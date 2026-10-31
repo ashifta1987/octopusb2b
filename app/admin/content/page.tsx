@@ -51,7 +51,7 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
 async function TermsTab({ isAdmin, editable, sectionNo, viewId }: { isAdmin: boolean; editable: boolean; sectionNo: number; viewId?: string }) {
   const sb = await createClient();
   const [{ data }, { data: settings }] = await Promise.all([
-    sb.from('terms_versions').select('id, version, status, sections, publish_at, published_at, created_at').order('created_at', { ascending: false }),
+    sb.from('terms_versions').select('id, version, status, sections, publish_at, published_at, created_at').eq('kind', 'general').order('created_at', { ascending: false }),
     sb.from('site_settings').select('key, value'),
   ]);
   const versions = (data ?? []) as Terms[];

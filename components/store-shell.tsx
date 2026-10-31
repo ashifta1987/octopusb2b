@@ -42,6 +42,7 @@ export async function StoreHeader() {
             </button>
           </form>
           <nav className="flex flex-wrap gap-5 items-center text-[15px] font-medium" aria-label="Account">
+            {settings.pool_enabled !== false && <Link href="/pools">Group buying pools</Link>}
             <Link href="/request/sourcing">Request Center</Link>
             {settings.supplier_portal_enabled === true && <Link href="/supplier">Sell on Octopus B2B</Link>}
             {session ? (
@@ -70,7 +71,7 @@ export async function StoreFooter() {
   const { blocks, company, branches } = await getSiteContent();
   return (
     <footer className="bg-navy text-[#D5DBE4] mt-16">
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-12 grid gap-10 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-12 grid gap-10 md:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]">
         <div className="text-sm space-y-3">
           <Logo white />
           <p className="max-w-sm">{block(blocks, 'footer.about')}</p>
@@ -86,11 +87,12 @@ export async function StoreFooter() {
           {branches.length > 1 && <div className="text-[13px]">Branches: {branches.map((b) => b.city).join(' · ')}</div>}
         </div>
         <FooterCol title="Marketplace" links={[['/products', 'Products'], ['/products', 'Categories'], ['/request/sourcing', 'Request Center']]} />
+        <FooterCol title="Group buy" links={[['/pools', 'Open pools'], ['/pools#how', 'Start a pool'], ['/pools/terms', 'Group Buy Terms'], ['/account/pools', 'My pledges']]} />
         <FooterCol title="Suppliers" links={[['/contact', 'Sell on Octopus B2B'], ['/about', 'Verification'], ['/login', 'Supplier login']]} />
         <FooterCol title="Company" links={[['/about', 'About us'], ['/contact', 'Contact'], ['/legal/privacy', 'Privacy policy'], ['/legal/terms', 'Terms of service']]} />
       </div>
       <div className="border-t border-white/10">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-5 text-[13px]">© 2026 {company?.brand ?? 'Octopus B2B'} · {company?.legal_name}. All rights reserved.</div>
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-5 text-[13px]">© 2026 {company?.brand ?? 'Octopus B2B'} · {company?.legal_name}. All rights reserved. · <Link href="/staff/login" className="text-[#9AA6B8] hover:text-white">Staff login</Link></div>
       </div>
     </footer>
   );

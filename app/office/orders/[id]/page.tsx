@@ -4,10 +4,13 @@ import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { Card, PageHeader, StatusBadge, Money, Timeline, OrderProgress, EmptyState } from '@/components/ui';
 import { DocumentButton } from '@/components/client';
-import { ActionForm, ReasonButton } from '@/components/backoffice/action-form';
+import { ReasonButton } from '@/components/backoffice/action-form';
 import { one } from '@/components/backoffice/server-utils';
 import { fmtDate, humanize, money } from '@/lib/format';
-import { transitionOrder, recordPayment } from '../../actions';
+import { transitionOrder } from '../../actions';
+import { recordPaymentStepUp } from './payment-actions';
+import { ActionForm as PaymentForm } from '@/components/admin/client';
+import { StepUpCallout, StepUpNote } from '@/components/admin/step-up';
 
 export const metadata = { title: 'Order' };
 
@@ -36,6 +39,8 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
   const sup = one(o.suppliers as unknown as { code: string; legal_name: string; country: string } | null);
   const canEdit = can(s, 'orders', 'edit');
   const canPay = can(s, 'finance', 'approve');
+  // record_payment is a money action with step-up (SPEC §17.3): show "Confirm with your code" when the code is already stale
+  const payFresh = canPay ? (await sb.rpc('mfa_fresh')).data as boolean | null : null;
   const outstanding = o.total_cents - o.paid_cents;
   const depositDue = Math.max(0, o.deposit_cents - o.paid_cents);
   const next = (NEXT[o.status] ?? []).filter((t) => t !== 'shipped'); // shipping goes through the Shipping screen
@@ -115,7 +120,9 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
           <Card title="Record bank payment">
             <div className="px-6 pb-6">
               {!canPay ? <p className="text-sm text-muted">Only Finance can record payments.</p> : outstanding <= 0 ? <p className="text-sm text-ok">Fully paid.</p> : (
-                <ActionForm action={recordPayment.bind(null, o.id)} submitLabel="Record payment" resetOnSuccess confirm={`Record this payment in ${o.currency}? It posts to the ledger and cannot be edited.`}>
+                <>
+                {payFresh === false && <div className="mb-3"><StepUpCallout path={`/office/orders/${o.id}`} text="Recording a payment needs a fresh 2FA code (yours is older than 10 minutes)." /></div>}
+                <PaymentForm action={recordPaymentStepUp.bind(null, o.id)} submitLabel="Record payment" resetOnSuccess confirm={`Record this payment in ${o.currency}? It posts to the ledger and cannot be edited.`}>
                   <div className="space-y-3">
                     <div>
                       <label htmlFor="rp-amt" className="label">Amount ({o.currency})</label>
@@ -132,7 +139,9 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
                       <input id="rp-ref" name="reference" className="input mono" required placeholder="e.g. SWIFT ref / PI number" />
                     </div>
                   </div>
-                </ActionForm>
+                </PaymentForm>
+                <StepUpNote className="mt-3" />
+                </>
               )}
             </div>
           </Card>

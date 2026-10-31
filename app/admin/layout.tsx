@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
-import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
+import { staffLayoutGuard } from '@/lib/staff/guard';
 import { PortalShell } from '@/components/portal-shell';
 import { OFFICE_NAV } from '@/lib/nav';
 import { Loading } from '@/components/admin/ui';
@@ -8,9 +8,7 @@ import { Loading } from '@/components/admin/ui';
 export const metadata = { title: { default: 'Admin', template: '%s · Admin · Octopus B2B' } };
 
 async function AdminShell({ children }: { children: React.ReactNode }) {
-  const session = await getSession();
-  if (!session) redirect('/login?next=/admin');
-  if (!session.isStaff) redirect('/forbidden');
+  const session = await staffLayoutGuard(await getSession(), '/admin');
   return (
     <PortalShell session={session} nav={OFFICE_NAV} roleLabel="Admin" searchPlaceholder="Search orders, customers, suppliers">
       {children}

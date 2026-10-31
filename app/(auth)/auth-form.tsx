@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/cn';
+import { checkCustomerSignupEmail, staffRedirectAfterCustomerSignIn } from '@/lib/staff/customer-guard';
 
 type Step = 'email' | 'verify';
 
@@ -31,6 +32,8 @@ export function AuthForm({ initialMode, next, initialError }: { initialMode: 'si
     try {
       if (mode === 'signup') {
         if (password.length < 8 || !/\d/.test(password)) throw new Error('Password needs at least 8 characters, with a number.');
+        const guard = await checkCustomerSignupEmail(email);
+        if (!guard.ok) throw new Error(guard.error);
         const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: callback() } });
         if (error) throw error;
         if (data.session) return router.push('/onboarding');
@@ -39,13 +42,18 @@ export function AuthForm({ initialMode, next, initialError }: { initialMode: 'si
       } else {
         const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        router.push(next); router.refresh();
+        const staffTarget = await staffRedirectAfterCustomerSignIn();
+        router.push(staffTarget ?? next); router.refresh();
       }
     } catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   }
 
   async function emailCode() {
     setErr(null); setBusy(true);
+    if (mode === 'signup') {
+      const guard = await checkCustomerSignupEmail(email);
+      if (!guard.ok) { setBusy(false); return setErr(guard.error); }
+    }
     const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: callback(), shouldCreateUser: mode === 'signup' } });
     setBusy(false);
     if (error) return setErr(error.message);
@@ -58,7 +66,8 @@ export function AuthForm({ initialMode, next, initialError }: { initialMode: 'si
     const { error } = await sb.auth.verifyOtp({ email, token: code.trim(), type: 'email' });
     setBusy(false);
     if (error) return setErr(error.message);
-    router.push(mode === 'signup' ? '/onboarding' : next); router.refresh();
+    const staffTarget = mode === 'login' ? await staffRedirectAfterCustomerSignIn() : null;
+    router.push(staffTarget ?? (mode === 'signup' ? '/onboarding' : next)); router.refresh();
   }
 
   const steps = ['Email', 'Verify', 'Profile'];

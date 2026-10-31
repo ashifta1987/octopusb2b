@@ -5,6 +5,8 @@ import { getSession } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { COUNTRY_NAMES, mapDbError } from '@/lib/format';
 import { z } from 'zod';
+import Link from 'next/link';
+import { emailIsStaff, isStaffUser } from '@/lib/staff/server';
 
 export const metadata = { title: 'Create your profile' };
 
@@ -23,11 +25,23 @@ async function save(formData: FormData) {
   if (!parsed.success) redirect('/onboarding?error=' + encodeURIComponent('Please fill in every field.'));
   const d = parsed.data;
   const sb = await createClient();
+  const { data: claims } = await sb.auth.getClaims();
+  const c = claims?.claims;
+  if (c?.sub && (await refuseStaff(c.sub as string, (c.email as string) ?? null))) redirect('/onboarding');
   const { error } = await sb.rpc('complete_onboarding', {
     p_full_name: d.full_name, p_company: d.company, p_country: d.country, p_phone: d.phone, p_business_type: d.business_type, p_city: d.city ?? null,
   });
   if (error) redirect('/onboarding?error=' + encodeURIComponent(mapDbError(error)));
   redirect('/account');
+}
+
+/** Staff (role or staff email domain) never get a customer profile/org (SPEC §17.3). */
+async function refuseStaff(userId: string, email: string | null) {
+  try {
+    return (await isStaffUser(userId)) || (!!email && (await emailIsStaff(email)));
+  } catch {
+    return false; // the STAFF_CANNOT_BE_CUSTOMER trigger still blocks it in the database
+  }
 }
 
 /** Create profile — required before anything else (SPEC §4.1 step 2). */
@@ -39,6 +53,21 @@ async function Onboarding({ searchParams }: { searchParams: Promise<{ error?: st
   const s = await getSession();
   if (!s) redirect('/login?next=/onboarding');
   if (s.profile && s.org) redirect('/account');
+  if (s.isStaff || (await refuseStaff(s.userId, s.email))) {
+    return (
+      <main className="min-h-screen bg-surface px-6 py-10">
+        <div className="max-w-[560px] mx-auto">
+          <Logo />
+          <h1 className="text-[28px] font-semibold mt-8">This is a staff account</h1>
+          <p className="text-muted mt-2">Octopus staff cannot create a customer profile. Sign in to the back office instead.</p>
+          <div className="flex gap-3 mt-6">
+            <Link href="/staff/login" className="btn btn-primary">Back office login</Link>
+            <form action="/auth/signout" method="post"><button className="btn btn-ghost" type="submit">Sign out</button></form>
+          </div>
+        </div>
+      </main>
+    );
+  }
   const { error } = await searchParams;
   const types = ['Importer / wholesaler', 'Retailer / e-commerce', 'Contractor / end user', 'Distributor', 'Manufacturer', 'Other'];
   return (

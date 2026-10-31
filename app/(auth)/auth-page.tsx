@@ -28,6 +28,9 @@ export default async function AuthPage({ searchParams, mode }: { searchParams: P
           <p className="text-center text-sm text-muted mt-6">
             By continuing you agree to the <Link href="/legal/terms" className="text-blue font-semibold">Terms</Link> and <Link href="/legal/privacy" className="text-blue font-semibold">Privacy Policy</Link>.
           </p>
+          <p className="text-center text-sm text-muted mt-4 pt-4 border-t border-line">
+            Octopus staff? <Link href="/staff/login" className="text-blue font-semibold">Back office login</Link>
+          </p>
         </div>
       </main>
     </div>

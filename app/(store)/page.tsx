@@ -8,6 +8,7 @@ import { getCategoryCounts, getFeatured, getVerifiedSuppliers } from '@/componen
 import { ProductGrid, GridSkeleton, unitOne } from '@/components/store/product-card';
 import { AdSlot } from '@/components/store/ad-slot';
 import { JsonLd, parts, SITE_URL } from '@/components/store/seo';
+import { HomePoolsSection } from '@/components/store/pools/home-section';
 
 export const metadata: Metadata = { alternates: { canonical: '/' } };
 
@@ -176,6 +177,11 @@ async function Home() {
           <div className="card p-10 text-center text-muted">No featured products yet. <Link href="/products" className="text-blue font-semibold">Browse all products</Link></div>
         )}
       </section>
+
+      {/* Group buying pools (SPEC §18) */}
+      <Suspense fallback={null}>
+        <HomePoolsSection />
+      </Suspense>
 
       {/* 3PL + Dropshipping */}
       <section className="max-w-[1280px] mx-auto px-4 sm:px-8 pt-[72px] grid gap-4 md:grid-cols-2">

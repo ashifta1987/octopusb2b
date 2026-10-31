@@ -9,6 +9,7 @@ import { getCurrencyContext, toPlatform } from '@/lib/currency';
 import { CurrencyTotals, sumByCurrency, rateLabel } from '@/components/admin/currency';
 import { setSetting, saveSettings } from '../actions';
 import { confirmTopup } from '../finance/actions';
+import { StepUpNote } from '@/components/admin/step-up';
 
 export const metadata = { title: 'Wallets & payments' };
 
@@ -67,6 +68,7 @@ export default async function WalletAdminPage() {
   return (
     <>
       <PageHeader title="Wallets & payments" subtitle="Turn the wallet on or off, see customer balances, confirm top-ups and review the service price list." />
+      <StepUpNote className="-mt-3 mb-4" />
 
       <section className="rounded-[12px] bg-navy text-white px-7 py-6 mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>

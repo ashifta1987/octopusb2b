@@ -5,6 +5,8 @@ import type { NavSection } from '@/lib/nav';
 import type { Session } from '@/lib/auth';
 import { can } from '@/lib/auth';
 import { MaintenanceNotice } from '@/components/maintenance-notice';
+import { workspacesFor } from '@/lib/staff/workspaces';
+import { staffSignOut, switchWorkspace } from '@/lib/staff/actions';
 
 /** Portal layout: left sidebar (role-filtered) that becomes a horizontal tab bar under 760px (SPEC §8.2). */
 export function PortalShell({ session, nav, children, searchPlaceholder = 'Search orders, RFQs, invoices', roleLabel }: {
@@ -26,15 +28,22 @@ export function PortalShell({ session, nav, children, searchPlaceholder = 'Searc
             <label htmlFor="portal-q" className="sr-only">Search</label>
             <input id="portal-q" name="q" className="input" placeholder={searchPlaceholder} />
           </form>
-          <div className="ml-auto flex items-center gap-3">
-            <PortalSwitcher session={session} />
-            <div className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center font-semibold text-sm" aria-hidden>{initials}</div>
-            <div className="hidden sm:block leading-tight">
-              <div className="font-semibold text-[15px]">{name}</div>
-              <div className="text-xs text-muted capitalize">{sub}</div>
+          {session.isStaff && !session.org ? (
+            <div className="ml-auto flex items-center gap-3">
+              <WorkspaceSwitcher session={session} current={roleLabel} />
+              <StaffUserMenu name={name} initials={initials} sub={sub} email={session.email} />
             </div>
-            <form action="/auth/signout" method="post"><button className="btn btn-ghost btn-sm" type="submit">Sign out</button></form>
-          </div>
+          ) : (
+            <div className="ml-auto flex items-center gap-3">
+              <PortalSwitcher session={session} />
+              <div className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center font-semibold text-sm" aria-hidden>{initials}</div>
+              <div className="hidden sm:block leading-tight">
+                <div className="font-semibold text-[15px]">{name}</div>
+                <div className="text-xs text-muted capitalize">{sub}</div>
+              </div>
+              <form action="/auth/signout" method="post"><button className="btn btn-ghost btn-sm" type="submit">Sign out</button></form>
+            </div>
+          )}
         </div>
       </header>
       <div className="flex flex-col md:flex-row">
@@ -61,3 +70,58 @@ function PortalSwitcher({ session }: { session: Session }) {
   );
 }
 
+
+/* ───────── Staff top bar (SPEC §17.2): workspace switcher + user menu. Native <details> menus: no client JS. ───────── */
+function WorkspaceSwitcher({ session, current }: { session: Session; current?: string }) {
+  const list = workspacesFor(session);
+  if (list.length < 2) return null;
+  return (
+    <details className="relative group">
+      <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer btn btn-ghost btn-sm gap-2" aria-label="Switch workspace">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+        <span className="hidden md:inline">{current ?? 'Workspace'}</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden className="transition-transform group-open:rotate-180"><path d="m6 9 6 6 6-6" /></svg>
+      </summary>
+      <div className="absolute right-0 mt-2 w-[300px] bg-white border border-line rounded-[10px] shadow-lg p-2 z-50" role="menu" aria-label="Workspaces">
+        <div className="px-2 pt-1 pb-2 text-xs font-semibold text-muted uppercase tracking-wide">Switch workspace</div>
+        {list.map((w) => (
+          <form key={w.key} action={switchWorkspace}>
+            <input type="hidden" name="workspace" value={w.key} />
+            <button type="submit" role="menuitem" className="w-full text-left flex items-center gap-3 px-2 py-2 rounded-md hover:bg-surface">
+              <span className="w-8 h-8 rounded-md bg-navy text-white text-xs font-bold flex items-center justify-center flex-none" aria-hidden>{w.short}</span>
+              <span className="min-w-0">
+                <span className="block text-sm font-semibold text-navy">{w.label}</span>
+                <span className="block text-xs text-muted truncate">{w.description}</span>
+              </span>
+            </button>
+          </form>
+        ))}
+      </div>
+    </details>
+  );
+}
+
+function StaffUserMenu({ name, initials, sub, email }: { name: string; initials: string; sub: string; email: string | null }) {
+  const item = 'block w-full text-left px-3 py-2 rounded-md text-sm font-semibold text-navy hover:bg-surface';
+  return (
+    <details className="relative">
+      <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer flex items-center gap-3 rounded-md px-1 py-1 hover:bg-surface" aria-label="Account menu">
+        <span className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center font-semibold text-sm" aria-hidden>{initials}</span>
+        <span className="hidden sm:block leading-tight text-left">
+          <span className="block font-semibold text-[15px]">{name}</span>
+          <span className="block text-xs text-muted capitalize">{sub}</span>
+        </span>
+      </summary>
+      <div className="absolute right-0 mt-2 w-[240px] bg-white border border-line rounded-[10px] shadow-lg p-2 z-50" role="menu" aria-label="Account">
+        {email && <div className="px-3 pt-1 pb-2 text-xs text-muted truncate border-b border-line mb-1">{email}</div>}
+        <Link href="/staff/account#profile" role="menuitem" className={item}>Profile</Link>
+        <Link href="/staff/account#password" role="menuitem" className={item}>Change password</Link>
+        <Link href="/staff/account#2fa" role="menuitem" className={item}>2FA devices</Link>
+        <Link href="/staff/workspace" role="menuitem" className={item}>All workspaces</Link>
+        <form action={staffSignOut} className="border-t border-line mt-1 pt-1">
+          <button type="submit" role="menuitem" className={`${item} text-bad`}>Sign out</button>
+        </form>
+      </div>
+    </details>
+  );
+}

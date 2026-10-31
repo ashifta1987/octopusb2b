@@ -137,6 +137,7 @@ export const MONEY_TABLES = new Set(['ledger_entries', 'journals', 'ledger_accou
 const ERRORS: Record<string, string> = {
   FORBIDDEN: 'You do not have permission to do this.',
   MFA_REQUIRED: 'Please re-enter your 2FA code first.',
+  STEP_UP_REQUIRED: 'Please re-enter your 2FA code first (it is older than 10 minutes).',
   BACKUP_ALREADY_RUNNING: 'A backup is already queued or running. Wait for it to finish.',
   MAKER_CANNOT_APPROVE: 'You requested this restore, so you cannot approve it. Another approver must do it (maker–checker).',
   NEEDS_FINANCE_APPROVER: 'This restore touches money records: a Finance user (or Admin) must approve it.',

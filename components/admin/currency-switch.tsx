@@ -3,8 +3,9 @@ import Link from 'next/link';
 import { useActionState, useState, useTransition } from 'react';
 import { money, CURRENCIES, type Currency } from '@/lib/format';
 import { previewImpact, requestSwitch } from '@/app/admin/currency/actions';
+import { goStepUp, StepUpLink } from '@/components/admin/client';
 
-type R = { ok: true; message?: string } | { ok: false; error: string };
+type R = { ok: true; message?: string } | { ok: false; error: string; redirect?: string };
 
 /** datetime-local input (browser time) + hidden ISO field so the server gets an unambiguous instant. */
 export function LocalDateTimeInput({ id, name, isoName, required, disabled }: { id: string; name: string; isoName: string; required?: boolean; disabled?: boolean }) {
@@ -40,7 +41,11 @@ export function CurrencySwitchWizard({ current, rate, serviceNames, pending }: {
   const [impactFor, setImpactFor] = useState<Currency | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, start] = useTransition();
-  const [state, formAction, submitting] = useActionState(async (_p: R | null, fd: FormData) => requestSwitch(_p, fd), null);
+  const [state, formAction, submitting] = useActionState(async (_p: R | null, fd: FormData) => {
+    const r = await requestSwitch(_p, fd);
+    goStepUp(r);   // SPEC §17.3 step-up → /staff/verify and back
+    return r;
+  }, null);
 
   const preview = () => {
     setErr(null);
@@ -130,7 +135,9 @@ export function CurrencySwitchWizard({ current, rate, serviceNames, pending }: {
         {blocked && <span role="alert" className="text-sm text-bad">Blocked: the payment adapter does not support {to}.</span>}
         {state && (state.ok
           ? <span role="status" className="text-sm text-ok font-semibold">✓ {state.message}</span>
-          : <span role="alert" className="text-sm text-bad">{state.error}</span>)}
+          : state.error === 'STEP_UP_REQUIRED'
+            ? <span role="alert" className="inline-flex items-center gap-2 text-sm text-bad">Please re-enter your 2FA code. <StepUpLink redirect={state.redirect} /></span>
+            : <span role="alert" className="text-sm text-bad">{state.error}</span>)}
       </div>
     </form>
   );

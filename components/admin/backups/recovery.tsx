@@ -2,6 +2,7 @@
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/cn';
+import { stepUpRedirect } from '@/lib/staff/step-up';
 import { StatusBadge } from '@/components/ui';
 import { restoreRecords } from '@/app/admin/backups/actions';
 
@@ -107,7 +108,7 @@ export function RecoveryCompare({ table, rows, restorable, canRestore, reasonDis
             start(async () => {
               const r = await restoreRecords(table, picked, reason);
               if (!r.ok) {
-                if (r.code === 'MFA_REQUIRED') { router.push(`/mfa?next=${encodeURIComponent(`/admin/backups/recovery?table=${table}`)}`); return; }
+                if (r.code === 'MFA_REQUIRED' || r.code === 'STEP_UP_REQUIRED') { router.push(stepUpRedirect(`/admin/backups/recovery?table=${table}`)); return; }
                 setMsg({ ok: false, text: r.error }); return;
               }
               setMsg({ ok: true, text: `${r.count} row${r.count === 1 ? '' : 's'} restored` });

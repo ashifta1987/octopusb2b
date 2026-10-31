@@ -3,6 +3,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/cn';
+import { stepUpRedirect } from '@/lib/staff/step-up';
 import { errorCode, errorText, EXPORT_GROUPS, PARTIAL_MODULES } from './shared';
 import { requestRestore, approveRestore, cancelRestore, sendApproverReminder, requestExport, setMaintenanceMode } from '@/app/admin/backups/actions';
 
@@ -26,9 +27,12 @@ export async function callApi(url: string, method: 'GET' | 'POST' = 'POST', body
   }
 }
 
+/** SPEC §17.3 step-up: re-enter the 2FA code at /staff/verify, then come back to `next`. */
 function mfaUrl(next: string) {
-  return `/mfa?next=${encodeURIComponent(next)}`;
+  return stepUpRedirect(next);
 }
+
+const needsCode = (code: string | undefined) => code === 'MFA_REQUIRED' || code === 'STEP_UP_REQUIRED';
 
 function Msg({ error, ok }: { error?: string | null; ok?: string | null }) {
   if (error) return <p role="alert" className="text-sm text-bad mt-2">{error}</p>;
@@ -169,7 +173,7 @@ export function DownloadBackupButton({ id, disabled }: { id: string; disabled?: 
           setErr(null);
           const r = await callApi(`/api/backups/${id}/download`, 'GET');
           if (r.ok && typeof r.url === 'string') { window.open(r.url, '_blank', 'noopener'); return; }
-          if (errorCode(r.error) === 'MFA_REQUIRED') { router.push(mfaUrl('/admin/backups')); return; }
+          if (needsCode(errorCode(r.error))) { router.push(mfaUrl('/admin/backups')); return; }
           setErr(errorText(r.error));
         })}
       >
@@ -233,7 +237,7 @@ export function RestoreForm({ backupId, backupCode, initialType, canRequest }: {
     start(async () => {
       const r = await requestRestore({ backupId, type, reason, modules, records: rec });
       if (!r.ok) {
-        if (r.code === 'MFA_REQUIRED') { router.push(mfaUrl(`/admin/backups?backup=${backupId}&type=${type}#restore`)); return; }
+        if (needsCode(r.code)) { router.push(mfaUrl(`/admin/backups?backup=${backupId}&type=${type}#restore`)); return; }
         setErr(r.error); return;
       }
       const v = await callApi(`/api/backups/restore/${r.id}/verify`);
@@ -325,7 +329,7 @@ export function RestoreActions({ id, status, canApprove, isRequester, canCancel,
               start(async () => {
                 const r = await approveRestore(id);
                 if (!r.ok) {
-                  if (r.code === 'MFA_REQUIRED') { router.push(mfaUrl(`/admin/backups?rs=${id}#restore`)); return; }
+                  if (needsCode(r.code)) { router.push(mfaUrl(`/admin/backups?rs=${id}#restore`)); return; }
                   setErr(r.error); return;
                 }
                 run();

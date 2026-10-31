@@ -5,6 +5,7 @@ import { PageHeader, Card, EmptyState, Notice } from '@/components/ui';
 import { RecoveryCompare, type CompareRow } from '@/components/admin/backups/recovery';
 import { MONEY_TABLES, errorText } from '@/components/admin/backups/shared';
 import { cn } from '@/lib/cn';
+import { StepUpNote } from '@/components/admin/step-up';
 
 export const metadata = { title: 'Partial restore' };
 
@@ -32,6 +33,7 @@ export default async function RecoveryPage({ searchParams }: { searchParams: Pro
         title="Partial restore — compare records"
         subtitle="Tables loaded from a backup into the recovery area are compared with the live data. Pick the rows to bring back; every restore is written to the audit log. Money records are never overwritten — corrections go through finance adjustments."
       />
+      <StepUpNote className="-mt-3 mb-4" />
       {error && <div className="mb-4"><Notice tone="red">{errorText(error.message)}</Notice></div>}
       <div className="grid lg:grid-cols-[260px_1fr] gap-6 items-start">
         <Card title="Recovery tables">

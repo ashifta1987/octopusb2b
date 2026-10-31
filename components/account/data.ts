@@ -47,7 +47,7 @@ export async function getWalletBalance(currency?: string | null): Promise<number
 
 export async function latestTermsId(): Promise<{ id: string; version: string } | null> {
   const sb = await createClient();
-  const { data } = await sb.from('terms_versions').select('id, version').eq('status', 'published').order('published_at', { ascending: false }).limit(1).maybeSingle();
+  const { data } = await sb.from('terms_versions').select('id, version').eq('status', 'published').eq('kind', 'general').order('published_at', { ascending: false }).limit(1).maybeSingle();
   return (data as { id: string; version: string } | null) ?? null;
 }
 

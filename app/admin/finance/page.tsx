@@ -9,6 +9,7 @@ import { getCurrencyContext } from '@/lib/currency';
 import { CurrencyTotals, sumByCurrency, perCurrencyText, rateLabel } from '@/components/admin/currency';
 import { monthLabel } from '@/components/admin/server';
 import { confirmTopup, recordPayment, decideApproval, requestApproval } from './actions';
+import { StepUpNote } from '@/components/admin/step-up';
 
 export const metadata = { title: 'Finance & revenue' };
 
@@ -114,6 +115,7 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
           </form>
         }
       />
+      <StepUpNote className="-mt-3 mb-4" />
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 mb-6">
         <Stat label="Gross revenue" value={<CurrencyTotals totals={grossBy} ctx={ctx} />} hint={monthLabel(from)} />

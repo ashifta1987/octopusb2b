@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { guard, fail, ok, str, bool, type Result } from '@/components/admin/server';
 import { errorCode, errorText, type BackupSettings } from '@/components/admin/backups/shared';
 
-/** Result that keeps the raw DB error code so the client can react (e.g. MFA_REQUIRED → /mfa). */
+/** Result that keeps the raw DB error code so the client can react (MFA_REQUIRED / STEP_UP_REQUIRED → /staff/verify step-up, SPEC §17.3). */
 export type CodeResult<T = object> = ({ ok: true } & T) | { ok: false; error: string; code: string };
 
 function bad(e: { message?: string } | string | null | undefined): { ok: false; error: string; code: string } {

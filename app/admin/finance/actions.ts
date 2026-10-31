@@ -2,14 +2,14 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { toCents } from '@/lib/format';
-import { guard, fail, ok, str, type Result } from '@/components/admin/server';
+import { guard, fail, failAt, ok, str, type Result } from '@/components/admin/server';
 
 /** Confirm a pending wallet top-up (credits the wallet via the ledger). */
 export async function confirmTopup(topupId: string): Promise<Result> {
   const g = await guard('wallet', 'approve');
   if ('error' in g) return g.error;
   const { error } = await g.sb.rpc('confirm_topup', { p_topup: topupId });
-  if (error) return fail(error);
+  if (error) return fail(error);   // step-up → { error: 'STEP_UP_REQUIRED' }; used on Finance and Wallets, so the client returns to the current page
   revalidatePath('/admin/finance');
   revalidatePath('/admin/wallet');
   return ok('Top-up credited');
@@ -33,7 +33,7 @@ export async function recordPayment(_prev: Result | null, fd: FormData): Promise
   const { error } = await g.sb.rpc('record_payment', {
     p_order: p.data.order_id, p_amount: cents, p_method: p.data.method, p_reference: p.data.reference,
   });
-  if (error) return fail(error);
+  if (error) return failAt(error, '/admin/finance');
   revalidatePath('/admin/finance');
   return ok('Payment recorded and posted to the ledger');
 }
@@ -44,7 +44,7 @@ export async function decideApproval(id: string, approve: boolean, note?: string
   if ('error' in g) return g.error;
   if (!approve && !note?.trim()) return fail('REASON_REQUIRED');
   const { error } = await g.sb.rpc('decide_finance_approval', { p_id: id, p_approve: approve, p_note: note?.trim() || null });
-  if (error) return fail(error);
+  if (error) return failAt(error, '/admin/finance');
   revalidatePath('/admin/finance');
   return ok(approve ? 'Approved' : 'Rejected');
 }

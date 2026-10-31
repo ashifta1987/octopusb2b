@@ -3,8 +3,24 @@ import { useActionState, useEffect, useRef, useState, useTransition } from 'reac
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/cn';
 import { Switch } from '@/components/client';
+import { stepUpRedirect } from '@/lib/staff/step-up';
 
-type R = { ok: true; message?: string } | { ok: false; error: string };
+type R = { ok: true; message?: string } | { ok: false; error: string; redirect?: string };
+
+const STEP_UP = 'STEP_UP_REQUIRED';
+const here = () => (typeof window === 'undefined' ? '/staff/workspace' : window.location.pathname + window.location.search);
+
+/** SPEC §17.3 step-up: the action needs a fresh 2FA code → go to /staff/verify and come back. Returns true when navigating. */
+export function goStepUp(r: R | null | undefined): boolean {
+  if (!r || r.ok || r.error !== STEP_UP) return false;
+  window.location.assign(r.redirect ?? stepUpRedirect(here()));
+  return true;
+}
+
+/** Fallback link shown with a step-up error (e.g. if navigation was blocked). */
+export function StepUpLink({ redirect, className = 'btn btn-primary btn-sm' }: { redirect?: string; className?: string }) {
+  return <a href={redirect ?? stepUpRedirect(here())} className={className}>Confirm with your code</a>;
+}
 type FormAction = (prev: R | null, fd: FormData) => Promise<R>;
 
 /**
@@ -19,6 +35,7 @@ export function ActionForm({
 }) {
   const [state, formAction, pending] = useActionState(async (prev: R | null, fd: FormData) => {
     const r = await action(prev, fd);
+    goStepUp(r);
     return r;
   }, null);
   const ref = useRef<HTMLFormElement>(null);
@@ -46,6 +63,9 @@ export function ActionForm({
 
 function Feedback({ state }: { state: R | null }) {
   if (!state) return null;
+  if (!state.ok && state.error === STEP_UP) {
+    return <span role="alert" className="inline-flex items-center gap-2 text-sm text-bad">Please re-enter your 2FA code. <StepUpLink redirect={state.redirect} /></span>;
+  }
   return state.ok
     ? <span role="status" className="text-sm text-ok font-semibold">✓ {state.message ?? 'Saved'}</span>
     : <span role="alert" className="text-sm text-bad">{state.error}</span>;
@@ -70,6 +90,7 @@ export function ToggleSetting({ checked, label, onToggle, disabled, showText }: 
           setErr(null);
           start(async () => {
             const r = await onToggle(v);
+            if (goStepUp(r)) return;
             if (r.ok) { setValue(v); router.refresh(); } else setErr(r.error);
           });
         }}
@@ -103,6 +124,7 @@ export function RunButton({ action, children, className = 'btn btn-ghost btn-sm'
           setMsg(null);
           start(async () => {
             const r = await action(reason);
+            if (goStepUp(r)) return;
             setMsg(r);
             if (r.ok) router.refresh();
           });

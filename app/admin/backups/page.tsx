@@ -6,6 +6,7 @@ import { nowMs } from '@/components/admin/server';
 import { BackupNowButton, BackupProgress, MaintenanceControl } from '@/components/admin/backups/client';
 import { StatusCards, BackupsTable, RestoreCard, RestoreList, ExportsCard, SettingsCard } from '@/components/admin/backups/sections';
 import { nextCronRun, chinaDay, chinaTime, type BackupRow, type RestoreRow, type CheckRow, type ExportRow, type BackupSettings, type MaintenanceMode } from '@/components/admin/backups/shared';
+import { StepUpNote } from '@/components/admin/step-up';
 
 export const metadata = { title: 'Backup & restore' };
 
@@ -94,6 +95,7 @@ export default async function BackupsPage({ searchParams }: { searchParams: Prom
           </div>
         }
       />
+      <StepUpNote className="-mt-3 mb-4" />
 
       {maintenance.enabled && (
         <div className="mb-4"><Notice tone="amber"><b>Maintenance mode is ON</b> since {chinaTime(maintenance.since)} China time. Visitors see: “{maintenance.message}”</Notice></div>

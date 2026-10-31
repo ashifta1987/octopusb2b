@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
-import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth';
+import { staffLayoutGuard } from '@/lib/staff/guard';
 import { PortalShell } from '@/components/portal-shell';
 import { OFFICE_NAV } from '@/lib/nav';
 import { ShellFallback } from '@/components/backoffice/shell-fallback';
@@ -8,9 +8,7 @@ import { ShellFallback } from '@/components/backoffice/shell-fallback';
 export const metadata = { title: { default: 'Back office', template: '%s · Back office · Octopus B2B' } };
 
 async function OfficeShell({ children }: { children: React.ReactNode }) {
-  const session = await getSession();
-  if (!session) redirect('/login?next=/office');
-  if (!session.isStaff) redirect('/forbidden');
+  const session = await staffLayoutGuard(await getSession(), '/office');
   return (
     <PortalShell session={session} nav={OFFICE_NAV} roleLabel="Back office" searchPlaceholder="Search orders, RFQs, tickets">
       {children}

@@ -125,9 +125,9 @@ function nextVersion(v: string) {
 export async function newTermsDraft(): Promise<Result> {
   const g = await guard('content', 'edit');
   if ('error' in g) return g.error;
-  const { data: open } = await g.sb.from('terms_versions').select('id').in('status', ['draft', 'in_review']).limit(1);
+  const { data: open } = await g.sb.from('terms_versions').select('id').eq('kind', 'general').in('status', ['draft', 'in_review']).limit(1);
   if (open?.length) return fail('A draft already exists — edit or publish it first.');
-  const { data: latest } = await g.sb.from('terms_versions').select('version, sections').order('created_at', { ascending: false }).limit(1).maybeSingle();
+  const { data: latest } = await g.sb.from('terms_versions').select('version, sections').eq('kind', 'general').order('created_at', { ascending: false }).limit(1).maybeSingle();
   let sections = (latest?.sections as Section[] | null) ?? [];
   if (sections.length !== 15) sections = Array.from({ length: 15 }, (_, i) => sections[i] ?? { no: i + 1, title: `Section ${i + 1}`, body: '' });
   const { error } = await g.sb.from('terms_versions').insert({ version: nextVersion(latest?.version ?? 'v0.9'), status: 'draft', sections, created_by: g.s.userId });

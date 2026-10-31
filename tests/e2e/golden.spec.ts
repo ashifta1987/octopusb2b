@@ -26,7 +26,8 @@ test.describe('Golden path 1 — signup → onboarding → KYC', () => {
   test.skip(!PASSWORD, 'DEMO_PASSWORD not set');
 
   test('new visitor signs up, completes profile and submits KYC', async ({ page }) => {
-    const email = `e2e+${Date.now()}@demo.octopusb2b.com`;
+    // staff email domains (incl. demo.octopusb2b.com) are refused on customer sign-up (SPEC §17.3)
+    const email = `e2e+${Date.now()}@${process.env.E2E_SIGNUP_DOMAIN ?? 'example.com'}`;
     await page.goto('/signup');
     await page.getByLabel(/email/i).fill(email);
     await page.getByLabel(/^password/i).fill(PASSWORD);

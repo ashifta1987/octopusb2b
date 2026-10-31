@@ -60,18 +60,19 @@ export async function requireCustomer(next = '/account') {
   return s;
 }
 
-/** Staff pages: require a permission (SPEC §3). Staff 2FA is enforced when the profile requires it. */
+/** Staff pages: require a permission (SPEC §3) on an aal2 (2FA-verified) staff session (SPEC §17.3). */
 export async function requireStaff(area: string, action = 'view', next = '/office') {
   const s = await getSession();
-  if (!s) redirect(`/login?next=${encodeURIComponent(next)}`);
+  if (!s) redirect(`/staff/login?next=${encodeURIComponent(next)}`);
+  if (!s.isStaff) redirect('/login'); // customers go to the customer login (SPEC §17.3)
+  if (s.aal !== 'aal2') redirect(`/staff/verify?next=${encodeURIComponent(next)}`); // 2FA everywhere for staff
   if (!can(s, area, action)) redirect('/forbidden');
-  if (s.profile?.totp_required && process.env.ENFORCE_STAFF_2FA === 'true' && s.aal !== 'aal2') redirect(`/mfa?next=${encodeURIComponent(next)}`);
   return s;
 }
 
 export async function requireRole(role: string, next: string) {
   const s = await getSession();
-  if (!s) redirect(`/login?next=${encodeURIComponent(next)}`);
+  if (!s) redirect(`${STAFF_ROLES.includes(role) ? '/staff/login' : '/login'}?next=${encodeURIComponent(next)}`);
   if (!s.isAdmin && !s.roles.includes(role)) redirect('/forbidden');
   return s;
 }

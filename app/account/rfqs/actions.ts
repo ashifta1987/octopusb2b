@@ -13,7 +13,7 @@ export async function approveQuote(input: { quoteId: string }): Promise<ActionRe
   if (!parsed.success) return { ok: false, error: 'Invalid quote.' };
   const sb = await createClient();
   // Always use the latest published Terms version server-side (never trust a client-sent id)
-  const { data: terms } = await sb.from('terms_versions').select('id').eq('status', 'published').order('published_at', { ascending: false }).limit(1).maybeSingle();
+  const { data: terms } = await sb.from('terms_versions').select('id').eq('status', 'published').eq('kind', 'general').order('published_at', { ascending: false }).limit(1).maybeSingle();
   const { data, error } = await sb.rpc('approve_quote', { p_quote: parsed.data.quoteId, p_terms_version: terms?.id ?? null });
   if (error) return { ok: false, error: mapDbError(error) };
   revalidatePath('/account');

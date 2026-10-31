@@ -1,7 +1,8 @@
 'use server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { CURRENCIES, type Currency } from '@/lib/format';
-import { guard, fail, ok, str, type Result } from '@/components/admin/server';
+import { guard, fail, failAt, ok, str, type Result } from '@/components/admin/server';
+import { isStepUpError } from '@/lib/staff/step-up';
 
 /** Currency-switch error codes raised by the RPCs (SPEC §15.1) → user-facing text. */
 const CURRENCY_ERRORS: Record<string, string> = {
@@ -16,6 +17,7 @@ const CURRENCY_ERRORS: Record<string, string> = {
 };
 
 function failCur(e: { message?: string } | string | null | undefined): Result {
+  if (isStepUpError(e)) return failAt(e, '/admin/currency');   // step-up (SPEC §17.3) → /staff/verify and back
   const raw = typeof e === 'string' ? e : e?.message ?? '';
   const code = raw.split(':')[0].trim();
   return CURRENCY_ERRORS[code] ? { ok: false, error: CURRENCY_ERRORS[code] } : fail(e);

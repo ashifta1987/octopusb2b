@@ -11,6 +11,7 @@ import { ProductGrid, ProductImage, GridSkeleton, unitOne, fmtQty } from '@/comp
 import { PriceCalculator } from '@/components/store/price-calculator';
 import { AdSlot } from '@/components/store/ad-slot';
 import { Breadcrumbs, JsonLd, breadcrumbLd, parts, SITE_URL } from '@/components/store/seo';
+import { ProductPoolCard } from '@/components/store/pools/product-pool-card';
 
 type Params = Promise<{ slug: string }>;
 
@@ -143,6 +144,10 @@ async function Content({ params }: { params: Params }) {
           )}
           <PriceCalculator productId={p.id} tiers={p.tiers} currency={p.currency} feeCurrency={services.rfq?.currency ?? p.currency} unit={p.unit} unitOne={u} moq={p.moq} incoterm={p.incoterm}
             rfqFee={services.rfq?.priceCents ?? null} sampleFee={services.sample?.priceCents ?? null} whatsapp={wa} />
+          {/* SPEC §18 — group buying card after the Request quote CTA */}
+          <Suspense fallback={null}>
+            <ProductPoolCard productId={p.id} moq={p.moq} unit={p.unit} />
+          </Suspense>
         </div>
       </div>
 

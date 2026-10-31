@@ -6,6 +6,7 @@ import { ActionForm, RunButton } from '@/components/admin/client';
 import { CurrencySwitchWizard, ImpactView, LocalDateTimeInput } from '@/components/admin/currency-switch';
 import { asCurrency, fmtDate, humanize, money, CURRENCY_PREFIX } from '@/lib/format';
 import { setFxRate, approveSwitch, cancelSwitch } from './actions';
+import { StepUpNote } from '@/components/admin/step-up';
 
 export const metadata = { title: 'Currency' };
 
@@ -55,6 +56,7 @@ export default async function CurrencyPage() {
         title="Currency"
         subtitle="Choose the platform currency (US dollar or Chinese yuan), keep the approved exchange rate and switch with Finance approval. Existing quotes, invoices and orders always keep their own currency."
       />
+      <StepUpNote className="-mt-3 mb-4" />
 
       <section className="rounded-[12px] bg-navy text-white px-7 py-6 mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
