@@ -79,3 +79,4 @@ try {
 }
 console.log(failed ? `\n${failed} failed` : '\nall staff-auth checks passed');
 process.exitCode = failed ? 1 : 0;
+

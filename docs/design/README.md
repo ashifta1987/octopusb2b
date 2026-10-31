@@ -1,6 +1,6 @@
 # Octopus B2B — UX/UI design screens
 
-35 screens designed at 1440 px desktop width. Every screen also works on mobile: portal sidebars turn into a horizontal tab bar under 760 px, and sticky side panels become static.
+37 screens designed at 1440 px desktop width. Every screen also works on mobile: portal sidebars turn into a horizontal tab bar under 760 px, and sticky side panels become static.
 
 - `<Name>.png` — full-page picture of the screen. Use it to see the layout.
 - `html/<Name>.html` — the same screen as static HTML with all CSS inline. Open it in a browser, or tell Antigravity to read it for exact spacing, colours, font sizes and copy. Links between screens work.
@@ -19,6 +19,8 @@ How to use with Antigravity: in each phase prompt, say for example "Build /p/[sl
 | **Products** | Storefront · All products | `/products, /c/[...slug], /search` | Public | [Products.png](Products.png) · [html/Products.html](html/Products.html) |
 | **Product** | Storefront · Product detail | `/p/[slug]` | Public | [Product.png](Product.png) · [html/Product.html](html/Product.html) |
 | **Request** | Request Center · Sourcing, 3PL, Dropshipping, Samples, QC, Certification | `/request/[type]` | Public → login | [Request.png](Request.png) · [html/Request.html](html/Request.html) |
+| **Pool** | Group buy · MOQ pool detail with progress, participants and join form | `/pool/[code]` | Public → login | [Pool.png](Pool.png) · [html/Pool.html](html/Pool.html) |
+| **Pools** | Group buying · browse all open pools with filters, hero stats and sort | `/pools` | Public | [Pools.png](Pools.png) · [html/Pools.html](html/Pools.html) |
 | **Auth** | Sign up & log in · Google + email | `/login, /signup, /onboarding` | Public | [Auth.png](Auth.png) · [html/Auth.html](html/Auth.html) |
 | **StaffLogin** | Staff login · back office, admin, finance, distributor (3 steps: sign in, 2FA code, choose workspace) | `/staff/login` | All staff | [StaffLogin.png](StaffLogin.png) · [step 2](StaffLogin-2-verify.png) · [step 3](StaffLogin-3-workspace.png) · [html/StaffLogin.html](html/StaffLogin.html) |
 
