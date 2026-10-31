@@ -486,3 +486,4 @@ begin
   end loop;
   execute 'grant execute on function public.maintenance_enabled() to anon, authenticated, service_role';
 end $$;
+

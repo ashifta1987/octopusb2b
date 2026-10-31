@@ -20,6 +20,7 @@ export async function GET(req: Request) {
   try {
     for (let i = 0; i < 4 && Date.now() - started < 40_000; i++) {
       const s = await processOutbox(sb, 50);
+      if (s.paused) return json({ ok: true, paused: true, reason: 'maintenance_mode', duration_ms: Date.now() - started });
       totals.claimed += s.claimed;
       totals.done += s.done;
       totals.retried += s.retried;

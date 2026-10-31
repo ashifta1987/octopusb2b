@@ -1,0 +1,184 @@
+# Octopus own backups — layer 2 (SPEC §16.2). Nightly 02:00 China time + "Back up now" (workflow_dispatch from the app).
+# Database: supabase db dump (roles, schema, data) → gzip → age (public key). Storage: every bucket via the service-role
+# REST API (scripts/backup/storage.mjs) → tar.gz → age. Upload to the off-site S3-compatible bucket with rclone under
+# <code>/, write manifest.json, report to the app (signed callback), then apply retention. Setup: docs/BACKUP-SETUP.md
+name: Backup
+
+on:
+  schedule:
+    - cron: '0 18 * * *' # 18:00 UTC = 02:00 Asia/Shanghai
+  workflow_dispatch:
+    inputs:
+      backup_code:
+        description: 'Backup code (BK-YYYY-MMDD-HHMM). Empty = now, China time.'
+        required: false
+        default: ''
+      trigger:
+        description: 'scheduled | manual | retry'
+        required: false
+        type: choice
+        options: [manual, scheduled, retry]
+        default: manual
+
+concurrency:
+  group: octopus-backup
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    name: Back up database + storage
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      BACKUP_AGE_PUBLIC_KEY: ${{ secrets.BACKUP_AGE_PUBLIC_KEY }}
+      BACKUP_KEY_FINGERPRINT: ${{ secrets.BACKUP_KEY_FINGERPRINT }}
+      BACKUP_EXCLUDE_BUCKETS: ${{ vars.BACKUP_EXCLUDE_BUCKETS }}
+      APP_URL: ${{ secrets.APP_URL }}
+      BACKUP_CALLBACK_SECRET: ${{ secrets.BACKUP_CALLBACK_SECRET }}
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+      BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+      # rclone remote "offsite" configured from env (S3-compatible: R2 / S3 / B2 / MinIO)
+      RCLONE_CONFIG_OFFSITE_TYPE: s3
+      RCLONE_CONFIG_OFFSITE_PROVIDER: ${{ secrets.BACKUP_S3_PROVIDER || 'Other' }}
+      RCLONE_CONFIG_OFFSITE_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+      RCLONE_CONFIG_OFFSITE_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+      RCLONE_CONFIG_OFFSITE_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+      RCLONE_CONFIG_OFFSITE_REGION: ${{ secrets.BACKUP_S3_REGION || 'auto' }}
+      RCLONE_CONFIG_OFFSITE_NO_CHECK_BUCKET: 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check configuration
+        run: |
+          missing=""
+          for v in SUPABASE_DB_URL SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY BACKUP_AGE_PUBLIC_KEY BACKUP_S3_BUCKET RCLONE_CONFIG_OFFSITE_ACCESS_KEY_ID RCLONE_CONFIG_OFFSITE_SECRET_ACCESS_KEY APP_URL BACKUP_CALLBACK_SECRET; do
+            [ -z "${!v}" ] && missing="$missing $v"
+          done
+          if [ -n "$missing" ]; then echo "::error::Missing secrets:$missing (see docs/BACKUP-SETUP.md)"; exit 1; fi
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Install age + rclone
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age rclone
+          age --version; rclone version | head -1
+
+      - name: Backup code, trigger, retention class
+        id: meta
+        run: |
+          trigger="${{ github.event_name == 'schedule' && 'scheduled' || inputs.trigger }}"
+          node scripts/backup/meta.mjs --code "${{ inputs.backup_code }}" --trigger "$trigger"
+
+      - name: Report running
+        run: |
+          retention='${{ steps.meta.outputs.retention }}'
+          extra=""; [ "$retention" != "manual" ] && extra=",\"retention_class\":\"$retention\""
+          node scripts/backup/callback.mjs "{\"type\":\"backup\",\"code\":\"${{ steps.meta.outputs.code }}\",\"status\":\"running\",\"progress\":5,\"trigger\":\"${{ steps.meta.outputs.trigger }}\"$extra}"
+
+      - name: Dump database (roles, schema, data)
+        run: |
+          mkdir -p work out/db
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f work/roles.sql --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f work/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f work/data.sql --data-only --use-copy -x "storage.buckets_vectors" -x "storage.vector_indexes"
+          ls -la work
+          node scripts/backup/manifest.mjs stats --data work/data.sql --out work/stats.json
+
+      - name: Compress + encrypt database dumps
+        run: |
+          for f in roles schema data; do
+            gzip -9 -c "work/$f.sql" | age -r "$BACKUP_AGE_PUBLIC_KEY" -o "out/db/$f.sql.gz.age"
+          done
+          shred -u work/roles.sql work/schema.sql || rm -f work/roles.sql work/schema.sql
+          node scripts/backup/callback.mjs "{\"type\":\"backup\",\"code\":\"${{ steps.meta.outputs.code }}\",\"status\":\"running\",\"progress\":40}" --allow-fail
+
+      - name: Back up Storage buckets
+        run: |
+          mkdir -p work/storage out/storage
+          node scripts/backup/storage.mjs download --out work/storage --stats work/buckets.json
+          for dir in work/storage/*/; do
+            [ -d "$dir" ] || continue
+            b=$(basename "$dir")
+            tar -czf - -C "$dir" . | age -r "$BACKUP_AGE_PUBLIC_KEY" -o "out/storage/$b.tar.gz.age"
+          done
+          rm -rf work/storage
+          node scripts/backup/callback.mjs "{\"type\":\"backup\",\"code\":\"${{ steps.meta.outputs.code }}\",\"status\":\"running\",\"progress\":70}" --allow-fail
+
+      - name: Write manifest
+        run: |
+          node scripts/backup/manifest.mjs build --dir out --code "${{ steps.meta.outputs.code }}" --stats work/stats.json --buckets work/buckets.json --out out/manifest.json
+          rm -f work/data.sql
+
+      - name: Upload off-site + verify
+        id: upload
+        run: |
+          dest="offsite:$BACKUP_S3_BUCKET/${{ steps.meta.outputs.code }}"
+          rclone copy out "$dest" --s3-no-check-bucket --transfers 4 --retries 5
+          # size check of every uploaded object (hashes differ on multipart uploads, so compare sizes + count)
+          if rclone check out "$dest" --one-way --size-only; then echo "checksum_ok=true" >> "$GITHUB_OUTPUT"; else echo "checksum_ok=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Report completed
+        run: |
+          node -e '
+            const fs = require("fs");
+            const m = JSON.parse(fs.readFileSync("out/manifest.json", "utf8"));
+            const manifestSize = fs.statSync("out/manifest.json").size;
+            const files = [...m.files, { path: "manifest.json", kind: "manifest", size_bytes: manifestSize, sha256: null }];
+            const body = {
+              type: "backup", code: m.code, status: process.env.CHECKSUM_OK === "true" ? "completed" : "failed", progress: 100,
+              size_bytes: m.total_size_bytes + manifestSize,
+              location: `s3://${process.env.BACKUP_S3_BUCKET}/${m.code}/`,
+              manifest: { ...m, files: undefined, file_count: m.files.length },
+              files, checksum_ok: process.env.CHECKSUM_OK === "true", migration_version: m.migration_version || undefined,
+              includes: { database: true, buckets: (m.buckets || []).map((b) => b.name) },
+              error: process.env.CHECKSUM_OK === "true" ? undefined : "Off-site verification failed (rclone check)",
+            };
+            fs.writeFileSync("work/report.json", JSON.stringify(body));
+          '
+          node scripts/backup/callback.mjs --file work/report.json
+        env:
+          CHECKSUM_OK: ${{ steps.upload.outputs.checksum_ok }}
+
+      - name: Apply retention (keep_daily / keep_weekly / keep_monthly)
+        if: success() && steps.upload.outputs.checksum_ok == 'true'
+        run: |
+          node scripts/backup/callback.mjs '{"type":"retention_plan"}' --out work/plan.json
+          ids=$(node -e '
+            const { plan = [] } = JSON.parse(require("fs").readFileSync("work/plan.json", "utf8"));
+            for (const p of plan) console.log(`${p.id} ${p.code}`);
+          ')
+          expired=()
+          while read -r id code; do
+            [ -z "$id" ] && continue
+            if rclone purge "offsite:$BACKUP_S3_BUCKET/$code" --s3-no-check-bucket; then expired+=("\"$id\""); else echo "::warning::could not delete $code"; fi
+          done <<< "$ids"
+          if [ ${#expired[@]} -gt 0 ]; then
+            node scripts/backup/callback.mjs "{\"type\":\"mark_expired\",\"ids\":[$(IFS=,; echo "${expired[*]}")]}"
+          fi
+
+      - name: Report failure
+        if: failure()
+        run: |
+          node scripts/backup/callback.mjs "{\"type\":\"backup\",\"code\":\"${{ steps.meta.outputs.code }}\",\"status\":\"failed\",\"error\":\"Backup workflow failed — see ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}" --allow-fail
+
+      - name: Clean up
+        if: always()
+        run: rm -rf work out

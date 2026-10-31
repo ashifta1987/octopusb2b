@@ -11,6 +11,8 @@ import { createStaff, setUserRoles, setStaffActive, setForce2fa, savePermissions
 export const metadata = { title: 'Staff & roles' };
 
 const ACTIONS = ['view', 'create', 'edit', 'delete', 'approve', 'export'] as const;
+/** Area-specific actions (SPEC §16.4: Backups & restore). */
+const AREA_ACTIONS: Record<string, readonly string[]> = { backups: ['view', 'backup', 'download', 'export', 'request_restore', 'approve_restore'] };
 
 /** Admin → Staff & roles (Staff.png). */
 export default async function StaffPage({ searchParams }: { searchParams: Promise<{ role?: string; user?: string }> }) {
@@ -126,7 +128,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
                 <table className="w-full border-collapse">
                   <thead><tr><th className="th">Area</th>{ACTIONS.map((a) => <th key={a} className="th text-center">{a}</th>)}</tr></thead>
                   <tbody>
-                    {(areas ?? []).map((ar) => (
+                    {(areas ?? []).filter((ar) => !AREA_ACTIONS[ar.code]).map((ar) => (
                       <tr key={ar.code}>
                         <td className="td font-semibold">{ar.name}</td>
                         {ACTIONS.map((a) => (
@@ -140,6 +142,20 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
                   </tbody>
                 </table>
               </div>
+              {(areas ?? []).filter((ar) => AREA_ACTIONS[ar.code]).map((ar) => (
+                <fieldset key={ar.code} className="mt-5 border border-line rounded-[10px] p-4">
+                  <legend className="px-1 font-semibold">{ar.name}</legend>
+                  <div className="flex flex-wrap gap-x-6 gap-y-2">
+                    {AREA_ACTIONS[ar.code].map((a) => (
+                      <label key={a} className="inline-flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="perm" value={`${ar.code}:${a}`} className="w-5 h-5"
+                          defaultChecked={selRole.code === 'admin' || have.has(`${ar.code}:${a}`)} disabled={!edit || selRole.code === 'admin'} />
+                        {a.replace(/_/g, ' ')}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+              ))}
               <p className="text-xs text-muted mt-3">Permission changes take effect on the staff member&apos;s next page load and are recorded in the audit log.</p>
             </ActionForm>
           </Card>

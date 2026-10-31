@@ -6,6 +6,10 @@ on:
   pull_request:
   # Vercel reports preview deployments as GitHub deployments → run the Postman collection against each preview.
   deployment_status:
+  # SPEC §16: weekly backup → restore drill (staging → scratch); also runnable by hand.
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 1'
 
 concurrency:
   group: ci-${{ github.event_name }}-${{ github.event.deployment.id || github.ref }}
@@ -114,3 +118,71 @@ jobs:
         with:
           name: newman-${{ github.event.deployment.id }}
           path: newman/
+
+  backup-restore-drill:
+    name: Backup staging → restore into scratch (counts + ledger)
+    # SPEC §16.5 tests: dump the staging DB, restore it into the scratch DB, compare row counts + ledger totals per currency.
+    # Skipped when STAGING_DB_URL / SCRATCH_DB_URL are not configured. SCRATCH_DB_URL lives in the `restore-scratch`
+    # environment (no required reviewers); STAGING_DB_URL may be a repository or environment secret.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: restore-scratch
+    env:
+      STAGING_DB_URL: ${{ secrets.STAGING_DB_URL || secrets.STAGING_DATABASE_URL }}
+      SCRATCH_DB_URL: ${{ secrets.SCRATCH_DB_URL }}
+    steps:
+      - name: Check secrets
+        id: cfg
+        run: |
+          if [ -z "$STAGING_DB_URL" ] || [ -z "$SCRATCH_DB_URL" ]; then
+            echo "::notice::STAGING_DB_URL / SCRATCH_DB_URL not set — skipping the backup/restore drill"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.cfg.outputs.skip == 'false'
+      - uses: pnpm/action-setup@v4
+        if: steps.cfg.outputs.skip == 'false'
+      - uses: actions/setup-node@v4
+        if: steps.cfg.outputs.skip == 'false'
+        with:
+          node-version: 24
+          cache: pnpm
+      - if: steps.cfg.outputs.skip == 'false'
+        run: pnpm install --frozen-lockfile
+      - uses: supabase/setup-cli@v1
+        if: steps.cfg.outputs.skip == 'false'
+        with:
+          version: latest
+      - name: Install psql 17
+        if: steps.cfg.outputs.skip == 'false'
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-17
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+      - name: Back up staging
+        if: steps.cfg.outputs.skip == 'false'
+        run: |
+          mkdir -p work/empty
+          supabase db dump --db-url "$STAGING_DB_URL" -f work/roles.sql --role-only
+          supabase db dump --db-url "$STAGING_DB_URL" -f work/schema.sql
+          supabase db dump --db-url "$STAGING_DB_URL" -f work/data.sql --data-only --use-copy -x "storage.buckets_vectors" -x "storage.vector_indexes"
+          node scripts/backup/manifest.mjs stats --data work/data.sql --out work/stats.json
+          node scripts/backup/manifest.mjs build --dir work/empty --code CI-DRILL --stats work/stats.json --out work/manifest.json
+      - name: Restore into scratch
+        if: steps.cfg.outputs.skip == 'false'
+        run: |
+          node scripts/backup/prepare-restore.mjs --roles work/roles.sql --roles-out work/roles.safe.sql --reset-out work/reset.sql --post-out work/post.sql
+          psql --single-transaction -v ON_ERROR_STOP=1 -q -f work/reset.sql -f work/roles.safe.sql -f work/schema.sql \
+            -c 'SET session_replication_role = replica' -f work/data.sql -f work/post.sql --dbname "$SCRATCH_DB_URL"
+      - name: Compare counts + ledger totals
+        if: steps.cfg.outputs.skip == 'false'
+        run: |
+          node scripts/backup/checks.mjs --db-url "$SCRATCH_DB_URL" --manifest work/manifest.json --append work/checks.json --only row_counts,ledger_balanced,migration_version
+          node -e 'const c=JSON.parse(require("fs").readFileSync("work/checks.json","utf8")); const f=c.filter(x=>x.status==="fail"); if(f.length){console.error(JSON.stringify(f,null,2)); process.exit(1)}'
+      - name: Clean up
+        if: always()
+        run: rm -rf work

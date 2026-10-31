@@ -1,0 +1,247 @@
+# Restore a backup (SPEC §16.3). Started by the app (/api/backups/restore/[id]/verify|run) or by restore-drill.yml.
+#   mode verify  → full restore into the SCRATCH project, run checks, post them (restore waits for the second approver)
+#   mode run     → full restore into staging / production (production: maintenance mode on → restore → migrations → storage →
+#                  catalog + caches → maintenance off). Production runs in the protected environment `restore-production`,
+#                  which MUST require manual approval (Settings → Environments → Required reviewers).
+#   mode drill   → monthly drill into SCRATCH (restore-drill.yml)
+#   mode partial → load the requested modules' tables from the data dump into the `recovery` schema of production
+# Secrets per environment (restore-scratch / restore-staging / restore-production): BACKUP_AGE_PRIVATE_KEY, *_DB_URL,
+# TARGET_SUPABASE_URL + TARGET_SUPABASE_SERVICE_ROLE_KEY (Storage restore). See docs/BACKUP-SETUP.md and docs/RUNBOOK-restore.md.
+name: Restore
+
+on:
+  workflow_dispatch:
+    inputs:
+      restore_id:
+        description: 'restore_requests.id (uuid)'
+        required: true
+        type: string
+      mode:
+        description: 'verify | run | drill | partial'
+        required: true
+        type: choice
+        options: [verify, run, drill, partial]
+        default: verify
+      target:
+        description: 'scratch | staging | production'
+        required: true
+        type: choice
+        options: [scratch, staging, production]
+        default: scratch
+  workflow_call:
+    inputs:
+      restore_id:
+        required: true
+        type: string
+      mode:
+        required: true
+        type: string
+      target:
+        required: true
+        type: string
+
+concurrency:
+  group: octopus-restore-${{ inputs.target }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  restore:
+    name: Restore (${{ inputs.mode }} → ${{ inputs.target }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    environment: restore-${{ inputs.target }}
+    env:
+      RESTORE_ID: ${{ inputs.restore_id }}
+      MODE: ${{ inputs.mode }}
+      TARGET: ${{ inputs.target }}
+      TARGET_DB_URL: ${{ inputs.target == 'production' && secrets.PRODUCTION_DB_URL || (inputs.target == 'staging' && secrets.STAGING_DB_URL || secrets.SCRATCH_DB_URL) }}
+      TARGET_SUPABASE_URL: ${{ secrets.TARGET_SUPABASE_URL }}
+      TARGET_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.TARGET_SUPABASE_SERVICE_ROLE_KEY }}
+      BACKUP_AGE_PRIVATE_KEY: ${{ secrets.BACKUP_AGE_PRIVATE_KEY }}
+      APP_URL: ${{ secrets.APP_URL }}
+      BACKUP_CALLBACK_SECRET: ${{ secrets.BACKUP_CALLBACK_SECRET }}
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+      BACKUP_S3_BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+      RCLONE_CONFIG_OFFSITE_TYPE: s3
+      RCLONE_CONFIG_OFFSITE_PROVIDER: ${{ secrets.BACKUP_S3_PROVIDER || 'Other' }}
+      RCLONE_CONFIG_OFFSITE_ACCESS_KEY_ID: ${{ secrets.BACKUP_S3_ACCESS_KEY_ID }}
+      RCLONE_CONFIG_OFFSITE_SECRET_ACCESS_KEY: ${{ secrets.BACKUP_S3_SECRET_ACCESS_KEY }}
+      RCLONE_CONFIG_OFFSITE_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT }}
+      RCLONE_CONFIG_OFFSITE_REGION: ${{ secrets.BACKUP_S3_REGION || 'auto' }}
+      RCLONE_CONFIG_OFFSITE_NO_CHECK_BUCKET: 'true'
+    steps:
+      - name: Validate inputs + configuration
+        run: |
+          [[ "$RESTORE_ID" =~ ^[0-9a-fA-F-]{36}$ ]] || { echo "::error::restore_id must be a uuid"; exit 1; }
+          case "$MODE:$TARGET" in
+            verify:scratch|verify:staging|run:scratch|run:staging|run:production|drill:scratch|partial:production|partial:staging) ;;
+            *) echo "::error::mode '$MODE' is not allowed for target '$TARGET'"; exit 1 ;;
+          esac
+          missing=""
+          for v in TARGET_DB_URL BACKUP_AGE_PRIVATE_KEY APP_URL BACKUP_CALLBACK_SECRET BACKUP_S3_BUCKET RCLONE_CONFIG_OFFSITE_ACCESS_KEY_ID RCLONE_CONFIG_OFFSITE_SECRET_ACCESS_KEY; do
+            [ -z "${!v}" ] && missing="$missing $v"
+          done
+          if [ "$MODE:$TARGET" = "run:production" ] && [ -z "$TARGET_SUPABASE_URL" ]; then missing="$missing TARGET_SUPABASE_URL"; fi
+          if [ -n "$missing" ]; then echo "::error::Missing secrets in environment restore-$TARGET:$missing"; exit 1; fi
+
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Install age, rclone, psql 17
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age rclone postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-17
+          echo "/usr/lib/postgresql/17/bin" >> "$GITHUB_PATH"
+
+      - name: Load restore request
+        id: info
+        run: |
+          mkdir -p work/files work/plain
+          node scripts/backup/callback.mjs "{\"type\":\"restore_info\",\"restore_id\":\"$RESTORE_ID\"}" --out work/info.json > /dev/null
+          node -e '
+            const { restore: r, backup: b } = JSON.parse(require("fs").readFileSync("work/info.json", "utf8"));
+            if (!b || b.status !== "completed") { console.error("backup is not completed"); process.exit(1); }
+            const mode = process.env.MODE;
+            const success = mode === "verify" ? "verified" : mode === "partial" ? (r.status === "running" ? "completed" : "verified") : "completed";
+            const phase = mode === "drill" ? "drill" : success === "verified" ? "verify" : "post_restore";
+            const start = mode === "verify" ? "verifying" : mode === "partial" ? r.status : "running";
+            const out = [`code=${b.code}`, `success=${success}`, `phase=${phase}`, `start=${start}`, `modules=${(r.modules || []).join(",")}`].join("\n");
+            require("fs").appendFileSync(process.env.GITHUB_OUTPUT, out + "\n");
+            console.log(out);
+          '
+
+      - name: Report started
+        env:
+          BACKUP_CODE: ${{ steps.info.outputs.code }}
+        run: |
+          node scripts/backup/callback.mjs "{\"type\":\"restore\",\"restore_id\":\"$RESTORE_ID\",\"status\":\"${{ steps.info.outputs.start }}\",\"phase\":\"${{ steps.info.outputs.phase }}\"}"
+
+      - name: Download backup + verify checksums
+        run: |
+          rclone copy "offsite:$BACKUP_S3_BUCKET/${{ steps.info.outputs.code }}" work/files --s3-no-check-bucket --transfers 4 --retries 5
+          node scripts/backup/verify-files.mjs --dir work/files --manifest work/files/manifest.json --out work/checks.json
+
+      - name: Decrypt database dumps
+        run: |
+          umask 077
+          printf '%s\n' "$BACKUP_AGE_PRIVATE_KEY" > work/age.key
+          for f in roles schema data; do
+            if [ "$MODE" = "partial" ] && [ "$f" != "data" ]; then continue; fi
+            age -d -i work/age.key "work/files/db/$f.sql.gz.age" | gunzip > "work/plain/$f.sql"
+          done
+          ls -la work/plain
+
+      # ───────── partial restore → recovery schema ─────────
+      - name: Load tables into the recovery schema
+        if: inputs.mode == 'partial'
+        run: |
+          node scripts/backup/partial.mjs --data work/plain/data.sql --modules "${{ steps.info.outputs.modules }}" --out work/recovery.sql --check work/checks.json
+          psql "$TARGET_DB_URL" -v ON_ERROR_STOP=1 --single-transaction -q -f work/recovery.sql
+
+      # ───────── full restore ─────────
+      - name: "Production: save backup catalogue, maintenance mode ON"
+        if: inputs.mode != 'partial' && inputs.target == 'production'
+        run: |
+          node scripts/backup/callback.mjs '{"type":"catalog","op":"export"}' --out work/catalog.json > /dev/null
+          node scripts/backup/callback.mjs '{"type":"maintenance","enabled":true,"message":"We are restoring data. The platform will be back shortly.","retry_after":1800}'
+          touch work/.maintenance-on
+          sleep 20 # API instances cache the setting ~15 s; the outbox pauses on its next run
+
+      - name: Restore database
+        if: inputs.mode != 'partial'
+        run: |
+          maint=""; [ "$TARGET" = "production" ] && maint="--maintenance"
+          node scripts/backup/prepare-restore.mjs --roles work/plain/roles.sql --roles-out work/plain/roles.safe.sql --reset-out work/reset.sql --post-out work/post.sql $maint
+          psql --single-transaction -v ON_ERROR_STOP=1 -q \
+            -f work/reset.sql -f work/plain/roles.safe.sql -f work/plain/schema.sql \
+            -c 'SET session_replication_role = replica' -f work/plain/data.sql -f work/post.sql \
+            --dbname "$TARGET_DB_URL"
+          touch work/.db-replaced
+          rm -f work/plain/*.sql
+
+      - name: Checks (row counts, ledger per currency, integration keys)
+        if: inputs.mode != 'partial'
+        run: node scripts/backup/checks.mjs --db-url "$TARGET_DB_URL" --manifest work/files/manifest.json --append work/checks.json --only row_counts,ledger_balanced,integration_keys
+
+      - name: Re-apply newer migrations
+        if: inputs.mode != 'partial'
+        run: |
+          DATABASE_URL="$TARGET_DB_URL" node scripts/db-migrate.mjs
+          node scripts/backup/checks.mjs --db-url "$TARGET_DB_URL" --manifest work/files/manifest.json --append work/checks.json --only migration_version --after-migrate
+
+      - name: Restore Storage
+        if: inputs.mode == 'run' || inputs.mode == 'drill'
+        run: |
+          if [ -z "$TARGET_SUPABASE_URL" ] || [ -z "$TARGET_SUPABASE_SERVICE_ROLE_KEY" ]; then
+            node -e 'const f="work/checks.json",fs=require("fs");const a=JSON.parse(fs.readFileSync(f,"utf8"));a.push({kind:"storage",status:"note",detail:"Storage not restored: TARGET_SUPABASE_URL / TARGET_SUPABASE_SERVICE_ROLE_KEY not set for this environment"});fs.writeFileSync(f,JSON.stringify(a))'
+            exit 0
+          fi
+          mkdir -p work/storage
+          for f in work/files/storage/*.tar.gz.age; do
+            [ -e "$f" ] || continue
+            b=$(basename "$f" .tar.gz.age)
+            mkdir -p "work/storage/$b"
+            age -d -i work/age.key "$f" | tar -xzf - -C "work/storage/$b"
+          done
+          SUPABASE_URL="$TARGET_SUPABASE_URL" SUPABASE_SERVICE_ROLE_KEY="$TARGET_SUPABASE_SERVICE_ROLE_KEY" \
+            node scripts/backup/storage.mjs upload --dir work/storage --manifest work/files/manifest.json --out work/storage-check.json
+          node -e 'const fs=require("fs");const a=JSON.parse(fs.readFileSync("work/checks.json","utf8"));a.push(...JSON.parse(fs.readFileSync("work/storage-check.json","utf8")));fs.writeFileSync("work/checks.json",JSON.stringify(a))'
+          rm -rf work/storage
+
+      - name: "Production: restore catalogue, revalidate caches, maintenance mode OFF"
+        if: inputs.mode != 'partial' && inputs.target == 'production'
+        run: |
+          node -e '
+            const fs = require("fs");
+            const { catalog } = JSON.parse(fs.readFileSync("work/catalog.json", "utf8"));
+            fs.writeFileSync("work/catalog-import.json", JSON.stringify({ type: "catalog", op: "import", catalog }));
+          '
+          node scripts/backup/callback.mjs --file work/catalog-import.json
+          node scripts/backup/callback.mjs '{"type":"revalidate"}'
+          # search index: products.search is maintained by the database (rebuilt with the data); nothing external to rebuild
+          node scripts/backup/callback.mjs '{"type":"maintenance","enabled":false}'
+          rm -f work/.maintenance-on
+
+      - name: Report result
+        env:
+          BACKUP_CODE: ${{ steps.info.outputs.code }}
+        run: |
+          node scripts/backup/report.mjs --checks work/checks.json --success "${{ steps.info.outputs.success }}" --phase "${{ steps.info.outputs.phase }}" --out work/report.json
+          node scripts/backup/callback.mjs --file work/report.json
+
+      - name: Report failure
+        if: failure()
+        env:
+          BACKUP_CODE: ${{ steps.info.outputs.code }}
+        run: |
+          reason="Restore workflow failed — see ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          if [ -f work/.maintenance-on ]; then
+            if [ -f work/.db-replaced ]; then
+              reason="$reason. MAINTENANCE MODE IS STILL ON (database was replaced) — follow docs/RUNBOOK-restore.md before turning it off."
+            else
+              # the restore transaction never committed: production data is untouched → safe to reopen
+              node scripts/backup/callback.mjs '{"type":"maintenance","enabled":false}' --allow-fail
+              reason="$reason. Production data was not changed; maintenance mode turned off."
+            fi
+          fi
+          phase="${{ steps.info.outputs.phase }}"
+          node scripts/backup/report.mjs --checks work/checks.json --phase "${phase:-verify}" --failed "$reason" --out work/report.json
+          node scripts/backup/callback.mjs --file work/report.json --allow-fail
+
+      - name: Clean up
+        if: always()
+        run: |
+          [ -f work/age.key ] && shred -u work/age.key || true
+          rm -rf work

@@ -1,5 +1,6 @@
 import 'server-only';
 import { getEmail } from '@/lib/adapters';
+import { getMaintenance } from '@/lib/backup/maintenance';
 import type { createAdminClient } from '@/lib/supabase/server';
 import { notificationFor, retryPlan, wantsEmail, type OutboxEvent } from './outbox-rules';
 import { amt, amt0, cur } from './money';
@@ -14,10 +15,12 @@ type Sb = ReturnType<typeof createAdminClient>;
  * Failure → attempts+1, backoff 1m/5m/30m/2h/6h, then status 'dead' (Admin → Integrations → Failed jobs).
  */
 export async function processOutbox(sb: Sb, limit = 50) {
+  // SPEC §16.3: queues pause while maintenance mode is on (production restore) — events stay pending and resume afterwards
+  if ((await getMaintenance()).enabled) return { claimed: 0, done: 0, retried: 0, dead: 0, errors: [] as string[], paused: true };
   const { data: events, error } = await sb.rpc('claim_outbox_events', { p_limit: limit, p_lease_seconds: 300 });
   if (error) throw new Error(error.message);
   const list = (events ?? []) as OutboxEvent[];
-  const summary = { claimed: list.length, done: 0, retried: 0, dead: 0, errors: [] as string[] };
+  const summary = { claimed: list.length, done: 0, retried: 0, dead: 0, errors: [] as string[], paused: false };
   if (!list.length) return summary;
 
   const { data: runs } = await sb.from('job_runs').select('event_id, consumer').in('event_id', list.map((e) => e.id));

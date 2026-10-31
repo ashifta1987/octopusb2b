@@ -1,0 +1,63 @@
+# Monthly restore drill (SPEC §16.4): restore the latest completed backup into the SCRATCH project, run every check and
+# post the results to the admin panel (restore_requests type 'drill', phase 'drill'). Respects backup_settings.monthly_drill
+# unless started manually with force. /api/cron/backup-monitor dispatches this as a fallback if no drill ran for 35 days.
+name: Restore drill
+
+on:
+  schedule:
+    - cron: '0 20 1 * *' # 1st of the month, 20:00 UTC (04:00 China time on the 2nd)
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Run even if monthly drills are switched off in the admin settings'
+        type: boolean
+        default: false
+      backup_code:
+        description: 'Backup to drill (empty = latest completed)'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  start:
+    name: Create drill request
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      restore_id: ${{ steps.drill.outputs.restore_id }}
+    env:
+      APP_URL: ${{ secrets.APP_URL }}
+      BACKUP_CALLBACK_SECRET: ${{ secrets.BACKUP_CALLBACK_SECRET }}
+      VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: drill_start (service role, via signed callback)
+        id: drill
+        env:
+          FORCE: ${{ inputs.force && 'true' || 'false' }}
+          BACKUP_CODE: ${{ inputs.backup_code }}
+        run: |
+          body=$(node -e 'const b={type:"drill_start",force:process.env.FORCE==="true"}; if(process.env.BACKUP_CODE) b.backup_code=process.env.BACKUP_CODE; console.log(JSON.stringify(b))')
+          node scripts/backup/callback.mjs "$body" --out drill.json > /dev/null
+          node -e '
+            const r = JSON.parse(require("fs").readFileSync("drill.json", "utf8"));
+            if (r.skip) { console.log(`::notice::Drill skipped: ${r.reason}`); process.exit(0); }
+            console.log(`Drill ${r.code} for backup ${r.backup.code}`);
+            require("fs").appendFileSync(process.env.GITHUB_OUTPUT, `restore_id=${r.restore_id}\n`);
+          '
+
+  drill:
+    name: Drill restore into scratch
+    needs: start
+    if: needs.start.outputs.restore_id != ''
+    uses: ./.github/workflows/restore.yml
+    with:
+      restore_id: ${{ needs.start.outputs.restore_id }}
+      mode: drill
+      target: scratch
+    secrets: inherit

@@ -41,10 +41,10 @@ try {
   ok((await one(`select status from restore_requests where id=$1`, [rs])).status === 'pending_approval', 'verified restore waits for a second approver');
   await as(admin);
   await expectErr(() => db.query(`select approve_restore($1)`, [rs]), 'MAKER_CANNOT_APPROVE', 'requester cannot approve own restore');
-  await as(fin);
-  await expectErr(() => db.query(`select approve_restore($1)`, [rs]), 'FORBIDDEN', 'finance without the backups permission cannot approve');
-  await db.query('reset role');
-  await db.query(`insert into role_permissions(role_code, area, action) values ('finance','backups','approve_restore'),('finance','backups','view')`);
+  await as(ops);
+  await expectErr(() => db.query(`select approve_restore($1)`, [rs]), 'FORBIDDEN', 'operations cannot approve a restore');
+  await as(fin, 'aal1');
+  await expectErr(() => db.query(`select approve_restore($1)`, [rs]), 'MFA_REQUIRED', 'approver must re-enter 2FA');
   await as(fin);
   await db.query(`select approve_restore($1)`, [rs]);
   ok((await one(`select status from restore_requests where id=$1`, [rs])).status === 'approved', 'finance (second approver) approves a money-touching restore');
@@ -84,3 +84,4 @@ try {
 }
 console.log(failed ? `\n${failed} failed` : '\nall backup checks passed');
 process.exitCode = failed ? 1 : 0;
+

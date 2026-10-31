@@ -4,6 +4,7 @@ import { SideNav } from '@/components/side-nav';
 import type { NavSection } from '@/lib/nav';
 import type { Session } from '@/lib/auth';
 import { can } from '@/lib/auth';
+import { MaintenanceNotice } from '@/components/maintenance-notice';
 
 /** Portal layout: left sidebar (role-filtered) that becomes a horizontal tab bar under 760px (SPEC §8.2). */
 export function PortalShell({ session, nav, children, searchPlaceholder = 'Search orders, RFQs, invoices', roleLabel }: {
@@ -17,6 +18,7 @@ export function PortalShell({ session, nav, children, searchPlaceholder = 'Searc
   const sub = roleLabel ?? (session.org?.name ? `${session.org.name} · Customer` : session.roles.map((r) => r.replace('_', ' ')).join(', '));
   return (
     <div className="min-h-screen bg-surface">
+      <MaintenanceNotice />
       <header className="bg-white border-b border-line">
         <div className="flex flex-wrap items-center gap-4 px-6 py-3">
           <Logo />

@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { guard, fail, ok, str, type Result } from '@/components/admin/server';
 
 const ACTIONS = ['view', 'create', 'edit', 'delete', 'approve', 'export'] as const;
+const AREA_ACTIONS: Record<string, readonly string[]> = { backups: ['view', 'backup', 'download', 'export', 'request_restore', 'approve_restore'] };
 
 async function staffRoleCodes(sb: Awaited<ReturnType<typeof import('@/lib/supabase/server').createClient>>) {
   const { data } = await sb.from('roles').select('code').eq('is_staff', true);
@@ -112,7 +113,7 @@ export async function savePermissions(_prev: Result | null, fd: FormData): Promi
   const areaSet = new Set((areas ?? []).map((a) => a.code as string));
   const want = new Set(fd.getAll('perm').map(String).filter((k) => {
     const [a, act] = k.split(':');
-    return areaSet.has(a) && (ACTIONS as readonly string[]).includes(act);
+    return areaSet.has(a) && (AREA_ACTIONS[a] ?? (ACTIONS as readonly string[])).includes(act);
   }));
   const { data: cur, error: ce } = await g.sb.from('role_permissions').select('area, action').eq('role_code', role);
   if (ce) return fail(ce);

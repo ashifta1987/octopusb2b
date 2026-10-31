@@ -1,12 +1,13 @@
 import 'server-only';
 import crypto from 'node:crypto';
 import { connection } from 'next/server';
+import { getMaintenance, maintenanceResponse } from '@/lib/backup/maintenance';
 import { authenticate, requireScope, type ApiContext } from './auth';
 import { problem } from './problem';
 import { rateHeaders, rateLimit } from './rate-limit';
 
 /**
- * Public API route wrapper: token check → rate limit → scope check → Idempotency-Key (POST) → handler (SPEC §9).
+ * Public API route wrapper: maintenance mode (503) → token check → rate limit → scope check → Idempotency-Key (POST) → handler (SPEC §9).
  * Errors are RFC 7807 problem+json. Every response carries X-RateLimit-* and Octopus-Mode headers.
  */
 export type Params = Record<string, string | string[] | undefined>;
@@ -17,6 +18,10 @@ export function apiRoute<P extends Params = Params>(opts: Options, fn: (a: Handl
   return async (req: Request, route: { params: Promise<P> }): Promise<Response> => {
     await connection(); // always dynamic (never prerendered)
     try {
+      // SPEC §16.3: during a production restore the public API answers 503 + Retry-After (setting cached ~15 s)
+      const maintenance = await getMaintenance();
+      if (maintenance.enabled) return maintenanceResponse(maintenance);
+
       const auth = await authenticate(req);
       if (auth instanceof Response) return auth;
       const ctx = auth;

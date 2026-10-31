@@ -57,6 +57,7 @@ export const OFFICE_NAV: NavSection[] = [
       { href: '/admin/suppliers', label: 'Suppliers', area: 'suppliers' },
       { href: '/admin/staff', label: 'Staff & roles', area: 'staff' },
       { href: '/admin/integrations', label: 'Integrations', area: 'integrations' },
+      { href: '/admin/backups', label: 'Backup & restore', area: 'backups' },
     ],
   },
 ];
