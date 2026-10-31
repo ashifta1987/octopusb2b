@@ -48,7 +48,7 @@ export async function addPrice(_prev: Result | null, fd: FormData): Promise<Resu
     if (Number.isNaN(d.getTime())) return fail('Invalid date');
     if (d.getTime() > Date.now()) effective = d;
   }
-  const { error } = await g.sb.from('service_prices').insert({ service_code: code, amount_usd_cents: cents, effective_from: effective.toISOString(), created_by: g.s.userId });
+  const { error } = await g.sb.from('service_prices').insert({ service_code: code, amount_minor: cents, effective_from: effective.toISOString(), created_by: g.s.userId });
   if (error) return fail(error);
   refresh();
   return ok(effective.getTime() > Date.now() + 60_000 ? 'Price scheduled' : 'Price updated — applies to new requests');
@@ -65,7 +65,7 @@ export async function createService(_prev: Result | null, fd: FormData): Promise
   const { data: last } = await g.sb.from('services').select('sort').order('sort', { ascending: false }).limit(1).maybeSingle();
   const { error } = await g.sb.from('services').insert({ ...p.data, description: p.data.description ?? null, active: bool(fd, 'active'), sort: (last?.sort ?? 0) + 1 });
   if (error) return fail(error);
-  const { error: e2 } = await g.sb.from('service_prices').insert({ service_code: p.data.code, amount_usd_cents: cents, created_by: g.s.userId });
+  const { error: e2 } = await g.sb.from('service_prices').insert({ service_code: p.data.code, amount_minor: cents, created_by: g.s.userId });
   if (e2) return fail(e2);
   refresh();
   return ok('Service created');

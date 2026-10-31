@@ -23,7 +23,7 @@ export default async function OfficeServices({ searchParams }: { searchParams: P
   const { f = 'open', r: highlight, type } = await searchParams;
   const sb = await createClient();
   let q = sb.from('service_requests')
-    .select('id, code, service_code, status, details, fee_usd_cents, paid_via, created_at, updated_at, organizations(name, country, city), products(title), services(name)')
+    .select('id, code, service_code, status, details, fee_minor, paid_via, created_at, updated_at, organizations(name, country, city), products(title), services(name)')
     .in('status', FILTERS[f] ?? FILTERS.open).order('created_at').limit(200);
   if (type) q = q.eq('service_code', type);
   const [{ data }, { data: services }] = await Promise.all([q, sb.from('services').select('code, name').order('sort')]);
@@ -54,7 +54,7 @@ export default async function OfficeServices({ searchParams }: { searchParams: P
                 <td className="td"><span className="text-xs font-semibold rounded-full bg-blue-soft text-[#1E4F9C] px-2 py-1">{one(r.services as unknown as { name: string } | null)?.name ?? r.service_code}</span></td>
                 <td className="td text-sm"><div className="font-semibold">{o?.name ?? '—'}</div><div className="text-xs text-muted">{[o?.city, o?.country].filter(Boolean).join(', ')}</div></td>
                 <td className="td text-sm max-w-[320px]">{one(r.products as unknown as { title: string } | null)?.title && <div className="font-medium">{one(r.products as unknown as { title: string } | null)?.title}</div>}<div className="text-xs text-muted break-words">{summary || '—'}</div></td>
-                <td className="td"><Money cents={r.fee_usd_cents} /><div className="text-xs text-muted">{r.paid_via}</div></td>
+                <td className="td"><Money cents={r.fee_minor} /><div className="text-xs text-muted">{r.paid_via}</div></td>
                 <td className="td text-sm">{fmtDate(r.created_at)}</td>
                 <td className="td"><StatusBadge status={r.status} /></td>
                 <td className="td">

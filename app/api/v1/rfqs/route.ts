@@ -39,7 +39,7 @@ export const POST = apiRoute({ scopes: ['quotes:write'] }, async ({ ctx, body, r
           quantity: r.quantity,
           unit: 'pcs',
           status: 'submitted',
-          fee_usd_cents: Number(fee ?? 0),
+          fee_minor: Number(fee ?? 0),
           product_id: r.productId ?? null,
           destination_country: r.destinationCountry ?? null,
           destination_city: r.destinationCity ?? null,

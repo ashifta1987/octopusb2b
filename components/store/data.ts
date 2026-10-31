@@ -65,10 +65,10 @@ export async function getServices(): Promise<Record<string, ServiceInfo>> {
   const sb = createPublicClient();
   const [{ data: services }, { data: prices }] = await Promise.all([
     sb.from('services').select('code, name, description, unit').eq('active', true).order('sort'),
-    sb.from('service_prices').select('service_code, amount_usd_cents, effective_from').lte('effective_from', new Date().toISOString()).order('effective_from', { ascending: false }),
+    sb.from('service_prices').select('service_code, amount_minor, effective_from').lte('effective_from', new Date().toISOString()).order('effective_from', { ascending: false }),
   ]);
   const price: Record<string, number> = {};
-  (prices ?? []).forEach((p) => { if (price[p.service_code] == null) price[p.service_code] = Number(p.amount_usd_cents); });
+  (prices ?? []).forEach((p) => { if (price[p.service_code] == null) price[p.service_code] = Number(p.amount_minor); });
   const out: Record<string, ServiceInfo> = {};
   (services ?? []).forEach((s) => (out[s.code] = { ...s, priceCents: price[s.code] ?? 0 }));
   return out;

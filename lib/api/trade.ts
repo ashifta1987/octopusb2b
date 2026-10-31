@@ -5,7 +5,7 @@ import { publicSuppliers } from './data';
 type Sb = ReturnType<typeof createAdminClient>;
 
 export const RFQ_COLUMNS =
-  'id, code, title, details, quantity, unit, status, fee_usd_cents, product_id, category_id, destination_country, destination_city, incoterm, target_price_cents, expires_at, created_at, updated_at';
+  'id, code, title, details, quantity, unit, status, fee_minor, product_id, category_id, destination_country, destination_city, incoterm, target_price_cents, expires_at, created_at, updated_at';
 
 export const ORDER_COLUMNS =
   'id, code, status, title, quantity, unit_price_cents, shipping_cents, total_cents, deposit_pct, deposit_cents, paid_cents, incoterm, quote_id, rfq_id, supplier_id, terms_version_id, delivered_at, claim_visible_until, claim_hidden_until, created_at, updated_at';

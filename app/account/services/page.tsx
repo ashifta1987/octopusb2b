@@ -15,7 +15,7 @@ export default async function ServicesPage() {
   if (!s.org) return <Notice tone="amber">Complete your company profile first.</Notice>;
   const sb = await createClient();
   const [{ data: reqs }, { data: services }, { count: rfqCount }, { count: orderCount }] = await Promise.all([
-    sb.from('service_requests').select('id, code, service_code, status, fee_usd_cents, paid_via, details, created_at, updated_at, products(title), services(name)').eq('org_id', s.org.id).order('created_at', { ascending: false }),
+    sb.from('service_requests').select('id, code, service_code, status, fee_minor, paid_via, details, created_at, updated_at, products(title), services(name)').eq('org_id', s.org.id).order('created_at', { ascending: false }),
     sb.from('services').select('code, name, description').eq('active', true).order('sort'),
     sb.from('rfqs').select('id', { count: 'exact', head: true }).eq('org_id', s.org.id),
     sb.from('orders').select('id', { count: 'exact', head: true }).eq('org_id', s.org.id),
@@ -46,7 +46,7 @@ export default async function ServicesPage() {
                 <td className="td mono text-sm">{r.code}</td>
                 <td className="td font-semibold">{(r.services as { name?: string } | null)?.name ?? humanize(r.service_code)}</td>
                 <td className="td text-sm text-muted max-w-[280px] truncate">{String(summary || '—')}</td>
-                <td className="td">{Number(r.fee_usd_cents) ? <Money cents={Number(r.fee_usd_cents)} /> : <span className="text-sm">Free</span>}</td>
+                <td className="td">{Number(r.fee_minor) ? <Money cents={Number(r.fee_minor)} /> : <span className="text-sm">Free</span>}</td>
                 <td className="td text-sm">{humanize(r.paid_via ?? '—')}</td>
                 <td className="td"><StatusBadge status={r.status as string} /></td>
                 <td className="td text-sm text-muted">{fmtDate(r.created_at as string)}</td>

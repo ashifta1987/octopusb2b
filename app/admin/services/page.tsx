@@ -11,7 +11,7 @@ import { nowMs } from '@/components/admin/server';
 
 export const metadata = { title: 'Services & charges' };
 
-type Price = { id: string; service_code: string; amount_usd_cents: number; effective_from: string; created_by: string | null; created_at: string };
+type Price = { id: string; service_code: string; amount_minor: number; effective_from: string; created_by: string | null; created_at: string };
 
 /** Admin → Services & charges (Fees.png). */
 export default async function ServicesPage({ searchParams }: { searchParams: Promise<{ code?: string; new?: string }> }) {
@@ -20,7 +20,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
   const sb = await createClient();
   const [{ data: services }, { data: prices }] = await Promise.all([
     sb.from('services').select('code, name, description, unit, active, sort').order('sort'),
-    sb.from('service_prices').select('id, service_code, amount_usd_cents, effective_from, created_by, created_at').order('effective_from', { ascending: false }),
+    sb.from('service_prices').select('id, service_code, amount_minor, effective_from, created_by, created_at').order('effective_from', { ascending: false }),
   ]);
   const editable = can(s, 'services', 'edit');
   const list = services ?? [];
@@ -60,7 +60,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
                     <Link href={`/admin/services?code=${sv.code}`} aria-current={active ? 'true' : undefined}
                       className={cn('block px-5 py-4 border-b border-line last:border-0', active ? 'bg-blue-soft border-l-4 border-l-blue' : 'hover:bg-surface')}>
                       <div className="flex justify-between gap-3"><span className="font-semibold">{sv.name}</span><StatusBadge status={sv.active ? 'live' : 'off'} label={sv.active ? 'Live' : 'Off'} /></div>
-                      <div className="mono text-sm text-muted mt-1">{p ? (Number(p.amount_usd_cents) === 0 ? 'Free · quoted later' : `${usd(Number(p.amount_usd_cents))} ${sv.unit}`) : 'price not set'}</div>
+                      <div className="mono text-sm text-muted mt-1">{p ? (Number(p.amount_minor) === 0 ? 'Free · quoted later' : `${usd(Number(p.amount_minor))} ${sv.unit}`) : 'price not set'}</div>
                     </Link>
                   </li>
                 );
@@ -94,7 +94,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
                 <Field label="Short description shown to buyers" htmlFor="s-desc" className="sm:col-span-2"><textarea id="s-desc" name="description" className="input min-h-20 py-2" defaultValue={selected.description ?? ''} disabled={!editable} /></Field>
                 <label className="flex items-center gap-2"><input type="checkbox" name="active" defaultChecked={selected.active} disabled={!editable} /> Service is live</label>
                 <div className="sm:col-span-2 rounded-[10px] bg-surface px-4 py-3 text-sm">
-                  Buyers will see: <b>{selected.name} · {cur ? (Number(cur.amount_usd_cents) === 0 ? 'Free' : `${usd(Number(cur.amount_usd_cents))} ${selected.unit}`) : 'price not set'}</b>
+                  Buyers will see: <b>{selected.name} · {cur ? (Number(cur.amount_minor) === 0 ? 'Free' : `${usd(Number(cur.amount_minor))} ${selected.unit}`) : 'price not set'}</b>
                 </div>
               </ActionForm>
               {editable && (
@@ -106,7 +106,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
               )}
             </Card>
 
-            <Card title="Price" action={<span className="text-sm text-muted">Current: <b className="mono text-navy">{cur ? usd(Number(cur.amount_usd_cents)) : 'not set'}</b></span>}>
+            <Card title="Price" action={<span className="text-sm text-muted">Current: <b className="mono text-navy">{cur ? usd(Number(cur.amount_minor)) : 'not set'}</b></span>}>
               {editable && (
                 <ActionForm key={'p' + selected.code} action={addPrice} className="px-6 pb-4 grid gap-4 sm:grid-cols-[1fr_1fr_auto] items-end" submitLabel="Set price" confirm="Change this price? It applies to new requests from the effective date." resetOnSuccess inline>
                   <input type="hidden" name="code" value={selected.code} />
@@ -117,7 +117,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
               <Table head={['Amount', 'Effective from', 'Set by', 'Status']} empty={<EmptyState title="No price history" />}>
                 {history.map((h) => (
                   <tr key={h.id}>
-                    <td className="td mono font-semibold">{usd(Number(h.amount_usd_cents))}</td>
+                    <td className="td mono font-semibold">{usd(Number(h.amount_minor))}</td>
                     <td className="td text-sm">{fmtDate(h.effective_from, true)} {new Date(h.effective_from).getFullYear()}</td>
                     <td className="td text-sm">{h.created_by ? who.get(h.created_by) ?? '—' : 'Seed'}</td>
                     <td className="td">{h.effective_from > now ? <StatusBadge status="scheduled" /> : h.id === cur?.id ? <StatusBadge status="active" label="Current" /> : <StatusBadge status="superseded" label="Previous" />}</td>

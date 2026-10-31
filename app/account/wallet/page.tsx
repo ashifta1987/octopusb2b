@@ -25,11 +25,11 @@ export default async function WalletPage({ searchParams }: { searchParams: Promi
     getSiteContent(),
     sb.from('wallet_topups').select('id, amount_cents, method, reference, status, created_at').eq('org_id', s.org.id).order('created_at', { ascending: false }).limit(20),
     sb.from('services').select('code, name, description, unit').eq('active', true).order('sort'),
-    sb.from('service_prices').select('service_code, amount_usd_cents, effective_from').lte('effective_from', new Date().toISOString()).order('effective_from', { ascending: false }),
+    sb.from('service_prices').select('service_code, amount_minor, effective_from').lte('effective_from', new Date().toISOString()).order('effective_from', { ascending: false }),
     getOrgLedger(s.org.id, { account: 'wallet' }),
   ]);
   const priceOf = new Map<string, number>();
-  (prices ?? []).forEach((p) => { if (!priceOf.has(p.service_code as string)) priceOf.set(p.service_code as string, Number(p.amount_usd_cents)); });
+  (prices ?? []).forEach((p) => { if (!priceOf.has(p.service_code as string)) priceOf.set(p.service_code as string, Number(p.amount_minor)); });
   const pending = (topups ?? []).filter((t) => t.status === 'pending' || t.status === 'initiated');
   const pendingSum = pending.reduce((a, t) => a + Number(t.amount_cents), 0);
   const monthStart = new Date(); monthStart.setUTCDate(1); monthStart.setUTCHours(0, 0, 0, 0);

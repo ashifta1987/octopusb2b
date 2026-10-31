@@ -2,7 +2,7 @@ import { apiRoute, pageMeta, range, simId } from '@/lib/api/handler';
 import { json, problem, problemFromDb } from '@/lib/api/problem';
 import { Pagination, ServiceRequest, zodIssues } from '@/lib/contracts';
 
-const COLUMNS = 'id, code, service_code, product_id, order_id, status, details, fee_usd_cents, paid_via, created_at, updated_at';
+const COLUMNS = 'id, code, service_code, product_id, order_id, status, details, fee_minor, paid_via, created_at, updated_at';
 
 /** GET /api/v1/service-requests — samples, QC, certification, 3PL, dropship requests of the organization. */
 export const GET = apiRoute({ scopes: ['orders:read'] }, async ({ ctx, url }) => {
@@ -48,7 +48,7 @@ export const POST = apiRoute({ scopes: ['orders:write'] }, async ({ ctx, body, r
           order_id: null,
           status: f === 0 || wallet ? 'paid' : 'requested',
           details: s.details,
-          fee_usd_cents: f,
+          fee_minor: f,
           paid_via: f === 0 ? 'free' : wallet ? 'wallet' : 'invoice',
           created_at: now,
           updated_at: now,

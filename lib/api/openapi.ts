@@ -120,7 +120,7 @@ const SCHEMAS: Record<string, unknown> = {
     type: 'object',
     properties: {
       id: { type: 'string' }, code: { type: 'string', example: 'RFQ-1001' }, title: { type: 'string' }, details: nullable({ type: 'string' }), quantity: { type: 'integer' }, unit: { type: 'string' },
-      status: { enum: ['draft', 'submitted', 'assigned', 'quoting', 'quoted', 'accepted', 'expired', 'cancelled'] }, fee_usd_cents: money, product_id: nullable({ type: 'string' }),
+      status: { enum: ['draft', 'submitted', 'assigned', 'quoting', 'quoted', 'accepted', 'expired', 'cancelled'] }, fee_minor: money, product_id: nullable({ type: 'string' }),
       destination_country: nullable({ type: 'string' }), destination_city: nullable({ type: 'string' }), incoterm: nullable({ type: 'string' }), target_price_cents: nullable(money),
       expires_at: nullable(ts), created_at: ts, quotes: { type: 'array', items: { $ref: '#/components/schemas/Quote' } },
     },
@@ -157,7 +157,7 @@ const SCHEMAS: Record<string, unknown> = {
     type: 'object',
     properties: {
       id: { type: 'string' }, code: { type: 'string' }, service_code: { type: 'string' }, status: { enum: ['requested', 'paid', 'accepted', 'in_progress', 'report_ready', 'completed', 'rejected', 'refunded'] },
-      fee_usd_cents: money, paid_via: { type: 'string' }, details: { type: 'object' }, created_at: ts,
+      fee_minor: money, paid_via: { type: 'string' }, details: { type: 'object' }, created_at: ts,
     },
   },
   Webhook: {

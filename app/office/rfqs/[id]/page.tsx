@@ -15,7 +15,7 @@ export default async function OfficeRfq({ params }: { params: Promise<{ id: stri
   const s = await requireStaff('requests', 'view', `/office/rfqs/${id}`);
   const sb = await createClient();
   const { data: r } = await sb.from('rfqs')
-    .select('id, code, title, details, quantity, unit, target_price_cents, destination_country, destination_city, incoterm, status, fee_usd_cents, created_at, expires_at, organizations(city, country, kyc_status), categories(name), products(id, title, slug, product_specs(name, value, sort))')
+    .select('id, code, title, details, quantity, unit, target_price_cents, destination_country, destination_city, incoterm, status, fee_minor, created_at, expires_at, organizations(city, country, kyc_status), categories(name), products(id, title, slug, product_specs(name, value, sort))')
     .eq('id', id).maybeSingle();
   if (!r) notFound();
   const [{ data: quotes }, { data: sups }] = await Promise.all([

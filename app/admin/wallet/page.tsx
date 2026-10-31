@@ -29,7 +29,7 @@ export default async function WalletAdminPage() {
     sb.rpc('admin_wallet_balances'),
     sb.from('wallet_topups').select('id, org_id, amount_cents, method, reference, status, created_at, organizations(name, country)').order('created_at', { ascending: false }).limit(40),
     sb.from('services').select('code, name, unit, active, sort').order('sort'),
-    sb.from('service_prices').select('service_code, amount_usd_cents, effective_from').order('effective_from', { ascending: false }),
+    sb.from('service_prices').select('service_code, amount_minor, effective_from').order('effective_from', { ascending: false }),
     can(s, 'finance', 'view') || can(s, 'dashboard', 'view') ? sb.rpc('admin_revenue_by_stream', { p_from: monthStart.toISOString() }) : Promise.resolve({ data: [] }),
   ]);
 
@@ -45,8 +45,8 @@ export default async function WalletAdminPage() {
   const current = new Map<string, number>();
   const scheduled = new Map<string, { amount: number; from: string }>();
   (prices.data ?? []).forEach((p) => {
-    if (p.effective_from <= now) { if (!current.has(p.service_code)) current.set(p.service_code, Number(p.amount_usd_cents)); }
-    else scheduled.set(p.service_code, { amount: Number(p.amount_usd_cents), from: p.effective_from });
+    if (p.effective_from <= now) { if (!current.has(p.service_code)) current.set(p.service_code, Number(p.amount_minor)); }
+    else scheduled.set(p.service_code, { amount: Number(p.amount_minor), from: p.effective_from });
   });
 
   return (
