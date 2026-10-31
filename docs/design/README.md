@@ -1,6 +1,6 @@
 # Octopus B2B — UX/UI design screens
 
-37 screens designed at 1440 px desktop width. Every screen also works on mobile: portal sidebars turn into a horizontal tab bar under 760 px, and sticky side panels become static.
+38 screens designed at 1440 px desktop width. Every screen also works on mobile: portal sidebars turn into a horizontal tab bar under 760 px, and sticky side panels become static.
 
 - `<Name>.png` — full-page picture of the screen. Use it to see the layout.
 - `html/<Name>.html` — the same screen as static HTML with all CSS inline. Open it in a browser, or tell Antigravity to read it for exact spacing, colours, font sizes and copy. Links between screens work.
@@ -29,6 +29,7 @@ How to use with Antigravity: in each phase prompt, say for example "Build /p/[sl
 | Screen | What it shows | Route | Who uses it | Files |
 | --- | --- | --- | --- | --- |
 | **Customer** | Customer portal · Dashboard | `/account` | Customer | [Customer.png](Customer.png) · [html/Customer.html](html/Customer.html) |
+| **Assistant** | Customer portal · AI account assistant "Octo" with human handoff to the dedicated account manager | `/account/assistant` | Customer | [Assistant.png](Assistant.png) · [html/Assistant.html](html/Assistant.html) |
 | **CustomerOrders** | Customer portal · Orders & live tracking | `/account/orders, /account/orders/[id], /account/rfqs/[id]` | Customer | [CustomerOrders.png](CustomerOrders.png) · [html/CustomerOrders.html](html/CustomerOrders.html) |
 | **CustomerKYC** | Customer portal · Company & KYC | `/account/kyc` | Customer | [CustomerKYC.png](CustomerKYC.png) · [html/CustomerKYC.html](html/CustomerKYC.html) |
 | **Wallet** | Customer portal · Wallet | `/account/wallet` | Customer | [Wallet.png](Wallet.png) · [html/Wallet.html](html/Wallet.html) |

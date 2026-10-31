@@ -1,6 +1,6 @@
 # Add-on: group buying (MOQ pools)
 
-The same text as docs/SPEC.md section 18, kept here so the Antigravity prompt is easy to find. Screen design: docs/design/Pool.png and docs/design/html/Pool.html; entry points on docs/design/Main.png and docs/design/Product.png.
+The same text as docs/SPEC.md section 18, kept here so the Antigravity prompt is easy to find. Screen design: docs/design/Pool.png, docs/design/Pools.png and docs/design/html/*.html; entry points on docs/design/Main.png and docs/design/Product.png.
 
 ## 18. Addendum: group buying (MOQ pools)
 
