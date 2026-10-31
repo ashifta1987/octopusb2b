@@ -1,6 +1,6 @@
 # Octopus B2B — UX/UI design screens
 
-33 screens designed at 1440 px desktop width. Every screen also works on mobile: portal sidebars turn into a horizontal tab bar under 760 px, and sticky side panels become static.
+34 screens designed at 1440 px desktop width. Every screen also works on mobile: portal sidebars turn into a horizontal tab bar under 760 px, and sticky side panels become static.
 
 - `<Name>.png` — full-page picture of the screen. Use it to see the layout.
 - `html/<Name>.html` — the same screen as static HTML with all CSS inline. Open it in a browser, or tell Antigravity to read it for exact spacing, colours, font sizes and copy. Links between screens work.
@@ -72,6 +72,7 @@ How to use with Antigravity: in each phase prompt, say for example "Build /p/[sl
 | **WalletAdmin** | Admin · Wallets & payments (on/off switch) | `/admin/wallet` | Admin | [WalletAdmin.png](WalletAdmin.png) · [html/WalletAdmin.html](html/WalletAdmin.html) |
 | **Integrations** | Admin · Integrations | `/admin/integrations` | Admin | [Integrations.png](Integrations.png) · [html/Integrations.html](html/Integrations.html) |
 | **CMS** | Admin · Site content, Terms editor, company & branches | `/admin/content` | Content editor, admin | [CMS.png](CMS.png) · [html/CMS.html](html/CMS.html) |
+| **Backups** | Admin · Backup & restore | `/admin/backups` | Admin | [Backups.png](Backups.png) · [html/Backups.html](html/Backups.html) |
 | **Catalog** | Admin & Distributor · Categories (4 levels) & tags | `/distributor/catalog, /admin/catalog` | Distributor, admin | [Catalog.png](Catalog.png) · [html/Catalog.html](html/Catalog.html) |
 
 ## Documents
