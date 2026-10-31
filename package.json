@@ -6,7 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "vitest run --config tests/vitest.integration.config.ts",
+    "test:db": "node supabase/tests/rls.test.mjs",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc --noEmit -p .",
+    "db:migrate": "node scripts/db-migrate.mjs",
+    "db:seed": "node scripts/db-migrate.mjs --seed"
   },
   "dependencies": {
     "@hookform/resolvers": "^6.0.2",

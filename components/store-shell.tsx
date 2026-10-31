@@ -61,7 +61,6 @@ export async function StoreHeader() {
 
 export async function StoreFooter() {
   const { blocks, company, branches } = await getSiteContent();
-  const year = new Date().getFullYear();
   return (
     <footer className="bg-navy text-[#D5DBE4] mt-16">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-12 grid gap-10 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
@@ -84,7 +83,7 @@ export async function StoreFooter() {
         <FooterCol title="Company" links={[['/about', 'About us'], ['/contact', 'Contact'], ['/legal/privacy', 'Privacy policy'], ['/legal/terms', 'Terms of service']]} />
       </div>
       <div className="border-t border-white/10">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-5 text-[13px]">© {year} {company?.brand ?? 'Octopus B2B'} · {company?.legal_name}. All rights reserved.</div>
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-5 text-[13px]">© 2026 {company?.brand ?? 'Octopus B2B'} · {company?.legal_name}. All rights reserved.</div>
       </div>
     </footer>
   );
@@ -98,3 +97,4 @@ function FooterCol({ title, links }: { title: string; links: [string, string][] 
     </div>
   );
 }
+

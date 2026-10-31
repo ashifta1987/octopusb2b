@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    { "path": "/api/cron/outbox", "schedule": "0 3 * * *" },
+    { "path": "/api/cron/expire-quotes", "schedule": "5 0 * * *" },
+    { "path": "/api/cron/ads-reset", "schedule": "0 0 * * *" },
+    { "path": "/api/cron/claim-windows", "schedule": "15 0 * * *" },
+    { "path": "/api/cron/terms-publish", "schedule": "20 0 * * *" },
+    { "path": "/api/cron/certificates", "schedule": "30 0 * * *" },
+    { "path": "/api/cron/tracking-poll", "schedule": "0 6 * * *" },
+    { "path": "/api/cron/cleanup", "schedule": "45 0 * * *" }
+  ]
+}

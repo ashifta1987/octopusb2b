@@ -543,3 +543,4 @@ create or replace function job_certificate_expiry() returns void language sql se
   update certificates set status = 'expired' where status in ('verified','expiring') and expires_at < current_date;
   update certificates set status = 'expiring' where status = 'verified' and expires_at < current_date + 30;
 $$;
+

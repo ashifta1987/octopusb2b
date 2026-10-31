@@ -178,3 +178,4 @@ export function Notice({ tone = 'blue', children }: { tone?: 'blue' | 'amber' | 
 export function SampleBadge() {
   return <span className="inline-block rounded-md bg-surface border border-line px-2 py-1 text-xs font-semibold text-navy">Sample data</span>;
 }
+

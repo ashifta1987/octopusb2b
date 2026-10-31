@@ -133,3 +133,4 @@ export function verifySignature(body: string, header: string | null, secret: str
   const expected = crypto.createHmac('sha256', secret).update(`${t}.${body}`).digest('hex');
   try { return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(parts.v1 ?? '')); } catch { return false; }
 }
+

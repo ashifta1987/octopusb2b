@@ -82,3 +82,4 @@ class MockAiAdapter implements AiAdapter {
 export function getAiAdapter(): AiAdapter {
   return process.env.OPENAI_API_KEY ? new OpenAiAdapter() : new MockAiAdapter();
 }
+

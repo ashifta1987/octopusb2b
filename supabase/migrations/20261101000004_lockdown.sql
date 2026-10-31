@@ -48,3 +48,4 @@ create trigger trg_guard_product before update on products for each row execute 
 -- Orders / quotes / ledger are never written directly by clients
 revoke insert, update, delete on orders, quotes, journals, ledger_entries, payments, proforma_invoices, wallet_topups, finance_approvals, payouts from anon, authenticated;
 revoke insert, update, delete on ledger_accounts, status_history, outbox_events, audit_log from anon, authenticated;
+

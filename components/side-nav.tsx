@@ -28,3 +28,4 @@ export function SideNav({ sections }: { sections: NavSection[] }) {
     </nav>
   );
 }
+

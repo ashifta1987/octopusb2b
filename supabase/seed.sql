@@ -285,3 +285,4 @@ insert into certificates(supplier_id, name, issuer, number, status, expires_at)
 select s.id, c.name, c.issuer, 'CERT-' || s.code || '-' || c.n, 'verified', current_date + 365
 from suppliers s cross join (values ('ISO 9001:2015','TÜV',1),('CE Declaration','SGS',2)) c(name, issuer, n)
 where not exists (select 1 from certificates);
+

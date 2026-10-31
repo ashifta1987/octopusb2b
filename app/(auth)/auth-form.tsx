@@ -118,3 +118,4 @@ export function AuthForm({ initialMode, next, initialError }: { initialMode: 'si
     </div>
   );
 }
+

@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Octopus B2B
 
-## Getting Started
+Global B2B wholesale marketplace for industrial supplies — Shenzhen Octopus Trading Co. Ltd.
+Spec: [`docs/SPEC.md`](docs/SPEC.md) · Designs: [`docs/design/`](docs/design/README.md)
 
-First, run the development server:
+**Stack:** Next.js 16 (App Router, React 19, TypeScript, Tailwind v4, Cache Components) · Supabase (Postgres + RLS, Auth, Storage, Realtime, pg_cron) · Vercel · OpenAI (AI product tools).
+
+## Run locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env.local      # fill in Supabase URL/keys, DATABASE_URL, OPENAI_API_KEY, CRON_SECRET, WEBHOOK_SIGNING_SECRET
+pnpm db:migrate                 # apply supabase/migrations (forward-only)
+pnpm db:seed                    # categories, suppliers, 60 products, services, CMS, T&C (first time only)
+DEMO_PASSWORD=... node scripts/seed-users.mjs   # one demo user per role + a demo trade flow
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Areas
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Path | Who |
+| --- | --- |
+| `/`, `/products`, `/c/...`, `/p/[slug]`, `/request/[type]`, `/legal/...` | Public storefront |
+| `/login`, `/signup`, `/onboarding` | Auth (email + 6-digit OTP, Google) |
+| `/account/*` | Customer: RFQs, orders, wallet, ledger, KYC, support, API keys, ads |
+| `/distributor/*` | Distributor: supplier switches, products + AI tools, Excel import, catalog, RFQs |
+| `/office/*` | Back office: queues, KYC, moderation, RFQ quoting, orders, YunExpress shipping, support desk |
+| `/admin/*` | Admin: KPIs, finance & approvals, wallet, services & charges, CMS & T&C, ads, geography, staff & roles, integrations, suppliers |
+| `/api/v1/*` | Public REST API (OAuth client credentials / `oct_test_` & `oct_live_` keys) — `openapi.json`, `postman.json` |
+| `/api/webhooks/*`, `/api/cron/*` | YunExpress + payment webhooks, outbox worker, scheduled jobs |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Rules (SPEC §0)
 
-## Learn More
+- Permissions are enforced in Postgres RLS + security-definer RPCs, not only in the UI.
+- Status changes go through `transition_*` RPCs; money moves only through balanced ledger journals with idempotency keys.
+- No prices, fees, contacts or legal text in code — they live in `service_prices`, `site_settings`, `content_blocks`, `company_profile`, `terms_versions`.
+- Integrations sit behind adapters in `lib/adapters` (sandbox/mock until credentials are configured).
 
-To learn more about Next.js, take a look at the following resources:
+## Tests
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+pnpm typecheck && pnpm lint && pnpm test   # unit (vitest)
+pnpm test:db                               # RLS / ledger / state-machine checks against DATABASE_URL
+pnpm test:integration                      # API route handlers against the DB
+```

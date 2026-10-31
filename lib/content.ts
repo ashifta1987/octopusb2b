@@ -1,10 +1,12 @@
 import 'server-only';
-import { unstable_cache } from 'next/cache';
+import { cacheLife, cacheTag } from 'next/cache';
 import { createPublicClient } from '@/lib/supabase/server';
 
 /** Site settings, content blocks and company profile — every text on the site comes from here (SPEC §8.4). */
-export const getSiteContent = unstable_cache(
-  async () => {
+export async function getSiteContent() {
+    'use cache';
+    cacheLife({ revalidate: 300 });
+    cacheTag('site-content');
     const sb = createPublicClient();
     const [settings, blocks, company, branches, categories] = await Promise.all([
       sb.from('site_settings').select('key, value'),
@@ -24,10 +26,7 @@ export const getSiteContent = unstable_cache(
       branches: (branches.data ?? []) as Branch[],
       categories: (categories.data ?? []) as Category[],
     };
-  },
-  ['site-content'],
-  { tags: ['site-content'], revalidate: 300 },
-);
+}
 
 export type Company = {
   legal_name: string; brand: string | null; tagline: string | null; address: string | null; address_cn: string | null;
@@ -53,3 +52,4 @@ export function descendantIds(categories: Category[], id: string): string[] {
   for (let i = 0; i < out.length; i++) categories.filter((c) => c.parent_id === out[i]).forEach((c) => out.push(c.id));
   return out;
 }
+

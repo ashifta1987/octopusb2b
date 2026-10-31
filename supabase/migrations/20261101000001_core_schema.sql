@@ -958,3 +958,4 @@ create table ad_impressions (
   campaign_id uuid references ad_campaigns(id) on delete cascade, day date not null default current_date, count int not null default 0,
   primary key (campaign_id, day)
 );
+

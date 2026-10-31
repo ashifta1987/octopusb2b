@@ -33,3 +33,4 @@ export default async function AuthPage({ searchParams, mode }: { searchParams: P
     </div>
   );
 }
+

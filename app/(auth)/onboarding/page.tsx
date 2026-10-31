@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { Logo } from '@/components/ui';
 import { getSession } from '@/lib/auth';
@@ -30,7 +31,11 @@ async function save(formData: FormData) {
 }
 
 /** Create profile — required before anything else (SPEC §4.1 step 2). */
-export default async function Onboarding({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+export default function OnboardingPage(props: { searchParams: Promise<{ error?: string }> }) {
+  return <Suspense fallback={<main className="min-h-screen bg-surface" />}><Onboarding {...props} /></Suspense>;
+}
+
+async function Onboarding({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const s = await getSession();
   if (!s) redirect('/login?next=/onboarding');
   if (s.profile && s.org) redirect('/account');
@@ -71,3 +76,4 @@ export default async function Onboarding({ searchParams }: { searchParams: Promi
     </main>
   );
 }
+

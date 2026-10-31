@@ -75,3 +75,4 @@ export async function requireRole(role: string, next: string) {
   if (!s.isAdmin && !s.roles.includes(role)) redirect('/forbidden');
   return s;
 }
+
