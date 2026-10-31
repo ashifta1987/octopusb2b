@@ -1,13 +1,7 @@
-import { buildPostman } from '@/lib/api/postman';
+import { buildPublicCollection } from '@/lib/api/postman';
+import { apiBase, jsonDownload, POSTMAN_EXAMPLES } from '@/lib/api/postman-http';
 
-/** GET /api/v1/postman.json — Postman v2.1 collection (public). */
+/** GET /api/v1/postman.json — "Octopus B2B API v1" Postman v2.1 collection (public; base_url = this deployment). */
 export async function GET(req: Request) {
-  const base = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || new URL(req.url).origin;
-  return new Response(JSON.stringify(buildPostman(base), null, 2), {
-    headers: {
-      'Content-Type': 'application/json',
-      'Content-Disposition': 'attachment; filename="octopus-b2b.postman_collection.json"',
-      'Cache-Control': 'public, max-age=300',
-    },
-  });
+  return jsonDownload(buildPublicCollection({ baseUrl: apiBase(req), examples: POSTMAN_EXAMPLES }), 'octopus-b2b-api-v1.postman_collection.json');
 }

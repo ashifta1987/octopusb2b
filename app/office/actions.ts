@@ -3,7 +3,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { getCarrier, type RateQuote } from '@/lib/adapters';
-import { toCents } from '@/lib/format';
+import { toCents, money } from '@/lib/format';
 import { actionSession, fail, ok, type Result } from '@/components/backoffice/server-utils';
 
 /* ───────── KYC ───────── */
@@ -71,6 +71,8 @@ export async function recordPayment(orderId: string, fd: FormData): Promise<Resu
 }
 
 /* ───────── Shipping (YunExpress via CarrierAdapter) ───────── */
+/** CarrierAdapter rates (RateQuote.priceCents) are quoted in USD; shipments.currency records it (SPEC §15.1). */
+const CARRIER_RATE_CURRENCY = 'USD';
 export async function priceTrial(input: { toCountry: string; fromCountry: string; weightKg: number; parcels: number }): Promise<Result<RateQuote[]>> {
   const g = await actionSession('orders', 'view');
   if ('error' in g) return fail(g.error);
@@ -96,7 +98,7 @@ export async function createShipment(orderId: string, input: { service: string; 
   } catch (e) { return fail(`YunExpress: ${(e as Error).message}`); }
   const { data: sh, error } = await sb.from('shipments').insert({
     order_id: o.id, org_id: o.org_id, carrier_code: carrier.code, service_code: input.service, tracking_no: res.trackingNo, label_url: res.labelUrl,
-    status: 'label_ready', weight_kg: input.weightKg, parcels: input.parcels, rate_cents: Math.round(input.rateCents), last_event_at: new Date().toISOString(),
+    status: 'label_ready', weight_kg: input.weightKg, parcels: input.parcels, rate_cents: Math.round(input.rateCents), currency: CARRIER_RATE_CURRENCY, last_event_at: new Date().toISOString(),
   }).select('id').single();
   if (error) return fail(error);
   await sb.from('tracking_events').insert({ shipment_id: sh.id, org_id: o.org_id, provider_event_id: `created-${res.trackingNo}`, status: 'created', description: `Shipment created with ${input.service}. Label ready.`, location: 'Origin' });
@@ -207,11 +209,17 @@ export async function escalateToFinance(ticketId: string, orgId: string, orderId
   if (!Number.isFinite(cents) || cents <= 0) return fail('Amount must be greater than 0.');
   const sb = await createClient();
   const { data: tk } = await sb.from('tickets').select('code').eq('id', ticketId).maybeSingle();
+  // request_finance_approval uses the order currency, else the platform currency (SPEC §15.1)
+  const [{ data: ord }, { data: plat }] = await Promise.all([
+    orderId ? sb.from('orders').select('currency').eq('id', orderId).maybeSingle() : Promise.resolve({ data: null }),
+    sb.rpc('current_platform_currency'),
+  ]);
+  const cur = (ord?.currency as string | undefined) ?? (plat as string | null) ?? 'USD';
   const { error } = await sb.rpc('request_finance_approval', {
     p_kind: p.data.kind, p_amount: cents, p_reason: `${tk?.code ?? 'Ticket'}: ${p.data.reason}`, p_org: orgId, p_order: orderId, p_supplier: null,
   });
   if (error) return fail(error);
-  await sb.rpc('reply_ticket', { p_ticket: ticketId, p_body: `Escalated to finance: ${p.data.kind.replace('_', ' ')} of $${(cents / 100).toFixed(2)} — ${p.data.reason}`, p_internal: true, p_status: 'waiting_internal' });
+  await sb.rpc('reply_ticket', { p_ticket: ticketId, p_body: `Escalated to finance: ${p.data.kind.replace('_', ' ')} of ${money(cents, cur)} — ${p.data.reason}`, p_internal: true, p_status: 'waiting_internal' });
   revalidatePath('/office/support');
   return ok(undefined, 'Sent to Finance for approval (maker–checker)');
 }

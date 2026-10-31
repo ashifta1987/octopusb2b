@@ -1,19 +1,31 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
 import { createPublicClient } from '@/lib/supabase/server';
+import { getCurrencyContext, toPlatform, type CurrencyContext } from '@/lib/currency';
+import { asCurrency, type Currency } from '@/lib/format';
 
 /**
  * Storefront data layer (SPEC P3). Every function is a `use cache` scope (Cache Components ISR equivalent,
  * revalidated every 5 minutes and tagged so CMS/catalog edits can call revalidateTag). Reads use the anon
  * client only: RLS exposes live products and the `public_suppliers` view (code + country + badge), never
  * supplier legal names, contacts or costs.
+ *
+ * Currency (SPEC §15.1): price tiers / products keep the currency they were entered in. Every catalogue function
+ * converts prices to the PLATFORM currency (getCurrencyContext + toPlatform) before returning, so `CardProduct.tiers`,
+ * `min_price_cents` and `ServiceInfo.priceCents` are always in `currency` (= platform currency). All price-bearing
+ * caches are tagged 'currency' so a switch (revalidateTag('currency','max')) refreshes them.
+ * Price filters/sorting use the `products.min_price_platform` computed column (migration 065), which converts in SQL
+ * with the same approved rate + rounding, so the bounds a buyer types in the platform currency match the cards.
  */
 
 export type PublicSupplier = { id: string; code: string; country: string | null; verified: boolean; supplier_type: string | null };
-export type Tier = { min_qty: number; unit_price_cents: number };
+/** A price tier converted to the platform currency (`source_currency` = the currency the supplier entered). */
+export type Tier = { min_qty: number; unit_price_cents: number; source_currency?: Currency };
 export type TagRef = { name: string; slug: string; kind: string };
 export type CardProduct = {
   id: string; slug: string; title: string; unit: string; moq: number; min_price_cents: number | null; image_url: string | null;
+  /** Platform currency every price on this card is expressed in. `source_currency` = currency the listing was entered in. */
+  currency: Currency; source_currency: Currency;
   category_id: string | null; supplier_id: string; octopus_dropship: boolean; ready_to_ship: boolean;
   tiers: Tier[]; tags: TagRef[]; supplier: PublicSupplier | null;
 };
@@ -25,17 +37,24 @@ export type ProductDetail = CardProduct & {
 };
 
 const CARD_COLS =
-  'id, slug, title, unit, moq, min_price_cents, image_url, category_id, supplier_id, octopus_dropship, ready_to_ship, price_tiers(min_qty, unit_price_cents), product_tags(tags(name, slug, kind))';
+  'id, slug, title, unit, moq, min_price_cents, currency, image_url, category_id, supplier_id, octopus_dropship, ready_to_ship, price_tiers(min_qty, unit_price_cents, currency), product_tags(tags(name, slug, kind))';
 
-type RawCard = Omit<CardProduct, 'tiers' | 'tags' | 'supplier'> & {
-  price_tiers: Tier[] | null; product_tags: { tags: TagRef | TagRef[] | null }[] | null;
+type RawTier = { min_qty: number; unit_price_cents: number; currency: string | null };
+type RawCard = Omit<CardProduct, 'tiers' | 'tags' | 'supplier' | 'currency' | 'source_currency'> & {
+  currency: string | null; price_tiers: RawTier[] | null; product_tags: { tags: TagRef | TagRef[] | null }[] | null;
 };
 
-function shape(r: RawCard, sup: Map<string, PublicSupplier>): CardProduct {
-  const { price_tiers, product_tags, ...rest } = r;
+function shape(r: RawCard, sup: Map<string, PublicSupplier>, ctx: CurrencyContext): CardProduct {
+  const { price_tiers, product_tags, currency, ...rest } = r;
+  const source = asCurrency(currency);
   return {
     ...rest,
-    tiers: [...(price_tiers ?? [])].sort((a, b) => a.min_qty - b.min_qty),
+    currency: ctx.currency,
+    source_currency: source,
+    min_price_cents: toPlatform(ctx, rest.min_price_cents, source),
+    tiers: [...(price_tiers ?? [])]
+      .map((t) => ({ min_qty: t.min_qty, unit_price_cents: toPlatform(ctx, t.unit_price_cents, t.currency ?? source) ?? 0, source_currency: asCurrency(t.currency ?? source) }))
+      .sort((a, b) => a.min_qty - b.min_qty),
     tags: (product_tags ?? []).flatMap((t) => (Array.isArray(t.tags) ? t.tags : t.tags ? [t.tags] : [])),
     supplier: sup.get(r.supplier_id) ?? null,
   };
@@ -52,25 +71,27 @@ async function supplierMap(ids: string[]) {
 }
 
 async function toCards(rows: RawCard[]) {
-  const sup = await supplierMap(rows.map((r) => r.supplier_id));
-  return rows.map((r) => shape(r, sup));
+  const [sup, ctx] = await Promise.all([supplierMap(rows.map((r) => r.supplier_id)), getCurrencyContext()]);
+  return rows.map((r) => shape(r, sup, ctx));
 }
 
 /* ───────── Services & prices ───────── */
-export type ServiceInfo = { code: string; name: string; description: string | null; unit: string; priceCents: number };
+/** `priceCents` is in `currency` (platform currency) via service_price_info(); `converted` = no native price, converted from USD. */
+export type ServiceInfo = { code: string; name: string; description: string | null; unit: string; priceCents: number; currency: Currency; converted: boolean };
 export async function getServices(): Promise<Record<string, ServiceInfo>> {
   'use cache';
   cacheLife({ revalidate: 300 });
-  cacheTag('service-prices');
+  cacheTag('service-prices', 'currency');
   const sb = createPublicClient();
-  const [{ data: services }, { data: prices }] = await Promise.all([
-    sb.from('services').select('code, name, description, unit').eq('active', true).order('sort'),
-    sb.from('service_prices').select('service_code, amount_minor, effective_from').lte('effective_from', new Date().toISOString()).order('effective_from', { ascending: false }),
-  ]);
-  const price: Record<string, number> = {};
-  (prices ?? []).forEach((p) => { if (price[p.service_code] == null) price[p.service_code] = Number(p.amount_minor); });
+  const ctx = await getCurrencyContext();
+  const { data: services } = await sb.from('services').select('code, name, description, unit').eq('active', true).order('sort');
+  const prices = await Promise.all((services ?? []).map((s) =>
+    sb.rpc('service_price_info', { p_code: s.code, p_currency: ctx.currency }).maybeSingle<{ amount_minor: number | null; currency: string; converted: boolean }>()));
   const out: Record<string, ServiceInfo> = {};
-  (services ?? []).forEach((s) => (out[s.code] = { ...s, priceCents: price[s.code] ?? 0 }));
+  (services ?? []).forEach((s, i) => {
+    const p = prices[i].data;
+    out[s.code] = { ...s, priceCents: Number(p?.amount_minor ?? 0), currency: asCurrency(p?.currency ?? ctx.currency), converted: !!p?.converted };
+  });
   return out;
 }
 
@@ -96,7 +117,7 @@ export async function getTags(): Promise<(TagRef & { id: string })[]> {
 export async function getFeatured(limit = 8): Promise<CardProduct[]> {
   'use cache';
   cacheLife({ revalidate: 300 });
-  cacheTag('products');
+  cacheTag('products', 'currency');
   const { data } = await createPublicClient().from('products').select(CARD_COLS)
     .eq('status', 'live').is('archived_at', null).eq('featured', true).order('created_at').limit(limit);
   return toCards((data ?? []) as unknown as RawCard[]);
@@ -112,13 +133,14 @@ export const PAGE_SIZE = 24;
 export async function listProducts(f: ListFilters): Promise<{ items: CardProduct[]; total: number }> {
   'use cache';
   cacheLife({ revalidate: 300 });
-  cacheTag('products');
+  cacheTag('products', 'currency');
   const sb = createPublicClient();
   let query = sb.from('products').select(CARD_COLS, { count: 'exact' }).eq('status', 'live').is('archived_at', null);
 
   if (f.categoryIds?.length) query = query.in('category_id', f.categoryIds);
-  if (f.minCents != null) query = query.gte('min_price_cents', f.minCents);
-  if (f.maxCents != null) query = query.lte('min_price_cents', f.maxCents);
+  // Bounds are in the platform currency → compare against the SQL-converted computed column (migration 065).
+  if (f.minCents != null) query = query.gte('min_price_platform', f.minCents);
+  if (f.maxCents != null) query = query.lte('min_price_platform', f.maxCents);
   if (f.moqMax != null) query = query.lte('moq', f.moqMax);
   if (f.dropship) query = query.eq('octopus_dropship', true);
   if (f.ready) query = query.eq('ready_to_ship', true);
@@ -146,8 +168,8 @@ export async function listProducts(f: ListFilters): Promise<{ items: CardProduct
   }
 
   switch (f.sort) {
-    case 'price_asc': query = query.order('min_price_cents', { ascending: true, nullsFirst: false }); break;
-    case 'price_desc': query = query.order('min_price_cents', { ascending: false, nullsFirst: false }); break;
+    case 'price_asc': query = query.order('min_price_platform', { ascending: true, nullsFirst: false }); break;
+    case 'price_desc': query = query.order('min_price_platform', { ascending: false, nullsFirst: false }); break;
     case 'moq_asc': query = query.order('moq', { ascending: true }); break;
     case 'newest': query = query.order('created_at', { ascending: false }); break;
     default: query = query.order('featured', { ascending: false }).order('created_at', { ascending: true });
@@ -162,7 +184,7 @@ export async function listProducts(f: ListFilters): Promise<{ items: CardProduct
 export async function getProduct(slug: string): Promise<ProductDetail | null> {
   'use cache';
   cacheLife({ revalidate: 300 });
-  cacheTag('products', `product:${slug}`);
+  cacheTag('products', `product:${slug}`, 'currency');
   const sb = createPublicClient();
   const { data } = await sb.from('products')
     .select(`${CARD_COLS}, description, lead_time_days, incoterm, origin_country, hs_code, seo_title, seo_description, updated_at,
@@ -207,7 +229,7 @@ export async function getProductById(id: string): Promise<{ id: string; slug: st
 export async function getRecommendations(productId: string, categoryId: string | null, limit = 12): Promise<CardProduct[]> {
   'use cache';
   cacheLife({ revalidate: 300 });
-  cacheTag('products');
+  cacheTag('products', 'currency');
   const sb = createPublicClient();
   const { data: recs } = await sb.from('recommendations').select('recommended_id, score').eq('product_id', productId).order('score', { ascending: false }).limit(48);
   const ids = (recs ?? []).map((r) => r.recommended_id as string);

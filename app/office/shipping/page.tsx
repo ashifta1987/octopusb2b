@@ -18,8 +18,8 @@ export default async function Shipping({ searchParams }: { searchParams: Promise
   const sb = await createClient();
   const carrier = getCarrier();
   const [{ data: ready }, { data: ships }] = await Promise.all([
-    sb.from('orders').select('id, code, title, total_cents, incoterm, updated_at, organizations(name, country, city), suppliers(code, legal_name, country, city)').eq('status', 'ready_to_ship').order('updated_at').limit(100),
-    sb.from('shipments').select('id, code, tracking_no, status, service_code, rate_cents, label_url, last_event_at, created_at, orders(id, code), tracking_events(status, description, occurred_at)').order('created_at', { ascending: false }).limit(50),
+    sb.from('orders').select('id, code, title, total_cents, currency, incoterm, updated_at, organizations(name, country, city), suppliers(code, legal_name, country, city)').eq('status', 'ready_to_ship').order('updated_at').limit(100),
+    sb.from('shipments').select('id, code, tracking_no, status, service_code, rate_cents, currency, label_url, last_event_at, created_at, orders(id, code), tracking_events(status, description, occurred_at)').order('created_at', { ascending: false }).limit(50),
   ]);
   const sel = (ready ?? []).find((o) => o.id === selId);
   const canEdit = can(s, 'orders', 'edit');
@@ -62,7 +62,7 @@ export default async function Shipping({ searchParams }: { searchParams: Promise
             </section>
             {canEdit ? (
               <ShipmentCreator orderId={sel.id} orderCode={sel.code} fromCountry={sup?.country ?? 'CN'} toCountry={org?.country ?? 'US'} defaultDesc={sel.title}
-                defaultHs={hs} declaredCents={sel.total_cents} incoterm={sel.incoterm} priceTrial={priceTrial} createShipment={createShipment} />
+                defaultHs={hs} declaredCents={sel.total_cents} declaredCurrency={sel.currency} incoterm={sel.incoterm} priceTrial={priceTrial} createShipment={createShipment} />
             ) : <Card><p className="p-6 text-sm text-muted">You can view shipping but not create shipments.</p></Card>}
           </div>
           <aside className="space-y-4">
@@ -87,7 +87,7 @@ export default async function Shipping({ searchParams }: { searchParams: Promise
                   <td className="td"><div className="mono font-semibold text-sm">{o.code}</div><div className="text-xs text-muted line-clamp-1">{o.title}</div></td>
                   <td className="td text-sm">{og?.name} <span className="text-muted">{og?.country}</span></td>
                   <td className="td mono text-sm">{one(o.suppliers as unknown as { code: string } | null)?.code}</td>
-                  <td className="td"><Money cents={o.total_cents} /></td>
+                  <td className="td"><Money cents={o.total_cents} currency={o.currency} /></td>
                   <td className="td text-sm">{o.incoterm ?? '—'}</td>
                   <td className="td text-sm">{fmtDate(o.updated_at)}</td>
                   <td className="td text-right"><Link className="btn btn-primary btn-sm" href={`/office/shipping?order=${o.id}`}>Create shipment</Link></td>
@@ -128,7 +128,7 @@ export default async function Shipping({ searchParams }: { searchParams: Promise
                 <td className="td mono text-sm"><Link href={`/office/orders/${ord?.id}`} className="text-blue">{ord?.code}</Link></td>
                 <td className="td mono text-sm">{x.tracking_no ?? '—'}</td>
                 <td className="td text-sm">{x.service_code ?? '—'}</td>
-                <td className="td"><Money cents={x.rate_cents} /></td>
+                <td className="td"><Money cents={x.rate_cents} currency={x.currency} /></td>
                 <td className="td text-sm"><div>{ev?.description ?? '—'}</div><div className="text-xs text-muted">{fmtDate(x.last_event_at ?? x.created_at, true)}</div></td>
                 <td className="td"><StatusBadge status={x.status} /></td>
                 <td className="td">

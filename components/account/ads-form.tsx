@@ -3,17 +3,26 @@
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/cn';
-import { usd } from '@/lib/format';
+import { money, asCurrency } from '@/lib/format';
 import { createCampaign } from '@/app/account/ads/actions';
 
+/** `min_cpc_cents` must already be converted to the platform `currency`. */
 type Placement = { code: string; name: string; min_cpc_cents: number };
 
-export function AdsCampaignForm({ placements, countries, disabled, walletCents }: {
+/**
+ * Budget and bid are entered in the platform `currency`; the campaign's currency is set by a DB trigger
+ * (set_campaign_currency) at creation, and clicks are charged from the wallet in that currency (SPEC §15.1).
+ */
+export function AdsCampaignForm({ placements, countries, disabled, walletCents, currency: cur }: {
   placements: Placement[];
   countries: Record<string, string>;
   disabled?: boolean;
   walletCents: number;
+  currency: string;
 }) {
+  const currency = asCurrency(cur);
+  const fmt = (n: number) => money(n, currency);
+  const budgetMax = currency === 'CNY' ? 5000 : 500;
   const router = useRouter();
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
@@ -27,7 +36,7 @@ export function AdsCampaignForm({ placements, countries, disabled, walletCents }
   const [picked, setPicked] = useState<string[]>([]);
   const minCpc = placements.find((p) => p.code === placement)?.min_cpc_cents ?? 10;
   const [bidCents, setBidCents] = useState(Math.max(minCpc, placements[0]?.min_cpc_cents ?? 10));
-  const [budgetUsd, setBudgetUsd] = useState(25);
+  const [budgetUsd, setBudgetUsd] = useState(currency === 'CNY' ? 200 : 25);
   const bid = Math.max(bidCents, minCpc);
 
   const est = useMemo(() => {
@@ -44,7 +53,7 @@ export function AdsCampaignForm({ placements, countries, disabled, walletCents }
     start(async () => {
       const r = await createCampaign({
         name, placement, headline, body, link, countries: picked,
-        daily_budget_usd: budgetUsd, max_cpc_usd: (bid / 100).toFixed(2),
+        daily_budget: budgetUsd, max_cpc: (bid / 100).toFixed(2),
       });
       if (!r.ok) { setErr(r.error); return; }
       setDone(true);
@@ -72,7 +81,7 @@ export function AdsCampaignForm({ placements, countries, disabled, walletCents }
           </div>
           <div className="mt-4">
             <label htmlFor="ad-headline" className="label">Headline <span className="font-normal text-muted">· {headline.length} / 45</span></label>
-            <input id="ad-headline" className="input" required minLength={3} maxLength={45} placeholder="M10 stainless bolts from $0.14" value={headline} onChange={(e) => setHeadline(e.target.value)} />
+            <input id="ad-headline" className="input" required minLength={3} maxLength={45} placeholder="M10 stainless bolts — bulk tier pricing" value={headline} onChange={(e) => setHeadline(e.target.value)} />
           </div>
           <div className="mt-4">
             <label htmlFor="ad-body" className="label">Short line <span className="font-normal text-muted">· {body.length} / 80</span></label>
@@ -94,7 +103,7 @@ export function AdsCampaignForm({ placements, countries, disabled, walletCents }
                     <input id={`pl-${p.code}`} type="radio" name="placement" className="w-[18px] h-[18px] accent-blue" checked={placement === p.code}
                       onChange={() => { setPlacement(p.code); setBidCents((b) => Math.max(b, p.min_cpc_cents)); }} />
                     <span className="flex-1 text-[15px]">{p.name}</span>
-                    <span className="mono text-xs text-muted">min {usd(p.min_cpc_cents)} / click</span>
+                    <span className="mono text-xs text-muted">min {fmt(p.min_cpc_cents)} / click</span>
                   </label>
                 ))}
               </div>
@@ -122,22 +131,22 @@ export function AdsCampaignForm({ placements, countries, disabled, walletCents }
         <section className="card p-6">
           <h2 className="text-lg font-semibold mb-4">3 · Budget</h2>
           <div>
-            <label htmlFor="ad-bid" className="label">Your bid per click: <span className="mono">{usd(bid)}</span></label>
+            <label htmlFor="ad-bid" className="label">Your bid per click: <span className="mono">{fmt(bid)}</span></label>
             <div className="flex items-center gap-3">
-              <input id="ad-bid" type="range" className="flex-1 accent-blue" min={minCpc} max={Math.max(minCpc * 10, 500)} step={1} value={bid}
-                onChange={(e) => setBidCents(Number(e.target.value))} aria-valuetext={usd(bid)} />
-              <label htmlFor="ad-bid-n" className="sr-only">Bid per click in USD</label>
+              <input id="ad-bid" type="range" className="flex-1 accent-blue" min={minCpc} max={Math.max(minCpc * 10, currency === 'CNY' ? 3500 : 500)} step={1} value={bid}
+                onChange={(e) => setBidCents(Number(e.target.value))} aria-valuetext={fmt(bid)} />
+              <label htmlFor="ad-bid-n" className="sr-only">Bid per click in {currency}</label>
               <input id="ad-bid-n" type="number" className="input w-28 mono" min={(minCpc / 100).toFixed(2)} step="0.01" value={(bid / 100).toFixed(2)}
                 onChange={(e) => setBidCents(Math.round(Number(e.target.value) * 100) || minCpc)} />
             </div>
-            <p className="text-xs text-muted mt-1">Minimum {usd(minCpc)} for this placement. Higher bids show first when several ads compete for a spot.</p>
+            <p className="text-xs text-muted mt-1">Minimum {fmt(minCpc)} for this placement. Higher bids show first when several ads compete for a spot.</p>
           </div>
           <div className="mt-5">
-            <label htmlFor="ad-budget" className="label">Daily budget: <span className="mono">{usd(budgetUsd * 100)}</span></label>
+            <label htmlFor="ad-budget" className="label">Daily budget: <span className="mono">{fmt(budgetUsd * 100)}</span></label>
             <div className="flex items-center gap-3">
-              <input id="ad-budget" type="range" className="flex-1 accent-blue" min={5} max={500} step={1} value={Math.min(budgetUsd, 500)}
-                onChange={(e) => setBudgetUsd(Number(e.target.value))} aria-valuetext={usd(budgetUsd * 100)} />
-              <label htmlFor="ad-budget-n" className="sr-only">Daily budget in USD</label>
+              <input id="ad-budget" type="range" className="flex-1 accent-blue" min={5} max={budgetMax} step={1} value={Math.min(budgetUsd, budgetMax)}
+                onChange={(e) => setBudgetUsd(Number(e.target.value))} aria-valuetext={fmt(budgetUsd * 100)} />
+              <label htmlFor="ad-budget-n" className="sr-only">Daily budget in {currency}</label>
               <input id="ad-budget-n" type="number" className="input w-28 mono" min={1} step="1" value={budgetUsd}
                 onChange={(e) => setBudgetUsd(Math.max(1, Math.round(Number(e.target.value)) || 1))} />
             </div>
@@ -165,9 +174,9 @@ export function AdsCampaignForm({ placements, countries, disabled, walletCents }
           <div className="text-sm font-semibold mb-3">Estimate</div>
           <dl className="space-y-2 text-[15px]">
             <div className="flex justify-between"><dt className="text-muted">Clicks per day</dt><dd className="mono font-semibold">≈ {est.lo}–{est.hi}</dd></div>
-            <div className="flex justify-between"><dt className="text-muted">Max spend per day</dt><dd className="mono font-semibold">{usd(budgetUsd * 100)}</dd></div>
-            <div className="flex justify-between"><dt className="text-muted">Max spend per month</dt><dd className="mono font-semibold">{usd(budgetUsd * 100 * 30)}</dd></div>
-            <div className="flex justify-between border-t border-line pt-2"><dt className="text-muted">Wallet balance</dt><dd className="mono">{usd(walletCents)}</dd></div>
+            <div className="flex justify-between"><dt className="text-muted">Max spend per day</dt><dd className="mono font-semibold">{fmt(budgetUsd * 100)}</dd></div>
+            <div className="flex justify-between"><dt className="text-muted">Max spend per month</dt><dd className="mono font-semibold">{fmt(budgetUsd * 100 * 30)}</dd></div>
+            <div className="flex justify-between border-t border-line pt-2"><dt className="text-muted">Wallet balance</dt><dd className="mono">{fmt(walletCents)}</dd></div>
           </dl>
           <p className="text-xs text-muted mt-3">Paid from your wallet per valid click. Repeated, bot and own clicks are not charged. Monthly invoice in Ledger &amp; invoices.</p>
           {walletCents < bid && <p className="text-xs text-bad mt-2">Your wallet balance is below one click. <a href="/account/wallet" className="underline">Top up</a> so the ad can run once approved.</p>}

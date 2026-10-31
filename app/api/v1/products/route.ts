@@ -1,6 +1,7 @@
 import { apiRoute, isUuid, pageMeta, range } from '@/lib/api/handler';
 import { PRODUCT_COLUMNS, publicProduct, publicSuppliers, safeSearch } from '@/lib/api/data';
 import { json, problem } from '@/lib/api/problem';
+import { loadFx } from '@/lib/api/money';
 import { ProductQuery, zodIssues } from '@/lib/contracts';
 
 /** GET /api/v1/products — live catalogue search. Supplier shown as code + country only. */
@@ -38,6 +39,6 @@ export const GET = apiRoute({ scopes: ['catalog:read'] }, async ({ ctx, url }) =
   const [from, to] = range(page, per_page);
   const { data, count, error } = await query.order('featured', { ascending: false }).order('title').range(from, to);
   if (error) throw new Error(error.message);
-  const sups = await publicSuppliers(ctx.sb, (data ?? []).map((p) => p.supplier_id));
-  return json({ data: (data ?? []).map((p) => publicProduct(p, sups.get(p.supplier_id))), meta: pageMeta(page, per_page, count) });
+  const [sups, fx] = await Promise.all([publicSuppliers(ctx.sb, (data ?? []).map((p) => p.supplier_id)), loadFx(ctx.sb)]);
+  return json({ data: (data ?? []).map((p) => publicProduct(p, fx, sups.get(p.supplier_id))), meta: pageMeta(page, per_page, count) });
 });

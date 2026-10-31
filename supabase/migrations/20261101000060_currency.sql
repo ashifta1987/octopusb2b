@@ -897,3 +897,4 @@ begin
     execute format('grant execute on function public.%s to anon, authenticated, service_role', f);
   end loop;
 end $$;
+

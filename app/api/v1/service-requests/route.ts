@@ -1,8 +1,10 @@
 import { apiRoute, pageMeta, range, simId } from '@/lib/api/handler';
 import { json, problem, problemFromDb } from '@/lib/api/problem';
 import { Pagination, ServiceRequest, zodIssues } from '@/lib/contracts';
+import { loadFx } from '@/lib/api/money';
+import { publicServiceRequest } from '@/lib/api/trade';
 
-const COLUMNS = 'id, code, service_code, product_id, order_id, status, details, fee_minor, paid_via, created_at, updated_at';
+const COLUMNS = 'id, code, service_code, product_id, order_id, status, details, fee_minor, currency, fx_rate_id, paid_via, created_at, updated_at';
 
 /** GET /api/v1/service-requests — samples, QC, certification, 3PL, dropship requests of the organization. */
 export const GET = apiRoute({ scopes: ['orders:read'] }, async ({ ctx, url }) => {
@@ -15,7 +17,7 @@ export const GET = apiRoute({ scopes: ['orders:read'] }, async ({ ctx, url }) =>
     .order('created_at', { ascending: false })
     .range(from, to);
   if (error) throw new Error(error.message);
-  return json({ data: data ?? [], meta: pageMeta(pg.page, pg.per_page, count) });
+  return json({ data: (data ?? []).map(publicServiceRequest), meta: pageMeta(pg.page, pg.per_page, count) });
 });
 
 /** POST /api/v1/service-requests — request a service; fee from Services & charges (wallet when on). Test keys: simulated. */
@@ -31,8 +33,9 @@ export const POST = apiRoute({ scopes: ['orders:write'] }, async ({ ctx, body, r
   }
 
   if (ctx.mode === 'test') {
+    const fx = await loadFx(ctx.sb);
     const [{ data: fee }, { data: w }] = await Promise.all([
-      ctx.sb.rpc('current_service_price', { p_code: s.serviceCode }),
+      ctx.sb.rpc('current_service_price', { p_code: s.serviceCode, p_currency: fx.currency }),
       ctx.sb.from('site_settings').select('value').eq('key', 'wallet_enabled').maybeSingle(),
     ]);
     const f = Number(fee ?? 0);
@@ -40,7 +43,7 @@ export const POST = apiRoute({ scopes: ['orders:write'] }, async ({ ctx, body, r
     const now = new Date().toISOString();
     return json(
       {
-        data: {
+        data: publicServiceRequest({
           id: simId('srv'),
           code: 'SRV-TEST',
           service_code: s.serviceCode,
@@ -49,10 +52,12 @@ export const POST = apiRoute({ scopes: ['orders:write'] }, async ({ ctx, body, r
           status: f === 0 || wallet ? 'paid' : 'requested',
           details: s.details,
           fee_minor: f,
+          currency: fx.currency,
+          fx_rate_id: fx.fxRateId,
           paid_via: f === 0 ? 'free' : wallet ? 'wallet' : 'invoice',
           created_at: now,
           updated_at: now,
-        },
+        }),
         simulated: true,
       },
       { status: 201 },
@@ -68,5 +73,5 @@ export const POST = apiRoute({ scopes: ['orders:write'] }, async ({ ctx, body, r
   });
   if (error) return problemFromDb(error);
   const { data } = await ctx.sb.from('service_requests').select(COLUMNS).eq('id', id).eq('org_id', ctx.orgId).single();
-  return json({ data }, { status: 201 });
+  return json({ data: data ? publicServiceRequest(data) : null }, { status: 201 });
 });

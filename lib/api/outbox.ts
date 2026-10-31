@@ -2,7 +2,8 @@ import 'server-only';
 import { getEmail } from '@/lib/adapters';
 import type { createAdminClient } from '@/lib/supabase/server';
 import { notificationFor, retryPlan, wantsEmail, type OutboxEvent } from './outbox-rules';
-import { deliverWebhook, publicEventFor, type Endpoint } from './webhooks';
+import { amt, amt0, cur } from './money';
+import { deliverWebhook, isBroadcastEvent, publicEventFor, type Endpoint } from './webhooks';
 
 type Sb = ReturnType<typeof createAdminClient>;
 
@@ -44,6 +45,10 @@ export async function processOutbox(sb: Sb, limit = 50) {
       if (wantsEmail(ev)) await run('email', () => email(sb, ev, orgId, env));
       const pub = publicEventFor(ev.event_type);
       if (pub) await run('webhooks_out', () => webhooksOut(sb, ev, orgId, pub, doneRuns));
+    } else {
+      // platform-wide events (settings.currency_changed): deliver to every org's subscribed endpoints
+      const pub = publicEventFor(ev.event_type);
+      if (pub && isBroadcastEvent(pub)) await run('webhooks_out', () => webhooksOut(sb, ev, null, pub, doneRuns));
     }
 
     if (!failures.length) {
@@ -112,28 +117,70 @@ async function email(sb: Sb, ev: OutboxEvent, orgId: string, env: Awaited<Return
   }
 }
 
-async function webhookData(sb: Sb, ev: OutboxEvent, orgId: string, pub: string) {
+async function webhookData(sb: Sb, ev: OutboxEvent, orgId: string | null, pub: string) {
   const { org_id: _o, ...rest } = ev.payload ?? {};
   void _o;
   const base: Record<string, unknown> = { source_event: ev.event_type, object: ev.aggregate_type, object_id: ev.aggregate_id, ...rest };
+  if (pub === 'settings.currency_changed') {
+    const p = ev.payload ?? {};
+    return {
+      source_event: ev.event_type,
+      object: 'currency_switch',
+      object_id: ev.aggregate_id,
+      from: p.from ?? null,
+      to: p.to ?? null,
+      currency: p.to ?? null,
+      rate: { base: 'USD', quote: 'CNY', rate: p.rate == null ? null : Number(p.rate), fx_rate_id: p.fx_rate_id ?? null },
+      wallet_option: p.wallet_option ?? null,
+    };
+  }
+  if (!orgId) return base;
   if (pub === 'order.updated') {
     const orderId = ev.aggregate_type === 'order' ? ev.aggregate_id : (ev.payload?.order_id as string | undefined);
     if (orderId) {
-      const { data: o } = await sb.from('orders').select('id, code, status, total_cents, paid_cents, updated_at').eq('id', orderId).eq('org_id', orgId).maybeSingle();
-      if (o) base.order = { ...o, balance_cents: o.total_cents - o.paid_cents, currency: 'USD' };
+      const { data: o } = await sb.from('orders').select('id, code, status, total_cents, paid_cents, currency, updated_at').eq('id', orderId).eq('org_id', orgId).maybeSingle();
+      if (o)
+        base.order = {
+          id: o.id,
+          code: o.code,
+          status: o.status,
+          currency: cur(o.currency),
+          total: amt0(o.total_cents, o.currency),
+          paid: amt0(o.paid_cents, o.currency),
+          balance: amt0(o.total_cents - o.paid_cents, o.currency),
+          updated_at: o.updated_at,
+        };
     }
   } else if (pub === 'quote.created' && ev.aggregate_id) {
-    const { data: q } = await sb.from('quotes').select('id, code, rfq_id, unit_price_cents, quantity, shipping_cents, incoterm, status, valid_until').eq('id', ev.aggregate_id).maybeSingle();
-    if (q) base.quote = q;
+    const { data: q } = await sb.from('quotes').select('id, code, rfq_id, unit_price_cents, quantity, shipping_cents, currency, incoterm, status, valid_until').eq('id', ev.aggregate_id).maybeSingle();
+    if (q) {
+      const { unit_price_cents, shipping_cents, currency, ...rest } = q;
+      base.quote = {
+        ...rest,
+        currency: cur(currency),
+        unit_price: amt0(unit_price_cents, currency),
+        shipping: amt0(shipping_cents, currency),
+        total: amt0(unit_price_cents * q.quantity + shipping_cents, currency),
+      };
+    }
   } else if (pub === 'wallet.updated') {
-    const { data: bal } = await sb.rpc('wallet_balance', { p_org: orgId });
-    base.balance_cents = Number(bal ?? 0);
+    const { data: ws } = await sb.from('wallets').select('currency, balance_minor').eq('org_id', orgId);
+    base.balances = (ws ?? []).map((w) => amt(w.balance_minor, w.currency));
+    if (typeof ev.payload?.amount_cents === 'number') {
+      base.amount = amt(ev.payload.amount_cents, ev.payload.currency);
+      delete base.amount_cents;
+    }
   }
+  // payload fields copied from the DB event must not leak bare *_cents integers
+  for (const k of Object.keys(base)) if (k.endsWith('_cents')) delete base[k];
   return base;
 }
 
-async function webhooksOut(sb: Sb, ev: OutboxEvent, orgId: string, pub: string, doneRuns: Set<string>) {
-  const { data: eps, error } = await sb.from('webhook_endpoints').select('id, org_id, url, secret, events, active').eq('org_id', orgId).eq('active', true).contains('events', [pub]);
+async function webhooksOut(sb: Sb, ev: OutboxEvent, orgId: string | null, pub: string, doneRuns: Set<string>) {
+  let q = sb.from('webhook_endpoints').select('id, org_id, url, secret, events, active').eq('active', true).contains('events', [pub]);
+  if (orgId) q = q.eq('org_id', orgId);
+  else if (!isBroadcastEvent(pub)) return; // never fan out org events without an org
+  const { data: eps, error } = await q;
   if (error) throw new Error(error.message);
   if (!eps?.length) return;
   const data = await webhookData(sb, ev, orgId, pub);

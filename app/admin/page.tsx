@@ -4,7 +4,9 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, Stat, PageHeader, EmptyState, StatusBadge, Table } from '@/components/ui';
 import { Bar, CountryTag } from '@/components/admin/ui';
 import { ToggleSetting } from '@/components/admin/client';
-import { usd, humanize, fmtDate, COUNTRY_NAMES } from '@/lib/format';
+import { money, humanize, fmtDate, COUNTRY_NAMES } from '@/lib/format';
+import { getCurrencyContext, toPlatform } from '@/lib/currency';
+import { CurrencyTotals, sumByCurrency, rateLabel } from '@/components/admin/currency';
 import { setSetting } from './actions';
 
 export const metadata = { title: 'Overview' };
@@ -27,8 +29,8 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
   const since = new Date(); since.setUTCDate(1); since.setUTCHours(0, 0, 0, 0); since.setUTCMonth(since.getUTCMonth() - (months - 1));
   const sb = await createClient();
 
-  const [orders, revenue, orgs, liveProducts, openRfqs, openTickets, srs, settings, audit, history, staffRoles, suppliers] = await Promise.all([
-    sb.from('orders').select('id, total_cents, status, created_at, supplier_id, org_id').neq('status', 'cancelled').limit(5000),
+  const [orders, revenue, orgs, liveProducts, openRfqs, openTickets, srs, settings, audit, history, staffRoles, suppliers, ctx] = await Promise.all([
+    sb.from('orders').select('id, total_cents, currency, status, created_at, supplier_id, org_id').neq('status', 'cancelled').limit(5000),
     sb.rpc('admin_revenue_by_stream', { p_from: since.toISOString() }),
     sb.from('organizations').select('id, kyc_status, country').is('archived_at', null).limit(10000),
     sb.from('products').select('id', { count: 'exact', head: true }).eq('status', 'live'),
@@ -40,15 +42,22 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
     sb.from('status_history').select('id, entity, entity_id, from_status, to_status, actor_id, reason, created_at').order('created_at', { ascending: false }).limit(8),
     can(s, 'staff', 'view') ? sb.from('user_roles').select('user_id, role_code, roles!inner(is_staff)').eq('roles.is_staff', true) : Promise.resolve({ data: [] as never[] }),
     sb.from('suppliers').select('id, code, legal_name, country'),
+    getCurrencyContext(),
   ]);
 
   const allOrders = orders.data ?? [];
   const periodOrders = allOrders.filter((o) => new Date(o.created_at) >= since);
-  const gmv = periodOrders.reduce((a, o) => a + Number(o.total_cents), 0);
-  const revRows = (revenue.data ?? []) as { month: string; stream: string; net_cents: number }[];
+  // Amounts are converted into the platform currency at the approved rate for charts; Stat cards also show each currency.
+  const conv = (minor: number, currency: string | null) => toPlatform(ctx, minor, currency) ?? 0;
+  const gmv = periodOrders.reduce((a, o) => a + conv(Number(o.total_cents), o.currency), 0);
+  const gmvBy = sumByCurrency(periodOrders, (o) => o.total_cents, (o) => o.currency);
+  const revRows = (revenue.data ?? []) as { month: string; stream: string; net_cents: number; currency: string; net_converted_minor: number }[];
   const byStream = new Map<string, number>();
-  revRows.forEach((r) => byStream.set(r.stream, (byStream.get(r.stream) ?? 0) + Number(r.net_cents)));
-  const nonOrderRevenue = [...byStream.entries()].filter(([k]) => k !== 'orders').reduce((a, [, v]) => a + v, 0);
+  revRows.forEach((r) => byStream.set(r.stream, (byStream.get(r.stream) ?? 0) + Number(r.net_converted_minor ?? r.net_cents)));
+  const streamBy = new Map<string, Map<string, number>>();
+  revRows.forEach((r) => { const m = streamBy.get(r.stream) ?? new Map<string, number>(); m.set(r.currency, (m.get(r.currency) ?? 0) + Number(r.net_cents)); streamBy.set(r.stream, m); });
+  const nonOrderBy = sumByCurrency(revRows.filter((r) => r.stream !== 'orders'), (r) => r.net_cents, (r) => r.currency);
+  const mixed = [...gmvBy.keys(), ...revRows.map((r) => r.currency)].some((c) => c !== ctx.currency);
   const orgList = orgs.data ?? [];
   const verified = orgList.filter((o) => o.kyc_status === 'verified').length;
   const kycPct = orgList.length ? Math.round((verified / orgList.length) * 100) : 0;
@@ -58,7 +67,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
   const monthKeys: string[] = [];
   for (let i = 0; i < months; i++) { const d = new Date(since); d.setUTCMonth(since.getUTCMonth() + i); monthKeys.push(d.toISOString().slice(0, 7)); }
   const gmvByMonth = new Map(monthKeys.map((k) => [k, 0]));
-  periodOrders.forEach((o) => { const k = o.created_at.slice(0, 7); if (gmvByMonth.has(k)) gmvByMonth.set(k, (gmvByMonth.get(k) ?? 0) + Number(o.total_cents)); });
+  periodOrders.forEach((o) => { const k = o.created_at.slice(0, 7); if (gmvByMonth.has(k)) gmvByMonth.set(k, (gmvByMonth.get(k) ?? 0) + conv(Number(o.total_cents), o.currency)); });
   const maxMonth = Math.max(1, ...gmvByMonth.values());
 
   // Service requests by type
@@ -74,7 +83,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
   // Top suppliers by GMV
   const supMap = new Map((suppliers.data ?? []).map((x) => [x.id, x]));
   const supAgg = new Map<string, { gmv: number; n: number }>();
-  periodOrders.forEach((o) => { if (!o.supplier_id) return; const a = supAgg.get(o.supplier_id) ?? { gmv: 0, n: 0 }; a.gmv += Number(o.total_cents); a.n++; supAgg.set(o.supplier_id, a); });
+  periodOrders.forEach((o) => { if (!o.supplier_id) return; const a = supAgg.get(o.supplier_id) ?? { gmv: 0, n: 0 }; a.gmv += conv(Number(o.total_cents), o.currency); a.n++; supAgg.set(o.supplier_id, a); });
   const topSuppliers = [...supAgg.entries()].sort((a, b) => b[1].gmv - a[1].gmv).slice(0, 5);
 
   // Activity: audit_log + status_history
@@ -99,7 +108,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
     <>
       <PageHeader
         title="Platform overview"
-        subtitle="All amounts in USD. Figures come from orders, the ledger and live queues."
+        subtitle={`Figures come from orders, the ledger and live queues. Charts are in ${ctx.currency}${mixed ? `; amounts in other currencies are converted at the approved rate (${rateLabel(ctx)})` : ''}.`}
         actions={
           <form className="flex items-center gap-3" action="/admin">
             <label htmlFor="months" className="text-sm text-muted">Period</label>
@@ -113,8 +122,8 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
       />
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 mb-6">
-        <Stat label="GMV" value={usd(gmv, { compact: true })} hint={`${periodOrders.length} orders`} />
-        <Stat label="Platform revenue (non-order)" value={usd(nonOrderRevenue, { compact: true })} hint="fees, services, ads" />
+        <Stat label="GMV" value={<CurrencyTotals totals={gmvBy} ctx={ctx} />} hint={`${periodOrders.length} orders`} />
+        <Stat label="Platform revenue (non-order)" value={<CurrencyTotals totals={nonOrderBy} ctx={ctx} />} hint="fees, services, ads" />
         <Stat label="Customers" value={orgList.length.toLocaleString()} hint={`${kycPct}% KYC verified`} hintTone={kycPct >= 50 ? 'ok' : 'warn'} />
         <Stat label="KYC verified" value={`${kycPct}%`} hint={`${verified} of ${orgList.length}`} />
         <Stat label="Live products" value={(liveProducts.count ?? 0).toLocaleString()} />
@@ -123,13 +132,13 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr] mb-6">
-        <Card title="Gross merchandise value by month" action={<span className="text-sm text-muted">USD, non-cancelled orders</span>}>
+        <Card title="Gross merchandise value by month" action={<span className="text-sm text-muted">{ctx.currency}{mixed ? ' (converted)' : ''}, non-cancelled orders</span>}>
           <div className="px-6 pb-6">
             {gmv === 0 ? <EmptyState title="No orders in this period" /> : (
               <div className="flex items-end gap-3 h-[240px] border-b border-line" role="img" aria-label="GMV by month bar chart">
                 {[...gmvByMonth.entries()].map(([k, v], i, arr) => (
                   <div key={k} className="flex-1 flex flex-col items-center justify-end h-full">
-                    <div className="text-xs font-semibold mono mb-1">{usd(v, { compact: true })}</div>
+                    <div className="text-xs font-semibold mono mb-1">{money(v, ctx.currency, { compact: true })}</div>
                     <div className={`w-full max-w-[56px] rounded-t-md ${i === arr.length - 1 ? 'bg-blue' : 'bg-navy'}`} style={{ height: `${Math.max(2, (v / maxMonth) * 190)}px` }} />
                   </div>
                 ))}
@@ -146,10 +155,11 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
           <div className="px-6 pb-6">
             {byStream.size === 0 ? <EmptyState title="No revenue posted yet" /> : (
               [...byStream.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => (
-                <Bar key={k} label={humanize(k)} value={v} max={Math.max(...byStream.values())} display={usd(v)} />
+                <Bar key={k} label={humanize(k)} value={v} max={Math.max(...byStream.values())}
+                  display={[...(streamBy.get(k) ?? new Map<string, number>())].map(([c, x]) => money(x, c)).join(' · ')} />
               ))
             )}
-            <p className="text-xs text-muted mt-3">From ledger revenue accounts grouped by journal stream. Wallet top-ups are customer money, not revenue.</p>
+            <p className="text-xs text-muted mt-3">From ledger revenue accounts grouped by journal stream. Wallet top-ups are customer money, not revenue. Bar length uses the total converted into {ctx.currency}.</p>
             {can(s, 'finance', 'view') && <Link href="/admin/finance" className="text-sm text-blue font-semibold mt-2 inline-block">Finance & revenue →</Link>}
           </div>
         </Card>
@@ -189,7 +199,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
               return (
                 <tr key={id}>
                   <td className="td font-semibold">{sp?.legal_name ?? sp?.code ?? '—'} <CountryTag code={sp?.country} /> <span className="mono text-xs text-muted">{sp?.code}</span></td>
-                  <td className="td mono font-semibold">{usd(a.gmv, { compact: true })}</td>
+                  <td className="td mono font-semibold">{money(a.gmv, ctx.currency, { compact: true })}{mixed && <span className="block text-[10px] uppercase text-muted font-normal">converted</span>}</td>
                   <td className="td">{a.n}</td>
                 </tr>
               );

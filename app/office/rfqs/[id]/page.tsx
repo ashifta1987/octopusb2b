@@ -6,7 +6,8 @@ import { Card, PageHeader, StatusBadge, Money, EmptyState, Table } from '@/compo
 import { one } from '@/components/backoffice/server-utils';
 import { QuoteForm } from '@/components/backoffice/quote-form';
 import { sendQuote } from '@/components/backoffice/quote-actions';
-import { fmtDate, usd, COUNTRY_NAMES } from '@/lib/format';
+import { fmtDate, money, COUNTRY_NAMES } from '@/lib/format';
+import { getCurrencyContext } from '@/lib/currency';
 
 export const metadata = { title: 'RFQ' };
 
@@ -15,12 +16,13 @@ export default async function OfficeRfq({ params }: { params: Promise<{ id: stri
   const s = await requireStaff('requests', 'view', `/office/rfqs/${id}`);
   const sb = await createClient();
   const { data: r } = await sb.from('rfqs')
-    .select('id, code, title, details, quantity, unit, target_price_cents, destination_country, destination_city, incoterm, status, fee_minor, created_at, expires_at, organizations(city, country, kyc_status), categories(name), products(id, title, slug, product_specs(name, value, sort))')
+    .select('id, code, title, details, quantity, unit, target_price_cents, destination_country, destination_city, incoterm, status, fee_minor, currency, created_at, expires_at, organizations(city, country, kyc_status), categories(name), products(id, title, slug, product_specs(name, value, sort))')
     .eq('id', id).maybeSingle();
   if (!r) notFound();
-  const [{ data: quotes }, { data: sups }] = await Promise.all([
-    sb.from('quotes').select('id, code, unit_price_cents, quantity, incoterm, lead_time_days, shipping_cents, notes, status, valid_until, created_at, suppliers(code, legal_name, country)').eq('rfq_id', id).order('created_at'),
+  const [{ data: quotes }, { data: sups }, cx] = await Promise.all([
+    sb.from('quotes').select('id, code, unit_price_cents, quantity, incoterm, lead_time_days, shipping_cents, currency, notes, status, valid_until, created_at, suppliers(code, legal_name, country)').eq('rfq_id', id).order('created_at'),
     sb.from('suppliers').select('id, code, legal_name, country, supplier_switches(rfq_replies)').is('archived_at', null).order('code'),
+    getCurrencyContext(),
   ]);
   const org = one(r.organizations as unknown as { city: string | null; country: string | null; kyc_status: string } | null);
   const prod = one(r.products as unknown as { id: string; title: string; slug: string; product_specs: { name: string; value: string; sort: number }[] } | null);
@@ -44,7 +46,7 @@ export default async function OfficeRfq({ params }: { params: Promise<{ id: stri
           <Card title="Request">
             <dl className="grid sm:grid-cols-3 gap-4 px-6 pb-4 text-[15px]">
               <div><dt className="text-sm text-muted">Quantity</dt><dd className="font-semibold">{r.quantity.toLocaleString()} {r.unit}</dd></div>
-              <div><dt className="text-sm text-muted">Target price</dt><dd className="font-semibold">{r.target_price_cents ? `${usd(r.target_price_cents)} / ${r.unit}` : '—'}</dd></div>
+              <div><dt className="text-sm text-muted">Target price</dt><dd className="font-semibold">{r.target_price_cents ? `${money(r.target_price_cents, r.currency)} / ${r.unit}` : '—'}</dd></div>
               <div><dt className="text-sm text-muted">Incoterm</dt><dd className="font-semibold">{r.incoterm ?? '—'}</dd></div>
               <div><dt className="text-sm text-muted">Customer</dt><dd className="font-semibold">{[org?.city, org?.country ? COUNTRY_NAMES[org.country] ?? org.country : null].filter(Boolean).join(', ') || '—'}</dd><dd className="text-xs text-muted">KYC {org?.kyc_status?.replace('_', ' ')}</dd></div>
               <div><dt className="text-sm text-muted">Ship to</dt><dd className="font-semibold">{[r.destination_city, r.destination_country].filter(Boolean).join(', ') || '—'}</dd></div>
@@ -73,10 +75,10 @@ export default async function OfficeRfq({ params }: { params: Promise<{ id: stri
                   <tr key={q.id}>
                     <td className="td mono text-sm">{q.code}</td>
                     <td className="td text-sm"><div className="mono">{sp?.code} · {sp?.country}</div><div className="text-xs text-muted">{sp?.legal_name}</div></td>
-                    <td className="td"><Money cents={q.unit_price_cents} /></td>
+                    <td className="td"><Money cents={q.unit_price_cents} currency={q.currency} /></td>
                     <td className="td text-sm">{q.quantity.toLocaleString()}</td>
-                    <td className="td"><Money cents={q.shipping_cents} /></td>
-                    <td className="td"><Money cents={q.unit_price_cents * q.quantity + q.shipping_cents} /></td>
+                    <td className="td"><Money cents={q.shipping_cents} currency={q.currency} /></td>
+                    <td className="td"><Money cents={q.unit_price_cents * q.quantity + q.shipping_cents} currency={q.currency} /></td>
                     <td className="td text-sm">{q.lead_time_days ?? '—'} d · {q.incoterm}</td>
                     <td className="td text-sm">{fmtDate(q.valid_until)}</td>
                     <td className="td"><StatusBadge status={q.status} /></td>
@@ -90,7 +92,7 @@ export default async function OfficeRfq({ params }: { params: Promise<{ id: stri
           <div className="px-6 pb-6">
             {!open ? <p className="text-sm text-muted">This RFQ is {r.status.replace('_', ' ')} and no longer accepts quotes.</p>
               : !canQuote ? <p className="text-sm text-muted">You don&apos;t have permission to send quotes.</p>
-                : <QuoteForm idPrefix="oq" action={sendQuote.bind(null, r.id)} suppliers={supplierOpts} defaultQty={r.quantity} defaultIncoterm={r.incoterm} unit={r.unit} />}
+                : <QuoteForm idPrefix="oq" action={sendQuote.bind(null, r.id)} suppliers={supplierOpts} defaultQty={r.quantity} defaultIncoterm={r.incoterm} unit={r.unit} currency={cx.currency} />}
             <p className="text-xs text-muted mt-3">The buyer sees the supplier as code + country only. Quote validity comes from the quote_validity_days setting.</p>
           </div>
         </Card>

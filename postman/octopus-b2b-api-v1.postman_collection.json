@@ -1,0 +1,2894 @@
+{
+  "info": {
+    "_postman_id": "b3f1c1c4-0c7a-4d38-9d1e-0c70b2b00001",
+    "name": "Octopus B2B API v1",
+    "description": "**Octopus B2B API v1** — generated from the OpenAPI document in the Octopus B2B repository on every release. Do not edit in Postman: changes are overwritten.\n\nQuick start (5 minutes):\n1. Fork this collection and the **Sandbox** environment.\n2. In Octopus B2B → Account → Developer, create an API client and a **test** key (`oct_test_…`).\n3. Paste the client id into `client_id` and the key into `client_secret` (Sandbox environment — keep them as secret, current values only).\n4. Send **Catalog → Search live products**. The collection fetches and caches the OAuth token for you and adds `Idempotency-Key` to POSTs.\n\nEvery request has tests for the status code, the response schema and that every amount carries a currency (`{ \"amount_minor\": 19000, \"currency\": \"USD\" }`).\nTest keys read real catalogue and your own data; writes are simulated (`\"simulated\": true`).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.1.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Octopus B2B — collection pre-request (generated from the repository; do not edit in Postman).",
+          "// 1) Adds an Idempotency-Key to every POST. 2) Fetches + caches an OAuth client-credentials token.",
+          "(function () {",
+          "  var bypass = pm.variables.get('vercel_bypass');",
+          "  if (bypass) pm.request.headers.upsert({ key: 'x-vercel-protection-bypass', value: bypass });",
+          "  if (pm.request.method === 'POST' && !pm.request.url.getPath().endsWith('/oauth/token') && !pm.request.headers.has('Idempotency-Key')) {",
+          "    pm.request.headers.upsert({ key: 'Idempotency-Key', value: pm.variables.replaceIn('{{$guid}}') });",
+          "  }",
+          "  if (pm.request.auth && pm.request.auth.type === 'noauth') return;",
+          "  var base = String(pm.variables.get('base_url') || '').replace(/\\/$/, '');",
+          "  // Supplier API lives next to the public API: …/v1 → …/supplier/v1 (unless the environment overrides it).",
+          "  if (!(pm.environment && pm.environment.get && pm.environment.get('supplier_base_url'))) pm.variables.set('supplier_base_url', base.replace(/\\/v1$/, '/supplier/v1'));",
+          "  var clientId = pm.variables.get('client_id');",
+          "  var secret = pm.variables.get('client_secret');",
+          "  function share(token) {",
+          "    if (pm.environment && pm.environment.has && pm.environment.has('access_token')) pm.environment.set('access_token', token);",
+          "  }",
+          "  var cached = pm.collectionVariables.get('access_token');",
+          "  var exp = Number(pm.collectionVariables.get('access_token_expires_at') || 0);",
+          "  if (cached && pm.collectionVariables.get('access_token_client') === clientId && Date.now() < exp - 60000) { share(cached); return; }",
+          "  if (!base || !clientId || !secret) { console.warn('Octopus B2B: set base_url, client_id and client_secret in the environment.'); return; }",
+          "  var headers = [{ key: 'Content-Type', value: 'application/x-www-form-urlencoded' }];",
+          "  if (bypass) headers.push({ key: 'x-vercel-protection-bypass', value: bypass });",
+          "  pm.sendRequest({",
+          "    url: base + '/oauth/token',",
+          "    method: 'POST',",
+          "    header: headers,",
+          "    body: { mode: 'urlencoded', urlencoded: [",
+          "      { key: 'grant_type', value: 'client_credentials' },",
+          "      { key: 'client_id', value: clientId },",
+          "      { key: 'client_secret', value: secret }",
+          "    ] }",
+          "  }, function (err, res) {",
+          "    if (err || res.code !== 200) { console.error('Octopus B2B: token request failed', err || res.text()); return; }",
+          "    var j = res.json();",
+          "    pm.collectionVariables.set('access_token', j.access_token);",
+          "    pm.collectionVariables.set('access_token_client', clientId);",
+          "    pm.collectionVariables.set('access_token_expires_at', String(Date.now() + Number(j.expires_in || 3600) * 1000));",
+          "    share(j.access_token);",
+          "  });",
+          "})();"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api.octopusb2b.com/v1",
+      "type": "string"
+    },
+    {
+      "key": "client_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "client_secret",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "access_token_expires_at",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "access_token_client",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "currency",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "product_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "rfq_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "quote_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "order_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "shipment_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "webhook_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "webhook_secret",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "mock_url",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "vercel_bypass",
+      "value": "",
+      "type": "secret"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "id": "auth-postOauthToken",
+          "name": "Get access token (client credentials)",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/oauth/token",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "oauth",
+                "token"
+              ]
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "client_credentials"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{client_secret}}"
+                }
+              ]
+            },
+            "description": "OAuth 2 client credentials. You rarely need to call this yourself: the collection pre-request script fetches and caches the token."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.expect([200]).to.include(pm.response.code); });",
+                  "var body = pm.response.json();",
+                  "pm.test('bearer token issued', function () { pm.expect(body.token_type).to.eql('Bearer'); });",
+                  "pm.collectionVariables.set('access_token', body.access_token);",
+                  "pm.collectionVariables.set('access_token_client', pm.variables.get('client_id'));",
+                  "pm.collectionVariables.set('access_token_expires_at', String(Date.now() + Number(body.expires_in || 3600) * 1000));",
+                  "if (pm.environment && pm.environment.has && pm.environment.has('access_token')) pm.environment.set('access_token', body.access_token);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · token",
+              "originalRequest": {
+                "method": "POST",
+                "auth": {
+                  "type": "noauth"
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/x-www-form-urlencoded"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/oauth/token",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "oauth",
+                    "token"
+                  ]
+                },
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "grant_type",
+                      "value": "client_credentials"
+                    },
+                    {
+                      "key": "client_id",
+                      "value": "{{client_id}}"
+                    },
+                    {
+                      "key": "client_secret",
+                      "value": "{{client_secret}}"
+                    }
+                  ]
+                },
+                "description": "OAuth 2 client credentials. You rarely need to call this yourself: the collection pre-request script fetches and caches the token."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"access_token\": \"eyJhbGciOiJIUzI1NiJ9.example.signature\",\n  \"token_type\": \"Bearer\",\n  \"expires_in\": 3600,\n  \"scope\": \"catalog:read quotes:write orders:read orders:write shipments:read wallet:read webhooks:manage\",\n  \"mode\": \"test\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Settings",
+      "item": [
+        {
+          "id": "public-getSettingsCurrency",
+          "name": "Platform currency and approved exchange rate",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/settings/currency",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "settings",
+                "currency"
+              ]
+            },
+            "description": "Platform currency and approved exchange rate\n\nScopes (any of): catalog:read"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation getSettingsCurrency — do not edit in Postman.",
+                  "var expected = [200];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"object\",\"properties\":{\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"rate\":{\"type\":\"object\",\"properties\":{\"base\":{\"type\":\"string\",\"const\":\"USD\"},\"quote\":{\"type\":\"string\",\"const\":\"CNY\"},\"rate\":{\"type\":\"number\",\"exclusiveMinimum\":0},\"effective_from\":{\"type\":[\"string\",\"null\"]},\"fx_rate_id\":{\"type\":[\"string\",\"null\"]}},\"required\":[\"base\",\"quote\",\"rate\",\"effective_from\",\"fx_rate_id\"]}},\"required\":[\"currency\",\"rate\"]}}};",
+                  "  pm.test('response matches the OpenAPI schema (CurrencySettingsEnvelope)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}",
+                  "if (body && pm.response.code < 300) {",
+                  "  if (body.data && body.data.currency) { pm.collectionVariables.set('currency', body.data.currency); if (pm.environment && pm.environment.has && pm.environment.has('currency')) pm.environment.set('currency', body.data.currency); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · from seed data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/settings/currency",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "settings",
+                    "currency"
+                  ]
+                },
+                "description": "Platform currency and approved exchange rate\n\nScopes (any of): catalog:read"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"currency\": \"USD\",\n    \"rate\": {\n      \"base\": \"USD\",\n      \"quote\": \"CNY\",\n      \"rate\": 7.1,\n      \"effective_from\": \"2026-10-30T21:29:10.30468+00:00\",\n      \"fx_rate_id\": \"1b707ba9-0c59-47ba-92ee-165b6e1de068\"\n    }\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Catalog",
+      "item": [
+        {
+          "id": "public-getProducts",
+          "name": "Search live products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "description": "Full-text search",
+                  "disabled": true
+                },
+                {
+                  "key": "category",
+                  "value": "",
+                  "description": "Category id or slug (includes sub-categories)",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "description": "Page (1-based)",
+                  "disabled": true
+                },
+                {
+                  "key": "per_page",
+                  "value": "",
+                  "description": "Page size (max 100)",
+                  "disabled": true
+                },
+                {
+                  "key": "ready_to_ship",
+                  "value": "",
+                  "description": "true/false",
+                  "disabled": true
+                },
+                {
+                  "key": "dropship",
+                  "value": "",
+                  "description": "Octopus Dropship tag: true/false",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Search live products\n\nScopes (any of): catalog:read"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation getProducts — do not edit in Postman.",
+                  "var expected = [200];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"slug\",\"title\",\"unit\",\"moq\",\"from_price\",\"currency\"],\"properties\":{\"id\":{\"type\":\"string\"},\"slug\":{\"type\":\"string\"},\"title\":{\"type\":\"string\"},\"description\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"category_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"unit\":{\"type\":\"string\"},\"moq\":{\"type\":\"integer\"},\"lead_time_days\":{\"anyOf\":[{\"type\":\"integer\"},{\"type\":\"null\"}]},\"incoterm\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"origin_country\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"hs_code\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"image_url\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"from_price\":{\"anyOf\":[{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"converted\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"fx_rate_id\":{\"type\":[\"string\",\"null\"]}},\"required\":[\"amount_minor\",\"currency\",\"fx_rate_id\"]}},\"required\":[\"amount_minor\",\"currency\",\"converted\"]},{\"type\":\"null\"}]},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"ready_to_ship\":{\"type\":\"boolean\"},\"octopus_dropship\":{\"type\":\"boolean\"},\"supplier\":{\"anyOf\":[{\"type\":\"object\",\"required\":[\"code\",\"country\"],\"properties\":{\"code\":{\"type\":\"string\"},\"country\":{\"type\":\"string\"},\"verified\":{\"type\":\"boolean\"}}},{\"type\":\"null\"}]}}}},\"meta\":{\"type\":\"object\",\"required\":[\"page\",\"per_page\",\"total\"],\"properties\":{\"page\":{\"type\":\"integer\"},\"per_page\":{\"type\":\"integer\"},\"total\":{\"type\":\"integer\"},\"total_pages\":{\"type\":\"integer\"}}}}};",
+                  "  pm.test('response matches the OpenAPI schema (ProductList)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}",
+                  "if (body && pm.response.code < 300) {",
+                  "  if (body.data && body.data[0]) pm.collectionVariables.set('product_id', body.data[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · from seed data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/products",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "products"
+                  ],
+                  "query": [
+                    {
+                      "key": "q",
+                      "value": "",
+                      "description": "Full-text search",
+                      "disabled": true
+                    },
+                    {
+                      "key": "category",
+                      "value": "",
+                      "description": "Category id or slug (includes sub-categories)",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page",
+                      "value": "",
+                      "description": "Page (1-based)",
+                      "disabled": true
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "",
+                      "description": "Page size (max 100)",
+                      "disabled": true
+                    },
+                    {
+                      "key": "ready_to_ship",
+                      "value": "",
+                      "description": "true/false",
+                      "disabled": true
+                    },
+                    {
+                      "key": "dropship",
+                      "value": "",
+                      "description": "Octopus Dropship tag: true/false",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Search live products\n\nScopes (any of): catalog:read"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"6094ba3d-d343-4ffd-ae4e-e992a30b6171\",\n      \"slug\": \"cordless-impact-driver-18-v-brushless\",\n      \"title\": \"Cordless impact driver, 18 V brushless\",\n      \"description\": \"Cordless impact driver, 18 V brushless. Wholesale supply with tiered USD pricing, DDP terms and an average lead time of 9 days. Quality checked and shipped through Octopus B2B.\",\n      \"category_id\": \"e0f31c66-0aee-4bda-ac25-3ec4d921832c\",\n      \"unit\": \"units\",\n      \"moq\": 20,\n      \"lead_time_days\": 9,\n      \"incoterm\": \"DDP\",\n      \"origin_country\": \"DE\",\n      \"hs_code\": \"8467.29\",\n      \"image_url\": null,\n      \"from_price\": {\n        \"amount_minor\": 4736,\n        \"currency\": \"USD\",\n        \"converted\": {\n          \"amount_minor\": 4736,\n          \"currency\": \"USD\",\n          \"fx_rate_id\": null\n        }\n      },\n      \"currency\": \"USD\",\n      \"ready_to_ship\": true,\n      \"octopus_dropship\": false,\n      \"supplier\": {\n        \"code\": \"OCT-1108\",\n        \"country\": \"DE\",\n        \"verified\": true\n      }\n    },\n    {\n      \"id\": \"610501f6-28ab-4a51-bf1f-4f8b07be3b89\",\n      \"slug\": \"double-wall-corrugated-boxes-40-30-30-cm\",\n      \"title\": \"Double-wall corrugated boxes, 40 × 30 × 30 cm\",\n      \"description\": \"Double-wall corrugated boxes, 40 × 30 × 30 cm. Wholesale supply with tiered USD pricing, EXW terms and an average lead time of 12 days. Quality checked and shipped through Octopus B2B.\",\n      \"category_id\": \"16593f95-3435-4d6d-bb7e-8900021ef157\",\n      \"unit\": \"pcs\",\n      \"moq\": 2000,\n      \"lead_time_days\": 12,\n      \"incoterm\": \"EXW\",\n      \"origin_country\": \"TR\",\n      \"hs_code\": \"4819.10\",\n      \"image_url\": null,\n      \"from_price\": {\n        \"amount_minor\": 35,\n        \"currency\": \"USD\",\n        \"converted\": {\n          \"amount_minor\": 35,\n          \"currency\": \"USD\",\n          \"fx_rate_id\": null\n        }\n      },\n      \"currency\": \"USD\",\n      \"ready_to_ship\": true,\n      \"octopus_dropship\": false,\n      \"supplier\": {\n        \"code\": \"OCT-1129\",\n        \"country\": \"TR\",\n        \"verified\": true\n      }\n    }\n  ],\n  \"meta\": {\n    \"page\": 1,\n    \"per_page\": 24,\n    \"total\": 60,\n    \"total_pages\": 3\n  }\n}"
+            }
+          ]
+        },
+        {
+          "id": "public-getProductsById",
+          "name": "Product detail with price tiers and specs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/products/{{product_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products",
+                "{{product_id}}"
+              ]
+            },
+            "description": "Product detail with price tiers and specs\n\nScopes (any of): catalog:read"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  var missing = [\"product_id\"].filter(function (v) { return !pm.variables.get(v); });",
+                  "  if (missing.length) {",
+                  "    console.log('Skipped: run the list request first to set ' + missing.join(', '));",
+                  "    if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  }",
+                  "})();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation getProductsById — do not edit in Postman.",
+                  "var expected = [200];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"allOf\":[{\"type\":\"object\",\"required\":[\"id\",\"slug\",\"title\",\"unit\",\"moq\",\"from_price\",\"currency\"],\"properties\":{\"id\":{\"type\":\"string\"},\"slug\":{\"type\":\"string\"},\"title\":{\"type\":\"string\"},\"description\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"category_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"unit\":{\"type\":\"string\"},\"moq\":{\"type\":\"integer\"},\"lead_time_days\":{\"anyOf\":[{\"type\":\"integer\"},{\"type\":\"null\"}]},\"incoterm\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"origin_country\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"hs_code\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"image_url\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"from_price\":{\"anyOf\":[{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"converted\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"fx_rate_id\":{\"type\":[\"string\",\"null\"]}},\"required\":[\"amount_minor\",\"currency\",\"fx_rate_id\"]}},\"required\":[\"amount_minor\",\"currency\",\"converted\"]},{\"type\":\"null\"}]},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"ready_to_ship\":{\"type\":\"boolean\"},\"octopus_dropship\":{\"type\":\"boolean\"},\"supplier\":{\"anyOf\":[{\"type\":\"object\",\"required\":[\"code\",\"country\"],\"properties\":{\"code\":{\"type\":\"string\"},\"country\":{\"type\":\"string\"},\"verified\":{\"type\":\"boolean\"}}},{\"type\":\"null\"}]}}},{\"type\":\"object\",\"required\":[\"price_tiers\",\"specs\",\"media\",\"tags\",\"certificates\"],\"properties\":{\"price_tiers\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"min_qty\",\"unit_price\"],\"properties\":{\"min_qty\":{\"type\":\"integer\"},\"unit_price\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"converted\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"fx_rate_id\":{\"type\":[\"string\",\"null\"]}},\"required\":[\"amount_minor\",\"currency\",\"fx_rate_id\"]}},\"required\":[\"amount_minor\",\"currency\",\"converted\"]}}}},\"specs\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"value\":{\"type\":\"string\"}}}},\"media\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"url\":{\"type\":\"string\"},\"kind\":{\"type\":\"string\"},\"alt\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]}}}},\"tags\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"slug\":{\"type\":\"string\"},\"kind\":{\"type\":\"string\"}}}},\"certificates\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"issuer\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"expires_at\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]}}}}}}]},\"simulated\":{\"type\":\"boolean\"}}};",
+                  "  pm.test('response matches the OpenAPI schema (ProductDetail)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · from seed data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/products/{{product_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "products",
+                    "{{product_id}}"
+                  ]
+                },
+                "description": "Product detail with price tiers and specs\n\nScopes (any of): catalog:read"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": \"6094ba3d-d343-4ffd-ae4e-e992a30b6171\",\n    \"slug\": \"cordless-impact-driver-18-v-brushless\",\n    \"title\": \"Cordless impact driver, 18 V brushless\",\n    \"description\": \"Cordless impact driver, 18 V brushless. Wholesale supply with tiered USD pricing, DDP terms and an average lead time of 9 days. Quality checked and shipped through Octopus B2B.\",\n    \"category_id\": \"e0f31c66-0aee-4bda-ac25-3ec4d921832c\",\n    \"unit\": \"units\",\n    \"moq\": 20,\n    \"lead_time_days\": 9,\n    \"incoterm\": \"DDP\",\n    \"origin_country\": \"DE\",\n    \"hs_code\": \"8467.29\",\n    \"image_url\": null,\n    \"from_price\": {\n      \"amount_minor\": 4736,\n      \"currency\": \"USD\",\n      \"converted\": {\n        \"amount_minor\": 4736,\n        \"currency\": \"USD\",\n        \"fx_rate_id\": null\n      }\n    },\n    \"currency\": \"USD\",\n    \"ready_to_ship\": true,\n    \"octopus_dropship\": false,\n    \"supplier\": {\n      \"code\": \"OCT-1108\",\n      \"country\": \"DE\",\n      \"verified\": true\n    },\n    \"price_tiers\": [\n      {\n        \"min_qty\": 20,\n        \"unit_price\": {\n          \"amount_minor\": 6400,\n          \"currency\": \"USD\",\n          \"converted\": {\n            \"amount_minor\": 6400,\n            \"currency\": \"USD\",\n            \"fx_rate_id\": null\n          }\n        }\n      },\n      {\n        \"min_qty\": 100,\n        \"unit_price\": {\n          \"amount_minor\": 5632,\n          \"currency\": \"USD\",\n          \"converted\": {\n            \"amount_minor\": 5632,\n            \"currency\": \"USD\",\n            \"fx_rate_id\": null\n          }\n        }\n      },\n      {\n        \"min_qty\": 200,\n        \"unit_price\": {\n          \"amount_minor\": 4736,\n          \"currency\": \"USD\",\n          \"converted\": {\n            \"amount_minor\": 4736,\n            \"currency\": \"USD\",\n            \"fx_rate_id\": null\n          }\n        }\n      }\n    ],\n    \"specs\": [\n      {\n        \"name\": \"Origin\",\n        \"value\": \"DE\"\n      },\n      {\n        \"name\": \"HS code\",\n        \"value\": \"8467.29\"\n      },\n      {\n        \"name\": \"Incoterm\",\n        \"value\": \"DDP\"\n      },\n      {\n        \"name\": \"MOQ\",\n        \"value\": \"20 units\"\n      },\n      {\n        \"name\": \"Lead time\",\n        \"value\": \"9 days\"\n      }\n    ],\n    \"media\": [],\n    \"tags\": [\n      {\n        \"kind\": \"service\",\n        \"name\": \"Ready to ship\",\n        \"slug\": \"ready-to-ship\"\n      },\n      {\n        \"kind\": \"certification\",\n        \"name\": \"EN 388\",\n        \"slug\": \"en-388\"\n      }\n    ],\n    \"certificates\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "id": "public-getCategories",
+          "name": "Category tree (flat)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/categories",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "categories"
+              ],
+              "query": [
+                {
+                  "key": "level",
+                  "value": "",
+                  "description": "1–4",
+                  "disabled": true
+                },
+                {
+                  "key": "parent_id",
+                  "value": "",
+                  "description": "Parent category id",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Category tree (flat)\n\nScopes (any of): catalog:read"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation getCategories — do not edit in Postman.",
+                  "var expected = [200];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"name\",\"slug\",\"level\"],\"properties\":{\"id\":{\"type\":\"string\"},\"parent_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"name\":{\"type\":\"string\"},\"slug\":{\"type\":\"string\"},\"level\":{\"type\":\"integer\",\"minimum\":1,\"maximum\":4},\"hs_code\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"sort\":{\"type\":\"integer\"}}}}}};",
+                  "  pm.test('response matches the OpenAPI schema (CategoryList)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · from seed data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/categories",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "categories"
+                  ],
+                  "query": [
+                    {
+                      "key": "level",
+                      "value": "",
+                      "description": "1–4",
+                      "disabled": true
+                    },
+                    {
+                      "key": "parent_id",
+                      "value": "",
+                      "description": "Parent category id",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Category tree (flat)\n\nScopes (any of): catalog:read"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"0ab47450-a37c-4c22-bd7a-92e9f92ca0d9\",\n      \"parent_id\": null,\n      \"name\": \"Fasteners\",\n      \"slug\": \"fasteners\",\n      \"level\": 1,\n      \"hs_code\": \"73\",\n      \"sort\": 1\n    },\n    {\n      \"id\": \"9057583d-655f-4b43-a550-c36c1fd69b31\",\n      \"parent_id\": null,\n      \"name\": \"Power tools\",\n      \"slug\": \"power-tools\",\n      \"level\": 1,\n      \"hs_code\": \"84\",\n      \"sort\": 2\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "RFQs & quotes",
+      "item": [
+        {
+          "id": "public-getRfqs",
+          "name": "List your RFQs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rfqs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "rfqs"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Filter by status",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "description": "Page",
+                  "disabled": true
+                },
+                {
+                  "key": "per_page",
+                  "value": "",
+                  "description": "Page size",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List your RFQs\n\nScopes (any of): quotes:write, orders:read"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation getRfqs — do not edit in Postman.",
+                  "var expected = [200];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"title\",\"quantity\",\"status\",\"currency\",\"fee\",\"target_price\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"title\":{\"type\":\"string\"},\"details\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"quantity\":{\"type\":\"integer\"},\"unit\":{\"type\":\"string\"},\"status\":{\"enum\":[\"draft\",\"submitted\",\"assigned\",\"quoting\",\"quoted\",\"accepted\",\"expired\",\"cancelled\"]},\"product_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"destination_country\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"destination_city\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"incoterm\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"expires_at\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"created_at\":{\"type\":\"string\"},\"updated_at\":{\"type\":\"string\"},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"fee\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"target_price\":{\"anyOf\":[{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},{\"type\":\"null\"}]},\"quotes\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"rfq_id\",\"quantity\",\"status\",\"currency\",\"unit_price\",\"shipping\",\"total\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"rfq_id\":{\"type\":\"string\"},\"quantity\":{\"type\":\"integer\"},\"incoterm\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"lead_time_days\":{\"anyOf\":[{\"type\":\"integer\"},{\"type\":\"null\"}]},\"notes\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"status\":{\"enum\":[\"draft\",\"sent\",\"viewed\",\"approved\",\"rejected\",\"expired\",\"superseded\"]},\"valid_until\":{\"type\":\"string\"},\"created_at\":{\"type\":\"string\"},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"fx_rate_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"unit_price\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"shipping\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"total\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"supplier\":{\"anyOf\":[{\"type\":\"object\",\"required\":[\"code\",\"country\"],\"properties\":{\"code\":{\"type\":\"string\"},\"country\":{\"type\":\"string\"},\"verified\":{\"type\":\"boolean\"}}},{\"type\":\"null\"}]}}}}}}},\"meta\":{\"type\":\"object\",\"required\":[\"page\",\"per_page\",\"total\"],\"properties\":{\"page\":{\"type\":\"integer\"},\"per_page\":{\"type\":\"integer\"},\"total\":{\"type\":\"integer\"},\"total_pages\":{\"type\":\"integer\"}}}}};",
+                  "  pm.test('response matches the OpenAPI schema (RfqList)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}",
+                  "if (body && pm.response.code < 300) {",
+                  "  if (body.data && body.data[0]) pm.collectionVariables.set('rfq_id', body.data[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · from seed data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/rfqs",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "rfqs"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "",
+                      "description": "Filter by status",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page",
+                      "value": "",
+                      "description": "Page",
+                      "disabled": true
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "",
+                      "description": "Page size",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "List your RFQs\n\nScopes (any of): quotes:write, orders:read"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"248bdfbd-111c-48f5-ae9b-7406d176ff29\",\n      \"code\": \"RFQ-1004\",\n      \"title\": \"10,000 hex bolts M10\",\n      \"details\": \"A2-70, DIN 933\",\n      \"quantity\": 10000,\n      \"unit\": \"pcs\",\n      \"status\": \"accepted\",\n      \"product_id\": \"ad76ca63-1cee-4945-ad48-7e5f84374469\",\n      \"destination_country\": \"NL\",\n      \"destination_city\": \"Rotterdam\",\n      \"incoterm\": \"FOB\",\n      \"expires_at\": \"2026-11-14T20:34:01.48715+00:00\",\n      \"created_at\": \"2026-10-31T20:34:01.48715+00:00\",\n      \"updated_at\": \"2026-10-31T20:34:02.042298+00:00\",\n      \"currency\": \"USD\",\n      \"fee\": {\n        \"amount_minor\": 500,\n        \"currency\": \"USD\"\n      },\n      \"target_price\": null\n    },\n    {\n      \"id\": \"a9670972-4bdf-4c82-ac48-b82bd9d75cab\",\n      \"code\": \"RFQ-1003\",\n      \"title\": \"5,000 pairs · Nitrile-coated work gloves\",\n      \"details\": \"Size L, EN 388, ship to Rotterdam\",\n      \"quantity\": 5000,\n      \"unit\": \"pairs\",\n      \"status\": \"quoted\",\n      \"product_id\": \"9884a5c0-c205-4f6f-bdd6-e093789f02e2\",\n      \"destination_country\": \"NL\",\n      \"destination_city\": \"Rotterdam\",\n      \"incoterm\": \"FOB\",\n      \"expires_at\": \"2026-11-14T20:34:00.307163+00:00\",\n      \"created_at\": \"2026-10-31T20:34:00.307163+00:00\",\n      \"updated_at\": \"2026-10-31T20:34:01.127173+00:00\",\n      \"currency\": \"USD\",\n      \"fee\": {\n        \"amount_minor\": 500,\n        \"currency\": \"USD\"\n      },\n      \"target_price\": {\n        \"amount_minor\": 60,\n        \"currency\": \"USD\"\n      }\n    }\n  ],\n  \"meta\": {\n    \"page\": 1,\n    \"per_page\": 25,\n    \"total\": 2,\n    \"total_pages\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "id": "public-postRfqs",
+          "name": "Submit an RFQ",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rfqs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "rfqs"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"5,000 pairs nitrile-coated work gloves\",\n  \"quantity\": 5000,\n  \"details\": \"Size L, EN 388\",\n  \"destinationCountry\": \"NL\",\n  \"destinationCity\": \"Rotterdam\",\n  \"incoterm\": \"FOB\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Submit an RFQ\n\nScopes (any of): quotes:write\n\nThe collection adds an `Idempotency-Key` header automatically."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation postRfqs — do not edit in Postman.",
+                  "var expected = [201];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 201) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"title\",\"quantity\",\"status\",\"currency\",\"fee\",\"target_price\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"title\":{\"type\":\"string\"},\"details\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"quantity\":{\"type\":\"integer\"},\"unit\":{\"type\":\"string\"},\"status\":{\"enum\":[\"draft\",\"submitted\",\"assigned\",\"quoting\",\"quoted\",\"accepted\",\"expired\",\"cancelled\"]},\"product_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"destination_country\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"destination_city\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"incoterm\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"expires_at\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"created_at\":{\"type\":\"string\"},\"updated_at\":{\"type\":\"string\"},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"fee\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"target_price\":{\"anyOf\":[{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},{\"type\":\"null\"}]},\"quotes\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"rfq_id\",\"quantity\",\"status\",\"currency\",\"unit_price\",\"shipping\",\"total\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"rfq_id\":{\"type\":\"string\"},\"quantity\":{\"type\":\"integer\"},\"incoterm\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"lead_time_days\":{\"anyOf\":[{\"type\":\"integer\"},{\"type\":\"null\"}]},\"notes\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"status\":{\"enum\":[\"draft\",\"sent\",\"viewed\",\"approved\",\"rejected\",\"expired\",\"superseded\"]},\"valid_until\":{\"type\":\"string\"},\"created_at\":{\"type\":\"string\"},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"fx_rate_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"unit_price\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"shipping\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"total\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"supplier\":{\"anyOf\":[{\"type\":\"object\",\"required\":[\"code\",\"country\"],\"properties\":{\"code\":{\"type\":\"string\"},\"country\":{\"type\":\"string\"},\"verified\":{\"type\":\"boolean\"}}},{\"type\":\"null\"}]}}}}}},\"simulated\":{\"type\":\"boolean\"}}};",
+                  "  pm.test('response matches the OpenAPI schema (RfqEnvelope)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 · from seed data",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/rfqs",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "rfqs"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"5,000 pairs nitrile-coated work gloves\",\n  \"quantity\": 5000,\n  \"details\": \"Size L, EN 388\",\n  \"destinationCountry\": \"NL\",\n  \"destinationCity\": \"Rotterdam\",\n  \"incoterm\": \"FOB\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Submit an RFQ\n\nScopes (any of): quotes:write\n\nThe collection adds an `Idempotency-Key` header automatically."
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": \"rfq_5a3a7293b02079c4\",\n    \"code\": \"RFQ-TEST-4016\",\n    \"title\": \"5,000 pairs nitrile-coated work gloves\",\n    \"details\": \"Size L, EN 388\",\n    \"quantity\": 5000,\n    \"unit\": \"pcs\",\n    \"status\": \"submitted\",\n    \"product_id\": null,\n    \"destination_country\": \"NL\",\n    \"destination_city\": \"Rotterdam\",\n    \"incoterm\": \"FOB\",\n    \"expires_at\": \"2026-11-14T21:52:56.941Z\",\n    \"created_at\": \"2026-10-31T21:52:56.941Z\",\n    \"currency\": \"USD\",\n    \"fee\": {\n      \"amount_minor\": 500,\n      \"currency\": \"USD\"\n    },\n    \"target_price\": null\n  },\n  \"simulated\": true\n}"
+            }
+          ]
+        },
+        {
+          "id": "public-getRfqsById",
+          "name": "RFQ with its quotes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/rfqs/{{rfq_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "rfqs",
+                "{{rfq_id}}"
+              ]
+            },
+            "description": "RFQ with its quotes\n\nScopes (any of): quotes:write, orders:read"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  var missing = [\"rfq_id\"].filter(function (v) { return !pm.variables.get(v); });",
+                  "  if (missing.length) {",
+                  "    console.log('Skipped: run the list request first to set ' + missing.join(', '));",
+                  "    if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  }",
+                  "})();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation getRfqsById — do not edit in Postman.",
+                  "var expected = [200];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"title\",\"quantity\",\"status\",\"currency\",\"fee\",\"target_price\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"title\":{\"type\":\"string\"},\"details\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"quantity\":{\"type\":\"integer\"},\"unit\":{\"type\":\"string\"},\"status\":{\"enum\":[\"draft\",\"submitted\",\"assigned\",\"quoting\",\"quoted\",\"accepted\",\"expired\",\"cancelled\"]},\"product_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"destination_country\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"destination_city\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"incoterm\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"expires_at\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"created_at\":{\"type\":\"string\"},\"updated_at\":{\"type\":\"string\"},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"fee\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"target_price\":{\"anyOf\":[{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},{\"type\":\"null\"}]},\"quotes\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"rfq_id\",\"quantity\",\"status\",\"currency\",\"unit_price\",\"shipping\",\"total\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"rfq_id\":{\"type\":\"string\"},\"quantity\":{\"type\":\"integer\"},\"incoterm\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"lead_time_days\":{\"anyOf\":[{\"type\":\"integer\"},{\"type\":\"null\"}]},\"notes\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"status\":{\"enum\":[\"draft\",\"sent\",\"viewed\",\"approved\",\"rejected\",\"expired\",\"superseded\"]},\"valid_until\":{\"type\":\"string\"},\"created_at\":{\"type\":\"string\"},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"fx_rate_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"unit_price\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"shipping\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"total\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"supplier\":{\"anyOf\":[{\"type\":\"object\",\"required\":[\"code\",\"country\"],\"properties\":{\"code\":{\"type\":\"string\"},\"country\":{\"type\":\"string\"},\"verified\":{\"type\":\"boolean\"}}},{\"type\":\"null\"}]}}}}}},\"simulated\":{\"type\":\"boolean\"}}};",
+                  "  pm.test('response matches the OpenAPI schema (RfqEnvelope)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · from seed data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/rfqs/{{rfq_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "rfqs",
+                    "{{rfq_id}}"
+                  ]
+                },
+                "description": "RFQ with its quotes\n\nScopes (any of): quotes:write, orders:read"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": \"248bdfbd-111c-48f5-ae9b-7406d176ff29\",\n    \"code\": \"RFQ-1004\",\n    \"title\": \"10,000 hex bolts M10\",\n    \"details\": \"A2-70, DIN 933\",\n    \"quantity\": 10000,\n    \"unit\": \"pcs\",\n    \"status\": \"accepted\",\n    \"product_id\": \"ad76ca63-1cee-4945-ad48-7e5f84374469\",\n    \"destination_country\": \"NL\",\n    \"destination_city\": \"Rotterdam\",\n    \"incoterm\": \"FOB\",\n    \"expires_at\": \"2026-11-14T20:34:01.48715+00:00\",\n    \"created_at\": \"2026-10-31T20:34:01.48715+00:00\",\n    \"updated_at\": \"2026-10-31T20:34:02.042298+00:00\",\n    \"currency\": \"USD\",\n    \"fee\": {\n      \"amount_minor\": 500,\n      \"currency\": \"USD\"\n    },\n    \"target_price\": null,\n    \"quotes\": [\n      {\n        \"id\": \"988f79d0-0a09-4b86-a8d0-df03948cfa28\",\n        \"code\": \"QT-1004-1\",\n        \"rfq_id\": \"248bdfbd-111c-48f5-ae9b-7406d176ff29\",\n        \"quantity\": 10000,\n        \"incoterm\": \"FOB\",\n        \"lead_time_days\": 15,\n        \"fx_rate_id\": \"1b707ba9-0c59-47ba-92ee-165b6e1de068\",\n        \"notes\": null,\n        \"status\": \"approved\",\n        \"valid_until\": \"2026-11-30T20:34:01.737274+00:00\",\n        \"created_at\": \"2026-10-31T20:34:01.737274+00:00\",\n        \"currency\": \"USD\",\n        \"unit_price\": {\n          \"amount_minor\": 14,\n          \"currency\": \"USD\"\n        },\n        \"shipping\": {\n          \"amount_minor\": 0,\n          \"currency\": \"USD\"\n        },\n        \"total\": {\n          \"amount_minor\": 140000,\n          \"currency\": \"USD\"\n        },\n        \"supplier\": {\n          \"code\": \"OCT-1101\",\n          \"country\": \"CN\",\n          \"verified\": true\n        }\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "id": "public-getQuotes",
+          "name": "Quotes for an RFQ",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/quotes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "quotes"
+              ],
+              "query": [
+                {
+                  "key": "rfq_id",
+                  "value": "",
+                  "description": "RFQ id or code",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Quotes for an RFQ\n\nScopes (any of): quotes:write, orders:read"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation getQuotes — do not edit in Postman.",
+                  "var expected = [200];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"rfq_id\",\"quantity\",\"status\",\"currency\",\"unit_price\",\"shipping\",\"total\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"rfq_id\":{\"type\":\"string\"},\"quantity\":{\"type\":\"integer\"},\"incoterm\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"lead_time_days\":{\"anyOf\":[{\"type\":\"integer\"},{\"type\":\"null\"}]},\"notes\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"status\":{\"enum\":[\"draft\",\"sent\",\"viewed\",\"approved\",\"rejected\",\"expired\",\"superseded\"]},\"valid_until\":{\"type\":\"string\"},\"created_at\":{\"type\":\"string\"},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"fx_rate_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"unit_price\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"shipping\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"total\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"supplier\":{\"anyOf\":[{\"type\":\"object\",\"required\":[\"code\",\"country\"],\"properties\":{\"code\":{\"type\":\"string\"},\"country\":{\"type\":\"string\"},\"verified\":{\"type\":\"boolean\"}}},{\"type\":\"null\"}]}}}}}};",
+                  "  pm.test('response matches the OpenAPI schema (QuoteList)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}",
+                  "if (body && pm.response.code < 300) {",
+                  "  var open = (body.data || []).filter(function (q) { return (q.status === 'sent' || q.status === 'viewed') && new Date(q.valid_until) > new Date(); });",
+                  "  pm.collectionVariables.set('quote_id', open[0] ? open[0].id : '');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · from seed data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/quotes",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "quotes"
+                  ],
+                  "query": [
+                    {
+                      "key": "rfq_id",
+                      "value": "",
+                      "description": "RFQ id or code",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Quotes for an RFQ\n\nScopes (any of): quotes:write, orders:read"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"5b8dac73-7602-489b-84af-b6a2220707cd\",\n      \"code\": \"QT-1003-1\",\n      \"rfq_id\": \"a9670972-4bdf-4c82-ac48-b82bd9d75cab\",\n      \"quantity\": 5000,\n      \"incoterm\": \"FOB\",\n      \"lead_time_days\": 18,\n      \"fx_rate_id\": \"1b707ba9-0c59-47ba-92ee-165b6e1de068\",\n      \"notes\": \"EN 388 certified\",\n      \"status\": \"sent\",\n      \"valid_until\": \"2026-11-30T20:34:00.54721+00:00\",\n      \"created_at\": \"2026-10-31T20:34:00.54721+00:00\",\n      \"currency\": \"USD\",\n      \"unit_price\": {\n        \"amount_minor\": 61,\n        \"currency\": \"USD\"\n      },\n      \"shipping\": {\n        \"amount_minor\": 0,\n        \"currency\": \"USD\"\n      },\n      \"total\": {\n        \"amount_minor\": 305000,\n        \"currency\": \"USD\"\n      },\n      \"supplier\": {\n        \"code\": \"OCT-1115\",\n        \"country\": \"VN\",\n        \"verified\": true\n      }\n    },\n    {\n      \"id\": \"ed7127c5-91b7-4d6f-9cb0-2cf7cc850701\",\n      \"code\": \"QT-1003-2\",\n      \"rfq_id\": \"a9670972-4bdf-4c82-ac48-b82bd9d75cab\",\n      \"quantity\": 5000,\n      \"incoterm\": \"CIF\",\n      \"lead_time_days\": 24,\n      \"fx_rate_id\": \"1b707ba9-0c59-47ba-92ee-165b6e1de068\",\n      \"notes\": null,\n      \"status\": \"sent\",\n      \"valid_until\": \"2026-11-30T20:34:00.827167+00:00\",\n      \"created_at\": \"2026-10-31T20:34:00.827167+00:00\",\n      \"currency\": \"USD\",\n      \"unit_price\": {\n        \"amount_minor\": 66,\n        \"currency\": \"USD\"\n      },\n      \"shipping\": {\n        \"amount_minor\": 0,\n        \"currency\": \"USD\"\n      },\n      \"total\": {\n        \"amount_minor\": 330000,\n        \"currency\": \"USD\"\n      },\n      \"supplier\": {\n        \"code\": \"OCT-1118\",\n        \"country\": \"LK\",\n        \"verified\": true\n      }\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "id": "public-getOrders",
+          "name": "List your orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders"
+              ],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "",
+                  "description": "Filter by status",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "description": "Page",
+                  "disabled": true
+                },
+                {
+                  "key": "per_page",
+                  "value": "",
+                  "description": "Page size",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List your orders\n\nScopes (any of): orders:read"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation getOrders — do not edit in Postman.",
+                  "var expected = [200];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"status\",\"currency\",\"unit_price\",\"shipping\",\"total\",\"deposit\",\"paid\",\"balance\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"pi_number\":{\"type\":\"string\"},\"status\":{\"enum\":[\"pi_issued\",\"deposit_pending\",\"deposit_paid\",\"confirmed\",\"in_production\",\"qc\",\"balance_pending\",\"balance_paid\",\"ready_to_ship\",\"shipped\",\"delivered\",\"closed\",\"cancelled\",\"disputed\"]},\"title\":{\"type\":\"string\"},\"quantity\":{\"type\":\"integer\"},\"deposit_pct\":{\"type\":\"number\"},\"incoterm\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"quote_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"rfq_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"terms_version_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"fx_rate_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"unit_price\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"shipping\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"total\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"deposit\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"paid\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"balance\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"supplier\":{\"anyOf\":[{\"type\":\"object\",\"required\":[\"code\",\"country\"],\"properties\":{\"code\":{\"type\":\"string\"},\"country\":{\"type\":\"string\"},\"verified\":{\"type\":\"boolean\"}}},{\"type\":\"null\"}]},\"events\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"kind\":{\"type\":\"string\"},\"title\":{\"type\":\"string\"},\"body\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"created_at\":{\"type\":\"string\"}}}},\"documents\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"doc_type\",\"amount\"],\"properties\":{\"id\":{\"type\":\"string\"},\"doc_type\":{\"type\":\"string\"},\"number\":{\"type\":\"string\"},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"amount\":{\"anyOf\":[{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},{\"type\":\"null\"}]},\"status\":{\"type\":\"string\"},\"created_at\":{\"type\":\"string\"}}}},\"shipments\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"status\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"tracking_no\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"status\":{\"type\":\"string\"},\"eta\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"shipping_rate\":{\"anyOf\":[{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},{\"type\":\"null\"}]}}}},\"created_at\":{\"type\":\"string\"}}}},\"meta\":{\"type\":\"object\",\"required\":[\"page\",\"per_page\",\"total\"],\"properties\":{\"page\":{\"type\":\"integer\"},\"per_page\":{\"type\":\"integer\"},\"total\":{\"type\":\"integer\"},\"total_pages\":{\"type\":\"integer\"}}}}};",
+                  "  pm.test('response matches the OpenAPI schema (OrderList)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}",
+                  "if (body && pm.response.code < 300) {",
+                  "  if (body.data && body.data[0]) pm.collectionVariables.set('order_id', body.data[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · from seed data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "orders"
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "",
+                      "description": "Filter by status",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page",
+                      "value": "",
+                      "description": "Page",
+                      "disabled": true
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "",
+                      "description": "Page size",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "List your orders\n\nScopes (any of): orders:read"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"4862dd70-09f2-4774-a182-98661d2af0b4\",\n      \"code\": \"ORD-2202\",\n      \"status\": \"shipped\",\n      \"title\": \"10,000 hex bolts M10\",\n      \"quantity\": 10000,\n      \"deposit_pct\": 30,\n      \"fx_rate_id\": \"1b707ba9-0c59-47ba-92ee-165b6e1de068\",\n      \"incoterm\": \"FOB\",\n      \"quote_id\": \"988f79d0-0a09-4b86-a8d0-df03948cfa28\",\n      \"rfq_id\": \"248bdfbd-111c-48f5-ae9b-7406d176ff29\",\n      \"terms_version_id\": \"9a045a8f-2097-4c85-b196-9dc046069f1f\",\n      \"delivered_at\": null,\n      \"claim_visible_until\": null,\n      \"claim_hidden_until\": null,\n      \"created_at\": \"2026-10-31T20:34:02.042298+00:00\",\n      \"updated_at\": \"2026-10-31T21:29:10.30468+00:00\",\n      \"currency\": \"USD\",\n      \"unit_price\": {\n        \"amount_minor\": 14,\n        \"currency\": \"USD\"\n      },\n      \"shipping\": {\n        \"amount_minor\": 0,\n        \"currency\": \"USD\"\n      },\n      \"total\": {\n        \"amount_minor\": 140000,\n        \"currency\": \"USD\"\n      },\n      \"deposit\": {\n        \"amount_minor\": 42000,\n        \"currency\": \"USD\"\n      },\n      \"paid\": {\n        \"amount_minor\": 140000,\n        \"currency\": \"USD\"\n      },\n      \"balance\": {\n        \"amount_minor\": 0,\n        \"currency\": \"USD\"\n      },\n      \"supplier\": {\n        \"code\": \"OCT-1101\",\n        \"country\": \"CN\",\n        \"verified\": true\n      }\n    }\n  ],\n  \"meta\": {\n    \"page\": 1,\n    \"per_page\": 25,\n    \"total\": 1,\n    \"total_pages\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "id": "public-postOrders",
+          "name": "Create an order from a quote (issues the proforma invoice)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quoteId\": \"{{quote_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Create an order from a quote (issues the proforma invoice)\n\nScopes (any of): orders:write\n\nThe collection adds an `Idempotency-Key` header automatically."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  var missing = [\"quote_id\"].filter(function (v) { return !pm.variables.get(v); });",
+                  "  if (missing.length) {",
+                  "    console.log('Skipped: run the list request first to set ' + missing.join(', '));",
+                  "    if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  }",
+                  "})();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation postOrders — do not edit in Postman.",
+                  "var expected = [201];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 201) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"status\",\"currency\",\"unit_price\",\"shipping\",\"total\",\"deposit\",\"paid\",\"balance\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"pi_number\":{\"type\":\"string\"},\"status\":{\"enum\":[\"pi_issued\",\"deposit_pending\",\"deposit_paid\",\"confirmed\",\"in_production\",\"qc\",\"balance_pending\",\"balance_paid\",\"ready_to_ship\",\"shipped\",\"delivered\",\"closed\",\"cancelled\",\"disputed\"]},\"title\":{\"type\":\"string\"},\"quantity\":{\"type\":\"integer\"},\"deposit_pct\":{\"type\":\"number\"},\"incoterm\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"quote_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"rfq_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"terms_version_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"fx_rate_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"unit_price\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"shipping\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"total\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"deposit\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"paid\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"balance\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"supplier\":{\"anyOf\":[{\"type\":\"object\",\"required\":[\"code\",\"country\"],\"properties\":{\"code\":{\"type\":\"string\"},\"country\":{\"type\":\"string\"},\"verified\":{\"type\":\"boolean\"}}},{\"type\":\"null\"}]},\"events\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"kind\":{\"type\":\"string\"},\"title\":{\"type\":\"string\"},\"body\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"created_at\":{\"type\":\"string\"}}}},\"documents\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"doc_type\",\"amount\"],\"properties\":{\"id\":{\"type\":\"string\"},\"doc_type\":{\"type\":\"string\"},\"number\":{\"type\":\"string\"},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"amount\":{\"anyOf\":[{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},{\"type\":\"null\"}]},\"status\":{\"type\":\"string\"},\"created_at\":{\"type\":\"string\"}}}},\"shipments\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"status\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"tracking_no\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"status\":{\"type\":\"string\"},\"eta\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"shipping_rate\":{\"anyOf\":[{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},{\"type\":\"null\"}]}}}},\"created_at\":{\"type\":\"string\"}}},\"simulated\":{\"type\":\"boolean\"}}};",
+                  "  pm.test('response matches the OpenAPI schema (OrderEnvelope)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 · from seed data",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "orders"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"quoteId\": \"{{quote_id}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Create an order from a quote (issues the proforma invoice)\n\nScopes (any of): orders:write\n\nThe collection adds an `Idempotency-Key` header automatically."
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": \"ord_a96e85ff84ac0ec9\",\n    \"code\": \"ORD-TEST-5742\",\n    \"pi_number\": \"PI-2026-TEST\",\n    \"status\": \"deposit_pending\",\n    \"title\": \"5,000 pairs · Nitrile-coated work gloves\",\n    \"quantity\": 5000,\n    \"unit_price\": {\n      \"amount_minor\": 61,\n      \"currency\": \"USD\"\n    },\n    \"shipping\": {\n      \"amount_minor\": 0,\n      \"currency\": \"USD\"\n    },\n    \"total\": {\n      \"amount_minor\": 305000,\n      \"currency\": \"USD\"\n    },\n    \"deposit_pct\": 30,\n    \"deposit\": {\n      \"amount_minor\": 91500,\n      \"currency\": \"USD\"\n    },\n    \"paid\": {\n      \"amount_minor\": 0,\n      \"currency\": \"USD\"\n    },\n    \"balance\": {\n      \"amount_minor\": 305000,\n      \"currency\": \"USD\"\n    },\n    \"currency\": \"USD\",\n    \"fx_rate_id\": \"1b707ba9-0c59-47ba-92ee-165b6e1de068\",\n    \"incoterm\": \"FOB\",\n    \"quote_id\": \"5b8dac73-7602-489b-84af-b6a2220707cd\",\n    \"rfq_id\": \"a9670972-4bdf-4c82-ac48-b82bd9d75cab\",\n    \"supplier\": {\n      \"code\": \"OCT-1115\",\n      \"country\": \"VN\",\n      \"verified\": true\n    },\n    \"created_at\": \"2026-10-31T21:52:58.726Z\"\n  },\n  \"simulated\": true\n}"
+            }
+          ]
+        },
+        {
+          "id": "public-getOrdersById",
+          "name": "Order detail with timeline, documents and shipments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/orders/{{order_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "orders",
+                "{{order_id}}"
+              ]
+            },
+            "description": "Order detail with timeline, documents and shipments\n\nScopes (any of): orders:read"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  var missing = [\"order_id\"].filter(function (v) { return !pm.variables.get(v); });",
+                  "  if (missing.length) {",
+                  "    console.log('Skipped: run the list request first to set ' + missing.join(', '));",
+                  "    if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  }",
+                  "})();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation getOrdersById — do not edit in Postman.",
+                  "var expected = [200];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"status\",\"currency\",\"unit_price\",\"shipping\",\"total\",\"deposit\",\"paid\",\"balance\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"pi_number\":{\"type\":\"string\"},\"status\":{\"enum\":[\"pi_issued\",\"deposit_pending\",\"deposit_paid\",\"confirmed\",\"in_production\",\"qc\",\"balance_pending\",\"balance_paid\",\"ready_to_ship\",\"shipped\",\"delivered\",\"closed\",\"cancelled\",\"disputed\"]},\"title\":{\"type\":\"string\"},\"quantity\":{\"type\":\"integer\"},\"deposit_pct\":{\"type\":\"number\"},\"incoterm\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"quote_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"rfq_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"terms_version_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"fx_rate_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"unit_price\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"shipping\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"total\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"deposit\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"paid\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"balance\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"supplier\":{\"anyOf\":[{\"type\":\"object\",\"required\":[\"code\",\"country\"],\"properties\":{\"code\":{\"type\":\"string\"},\"country\":{\"type\":\"string\"},\"verified\":{\"type\":\"boolean\"}}},{\"type\":\"null\"}]},\"events\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"kind\":{\"type\":\"string\"},\"title\":{\"type\":\"string\"},\"body\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"created_at\":{\"type\":\"string\"}}}},\"documents\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"doc_type\",\"amount\"],\"properties\":{\"id\":{\"type\":\"string\"},\"doc_type\":{\"type\":\"string\"},\"number\":{\"type\":\"string\"},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"amount\":{\"anyOf\":[{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},{\"type\":\"null\"}]},\"status\":{\"type\":\"string\"},\"created_at\":{\"type\":\"string\"}}}},\"shipments\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"status\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"tracking_no\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"status\":{\"type\":\"string\"},\"eta\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"shipping_rate\":{\"anyOf\":[{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},{\"type\":\"null\"}]}}}},\"created_at\":{\"type\":\"string\"}}},\"simulated\":{\"type\":\"boolean\"}}};",
+                  "  pm.test('response matches the OpenAPI schema (OrderEnvelope)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}",
+                  "if (body && pm.response.code < 300) {",
+                  "  pm.collectionVariables.set('shipment_id', body.data && body.data.shipments && body.data.shipments[0] ? body.data.shipments[0].id : '');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · from seed data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/orders/{{order_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "orders",
+                    "{{order_id}}"
+                  ]
+                },
+                "description": "Order detail with timeline, documents and shipments\n\nScopes (any of): orders:read"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": \"4862dd70-09f2-4774-a182-98661d2af0b4\",\n    \"code\": \"ORD-2202\",\n    \"status\": \"shipped\",\n    \"title\": \"10,000 hex bolts M10\",\n    \"quantity\": 10000,\n    \"deposit_pct\": 30,\n    \"fx_rate_id\": \"1b707ba9-0c59-47ba-92ee-165b6e1de068\",\n    \"incoterm\": \"FOB\",\n    \"quote_id\": \"988f79d0-0a09-4b86-a8d0-df03948cfa28\",\n    \"rfq_id\": \"248bdfbd-111c-48f5-ae9b-7406d176ff29\",\n    \"terms_version_id\": \"9a045a8f-2097-4c85-b196-9dc046069f1f\",\n    \"delivered_at\": null,\n    \"claim_visible_until\": null,\n    \"claim_hidden_until\": null,\n    \"created_at\": \"2026-10-31T20:34:02.042298+00:00\",\n    \"updated_at\": \"2026-10-31T21:29:10.30468+00:00\",\n    \"currency\": \"USD\",\n    \"unit_price\": {\n      \"amount_minor\": 14,\n      \"currency\": \"USD\"\n    },\n    \"shipping\": {\n      \"amount_minor\": 0,\n      \"currency\": \"USD\"\n    },\n    \"total\": {\n      \"amount_minor\": 140000,\n      \"currency\": \"USD\"\n    },\n    \"deposit\": {\n      \"amount_minor\": 42000,\n      \"currency\": \"USD\"\n    },\n    \"paid\": {\n      \"amount_minor\": 140000,\n      \"currency\": \"USD\"\n    },\n    \"balance\": {\n      \"amount_minor\": 0,\n      \"currency\": \"USD\"\n    },\n    \"supplier\": {\n      \"code\": \"OCT-1101\",\n      \"country\": \"CN\",\n      \"verified\": true\n    },\n    \"events\": [\n      {\n        \"kind\": \"status\",\n        \"title\": \"Proforma invoice issued\",\n        \"body\": \"PI-2026-1002 · deposit 30% due\",\n        \"created_at\": \"2026-10-31T20:34:02.042298+00:00\"\n      },\n      {\n        \"kind\": \"payment\",\n        \"title\": \"Payment received\",\n        \"body\": \"420.00 USD · deposit\",\n        \"created_at\": \"2026-10-31T20:34:02.302442+00:00\"\n      },\n      {\n        \"kind\": \"status\",\n        \"title\": \"Confirmed\",\n        \"body\": null,\n        \"created_at\": \"2026-10-31T20:34:02.542403+00:00\"\n      },\n      {\n        \"kind\": \"status\",\n        \"title\": \"In Production\",\n        \"body\": null,\n        \"created_at\": \"2026-10-31T20:34:02.862394+00:00\"\n      },\n      {\n        \"kind\": \"status\",\n        \"title\": \"Balance Pending\",\n        \"body\": null,\n        \"created_at\": \"2026-10-31T20:34:03.102137+00:00\"\n      },\n      {\n        \"kind\": \"payment\",\n        \"title\": \"Payment received\",\n        \"body\": \"980.00 USD · balance\",\n        \"created_at\": \"2026-10-31T20:34:03.347249+00:00\"\n      },\n      {\n        \"kind\": \"status\",\n        \"title\": \"Ready To Ship\",\n        \"body\": null,\n        \"created_at\": \"2026-10-31T20:34:03.562353+00:00\"\n      },\n      {\n        \"kind\": \"status\",\n        \"title\": \"Shipped\",\n        \"body\": null,\n        \"created_at\": \"2026-10-31T20:34:03.952409+00:00\"\n      }\n    ],\n    \"documents\": [\n      {\n        \"id\": \"0ad09e1b-e2a8-4f4f-a696-73e0d25572c9\",\n        \"doc_type\": \"proforma_invoice\",\n        \"number\": \"PI-2026-1002\",\n        \"status\": \"paid\",\n        \"emailed_at\": null,\n        \"created_at\": \"2026-10-31T20:34:02.042298+00:00\",\n        \"currency\": \"USD\",\n        \"amount\": {\n          \"amount_minor\": 140000,\n          \"currency\": \"USD\"\n        }\n      },\n      {\n        \"id\": \"d986fe3f-7347-463b-89ad-1ee4673ba60a\",\n        \"doc_type\": \"receipt\",\n        \"number\": \"RCT-4EAB9FAE\",\n        \"status\": \"paid\",\n        \"emailed_at\": null,\n        \"created_at\": \"2026-10-31T20:34:02.302442+00:00\",\n        \"currency\": \"USD\",\n        \"amount\": {\n          \"amount_minor\": 42000,\n          \"currency\": \"USD\"\n        }\n      },\n      {\n        \"id\": \"51cdafd1-2e6b-4c5e-aeca-d16929858c93\",\n        \"doc_type\": \"confirmation\",\n        \"number\": \"CNF-2202\",\n        \"status\": \"issued\",\n        \"emailed_at\": null,\n        \"created_at\": \"2026-10-31T20:34:02.542403+00:00\",\n        \"currency\": \"USD\",\n        \"amount\": {\n          \"amount_minor\": 140000,\n          \"currency\": \"USD\"\n        }\n      },\n      {\n        \"id\": \"5fbe6e70-ac26-4372-bb15-8db7148a056c\",\n        \"doc_type\": \"commercial_invoice\",\n        \"number\": \"INV-2026-0401\",\n        \"status\": \"paid\",\n        \"emailed_at\": null,\n        \"created_at\": \"2026-10-31T20:34:03.102137+00:00\",\n        \"currency\": \"USD\",\n        \"amount\": {\n          \"amount_minor\": 140000,\n          \"currency\": \"USD\"\n        }\n      },\n      {\n        \"id\": \"88a9ef33-46c4-4293-8e21-b869c25a55fd\",\n        \"doc_type\": \"receipt\",\n        \"number\": \"RCT-30EC9A5D\",\n        \"status\": \"paid\",\n        \"emailed_at\": null,\n        \"created_at\": \"2026-10-31T20:34:03.347249+00:00\",\n        \"currency\": \"USD\",\n        \"amount\": {\n          \"amount_minor\": 98000,\n          \"currency\": \"USD\"\n        }\n      }\n    ],\n    \"shipments\": [\n      {\n        \"id\": \"b7ca1879-553a-4e8c-b5df-3f6324702c3d\",\n        \"code\": \"SHP-1001\",\n        \"carrier_code\": \"yunexpress\",\n        \"service_code\": \"YunExpress Global Standard\",\n        \"tracking_no\": \"YT2530412345678\",\n        \"status\": \"in_transit\",\n        \"eta\": \"2026-11-12\",\n        \"last_event_at\": \"2026-10-31T20:34:03.807172+00:00\",\n        \"created_at\": \"2026-10-31T20:34:03.807172+00:00\",\n        \"shipping_rate\": {\n          \"amount_minor\": 38000,\n          \"currency\": \"USD\"\n        }\n      }\n    ]\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Shipments",
+      "item": [
+        {
+          "id": "public-getShipmentsByIdTracking",
+          "name": "Shipment tracking events",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/shipments/{{shipment_id}}/tracking",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "shipments",
+                "{{shipment_id}}",
+                "tracking"
+              ]
+            },
+            "description": "Shipment tracking events\n\nScopes (any of): shipments:read, orders:read"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  var missing = [\"shipment_id\"].filter(function (v) { return !pm.variables.get(v); });",
+                  "  if (missing.length) {",
+                  "    console.log('Skipped: run the list request first to set ' + missing.join(', '));",
+                  "    if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  }",
+                  "})();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation getShipmentsByIdTracking — do not edit in Postman.",
+                  "var expected = [200];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"status\",\"events\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"order_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"order_code\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"carrier_code\":{\"type\":\"string\"},\"service_code\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"tracking_no\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"status\":{\"enum\":[\"draft\",\"priced\",\"created\",\"label_ready\",\"picked_up\",\"in_transit\",\"out_for_delivery\",\"delivered\",\"exception\",\"returned\"]},\"eta\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"events\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"status\":{\"type\":\"string\"},\"description\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"location\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"occurred_at\":{\"type\":\"string\"}}}}}},\"simulated\":{\"type\":\"boolean\"}}};",
+                  "  pm.test('response matches the OpenAPI schema (TrackingEnvelope)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · from seed data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/shipments/{{shipment_id}}/tracking",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "shipments",
+                    "{{shipment_id}}",
+                    "tracking"
+                  ]
+                },
+                "description": "Shipment tracking events\n\nScopes (any of): shipments:read, orders:read"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": \"b7ca1879-553a-4e8c-b5df-3f6324702c3d\",\n    \"code\": \"SHP-1001\",\n    \"order_id\": \"4862dd70-09f2-4774-a182-98661d2af0b4\",\n    \"carrier_code\": \"yunexpress\",\n    \"service_code\": \"YunExpress Global Standard\",\n    \"tracking_no\": \"YT2530412345678\",\n    \"status\": \"in_transit\",\n    \"eta\": \"2026-11-12\",\n    \"parcels\": 1,\n    \"weight_kg\": 120,\n    \"last_event_at\": \"2026-10-31T20:34:03.807172+00:00\",\n    \"created_at\": \"2026-10-31T20:34:03.807172+00:00\",\n    \"order_code\": \"ORD-2202\",\n    \"events\": [\n      {\n        \"status\": \"in_transit\",\n        \"description\": \"Departed origin facility\",\n        \"location\": \"Shenzhen, CN\",\n        \"occurred_at\": \"2026-10-30T20:34:03.887069+00:00\"\n      },\n      {\n        \"status\": \"picked_up\",\n        \"description\": \"Picked up by YunExpress\",\n        \"location\": \"Shenzhen, CN\",\n        \"occurred_at\": \"2026-10-29T20:34:03.887069+00:00\"\n      },\n      {\n        \"status\": \"created\",\n        \"description\": \"Shipment created, label printed\",\n        \"location\": \"Shenzhen, CN\",\n        \"occurred_at\": \"2026-10-28T20:34:03.887069+00:00\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Wallet & ledger",
+      "item": [
+        {
+          "id": "public-getWallet",
+          "name": "Wallet balances per currency and ledger lines",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/wallet",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "wallet"
+              ],
+              "query": [
+                {
+                  "key": "currency",
+                  "value": "",
+                  "description": "Wallet whose ledger lines to list (default: platform currency)",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "description": "Page",
+                  "disabled": true
+                },
+                {
+                  "key": "per_page",
+                  "value": "",
+                  "description": "Page size",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Wallet balances per currency and ledger lines\n\nScopes (any of): wallet:read"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation getWallet — do not edit in Postman.",
+                  "var expected = [200];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"object\",\"required\":[\"currency\",\"platform_currency\",\"balance\",\"balances\",\"entries\"],\"properties\":{\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"platform_currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"balance\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"balances\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]}},\"wallet_enabled\":{\"type\":\"boolean\"},\"entries\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"direction\",\"amount\"],\"properties\":{\"id\":{\"type\":\"integer\"},\"direction\":{\"enum\":[\"credit\",\"debit\"]},\"amount\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"memo\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"journal\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"stream\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"ref_type\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"created_at\":{\"type\":\"string\"}}}}}},\"simulated\":{\"type\":\"boolean\"}}};",
+                  "  pm.test('response matches the OpenAPI schema (WalletEnvelope)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · from seed data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/wallet",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "wallet"
+                  ],
+                  "query": [
+                    {
+                      "key": "currency",
+                      "value": "",
+                      "description": "Wallet whose ledger lines to list (default: platform currency)",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page",
+                      "value": "",
+                      "description": "Page",
+                      "disabled": true
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "",
+                      "description": "Page size",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Wallet balances per currency and ledger lines\n\nScopes (any of): wallet:read"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"currency\": \"USD\",\n    \"platform_currency\": \"USD\",\n    \"balance\": {\n      \"amount_minor\": 29100,\n      \"currency\": \"USD\"\n    },\n    \"balances\": [\n      {\n        \"amount_minor\": 29100,\n        \"currency\": \"USD\"\n      }\n    ],\n    \"wallet_enabled\": true,\n    \"entries\": [\n      {\n        \"id\": 23,\n        \"direction\": \"debit\",\n        \"amount\": {\n          \"amount_minor\": 19900,\n          \"currency\": \"USD\"\n        },\n        \"memo\": \"Service fee · qc\",\n        \"journal\": \"JRN-000012\",\n        \"stream\": \"service_fees\",\n        \"ref_type\": \"service_request\",\n        \"created_at\": \"2026-10-31T20:34:04.207335+00:00\"\n      },\n      {\n        \"id\": 15,\n        \"direction\": \"debit\",\n        \"amount\": {\n          \"amount_minor\": 500,\n          \"currency\": \"USD\"\n        },\n        \"memo\": \"RFQ fee\",\n        \"journal\": \"JRN-000008\",\n        \"stream\": \"rfq_fees\",\n        \"ref_type\": \"rfq\",\n        \"created_at\": \"2026-10-31T20:34:01.48715+00:00\"\n      },\n      {\n        \"id\": 13,\n        \"direction\": \"debit\",\n        \"amount\": {\n          \"amount_minor\": 500,\n          \"currency\": \"USD\"\n        },\n        \"memo\": \"RFQ fee\",\n        \"journal\": \"JRN-000007\",\n        \"stream\": \"rfq_fees\",\n        \"ref_type\": \"rfq\",\n        \"created_at\": \"2026-10-31T20:34:00.307163+00:00\"\n      },\n      {\n        \"id\": 12,\n        \"direction\": \"credit\",\n        \"amount\": {\n          \"amount_minor\": 50000,\n          \"currency\": \"USD\"\n        },\n        \"memo\": \"Wallet top-up DEMO-TOPUP-1\",\n        \"journal\": \"JRN-000006\",\n        \"stream\": null,\n        \"ref_type\": \"wallet_topup\",\n        \"created_at\": \"2026-10-31T20:33:59.987187+00:00\"\n      }\n    ]\n  },\n  \"meta\": {\n    \"page\": 1,\n    \"per_page\": 25,\n    \"total\": 4,\n    \"total_pages\": 1\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Service requests",
+      "item": [
+        {
+          "id": "public-getServiceRequests",
+          "name": "List service requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/service-requests",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "service-requests"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "description": "Page",
+                  "disabled": true
+                },
+                {
+                  "key": "per_page",
+                  "value": "",
+                  "description": "Page size",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List service requests\n\nScopes (any of): orders:read"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation getServiceRequests — do not edit in Postman.",
+                  "var expected = [200];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"service_code\",\"status\",\"currency\",\"fee\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"service_code\":{\"type\":\"string\"},\"product_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"order_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"status\":{\"enum\":[\"requested\",\"paid\",\"accepted\",\"in_progress\",\"report_ready\",\"completed\",\"rejected\",\"refunded\"]},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"fx_rate_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"fee\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"paid_via\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"details\":{\"type\":\"object\"},\"created_at\":{\"type\":\"string\"},\"updated_at\":{\"type\":\"string\"}}}},\"meta\":{\"type\":\"object\",\"required\":[\"page\",\"per_page\",\"total\"],\"properties\":{\"page\":{\"type\":\"integer\"},\"per_page\":{\"type\":\"integer\"},\"total\":{\"type\":\"integer\"},\"total_pages\":{\"type\":\"integer\"}}}}};",
+                  "  pm.test('response matches the OpenAPI schema (ServiceRequestList)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · from seed data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/service-requests",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "service-requests"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "",
+                      "description": "Page",
+                      "disabled": true
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "",
+                      "description": "Page size",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "List service requests\n\nScopes (any of): orders:read"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"b5eb3d85-c852-40fa-9184-779437d57fde\",\n      \"code\": \"SRV-0301\",\n      \"service_code\": \"qc\",\n      \"product_id\": \"9884a5c0-c205-4f6f-bdd6-e093789f02e2\",\n      \"order_id\": null,\n      \"status\": \"paid\",\n      \"details\": {\n        \"notes\": \"Pre-shipment inspection for ORD gloves\"\n      },\n      \"paid_via\": \"wallet\",\n      \"created_at\": \"2026-10-31T20:34:04.207335+00:00\",\n      \"updated_at\": \"2026-10-31T21:29:10.30468+00:00\",\n      \"currency\": \"USD\",\n      \"fx_rate_id\": \"1b707ba9-0c59-47ba-92ee-165b6e1de068\",\n      \"fee\": {\n        \"amount_minor\": 19900,\n        \"currency\": \"USD\"\n      }\n    }\n  ],\n  \"meta\": {\n    \"page\": 1,\n    \"per_page\": 25,\n    \"total\": 1,\n    \"total_pages\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "id": "public-postServiceRequests",
+          "name": "Request a service (sample, QC, certification, 3PL, dropship)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/service-requests",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "service-requests"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceCode\": \"qc\",\n  \"details\": {\n    \"notes\": \"Pre-shipment inspection\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Request a service (sample, QC, certification, 3PL, dropship)\n\nScopes (any of): orders:write\n\nThe collection adds an `Idempotency-Key` header automatically."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation postServiceRequests — do not edit in Postman.",
+                  "var expected = [201];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 201) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"service_code\",\"status\",\"currency\",\"fee\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"service_code\":{\"type\":\"string\"},\"product_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"order_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"status\":{\"enum\":[\"requested\",\"paid\",\"accepted\",\"in_progress\",\"report_ready\",\"completed\",\"rejected\",\"refunded\"]},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"fx_rate_id\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"fee\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"paid_via\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"details\":{\"type\":\"object\"},\"created_at\":{\"type\":\"string\"},\"updated_at\":{\"type\":\"string\"}}},\"simulated\":{\"type\":\"boolean\"}}};",
+                  "  pm.test('response matches the OpenAPI schema (ServiceRequestEnvelope)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 · from seed data",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/service-requests",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "service-requests"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"serviceCode\": \"qc\",\n  \"details\": {\n    \"notes\": \"Pre-shipment inspection\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Request a service (sample, QC, certification, 3PL, dropship)\n\nScopes (any of): orders:write\n\nThe collection adds an `Idempotency-Key` header automatically."
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": \"srv_40f236431a50f382\",\n    \"code\": \"SRV-TEST\",\n    \"service_code\": \"qc\",\n    \"product_id\": null,\n    \"order_id\": null,\n    \"status\": \"paid\",\n    \"details\": {\n      \"notes\": \"Pre-shipment inspection\"\n    },\n    \"paid_via\": \"wallet\",\n    \"created_at\": \"2026-10-31T21:53:00.643Z\",\n    \"updated_at\": \"2026-10-31T21:53:00.643Z\",\n    \"currency\": \"USD\",\n    \"fx_rate_id\": \"1b707ba9-0c59-47ba-92ee-165b6e1de068\",\n    \"fee\": {\n      \"amount_minor\": 19900,\n      \"currency\": \"USD\"\n    }\n  },\n  \"simulated\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "id": "public-getWebhooks",
+          "name": "List webhook endpoints",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/webhooks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "webhooks"
+              ]
+            },
+            "description": "List webhook endpoints\n\nScopes (any of): webhooks:manage"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation getWebhooks — do not edit in Postman.",
+                  "var expected = [200];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"url\",\"events\",\"active\"],\"properties\":{\"id\":{\"type\":\"string\"},\"url\":{\"type\":\"string\"},\"events\":{\"type\":\"array\",\"items\":{\"enum\":[\"order.updated\",\"quote.created\",\"shipment.tracking\",\"service_request.updated\",\"wallet.updated\",\"settings.currency_changed\"]}},\"active\":{\"type\":\"boolean\"},\"secret\":{\"type\":\"string\"},\"created_at\":{\"type\":\"string\"},\"deliveries\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"id\":{},\"event_type\":{\"type\":\"string\"},\"response_status\":{\"anyOf\":[{\"type\":\"integer\"},{\"type\":\"null\"}]},\"attempts\":{\"type\":\"integer\"},\"delivered_at\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"created_at\":{\"type\":\"string\"}}}}}}}}};",
+                  "  pm.test('response matches the OpenAPI schema (WebhookList)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · from seed data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/webhooks",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "webhooks"
+                  ]
+                },
+                "description": "List webhook endpoints\n\nScopes (any of): webhooks:manage"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": []\n}"
+            }
+          ]
+        },
+        {
+          "id": "public-postWebhooks",
+          "name": "Register a webhook endpoint (secret returned once)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/webhooks",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "webhooks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://example.com/octopus/webhooks\",\n  \"events\": [\n    \"order.updated\",\n    \"shipment.tracking\",\n    \"settings.currency_changed\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Register a webhook endpoint (secret returned once)\n\nScopes (any of): webhooks:manage\n\nThe collection adds an `Idempotency-Key` header automatically."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation postWebhooks — do not edit in Postman.",
+                  "var expected = [201];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 201) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"object\",\"required\":[\"id\",\"url\",\"events\",\"active\"],\"properties\":{\"id\":{\"type\":\"string\"},\"url\":{\"type\":\"string\"},\"events\":{\"type\":\"array\",\"items\":{\"enum\":[\"order.updated\",\"quote.created\",\"shipment.tracking\",\"service_request.updated\",\"wallet.updated\",\"settings.currency_changed\"]}},\"active\":{\"type\":\"boolean\"},\"secret\":{\"type\":\"string\"},\"created_at\":{\"type\":\"string\"},\"deliveries\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"id\":{},\"event_type\":{\"type\":\"string\"},\"response_status\":{\"anyOf\":[{\"type\":\"integer\"},{\"type\":\"null\"}]},\"attempts\":{\"type\":\"integer\"},\"delivered_at\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"created_at\":{\"type\":\"string\"}}}}}},\"simulated\":{\"type\":\"boolean\"}}};",
+                  "  pm.test('response matches the OpenAPI schema (WebhookEnvelope)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}",
+                  "if (body && pm.response.code < 300) {",
+                  "  if (body.data) { pm.collectionVariables.set('webhook_id', body.data.id); pm.collectionVariables.set('webhook_secret', body.data.secret || ''); }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 · from seed data",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/webhooks",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "webhooks"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"url\": \"https://example.com/octopus/webhooks\",\n  \"events\": [\n    \"order.updated\",\n    \"shipment.tracking\",\n    \"settings.currency_changed\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Register a webhook endpoint (secret returned once)\n\nScopes (any of): webhooks:manage\n\nThe collection adds an `Idempotency-Key` header automatically."
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": \"a2db83a1-b8ec-4af1-987a-d79888f32a9c\",\n    \"url\": \"https://example.com/octopus/webhooks\",\n    \"events\": [\n      \"order.updated\",\n      \"shipment.tracking\",\n      \"settings.currency_changed\"\n    ],\n    \"active\": true,\n    \"created_at\": \"2026-10-31T21:53:01.419683+00:00\",\n    \"secret\": \"whsec_redacted_example_secret\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "id": "public-getWebhooksById",
+          "name": "Webhook endpoint with recent deliveries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/webhooks/{{webhook_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "webhooks",
+                "{{webhook_id}}"
+              ]
+            },
+            "description": "Webhook endpoint with recent deliveries\n\nScopes (any of): webhooks:manage"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  var missing = [\"webhook_id\"].filter(function (v) { return !pm.variables.get(v); });",
+                  "  if (missing.length) {",
+                  "    console.log('Skipped: run the list request first to set ' + missing.join(', '));",
+                  "    if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  }",
+                  "})();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation getWebhooksById — do not edit in Postman.",
+                  "var expected = [200];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"object\",\"required\":[\"id\",\"url\",\"events\",\"active\"],\"properties\":{\"id\":{\"type\":\"string\"},\"url\":{\"type\":\"string\"},\"events\":{\"type\":\"array\",\"items\":{\"enum\":[\"order.updated\",\"quote.created\",\"shipment.tracking\",\"service_request.updated\",\"wallet.updated\",\"settings.currency_changed\"]}},\"active\":{\"type\":\"boolean\"},\"secret\":{\"type\":\"string\"},\"created_at\":{\"type\":\"string\"},\"deliveries\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"id\":{},\"event_type\":{\"type\":\"string\"},\"response_status\":{\"anyOf\":[{\"type\":\"integer\"},{\"type\":\"null\"}]},\"attempts\":{\"type\":\"integer\"},\"delivered_at\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"created_at\":{\"type\":\"string\"}}}}}},\"simulated\":{\"type\":\"boolean\"}}};",
+                  "  pm.test('response matches the OpenAPI schema (WebhookEnvelope)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · from seed data",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/webhooks/{{webhook_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "webhooks",
+                    "{{webhook_id}}"
+                  ]
+                },
+                "description": "Webhook endpoint with recent deliveries\n\nScopes (any of): webhooks:manage"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": \"a2db83a1-b8ec-4af1-987a-d79888f32a9c\",\n    \"url\": \"https://example.com/octopus/webhooks\",\n    \"events\": [\n      \"order.updated\",\n      \"shipment.tracking\",\n      \"settings.currency_changed\"\n    ],\n    \"active\": true,\n    \"created_at\": \"2026-10-31T21:53:01.419683+00:00\",\n    \"deliveries\": []\n  }\n}"
+            }
+          ]
+        },
+        {
+          "id": "public-patchWebhooksById",
+          "name": "Update a webhook endpoint",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/webhooks/{{webhook_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "webhooks",
+                "{{webhook_id}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"active\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Update a webhook endpoint\n\nScopes (any of): webhooks:manage"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  var missing = [\"webhook_id\"].filter(function (v) { return !pm.variables.get(v); });",
+                  "  if (missing.length) {",
+                  "    console.log('Skipped: run the list request first to set ' + missing.join(', '));",
+                  "    if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  }",
+                  "})();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation patchWebhooksById — do not edit in Postman.",
+                  "var expected = [200];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"object\",\"required\":[\"id\",\"url\",\"events\",\"active\"],\"properties\":{\"id\":{\"type\":\"string\"},\"url\":{\"type\":\"string\"},\"events\":{\"type\":\"array\",\"items\":{\"enum\":[\"order.updated\",\"quote.created\",\"shipment.tracking\",\"service_request.updated\",\"wallet.updated\",\"settings.currency_changed\"]}},\"active\":{\"type\":\"boolean\"},\"secret\":{\"type\":\"string\"},\"created_at\":{\"type\":\"string\"},\"deliveries\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"id\":{},\"event_type\":{\"type\":\"string\"},\"response_status\":{\"anyOf\":[{\"type\":\"integer\"},{\"type\":\"null\"}]},\"attempts\":{\"type\":\"integer\"},\"delivered_at\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"created_at\":{\"type\":\"string\"}}}}}},\"simulated\":{\"type\":\"boolean\"}}};",
+                  "  pm.test('response matches the OpenAPI schema (WebhookEnvelope)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · from seed data",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/webhooks/{{webhook_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "webhooks",
+                    "{{webhook_id}}"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"active\": false\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Update a webhook endpoint\n\nScopes (any of): webhooks:manage"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": \"a2db83a1-b8ec-4af1-987a-d79888f32a9c\",\n    \"url\": \"https://example.com/octopus/webhooks\",\n    \"events\": [\n      \"order.updated\",\n      \"shipment.tracking\",\n      \"settings.currency_changed\"\n    ],\n    \"active\": false,\n    \"created_at\": \"2026-10-31T21:53:01.419683+00:00\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "id": "public-postWebhooksByIdTest",
+          "name": "Send a signed ping event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/webhooks/{{webhook_id}}/test",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "webhooks",
+                "{{webhook_id}}",
+                "test"
+              ]
+            },
+            "description": "Send a signed ping event\n\nScopes (any of): webhooks:manage\n\nThe collection adds an `Idempotency-Key` header automatically."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  var missing = [\"webhook_id\"].filter(function (v) { return !pm.variables.get(v); });",
+                  "  if (missing.length) {",
+                  "    console.log('Skipped: run the list request first to set ' + missing.join(', '));",
+                  "    if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  }",
+                  "})();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation postWebhooksByIdTest — do not edit in Postman.",
+                  "var expected = [200];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"object\",\"required\":[\"delivered\",\"event_id\"],\"properties\":{\"delivered\":{\"type\":\"boolean\"},\"response_status\":{\"anyOf\":[{\"type\":\"integer\"},{\"type\":\"null\"}]},\"error\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"event_id\":{\"type\":\"string\"}}}}};",
+                  "  pm.test('response matches the OpenAPI schema (WebhookTestEnvelope)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · from seed data",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/webhooks/{{webhook_id}}/test",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "webhooks",
+                    "{{webhook_id}}",
+                    "test"
+                  ]
+                },
+                "description": "Send a signed ping event\n\nScopes (any of): webhooks:manage\n\nThe collection adds an `Idempotency-Key` header automatically."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"delivered\": false,\n    \"response_status\": 405,\n    \"error\": \"HTTP 405\",\n    \"event_id\": \"evt_e9705021717e4869\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "id": "public-deleteWebhooksById",
+          "name": "Delete a webhook endpoint",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/webhooks/{{webhook_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "webhooks",
+                "{{webhook_id}}"
+              ]
+            },
+            "description": "Delete a webhook endpoint\n\nScopes (any of): webhooks:manage"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "(function () {",
+                  "  var missing = [\"webhook_id\"].filter(function (v) { return !pm.variables.get(v); });",
+                  "  if (missing.length) {",
+                  "    console.log('Skipped: run the list request first to set ' + missing.join(', '));",
+                  "    if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "  }",
+                  "})();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation deleteWebhooksById — do not edit in Postman.",
+                  "var expected = [204];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}",
+                  "if (body && pm.response.code < 300) {",
+                  "  pm.collectionVariables.set('webhook_id', '');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "204 · from seed data",
+              "originalRequest": {
+                "method": "DELETE",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/webhooks/{{webhook_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "webhooks",
+                    "{{webhook_id}}"
+                  ]
+                },
+                "description": "Delete a webhook endpoint\n\nScopes (any of): webhooks:manage"
+              },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "text",
+              "header": [],
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Webhooks · verify signature",
+      "description": "Every delivery carries `Octopus-Signature: t=<unix seconds>,v1=<hex>` where `v1 = HMAC-SHA256(endpoint secret, \"<t>.<raw request body>\")`.\nReject the request when the signature does not match or when |now − t| > 300 seconds. Always compute the HMAC over the **raw** body bytes.\n\n**Try it with a Postman mock server:** create a mock server from this collection (Mock servers → Create → select this collection), copy its URL into the `mock_url` variable and send the request below. The pre-request script signs the body with `webhook_secret` (set automatically by \"Register a webhook endpoint\", or any test value) exactly like Octopus B2B does; the test script verifies it the way your receiver should; the mock replies with the saved example.\n\nNode.js:\n```js\nconst crypto = require('crypto');\nfunction verify(rawBody, header, secret) {\n  const p = Object.fromEntries(header.split(',').map((kv) => kv.split('=')));\n  if (Math.abs(Date.now() / 1000 - Number(p.t)) > 300) return false;\n  const expected = crypto.createHmac('sha256', secret).update(`${p.t}.${rawBody}`).digest('hex');\n  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(p.v1 || ''));\n}\n```\n\nPython:\n```python\nimport hmac, hashlib, time\ndef verify(raw_body: bytes, header: str, secret: str) -> bool:\n    p = dict(kv.split('=', 1) for kv in header.split(','))\n    if abs(time.time() - int(p['t'])) > 300: return False\n    expected = hmac.new(secret.encode(), f\"{p['t']}.\".encode() + raw_body, hashlib.sha256).hexdigest()\n    return hmac.compare_digest(expected, p.get('v1', ''))\n```",
+      "item": [
+        {
+          "id": "verify-signed-delivery",
+          "name": "Signed delivery → receiver (mock server)",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Octopus-Event",
+                "value": "settings.currency_changed"
+              }
+            ],
+            "url": {
+              "raw": "{{mock_url}}/octopus/webhooks",
+              "host": [
+                "{{mock_url}}"
+              ],
+              "path": [
+                "octopus",
+                "webhooks"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"evt_5f1c0e2a9b7d4c3e\",\n  \"type\": \"settings.currency_changed\",\n  \"created_at\": \"2026-11-01T00:00:00.000Z\",\n  \"livemode\": false,\n  \"data\": {\n    \"source_event\": \"settings.currency_changed\",\n    \"object\": \"currency_switch\",\n    \"from\": \"USD\",\n    \"to\": \"CNY\",\n    \"currency\": \"CNY\",\n    \"rate\": {\n      \"base\": \"USD\",\n      \"quote\": \"CNY\",\n      \"rate\": 7.1,\n      \"fx_rate_id\": null\n    },\n    \"wallet_option\": \"keep\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Simulates an Octopus B2B webhook delivery to your receiver (or a Postman mock server) with a valid Octopus-Signature header."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Signs the raw body exactly like Octopus B2B: v1 = HMAC-SHA256(secret, t + '.' + body).",
+                  "(function () {",
+                  "  if (!pm.variables.get('mock_url')) {",
+                  "    console.log('Skipped: create a Postman mock server from this collection and set mock_url.');",
+                  "    if (pm.execution && pm.execution.skipRequest) pm.execution.skipRequest();",
+                  "    return;",
+                  "  }",
+                  "  var CryptoJS = require('crypto-js');",
+                  "  var secret = pm.variables.get('webhook_secret') || 'whsec_test_example';",
+                  "  var raw = pm.request.body.raw;",
+                  "  var t = Math.floor(Date.now() / 1000);",
+                  "  var v1 = CryptoJS.HmacSHA256(t + '.' + raw, secret).toString(CryptoJS.enc.Hex);",
+                  "  pm.request.headers.upsert({ key: 'Octopus-Signature', value: 't=' + t + ',v1=' + v1 });",
+                  "})();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// What your receiver must do: recompute the HMAC over the raw body and compare; reject stale timestamps.",
+                  "var CryptoJS = require('crypto-js');",
+                  "var header = String(pm.request.headers.get('Octopus-Signature') || '');",
+                  "var parts = {};",
+                  "header.split(',').forEach(function (kv) { var i = kv.indexOf('='); parts[kv.slice(0, i)] = kv.slice(i + 1); });",
+                  "var secret = pm.variables.get('webhook_secret') || 'whsec_test_example';",
+                  "var expected = CryptoJS.HmacSHA256(parts.t + '.' + pm.request.body.raw, secret).toString(CryptoJS.enc.Hex);",
+                  "pm.test('Octopus-Signature verifies (HMAC-SHA256 of \"t.body\")', function () { pm.expect(parts.v1).to.eql(expected); });",
+                  "pm.test('timestamp within 300 s', function () { pm.expect(Math.abs(Date.now() / 1000 - Number(parts.t)) <= 300).to.eql(true); });",
+                  "pm.test('receiver acknowledged with 2xx', function () { pm.expect([200, 201, 202, 204]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · mock server acknowledges",
+              "originalRequest": {
+                "method": "POST",
+                "auth": {
+                  "type": "noauth"
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Octopus-Event",
+                    "value": "settings.currency_changed"
+                  }
+                ],
+                "url": {
+                  "raw": "{{mock_url}}/octopus/webhooks",
+                  "host": [
+                    "{{mock_url}}"
+                  ],
+                  "path": [
+                    "octopus",
+                    "webhooks"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"id\": \"evt_5f1c0e2a9b7d4c3e\",\n  \"type\": \"settings.currency_changed\",\n  \"created_at\": \"2026-11-01T00:00:00.000Z\",\n  \"livemode\": false,\n  \"data\": {\n    \"source_event\": \"settings.currency_changed\",\n    \"object\": \"currency_switch\",\n    \"from\": \"USD\",\n    \"to\": \"CNY\",\n    \"currency\": \"CNY\",\n    \"rate\": {\n      \"base\": \"USD\",\n      \"quote\": \"CNY\",\n      \"rate\": 7.1,\n      \"fx_rate_id\": null\n    },\n    \"wallet_option\": \"keep\"\n  }\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Simulates an Octopus B2B webhook delivery to your receiver (or a Postman mock server) with a valid Octopus-Signature header."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"received\": true\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

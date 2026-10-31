@@ -1,8 +1,9 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { getSiteContent, block, descendantIds } from '@/lib/content';
-import { usd, COUNTRY_NAMES } from '@/lib/format';
+import { block, descendantIds } from '@/lib/content';
+import { money, COUNTRY_NAMES } from '@/lib/format';
+import { getStoreContent } from '@/components/store/currency';
 import { getCategoryCounts, getFeatured, getVerifiedSuppliers } from '@/components/store/data';
 import { ProductGrid, GridSkeleton, unitOne } from '@/components/store/product-card';
 import { AdSlot } from '@/components/store/ad-slot';
@@ -34,7 +35,7 @@ function SectionHead({ title, href, link }: { title: string; href?: string; link
 
 async function Home() {
   const [{ blocks, settings, company, categories }, counts, featured, suppliers] = await Promise.all([
-    getSiteContent(), getCategoryCounts(), getFeatured(4), getVerifiedSuppliers(4),
+    getStoreContent(), getCategoryCounts(), getFeatured(4), getVerifiedSuppliers(4),
   ]);
   const top = categories.filter((c) => c.level === 1);
   const catName = Object.fromEntries(categories.map((c) => [c.id, c.name]));
@@ -103,7 +104,7 @@ async function Home() {
                       <div className="mono text-[12px] text-[#9AA6B8]">{q.s.country} · {q.incoterm} · {q.days} days</div>
                     </div>
                     <div className="text-right">
-                      <div className="font-display font-bold text-[18px]">{usd(q.price)}</div>
+                      <div className="font-display font-bold text-[18px]">{money(q.price, demo.currency)}</div>
                       <div className="text-[12px] text-[#9AA6B8]">per {unitOne(demo.unit)}</div>
                     </div>
                   </li>

@@ -6,7 +6,7 @@ import { Card, PageHeader, StatusBadge, Money, Timeline, OrderProgress, EmptySta
 import { DocumentButton } from '@/components/client';
 import { ActionForm, ReasonButton } from '@/components/backoffice/action-form';
 import { one } from '@/components/backoffice/server-utils';
-import { fmtDate, humanize, usd } from '@/lib/format';
+import { fmtDate, humanize, money } from '@/lib/format';
 import { transitionOrder, recordPayment } from '../../actions';
 
 export const metadata = { title: 'Order' };
@@ -23,13 +23,13 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
   const s = await requireStaff('orders', 'view', `/office/orders/${id}`);
   const sb = await createClient();
   const { data: o } = await sb.from('orders')
-    .select('id, code, title, status, quantity, unit_price_cents, shipping_cents, total_cents, deposit_cents, deposit_pct, paid_cents, incoterm, created_at, delivered_at, claim_visible_until, claim_hidden_until, organizations(id, name, country, city, kyc_status), suppliers(code, legal_name, country), quotes(code), rfqs(code)')
+    .select('id, code, title, status, quantity, unit_price_cents, shipping_cents, total_cents, deposit_cents, deposit_pct, paid_cents, currency, incoterm, created_at, delivered_at, claim_visible_until, claim_hidden_until, organizations(id, name, country, city, kyc_status), suppliers(code, legal_name, country), quotes(code), rfqs(code)')
     .eq('id', id).maybeSingle();
   if (!o) notFound();
   const [{ data: events }, { data: docs }, { data: pays }, { data: ships }] = await Promise.all([
     sb.from('order_events').select('id, kind, title, body, created_at').eq('order_id', id).order('created_at'),
-    sb.from('documents').select('id, doc_type, number, amount_cents, status, created_at').eq('order_id', id).order('created_at'),
-    sb.from('payments').select('id, purpose, method, amount_cents, reference, status, created_at').eq('order_id', id).order('created_at'),
+    sb.from('documents').select('id, doc_type, number, amount_cents, currency, status, created_at').eq('order_id', id).order('created_at'),
+    sb.from('payments').select('id, purpose, method, amount_cents, currency, reference, status, created_at').eq('order_id', id).order('created_at'),
     sb.from('shipments').select('id, code, tracking_no, status, service_code, label_url, created_at').eq('order_id', id).order('created_at'),
   ]);
   const org = one(o.organizations as unknown as { id: string; name: string; country: string | null; city: string | null; kyc_status: string } | null);
@@ -53,12 +53,12 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
         <div className="space-y-6">
           <Card title="Summary">
             <dl className="grid sm:grid-cols-3 gap-4 px-6 pb-6 text-[15px]">
-              <div><dt className="text-sm text-muted">Quantity</dt><dd className="font-semibold">{o.quantity.toLocaleString()} × {usd(o.unit_price_cents)}</dd></div>
-              <div><dt className="text-sm text-muted">Shipping</dt><dd><Money cents={o.shipping_cents} /></dd></div>
-              <div><dt className="text-sm text-muted">Total</dt><dd><Money cents={o.total_cents} /></dd></div>
-              <div><dt className="text-sm text-muted">Deposit ({o.deposit_pct}%)</dt><dd><Money cents={o.deposit_cents} /></dd></div>
-              <div><dt className="text-sm text-muted">Paid</dt><dd><Money cents={o.paid_cents} /></dd></div>
-              <div><dt className="text-sm text-muted">Outstanding</dt><dd><Money cents={outstanding} className={outstanding > 0 ? 'text-warn' : 'text-ok'} /></dd></div>
+              <div><dt className="text-sm text-muted">Quantity</dt><dd className="font-semibold">{o.quantity.toLocaleString()} × {money(o.unit_price_cents, o.currency)}</dd></div>
+              <div><dt className="text-sm text-muted">Shipping</dt><dd><Money cents={o.shipping_cents} currency={o.currency} /></dd></div>
+              <div><dt className="text-sm text-muted">Total</dt><dd><Money cents={o.total_cents} currency={o.currency} /></dd></div>
+              <div><dt className="text-sm text-muted">Deposit ({o.deposit_pct}%)</dt><dd><Money cents={o.deposit_cents} currency={o.currency} /></dd></div>
+              <div><dt className="text-sm text-muted">Paid</dt><dd><Money cents={o.paid_cents} currency={o.currency} /></dd></div>
+              <div><dt className="text-sm text-muted">Outstanding</dt><dd><Money cents={outstanding} currency={o.currency} className={outstanding > 0 ? 'text-warn' : 'text-ok'} /></dd></div>
               <div><dt className="text-sm text-muted">Incoterm</dt><dd className="font-semibold">{o.incoterm ?? '—'}</dd></div>
               <div><dt className="text-sm text-muted">Quote / RFQ</dt><dd className="mono text-sm">{one(o.quotes as unknown as { code: string } | null)?.code ?? '—'} · {one(o.rfqs as unknown as { code: string } | null)?.code ?? '—'}</dd></div>
               <div><dt className="text-sm text-muted">Supplier</dt><dd className="text-sm"><span className="mono">{sup?.code}</span> · {sup?.legal_name}</dd></div>
@@ -72,7 +72,7 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
                   <li key={d.id} className="flex flex-wrap items-center gap-3 border border-line rounded-[10px] px-4 py-2">
                     <span className="mono text-sm font-semibold">{d.number}</span>
                     <span className="text-sm text-muted">{humanize(d.doc_type)}</span>
-                    <Money cents={d.amount_cents} className="text-sm" />
+                    <Money cents={d.amount_cents} currency={d.currency} className="text-sm" />
                     <StatusBadge status={d.status ?? 'issued'} />
                     <span className="ml-auto"><DocumentButton docId={d.id} compact /></span>
                   </li>
@@ -85,7 +85,7 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
               <ul className="px-6 pb-6 divide-y divide-line">
                 {pays.map((p) => (
                   <li key={p.id} className="flex flex-wrap items-center gap-3 py-2 text-sm">
-                    <Money cents={p.amount_cents} /> <span>{humanize(p.purpose)} · {humanize(p.method)}</span>
+                    <Money cents={p.amount_cents} currency={p.currency} /> <span>{humanize(p.purpose)} · {humanize(p.method)}</span>
                     <span className="mono text-muted">{p.reference}</span>
                     <span className="text-muted">{fmtDate(p.created_at, true)}</span>
                     <span className="ml-auto"><StatusBadge status={p.status} /></span>
@@ -115,12 +115,13 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
           <Card title="Record bank payment">
             <div className="px-6 pb-6">
               {!canPay ? <p className="text-sm text-muted">Only Finance can record payments.</p> : outstanding <= 0 ? <p className="text-sm text-ok">Fully paid.</p> : (
-                <ActionForm action={recordPayment.bind(null, o.id)} submitLabel="Record payment" resetOnSuccess confirm="Record this payment? It posts to the ledger and cannot be edited.">
+                <ActionForm action={recordPayment.bind(null, o.id)} submitLabel="Record payment" resetOnSuccess confirm={`Record this payment in ${o.currency}? It posts to the ledger and cannot be edited.`}>
                   <div className="space-y-3">
                     <div>
-                      <label htmlFor="rp-amt" className="label">Amount (USD)</label>
+                      <label htmlFor="rp-amt" className="label">Amount ({o.currency})</label>
+                      <p className="text-xs text-muted mb-1">This order is locked in {o.currency}; record the amount received in {o.currency}.</p>
                       <input id="rp-amt" name="amount" type="number" step="0.01" min="0.01" max={outstanding / 100} defaultValue={((depositDue || outstanding) / 100).toFixed(2)} className="input mono" required />
-                      <p className="text-xs text-muted mt-1">{depositDue > 0 ? `Deposit due ${usd(depositDue)}` : `Balance due ${usd(outstanding)}`}</p>
+                      <p className="text-xs text-muted mt-1">{depositDue > 0 ? `Deposit due ${money(depositDue, o.currency)}` : `Balance due ${money(outstanding, o.currency)}`}</p>
                     </div>
                     <div>
                       <label htmlFor="rp-m" className="label">Method</label>

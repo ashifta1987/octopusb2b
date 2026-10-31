@@ -17,7 +17,7 @@ export default async function OfficeOrders({ searchParams }: { searchParams: Pro
   const { f = 'active', q } = await searchParams;
   const sb = await createClient();
   let query = sb.from('orders')
-    .select('id, code, title, status, total_cents, paid_cents, deposit_cents, created_at, updated_at, organizations(name, country), suppliers(code)')
+    .select('id, code, title, status, total_cents, paid_cents, deposit_cents, currency, created_at, updated_at, organizations(name, country), suppliers(code)')
     .order('updated_at', { ascending: false }).limit(200);
   const st = FILTERS[f] ?? FILTERS.active;
   if (st) query = query.in('status', st);
@@ -42,8 +42,8 @@ export default async function OfficeOrders({ searchParams }: { searchParams: Pro
                 <td className="td"><div className="mono text-sm font-semibold">{o.code}</div><div className="text-xs text-muted line-clamp-1">{o.title}</div></td>
                 <td className="td text-sm">{org?.name ?? '—'} <span className="text-muted">{org?.country}</span></td>
                 <td className="td mono text-sm">{one(o.suppliers as unknown as { code: string } | null)?.code ?? '—'}</td>
-                <td className="td"><Money cents={o.total_cents} /></td>
-                <td className="td"><Money cents={o.paid_cents} /><div className="text-xs text-muted">{Math.round((o.paid_cents / Math.max(1, o.total_cents)) * 100)}%</div></td>
+                <td className="td"><Money cents={o.total_cents} currency={o.currency} /></td>
+                <td className="td"><Money cents={o.paid_cents} currency={o.currency} /><div className="text-xs text-muted">{Math.round((o.paid_cents / Math.max(1, o.total_cents)) * 100)}%</div></td>
                 <td className="td text-sm">{fmtDate(o.updated_at)}</td>
                 <td className="td"><StatusBadge status={o.status} /></td>
                 <td className="td text-right"><Link href={`/office/orders/${o.id}`} className="btn btn-ghost btn-sm">Open</Link></td>

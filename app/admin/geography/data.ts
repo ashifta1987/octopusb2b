@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
+import { getCurrencyContext, toPlatform, type CurrencyContext } from '@/lib/currency';
 
 export const REGION: Record<string, string> = {
   DE: 'Europe', NL: 'Europe', GB: 'Europe', FR: 'Europe', ES: 'Europe', IT: 'Europe', PL: 'Europe', TR: 'Europe',
@@ -12,15 +13,17 @@ export const REGION: Record<string, string> = {
 export const REGIONS = ['Europe', 'North America', 'Middle East', 'Asia-Pacific', 'Latin America', 'Africa', 'Other'];
 export const regionOf = (c: string | null) => (c && REGION[c]) || 'Other';
 
-export type CountryRow = { country: string; region: string; customers: number; verified: number; pending: number; rejected: number; notStarted: number; orders: number; gmv: number };
+export type CountryRow = { country: string; region: string; customers: number; verified: number; pending: number; rejected: number; notStarted: number; orders: number; gmv: number; gmvBy: Record<string, number> };
 export type Org = { id: string; country: string | null; city: string | null; business_type: string | null; kyc_status: string; created_at: string };
 
-/** Customers by country with KYC breakdown and GMV (orders.total_cents by org country). */
+/** Customers by country with KYC breakdown and GMV (orders.total_cents by org country).
+ *  `gmv` is converted into the platform currency at the approved rate; `gmvBy` keeps each order currency (SPEC §15.1). */
 export async function loadGeography(f: { kyc?: string; type?: string; since?: string; region?: string }) {
   const sb = await createClient();
-  const [{ data: orgsRaw }, { data: orders }] = await Promise.all([
+  const [{ data: orgsRaw }, { data: orders }, ctx] = await Promise.all([
     sb.from('organizations').select('id, country, city, business_type, kyc_status, created_at').is('archived_at', null).limit(20000),
-    sb.from('orders').select('org_id, total_cents, status, created_at').neq('status', 'cancelled').limit(50000),
+    sb.from('orders').select('org_id, total_cents, currency, status, created_at').neq('status', 'cancelled').limit(50000),
+    getCurrencyContext(),
   ]);
   let orgs = (orgsRaw ?? []) as Org[];
   if (f.kyc) orgs = orgs.filter((o) => (f.kyc === 'pending' ? ['submitted', 'in_review', 'more_info'].includes(o.kyc_status) : o.kyc_status === f.kyc));
@@ -32,7 +35,7 @@ export async function loadGeography(f: { kyc?: string; type?: string; since?: st
   const rows = new Map<string, CountryRow>();
   const row = (c: string) => {
     let r = rows.get(c);
-    if (!r) { r = { country: c, region: regionOf(c), customers: 0, verified: 0, pending: 0, rejected: 0, notStarted: 0, orders: 0, gmv: 0 }; rows.set(c, r); }
+    if (!r) { r = { country: c, region: regionOf(c), customers: 0, verified: 0, pending: 0, rejected: 0, notStarted: 0, orders: 0, gmv: 0, gmvBy: {} }; rows.set(c, r); }
     return r;
   };
   orgs.forEach((o) => {
@@ -48,12 +51,15 @@ export async function loadGeography(f: { kyc?: string; type?: string; since?: st
   allOrgsForRegion.forEach((o) => { const k = regionOf(o.country); const a = regionGmv.get(k) ?? { customers: 0, gmv: 0 }; a.customers++; regionGmv.set(k, a); });
   (orders ?? []).forEach((o) => {
     if (f.since && o.created_at < f.since) return;
-    if (allCountry.has(o.org_id)) { const k = regionOf(allCountry.get(o.org_id) ?? null); const a = regionGmv.get(k) ?? { customers: 0, gmv: 0 }; a.gmv += Number(o.total_cents); regionGmv.set(k, a); }
+    const conv = toPlatform(ctx, Number(o.total_cents), o.currency) ?? 0;
+    if (allCountry.has(o.org_id)) { const k = regionOf(allCountry.get(o.org_id) ?? null); const a = regionGmv.get(k) ?? { customers: 0, gmv: 0 }; a.gmv += conv; regionGmv.set(k, a); }
     const c = orgCountry.get(o.org_id);
     if (c === undefined) return;
     const r = row(c);
-    r.orders++; r.gmv += Number(o.total_cents);
+    r.orders++; r.gmv += conv;
+    const cur = String(o.currency ?? 'USD');
+    r.gmvBy[cur] = (r.gmvBy[cur] ?? 0) + Number(o.total_cents);
   });
   const list = [...rows.values()].sort((a, b) => b.gmv - a.gmv || b.customers - a.customers);
-  return { rows: list, orgs, allOrgs: (orgsRaw ?? []) as Org[], regionGmv };
+  return { rows: list, orgs, allOrgs: (orgsRaw ?? []) as Org[], regionGmv, ctx: ctx as CurrencyContext };
 }

@@ -1,15 +1,20 @@
 'use client';
 import Link from 'next/link';
 import { useState } from 'react';
-import { usd } from '@/lib/format';
+import { money } from '@/lib/format';
 
 type Tier = { min_qty: number; unit_price_cents: number };
 
-/** Product.png "Bulk price tiers" card: tier picker, quantity stepper, unit price + estimated subtotal. */
-export function PriceCalculator({ productId, tiers, unit, unitOne, moq, rfqFee, sampleFee, whatsapp, incoterm }: {
-  productId: string; tiers: Tier[]; unit: string; unitOne: string; moq: number; rfqFee: number | null; sampleFee: number | null;
-  whatsapp: string | null; incoterm: string | null;
+/**
+ * Product.png "Bulk price tiers" card: tier picker, quantity stepper, unit price + estimated subtotal.
+ * `tiers` must already be converted to the platform `currency`; `rfqFee`/`sampleFee` come from service_price_info() in `feeCurrency`.
+ */
+export function PriceCalculator({ productId, tiers, currency, unit, unitOne, moq, rfqFee, sampleFee, feeCurrency, whatsapp, incoterm }: {
+  productId: string; tiers: Tier[]; currency: string; unit: string; unitOne: string; moq: number; rfqFee: number | null; sampleFee: number | null;
+  feeCurrency?: string; whatsapp: string | null; incoterm: string | null;
 }) {
+  const fmt = (minor: number) => money(minor, currency);
+  const fee = (minor: number) => money(minor, feeCurrency ?? currency);
   const sorted = [...tiers].sort((a, b) => a.min_qty - b.min_qty);
   const [qty, setQty] = useState(Math.max(moq, sorted[0]?.min_qty ?? moq));
   const tier = sorted.reduce<Tier | undefined>((pick, t) => (qty >= t.min_qty ? t : pick), undefined);
@@ -22,7 +27,7 @@ export function PriceCalculator({ productId, tiers, unit, unitOne, moq, rfqFee, 
     <section className="card p-6 space-y-5" aria-labelledby="tiers-h">
       <div className="flex flex-wrap justify-between items-baseline gap-2">
         <h2 id="tiers-h" className="text-lg font-semibold">Bulk price tiers</h2>
-        <span className="text-[13px] text-muted">USD per {unitOne} · MOQ {moq.toLocaleString('en-US')} {unit}</span>
+        <span className="text-[13px] text-muted">{currency} per {unitOne} · MOQ {moq.toLocaleString('en-US')} {unit}</span>
       </div>
       {sorted.length ? (
         <ul className="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-3">
@@ -37,7 +42,7 @@ export function PriceCalculator({ productId, tiers, unit, unitOne, moq, rfqFee, 
                   <span className={`block text-[12px] ${on ? 'text-white/85' : 'text-muted'}`}>
                     {t.min_qty.toLocaleString('en-US')}{next ? `–${(next.min_qty - 1).toLocaleString('en-US')}` : '+'} {unit}
                   </span>
-                  <span className="block font-display text-[22px] font-bold mt-1">{usd(t.unit_price_cents)}</span>
+                  <span className="block font-display text-[22px] font-bold mt-1">{fmt(t.unit_price_cents)}</span>
                   <span className={`block text-[11px] font-semibold mt-0.5 ${on ? 'text-white' : 'text-ok'}`}>{i === 0 ? 'Base price' : `Save ${save}%`}</span>
                 </button>
               </li>
@@ -68,11 +73,11 @@ export function PriceCalculator({ productId, tiers, unit, unitOne, moq, rfqFee, 
       <div className="rounded-[10px] bg-surface px-4 py-3 flex flex-wrap justify-between items-end gap-3" aria-live="polite">
         <div>
           <div className="text-[13px] text-muted">Your unit price</div>
-          <div className="font-display font-bold text-lg">{tier ? `${usd(tier.unit_price_cents)} / ${unitOne}` : '—'}</div>
+          <div className="font-display font-bold text-lg">{tier ? `${fmt(tier.unit_price_cents)} / ${unitOne}` : '—'}</div>
         </div>
         <div className="text-right">
           <div className="text-[13px] text-muted">Estimated subtotal (excl. freight{incoterm ? `, ${incoterm}` : ''})</div>
-          <div className="font-display font-bold text-2xl">{tier ? usd(tier.unit_price_cents * qty) : '—'}</div>
+          <div className="font-display font-bold text-2xl">{tier ? fmt(tier.unit_price_cents * qty) : '—'}</div>
         </div>
       </div>
 
@@ -84,8 +89,8 @@ export function PriceCalculator({ productId, tiers, unit, unitOne, moq, rfqFee, 
         )}
       </div>
       <p className="text-[12px] text-muted text-center">
-        RFQ fee <span className="mono font-semibold text-navy">{rfqFee ? usd(rfqFee) : 'free'}</span> per request
-        {sampleFee != null && <> · Sample <span className="mono font-semibold text-navy">{usd(sampleFee)}</span> + shipping</>}
+        RFQ fee <span className="mono font-semibold text-navy">{rfqFee ? fee(rfqFee) : 'free'}</span> per request
+        {sampleFee != null && <> · Sample <span className="mono font-semibold text-navy">{fee(sampleFee)}</span> + shipping</>}
       </p>
     </section>
   );

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { mapDbError, tierFor, toCents, usd } from '@/lib/format';
+import { convertMinor, mapDbError, money, tierFor, toCents, usd, withCurrency } from '@/lib/format';
 
 describe('tierFor (price tier selection)', () => {
   const tiers = [
@@ -32,15 +32,23 @@ describe('money helpers', () => {
     expect(toCents(14)).toBe(1400);
     expect(Number.isNaN(toCents('abc'))).toBe(true);
   });
-  it('usd formats cents as USD', () => {
-    expect(usd(123456)).toBe('$1,234.56');
-    expect(usd(0)).toBe('$0.00');
-    expect(usd(null)).toBe('—');
-    expect(usd(undefined)).toBe('—');
-    expect(usd(14)).toBe('$0.14');
+  it('money formats minor units with code + symbol (US$ / CN¥, SPEC §15.1)', () => {
+    expect(money(123456, 'USD')).toBe('US$ 1,234.56');
+    expect(money(136800, 'CNY')).toBe('CN¥ 1,368.00');
+    expect(money(0, 'USD')).toBe('US$ 0.00');
+    expect(money(null, 'CNY')).toBe('—');
+    expect(money(14, 'USD')).toBe('US$ 0.14');
+    expect(money(-500, 'USD')).toBe('-US$ 5.00');
+    expect(usd(123456)).toBe(money(123456, 'USD')); // deprecated alias
   });
-  it('usd compact for large amounts', () => {
-    expect(usd(250_000_00, { compact: true })).toBe('$250K');
+  it('compact for large amounts', () => {
+    expect(money(250_000_00, 'USD', { compact: true })).toBe('US$ 250K');
+    expect(usd(250_000_00, { compact: true })).toBe('US$ 250K');
+  });
+  it('convertMinor + withCurrency', () => {
+    expect(convertMinor(19000, 'USD', 'CNY', 7.2)).toBe(136800);
+    expect(convertMinor(136800, 'CNY', 'USD', 7.2)).toBe(19000);
+    expect(withCurrency('All prices in {currency}', 'CNY')).toBe('All prices in CNY');
   });
 });
 

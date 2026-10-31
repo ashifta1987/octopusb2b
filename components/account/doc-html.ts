@@ -1,6 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
-import { COUNTRY_NAMES, humanize } from '@/lib/format';
+import { COUNTRY_NAMES, humanize, asCurrency, CURRENCY_PREFIX, type Currency } from '@/lib/format';
 
 /**
  * Print-ready, self-contained HTML for customer documents (Invoice.png).
@@ -24,12 +24,15 @@ export function esc(v: unknown): string {
   return String(v).replace(/[&<>"'`]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '`': '&#96;' })[c]!);
 }
 
-function money(cents: unknown): string {
+/** Minor units in the DOCUMENT's currency (SPEC §15.1): "US$ 190.00" / "CN¥ 1,368.00" (code-style prefix, never a bare ¥). */
+function money(cents: unknown, currency: Currency): string {
   const n = Number(cents);
   if (cents == null || !Number.isFinite(n)) return '—';
   const v = n / 100;
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: Math.abs(v) < 1 && v !== 0 ? 3 : 2 }).format(v);
+  const num = new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: Math.abs(v) < 1 && v !== 0 ? 3 : 2 }).format(Math.abs(v));
+  return `${v < 0 ? '-' : ''}${CURRENCY_PREFIX[currency]} ${num}`;
 }
+const CURRENCY_NAME: Record<Currency, string> = { USD: 'US dollars (USD)', CNY: 'Chinese yuan (CNY)' };
 function date(d: string | Date | null | undefined) {
   if (!d) return '—';
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
@@ -38,7 +41,7 @@ const num = (v: unknown) => (v == null || v === '' || !Number.isFinite(Number(v)
 
 type Row = Record<string, unknown>;
 export type DocBundle = {
-  doc: Row & { id: string; doc_type: string; number: string; amount_cents: number | null; status: string | null; data: Row | null; created_at: string; order_id: string | null; org_id: string | null };
+  doc: Row & { id: string; doc_type: string; number: string; amount_cents: number | null; currency: string | null; status: string | null; data: Row | null; created_at: string; order_id: string | null; org_id: string | null };
   org: Row | null;
   order: Row | null;
   company: Row | null;
@@ -59,7 +62,7 @@ export async function loadDocument(id: string): Promise<DocBundle | null> {
 
   const [orgR, orderR, companyR, kycR, settingsR] = await Promise.all([
     doc.org_id ? sb.from('organizations').select('id, name, country, city, registration_no, website').eq('id', doc.org_id).maybeSingle() : Promise.resolve({ data: null }),
-    doc.order_id ? sb.from('orders').select('id, code, title, quantity, unit_price_cents, shipping_cents, total_cents, deposit_pct, deposit_cents, paid_cents, incoterm, rfq_id, quote_id, supplier_id, created_at').eq('id', doc.order_id).maybeSingle() : Promise.resolve({ data: null }),
+    doc.order_id ? sb.from('orders').select('id, code, title, quantity, unit_price_cents, shipping_cents, total_cents, currency, deposit_pct, deposit_cents, paid_cents, incoterm, rfq_id, quote_id, supplier_id, created_at').eq('id', doc.order_id).maybeSingle() : Promise.resolve({ data: null }),
     sb.from('company_profile').select('legal_name, brand, address, address_cn, contact_person, phone, whatsapp, email, website').eq('id', 1).maybeSingle(),
     doc.org_id ? sb.from('kyc_submissions').select('company_name, registration_no, address, contact_name, contact_phone, contact_email').eq('org_id', doc.org_id).order('created_at', { ascending: false }).limit(1).maybeSingle() : Promise.resolve({ data: null }),
     sb.from('site_settings').select('key, value').in('key', ['deposit_pct', 'claim_visible_days', 'claim_hidden_days', 'quote_validity_days']),
@@ -115,6 +118,9 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
   const isInvoice = type === 'proforma_invoice' || type === 'commercial_invoice';
   const legal = esc(co?.legal_name ?? 'Octopus B2B');
   const website = String(co?.website ?? 'octopusb2b.com').replace(/^https?:\/\//, '');
+  // Documents lock their currency at creation: documents.currency, then the data snapshot, then the order.
+  const cur = asCurrency((doc.currency as string | null) ?? (d.currency as string | undefined) ?? (order?.currency as string | undefined));
+  const m = (cents: unknown) => money(cents, cur);
 
   // Line item values: document snapshot first, order as fallback.
   const qty = num(d.qty) ?? num(order?.quantity);
@@ -160,15 +166,15 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
   if (isInvoice || type === 'confirmation' || (qty != null && unitPrice != null)) {
     main += `
     <table class="items">
-      <thead><tr><th style="width:28px">#</th><th>Description</th><th>HS code</th><th class="r">Qty</th><th class="r">Unit price</th><th class="r">Amount (USD)</th></tr></thead>
+      <thead><tr><th style="width:28px">#</th><th>Description</th><th>HS code</th><th class="r">Qty</th><th class="r">Unit price</th><th class="r">Amount (${cur})</th></tr></thead>
       <tbody>
         <tr>
           <td class="mono">1</td>
           <td><b>${esc(itemTitle)}</b>${supplier ? `<div class="sub">Supplier ${esc(supplier.code)}${supplier.country ? ` · ${esc(supplier.country)}` : ''}${rfqCode ? ` · ${esc(rfqCode)}` : ''}</div>` : ''}</td>
           <td class="mono">${esc(b.hsCode ?? '—')}</td>
           <td class="r mono">${qty != null ? esc(new Intl.NumberFormat('en-US').format(qty)) : '—'}<div class="sub">${esc(unit)}</div></td>
-          <td class="r mono">${money(unitPrice)}</td>
-          <td class="r mono"><b>${money(subtotal)}</b></td>
+          <td class="r mono">${m(unitPrice)}</td>
+          <td class="r mono"><b>${m(subtotal)}</b></td>
         </tr>
       </tbody>
     </table>`;
@@ -178,17 +184,17 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
     main += `
     <div class="box receipt">
       <div class="lbl">Payment received</div>
-      <div class="big">${money(doc.amount_cents)}</div>
+      <div class="big">${m(doc.amount_cents)}</div>
       <div class="kv"><b>Purpose:</b> ${esc(humanize((d.purpose as string) ?? 'payment'))}</div>
       <div class="kv"><b>Method:</b> ${esc(humanize((d.method as string) ?? '—'))}</div>
       ${d.reference ? `<div class="kv"><b>Reference:</b> <span class="mono">${esc(d.reference)}</span></div>` : ''}
-      ${order ? `<div class="kv"><b>Order:</b> <span class="mono">${esc(order.code)}</span> · ${esc(order.title)} · order total ${money(order.total_cents)} · paid to date ${money(order.paid_cents)}</div>` : ''}
+      ${order ? `<div class="kv"><b>Order:</b> <span class="mono">${esc(order.code)}</span> · ${esc(order.title)} · order total ${m(order.total_cents)} · paid to date ${m(order.paid_cents)}</div>` : ''}
     </div>`;
   } else if (type === 'credit_note') {
     main += `
     <div class="box receipt">
       <div class="lbl">Credit issued</div>
-      <div class="big">${money(doc.amount_cents)}</div>
+      <div class="big">${m(doc.amount_cents)}</div>
       ${d.reason ? `<div class="kv"><b>Reason:</b> ${esc(d.reason)}</div>` : ''}
       ${order ? `<div class="kv"><b>Order:</b> <span class="mono">${esc(order.code)}</span> · ${esc(order.title)}</div>` : ''}
       <div class="kv">Credited to your Octopus wallet / account balance.</div>
@@ -197,7 +203,7 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
     const rows = Object.entries(d).filter(([, v]) => v != null && typeof v !== 'object');
     main += `
     <table class="items"><thead><tr><th>Field</th><th class="r">Value</th></tr></thead><tbody>
-      ${rows.length ? rows.map(([k, v]) => `<tr><td>${esc(humanize(k))}</td><td class="r">${/_cents$/.test(k) ? money(v) : esc(v)}</td></tr>`).join('') : '<tr><td colspan="2">No additional details.</td></tr>'}
+      ${rows.length ? rows.map(([k, v]) => `<tr><td>${esc(humanize(k))}</td><td class="r">${/_cents$/.test(k) ? m(v) : esc(v)}</td></tr>`).join('') : '<tr><td colspan="2">No additional details.</td></tr>'}
     </tbody></table>`;
   }
 
@@ -207,13 +213,13 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
     const bal = total != null && depCents != null ? total - depCents : null;
     schedule = `
       <div class="lbl">Payment schedule</div>
-      <div class="row"><span>${esc(depPct)}% deposit on order confirmation</span><b class="mono">${money(depCents)}</b></div>
-      <div class="row"><span>${esc(100 - depPct)}% balance before despatch</span><b class="mono">${money(bal)}</b></div>`;
+      <div class="row"><span>${esc(depPct)}% deposit on order confirmation</span><b class="mono">${m(depCents)}</b></div>
+      <div class="row"><span>${esc(100 - depPct)}% balance before despatch</span><b class="mono">${m(bal)}</b></div>`;
   } else if (type === 'commercial_invoice') {
     schedule = `
       <div class="lbl">Payment status</div>
-      <div class="row"><span>Paid to date</span><b class="mono">${money(paid)}</b></div>
-      <div class="row"><span>Balance due before despatch</span><b class="mono">${money(balance)}</b></div>`;
+      <div class="row"><span>Paid to date</span><b class="mono">${m(paid)}</b></div>
+      <div class="row"><span>Balance due before despatch</span><b class="mono">${m(balance)}</b></div>`;
   }
   const payBox = schedule
     ? `<div class="box pay">${schedule}
@@ -225,19 +231,19 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
 
   const totalsBox = isInvoice || type === 'confirmation'
     ? `<div class="totals">
-        <div class="row"><span>Subtotal</span><span class="mono">${money(subtotal)}</span></div>
-        <div class="row"><span>Freight</span><span class="mono">${shipping > 0 ? money(shipping) : `Excluded${incoterm ? ` (${esc(incoterm)})` : ''}`}</span></div>
+        <div class="row"><span>Subtotal</span><span class="mono">${m(subtotal)}</span></div>
+        <div class="row"><span>Freight</span><span class="mono">${shipping > 0 ? m(shipping) : `Excluded${incoterm ? ` (${esc(incoterm)})` : ''}`}</span></div>
         <div class="row"><span>Duties &amp; import taxes</span><span class="mono">${isF || !incoterm ? `Buyer${incoterm ? ` (${esc(incoterm)})` : ''}` : esc(incoterm)}</span></div>
-        <div class="grand"><span class="lbl" style="color:#fff">Total USD</span><span class="amt">${money(total)}</span></div>
+        <div class="grand"><span class="lbl" style="color:#fff">Total ${cur}</span><span class="amt">${m(total)}</span></div>
       </div>`
-    : `<div class="totals"><div class="grand"><span class="lbl" style="color:#fff">${type === 'credit_note' ? 'Credit USD' : type === 'receipt' ? 'Received USD' : 'Amount USD'}</span><span class="amt">${money(doc.amount_cents)}</span></div></div>`;
+    : `<div class="totals"><div class="grand"><span class="lbl" style="color:#fff">${type === 'credit_note' ? 'Credit' : type === 'receipt' ? 'Received' : 'Amount'} ${cur}</span><span class="amt">${m(doc.amount_cents)}</span></div></div>`;
 
   const showTotals = !(type !== 'receipt' && type !== 'credit_note' && !isInvoice && type !== 'confirmation' && doc.amount_cents == null);
 
   /* key terms */
   const terms: string[] = [];
-  if (type === 'proforma_invoice') terms.push(`Prices in US dollars; this proforma invoice is valid for ${settings.quote_validity_days} days from the issue date.`);
-  else terms.push('All amounts in US dollars.');
+  if (type === 'proforma_invoice') terms.push(`Prices in ${CURRENCY_NAME[cur]}; this proforma invoice is valid for ${settings.quote_validity_days} days from the issue date.`);
+  else terms.push(`All amounts in ${CURRENCY_NAME[cur]}. This document keeps the currency it was issued in.`);
   if (isInvoice || type === 'confirmation') {
     terms.push(`${depPct}% deposit on order confirmation, balance before despatch. Bank charges at both ends are paid by the buyer.`);
     terms.push('The order is binding only when Octopus B2B confirms it in writing; it can’t then be cancelled or amended without our written agreement.');

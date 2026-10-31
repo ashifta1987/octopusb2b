@@ -7,6 +7,7 @@ import { TicketReply } from '@/components/backoffice/ticket-reply';
 import { one } from '@/components/backoffice/server-utils';
 import { fmtDate, humanize } from '@/lib/format';
 import { cn } from '@/lib/cn';
+import { getCurrencyContext } from '@/lib/currency';
 import { replyTicket, updateTicket, ticketStatusForm, ticketPriorityForm, saveMacro, escalateToFinance } from '../actions';
 
 export const metadata = { title: 'Support desk' };
@@ -42,7 +43,7 @@ export default async function SupportDesk({ searchParams }: { searchParams: Prom
   const tickets = (rawTickets ?? []).sort((a, b) => (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9) || (a.sla_due_at ?? '9').localeCompare(b.sla_due_at ?? '9'));
   const sel = selId ?? tickets[0]?.id;
   const { data: t } = sel ? await sb.from('tickets')
-    .select('id, code, org_id, order_id, subject, category, priority, status, sla_due_at, assigned_to, csat, created_at, organizations(name, country, kyc_status), orders(id, code, status, claim_visible_until, claim_hidden_until, delivered_at, suppliers(code))')
+    .select('id, code, org_id, order_id, subject, category, priority, status, sla_due_at, assigned_to, csat, created_at, organizations(name, country, kyc_status), orders(id, code, status, currency, claim_visible_until, claim_hidden_until, delivered_at, suppliers(code))')
     .eq('id', sel).maybeSingle() : { data: null };
   const { data: msgs } = t ? await sb.from('ticket_messages').select('id, author_id, is_staff, internal, body, attachments, created_at').eq('ticket_id', t.id).order('created_at') : { data: null };
   const authorIds = [...new Set([...(msgs ?? []).map((m) => m.author_id), t?.assigned_to].filter(Boolean))] as string[];
@@ -52,7 +53,9 @@ export default async function SupportDesk({ searchParams }: { searchParams: Prom
   const canEscalate = can(s, 'support', 'create') || can(s, 'finance', 'create');
   const avgCsat = csat?.length ? (csat.reduce((a, c) => a + (c.csat ?? 0), 0) / csat.length).toFixed(1) : null;
   const org = t ? one(t.organizations as unknown as { name: string; country: string | null; kyc_status: string } | null) : null;
-  const ord = t ? one(t.orders as unknown as { id: string; code: string; status: string; claim_visible_until: string | null; claim_hidden_until: string | null; delivered_at: string | null; suppliers: { code: string } | { code: string }[] | null } | null) : null;
+  const ord = t ? one(t.orders as unknown as { id: string; code: string; status: string; currency: string; claim_visible_until: string | null; claim_hidden_until: string | null; delivered_at: string | null; suppliers: { code: string } | { code: string }[] | null } | null) : null;
+  // finance approvals use the order currency, else the platform currency (SPEC §15.1)
+  const escCurrency = ord?.currency ?? (await getCurrencyContext()).currency;
   const link = (o: Record<string, string | undefined>) => {
     const p = new URLSearchParams(); const m = { f, p: prio, t: selId, ...o };
     Object.entries(m).forEach(([k, v]) => v && p.set(k, v));
@@ -172,7 +175,7 @@ export default async function SupportDesk({ searchParams }: { searchParams: Prom
                       <select id="es-k" name="kind" className="input"><option value="credit_note">Credit note</option><option value="refund">Refund</option></select>
                     </div>
                     <div>
-                      <label htmlFor="es-a" className="label">Amount (USD)</label>
+                      <label htmlFor="es-a" className="label">Amount ({escCurrency})</label>
                       <input id="es-a" name="amount" type="number" step="0.01" min="0.01" required className="input mono" />
                     </div>
                     <div>

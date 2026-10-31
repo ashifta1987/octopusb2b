@@ -19,7 +19,7 @@ export default async function OfficeRfqs({ searchParams }: { searchParams: Promi
   const { f = 'open' } = await searchParams;
   const sb = await createClient();
   const { data } = await sb.from('rfqs')
-    .select('id, code, title, quantity, unit, target_price_cents, destination_country, destination_city, status, created_at, expires_at, organizations(city, country), quotes(id)')
+    .select('id, code, title, quantity, unit, target_price_cents, currency, destination_country, destination_city, status, created_at, expires_at, organizations(city, country), quotes(id)')
     .in('status', FILTERS[f] ?? FILTERS.open).order('created_at', { ascending: f !== 'closed' && f !== 'accepted' }).limit(200);
   return (
     <>
@@ -38,7 +38,7 @@ export default async function OfficeRfqs({ searchParams }: { searchParams: Promi
                 <td className="td mono text-sm">{r.code}</td>
                 <td className="td"><div className="font-semibold">{r.title}</div><div className="text-xs text-muted">{r.quantity.toLocaleString()} {r.unit} → {[r.destination_city, r.destination_country].filter(Boolean).join(', ') || '—'}</div></td>
                 <td className="td text-sm">{[o?.city, o?.country ? COUNTRY_NAMES[o.country] ?? o.country : null].filter(Boolean).join(', ') || '—'}</td>
-                <td className="td">{r.target_price_cents ? <Money cents={r.target_price_cents} /> : '—'}</td>
+                <td className="td">{r.target_price_cents ? <Money cents={r.target_price_cents} currency={r.currency} /> : '—'}</td>
                 <td className="td text-sm">{nq}</td>
                 <td className={`td text-sm ${ageH > 48 && nq === 0 && r.status !== 'accepted' ? 'text-bad font-semibold' : ''}`}>{ageH < 48 ? `${ageH} h` : `${Math.round(ageH / 24)} d`}<div className="text-xs text-muted font-normal">{fmtDate(r.created_at)}</div></td>
                 <td className="td"><StatusBadge status={r.status} /></td>

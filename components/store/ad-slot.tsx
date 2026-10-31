@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { getSiteContent } from '@/lib/content';
+import { getStoreContent } from './currency';
 import { getActiveAds } from './data';
 import { parts } from './seo';
 
@@ -11,7 +11,7 @@ export type AdPlacement = 'home_banner' | 'category_banner' | 'product_side' | '
  * server-side, then redirects. Falls back to a house ad from content_blocks `ads.house`.
  */
 export async function AdSlot({ placement, layout = 'banner' }: { placement: AdPlacement; layout?: 'banner' | 'card' }) {
-  const [{ settings, blocks }, ads] = await Promise.all([getSiteContent(), getActiveAds(placement)]);
+  const [{ settings, blocks }, ads] = await Promise.all([getStoreContent(), getActiveAds(placement)]);
   const enabled = settings.ads_enabled !== false;
   const ad = enabled ? ads[0] : undefined;
   const [hHead, hBody, hLink, hCta] = parts(blocks, 'ads.house', "Can't find what you need?|Send one RFQ and get quotes from several verified suppliers.|/request/sourcing|Start an RFQ");

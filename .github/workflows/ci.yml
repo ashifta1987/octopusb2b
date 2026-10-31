@@ -4,14 +4,17 @@ on:
   push:
     branches: ['**']
   pull_request:
+  # Vercel reports preview deployments as GitHub deployments → run the Postman collection against each preview.
+  deployment_status:
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name }}-${{ github.event.deployment.id || github.ref }}
   cancel-in-progress: true
 
 jobs:
   checks:
     name: Lint · typecheck · unit tests
+    if: ${{ github.event_name != 'deployment_status' }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -21,7 +24,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
 
       - name: Install
@@ -35,6 +38,9 @@ jobs:
 
       - name: Unit tests (Vitest)
         run: pnpm exec vitest run
+
+      - name: Postman collections match the contracts (SPEC §15.2)
+        run: node scripts/postman-sync.mjs --check
 
   db-security:
     name: Database security tests (staging)
@@ -55,3 +61,56 @@ jobs:
       - name: RLS / RPC rule tests
         if: ${{ env.DATABASE_URL != '' }}
         run: node supabase/tests/rls.test.mjs
+
+  postman-preview:
+    name: Postman collection vs Vercel preview (Newman)
+    # Runs when Vercel marks a Preview deployment successful (one per pull-request push).
+    if: ${{ github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success' && startsWith(github.event.deployment.environment, 'Preview') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      URL: ${{ github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
+      POSTMAN_SANDBOX_CLIENT_ID: ${{ secrets.POSTMAN_SANDBOX_CLIENT_ID }}
+      POSTMAN_SANDBOX_CLIENT_SECRET: ${{ secrets.POSTMAN_SANDBOX_CLIENT_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.deployment.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Check sandbox credentials
+        run: |
+          if [ -z "$POSTMAN_SANDBOX_CLIENT_ID" ] || [ -z "$POSTMAN_SANDBOX_CLIENT_SECRET" ]; then
+            echo "::error::Set POSTMAN_SANDBOX_CLIENT_ID and POSTMAN_SANDBOX_CLIENT_SECRET (an oct_test_ key) — see postman/README.md"
+            exit 1
+          fi
+          echo "Preview: $URL"
+
+      - name: Wait for the preview API
+        run: |
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -H "x-vercel-protection-bypass: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}" "$URL/api/v1/openapi.json" || true)
+            [ "$code" = "200" ] && exit 0
+            echo "waiting for $URL ($code)…"; sleep 10
+          done
+          echo "::error::Preview API did not become ready"; exit 1
+
+      - name: Newman — Octopus B2B API v1
+        run: >
+          npx --yes newman@6 run postman/octopus-b2b-api-v1.postman_collection.json
+          -e postman/sandbox.postman_environment.json
+          --env-var "base_url=$URL/api/v1"
+          --env-var "client_id=${{ secrets.POSTMAN_SANDBOX_CLIENT_ID }}"
+          --env-var "client_secret=${{ secrets.POSTMAN_SANDBOX_CLIENT_SECRET }}"
+          --env-var "vercel_bypass=${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}"
+          --reporters cli,junit --reporter-junit-export newman/results.xml
+
+      - name: Upload Newman report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newman-${{ github.event.deployment.id }}
+          path: newman/

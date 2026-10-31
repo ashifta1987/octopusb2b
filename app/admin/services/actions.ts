@@ -1,7 +1,7 @@
 'use server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod';
-import { toCents } from '@/lib/format';
+import { toCents, CURRENCIES, type Currency } from '@/lib/format';
 import { guard, fail, ok, str, bool, type Result } from '@/components/admin/server';
 
 function refresh() {
@@ -40,6 +40,8 @@ export async function addPrice(_prev: Result | null, fd: FormData): Promise<Resu
   const code = str(fd, 'code');
   const cents = toCents(str(fd, 'amount'));
   if (!code) return fail('Missing service');
+  const currency = (str(fd, 'currency') || 'USD') as Currency;
+  if (!CURRENCIES.includes(currency)) return fail('UNSUPPORTED_CURRENCY');
   if (!Number.isFinite(cents) || cents < 0) return fail('INVALID_AMOUNT');
   const when = str(fd, 'effective_from');
   let effective = new Date();
@@ -48,10 +50,10 @@ export async function addPrice(_prev: Result | null, fd: FormData): Promise<Resu
     if (Number.isNaN(d.getTime())) return fail('Invalid date');
     if (d.getTime() > Date.now()) effective = d;
   }
-  const { error } = await g.sb.from('service_prices').insert({ service_code: code, amount_minor: cents, effective_from: effective.toISOString(), created_by: g.s.userId });
+  const { error } = await g.sb.from('service_prices').insert({ service_code: code, amount_minor: cents, currency, effective_from: effective.toISOString(), created_by: g.s.userId });
   if (error) return fail(error);
   refresh();
-  return ok(effective.getTime() > Date.now() + 60_000 ? 'Price scheduled' : 'Price updated — applies to new requests');
+  return ok(effective.getTime() > Date.now() + 60_000 ? `${currency} price scheduled` : `${currency} price updated — applies to new requests`);
 }
 
 /** Add a new service with its first price. */
@@ -65,7 +67,7 @@ export async function createService(_prev: Result | null, fd: FormData): Promise
   const { data: last } = await g.sb.from('services').select('sort').order('sort', { ascending: false }).limit(1).maybeSingle();
   const { error } = await g.sb.from('services').insert({ ...p.data, description: p.data.description ?? null, active: bool(fd, 'active'), sort: (last?.sort ?? 0) + 1 });
   if (error) return fail(error);
-  const { error: e2 } = await g.sb.from('service_prices').insert({ service_code: p.data.code, amount_minor: cents, created_by: g.s.userId });
+  const { error: e2 } = await g.sb.from('service_prices').insert({ service_code: p.data.code, amount_minor: cents, currency: 'USD', created_by: g.s.userId });
   if (e2) return fail(e2);
   refresh();
   return ok('Service created');

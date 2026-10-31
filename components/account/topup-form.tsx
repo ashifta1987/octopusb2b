@@ -1,21 +1,26 @@
 'use client';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { usd, toCents } from '@/lib/format';
+import { money, toCents, asCurrency, type Currency } from '@/lib/format';
 import { cn } from '@/lib/cn';
 
 type Res<T = undefined> = { ok: true; data?: T } | { ok: false; error: string };
 
-const PRESETS = [10000, 25000, 50000, 100000, 500000];
+/** Preset top-ups (minor units) per currency. */
+const PRESETS: Record<Currency, number[]> = { USD: [10000, 25000, 50000, 100000, 500000], CNY: [50000, 100000, 250000, 500000, 2500000] };
 
-export function TopupForm({ disabled, bank, defaultReference, bankAction, cardAction }: {
-  disabled: boolean;
+/** Top-ups always go to the wallet in the platform `currency` (request_topup locks it server-side). */
+export function TopupForm({ disabled, currency: cur, bank, defaultReference, bankAction, cardAction }: {
+  disabled: boolean; currency: string;
   bank: { accountName: string; bankDetails: string; virtualAccount: string; reference: string };
   defaultReference: string;
   bankAction: (i: { amountCents: number; reference: string }) => Promise<Res>;
   cardAction: (i: { amountCents: number }) => Promise<Res<{ checkoutUrl: string }>>;
 }) {
-  const [amount, setAmount] = useState(50000);
+  const currency = asCurrency(cur);
+  const fmt = (n: number) => money(n, currency);
+  const presets = PRESETS[currency];
+  const [amount, setAmount] = useState(presets[2]);
   const [custom, setCustom] = useState('');
   const [method, setMethod] = useState<'bank_transfer' | 'card'>('bank_transfer');
   const [reference, setReference] = useState(defaultReference);
@@ -32,7 +37,7 @@ export function TopupForm({ disabled, bank, defaultReference, bankAction, cardAc
       const r = await bankAction({ amountCents: cents, reference });
       if (!r.ok) { setMsg({ tone: 'bad', text: r.error }); return; }
       setConfirming(false);
-      setMsg({ tone: 'ok', text: `Thanks — your ${usd(cents)} top-up is pending until finance matches the transfer.` });
+      setMsg({ tone: 'ok', text: `Thanks — your ${fmt(cents)} top-up is pending until finance matches the transfer.` });
       router.refresh();
     } else {
       const r = await cardAction({ amountCents: cents });
@@ -44,13 +49,13 @@ export function TopupForm({ disabled, bank, defaultReference, bankAction, cardAc
 
   return (
     <fieldset disabled={disabled || pending} className="disabled:opacity-60">
-      <legend className="label">Amount (USD)</legend>
+      <legend className="label">Amount ({currency})</legend>
       <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="Preset amounts">
-        {PRESETS.map((p) => (
+        {presets.map((p) => (
           <button key={p} type="button" role="radio" aria-checked={!custom && amount === p}
             onClick={() => { setAmount(p); setCustom(''); }}
             className={cn('px-4 py-2 rounded-full border text-sm font-semibold', !custom && amount === p ? 'bg-navy text-white border-navy' : 'bg-white border-line-2')}>
-            {usd(p).replace('.00', '')}
+            {fmt(p).replace('.00', '')}
           </button>
         ))}
         <label className="sr-only" htmlFor="topup-custom">Custom amount</label>
@@ -80,7 +85,7 @@ export function TopupForm({ disabled, bank, defaultReference, bankAction, cardAc
       )}
 
       <div className="mt-5 pt-4 border-t border-line flex flex-wrap items-center justify-between gap-3">
-        <div className="text-[15px]">You add <span className="mono text-lg font-bold">{valid ? usd(cents) : '—'}</span></div>
+        <div className="text-[15px]">You add <span className="mono text-lg font-bold">{valid ? fmt(cents) : '—'}</span></div>
         <button type="button" className="btn btn-primary" disabled={!valid || (method === 'bank_transfer' && reference.trim().length < 3)} onClick={() => setConfirming(true)}>
           {method === 'bank_transfer' ? 'I have sent the transfer' : 'Continue to card payment'}
         </button>
@@ -92,7 +97,7 @@ export function TopupForm({ disabled, bank, defaultReference, bankAction, cardAc
           <div className="card w-full max-w-md p-6">
             <h2 id="topup-title" className="text-xl font-semibold">Confirm top-up</h2>
             <dl className="mt-4 space-y-2 text-[15px]">
-              <div className="flex justify-between"><dt className="text-muted">Amount</dt><dd className="mono font-semibold">{usd(cents)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted">Amount</dt><dd className="mono font-semibold">{fmt(cents)}</dd></div>
               <div className="flex justify-between"><dt className="text-muted">Method</dt><dd>{method === 'card' ? 'Card (test mode)' : 'Bank transfer'}</dd></div>
               {method === 'bank_transfer' && <div className="flex justify-between"><dt className="text-muted">Reference</dt><dd className="mono">{reference}</dd></div>}
             </dl>

@@ -4,14 +4,16 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, Stat, PageHeader, EmptyState, StatusBadge, Table, Notice } from '@/components/ui';
 import { CountryTag, Field } from '@/components/admin/ui';
 import { ActionForm, RunButton, ToggleSetting } from '@/components/admin/client';
-import { usd, humanize, fmtDate } from '@/lib/format';
+import { money, humanize, fmtDate, CURRENCIES } from '@/lib/format';
+import { getCurrencyContext, toPlatform } from '@/lib/currency';
+import { CurrencyTotals, sumByCurrency, rateLabel } from '@/components/admin/currency';
 import { setSetting, saveSettings } from '../actions';
 import { confirmTopup } from '../finance/actions';
 
 export const metadata = { title: 'Wallets & payments' };
 
 const PLATFORM_SETTINGS: { key: string; label: string; type: 'number'; hint: string }[] = [
-  { key: 'finance_approval_limit_cents', label: 'Finance approval limit (cents)', type: 'number', hint: 'Approvals above this need an Admin (e.g. 100000 = $1,000.00)' },
+  { key: 'finance_approval_limit_cents', label: 'Finance approval limit (cents)', type: 'number', hint: 'In USD cents. Approvals above this (converted to USD) need an Admin (e.g. 100000 = US$ 1,000.00)' },
   { key: 'deposit_pct', label: 'Deposit % on proforma invoices', type: 'number', hint: 'Applied to new proforma invoices' },
   { key: 'quote_validity_days', label: 'Quote validity (days)', type: 'number', hint: 'New quotes only' },
   { key: 'claim_visible_days', label: 'Claim window — visible defects (days)', type: 'number', hint: 'From delivery' },
@@ -24,30 +26,43 @@ export default async function WalletAdminPage() {
   const sb = await createClient();
   const monthStart = new Date(); monthStart.setUTCDate(1); monthStart.setUTCHours(0, 0, 0, 0);
 
-  const [settings, wallets, topups, services, prices, rev] = await Promise.all([
+  const [settings, wallets, topups, services, prices, rev, ctx] = await Promise.all([
     sb.from('site_settings').select('key, value').in('key', ['wallet_enabled', ...PLATFORM_SETTINGS.map((p) => p.key)]),
     sb.rpc('admin_wallet_balances'),
-    sb.from('wallet_topups').select('id, org_id, amount_cents, method, reference, status, created_at, organizations(name, country)').order('created_at', { ascending: false }).limit(40),
+    sb.from('wallet_topups').select('id, org_id, amount_cents, currency, method, reference, status, created_at, organizations(name, country)').order('created_at', { ascending: false }).limit(40),
     sb.from('services').select('code, name, unit, active, sort').order('sort'),
-    sb.from('service_prices').select('service_code, amount_minor, effective_from').order('effective_from', { ascending: false }),
+    sb.from('service_prices').select('service_code, amount_minor, currency, effective_from').order('effective_from', { ascending: false }),
     can(s, 'finance', 'view') || can(s, 'dashboard', 'view') ? sb.rpc('admin_revenue_by_stream', { p_from: monthStart.toISOString() }) : Promise.resolve({ data: [] }),
+    getCurrencyContext(),
   ]);
 
   const set = new Map((settings.data ?? []).map((r) => [r.key, r.value]));
   const walletOn = set.get('wallet_enabled') === true || set.get('wallet_enabled') === 'true';
-  const ws = (wallets.data ?? []) as { org_id: string; org_name: string; country: string | null; kyc_status: string; balance_cents: number; last_activity: string | null }[];
-  const total = ws.reduce((a, w) => a + Number(w.balance_cents), 0);
+  const ws = (wallets.data ?? []) as { org_id: string; org_name: string; country: string | null; kyc_status: string; balance_cents: number; last_activity: string | null; currency: string }[];
+  const walletsBy = sumByCurrency(ws, (w) => w.balance_cents, (w) => w.currency);
+  const walletCurrencies = CURRENCIES.filter((c) => ws.some((w) => w.currency === c));
   const tps = topups.data ?? [];
   const creditedThisMonth = tps.filter((t) => t.status === 'credited' && t.created_at >= monthStart.toISOString());
   const pending = tps.filter((t) => t.status === 'pending');
-  const spent = ((rev.data ?? []) as { stream: string; net_cents: number }[]).filter((r) => ['service_fees', 'rfq_fees', 'ads'].includes(r.stream)).reduce((a, r) => a + Number(r.net_cents), 0);
+  const spentBy = sumByCurrency(((rev.data ?? []) as { stream: string; net_cents: number; currency: string }[]).filter((r) => ['service_fees', 'rfq_fees', 'ads'].includes(r.stream)), (r) => r.net_cents, (r) => r.currency);
+  const topupsBy = sumByCurrency(creditedThisMonth, (t) => t.amount_cents, (t) => t.currency);
   const now = new Date().toISOString();
+  // service price list in the platform currency (what the wallet deducts); key = code|currency
   const current = new Map<string, number>();
   const scheduled = new Map<string, { amount: number; from: string }>();
   (prices.data ?? []).forEach((p) => {
-    if (p.effective_from <= now) { if (!current.has(p.service_code)) current.set(p.service_code, Number(p.amount_minor)); }
-    else scheduled.set(p.service_code, { amount: Number(p.amount_minor), from: p.effective_from });
+    const k = `${p.service_code}|${p.currency}`;
+    if (p.effective_from <= now) { if (!current.has(k)) current.set(k, Number(p.amount_minor)); }
+    else scheduled.set(k, { amount: Number(p.amount_minor), from: p.effective_from });
   });
+  const cur = ctx.currency;
+  const priceIn = (code: string) => {
+    const own = current.get(`${code}|${cur}`);
+    if (own != null) return { amount: own, converted: false };
+    const usdP = current.get(`${code}|USD`);
+    if (usdP == null) return null;
+    return { amount: toPlatform(ctx, usdP, 'USD') ?? usdP, converted: cur !== 'USD' };
+  };
 
   return (
     <>
@@ -65,34 +80,45 @@ export default async function WalletAdminPage() {
       {!s.isAdmin && <div className="mb-6"><Notice tone="blue">Only an Admin can switch the wallet on or off.</Notice></div>}
 
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-6">
-        <Stat label="Total in customer wallets" value={usd(total)} hint={`${ws.length} wallets`} />
-        <Stat label="Top-ups this month" value={usd(creditedThisMonth.reduce((a, t) => a + Number(t.amount_cents), 0))} hint={`${creditedThisMonth.length} top-ups`} />
-        <Stat label="Spent on services" value={usd(spent)} hint="this month (services, RFQ fees, ads)" />
+        <Stat label="Total in customer wallets" value={<CurrencyTotals totals={walletsBy} ctx={ctx} />} hint={`${ws.length} wallets`} />
+        <Stat label="Top-ups this month" value={<CurrencyTotals totals={topupsBy} ctx={ctx} />} hint={`${creditedThisMonth.length} top-ups`} />
+        <Stat label="Spent on services" value={<CurrencyTotals totals={spentBy} ctx={ctx} />} hint="this month (services, RFQ fees, ads)" />
         <Stat label="Transfers to match" value={pending.length} hint={`${pending.filter((t) => !t.reference).length} without reference`} hintTone={pending.length ? 'warn' : undefined} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr] mb-6">
-        <Card title="Customer wallets" action={<span className="text-xs text-muted">Balance = ledger credits − debits</span>}>
-          <Table head={['Customer', 'KYC', 'Balance', 'Last activity']} empty={<EmptyState title="No wallets yet" />}>
-            {ws.map((w) => (
-              <tr key={w.org_id}>
+        <Card title="Customer wallets" action={<span className="text-xs text-muted">One wallet per customer per currency · balance = ledger credits − debits</span>}>
+          <Table head={['Customer', 'KYC', 'Currency', 'Balance', 'Last activity']} empty={<EmptyState title="No wallets yet" />}>
+            {walletCurrencies.flatMap((c) => ws.filter((w) => w.currency === c)).map((w) => (
+              <tr key={`${w.org_id}-${w.currency}`}>
                 <td className="td font-semibold">{w.org_name} <CountryTag code={w.country} /></td>
                 <td className="td"><StatusBadge status={w.kyc_status} /></td>
-                <td className="td mono font-semibold">{usd(Number(w.balance_cents))}</td>
+                <td className="td mono text-sm">{w.currency}</td>
+                <td className="td mono font-semibold">{money(Number(w.balance_cents), w.currency)}</td>
                 <td className="td text-sm text-muted">{fmtDate(w.last_activity, true)}</td>
               </tr>
             ))}
           </Table>
+          {walletCurrencies.length > 0 && (
+            <div className="px-6 py-3 border-t border-line text-sm grid gap-1">
+              {walletCurrencies.map((c) => (
+                <div key={c} className="flex justify-between"><span>Total {c} wallets ({ws.filter((w) => w.currency === c).length})</span><b className="mono">{money(walletsBy.get(c) ?? 0, c)}</b></div>
+              ))}
+              {(walletCurrencies.length > 1 || walletCurrencies[0] !== cur) && (
+                <div className="flex justify-between text-muted"><span>All wallets · converted at {rateLabel(ctx)}</span><b className="mono">{money([...walletsBy].reduce((a, [c, v]) => a + (toPlatform(ctx, v, c) ?? 0), 0), cur)}</b></div>
+              )}
+            </div>
+          )}
         </Card>
         <Card title="Service price list" action={<Link href="/admin/services" className="btn btn-ghost btn-sm">Open Services & charges</Link>}>
-          <p className="px-6 -mt-1 mb-2 text-sm text-muted">The same prices as Services & charges. This is what the wallet deducts.</p>
-          <Table head={['Service', 'Unit', 'Price']} empty={<EmptyState title="No services" />}>
+          <p className="px-6 -mt-1 mb-2 text-sm text-muted">The same prices as Services & charges, in the platform currency ({cur}). This is what the wallet deducts.</p>
+          <Table head={['Service', 'Unit', `Price (${cur})`]} empty={<EmptyState title="No services" />}>
             {(services.data ?? []).map((sv) => (
               <tr key={sv.code}>
                 <td className="td font-semibold">{sv.name}{!sv.active && <> <StatusBadge status="off" label="Inactive" /></>}<div className="mono text-xs text-muted">{sv.code}</div></td>
                 <td className="td text-sm">{sv.unit}</td>
-                <td className="td mono font-semibold">{current.has(sv.code) ? usd(current.get(sv.code)!) : <span className="text-warn">not set</span>}
-                  {scheduled.has(sv.code) && <div className="text-xs text-muted font-normal">→ {usd(scheduled.get(sv.code)!.amount)} from {fmtDate(scheduled.get(sv.code)!.from)}</div>}
+                <td className="td mono font-semibold">{(() => { const p = priceIn(sv.code); return p ? <>{money(p.amount, cur)}{p.converted && <span className="ml-1.5 text-[10px] uppercase text-muted font-normal">converted</span>}</> : <span className="text-warn">not set</span>; })()}
+                  {scheduled.has(`${sv.code}|${cur}`) && <div className="text-xs text-muted font-normal">→ {money(scheduled.get(`${sv.code}|${cur}`)!.amount, cur)} from {fmtDate(scheduled.get(`${sv.code}|${cur}`)!.from)}</div>}
                 </td>
               </tr>
             ))}
@@ -110,9 +136,9 @@ export default async function WalletAdminPage() {
                 <td className="td font-semibold">{org?.name ?? '—'} <CountryTag code={org?.country} /></td>
                 <td className="td text-sm">{humanize(t.method)}</td>
                 <td className="td mono text-sm">{t.reference ?? <span className="text-warn">none</span>}</td>
-                <td className="td mono font-semibold text-ok">+{usd(Number(t.amount_cents))}</td>
+                <td className="td mono font-semibold text-ok">+{money(Number(t.amount_cents), t.currency)}</td>
                 <td className="td"><StatusBadge status={t.status} /></td>
-                <td className="td text-right">{t.status === 'pending' && can(s, 'wallet', 'approve') && <RunButton className="btn btn-primary btn-sm" confirm={`Confirm ${usd(Number(t.amount_cents))} received and credit ${org?.name ?? 'the wallet'}?`} action={confirmTopup.bind(null, t.id)}>Confirm match</RunButton>}</td>
+                <td className="td text-right">{t.status === 'pending' && can(s, 'wallet', 'approve') && <RunButton className="btn btn-primary btn-sm" confirm={`Confirm ${money(Number(t.amount_cents), t.currency)} received and credit the ${t.currency} wallet of ${org?.name ?? 'the customer'}?`} action={confirmTopup.bind(null, t.id)}>Confirm match</RunButton>}</td>
               </tr>
             );
           })}

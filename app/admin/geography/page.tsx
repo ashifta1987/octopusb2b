@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { requireStaff } from '@/lib/auth';
 import { Card, Stat, PageHeader, EmptyState, Table } from '@/components/ui';
 import { Bar, CountryTag } from '@/components/admin/ui';
-import { usd, humanize, COUNTRY_NAMES } from '@/lib/format';
+import { money, humanize, COUNTRY_NAMES, CURRENCIES } from '@/lib/format';
+import { rateLabel } from '@/components/admin/currency';
 import { cn } from '@/lib/cn';
 import { loadGeography, REGIONS } from './data';
 import { nowMs } from '@/components/admin/server';
@@ -20,7 +21,7 @@ function sinceFor(period?: string) {
 export default async function GeographyPage({ searchParams }: { searchParams: Promise<SP> }) {
   await requireStaff('customers', 'view', '/admin/geography');
   const sp = await searchParams;
-  const { rows, orgs, allOrgs, regionGmv } = await loadGeography({ kyc: sp.kyc, type: sp.type, since: sinceFor(sp.period), region: sp.region });
+  const { rows, orgs, allOrgs, regionGmv, ctx } = await loadGeography({ kyc: sp.kyc, type: sp.type, since: sinceFor(sp.period), region: sp.region });
   const total = orgs.length;
   const verified = orgs.filter((o) => o.kyc_status === 'verified').length;
   const pendingOrgs = orgs.filter((o) => ['submitted', 'in_review', 'more_info'].includes(o.kyc_status));
@@ -40,11 +41,13 @@ export default async function GeographyPage({ searchParams }: { searchParams: Pr
     const p = new URLSearchParams(Object.entries({ ...sp, ...patch }).filter(([, v]) => v) as [string, string][]);
     return `/admin/geography${p.size ? '?' + p : ''}`;
   };
+  const gmv = (v: number) => money(v, ctx.currency, { compact: true });
+  const mixed = rows.some((r) => Object.keys(r.gmvBy).some((c) => c !== ctx.currency));
   const exportQs = new URLSearchParams(Object.entries(sp).filter(([, v]) => v) as [string, string][]).toString();
 
   return (
     <>
-      <PageHeader title="Customer geography" subtitle="Built from customer company profiles and KYC: business country, KYC status and order value." />
+      <PageHeader title="Customer geography" subtitle={`Built from customer company profiles and KYC: business country, KYC status and order value. GMV is shown in ${ctx.currency}; orders in another currency are converted at the approved rate (${rateLabel(ctx)}).`} />
       <form action="/admin/geography" className="flex flex-wrap gap-3 mb-6">
         {sp.region && <input type="hidden" name="region" value={sp.region} />}
         <label className="sr-only" htmlFor="g-period">Period</label>
@@ -73,17 +76,17 @@ export default async function GeographyPage({ searchParams }: { searchParams: Pr
       <Card title="By region" className="mb-6">
         <div className="px-6 pb-6 grid gap-3 grid-cols-2 md:grid-cols-4 xl:grid-cols-7">
           <Link href={qs({ region: undefined })} aria-current={!sp.region ? 'true' : undefined} className={cn('rounded-[10px] border p-4', !sp.region ? 'bg-navy text-white border-navy' : 'border-line hover:border-navy')}>
-            <div className="text-sm opacity-80">All regions</div><div className="font-display text-2xl font-bold">{allRegionCustomers}</div><div className="text-xs opacity-80">{usd(allRegionGmv, { compact: true })} GMV</div>
+            <div className="text-sm opacity-80">All regions</div><div className="font-display text-2xl font-bold">{allRegionCustomers}</div><div className="text-xs opacity-80">{gmv(allRegionGmv)} GMV</div>
           </Link>
           {regionList.map((x) => (
             <Link key={x.r} href={qs({ region: x.r })} aria-current={sp.region === x.r ? 'true' : undefined} className={cn('rounded-[10px] border p-4', sp.region === x.r ? 'bg-navy text-white border-navy' : 'border-line hover:border-navy')}>
-              <div className="text-sm opacity-80">{x.r}</div><div className="font-display text-2xl font-bold">{x.customers}</div><div className="text-xs opacity-80">{usd(x.gmv, { compact: true })} GMV</div>
+              <div className="text-sm opacity-80">{x.r}</div><div className="font-display text-2xl font-bold">{x.customers}</div><div className="text-xs opacity-80">{gmv(x.gmv)} GMV</div>
             </Link>
           ))}
         </div>
       </Card>
 
-      <Card title={`By country · ${sp.region ?? 'all regions'}`} className="mb-6" action={<span className="text-sm text-muted">Sorted by GMV (USD)</span>}>
+      <Card title={`By country · ${sp.region ?? 'all regions'}`} className="mb-6" action={<span className="text-sm text-muted">Sorted by GMV · {ctx.currency}{mixed ? `, converted at ${rateLabel(ctx)}` : ''}</span>}>
         <Table head={['Country', 'Region', 'Customers', 'KYC verified', 'Pending', 'Orders', 'GMV', 'Share of GMV']} empty={<EmptyState title="No customers match these filters" />}>
           {rows.map((r) => (
             <tr key={r.country}>
@@ -95,7 +98,14 @@ export default async function GeographyPage({ searchParams }: { searchParams: Pr
               <td className="td">{r.verified} ({r.customers ? Math.round((r.verified / r.customers) * 100) : 0}%)</td>
               <td className="td">{r.pending}</td>
               <td className="td">{r.orders}</td>
-              <td className="td mono font-semibold">{usd(r.gmv, { compact: true })}</td>
+              <td className="td">
+                <span className="mono font-semibold">{gmv(r.gmv)}</span>
+                {Object.keys(r.gmvBy).some((c) => c !== ctx.currency) && (
+                  <span className="block text-xs text-muted">
+                    {CURRENCIES.filter((c) => r.gmvBy[c]).map((c) => money(r.gmvBy[c], c, { compact: true })).join(' · ')} · converted
+                  </span>
+                )}
+              </td>
               <td className="td w-[180px]">
                 <span className="flex items-center gap-2">
                   <span className="h-2 flex-1 rounded-full bg-line" aria-hidden><span className="block h-2 rounded-full bg-blue" style={{ width: `${totalGmv ? (r.gmv / totalGmv) * 100 : 0}%` }} /></span>

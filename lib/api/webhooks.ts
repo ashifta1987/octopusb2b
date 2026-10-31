@@ -13,7 +13,13 @@ export function publicEventFor(eventType: string): string | null {
   if (eventType === 'shipment.tracking') return 'shipment.tracking';
   if (eventType.startsWith('service_request.')) return 'service_request.updated';
   if (eventType === 'wallet.updated') return 'wallet.updated';
+  if (eventType === 'settings.currency_changed') return 'settings.currency_changed';
   return null;
+}
+
+/** Platform-wide events have no org_id: they go to every organization's endpoints that subscribe to them. */
+export function isBroadcastEvent(publicEvent: string) {
+  return publicEvent === 'settings.currency_changed';
 }
 
 const PRIVATE_HOST = /^(localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|0\.|\[?::1\]?$|.*\.internal$|.*\.local$)/i;

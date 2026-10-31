@@ -2,7 +2,8 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getSiteContent, block } from '@/lib/content';
+import { block } from '@/lib/content';
+import { getStoreContent } from '@/components/store/currency';
 import { getSession } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { COUNTRY_NAMES } from '@/lib/format';
@@ -25,7 +26,7 @@ const FALLBACK: Record<RequestType, string> = {
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { type } = await params;
   if (!isRequestType(type)) return { title: 'Request Center', robots: { index: false } };
-  const { blocks } = await getSiteContent();
+  const { blocks } = await getStoreContent();
   const [title, sub] = parts(blocks, `request.type.${type}`, FALLBACK[type]);
   return { title: `${title} · Request Center`, description: `${sub}. ${block(blocks, 'request.subtitle')}`.slice(0, 160), alternates: { canonical: `/request/${type}` } };
 }
@@ -42,18 +43,20 @@ export default function RequestPage({ params, searchParams }: { params: Params; 
 async function Content({ params, searchParams }: { params: Params; searchParams: SP }) {
   const [{ type }, sp] = await Promise.all([params, searchParams]);
   if (!isRequestType(type)) notFound();
-  const [{ blocks, settings, company }, services, session, product] = await Promise.all([
-    getSiteContent(), getServices(), getSession(), sp.product ? getProductById(sp.product) : Promise.resolve(null),
+  const [{ blocks, settings, company, ctx }, services, session, product] = await Promise.all([
+    getStoreContent(), getServices(), getSession(), sp.product ? getProductById(sp.product) : Promise.resolve(null),
   ]);
   const walletEnabled = settings.wallet_enabled !== false;
+  const svc = services[SERVICE_CODE[type]];
+  const fee = svc?.priceCents ?? 0;
+  const svcCurrency = svc?.currency ?? ctx.currency;
   let balance: number | null = null;
   if (session?.org) {
     const sb = await createClient();
-    const { data } = await sb.rpc('my_wallet_balance');
+    // Charges use the wallet in the platform currency (SPEC §15.1).
+    const { data } = await sb.rpc('my_wallet_balance', { p_currency: svcCurrency });
     balance = data == null ? 0 : Number(data);
   }
-  const svc = services[SERVICE_CODE[type]];
-  const fee = svc?.priceCents ?? 0;
   const productQs = product ? `?product=${product.id}` : '';
   const loginHref = `/login?next=${encodeURIComponent(`/request/${type}${productQs}`)}`;
   const mode = !session ? 'guest' : !session.org ? 'no-org' : 'ready';
@@ -127,7 +130,7 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
             type={type} action={submitRequest} defaults={defaults} productId={product?.id ?? null}
             feeCents={fee} serviceName={svc?.name ?? 'Service fee'}
             feeLabel={fee > 0 ? `Charged once ${svc?.unit ?? 'per request'} when you submit it.` : 'No fee to submit — you will receive a quote.'}
-            balanceCents={balance} walletEnabled={walletEnabled} mode={mode} loginHref={loginHref}
+            balanceCents={balance} walletEnabled={walletEnabled} currency={svcCurrency} mode={mode} loginHref={loginHref}
           />
         </section>
 

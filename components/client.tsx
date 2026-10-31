@@ -1,13 +1,13 @@
 'use client';
 import { useState, useTransition, useRef } from 'react';
 import { cn } from '@/lib/cn';
-import { usd } from '@/lib/format';
+import { money } from '@/lib/format';
 
 /* ───────── ConfirmCharge — shows price + wallet balance before any deduction (SPEC §8.2) ───────── */
 export function ConfirmCharge({
-  label, title, priceCents, balanceCents, walletEnabled, onConfirm, className, buttonClass = 'btn btn-primary',
+  label, title, priceCents, balanceCents, walletEnabled, onConfirm, className, buttonClass = 'btn btn-primary', currency = 'USD',
 }: {
-  label: string; title: string; priceCents: number; balanceCents: number | null; walletEnabled: boolean;
+  label: string; title: string; priceCents: number; balanceCents: number | null; walletEnabled: boolean; currency?: string;
   onConfirm: () => Promise<{ ok: boolean; error?: string } | void>; className?: string; buttonClass?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -22,11 +22,11 @@ export function ConfirmCharge({
           <div className="card w-full max-w-md p-6">
             <h2 id="cc-title" className="text-xl font-semibold">{title}</h2>
             <dl className="mt-4 space-y-2 text-[15px]">
-              <div className="flex justify-between"><dt className="text-muted">Charge</dt><dd className="mono font-semibold">{usd(priceCents)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted">Charge</dt><dd className="mono font-semibold">{money(priceCents, currency)}</dd></div>
               {walletEnabled ? (
                 <>
-                  <div className="flex justify-between"><dt className="text-muted">Wallet balance</dt><dd className="mono">{usd(balanceCents)}</dd></div>
-                  <div className="flex justify-between border-t border-line pt-2"><dt className="text-muted">Balance after</dt><dd className={cn('mono font-semibold', insufficient && 'text-bad')}>{usd((balanceCents ?? 0) - priceCents)}</dd></div>
+                  <div className="flex justify-between"><dt className="text-muted">Wallet balance</dt><dd className="mono">{money(balanceCents, currency)}</dd></div>
+                  <div className="flex justify-between border-t border-line pt-2"><dt className="text-muted">Balance after</dt><dd className={cn('mono font-semibold', insufficient && 'text-bad')}>{money((balanceCents ?? 0) - priceCents, currency)}</dd></div>
                 </>
               ) : (
                 <p className="text-sm text-muted">The wallet is switched off — this charge will be added to your next invoice / card payment.</p>
@@ -39,7 +39,7 @@ export function ConfirmCharge({
               <button className="btn btn-primary" disabled={pending || insufficient} onClick={() => start(async () => {
                 const r = await onConfirm();
                 if (r && !r.ok) setErr(r.error ?? 'Failed'); else setOpen(false);
-              })}>{pending ? 'Processing…' : priceCents > 0 ? `Confirm ${usd(priceCents)}` : 'Confirm'}</button>
+              })}>{pending ? 'Processing…' : priceCents > 0 ? `Confirm ${money(priceCents, currency)}` : 'Confirm'}</button>
             </div>
           </div>
         </div>

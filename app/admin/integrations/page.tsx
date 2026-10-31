@@ -4,11 +4,17 @@ import { Card, PageHeader, EmptyState, StatusBadge, Table, Notice } from '@/comp
 import { Tabs } from '@/components/admin/ui';
 import { ActionForm, RunButton } from '@/components/admin/client';
 import { fmtDate, humanize } from '@/lib/format';
-import { saveIntegrationMode, testConnection, retryOutbox } from './actions';
+import { Field } from '@/components/admin/ui';
+import { PostmanSyncButton } from '@/components/admin/postman';
+import { saveIntegrationMode, testConnection, retryOutbox, savePostmanConfig } from './actions';
 
 export const metadata = { title: 'Integrations' };
 
-const KIND_LABEL: Record<string, string> = { carrier: 'Shipping carrier', payment: 'Payment partner', email: 'Transactional email', ai: 'AI text & image', dropship: 'Dropshipping app', source: 'Product source' };
+const KIND_LABEL: Record<string, string> = { carrier: 'Shipping carrier', payment: 'Payment partner', email: 'Transactional email', ai: 'AI text & image', dropship: 'Dropshipping app', source: 'Product source', api_partner: 'API partner', bank: 'Bank adapter' };
+/** Money-moving adapters: the currency switch is blocked unless these support the target currency (SPEC §15.1). */
+const MONEY_KINDS = new Set(['payment', 'bank']);
+
+type PostmanConfig = { workspace_id?: string | null; collection_ids?: { public_v1?: string | null; supplier_v1?: string | null }; monitor_id?: string | null };
 const EVENTS = ['product.published', 'rfq.submitted', 'quote.sent', 'quote.approved', 'payment.confirmed', 'order.confirmed', 'order.ready_to_ship', 'shipment.tracking', 'service_request.paid', 'ticket.created', 'terms.published'];
 
 /** Admin → Integrations (Integrations.png). */
@@ -18,18 +24,26 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
   const sb = await createClient();
   const outboxFilter = sp.outbox === 'all' ? null : ['failed', 'dead'];
   const outboxQ = sb.from('outbox_events').select('id, event_type, aggregate_type, status, attempts, last_error, available_at, created_at').order('created_at', { ascending: false }).limit(40);
-  const [{ data: integrations }, { data: outbox }, { data: deliveries }, { data: logs }, counts] = await Promise.all([
-    sb.from('integrations').select('code, name, kind, mode, status, last_tested_at, updated_at').order('kind'),
+  const [{ data: integrations }, { data: outbox }, { data: deliveries }, { data: logs }, counts, { data: postmanLogs }] = await Promise.all([
+    sb.from('integrations').select('code, name, kind, mode, status, config, last_tested_at, updated_at').order('kind'),
     outboxFilter ? outboxQ.in('status', outboxFilter) : outboxQ,
     sb.from('webhook_deliveries').select('id, event_type, response_status, attempts, delivered_at, created_at, webhook_endpoints(url)').order('created_at', { ascending: false }).limit(20),
     sb.from('integration_logs').select('id, integration_code, direction, status, summary, created_at').order('created_at', { ascending: false }).limit(25),
     Promise.all(['pending', 'failed', 'dead'].map((st) => sb.from('outbox_events').select('id', { count: 'exact', head: true }).eq('status', st))),
+    sb.from('integration_logs').select('id, direction, status, summary, created_at').eq('integration_code', 'postman').order('created_at', { ascending: false }).limit(20),
   ]);
   const [pendingN, failedN, deadN] = counts.map((c) => c.count ?? 0);
   const list = integrations ?? [];
   const kinds = [...new Set(list.map((i) => i.kind))];
   const kind = kinds.includes(sp.kind ?? '') ? sp.kind! : 'all';
-  const shown = kind === 'all' ? list : list.filter((i) => i.kind === kind);
+  const shown = (kind === 'all' ? list : list.filter((i) => i.kind === kind)).filter((i) => i.code !== 'postman');
+  const postman = list.find((i) => i.code === 'postman');
+  const showPostman = !!postman && (kind === 'all' || kind === postman.kind);
+  const pmCfg = (postman?.config ?? {}) as PostmanConfig;
+  const pmLogs = postmanLogs ?? [];
+  const lastSync = pmLogs.find((l) => l.direction !== 'monitor');
+  const lastMonitor = pmLogs.find((l) => l.direction === 'monitor');
+  const okLog = (st: number | null | undefined) => st != null && st < 300;
   const edit = can(s, 'integrations', 'edit');
 
   return (
@@ -39,7 +53,7 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
       <Tabs base="/admin/integrations" param="kind" active={kind} tabs={[{ key: 'all', label: 'All', count: list.length }, ...kinds.map((k) => ({ key: k, label: KIND_LABEL[k] ?? humanize(k), count: list.filter((i) => i.kind === k).length }))]} />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 mb-6">
-        {shown.length === 0 && <Card className="sm:col-span-2 xl:col-span-3"><EmptyState title="No connections" /></Card>}
+        {shown.length === 0 && !showPostman && <Card className="sm:col-span-2 xl:col-span-3"><EmptyState title="No connections" /></Card>}
         {shown.map((i) => (
           <section key={i.code} className="card p-5 flex flex-col">
             <div className="flex items-start gap-3">
@@ -54,6 +68,7 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
               <dt className="text-muted">Mode</dt><dd><StatusBadge status={i.mode} label={humanize(i.mode)} tone={i.mode === 'live' ? 'green' : undefined} /></dd>
               <dt className="text-muted">Last tested</dt><dd>{fmtDate(i.last_tested_at, true)}</dd>
             </dl>
+            <CurrencyLine kind={i.kind} config={i.config} />
             <div className="mt-auto pt-4 border-t border-line flex flex-wrap items-end gap-2 justify-between">
               {edit ? (
                 <ActionForm action={saveIntegrationMode} className="flex items-end gap-2" submitLabel="Set" submitClass="btn btn-ghost btn-sm" inline confirm={`Change the mode of ${i.name}? Live mode uses real credentials and real money / shipments.`}>
@@ -69,6 +84,65 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
           </section>
         ))}
       </div>
+
+      {showPostman && postman && (
+        <section className="card border-2 border-blue p-6 mb-6" aria-labelledby="pm-title">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <span className="w-12 h-12 rounded-[10px] bg-navy text-white mono text-xs font-semibold flex items-center justify-center" aria-hidden>PM</span>
+              <div>
+                <h2 id="pm-title" className="font-semibold text-xl">{postman.name}</h2>
+                <p className="text-sm text-muted">Official API partner · public workspace “Octopus B2B API”, collections “Octopus B2B API v1” and the supplier API (SPEC §15.2)</p>
+              </div>
+            </div>
+            <span className="flex gap-2">
+              <StatusBadge status={postman.status} />
+              <StatusBadge status={postman.mode} label={humanize(postman.mode)} tone={postman.mode === 'live' ? 'green' : undefined} />
+            </span>
+          </div>
+
+          <ActionForm action={savePostmanConfig} className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" submitLabel="Save IDs" hideSubmit={!edit}>
+            <Field label="Workspace ID" htmlFor="pm-ws"><input id="pm-ws" name="workspace_id" className="input mono" defaultValue={pmCfg.workspace_id ?? ''} placeholder="not set" disabled={!edit} /></Field>
+            <Field label="Collection ID · public v1" htmlFor="pm-pub"><input id="pm-pub" name="public_v1" className="input mono" defaultValue={pmCfg.collection_ids?.public_v1 ?? ''} placeholder="not set" disabled={!edit} /></Field>
+            <Field label="Collection ID · supplier v1" htmlFor="pm-sup"><input id="pm-sup" name="supplier_v1" className="input mono" defaultValue={pmCfg.collection_ids?.supplier_v1 ?? ''} placeholder="not set" disabled={!edit} /></Field>
+            <Field label="Monitor ID" htmlFor="pm-mon"><input id="pm-mon" name="monitor_id" className="input mono" defaultValue={pmCfg.monitor_id ?? ''} placeholder="not set" disabled={!edit} /></Field>
+            <div className="sm:col-span-2 lg:col-span-4 rounded-[10px] bg-surface px-4 py-3 text-sm">
+              <b>API key:</b> <span className="mono">POSTMAN_API_KEY</span> is stored in the server environment / Supabase Vault and is never shown here. These IDs are non-secret config.
+            </div>
+          </ActionForm>
+
+          <dl className="mt-5 grid gap-4 sm:grid-cols-3 text-sm">
+            <div className="rounded-[10px] border border-line px-4 py-3">
+              <dt className="text-muted">Last sync</dt>
+              <dd className="mt-1">
+                {lastSync ? (
+                  <>
+                    <div className="flex items-center gap-2"><span>{fmtDate(lastSync.created_at, true)}</span><StatusBadge status={okLog(lastSync.status) ? 'completed' : 'failed'} label={okLog(lastSync.status) ? 'Succeeded' : `Failed${lastSync.status ? ` (${lastSync.status})` : ''}`} /></div>
+                    {lastSync.summary && <p className="text-xs text-muted mt-1">{lastSync.summary}</p>}
+                  </>
+                ) : <span className="text-muted">Never synced</span>}
+              </dd>
+            </div>
+            <div className="rounded-[10px] border border-line px-4 py-3">
+              <dt className="text-muted">Monitor (sandbox collection)</dt>
+              <dd className="mt-1">
+                {!pmCfg.monitor_id ? <span className="text-muted">No monitor configured</span>
+                  : lastMonitor ? (
+                    <>
+                      <div className="flex items-center gap-2"><StatusBadge status={okLog(lastMonitor.status) ? 'completed' : 'failed'} label={okLog(lastMonitor.status) ? 'Passing' : 'Failing'} /><span>{fmtDate(lastMonitor.created_at, true)}</span></div>
+                      {lastMonitor.summary && <p className="text-xs text-muted mt-1">{lastMonitor.summary}</p>}
+                    </>
+                  ) : <span className="text-muted">Monitor {pmCfg.monitor_id} — no runs reported yet</span>}
+              </dd>
+            </div>
+            <div className="rounded-[10px] border border-line px-4 py-3 flex flex-col gap-2">
+              <dt className="text-muted">Sync</dt>
+              <dd className="text-xs text-muted">CI pushes the OpenAPI definition and collections on every release. The repository is the source — never edit collections by hand in Postman.</dd>
+              {edit && <dd><PostmanSyncButton /></dd>}
+            </div>
+          </dl>
+        </section>
+      )}
 
       <Card title="Failed jobs (outbox)" className="mb-6" action={
         <span className="flex items-center gap-3 text-sm">
@@ -129,5 +203,21 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
         </div>
       </Card>
     </>
+  );
+}
+
+/** "Currencies: USD, CNY" + CNY-supported badge (integrations.config.currencies, SPEC §15.1). */
+function CurrencyLine({ kind, config }: { kind: string; config: unknown }) {
+  const raw = (config as { currencies?: unknown } | null)?.currencies;
+  const list = Array.isArray(raw) ? raw.map(String) : null;
+  if (!list && !MONEY_KINDS.has(kind)) return null;
+  const currencies = list ?? ['USD'];
+  const cny = currencies.includes('CNY');
+  return (
+    <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+      <span className="text-muted">Currencies:</span>
+      <span className="mono">{currencies.join(', ')}</span>
+      <StatusBadge status={cny ? 'active' : 'pending'} label={cny ? 'CNY supported' : 'CNY not supported'} tone={cny ? 'green' : 'amber'} />
+    </div>
   );
 }

@@ -1,0 +1,1703 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Octopus B2B Supplier API",
+    "version": "1.0.0-beta",
+    "description": "Bulk product sync, stock and price updates and quoting from your own ERP. Writes still pass moderation and the supplier switches.\n\n* **Status:** returns `403 SUPPLIER_PORTAL_DISABLED` until the supplier portal opens; endpoints then roll out (`501` until available).\n* **Auth:** same OAuth 2 client credentials as the public API (`POST /api/v1/oauth/token`) with supplier scopes.\n* **Money:** every amount is `{ \"amount_minor\": 19000, \"currency\": \"USD\" }` (minor units = cents / fen). Prices may be entered in USD or CNY (1688 suppliers often quote CNY). Quotes, orders, invoices and service requests keep the currency they were created in; catalogue prices keep the supplier's currency and add a `converted` amount in the platform currency. `GET /settings/currency` returns the platform currency (USD or CNY) and the approved rate; the `settings.currency_changed` webhook announces a switch.",
+    "contact": {
+      "name": "Octopus B2B",
+      "email": "support@octopusb2b.com",
+      "url": "https://octopusb2b.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://octopusb2b.com/api/supplier/v1",
+      "description": "This deployment"
+    },
+    {
+      "url": "https://api.octopusb2b.com/supplier/v1",
+      "description": "Production"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth"
+    },
+    {
+      "name": "Products"
+    },
+    {
+      "name": "Inventory"
+    },
+    {
+      "name": "RFQs & quotes"
+    },
+    {
+      "name": "Orders"
+    }
+  ],
+  "paths": {
+    "/products": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "List your products (any status)",
+        "operationId": "getProducts",
+        "security": [
+          {
+            "oauth2": [
+              "products:write"
+            ]
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "description": "Scopes (any of): products:write",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "description": "Page",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "required": false,
+            "description": "Page size",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierProductList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient scope or KYC required for live keys",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (60/min per key)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Endpoint not implemented yet (coming soon)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Products"
+        ],
+        "summary": "Bulk upsert products by SKU (goes to moderation)",
+        "operationId": "postProducts",
+        "security": [
+          {
+            "oauth2": [
+              "products:write"
+            ]
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "description": "Scopes (any of): products:write",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "Unique key per logical request (e.g. a UUID). Replays return the stored response.",
+            "schema": {
+              "type": "string",
+              "maxLength": 255
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "products": {
+                    "minItems": 1,
+                    "maxItems": 500,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "sku": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 80,
+                          "description": "Your own SKU — the upsert key"
+                        },
+                        "title": {
+                          "type": "string",
+                          "minLength": 3,
+                          "maxLength": 200
+                        },
+                        "description": {
+                          "type": "string",
+                          "maxLength": 10000
+                        },
+                        "category_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                        },
+                        "unit": {
+                          "default": "pcs",
+                          "type": "string",
+                          "maxLength": 20
+                        },
+                        "moq": {
+                          "default": 1,
+                          "type": "integer",
+                          "exclusiveMinimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "lead_time_days": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "origin_country": {
+                          "type": "string",
+                          "minLength": 2,
+                          "maxLength": 2
+                        },
+                        "hs_code": {
+                          "type": "string",
+                          "maxLength": 12
+                        },
+                        "price_tiers": {
+                          "minItems": 1,
+                          "maxItems": 10,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "min_qty": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "unit_price": {
+                                "type": "object",
+                                "properties": {
+                                  "amount_minor": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
+                                    "description": "Integer minor units (cents / fen) of `currency`"
+                                  },
+                                  "currency": {
+                                    "type": "string",
+                                    "enum": [
+                                      "USD",
+                                      "CNY"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "amount_minor",
+                                  "currency"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "min_qty",
+                              "unit_price"
+                            ]
+                          },
+                          "description": "All tiers must use the same currency (USD or CNY)"
+                        }
+                      },
+                      "required": [
+                        "sku",
+                        "title",
+                        "price_tiers"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "products"
+                ]
+              },
+              "example": {
+                "products": [
+                  {
+                    "sku": "GLV-NIT-L",
+                    "title": "Nitrile-coated work gloves, size L",
+                    "unit": "pairs",
+                    "moq": 1000,
+                    "lead_time_days": 20,
+                    "origin_country": "CN",
+                    "hs_code": "611610",
+                    "price_tiers": [
+                      {
+                        "min_qty": 1000,
+                        "unit_price": {
+                          "amount_minor": 650,
+                          "currency": "CNY"
+                        }
+                      },
+                      {
+                        "min_qty": 5000,
+                        "unit_price": {
+                          "amount_minor": 580,
+                          "currency": "CNY"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierSyncResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient scope or KYC required for live keys",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (60/min per key)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Endpoint not implemented yet (coming soon)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/inventory": {
+      "patch": {
+        "tags": [
+          "Inventory"
+        ],
+        "summary": "Update stock and prices by SKU",
+        "operationId": "patchInventory",
+        "security": [
+          {
+            "oauth2": [
+              "inventory:write"
+            ]
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "description": "Scopes (any of): inventory:write",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "items": {
+                    "minItems": 1,
+                    "maxItems": 1000,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "sku": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 80
+                        },
+                        "stock": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "maximum": 9007199254740991
+                        },
+                        "price_tiers": {
+                          "maxItems": 10,
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "min_qty": {
+                                "type": "integer",
+                                "exclusiveMinimum": 0,
+                                "maximum": 9007199254740991
+                              },
+                              "unit_price": {
+                                "type": "object",
+                                "properties": {
+                                  "amount_minor": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991,
+                                    "description": "Integer minor units (cents / fen) of `currency`"
+                                  },
+                                  "currency": {
+                                    "type": "string",
+                                    "enum": [
+                                      "USD",
+                                      "CNY"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "amount_minor",
+                                  "currency"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "min_qty",
+                              "unit_price"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "sku"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "items"
+                ]
+              },
+              "example": {
+                "items": [
+                  {
+                    "sku": "GLV-NIT-L",
+                    "stock": 120000,
+                    "price_tiers": [
+                      {
+                        "min_qty": 1000,
+                        "unit_price": {
+                          "amount_minor": 640,
+                          "currency": "CNY"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierSyncResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient scope or KYC required for live keys",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (60/min per key)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Endpoint not implemented yet (coming soon)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rfqs": {
+      "get": {
+        "tags": [
+          "RFQs & quotes"
+        ],
+        "summary": "RFQs assigned to you",
+        "operationId": "getRfqs",
+        "security": [
+          {
+            "oauth2": [
+              "rfqs:read"
+            ]
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "description": "Scopes (any of): rfqs:read",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierRfqList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient scope or KYC required for live keys",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (60/min per key)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Endpoint not implemented yet (coming soon)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/quotes": {
+      "post": {
+        "tags": [
+          "RFQs & quotes"
+        ],
+        "summary": "Quote an assigned RFQ",
+        "operationId": "postQuotes",
+        "security": [
+          {
+            "oauth2": [
+              "quotes:write"
+            ]
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "description": "Scopes (any of): quotes:write",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "description": "Unique key per logical request (e.g. a UUID). Replays return the stored response.",
+            "schema": {
+              "type": "string",
+              "maxLength": 255
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rfq_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                  },
+                  "unit_price": {
+                    "type": "object",
+                    "properties": {
+                      "amount_minor": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "Integer minor units (cents / fen) of `currency`"
+                      },
+                      "currency": {
+                        "type": "string",
+                        "enum": [
+                          "USD",
+                          "CNY"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "amount_minor",
+                      "currency"
+                    ]
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "incoterm": {
+                    "type": "string",
+                    "enum": [
+                      "EXW",
+                      "FOB",
+                      "CIF",
+                      "CFR",
+                      "DAP",
+                      "DDP",
+                      "FCA"
+                    ]
+                  },
+                  "lead_time_days": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "shipping": {
+                    "type": "object",
+                    "properties": {
+                      "amount_minor": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991,
+                        "description": "Integer minor units (cents / fen) of `currency`"
+                      },
+                      "currency": {
+                        "type": "string",
+                        "enum": [
+                          "USD",
+                          "CNY"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "amount_minor",
+                      "currency"
+                    ]
+                  },
+                  "notes": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                },
+                "required": [
+                  "rfq_id",
+                  "unit_price",
+                  "quantity",
+                  "incoterm",
+                  "lead_time_days"
+                ]
+              },
+              "example": {
+                "rfq_id": "3f0c1a52-8f5e-4c6b-9b7a-2d1e0f9a8b7c",
+                "unit_price": {
+                  "amount_minor": 620,
+                  "currency": "CNY"
+                },
+                "quantity": 5000,
+                "incoterm": "FOB",
+                "lead_time_days": 25,
+                "shipping": {
+                  "amount_minor": 180000,
+                  "currency": "CNY"
+                },
+                "notes": "EN 388 certified"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierQuoteEnvelope"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient scope or KYC required for live keys",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation failed",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (60/min per key)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Endpoint not implemented yet (coming soon)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Orders placed with you",
+        "operationId": "getOrders",
+        "security": [
+          {
+            "oauth2": [
+              "orders:read"
+            ]
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "description": "Scopes (any of): orders:read",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierOrderList"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient scope or KYC required for live keys",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited (60/min per key)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Endpoint not implemented yet (coming soon)",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oauth/token": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Get an access token (OAuth 2 client credentials, 1 hour)",
+        "operationId": "postOauthToken",
+        "security": [],
+        "servers": [
+          {
+            "url": "https://octopusb2b.com/api/v1"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "grant_type",
+                  "client_id",
+                  "client_secret"
+                ],
+                "properties": {
+                  "grant_type": {
+                    "const": "client_credentials"
+                  },
+                  "client_id": {
+                    "type": "string",
+                    "example": "cli_0123456789abcdef"
+                  },
+                  "client_secret": {
+                    "type": "string",
+                    "description": "An API key of this client: oct_test_… or oct_live_…"
+                  },
+                  "scope": {
+                    "type": "string",
+                    "description": "Space-separated subset of the client scopes"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "access_token",
+                    "token_type",
+                    "expires_in"
+                  ],
+                  "properties": {
+                    "access_token": {
+                      "type": "string"
+                    },
+                    "token_type": {
+                      "const": "Bearer"
+                    },
+                    "expires_in": {
+                      "type": "integer",
+                      "example": 3600
+                    },
+                    "scope": {
+                      "type": "string"
+                    },
+                    "mode": {
+                      "enum": [
+                        "test",
+                        "live"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "invalid_request / invalid_scope",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "invalid_client",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "oauth2": {
+        "type": "oauth2",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "https://octopusb2b.com/api/v1/oauth/token",
+            "scopes": {
+              "products:write": "products:write",
+              "inventory:write": "inventory:write",
+              "rfqs:read": "rfqs:read",
+              "quotes:write": "quotes:write",
+              "orders:read": "orders:read"
+            }
+          }
+        }
+      },
+      "apiKey": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Supplier API key used directly as bearer token"
+      }
+    },
+    "schemas": {
+      "Amount": {
+        "type": "object",
+        "properties": {
+          "amount_minor": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Integer minor units (cents / fen) of `currency`"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "CNY"
+            ]
+          }
+        },
+        "required": [
+          "amount_minor",
+          "currency"
+        ],
+        "description": "Every amount in the API: integer minor units + ISO 4217 currency (USD or CNY)."
+      },
+      "Price": {
+        "type": "object",
+        "properties": {
+          "amount_minor": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Integer minor units (cents / fen) of `currency`"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "CNY"
+            ]
+          },
+          "converted": {
+            "type": "object",
+            "properties": {
+              "amount_minor": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "description": "Integer minor units (cents / fen) of `currency`"
+              },
+              "currency": {
+                "type": "string",
+                "enum": [
+                  "USD",
+                  "CNY"
+                ]
+              },
+              "fx_rate_id": {
+                "description": "Approved fx_rates row used for the conversion",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "amount_minor",
+              "currency",
+              "fx_rate_id"
+            ],
+            "description": "The price in the platform currency at the approved rate (equal to the original when the currencies match)"
+          }
+        },
+        "required": [
+          "amount_minor",
+          "currency",
+          "converted"
+        ],
+        "description": "A catalogue price in the currency it was entered in, plus `converted` into the platform currency at the approved rate."
+      },
+      "CurrencySettings": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "CNY"
+            ],
+            "description": "Active platform currency — new quotes, invoices and charges use it"
+          },
+          "rate": {
+            "type": "object",
+            "properties": {
+              "base": {
+                "type": "string",
+                "const": "USD"
+              },
+              "quote": {
+                "type": "string",
+                "const": "CNY"
+              },
+              "rate": {
+                "type": "number",
+                "exclusiveMinimum": 0,
+                "description": "CNY per 1 USD (approved billing rate)"
+              },
+              "effective_from": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "fx_rate_id": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "base",
+              "quote",
+              "rate",
+              "effective_from",
+              "fx_rate_id"
+            ]
+          }
+        },
+        "required": [
+          "currency",
+          "rate"
+        ]
+      },
+      "Problem": {
+        "type": "object",
+        "description": "RFC 7807 problem details",
+        "required": [
+          "status",
+          "code"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "code": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "PageMeta": {
+        "type": "object",
+        "required": [
+          "page",
+          "per_page",
+          "total"
+        ],
+        "properties": {
+          "page": {
+            "type": "integer"
+          },
+          "per_page": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "total_pages": {
+            "type": "integer"
+          }
+        }
+      },
+      "SupplierProduct": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "status",
+          "currency"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "sku": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "CNY"
+            ],
+            "description": "Currency the record is locked in"
+          },
+          "price_tiers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "min_qty",
+                "unit_price"
+              ],
+              "properties": {
+                "min_qty": {
+                  "type": "integer"
+                },
+                "unit_price": {
+                  "$ref": "#/components/schemas/Amount"
+                }
+              }
+            }
+          },
+          "updated_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp"
+          }
+        }
+      },
+      "SupplierSyncResult": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "object",
+            "required": [
+              "accepted",
+              "rejected"
+            ],
+            "properties": {
+              "accepted": {
+                "type": "integer"
+              },
+              "rejected": {
+                "type": "integer"
+              },
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sku": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "SupplierRfq": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "title",
+          "quantity",
+          "currency"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "incoterm": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "destination_country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "CNY"
+            ],
+            "description": "Currency the record is locked in"
+          },
+          "target_price": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Amount"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expires_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "ISO 8601 timestamp"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
+      "SupplierQuote": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "rfq_id",
+          "currency",
+          "unit_price",
+          "total"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "rfq_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "CNY"
+            ],
+            "description": "Currency the record is locked in"
+          },
+          "unit_price": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "shipping": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "total": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "valid_until": {
+            "type": "string",
+            "description": "ISO 8601 timestamp"
+          }
+        }
+      },
+      "SupplierOrder": {
+        "type": "object",
+        "required": [
+          "id",
+          "code",
+          "status",
+          "currency",
+          "total"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "USD",
+              "CNY"
+            ],
+            "description": "Currency the record is locked in"
+          },
+          "total": {
+            "$ref": "#/components/schemas/Amount"
+          },
+          "created_at": {
+            "type": "string",
+            "description": "ISO 8601 timestamp"
+          }
+        }
+      },
+      "SupplierProductList": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierProduct"
+            }
+          },
+          "meta": {
+            "$ref": "#/components/schemas/PageMeta"
+          }
+        }
+      },
+      "SupplierRfqList": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierRfq"
+            }
+          }
+        }
+      },
+      "SupplierQuoteEnvelope": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SupplierQuote"
+          },
+          "simulated": {
+            "type": "boolean",
+            "description": "true when a test key was used — nothing was written"
+          }
+        }
+      },
+      "SupplierOrderList": {
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SupplierOrder"
+            }
+          }
+        }
+      }
+    }
+  }
+}

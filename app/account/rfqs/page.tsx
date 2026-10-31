@@ -13,7 +13,7 @@ export default async function RfqsPage({ searchParams }: { searchParams: Promise
   if (!s.org) return <Notice tone="amber">Complete your company profile first.</Notice>;
   const { status } = await searchParams;
   const sb = await createClient();
-  let q = sb.from('rfqs').select('id, code, title, quantity, unit, status, destination_country, target_price_cents, created_at, expires_at, quotes(id, status)').eq('org_id', s.org.id).order('created_at', { ascending: false });
+  let q = sb.from('rfqs').select('id, code, title, quantity, unit, status, destination_country, target_price_cents, fee_minor, currency, created_at, expires_at, quotes(id, status)').eq('org_id', s.org.id).order('created_at', { ascending: false });
   if (status === 'open') q = q.in('status', OPEN);
   else if (status === 'closed') q = q.not('status', 'in', `(${OPEN.join(',')})`);
   const { data: rfqs } = await q;
@@ -30,7 +30,7 @@ export default async function RfqsPage({ searchParams }: { searchParams: Promise
       </nav>
       <Card>
         <Table head={['RFQ', 'Product', 'Quantity', 'Target', 'Quotes', 'Status', 'Created', '']}
-          empty={<EmptyState title="No RFQs yet" body="Describe what you need and suppliers will quote in USD with Incoterm and lead time." action={<Link href="/request/sourcing" className="btn btn-primary btn-sm">Create an RFQ</Link>} />}>
+          empty={<EmptyState title="No RFQs yet" body="Describe what you need and suppliers will quote in the platform currency with Incoterm and lead time." action={<Link href="/request/sourcing" className="btn btn-primary btn-sm">Create an RFQ</Link>} />}>
           {(rfqs ?? []).map((r) => {
             const quotes = (r.quotes as { id: string; status: string }[] | null) ?? [];
             const waiting = quotes.filter((x) => x.status === 'sent' || x.status === 'viewed').length;
@@ -39,7 +39,7 @@ export default async function RfqsPage({ searchParams }: { searchParams: Promise
                 <td className="td mono text-sm">{r.code}</td>
                 <td className="td font-semibold"><Link href={`/account/rfqs/${r.id}`} className="hover:text-blue">{r.title}</Link></td>
                 <td className="td mono text-sm">{Number(r.quantity).toLocaleString('en-US')} {r.unit}</td>
-                <td className="td">{r.target_price_cents ? <Money cents={Number(r.target_price_cents)} /> : '—'}</td>
+                <td className="td">{r.target_price_cents ? <Money cents={Number(r.target_price_cents)} currency={r.currency as string} /> : '—'}</td>
                 <td className="td">{quotes.length}{waiting ? <span className="ml-2 text-xs font-semibold text-blue">{waiting} to review</span> : null}</td>
                 <td className="td"><StatusBadge status={r.status as string} /></td>
                 <td className="td text-sm text-muted">{fmtDate(r.created_at as string)}</td>

@@ -1,5 +1,6 @@
 import { apiRoute, pageMeta, range, simId } from '@/lib/api/handler';
-import { RFQ_COLUMNS } from '@/lib/api/trade';
+import { publicRfq, RFQ_COLUMNS } from '@/lib/api/trade';
+import { loadFx } from '@/lib/api/money';
 import { json, problem, problemFromDb } from '@/lib/api/problem';
 import { Pagination, SubmitRfq, zodIssues } from '@/lib/contracts';
 
@@ -12,7 +13,7 @@ export const GET = apiRoute({ scopes: ['quotes:write', 'orders:read'] }, async (
   const [from, to] = range(pg.page, pg.per_page);
   const { data, count, error } = await q.order('created_at', { ascending: false }).range(from, to);
   if (error) return error.code === '22P02' ? problem(400, 'INVALID_QUERY', 'Unknown status.') : problemFromDb(error);
-  return json({ data: data ?? [], meta: pageMeta(pg.page, pg.per_page, count) });
+  return json({ data: (data ?? []).map(publicRfq), meta: pageMeta(pg.page, pg.per_page, count) });
 });
 
 /** POST /api/v1/rfqs — submit an RFQ (RFQ fee charged from the wallet when the wallet is on). Test keys: simulated. */
@@ -27,11 +28,12 @@ export const POST = apiRoute({ scopes: ['quotes:write'] }, async ({ ctx, body, r
   }
 
   if (ctx.mode === 'test') {
-    const { data: fee } = await ctx.sb.rpc('current_service_price', { p_code: 'rfq' });
+    const fx = await loadFx(ctx.sb);
+    const { data: fee } = await ctx.sb.rpc('current_service_price', { p_code: 'rfq', p_currency: fx.currency });
     const now = new Date();
     return json(
       {
-        data: {
+        data: publicRfq({
           id: simId('rfq'),
           code: 'RFQ-TEST-' + Math.floor(1000 + Math.random() * 9000),
           title: r.title,
@@ -40,6 +42,7 @@ export const POST = apiRoute({ scopes: ['quotes:write'] }, async ({ ctx, body, r
           unit: 'pcs',
           status: 'submitted',
           fee_minor: Number(fee ?? 0),
+          currency: fx.currency,
           product_id: r.productId ?? null,
           destination_country: r.destinationCountry ?? null,
           destination_city: r.destinationCity ?? null,
@@ -47,7 +50,7 @@ export const POST = apiRoute({ scopes: ['quotes:write'] }, async ({ ctx, body, r
           target_price_cents: r.targetPriceCents ?? null,
           expires_at: new Date(now.getTime() + 14 * 864e5).toISOString(),
           created_at: now.toISOString(),
-        },
+        }),
         simulated: true,
       },
       { status: 201 },
@@ -68,5 +71,5 @@ export const POST = apiRoute({ scopes: ['quotes:write'] }, async ({ ctx, body, r
   });
   if (error) return problemFromDb(error);
   const { data } = await ctx.sb.from('rfqs').select(RFQ_COLUMNS).eq('id', id).eq('org_id', ctx.orgId).single();
-  return json({ data }, { status: 201, headers: { Location: `/api/v1/rfqs/${id}` } });
+  return json({ data: data ? publicRfq(data) : null }, { status: 201, headers: { Location: `/api/v1/rfqs/${id}` } });
 });

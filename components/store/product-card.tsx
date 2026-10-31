@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { SupplierCode } from '@/components/ui';
-import { usd } from '@/lib/format';
+import { money, CURRENCY_PREFIX, asCurrency } from '@/lib/format';
 import type { CardProduct, Tier, TagRef } from './data';
 
 /** "pcs" → "pc", "units" → "unit", "m" → "m". */
@@ -9,12 +9,12 @@ export function unitOne(unit: string) {
   return unit.length > 2 && unit.endsWith('s') ? unit.slice(0, -1) : unit;
 }
 
-/** "$0.14–0.19" from price tiers (falls back to min price). */
-export function priceRange(tiers: Tier[], min: number | null) {
-  if (!tiers.length) return min != null ? usd(min) : 'Price on request';
+/** "US$ 0.14–0.19" / "CN¥ 1.00–1.35" from (already converted) price tiers in `currency` (falls back to min price). */
+export function priceRange(tiers: Tier[], min: number | null, currency: string) {
+  if (!tiers.length) return min != null ? money(min, currency) : 'Price on request';
   const prices = tiers.map((t) => t.unit_price_cents);
   const lo = Math.min(...prices), hi = Math.max(...prices);
-  return lo === hi ? usd(lo) : `${usd(lo)}–${usd(hi).replace('$', '')}`;
+  return lo === hi ? money(lo, currency) : `${money(lo, currency)}–${money(hi, currency).replace(`${CURRENCY_PREFIX[asCurrency(currency)]} `, '')}`;
 }
 
 export function fmtQty(n: number, unit: string) {
@@ -68,11 +68,11 @@ export function ProductCard({ p, categoryName, variant = 'grid' }: { p: CardProd
         </h3>
         {variant === 'featured' && base ? (
           <div>
-            <div><span className="font-display text-xl font-bold">{usd(base.unit_price_cents)}</span> <span className="text-sm text-muted">/ {u}</span></div>
-            {best && best !== base && <div className="text-[13px] font-semibold text-ok">{usd(best.unit_price_cents)} at {best.min_qty.toLocaleString('en-US')}+ {p.unit}</div>}
+            <div><span className="font-display text-xl font-bold">{money(base.unit_price_cents, p.currency)}</span> <span className="text-sm text-muted">/ {u}</span></div>
+            {best && best !== base && <div className="text-[13px] font-semibold text-ok">{money(best.unit_price_cents, p.currency)} at {best.min_qty.toLocaleString('en-US')}+ {p.unit}</div>}
           </div>
         ) : (
-          <div><span className="font-display text-lg font-bold">{priceRange(p.tiers, p.min_price_cents)}</span> <span className="text-sm text-muted">/ {u}</span></div>
+          <div><span className="font-display text-lg font-bold">{priceRange(p.tiers, p.min_price_cents, p.currency)}</span> <span className="text-sm text-muted">/ {u}</span></div>
         )}
         <div className="text-[13px] text-muted">MOQ {fmtQty(p.moq, p.unit)}</div>
         {variant === 'grid' && <ProductTags tags={p.tags} dropship={p.octopus_dropship} ready={p.ready_to_ship} />}

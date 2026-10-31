@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { getSiteContent, descendantIds, categoryPath, type Category } from '@/lib/content';
+import { descendantIds, categoryPath, type Category } from '@/lib/content';
+import { getStoreContent } from './currency';
 import { toCents } from '@/lib/format';
 import { EmptyState } from '@/components/ui';
 import { listProducts, getTags, getCategoryCounts, PAGE_SIZE, type ListFilters } from './data';
@@ -30,7 +31,7 @@ function qs(sp: SP, patch: Record<string, string | null>) {
 export async function CatalogView({ basePath, category, sp, placement, title }: {
   basePath: string; category: Category | null; sp: SP; placement: AdPlacement; title?: string;
 }) {
-  const { categories, blocks } = await getSiteContent();
+  const { categories, blocks, ctx } = await getStoreContent();
   const [tags, counts] = await Promise.all([getTags(), getCategoryCounts()]);
   const q = one(sp.q).trim();
   const page = Math.max(1, Math.floor(num(one(sp.page)) ?? 1));
@@ -70,7 +71,7 @@ export async function CatalogView({ basePath, category, sp, placement, title }: 
       <div className="flex flex-wrap justify-between items-end gap-4 mt-3">
         <div>
           <h1 className="text-[28px] sm:text-[32px] font-extrabold leading-tight">{heading}</h1>
-          <p className="text-sm text-muted mt-1" aria-live="polite">{total.toLocaleString('en-US')} {total === 1 ? 'product' : 'products'} · Prices in USD per unit</p>
+          <p className="text-sm text-muted mt-1" aria-live="polite">{total.toLocaleString('en-US')} {total === 1 ? 'product' : 'products'} · Prices in {ctx.currency} per unit</p>
         </div>
         <div className="flex items-center gap-2">
           <label htmlFor="sort" className="text-sm text-muted">Sort by</label>
@@ -127,7 +128,7 @@ export async function CatalogView({ basePath, category, sp, placement, title }: 
               </fieldset>
             )}
             <fieldset>
-              <legend className="text-sm font-semibold mb-2">Price (USD per unit)</legend>
+              <legend className="text-sm font-semibold mb-2">Price ({ctx.currency} per unit)</legend>
               <div className="flex items-center gap-2">
                 <label className="sr-only" htmlFor="f-min">Minimum price</label>
                 <input id="f-min" name="min" type="number" min={0} step="0.01" inputMode="decimal" placeholder="Min" defaultValue={min ?? ''} className="input !min-h-10 text-sm" />

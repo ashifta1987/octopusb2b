@@ -1,0 +1,938 @@
+{
+  "info": {
+    "_postman_id": "b3f1c1c4-0c7a-4d38-9d1e-0c70b2b00002",
+    "name": "Octopus B2B Supplier API v1",
+    "description": "Supplier API (bulk product sync, stock/price updates, quoting). Returns 403 SUPPLIER_PORTAL_DISABLED until the supplier portal opens. Same OAuth client credentials as the public API. Generated from the repository — do not edit in Postman.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0-beta"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Octopus B2B — collection pre-request (generated from the repository; do not edit in Postman).",
+          "// 1) Adds an Idempotency-Key to every POST. 2) Fetches + caches an OAuth client-credentials token.",
+          "(function () {",
+          "  var bypass = pm.variables.get('vercel_bypass');",
+          "  if (bypass) pm.request.headers.upsert({ key: 'x-vercel-protection-bypass', value: bypass });",
+          "  if (pm.request.method === 'POST' && !pm.request.url.getPath().endsWith('/oauth/token') && !pm.request.headers.has('Idempotency-Key')) {",
+          "    pm.request.headers.upsert({ key: 'Idempotency-Key', value: pm.variables.replaceIn('{{$guid}}') });",
+          "  }",
+          "  if (pm.request.auth && pm.request.auth.type === 'noauth') return;",
+          "  var base = String(pm.variables.get('base_url') || '').replace(/\\/$/, '');",
+          "  // Supplier API lives next to the public API: …/v1 → …/supplier/v1 (unless the environment overrides it).",
+          "  if (!(pm.environment && pm.environment.get && pm.environment.get('supplier_base_url'))) pm.variables.set('supplier_base_url', base.replace(/\\/v1$/, '/supplier/v1'));",
+          "  var clientId = pm.variables.get('client_id');",
+          "  var secret = pm.variables.get('client_secret');",
+          "  function share(token) {",
+          "    if (pm.environment && pm.environment.has && pm.environment.has('access_token')) pm.environment.set('access_token', token);",
+          "  }",
+          "  var cached = pm.collectionVariables.get('access_token');",
+          "  var exp = Number(pm.collectionVariables.get('access_token_expires_at') || 0);",
+          "  if (cached && pm.collectionVariables.get('access_token_client') === clientId && Date.now() < exp - 60000) { share(cached); return; }",
+          "  if (!base || !clientId || !secret) { console.warn('Octopus B2B: set base_url, client_id and client_secret in the environment.'); return; }",
+          "  var headers = [{ key: 'Content-Type', value: 'application/x-www-form-urlencoded' }];",
+          "  if (bypass) headers.push({ key: 'x-vercel-protection-bypass', value: bypass });",
+          "  pm.sendRequest({",
+          "    url: base + '/oauth/token',",
+          "    method: 'POST',",
+          "    header: headers,",
+          "    body: { mode: 'urlencoded', urlencoded: [",
+          "      { key: 'grant_type', value: 'client_credentials' },",
+          "      { key: 'client_id', value: clientId },",
+          "      { key: 'client_secret', value: secret }",
+          "    ] }",
+          "  }, function (err, res) {",
+          "    if (err || res.code !== 200) { console.error('Octopus B2B: token request failed', err || res.text()); return; }",
+          "    var j = res.json();",
+          "    pm.collectionVariables.set('access_token', j.access_token);",
+          "    pm.collectionVariables.set('access_token_client', clientId);",
+          "    pm.collectionVariables.set('access_token_expires_at', String(Date.now() + Number(j.expires_in || 3600) * 1000));",
+          "    share(j.access_token);",
+          "  });",
+          "})();"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://api.octopusb2b.com/v1",
+      "type": "string"
+    },
+    {
+      "key": "supplier_base_url",
+      "value": "https://api.octopusb2b.com/supplier/v1",
+      "type": "string"
+    },
+    {
+      "key": "client_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "client_secret",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "access_token_expires_at",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "access_token_client",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "currency",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "rfq_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "vercel_bypass",
+      "value": "",
+      "type": "secret"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "id": "auth-postOauthToken",
+          "name": "Get access token (client credentials)",
+          "request": {
+            "method": "POST",
+            "auth": {
+              "type": "noauth"
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/oauth/token",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "oauth",
+                "token"
+              ]
+            },
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "client_credentials"
+                },
+                {
+                  "key": "client_id",
+                  "value": "{{client_id}}"
+                },
+                {
+                  "key": "client_secret",
+                  "value": "{{client_secret}}"
+                }
+              ]
+            },
+            "description": "OAuth 2 client credentials. You rarely need to call this yourself: the collection pre-request script fetches and caches the token."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is 200', function () { pm.expect([200]).to.include(pm.response.code); });",
+                  "var body = pm.response.json();",
+                  "pm.test('bearer token issued', function () { pm.expect(body.token_type).to.eql('Bearer'); });",
+                  "pm.collectionVariables.set('access_token', body.access_token);",
+                  "pm.collectionVariables.set('access_token_client', pm.variables.get('client_id'));",
+                  "pm.collectionVariables.set('access_token_expires_at', String(Date.now() + Number(body.expires_in || 3600) * 1000));",
+                  "if (pm.environment && pm.environment.has && pm.environment.has('access_token')) pm.environment.set('access_token', body.access_token);"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · token",
+              "originalRequest": {
+                "method": "POST",
+                "auth": {
+                  "type": "noauth"
+                },
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/x-www-form-urlencoded"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/oauth/token",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "oauth",
+                    "token"
+                  ]
+                },
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "key": "grant_type",
+                      "value": "client_credentials"
+                    },
+                    {
+                      "key": "client_id",
+                      "value": "{{client_id}}"
+                    },
+                    {
+                      "key": "client_secret",
+                      "value": "{{client_secret}}"
+                    }
+                  ]
+                },
+                "description": "OAuth 2 client credentials. You rarely need to call this yourself: the collection pre-request script fetches and caches the token."
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"access_token\": \"eyJhbGciOiJIUzI1NiJ9.example.signature\",\n  \"token_type\": \"Bearer\",\n  \"expires_in\": 3600,\n  \"scope\": \"catalog:read quotes:write orders:read orders:write shipments:read wallet:read webhooks:manage\",\n  \"mode\": \"test\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "item": [
+        {
+          "id": "supplier-getProducts",
+          "name": "List your products (any status)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{supplier_base_url}}/products",
+              "host": [
+                "{{supplier_base_url}}"
+              ],
+              "path": [
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "",
+                  "description": "Page",
+                  "disabled": true
+                },
+                {
+                  "key": "per_page",
+                  "value": "",
+                  "description": "Page size",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List your products (any status)\n\nScopes (any of): products:write"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation getProducts — do not edit in Postman.",
+                  "var expected = [200,403,501];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"title\",\"status\",\"currency\"],\"properties\":{\"id\":{\"type\":\"string\"},\"sku\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"title\":{\"type\":\"string\"},\"status\":{\"type\":\"string\"},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"price_tiers\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"min_qty\",\"unit_price\"],\"properties\":{\"min_qty\":{\"type\":\"integer\"},\"unit_price\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]}}}},\"updated_at\":{\"type\":\"string\"}}}},\"meta\":{\"type\":\"object\",\"required\":[\"page\",\"per_page\",\"total\"],\"properties\":{\"page\":{\"type\":\"integer\"},\"per_page\":{\"type\":\"integer\"},\"total\":{\"type\":\"integer\"},\"total_pages\":{\"type\":\"integer\"}}}}};",
+                  "  pm.test('response matches the OpenAPI schema (SupplierProductList)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if ([403,501].indexOf(pm.response.code) !== -1) {",
+                  "  var problemSchema = {\"type\":\"object\",\"required\":[\"status\",\"code\"],\"properties\":{\"type\":{\"type\":\"string\"},\"title\":{\"type\":\"string\"},\"status\":{\"type\":\"integer\"},\"code\":{\"type\":\"string\"},\"detail\":{\"type\":\"string\"},\"errors\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"message\":{\"type\":\"string\"}}}}}};",
+                  "  pm.test('documented problem+json', function () { pm.response.to.have.jsonSchema(problemSchema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}",
+                  "if (body && pm.response.code < 300) {",
+                  "  if (body.data && body.data[0]) pm.collectionVariables.set('product_id', body.data[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · example",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{supplier_base_url}}/products",
+                  "host": [
+                    "{{supplier_base_url}}"
+                  ],
+                  "path": [
+                    "products"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "",
+                      "description": "Page",
+                      "disabled": true
+                    },
+                    {
+                      "key": "per_page",
+                      "value": "",
+                      "description": "Page size",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "List your products (any status)\n\nScopes (any of): products:write"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"string\",\n      \"sku\": \"string\",\n      \"title\": \"string\",\n      \"status\": \"string\",\n      \"currency\": \"USD\",\n      \"price_tiers\": [\n        {\n          \"min_qty\": 1,\n          \"unit_price\": {\n            \"amount_minor\": 19000,\n            \"currency\": \"USD\"\n          }\n        }\n      ],\n      \"updated_at\": \"string\"\n    }\n  ],\n  \"meta\": {\n    \"page\": 1,\n    \"per_page\": 1,\n    \"total\": 1,\n    \"total_pages\": 1\n  }\n}"
+            }
+          ]
+        },
+        {
+          "id": "supplier-postProducts",
+          "name": "Bulk upsert products by SKU (goes to moderation)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{supplier_base_url}}/products",
+              "host": [
+                "{{supplier_base_url}}"
+              ],
+              "path": [
+                "products"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"products\": [\n    {\n      \"sku\": \"GLV-NIT-L\",\n      \"title\": \"Nitrile-coated work gloves, size L\",\n      \"unit\": \"pairs\",\n      \"moq\": 1000,\n      \"lead_time_days\": 20,\n      \"origin_country\": \"CN\",\n      \"hs_code\": \"611610\",\n      \"price_tiers\": [\n        {\n          \"min_qty\": 1000,\n          \"unit_price\": {\n            \"amount_minor\": 650,\n            \"currency\": \"CNY\"\n          }\n        },\n        {\n          \"min_qty\": 5000,\n          \"unit_price\": {\n            \"amount_minor\": 580,\n            \"currency\": \"CNY\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Bulk upsert products by SKU (goes to moderation)\n\nScopes (any of): products:write\n\nThe collection adds an `Idempotency-Key` header automatically."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation postProducts — do not edit in Postman.",
+                  "var expected = [202,403,501];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 202) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"object\",\"required\":[\"accepted\",\"rejected\"],\"properties\":{\"accepted\":{\"type\":\"integer\"},\"rejected\":{\"type\":\"integer\"},\"errors\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"sku\":{\"type\":\"string\"},\"message\":{\"type\":\"string\"}}}}}}}};",
+                  "  pm.test('response matches the OpenAPI schema (SupplierSyncResult)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if ([403,501].indexOf(pm.response.code) !== -1) {",
+                  "  var problemSchema = {\"type\":\"object\",\"required\":[\"status\",\"code\"],\"properties\":{\"type\":{\"type\":\"string\"},\"title\":{\"type\":\"string\"},\"status\":{\"type\":\"integer\"},\"code\":{\"type\":\"string\"},\"detail\":{\"type\":\"string\"},\"errors\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"message\":{\"type\":\"string\"}}}}}};",
+                  "  pm.test('documented problem+json', function () { pm.response.to.have.jsonSchema(problemSchema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "202 · example",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{supplier_base_url}}/products",
+                  "host": [
+                    "{{supplier_base_url}}"
+                  ],
+                  "path": [
+                    "products"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"products\": [\n    {\n      \"sku\": \"GLV-NIT-L\",\n      \"title\": \"Nitrile-coated work gloves, size L\",\n      \"unit\": \"pairs\",\n      \"moq\": 1000,\n      \"lead_time_days\": 20,\n      \"origin_country\": \"CN\",\n      \"hs_code\": \"611610\",\n      \"price_tiers\": [\n        {\n          \"min_qty\": 1000,\n          \"unit_price\": {\n            \"amount_minor\": 650,\n            \"currency\": \"CNY\"\n          }\n        },\n        {\n          \"min_qty\": 5000,\n          \"unit_price\": {\n            \"amount_minor\": 580,\n            \"currency\": \"CNY\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Bulk upsert products by SKU (goes to moderation)\n\nScopes (any of): products:write\n\nThe collection adds an `Idempotency-Key` header automatically."
+              },
+              "status": "Accepted",
+              "code": 202,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"accepted\": 1,\n    \"rejected\": 1,\n    \"errors\": [\n      {\n        \"sku\": \"string\",\n        \"message\": \"string\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Inventory",
+      "item": [
+        {
+          "id": "supplier-patchInventory",
+          "name": "Update stock and prices by SKU",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{supplier_base_url}}/inventory",
+              "host": [
+                "{{supplier_base_url}}"
+              ],
+              "path": [
+                "inventory"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"sku\": \"GLV-NIT-L\",\n      \"stock\": 120000,\n      \"price_tiers\": [\n        {\n          \"min_qty\": 1000,\n          \"unit_price\": {\n            \"amount_minor\": 640,\n            \"currency\": \"CNY\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Update stock and prices by SKU\n\nScopes (any of): inventory:write"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation patchInventory — do not edit in Postman.",
+                  "var expected = [200,403,501];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"object\",\"required\":[\"accepted\",\"rejected\"],\"properties\":{\"accepted\":{\"type\":\"integer\"},\"rejected\":{\"type\":\"integer\"},\"errors\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"sku\":{\"type\":\"string\"},\"message\":{\"type\":\"string\"}}}}}}}};",
+                  "  pm.test('response matches the OpenAPI schema (SupplierSyncResult)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if ([403,501].indexOf(pm.response.code) !== -1) {",
+                  "  var problemSchema = {\"type\":\"object\",\"required\":[\"status\",\"code\"],\"properties\":{\"type\":{\"type\":\"string\"},\"title\":{\"type\":\"string\"},\"status\":{\"type\":\"integer\"},\"code\":{\"type\":\"string\"},\"detail\":{\"type\":\"string\"},\"errors\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"message\":{\"type\":\"string\"}}}}}};",
+                  "  pm.test('documented problem+json', function () { pm.response.to.have.jsonSchema(problemSchema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · example",
+              "originalRequest": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{supplier_base_url}}/inventory",
+                  "host": [
+                    "{{supplier_base_url}}"
+                  ],
+                  "path": [
+                    "inventory"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"items\": [\n    {\n      \"sku\": \"GLV-NIT-L\",\n      \"stock\": 120000,\n      \"price_tiers\": [\n        {\n          \"min_qty\": 1000,\n          \"unit_price\": {\n            \"amount_minor\": 640,\n            \"currency\": \"CNY\"\n          }\n        }\n      ]\n    }\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Update stock and prices by SKU\n\nScopes (any of): inventory:write"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"accepted\": 1,\n    \"rejected\": 1,\n    \"errors\": [\n      {\n        \"sku\": \"string\",\n        \"message\": \"string\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "RFQs & quotes",
+      "item": [
+        {
+          "id": "supplier-getRfqs",
+          "name": "RFQs assigned to you",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{supplier_base_url}}/rfqs",
+              "host": [
+                "{{supplier_base_url}}"
+              ],
+              "path": [
+                "rfqs"
+              ]
+            },
+            "description": "RFQs assigned to you\n\nScopes (any of): rfqs:read"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation getRfqs — do not edit in Postman.",
+                  "var expected = [200,403,501];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"title\",\"quantity\",\"currency\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"title\":{\"type\":\"string\"},\"quantity\":{\"type\":\"integer\"},\"unit\":{\"type\":\"string\"},\"incoterm\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"destination_country\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"target_price\":{\"anyOf\":[{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},{\"type\":\"null\"}]},\"expires_at\":{\"anyOf\":[{\"type\":\"string\"},{\"type\":\"null\"}]}}}}}};",
+                  "  pm.test('response matches the OpenAPI schema (SupplierRfqList)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if ([403,501].indexOf(pm.response.code) !== -1) {",
+                  "  var problemSchema = {\"type\":\"object\",\"required\":[\"status\",\"code\"],\"properties\":{\"type\":{\"type\":\"string\"},\"title\":{\"type\":\"string\"},\"status\":{\"type\":\"integer\"},\"code\":{\"type\":\"string\"},\"detail\":{\"type\":\"string\"},\"errors\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"message\":{\"type\":\"string\"}}}}}};",
+                  "  pm.test('documented problem+json', function () { pm.response.to.have.jsonSchema(problemSchema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}",
+                  "if (body && pm.response.code < 300) {",
+                  "  if (body.data && body.data[0]) pm.collectionVariables.set('rfq_id', body.data[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · example",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{supplier_base_url}}/rfqs",
+                  "host": [
+                    "{{supplier_base_url}}"
+                  ],
+                  "path": [
+                    "rfqs"
+                  ]
+                },
+                "description": "RFQs assigned to you\n\nScopes (any of): rfqs:read"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"string\",\n      \"code\": \"string\",\n      \"title\": \"string\",\n      \"quantity\": 1,\n      \"unit\": \"string\",\n      \"incoterm\": \"string\",\n      \"destination_country\": \"string\",\n      \"currency\": \"USD\",\n      \"target_price\": {\n        \"amount_minor\": 19000,\n        \"currency\": \"USD\"\n      },\n      \"expires_at\": \"string\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "id": "supplier-postQuotes",
+          "name": "Quote an assigned RFQ",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{supplier_base_url}}/quotes",
+              "host": [
+                "{{supplier_base_url}}"
+              ],
+              "path": [
+                "quotes"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"rfq_id\": \"{{rfq_id}}\",\n  \"unit_price\": {\n    \"amount_minor\": 620,\n    \"currency\": \"CNY\"\n  },\n  \"quantity\": 5000,\n  \"incoterm\": \"FOB\",\n  \"lead_time_days\": 25,\n  \"shipping\": {\n    \"amount_minor\": 180000,\n    \"currency\": \"CNY\"\n  },\n  \"notes\": \"EN 388 certified\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Quote an assigned RFQ\n\nScopes (any of): quotes:write\n\nThe collection adds an `Idempotency-Key` header automatically."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation postQuotes — do not edit in Postman.",
+                  "var expected = [201,403,501];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 201) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"rfq_id\",\"currency\",\"unit_price\",\"total\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"rfq_id\":{\"type\":\"string\"},\"status\":{\"type\":\"string\"},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"unit_price\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"shipping\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"total\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"valid_until\":{\"type\":\"string\"}}},\"simulated\":{\"type\":\"boolean\"}}};",
+                  "  pm.test('response matches the OpenAPI schema (SupplierQuoteEnvelope)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if ([403,501].indexOf(pm.response.code) !== -1) {",
+                  "  var problemSchema = {\"type\":\"object\",\"required\":[\"status\",\"code\"],\"properties\":{\"type\":{\"type\":\"string\"},\"title\":{\"type\":\"string\"},\"status\":{\"type\":\"integer\"},\"code\":{\"type\":\"string\"},\"detail\":{\"type\":\"string\"},\"errors\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"message\":{\"type\":\"string\"}}}}}};",
+                  "  pm.test('documented problem+json', function () { pm.response.to.have.jsonSchema(problemSchema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "201 · example",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{supplier_base_url}}/quotes",
+                  "host": [
+                    "{{supplier_base_url}}"
+                  ],
+                  "path": [
+                    "quotes"
+                  ]
+                },
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"rfq_id\": \"{{rfq_id}}\",\n  \"unit_price\": {\n    \"amount_minor\": 620,\n    \"currency\": \"CNY\"\n  },\n  \"quantity\": 5000,\n  \"incoterm\": \"FOB\",\n  \"lead_time_days\": 25,\n  \"shipping\": {\n    \"amount_minor\": 180000,\n    \"currency\": \"CNY\"\n  },\n  \"notes\": \"EN 388 certified\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "description": "Quote an assigned RFQ\n\nScopes (any of): quotes:write\n\nThe collection adds an `Idempotency-Key` header automatically."
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": {\n    \"id\": \"string\",\n    \"code\": \"string\",\n    \"rfq_id\": \"string\",\n    \"status\": \"string\",\n    \"currency\": \"USD\",\n    \"unit_price\": {\n      \"amount_minor\": 19000,\n      \"currency\": \"USD\"\n    },\n    \"shipping\": {\n      \"amount_minor\": 19000,\n      \"currency\": \"USD\"\n    },\n    \"total\": {\n      \"amount_minor\": 19000,\n      \"currency\": \"USD\"\n    },\n    \"valid_until\": \"string\"\n  },\n  \"simulated\": true\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "id": "supplier-getOrders",
+          "name": "Orders placed with you",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{supplier_base_url}}/orders",
+              "host": [
+                "{{supplier_base_url}}"
+              ],
+              "path": [
+                "orders"
+              ]
+            },
+            "description": "Orders placed with you\n\nScopes (any of): orders:read"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generated from OpenAPI operation getOrders — do not edit in Postman.",
+                  "var expected = [200,403,501];",
+                  "pm.test('status is ' + expected.join(' or '), function () { pm.expect(expected).to.include(pm.response.code); });",
+                  "var text = pm.response.text();",
+                  "var body = null;",
+                  "try { body = text ? JSON.parse(text) : null; } catch (e) { body = null; }",
+                  "if (pm.response.code === 200) {",
+                  "  var schema = {\"type\":\"object\",\"required\":[\"data\"],\"properties\":{\"data\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"required\":[\"id\",\"code\",\"status\",\"currency\",\"total\"],\"properties\":{\"id\":{\"type\":\"string\"},\"code\":{\"type\":\"string\"},\"status\":{\"type\":\"string\"},\"quantity\":{\"type\":\"integer\"},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]},\"total\":{\"type\":\"object\",\"properties\":{\"amount_minor\":{\"type\":\"integer\",\"minimum\":-9007199254740991,\"maximum\":9007199254740991},\"currency\":{\"type\":\"string\",\"enum\":[\"USD\",\"CNY\"]}},\"required\":[\"amount_minor\",\"currency\"]},\"created_at\":{\"type\":\"string\"}}}}}};",
+                  "  pm.test('response matches the OpenAPI schema (SupplierOrderList)', function () { pm.response.to.have.jsonSchema(schema); });",
+                  "}",
+                  "if ([403,501].indexOf(pm.response.code) !== -1) {",
+                  "  var problemSchema = {\"type\":\"object\",\"required\":[\"status\",\"code\"],\"properties\":{\"type\":{\"type\":\"string\"},\"title\":{\"type\":\"string\"},\"status\":{\"type\":\"integer\"},\"code\":{\"type\":\"string\"},\"detail\":{\"type\":\"string\"},\"errors\":{\"type\":\"array\",\"items\":{\"type\":\"object\",\"properties\":{\"path\":{\"type\":\"string\"},\"message\":{\"type\":\"string\"}}}}}};",
+                  "  pm.test('documented problem+json', function () { pm.response.to.have.jsonSchema(problemSchema); });",
+                  "}",
+                  "if (body !== null) {",
+                  "  pm.test('every amount carries a currency', function () {",
+                  "    var bad = [];",
+                  "    (function walk(v, p) {",
+                  "      if (Array.isArray(v)) { v.forEach(function (x, i) { walk(x, p + '[' + i + ']'); }); return; }",
+                  "      if (!v || typeof v !== 'object') return;",
+                  "      if (Object.prototype.hasOwnProperty.call(v, 'amount_minor') && !(typeof v.currency === 'string' && /^[A-Z]{3}$/.test(v.currency))) bad.push(p);",
+                  "      Object.keys(v).forEach(function (k) { if (/_cents$/.test(k)) bad.push(p + '.' + k); walk(v[k], p + '.' + k); });",
+                  "    })(body, '$');",
+                  "    pm.expect(bad, 'amounts without currency: ' + bad.join(', ')).to.eql([]);",
+                  "  });",
+                  "}",
+                  "if (body && pm.response.code < 300) {",
+                  "  if (body.data && body.data[0]) pm.collectionVariables.set('order_id', body.data[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": [
+            {
+              "name": "200 · example",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{supplier_base_url}}/orders",
+                  "host": [
+                    "{{supplier_base_url}}"
+                  ],
+                  "path": [
+                    "orders"
+                  ]
+                },
+                "description": "Orders placed with you\n\nScopes (any of): orders:read"
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": \"string\",\n      \"code\": \"string\",\n      \"status\": \"string\",\n      \"quantity\": 1,\n      \"currency\": \"USD\",\n      \"total\": {\n        \"amount_minor\": 19000,\n        \"currency\": \"USD\"\n      },\n      \"created_at\": \"string\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

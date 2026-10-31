@@ -1,20 +1,22 @@
 'use client';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { ConfirmCharge } from '@/components/client';
+import { ConfirmChargeCurrency } from '@/components/store/confirm-charge-currency';
 
 type Res = { ok: true } | { ok: false; error: string };
 
-export function PayWalletButton({ orderId, amountCents, balanceCents, purpose, action }: {
-  orderId: string; amountCents: number; balanceCents: number; purpose: 'deposit' | 'balance'; action: (id: string) => Promise<Res>;
+/** Pays from the wallet in the ORDER's currency (record_payment debits wallet(order.currency)); `balanceCents` = that wallet. */
+export function PayWalletButton({ orderId, amountCents, balanceCents, currency, purpose, action }: {
+  orderId: string; amountCents: number; balanceCents: number; currency: string; purpose: 'deposit' | 'balance'; action: (id: string) => Promise<Res>;
 }) {
   const router = useRouter();
   return (
-    <ConfirmCharge
-      label={`Pay ${purpose} from wallet`}
-      title={`Pay the ${purpose} from your wallet`}
+    <ConfirmChargeCurrency
+      label={`Pay ${purpose} from ${currency} wallet`}
+      title={`Pay the ${purpose} from your ${currency} wallet`}
       priceCents={amountCents}
       balanceCents={balanceCents}
+      currency={currency}
       walletEnabled
       onConfirm={async () => {
         const r = await action(orderId);

@@ -14,7 +14,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
   if (!s.org) return <Notice tone="amber">Complete your company profile first.</Notice>;
   const { filter } = await searchParams;
   const sb = await createClient();
-  let q = sb.from('orders').select('id, code, title, quantity, status, total_cents, paid_cents, deposit_cents, created_at, updated_at').eq('org_id', s.org.id).order('updated_at', { ascending: false });
+  let q = sb.from('orders').select('id, code, title, quantity, status, total_cents, paid_cents, deposit_cents, currency, created_at, updated_at').eq('org_id', s.org.id).order('updated_at', { ascending: false });
   if (filter === 'active') q = q.in('status', ACTIVE_ORDER);
   if (filter === 'done') q = q.in('status', ['delivered', 'closed', 'cancelled', 'disputed']);
   const [{ data: orders }, { count: rfqCount }, { count: srCount }, { count: orderCount }] = await Promise.all([
@@ -54,8 +54,8 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
             <tr key={o.id}>
               <td className="td mono text-sm">{o.code}</td>
               <td className="td font-semibold"><Link href={`/account/orders/${o.id}`} className="hover:text-blue">{o.title}</Link><div className="text-xs text-muted font-normal">{Number(o.quantity).toLocaleString('en-US')} units</div></td>
-              <td className="td"><Money cents={Number(o.total_cents)} /></td>
-              <td className="td"><Money cents={Number(o.paid_cents)} className="text-muted" /></td>
+              <td className="td"><Money cents={Number(o.total_cents)} currency={o.currency as string} /></td>
+              <td className="td"><Money cents={Number(o.paid_cents)} currency={o.currency as string} className="text-muted" /></td>
               <td className="td"><StatusBadge status={o.status as string} /></td>
               <td className="td text-sm text-muted">{fmtDate(o.created_at as string)}</td>
               <td className="td text-right"><Link href={`/account/orders/${o.id}`} className="btn btn-ghost btn-sm">Open</Link></td>

@@ -2,8 +2,9 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getSiteContent, categoryPath, block } from '@/lib/content';
-import { usd, fmtDate, COUNTRY_NAMES } from '@/lib/format';
+import { categoryPath, block } from '@/lib/content';
+import { getStoreContent } from '@/components/store/currency';
+import { money, fmtDate, COUNTRY_NAMES } from '@/lib/format';
 import { SupplierCode, StatusBadge } from '@/components/ui';
 import { getProduct, getRecommendations, getServices } from '@/components/store/data';
 import { ProductGrid, ProductImage, GridSkeleton, unitOne, fmtQty } from '@/components/store/product-card';
@@ -45,7 +46,7 @@ async function Content({ params }: { params: Params }) {
   const { slug } = await params;
   const p = await getProduct(slug);
   if (!p) notFound();
-  const [{ categories, company, blocks }, services, recs] = await Promise.all([getSiteContent(), getServices(), getRecommendations(p.id, p.category_id)]);
+  const [{ categories, company, blocks }, services, recs] = await Promise.all([getStoreContent(), getServices(), getRecommendations(p.id, p.category_id)]);
   const path = categoryPath(categories, p.category_id);
   const crumbs = [
     { name: 'Home', href: '/' },
@@ -70,7 +71,7 @@ async function Content({ params }: { params: Params }) {
     brand: { '@type': 'Brand', name: company?.brand ?? 'Octopus B2B' },
     countryOfOrigin: p.origin_country ?? undefined,
     offers: prices.length ? {
-      '@type': 'AggregateOffer', priceCurrency: 'USD', lowPrice: (Math.min(...prices) / 100).toFixed(2), highPrice: (Math.max(...prices) / 100).toFixed(2),
+      '@type': 'AggregateOffer', priceCurrency: p.currency, lowPrice: (Math.min(...prices) / 100).toFixed(2), highPrice: (Math.max(...prices) / 100).toFixed(2),
       offerCount: p.tiers.length, availability: 'https://schema.org/InStock', url: `${SITE_URL}/p/${p.slug}`,
       eligibleQuantity: { '@type': 'QuantitativeValue', minValue: p.moq, unitText: p.unit },
       seller: { '@type': 'Organization', name: company?.brand ?? 'Octopus B2B' },
@@ -140,7 +141,7 @@ async function Content({ params }: { params: Params }) {
               ))}
             </div>
           )}
-          <PriceCalculator productId={p.id} tiers={p.tiers} unit={p.unit} unitOne={u} moq={p.moq} incoterm={p.incoterm}
+          <PriceCalculator productId={p.id} tiers={p.tiers} currency={p.currency} feeCurrency={services.rfq?.currency ?? p.currency} unit={p.unit} unitOne={u} moq={p.moq} incoterm={p.incoterm}
             rfqFee={services.rfq?.priceCents ?? null} sampleFee={services.sample?.priceCents ?? null} whatsapp={wa} />
         </div>
       </div>
@@ -175,7 +176,7 @@ async function Content({ params }: { params: Params }) {
                 <h3 className="font-sans font-semibold text-[16px] leading-tight">{title}</h3>
                 <p className="text-[13px] text-muted flex-1">{body}</p>
                 <p className="text-[12px] text-muted">
-                  {price > 0 ? <><span className="mono font-semibold text-navy">{usd(price)}</span> {unitTxt}</> : <>Request free · {unitTxt}</>}
+                  {price > 0 ? <><span className="mono font-semibold text-navy">{money(price, s?.currency)}</span> {unitTxt}</> : <>Request free · {unitTxt}</>}
                 </p>
                 <Link href={`/request/${code}?product=${p.id}`} className={`btn btn-sm w-full ${dark ? 'btn-dark' : 'btn-ghost'}`}>
                   {SERVICE_CTA[code]}
@@ -261,7 +262,7 @@ async function Content({ params }: { params: Params }) {
         <div className="flex flex-wrap justify-between items-end gap-4 mb-5">
           <div>
             <h2 id="rec-h" className="text-[26px] font-extrabold">Recommended products</h2>
-            <p className="text-sm text-muted">{block(blocks, 'product.recommended.subtitle', 'Often sourced together · Prices in USD')}</p>
+            <p className="text-sm text-muted">{block(blocks, 'product.recommended.subtitle', `Often sourced together · Prices in ${p.currency}`)}</p>
           </div>
           <Link href={path.length ? `/c/${path.map((c) => c.slug).join('/')}` : '/products'} className="font-semibold text-blue">View all products <span aria-hidden>→</span></Link>
         </div>

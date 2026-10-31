@@ -56,15 +56,15 @@ export function getCarrier(code = 'yunexpress'): CarrierAdapter {
 export type PaymentEvent = { providerEventId: string; kind: 'topup.succeeded' | 'payment.succeeded' | 'payment.failed'; reference: string; amountCents: number };
 export interface PaymentAdapter {
   readonly mode: 'test' | 'live';
-  createIntent(i: { amountCents: number; reference: string; description: string }): Promise<{ id: string; checkoutUrl: string }>;
+  createIntent(i: { amountCents: number; currency?: string; reference: string; description: string }): Promise<{ id: string; checkoutUrl: string }>;
   refund(r: { paymentId: string; amountCents: number }): Promise<void>;
   parseWebhook(rawBody: string, headers: Headers): Promise<PaymentEvent[]>;
 }
 export class TestPaymentAdapter implements PaymentAdapter {
   readonly mode = 'test' as const;
-  async createIntent(i: { amountCents: number; reference: string }) {
+  async createIntent(i: { amountCents: number; currency?: string; reference: string }) {
     const id = 'pi_test_' + crypto.randomBytes(6).toString('hex');
-    return { id, checkoutUrl: `/account/wallet?test_checkout=${id}&ref=${encodeURIComponent(i.reference)}&amount=${i.amountCents}` };
+    return { id, checkoutUrl: `/account/wallet?test_checkout=${id}&ref=${encodeURIComponent(i.reference)}&amount=${i.amountCents}&currency=${i.currency ?? 'USD'}` };
   }
   async refund() {}
   async parseWebhook(rawBody: string, headers: Headers): Promise<PaymentEvent[]> {

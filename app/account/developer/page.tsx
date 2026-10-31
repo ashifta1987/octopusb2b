@@ -6,6 +6,7 @@ import { ActionButton } from '@/components/client';
 import { fmtDate } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { apiBaseUrl, WEBHOOK_EVENTS } from '@/components/account/dev-constants';
+import { runInPostmanUrl, POSTMAN_WORKSPACE_URL, POSTMAN_DOWNLOADS, RUN_IN_POSTMAN_BADGE } from '@/lib/api/postman-links';
 import { CopyField, CreateAppForm, CreateKeyButton, ScopesForm, WebhookForm, WebhookSecret, WebhookToggle } from '@/components/account/dev-client';
 import { deleteWebhook, revokeApp, revokeKey } from './actions';
 
@@ -175,7 +176,15 @@ export default async function DeveloperPage({ searchParams }: { searchParams: Pr
           <Card title="Test in Postman">
             <div className="px-6 pb-6 space-y-3">
               <p className="text-[15px] text-muted">Import the collection, add your Client ID and secret to the environment, and send your first request.</p>
-              <a className="btn btn-primary w-full" href="/api/v1/postman.json" download>Download Postman collection</a>
+              {runInPostmanUrl() && (
+                <a href={runInPostmanUrl()!} target="_blank" rel="noopener" className="block">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={RUN_IN_POSTMAN_BADGE} alt="Run in Postman" height={32} />
+                </a>
+              )}
+              {POSTMAN_WORKSPACE_URL && <a className="btn btn-ghost w-full" href={POSTMAN_WORKSPACE_URL} target="_blank" rel="noopener">Open the public Postman workspace</a>}
+              <a className="btn btn-primary w-full" href={POSTMAN_DOWNLOADS.publicCollection} download>Download Postman collection</a>
+              <a className="btn btn-ghost w-full" href={POSTMAN_DOWNLOADS.sandboxEnvironment} download>Sandbox environment</a>
               <a className="btn btn-ghost w-full" href="/api/v1/openapi.json" target="_blank" rel="noopener">OpenAPI spec (JSON)</a>
               <a className="inline-flex text-blue font-semibold text-[15px] hover:underline" href="/api/v1/openapi.json" target="_blank" rel="noopener">Read the API docs →</a>
             </div>

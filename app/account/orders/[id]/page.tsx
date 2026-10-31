@@ -24,13 +24,14 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
   const { data: o } = await sb.from('orders').select('*').eq('id', id).maybeSingle();
   if (!o) notFound();
   const [{ data: docs }, { data: events }, { data: shipments }, { data: list }, { data: pi }, settings, balance, content] = await Promise.all([
-    sb.from('documents').select('id, doc_type, number, amount_cents, status, created_at').eq('order_id', id).order('created_at'),
+    sb.from('documents').select('id, doc_type, number, amount_cents, currency, status, created_at').eq('order_id', id).order('created_at'),
     sb.from('order_events').select('id, kind, title, body, created_at').eq('order_id', id).order('created_at', { ascending: false }),
     sb.from('shipments').select('id, code, carrier_code, service_code, tracking_no, status, weight_kg, parcels, eta, last_event_at, created_at').eq('order_id', id).order('created_at', { ascending: false }),
     sb.from('orders').select('id, code, title, quantity, status, updated_at').eq('org_id', o.org_id).order('updated_at', { ascending: false }).limit(12),
     sb.from('proforma_invoices').select('number').eq('order_id', id).maybeSingle(),
     getSettings(),
-    getWalletBalance(),
+    // Orders are paid from the wallet in the ORDER's currency (an old USD order stays payable in USD after a switch).
+    getWalletBalance(o.currency as string),
     getSiteContent(),
   ]);
   const shipIds = (shipments ?? []).map((x) => x.id as string);
@@ -41,6 +42,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
 
   const money = { status: o.status as string, total_cents: Number(o.total_cents), deposit_cents: Number(o.deposit_cents), paid_cents: Number(o.paid_cents) };
   const due = dueNow(money);
+  const cur = o.currency as string;
   const balanceDue = money.total_cents - money.paid_cents;
   const depositLeft = Math.max(0, money.deposit_cents - money.paid_cents);
   const ship = shipments?.[0];
@@ -81,7 +83,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
                 <h2 className="text-2xl font-semibold mt-1">{o.title}</h2>
                 <div className="mt-1 text-muted flex flex-wrap items-center gap-x-2">
                   {sup && <SupplierCode code={sup.code} country={sup.country} verified={sup.verified} />}
-                  <span>· {Number(o.quantity).toLocaleString('en-US')} units · <Money cents={money.total_cents} className="text-navy" />{o.incoterm ? ` · ${o.incoterm}` : ''}</span>
+                  <span>· {Number(o.quantity).toLocaleString('en-US')} units · <Money cents={money.total_cents} currency={cur} className="text-navy" />{o.incoterm ? ` · ${o.incoterm}` : ''}</span>
                 </div>
               </div>
               <StatusBadge status={o.status} />
@@ -96,7 +98,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
               ].map(([l, v]) => (
                 <div key={l as string} className="rounded-[10px] bg-surface px-4 py-3">
                   <dt className="text-xs text-muted">{l}</dt>
-                  <dd className="mt-1"><Money cents={v as number} className="text-lg" /></dd>
+                  <dd className="mt-1"><Money cents={v as number} currency={cur} className="text-lg" /></dd>
                 </div>
               ))}
             </dl>
@@ -107,15 +109,15 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
             <Card className="p-6">
               <h2 className="text-lg font-semibold">{due ? `Pay the ${due.purpose}` : 'Payment'}</h2>
               {due ? (
-                <p className="text-sm text-muted mt-1">Amount due now: <Money cents={due.amount} className="text-navy" /> · reference <span className="mono">{reference}</span></p>
+                <p className="text-sm text-muted mt-1">Amount due now: <Money cents={due.amount} currency={cur} className="text-navy" /> · reference <span className="mono">{reference}</span></p>
               ) : <p className="text-sm text-muted mt-1">The balance invoice is issued before despatch. Nothing is due right now.</p>}
               {due && (
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   {settings.wallet_enabled ? (
                     <div className="rounded-[10px] border border-line p-4">
-                      <div className="font-semibold">Pay from wallet</div>
-                      <p className="text-sm text-muted mt-1">Wallet balance: <Money cents={balance} className="text-navy" /></p>
-                      <div className="mt-3"><PayWalletButton orderId={id} amountCents={due.amount} balanceCents={balance} purpose={due.purpose} action={payFromWallet} /></div>
+                      <div className="font-semibold">Pay from {cur} wallet</div>
+                      <p className="text-sm text-muted mt-1">{cur} wallet balance: <Money cents={balance} currency={cur} className="text-navy" /></p>
+                      <div className="mt-3"><PayWalletButton orderId={id} amountCents={due.amount} balanceCents={balance} currency={cur} purpose={due.purpose} action={payFromWallet} /></div>
                     </div>
                   ) : null}
                   <div className="rounded-[10px] border border-line p-4">
@@ -163,7 +165,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
                     {(docs ?? []).map((d) => (
                       <li key={d.id} className="rounded-[10px] border border-line p-3">
                         <div className="flex justify-between gap-2"><span className="font-semibold text-sm">{DOC_LABEL[d.doc_type] ?? humanize(d.doc_type)}</span><StatusBadge status={d.status ?? 'issued'} /></div>
-                        <div className="mono text-xs text-muted mt-0.5">{d.number}{d.amount_cents != null ? ` · ` : ''}{d.amount_cents != null && <Money cents={Number(d.amount_cents)} className="font-normal" />}</div>
+                        <div className="mono text-xs text-muted mt-0.5">{d.number}{d.amount_cents != null ? ` · ` : ''}{d.amount_cents != null && <Money cents={Number(d.amount_cents)} currency={(d.currency as string) ?? cur} className="font-normal" />}</div>
                         <div className="mt-2"><DocumentButton docId={d.id} compact /></div>
                       </li>
                     ))}

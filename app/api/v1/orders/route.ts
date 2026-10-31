@@ -1,6 +1,7 @@
 import { apiRoute, pageMeta, range, simId } from '@/lib/api/handler';
 import { publicSuppliers } from '@/lib/api/data';
 import { ORDER_COLUMNS, publicOrder } from '@/lib/api/trade';
+import { amt0, cur } from '@/lib/api/money';
 import { json, problem, problemFromDb } from '@/lib/api/problem';
 import { ApproveQuote, Pagination, zodIssues } from '@/lib/contracts';
 
@@ -26,7 +27,7 @@ export const POST = apiRoute({ scopes: ['orders:write'] }, async ({ ctx, body })
   if (ctx.mode === 'test') {
     const { data: q } = await ctx.sb
       .from('quotes')
-      .select('id, code, status, valid_until, unit_price_cents, quantity, shipping_cents, incoterm, supplier_id, rfq:rfqs!inner(id, org_id, title)')
+      .select('id, code, status, valid_until, unit_price_cents, quantity, shipping_cents, currency, fx_rate_id, incoterm, supplier_id, rfq:rfqs!inner(id, org_id, title)')
       .eq('id', quoteId)
       .eq('rfq.org_id', ctx.orgId)
       .maybeSingle();
@@ -47,14 +48,15 @@ export const POST = apiRoute({ scopes: ['orders:write'] }, async ({ ctx, body })
           status: 'deposit_pending',
           title: rfq.title,
           quantity: q.quantity,
-          unit_price_cents: q.unit_price_cents,
-          shipping_cents: q.shipping_cents,
-          total_cents: total,
+          unit_price: amt0(q.unit_price_cents, q.currency),
+          shipping: amt0(q.shipping_cents, q.currency),
+          total: amt0(total, q.currency),
           deposit_pct: depositPct,
-          deposit_cents: Math.round((total * depositPct) / 100),
-          paid_cents: 0,
-          balance_cents: total,
-          currency: 'USD',
+          deposit: amt0(Math.round((total * depositPct) / 100), q.currency),
+          paid: amt0(0, q.currency),
+          balance: amt0(total, q.currency),
+          currency: cur(q.currency),
+          fx_rate_id: q.fx_rate_id ?? null,
           incoterm: q.incoterm,
           quote_id: q.id,
           rfq_id: rfq.id,

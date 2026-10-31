@@ -48,6 +48,7 @@ export const OFFICE_NAV: NavSection[] = [
       { href: '/admin', label: 'Overview', area: 'dashboard' },
       { href: '/admin/finance', label: 'Finance', area: 'finance' },
       { href: '/admin/wallet', label: 'Wallets & payments', area: 'wallet' },
+      { href: '/admin/currency', label: 'Currency', area: 'finance' },
       { href: '/admin/services', label: 'Services & charges', area: 'services' },
       { href: '/admin/catalog', label: 'Categories & tags', area: 'catalog' },
       { href: '/admin/content', label: 'Site content', area: 'content' },

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { getEmail } from '@/lib/adapters';
 import { DOC_TITLE, esc } from '@/components/account/doc-html';
+import { money } from '@/lib/format';
 
 
 /** Emails the signed-in user a link to the document (access verified via RLS). */
@@ -13,7 +14,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   if (!email) return Response.json({ ok: false, error: 'NO_EMAIL' }, { status: 400 });
 
   if (!/^[0-9a-f-]{36}$/i.test(id)) return Response.json({ ok: false, error: 'NOT_FOUND' }, { status: 404 });
-  const { data: doc } = await sb.from('documents').select('id, doc_type, number').eq('id', id).maybeSingle();
+  const { data: doc } = await sb.from('documents').select('id, doc_type, number, amount_cents, currency').eq('id', id).maybeSingle();
   if (!doc) return Response.json({ ok: false, error: 'NOT_FOUND' }, { status: 404 });
 
   const label = DOC_TITLE[doc.doc_type as string] ?? 'Document';
@@ -25,6 +26,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   const html = `<!doctype html><html><body style="margin:0;background:#F5F6F8;font-family:Inter,-apple-system,Segoe UI,Arial,sans-serif;color:#11133C">
 <div style="max-width:560px;margin:24px auto;background:#fff;border:1px solid #E2E5EA;border-radius:12px;padding:28px">
   <h1 style="font-size:20px;margin:0 0 12px">${esc(label)} ${esc(doc.number)}</h1>
+  ${doc.amount_cents != null ? `<p style="font-size:22px;font-weight:700;margin:0 0 12px;font-family:ui-monospace,Menlo,monospace">${esc(money(Number(doc.amount_cents), doc.currency as string))}</p>` : ''}
   <p style="font-size:15px;line-height:1.5;margin:0 0 20px">Your ${esc(label.toLowerCase())} from ${brand} is ready. Open it to view, print or save as PDF (sign-in required).</p>
   <p style="margin:0 0 24px"><a href="${esc(link)}" style="display:inline-block;background:#2A6FD6;color:#fff;text-decoration:none;font-weight:600;padding:12px 18px;border-radius:8px">View ${esc(label.toLowerCase())}</a></p>
   <p style="font-size:12px;color:#5A6475;margin:0">${esc(co?.legal_name ?? '')}${co?.email ? ` · ${esc(co.email)}` : ''}</p>

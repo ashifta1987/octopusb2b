@@ -8,7 +8,7 @@ import { mapDbError } from '@/lib/format';
 import type { ActionResult } from '@/components/account/data';
 
 const Topup = z.object({
-  amountCents: z.number().int().min(100, 'Minimum top-up is $1.00').max(100_000_000),
+  amountCents: z.number().int().min(100, 'Minimum top-up is 1.00 in the wallet currency').max(100_000_000),
   reference: z.string().trim().min(3, 'Enter the transfer reference').max(80),
 });
 
@@ -31,9 +31,10 @@ export async function startCardTopup(input: { amountCents: number }): Promise<Ac
   if (!s?.org) return { ok: false, error: mapDbError({ message: 'NO_ORG' }) };
   const sb = await createClient();
   const reference = `TOPUP-${s.org.id.slice(0, 8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+  const { data: cur } = await sb.rpc('current_platform_currency');
   let intent: { id: string; checkoutUrl: string };
   try {
-    intent = await getPayment().createIntent({ amountCents: p.data, reference, description: 'Octopus B2B wallet top-up' });
+    intent = await getPayment().createIntent({ amountCents: p.data, currency: (cur as string) ?? 'USD', reference, description: 'Octopus B2B wallet top-up' });
   } catch (e) {
     return { ok: false, error: (e as Error).message || 'Payment partner unavailable' };
   }

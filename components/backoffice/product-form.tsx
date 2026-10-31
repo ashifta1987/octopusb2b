@@ -6,7 +6,7 @@ import { useForm, useFieldArray, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/cn';
-import { usd } from '@/lib/format';
+import { money, CURRENCIES, CURRENCY_PREFIX, asCurrency } from '@/lib/format';
 import { productSchema, INCOTERMS, UNITS, type ProductFormValues } from './product-schema';
 
 type Result = { ok: boolean; error?: string; message?: string; data?: { id: string } };
@@ -168,7 +168,8 @@ export function ProductForm({
 
   /* ── completeness + preview ── */
   const tierVals = watch('tiers') ?? [];
-  const prices = tierVals.map((t) => Number(t.price_usd)).filter((n) => Number.isFinite(n));
+  const cur = asCurrency(watch('currency'));
+  const prices = tierVals.map((t) => Number(t.price)).filter((n) => Number.isFinite(n));
   const checks = [
     { ok: title.trim().length >= 10, label: 'Descriptive title (10+ characters)' },
     { ok: !!categoryId, label: 'Category chosen' },
@@ -327,13 +328,18 @@ export function ProductForm({
         {/* Price tiers */}
         <section className="card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">Price tiers (USD)</h2>
+            <h2 className="text-lg font-semibold">Price tiers ({cur})</h2>
             <button type="button" className="btn btn-ghost btn-sm" onClick={() => {
               const last = tierVals[tierVals.length - 1];
-              tiers.append({ min_qty: last ? Number(last.min_qty) * 5 || 1 : getValues('moq') || 1, price_usd: last ? Number(last.price_usd) : NaN });
+              tiers.append({ min_qty: last ? Number(last.min_qty) * 5 || 1 : getValues('moq') || 1, price: last ? Number(last.price) : NaN });
             }}>+ Add tier</button>
           </div>
-          <div className="grid sm:grid-cols-3 gap-4 mb-4">
+          <div className="grid sm:grid-cols-4 gap-4 mb-4">
+            <div>
+              <label htmlFor="pf-cur" className="label">Currency</label>
+              <select id="pf-cur" className="input" aria-describedby="pf-cur-hint" {...register('currency')}>{CURRENCIES.map((c) => <option key={c} value={c}>{c} ({CURRENCY_PREFIX[c]})</option>)}</select>
+              <p id="pf-cur-hint" className="text-xs text-muted mt-1">1688 suppliers quote CNY</p>
+            </div>
             <div>
               <label htmlFor="pf-unit" className="label">Unit</label>
               <select id="pf-unit" className="input" {...register('unit')}>{UNITS.map((u) => <option key={u}>{u}</option>)}</select>
@@ -357,16 +363,16 @@ export function ProductForm({
                   {err(errors.tiers?.[i]?.min_qty)}
                 </div>
                 <div>
-                  <label htmlFor={`t-p-${i}`} className="label text-xs">Price per unit (USD)</label>
-                  <input id={`t-p-${i}`} type="number" min={0} step="0.001" className="input mono" {...register(`tiers.${i}.price_usd`, { valueAsNumber: true })} />
-                  {err(errors.tiers?.[i]?.price_usd)}
+                  <label htmlFor={`t-p-${i}`} className="label text-xs">Price per unit ({cur})</label>
+                  <input id={`t-p-${i}`} type="number" min={0} step="0.001" className="input mono" {...register(`tiers.${i}.price`, { valueAsNumber: true })} />
+                  {err(errors.tiers?.[i]?.price)}
                 </div>
                 <button type="button" className="btn btn-ghost btn-sm mt-6" aria-label={`Remove tier ${i + 1}`} disabled={tiers.fields.length === 1} onClick={() => tiers.remove(i)}>Remove</button>
               </div>
             ))}
           </div>
           {err(errors.tiers?.root ?? (errors.tiers as { message?: string } | undefined))}
-          <p className="text-xs text-muted mt-3">Quantities must go up from tier to tier. Prices are stored in USD cents.</p>
+          <p className="text-xs text-muted mt-3">Quantities must go up from tier to tier. All tiers use one currency; prices are stored in {cur} minor units ({cur === 'CNY' ? 'fen' : 'cents'}). The storefront converts them to the platform currency at the approved rate.</p>
         </section>
 
         {/* Specs */}
@@ -448,7 +454,7 @@ export function ProductForm({
             <div className="eyebrow text-muted">Buyer preview</div>
             <div className="font-semibold mt-1">{title || 'Product title'}</div>
             <div className="mono font-bold text-lg mt-1">
-              {prices.length ? `${usd(Math.round(Math.min(...prices) * 100))}${prices.length > 1 ? `–${usd(Math.round(Math.max(...prices) * 100))}` : ''}` : '—'}
+              {prices.length ? `${money(Math.round(Math.min(...prices) * 100), cur)}${prices.length > 1 ? `–${money(Math.round(Math.max(...prices) * 100), cur)}` : ''}` : '—'}
               <span className="text-xs text-muted font-normal"> / {watch('unit')}</span>
             </div>
             <div className="text-xs text-muted">MOQ {watch('moq') || '—'} {watch('unit')} · Supplier {supplier?.code ?? '—'} · {supplier?.country ?? ''}</div>

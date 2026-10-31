@@ -1,16 +1,17 @@
 'use client';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { usd } from '@/lib/format';
+import { money } from '@/lib/format';
 import { cn } from '@/lib/cn';
 
 type Result = { ok: true; data?: { order_id: string; order_code: string; pi_number: string } } | { ok: false; error: string };
 
 /** Approve-quote confirm dialog: shows total, deposit %, Terms link; redirects to the new order on success. */
 export function ApproveQuoteButton({
-  quoteId, quoteCode, totalCents, depositPct, termsVersion, action, label = 'Accept', className = 'btn btn-primary btn-sm',
+  quoteId, quoteCode, totalCents, currency, depositPct, termsVersion, action, label = 'Accept', className = 'btn btn-primary btn-sm',
 }: {
-  quoteId: string; quoteCode: string; totalCents: number; depositPct: number; termsVersion?: string | null;
+  /** `currency` = the quote's locked currency (the order + PI inherit it). */
+  quoteId: string; quoteCode: string; totalCents: number; currency: string; depositPct: number; termsVersion?: string | null;
   action: (input: { quoteId: string }) => Promise<Result>; label?: string; className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -29,9 +30,9 @@ export function ApproveQuoteButton({
             <h2 id={titleId} className="text-xl font-semibold">Approve quote {quoteCode}?</h2>
             <p className="text-sm text-muted mt-1">We will issue a proforma invoice. The order is binding once Octopus B2B confirms it in writing after your deposit.</p>
             <dl className="mt-4 space-y-2 text-[15px]">
-              <div className="flex justify-between"><dt className="text-muted">Order total</dt><dd className="mono font-semibold">{usd(totalCents)}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted">Deposit due ({depositPct}%)</dt><dd className="mono font-semibold">{usd(deposit)}</dd></div>
-              <div className="flex justify-between border-t border-line pt-2"><dt className="text-muted">Balance before despatch</dt><dd className="mono">{usd(totalCents - deposit)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted">Order total</dt><dd className="mono font-semibold">{money(totalCents, currency)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted">Deposit due ({depositPct}%)</dt><dd className="mono font-semibold">{money(deposit, currency)}</dd></div>
+              <div className="flex justify-between border-t border-line pt-2"><dt className="text-muted">Balance before despatch</dt><dd className="mono">{money(totalCents - deposit, currency)}</dd></div>
             </dl>
             <label className="mt-4 flex items-start gap-2 text-sm">
               <input type="checkbox" className="mt-1 w-4 h-4" checked={agree} onChange={(e) => setAgree(e.target.checked)} />

@@ -3,7 +3,8 @@ import { requireCustomer } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { Card, Stat, StatusBadge, EmptyState, Notice, Money, OrderProgress, Table } from '@/components/ui';
 import { DocumentButton } from '@/components/client';
-import { fmtDate, usd, humanize } from '@/lib/format';
+import { fmtDate, money, humanize, asCurrency, CURRENCIES, type Currency } from '@/lib/format';
+import { getCurrencyContext, toPlatform } from '@/lib/currency';
 import { getSettings, latestTermsId, supplierMap, DOC_LABEL } from '@/components/account/data';
 import { ACTIVE_ORDER } from '@/components/account/order-utils';
 import { ApproveQuoteButton } from '@/components/account/approve-quote';
@@ -31,16 +32,17 @@ export default async function AccountDashboard() {
   const qStart = new Date(Date.UTC(now.getUTCFullYear(), Math.floor(now.getUTCMonth() / 3) * 3, 1));
   const weekAhead = new Date(now.getTime() + 7 * 86400000).toISOString();
 
-  const [{ data: rfqs }, { data: quotes }, { data: orders }, { data: srs }, { data: docs }, { data: ads }, settings, terms] = await Promise.all([
+  const [{ data: rfqs }, { data: quotes }, { data: orders }, { data: srs }, { data: docs }, { data: ads }, settings, terms, ctx] = await Promise.all([
     sb.from('rfqs').select('id, status, expires_at').eq('org_id', org.id),
-    sb.from('quotes').select('id, code, rfq_id, supplier_id, unit_price_cents, quantity, incoterm, lead_time_days, shipping_cents, valid_until, rfqs!inner(code, title, org_id)')
+    sb.from('quotes').select('id, code, rfq_id, supplier_id, unit_price_cents, quantity, incoterm, lead_time_days, shipping_cents, currency, valid_until, rfqs!inner(code, title, org_id)')
       .in('status', ['sent', 'viewed']).eq('rfqs.org_id', org.id).gt('valid_until', now.toISOString()).order('valid_until'),
-    sb.from('orders').select('id, code, title, quantity, status, total_cents, supplier_id, created_at, updated_at').eq('org_id', org.id).order('updated_at', { ascending: false }),
+    sb.from('orders').select('id, code, title, quantity, status, total_cents, currency, supplier_id, created_at, updated_at').eq('org_id', org.id).order('updated_at', { ascending: false }),
     sb.from('service_requests').select('id, code, service_code, status, details, created_at, services(name), products(title)').eq('org_id', org.id).order('created_at', { ascending: false }).limit(3),
-    sb.from('documents').select('id, doc_type, number, amount_cents, status, created_at, orders(code)').eq('org_id', org.id).in('doc_type', ['proforma_invoice', 'commercial_invoice', 'credit_note', 'receipt']).order('created_at', { ascending: false }).limit(4),
+    sb.from('documents').select('id, doc_type, number, amount_cents, currency, status, created_at, orders(code)').eq('org_id', org.id).in('doc_type', ['proforma_invoice', 'commercial_invoice', 'credit_note', 'receipt']).order('created_at', { ascending: false }).limit(4),
     sb.from('ad_campaigns').select('id, headline, body, image_url, target_countries, max_cpc_cents').eq('status', 'active').order('max_cpc_cents', { ascending: false }).limit(10),
     getSettings(),
     latestTermsId(),
+    getCurrencyContext(),
   ]);
 
   const openRfqs = (rfqs ?? []).filter((r) => OPEN_RFQ.includes(r.status as string));
@@ -52,7 +54,19 @@ export default async function AccountDashboard() {
   const rfqWithQuotes = new Set(qList.map((q) => q.rfq_id)).size;
   const activeOrders = (orders ?? []).filter((o) => ACTIVE_ORDER.includes(o.status as string));
   const inTransit = activeOrders.filter((o) => o.status === 'shipped').length;
-  const spendQuarter = (orders ?? []).filter((o) => o.status !== 'cancelled' && new Date(o.created_at as string) >= qStart).reduce((a, o) => a + Number(o.total_cents), 0);
+  // Spend per order currency + a total converted to the platform currency at the approved rate (labelled "converted").
+  const spendBy: Partial<Record<Currency, number>> = {};
+  (orders ?? []).filter((o) => o.status !== 'cancelled' && new Date(o.created_at as string) >= qStart)
+    .forEach((o) => { const c = asCurrency(o.currency as string); spendBy[c] = (spendBy[c] ?? 0) + Number(o.total_cents); });
+  const spendCurs = CURRENCIES.filter((c) => spendBy[c]);
+  const mixedSpend = spendCurs.length > 1;
+  const spendQuarter = mixedSpend
+    ? spendCurs.reduce((a, c) => a + (toPlatform(ctx, spendBy[c]!, c) ?? 0), 0)
+    : (spendCurs[0] ? spendBy[spendCurs[0]]! : 0);
+  const spendCur = mixedSpend ? ctx.currency : (spendCurs[0] ?? ctx.currency);
+  const spendHint = mixedSpend
+    ? `Converted to ${ctx.currency} at the approved rate · ${spendCurs.map((c) => money(spendBy[c]!, c, { compact: true })).join(' + ')}`
+    : `${spendCur}, order value`;
   const latest = activeOrders[0] ?? (orders ?? [])[0];
   const sup = await supplierMap([...qList.map((q) => q.supplier_id as string), latest?.supplier_id as string]);
   const ad = settings.ads_enabled
@@ -96,7 +110,7 @@ export default async function AccountDashboard() {
         <Stat label="Open RFQs" value={openRfqs.length} hint={closingSoon ? `${closingSoon} closing this week` : 'none closing this week'} />
         <Stat label="Quotes to review" value={qList.length} hint={qList.length ? `across ${rfqWithQuotes} RFQ${rfqWithQuotes === 1 ? '' : 's'}` : 'all caught up'} hintTone={qList.length ? 'ok' : undefined} />
         <Stat label="Active orders" value={activeOrders.length} hint={`${inTransit} in transit`} />
-        <Stat label="Spend this quarter" value={usd(spendQuarter, { compact: true })} hint="USD, order value" />
+        <Stat label={mixedSpend ? 'Spend this quarter (converted)' : 'Spend this quarter'} value={money(spendQuarter, spendCur, { compact: true })} hint={spendHint} />
       </div>
 
       {ad && (
@@ -115,7 +129,7 @@ export default async function AccountDashboard() {
       )}
 
       <Card className="mb-6" title="Quotes waiting for you" action={<Link href="/account/rfqs" className="text-sm font-semibold text-blue">All RFQs →</Link>}>
-        <Table head={['RFQ', 'Product', 'Supplier code', 'Unit (USD)', 'Incoterm', 'Lead time', 'Valid until', '']}
+        <Table head={['RFQ', 'Product', 'Supplier code', 'Unit price', 'Incoterm', 'Lead time', 'Valid until', '']}
           empty={<EmptyState title="No quotes waiting" body="When suppliers reply to your RFQs, their quotes appear here." action={<Link href="/request/sourcing" className="btn btn-primary btn-sm">New RFQ</Link>} />}>
           {qList.slice(0, 8).map((q) => {
             const sp = sup.get(q.supplier_id as string);
@@ -124,14 +138,14 @@ export default async function AccountDashboard() {
                 <td className="td mono text-sm">{q.rfq.code}</td>
                 <td className="td font-semibold">{q.rfq.title}</td>
                 <td className="td mono text-sm">{sp?.code ?? '—'} {sp?.country && <span className="text-[10px] font-semibold bg-surface border border-line rounded px-1 ml-1">{sp.country}</span>}</td>
-                <td className="td"><Money cents={Number(q.unit_price_cents)} /></td>
+                <td className="td"><Money cents={Number(q.unit_price_cents)} currency={q.currency as string} /></td>
                 <td className="td">{q.incoterm}</td>
                 <td className="td">{q.lead_time_days != null ? `${q.lead_time_days} days` : '—'}</td>
                 <td className="td">{fmtDate(q.valid_until as string)}</td>
                 <td className="td">
                   <div className="flex justify-end gap-2">
                     <Link href={`/account/rfqs/${q.rfq_id}`} className="btn btn-ghost btn-sm">Compare</Link>
-                    <ApproveQuoteButton quoteId={q.id as string} quoteCode={q.code as string} totalCents={q.total} depositPct={settings.deposit_pct} termsVersion={terms?.version} action={approveQuote} />
+                    <ApproveQuoteButton quoteId={q.id as string} quoteCode={q.code as string} totalCents={q.total} currency={q.currency as string} depositPct={settings.deposit_pct} termsVersion={terms?.version} action={approveQuote} />
                   </div>
                 </td>
               </tr>
@@ -147,7 +161,7 @@ export default async function AccountDashboard() {
               <div className="flex justify-between gap-3">
                 <div>
                   <h2 className="text-lg font-semibold"><Link href={`/account/orders/${latest.id}`} className="hover:text-blue">Order {latest.code}</Link></h2>
-                  <p className="text-sm text-muted">{Number(latest.quantity).toLocaleString('en-US')} · {latest.title}{latestSup ? ` · Supplier ${latestSup.code}${latestSup.country ? ` (${latestSup.country})` : ''}` : ''} · {usd(Number(latest.total_cents))}</p>
+                  <p className="text-sm text-muted">{Number(latest.quantity).toLocaleString('en-US')} · {latest.title}{latestSup ? ` · Supplier ${latestSup.code}${latestSup.country ? ` (${latestSup.country})` : ''}` : ''} · {money(Number(latest.total_cents), latest.currency as string)}</p>
                 </div>
                 <StatusBadge status={latest.status as string} />
               </div>
@@ -196,7 +210,7 @@ export default async function AccountDashboard() {
               <li key={d.id} className="flex flex-wrap items-center gap-x-6 gap-y-2 py-3 border-t border-line text-sm">
                 <span className="mono flex-[1_1_130px]">{d.number}</span>
                 <span className="flex-[2_1_200px] text-muted">{DOC_LABEL[d.doc_type as string] ?? d.doc_type}{(d.orders as unknown as { code: string } | null)?.code ? ` · ${(d.orders as unknown as { code: string }).code}` : ''}</span>
-                <span className="flex-[1_1_100px]">{d.amount_cents != null ? <Money cents={Number(d.amount_cents)} /> : '—'}</span>
+                <span className="flex-[1_1_100px]">{d.amount_cents != null ? <Money cents={Number(d.amount_cents)} currency={d.currency as string} /> : '—'}</span>
                 <StatusBadge status={(d.status as string) ?? 'issued'} />
                 <DocumentButton docId={d.id as string} compact />
               </li>

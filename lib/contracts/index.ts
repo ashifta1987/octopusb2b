@@ -14,7 +14,7 @@ export const SubmitRfq = z.object({
   productId: uuid.optional(),
   destinationCountry: country.optional(),
   destinationCity: z.string().trim().max(120).optional(),
-  targetPriceCents: cents.optional(),
+  targetPriceCents: cents.optional().describe('Target unit price in minor units of the platform currency (GET /settings/currency)'),
   incoterm: z.enum(['EXW', 'FOB', 'CIF', 'CFR', 'DAP', 'DDP', 'FCA']).optional(),
 });
 export type SubmitRfq = z.infer<typeof SubmitRfq>;
@@ -72,8 +72,87 @@ export type ApiScope = (typeof API_SCOPES)[number];
 
 export const SUPPLIER_SCOPES = ['products:write', 'inventory:write', 'rfqs:read', 'quotes:write', 'orders:read'] as const;
 
-export const WEBHOOK_EVENTS = ['order.updated', 'quote.created', 'shipment.tracking', 'service_request.updated', 'wallet.updated'] as const;
+/**
+ * Public webhook events. `settings.currency_changed` (SPEC §15.1) is platform-wide: it is delivered to every
+ * organization's endpoints that subscribe to it.
+ */
+export const WEBHOOK_EVENTS = ['order.updated', 'quote.created', 'shipment.tracking', 'service_request.updated', 'wallet.updated', 'settings.currency_changed'] as const;
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
+
+// ───────── Money (SPEC §15.1) ─────────
+/** Supported currencies. Every amount in the API is `{ amount_minor, currency }` (minor units = cents / fen). */
+export const CURRENCY_CODES = ['USD', 'CNY'] as const;
+export const CurrencyCode = z.enum(CURRENCY_CODES);
+export type CurrencyCode = z.infer<typeof CurrencyCode>;
+
+export const Amount = z.object({
+  amount_minor: z.number().int().describe('Integer minor units (cents / fen) of `currency`'),
+  currency: CurrencyCode,
+});
+export type Amount = z.infer<typeof Amount>;
+
+/** A catalogue price in the currency it was entered in, plus the same price converted to the platform currency. */
+export const Price = Amount.extend({
+  converted: Amount.extend({ fx_rate_id: z.string().nullable().describe('Approved fx_rates row used for the conversion') }).describe(
+    'The price in the platform currency at the approved rate (equal to the original when the currencies match)',
+  ),
+});
+export type Price = z.infer<typeof Price>;
+
+export const CurrencySettings = z.object({
+  currency: CurrencyCode.describe('Active platform currency — new quotes, invoices and charges use it'),
+  rate: z.object({
+    base: z.literal('USD'),
+    quote: z.literal('CNY'),
+    rate: z.number().positive().describe('CNY per 1 USD (approved billing rate)'),
+    effective_from: z.string().nullable(),
+    fx_rate_id: z.string().nullable(),
+  }),
+});
+export type CurrencySettings = z.infer<typeof CurrencySettings>;
+
+// ───────── Supplier API (SPEC §7 Supplier API) ─────────
+const PriceTierInput = z.object({ min_qty: z.number().int().positive(), unit_price: Amount });
+
+export const SupplierProductUpsert = z.object({
+  products: z
+    .array(
+      z.object({
+        sku: z.string().trim().min(1).max(80).describe('Your own SKU — the upsert key'),
+        title: z.string().trim().min(3).max(200),
+        description: z.string().trim().max(10_000).optional(),
+        category_id: uuid.optional(),
+        unit: z.string().trim().max(20).default('pcs'),
+        moq: z.number().int().positive().default(1),
+        lead_time_days: z.number().int().nonnegative().optional(),
+        origin_country: country.optional(),
+        hs_code: z.string().trim().max(12).optional(),
+        price_tiers: z.array(PriceTierInput).min(1).max(10).describe('All tiers must use the same currency (USD or CNY)'),
+      }),
+    )
+    .min(1)
+    .max(500),
+});
+export type SupplierProductUpsert = z.infer<typeof SupplierProductUpsert>;
+
+export const SupplierInventoryUpdate = z.object({
+  items: z
+    .array(z.object({ sku: z.string().trim().min(1).max(80), stock: z.number().int().nonnegative().optional(), price_tiers: z.array(PriceTierInput).max(10).optional() }))
+    .min(1)
+    .max(1000),
+});
+export type SupplierInventoryUpdate = z.infer<typeof SupplierInventoryUpdate>;
+
+export const SupplierQuoteCreate = z.object({
+  rfq_id: uuid,
+  unit_price: Amount,
+  quantity: z.number().int().positive(),
+  incoterm: z.enum(['EXW', 'FOB', 'CIF', 'CFR', 'DAP', 'DDP', 'FCA']),
+  lead_time_days: z.number().int().nonnegative(),
+  shipping: Amount.optional(),
+  notes: z.string().trim().max(2000).optional(),
+});
+export type SupplierQuoteCreate = z.infer<typeof SupplierQuoteCreate>;
 
 const httpsUrl = z
   .url()

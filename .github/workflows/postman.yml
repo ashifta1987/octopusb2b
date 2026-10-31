@@ -1,0 +1,62 @@
+name: Postman sync
+
+# SPEC §15.2 — the repository is the source of truth. On every published release, regenerate the OpenAPI definition
+# and the Postman collections from the Zod contracts and push them to the public Postman workspace.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+concurrency:
+  group: postman-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Push OpenAPI + collections to Postman
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      POSTMAN_API_KEY: ${{ secrets.POSTMAN_API_KEY }}
+      POSTMAN_WORKSPACE_ID: ${{ secrets.POSTMAN_WORKSPACE_ID }}
+      POSTMAN_COLLECTION_ID_PUBLIC: ${{ secrets.POSTMAN_COLLECTION_ID_PUBLIC }}
+      POSTMAN_COLLECTION_ID_SUPPLIER: ${{ secrets.POSTMAN_COLLECTION_ID_SUPPLIER }}
+      POSTMAN_API_ID: ${{ secrets.POSTMAN_API_ID }}
+      POSTMAN_API_SCHEMA_ID: ${{ secrets.POSTMAN_API_SCHEMA_ID }}
+      POSTMAN_ENVIRONMENT_ID_SANDBOX: ${{ secrets.POSTMAN_ENVIRONMENT_ID_SANDBOX }}
+      POSTMAN_ENVIRONMENT_ID_LIVE: ${{ secrets.POSTMAN_ENVIRONMENT_ID_LIVE }}
+      # optional: log the result to integration_logs (Admin → Integrations → Postman "last sync")
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4 # version comes from package.json "packageManager"
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # built-in TypeScript type stripping for the shared generator
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Committed collections match the contracts
+        run: node scripts/postman-sync.mjs --check
+
+      - name: Check Postman secrets
+        run: |
+          if [ -z "$POSTMAN_API_KEY" ] || [ -z "$POSTMAN_WORKSPACE_ID" ]; then
+            echo "::error::POSTMAN_API_KEY and POSTMAN_WORKSPACE_ID repository secrets are required (see postman/README.md)"
+            exit 1
+          fi
+
+      - name: Regenerate + push to Postman
+        run: node scripts/postman-sync.mjs
+
+      - name: Upload generated files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: postman
+          path: postman/*.json

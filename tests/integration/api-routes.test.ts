@@ -133,7 +133,8 @@ describe('org data (strictly filtered by token org)', () => {
     }
     const w = await call((await import('@/app/api/v1/wallet/route')).GET as Handler, '/api/v1/wallet', { headers: auth() });
     expect(w.status).toBe(200);
-    expect(typeof w.body.data.balance_cents).toBe('number');
+    expect(w.body.data.balance).toMatchObject({ amount_minor: expect.any(Number), currency: expect.stringMatching(/^(USD|CNY)$/) });
+    expect(Array.isArray(w.body.data.balances)).toBe(true);
     const rfqs = await call((await import('@/app/api/v1/rfqs/route')).GET as Handler, '/api/v1/rfqs', { headers: auth() });
     expect(rfqs.status).toBe(200);
     const quotes = await call((await import('@/app/api/v1/quotes/route')).GET as Handler, '/api/v1/quotes', { headers: auth() });
@@ -184,7 +185,8 @@ describe('writes (sandbox key → simulated) + idempotency', () => {
     const r = await call(POST as Handler, '/api/v1/orders', { method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json', 'Idempotency-Key': 'vitest-' + crypto.randomUUID() }, body: JSON.stringify({ quoteId: q.id }) });
     expect(r.status).toBe(201);
     expect(r.body.simulated).toBe(true);
-    expect(r.body.data.deposit_cents).toBeGreaterThan(0);
+    expect(r.body.data.deposit.amount_minor).toBeGreaterThan(0);
+    expect(r.body.data.deposit.currency).toBe(r.body.data.currency);
   });
 });
 
@@ -248,6 +250,59 @@ describe('cron + incoming webhooks', () => {
     expect(res.status).toBe(200);
     expect(j.ok).toBe(true);
     expect(j.dead).toBe(0);
+  });
+  it('settings.currency_changed (no org) is delivered to every org subscribed to it', async () => {
+    const http = await import('node:http');
+    const got: { path: string; sig: string; body: string }[] = [];
+    const server = http.createServer((req, res) => {
+      let b = '';
+      req.on('data', (c) => (b += c));
+      req.on('end', () => {
+        got.push({ path: req.url ?? '', sig: String(req.headers['octopus-signature'] ?? ''), body: b });
+        res.end('ok');
+      });
+    });
+    await new Promise<void>((r) => server.listen(0, '127.0.0.1', () => r()));
+    const port = (server.address() as { port: number }).port;
+    // a second (temporary) organization proves the fan-out crosses orgs
+    const { data: other, error: oe } = await sb.from('organizations').insert({ name: 'vitest broadcast org', country: 'NL' }).select('id').single();
+    if (oe) throw oe;
+    const { data: eps, error } = await sb
+      .from('webhook_endpoints')
+      .insert([
+        { org_id: orgId, url: `http://127.0.0.1:${port}/a`, events: ['settings.currency_changed'], secret: 'sek-a' },
+        { org_id: other!.id, url: `http://127.0.0.1:${port}/b`, events: ['settings.currency_changed'], secret: 'sek-b' },
+        { org_id: other!.id, url: `http://127.0.0.1:${port}/not-subscribed`, events: ['order.updated'], secret: 'sek-c' },
+      ])
+      .select('id');
+    if (error) throw error;
+    const { data: ev, error: ee } = await sb
+      .from('outbox_events')
+      .insert({ event_type: 'settings.currency_changed', aggregate_type: 'currency_switch', aggregate_id: crypto.randomUUID(), payload: { from: 'USD', to: 'CNY', rate: 7.2, fx_rate_id: null, wallet_option: 'keep' } })
+      .select('id')
+      .single();
+    if (ee) throw ee;
+    try {
+      const { processOutbox } = await import('@/lib/api/outbox');
+      for (let i = 0; i < 6; i++) {
+        await processOutbox(sb, 50);
+        const { data: row } = await sb.from('outbox_events').select('status').eq('id', ev!.id).single();
+        if (row?.status === 'done') break;
+      }
+      const { data: row } = await sb.from('outbox_events').select('status').eq('id', ev!.id).single();
+      expect(row?.status).toBe('done');
+      expect(got.map((g) => g.path).sort()).toEqual(['/a', '/b']);
+      const a = got.find((g) => g.path === '/a')!;
+      const body = JSON.parse(a.body);
+      expect(body).toMatchObject({ type: 'settings.currency_changed', data: { from: 'USD', to: 'CNY', currency: 'CNY', rate: { base: 'USD', quote: 'CNY', rate: 7.2 } } });
+      const { verifySignature } = await import('@/lib/adapters');
+      expect(verifySignature(a.body, a.sig, 'sek-a')).toBe(true);
+    } finally {
+      server.close();
+      await sb.from('webhook_endpoints').delete().in('id', (eps ?? []).map((e) => e.id));
+      await sb.from('outbox_events').delete().eq('id', ev!.id);
+      await sb.from('organizations').delete().eq('id', other!.id);
+    }
   });
   it('yunexpress webhook verifies signature and handles unknown tracking numbers', async () => {
     const { POST } = await import('@/app/api/webhooks/yunexpress/route');

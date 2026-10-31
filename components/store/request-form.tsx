@@ -4,19 +4,20 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm, type UseFormRegisterReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { ConfirmCharge } from '@/components/client';
-import { usd } from '@/lib/format';
+import { money, withCurrency } from '@/lib/format';
+import { ConfirmChargeCurrency } from './confirm-charge-currency';
 import { REQUEST_FIELDS, COUNTRY_OPTIONS, requestSchema, type RequestType, type RequestValues, type Field } from './request-schema';
 
 type Props = {
   type: RequestType; action: (type: string, values: RequestValues, productId: string | null, idem: string) => Promise<{ ok: boolean; error?: string; redirect?: string }>;
   defaults: RequestValues; productId: string | null; feeCents: number; feeLabel: string; serviceName: string;
-  balanceCents: number | null; walletEnabled: boolean;
+  /** Platform currency: the fee (service_price_info) and the wallet balance (my_wallet_balance(p_currency)) are both in it. */
+  balanceCents: number | null; walletEnabled: boolean; currency: string;
   mode: 'ready' | 'guest' | 'no-org'; loginHref: string;
 };
 
 /** Request.png form: React Hook Form + the shared zod schema; submit goes through <ConfirmCharge/> (fee + wallet balance). */
-export function RequestForm({ type, action, defaults, productId, feeCents, feeLabel, serviceName, balanceCents, walletEnabled, mode, loginHref }: Props) {
+export function RequestForm({ type, action, defaults, productId, feeCents, feeLabel, serviceName, balanceCents, walletEnabled, currency, mode, loginHref }: Props) {
   const router = useRouter();
   const sections = REQUEST_FIELDS[type];
   const schema = useMemo(() => requestSchema(type), [type]);
@@ -45,7 +46,7 @@ export function RequestForm({ type, action, defaults, productId, feeCents, feeLa
           <div key={s.title}>
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-4">{s.title}<span className="flex-1 h-px bg-line" aria-hidden /></h2>
             <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-              {s.fields.map((f) => <FieldInput key={f.name} f={f} reg={register(f.name)} error={errors[f.name]?.message as string | undefined} />)}
+              {s.fields.map((f) => <FieldInput key={f.name} f={{ ...f, label: withCurrency(f.label, currency) }} reg={register(f.name)} error={errors[f.name]?.message as string | undefined} />)}
             </div>
           </div>
         ))}
@@ -54,9 +55,9 @@ export function RequestForm({ type, action, defaults, productId, feeCents, feeLa
       <div className="border-t border-line pt-6 space-y-5">
         <div className="rounded-[12px] bg-surface p-5">
           <h3 className="font-sans font-semibold text-[16px]">Fees for this request</h3>
-          <div className="flex justify-between mt-2 text-[14px]"><span className="text-muted">{serviceName}</span><span className="mono font-semibold">{feeCents > 0 ? usd(feeCents) : 'Free'}</span></div>
+          <div className="flex justify-between mt-2 text-[14px]"><span className="text-muted">{serviceName}</span><span className="mono font-semibold">{feeCents > 0 ? money(feeCents, currency) : 'Free'}</span></div>
           <div className="flex justify-between items-baseline border-t border-line mt-3 pt-3">
-            <span className="font-semibold">Pay now</span><span className="font-display text-2xl font-bold">{usd(feeCents)}</span>
+            <span className="font-semibold">Pay now</span><span className="font-display text-2xl font-bold">{money(feeCents, currency)}</span>
           </div>
           <p className="text-[13px] text-muted mt-1">{feeLabel}</p>
         </div>
@@ -65,7 +66,7 @@ export function RequestForm({ type, action, defaults, productId, feeCents, feeLa
             {walletEnabled ? 'Charged from your wallet when you submit. You get a reference number right away.' : 'The wallet is off — the fee is added to your next invoice. You get a reference number right away.'}
           </p>
           {mode === 'ready' && (
-            <ConfirmCharge label={submitLabel} title={`Confirm ${serviceName.toLowerCase()}`} priceCents={feeCents} balanceCents={balanceCents}
+            <ConfirmChargeCurrency label={submitLabel} title={`Confirm ${serviceName.toLowerCase()}`} priceCents={feeCents} balanceCents={balanceCents} currency={currency}
               walletEnabled={walletEnabled && feeCents > 0} onConfirm={onConfirm} />
           )}
           {mode === 'guest' && <Link href={loginHref} className="btn btn-primary">Sign in to submit</Link>}

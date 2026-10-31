@@ -1,9 +1,10 @@
 import { z } from 'zod';
 
-/** Shared product form schema (client form + server action). Prices are entered in USD and stored as cents. */
+/** Shared product form schema (client form + server action). Prices are entered in the product currency (USD or CNY)
+ *  and stored as minor units (cents / fen) with price_tiers.currency + products.currency (SPEC §15.1). */
 export const tierSchema = z.object({
   min_qty: z.number().int('Whole number').positive('Must be > 0'),
-  price_usd: z.number().nonnegative('Must be ≥ 0'),
+  price: z.number().nonnegative('Must be ≥ 0'),
 });
 export const specSchema = z.object({ name: z.string().trim().min(1, 'Name required'), value: z.string().trim().min(1, 'Value required') });
 
@@ -18,6 +19,8 @@ export const productSchema = z.object({
   incoterm: z.string().trim().max(10).nullable(),
   origin_country: z.string().trim().max(2).nullable(),
   hs_code: z.string().trim().max(20).nullable(),
+  /** One currency per product: all tiers share it (1688 suppliers usually quote CNY). */
+  currency: z.enum(['USD', 'CNY']),
   tiers: z.array(tierSchema).min(1, 'Add at least one price tier'),
   specs: z.array(specSchema),
   certificate_ids: z.array(z.string().uuid()),

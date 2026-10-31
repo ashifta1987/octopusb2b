@@ -1,5 +1,6 @@
 import 'server-only';
 import type { createAdminClient } from '@/lib/supabase/server';
+import { cur, price, type FxContext } from './money';
 
 type Sb = ReturnType<typeof createAdminClient>;
 export type PublicSupplier = { code: string; country: string; verified: boolean };
@@ -19,7 +20,8 @@ export function safeSearch(q: string) {
   return q.replace(/[^\p{L}\p{N}\s\-.]/gu, ' ').replace(/\s+/g, ' ').trim().slice(0, 100);
 }
 
-export function publicProduct(p: Record<string, unknown>, sup?: PublicSupplier) {
+/** Catalogue prices keep their own currency (1688 suppliers quote CNY) + a `converted` amount in the platform currency. */
+export function publicProduct(p: Record<string, unknown>, fx: FxContext, sup?: PublicSupplier) {
   return {
     id: p.id,
     slug: p.slug,
@@ -33,8 +35,8 @@ export function publicProduct(p: Record<string, unknown>, sup?: PublicSupplier) 
     origin_country: p.origin_country ?? null,
     hs_code: p.hs_code ?? null,
     image_url: p.image_url ?? null,
-    from_price_cents: p.min_price_cents ?? null,
-    currency: 'USD',
+    from_price: price(p.min_price_cents, p.currency, fx),
+    currency: cur(p.currency),
     ready_to_ship: p.ready_to_ship,
     octopus_dropship: p.octopus_dropship,
     supplier: sup ?? null,
@@ -42,4 +44,4 @@ export function publicProduct(p: Record<string, unknown>, sup?: PublicSupplier) 
 }
 
 export const PRODUCT_COLUMNS =
-  'id, slug, title, description, category_id, supplier_id, unit, moq, lead_time_days, incoterm, origin_country, hs_code, image_url, min_price_cents, ready_to_ship, octopus_dropship';
+  'id, slug, title, description, category_id, supplier_id, unit, moq, lead_time_days, incoterm, origin_country, hs_code, image_url, min_price_cents, currency, ready_to_ship, octopus_dropship';

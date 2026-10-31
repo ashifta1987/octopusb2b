@@ -41,3 +41,4 @@ export function toPlatform(ctx: CurrencyContext, minor: number | null | undefine
   if (minor == null) return null;
   return convertMinor(Number(minor), asCurrency(from), ctx.currency, ctx.rate, ctx.rounding[ctx.currency]?.step_minor ?? 1);
 }
+

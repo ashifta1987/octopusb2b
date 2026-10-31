@@ -4,7 +4,7 @@ import { CatalogView, CatalogSkeleton, type SP } from '@/components/store/catalo
 
 export const metadata: Metadata = {
   title: 'All products',
-  description: 'Browse wholesale industrial supplies with tiered USD pricing, MOQ, certifications and verified suppliers.',
+  description: 'Browse wholesale industrial supplies with tiered pricing, MOQ, certifications and verified suppliers.',
   alternates: { canonical: '/products' },
 };
 

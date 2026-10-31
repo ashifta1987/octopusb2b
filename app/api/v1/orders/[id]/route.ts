@@ -1,6 +1,7 @@
 import { apiRoute, isUuid } from '@/lib/api/handler';
 import { publicSuppliers } from '@/lib/api/data';
-import { ORDER_COLUMNS, publicOrder } from '@/lib/api/trade';
+import { ORDER_COLUMNS, publicDocument, publicOrder } from '@/lib/api/trade';
+import { amt } from '@/lib/api/money';
 import { json, problem } from '@/lib/api/problem';
 
 /** GET /api/v1/orders/{id|code} — order with status timeline, documents and shipments. */
@@ -15,16 +16,16 @@ export const GET = apiRoute<{ id: string }>({ scopes: ['orders:read'] }, async (
 
   const [events, docs, ships, sups] = await Promise.all([
     ctx.sb.from('order_events').select('kind, title, body, created_at').eq('order_id', o.id).eq('org_id', ctx.orgId).order('created_at'),
-    ctx.sb.from('documents').select('id, doc_type, number, amount_cents, status, emailed_at, created_at').eq('order_id', o.id).eq('org_id', ctx.orgId).order('created_at'),
-    ctx.sb.from('shipments').select('id, code, carrier_code, service_code, tracking_no, status, eta, last_event_at, created_at').eq('order_id', o.id).eq('org_id', ctx.orgId),
+    ctx.sb.from('documents').select('id, doc_type, number, amount_cents, currency, status, emailed_at, created_at').eq('order_id', o.id).eq('org_id', ctx.orgId).order('created_at'),
+    ctx.sb.from('shipments').select('id, code, carrier_code, service_code, tracking_no, status, eta, rate_cents, currency, last_event_at, created_at').eq('order_id', o.id).eq('org_id', ctx.orgId),
     publicSuppliers(ctx.sb, [o.supplier_id]),
   ]);
   return json({
     data: {
       ...publicOrder(o, sups.get(o.supplier_id) ?? null),
       events: events.data ?? [],
-      documents: docs.data ?? [],
-      shipments: ships.data ?? [],
+      documents: (docs.data ?? []).map(publicDocument),
+      shipments: (ships.data ?? []).map(({ rate_cents, currency, ...s }) => ({ ...s, shipping_rate: amt(rate_cents, currency) })),
     },
   });
 });

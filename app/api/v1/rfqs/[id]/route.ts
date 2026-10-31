@@ -1,5 +1,5 @@
 import { apiRoute, isUuid } from '@/lib/api/handler';
-import { quotesFor, RFQ_COLUMNS } from '@/lib/api/trade';
+import { publicRfq, quotesFor, RFQ_COLUMNS } from '@/lib/api/trade';
 import { json, problem } from '@/lib/api/problem';
 
 /** GET /api/v1/rfqs/{id|code} — RFQ with its quotes. */
@@ -11,5 +11,5 @@ export const GET = apiRoute<{ id: string }>({ scopes: ['quotes:write', 'orders:r
     .eq('org_id', ctx.orgId)
     .maybeSingle();
   if (!rfq) return problem(404, 'NOT_FOUND', 'RFQ not found.');
-  return json({ data: { ...rfq, quotes: await quotesFor(ctx.sb, [rfq.id]) } });
+  return json({ data: { ...publicRfq(rfq), quotes: await quotesFor(ctx.sb, [rfq.id]) } });
 });

@@ -3,7 +3,8 @@ import { requireCustomer } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { Card, EmptyState, Money, Notice, PageHeader, StatusBadge, Table } from '@/components/ui';
 import { ActionButton } from '@/components/client';
-import { COUNTRY_NAMES, fmtDate, usd } from '@/lib/format';
+import { COUNTRY_NAMES, fmtDate, money, asCurrency, CURRENCIES, type Currency } from '@/lib/format';
+import { getCurrencyContext, toPlatform } from '@/lib/currency';
 import { getSettings, getWalletBalance } from '@/components/account/data';
 import { AdsCampaignForm } from '@/components/account/ads-form';
 import { pauseCampaign } from './actions';
@@ -12,7 +13,7 @@ export const metadata = { title: 'Advertising' };
 
 type Campaign = {
   id: string; name: string; placement: string; headline: string; status: string; rejection_reason: string | null;
-  daily_budget_cents: number; max_cpc_cents: number; spent_today_cents: number; target_countries: string[] | null; created_at: string;
+  daily_budget_cents: number; max_cpc_cents: number; spent_today_cents: number; target_countries: string[] | null; created_at: string; currency: string;
 };
 
 export default async function AdsPage() {
@@ -28,14 +29,16 @@ export default async function AdsPage() {
   }
 
   const sb = await createClient();
+  const ctx = await getCurrencyContext();
   const [settings, wallet, { data: plRaw }, { data: cRaw }] = await Promise.all([
     getSettings(),
-    getWalletBalance(),
+    getWalletBalance(ctx.currency),
     sb.from('ad_placements').select('code, name, min_cpc_cents').order('min_cpc_cents'),
-    sb.from('ad_campaigns').select('id, name, placement, headline, status, rejection_reason, daily_budget_cents, max_cpc_cents, spent_today_cents, target_countries, created_at')
+    sb.from('ad_campaigns').select('id, name, placement, headline, status, rejection_reason, daily_budget_cents, max_cpc_cents, spent_today_cents, target_countries, created_at, currency')
       .eq('org_id', s.org.id).order('created_at', { ascending: false }),
   ]);
-  const placements = (plRaw ?? []).map((p) => ({ code: p.code as string, name: p.name as string, min_cpc_cents: Number(p.min_cpc_cents) }));
+  // Placement minimums are stored in USD → shown/enforced in the platform currency at the approved rate.
+  const placements = (plRaw ?? []).map((p) => ({ code: p.code as string, name: p.name as string, min_cpc_cents: toPlatform(ctx, Number(p.min_cpc_cents), 'USD') ?? Number(p.min_cpc_cents) }));
   const plName = new Map(placements.map((p) => [p.code, p.name]));
   const campaigns = ((cRaw ?? []) as Campaign[]).map((c) => ({ ...c, daily_budget_cents: Number(c.daily_budget_cents), max_cpc_cents: Number(c.max_cpc_cents) }));
   const ids = campaigns.map((c) => c.id);
@@ -56,7 +59,11 @@ export default async function AdsPage() {
       if (st) st.impressions += Number(r.count ?? 0);
     });
   }
-  const totals = [...stats.values()].reduce((a, b) => ({ clicks: a.clicks + b.clicks, spent: a.spent + b.spent, impressions: a.impressions + b.impressions }), { clicks: 0, spent: 0, impressions: 0 });
+  const totals = [...stats.values()].reduce((a, b) => ({ clicks: a.clicks + b.clicks, impressions: a.impressions + b.impressions }), { clicks: 0, impressions: 0 });
+  // Spend stays in each campaign's own currency.
+  const spentBy: Partial<Record<Currency, number>> = {};
+  campaigns.forEach((c) => { const k = asCurrency(c.currency); spentBy[k] = (spentBy[k] ?? 0) + (stats.get(c.id)?.spent ?? 0); });
+  const spentTxt = CURRENCIES.filter((k) => spentBy[k] != null).map((k) => money(spentBy[k]!, k)).join(' + ') || money(0, ctx.currency);
   const nf = new Intl.NumberFormat('en-US');
 
   return (
@@ -66,7 +73,7 @@ export default async function AdsPage() {
         subtitle="Show a small sponsored banner to buyers. You only pay when someone clicks, and never more than your daily budget."
         actions={
           <div className="flex items-center gap-3">
-            <span className="text-[15px]">Wallet <Money cents={wallet} /></span>
+            <span className="text-[15px]">{ctx.currency} wallet <Money cents={wallet} currency={ctx.currency} /></span>
             <Link href="/account/wallet" className="btn btn-ghost btn-sm">Top up</Link>
           </div>
         }
@@ -81,10 +88,10 @@ export default async function AdsPage() {
         <div className="mb-6"><Notice tone="blue">The wallet is switched off — valid clicks will be added to your monthly invoice in Ledger &amp; invoices.</Notice></div>
       )}
 
-      <AdsCampaignForm placements={placements} countries={COUNTRY_NAMES} disabled={!settings.ads_enabled} walletCents={wallet} />
+      <AdsCampaignForm placements={placements} countries={COUNTRY_NAMES} disabled={!settings.ads_enabled} walletCents={wallet} currency={ctx.currency} />
 
       <Card title="My campaigns" className="mt-6"
-        action={campaigns.length ? <span className="text-sm text-muted">{nf.format(totals.impressions)} impressions · {nf.format(totals.clicks)} clicks · {usd(totals.spent)} spent</span> : undefined}>
+        action={campaigns.length ? <span className="text-sm text-muted">{nf.format(totals.impressions)} impressions · {nf.format(totals.clicks)} clicks · {spentTxt} spent</span> : undefined}>
         <Table head={['Campaign', 'Status', 'Impressions', 'Clicks', 'CTR', 'Bid', 'Daily budget', 'Spent', '']}
           empty={<EmptyState title="No campaigns yet" body="Create your first sponsored banner above. It goes live after a quick review." />}>
           {campaigns.map((c) => {
@@ -101,9 +108,9 @@ export default async function AdsPage() {
                 <td className="td mono text-sm">{nf.format(st.impressions)}</td>
                 <td className="td mono text-sm">{nf.format(st.clicks)}</td>
                 <td className="td mono text-sm">{ctr == null ? '—' : `${ctr.toFixed(1)}%`}</td>
-                <td className="td"><Money cents={c.max_cpc_cents} className="text-sm font-normal" /></td>
-                <td className="td"><Money cents={c.daily_budget_cents} className="text-sm font-normal" /></td>
-                <td className="td"><Money cents={st.spent} className="text-sm" /></td>
+                <td className="td"><Money cents={c.max_cpc_cents} currency={c.currency} className="text-sm font-normal" /></td>
+                <td className="td"><Money cents={c.daily_budget_cents} currency={c.currency} className="text-sm font-normal" /></td>
+                <td className="td"><Money cents={st.spent} currency={c.currency} className="text-sm" /></td>
                 <td className="td text-right">
                   {c.status === 'active' && (
                     <ActionButton action={pauseCampaign.bind(null, c.id)} className="btn btn-ghost btn-sm"

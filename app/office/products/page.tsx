@@ -4,7 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, PageHeader, StatusBadge, EmptyState, Money, Notice } from '@/components/ui';
 import { ReasonButton, RunButton } from '@/components/backoffice/action-form';
 import { one } from '@/components/backoffice/server-utils';
-import { fmtDate, usd } from '@/lib/format';
+import { fmtDate, money } from '@/lib/format';
+import { getCurrencyContext, toPlatform } from '@/lib/currency';
 import { cn } from '@/lib/cn';
 import { moderateProduct } from '../actions';
 
@@ -19,11 +20,15 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
     .in('status', ['submitted', 'in_review']).order('updated_at').limit(100);
   const sel = selId ?? queue?.[0]?.id;
   const { data: p } = sel ? await sb.from('products')
-    .select('id, title, description, status, unit, moq, lead_time_days, incoterm, origin_country, hs_code, octopus_dropship, ready_to_ship, seo_title, seo_description, image_url, updated_at, rejection_reason, suppliers(code, legal_name, country, verified, supplier_switches(listings_live)), categories(name), price_tiers(min_qty, unit_price_cents), product_specs(name, value, sort), product_media(url, sort), product_tags(tags(name)), product_certificates(certificates(name, status))')
+    .select('id, title, description, status, unit, moq, lead_time_days, incoterm, origin_country, hs_code, octopus_dropship, ready_to_ship, seo_title, seo_description, image_url, updated_at, rejection_reason, suppliers(code, legal_name, country, verified, supplier_switches(listings_live)), categories(name), currency, price_tiers(min_qty, unit_price_cents, currency), product_specs(name, value, sort), product_media(url, sort), product_tags(tags(name)), product_certificates(certificates(name, status))')
     .eq('id', sel).maybeSingle() : { data: null };
   const sup = p ? one(p.suppliers as unknown as { code: string; legal_name: string; country: string; verified: boolean; supplier_switches: { listings_live: boolean } | { listings_live: boolean }[] | null } | null) : null;
   const listingsOff = sup ? one(sup.supplier_switches)?.listings_live === false : false;
-  const tiers = ((p?.price_tiers ?? []) as { min_qty: number; unit_price_cents: number }[]).sort((a, b) => a.min_qty - b.min_qty);
+  const tiers = ((p?.price_tiers ?? []) as { min_qty: number; unit_price_cents: number; currency: string }[]).sort((a, b) => a.min_qty - b.min_qty);
+  const cx = await getCurrencyContext();
+  const lowest = tiers[tiers.length - 1];
+  // storefront shows catalogue prices converted to the platform currency (SPEC §15.1)
+  const lowestPlatform = lowest && lowest.currency !== cx.currency ? toPlatform(cx, lowest.unit_price_cents, lowest.currency) : null;
   const media = ((p?.product_media ?? []) as { url: string; sort: number }[]).sort((a, b) => a.sort - b.sort);
   const issues = p ? [
     !p.description || p.description.length < 80 ? 'Description is short (under 80 characters)' : null,
@@ -81,10 +86,10 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
               </div>
               <div className="space-y-4">
                 <div>
-                  <h3 className="font-semibold mb-2">Price tiers</h3>
+                  <h3 className="font-semibold mb-2">Price tiers{tiers[0] ? <span className="ml-2 text-xs font-normal text-muted">entered in {tiers[0].currency}</span> : null}</h3>
                   {tiers.length ? (
                     <table className="w-full text-sm"><tbody>
-                      {tiers.map((t, i) => <tr key={t.min_qty} className="border-b border-line"><td className="py-1.5">{t.min_qty.toLocaleString()}{tiers[i + 1] ? `–${(tiers[i + 1].min_qty - 1).toLocaleString()}` : '+'} {p.unit}</td><td className="py-1.5 text-right"><Money cents={t.unit_price_cents} /></td></tr>)}
+                      {tiers.map((t, i) => <tr key={t.min_qty} className="border-b border-line"><td className="py-1.5">{t.min_qty.toLocaleString()}{tiers[i + 1] ? `–${(tiers[i + 1].min_qty - 1).toLocaleString()}` : '+'} {p.unit}</td><td className="py-1.5 text-right"><Money cents={t.unit_price_cents} currency={t.currency} /></td></tr>)}
                     </tbody></table>
                   ) : <p className="text-sm text-bad">No tiers</p>}
                 </div>
@@ -115,7 +120,7 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
               <div className="text-xs text-muted">Search preview</div>
               <div className="text-blue font-semibold">{p.seo_title || p.title}</div>
               <div className="text-muted">{p.seo_description || '—'}</div>
-              {tiers[0] && <div className="text-xs text-muted mt-1">From {usd(tiers[tiers.length - 1].unit_price_cents)} / {p.unit}</div>}
+              {tiers[0] && <div className="text-xs text-muted mt-1">From {money(lowest.unit_price_cents, lowest.currency)} / {p.unit}{lowestPlatform != null ? ` · storefront ≈ ${money(lowestPlatform, cx.currency)} (converted)` : ''}</div>}
             </div>
             <div className="border-t border-line mt-6 pt-5 flex flex-wrap gap-3 justify-end">
               {p.status === 'submitted' && <RunButton action={moderateProduct.bind(null, p.id, 'in_review', '')}>Start review</RunButton>}

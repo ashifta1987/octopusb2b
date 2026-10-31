@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   if (!cat) return { title: 'Category not found', robots: { index: false } };
   return {
     title: `${cat.name} — wholesale${cat.hs_code ? ` (HS ${cat.hs_code})` : ''}`,
-    description: `Buy ${cat.name.toLowerCase()} wholesale from verified suppliers. Tiered USD pricing, MOQ and lead times on every listing.`,
+    description: `Buy ${cat.name.toLowerCase()} wholesale from verified suppliers. Tiered pricing, MOQ and lead times on every listing.`,
     alternates: { canonical: `/c/${slug.join('/')}` },
   };
 }

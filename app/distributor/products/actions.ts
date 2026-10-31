@@ -1,7 +1,7 @@
 'use server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import { slugify, toCents } from '@/lib/format';
+import { slugify, toCents, asCurrency } from '@/lib/format';
 import { actionSession, fail, ok, type Result } from '@/components/backoffice/server-utils';
 import { productSchema, draftSchema, type ProductFormValues } from '@/components/backoffice/product-schema';
 
@@ -16,7 +16,8 @@ async function checkSupplier(sb: Sb, supplierId: string) {
 }
 
 async function replaceChildren(sb: Sb, id: string, v: ProductFormValues) {
-  const tiers = (v.tiers ?? []).filter((t) => Number.isFinite(t.min_qty) && Number.isFinite(t.price_usd));
+  const tiers = (v.tiers ?? []).filter((t) => Number.isFinite(t.min_qty) && Number.isFinite(t.price));
+  const currency = asCurrency(v.currency);
   const del = await Promise.all([
     sb.from('price_tiers').delete().eq('product_id', id),
     sb.from('product_specs').delete().eq('product_id', id),
@@ -28,7 +29,7 @@ async function replaceChildren(sb: Sb, id: string, v: ProductFormValues) {
   if (de) return de;
   const seen = new Set<number>();
   const tierRows = tiers.filter((t) => !seen.has(t.min_qty) && seen.add(t.min_qty))
-    .map((t) => ({ product_id: id, min_qty: t.min_qty, unit_price_cents: toCents(t.price_usd) }));
+    .map((t) => ({ product_id: id, min_qty: t.min_qty, unit_price_cents: toCents(t.price), currency }));
   const ins = await Promise.all([
     tierRows.length ? sb.from('price_tiers').insert(tierRows) : null,
     v.specs?.length ? sb.from('product_specs').insert(v.specs.filter((s) => s.name && s.value).map((s, i) => ({ product_id: id, name: s.name, value: s.value, sort: i + 1 }))) : null,
@@ -40,7 +41,7 @@ async function replaceChildren(sb: Sb, id: string, v: ProductFormValues) {
 }
 
 function columns(v: ProductFormValues) {
-  const prices = (v.tiers ?? []).map((t) => toCents(t.price_usd)).filter((n) => Number.isFinite(n));
+  const prices = (v.tiers ?? []).map((t) => toCents(t.price)).filter((n) => Number.isFinite(n));
   return {
     title: v.title.trim(),
     supplier_id: v.supplier_id,
@@ -57,6 +58,8 @@ function columns(v: ProductFormValues) {
     seo_title: v.seo_title || null,
     seo_description: v.seo_description || null,
     image_url: v.images?.[0] ?? null,
+    // min price is in the product currency (same as its price tiers)
+    currency: asCurrency(v.currency),
     min_price_cents: prices.length ? Math.min(...prices) : null,
   };
 }

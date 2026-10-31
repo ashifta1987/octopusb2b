@@ -2,14 +2,16 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/cn';
-import { usd } from '@/lib/format';
+import { money } from '@/lib/format';
 
 type Rate = { carrier: string; service: string; priceCents: number; days: string };
+/** CarrierAdapter rates have no currency field — they are USD (stored as shipments.currency = 'USD'). */
+const RATE_CURRENCY = 'USD';
 type Res<T> = { ok: boolean; error?: string; data?: T };
 
 /** Shipping.png steps 2–3: parcel details → YunExpress price trial → create shipment + label. */
-export function ShipmentCreator({ orderId, orderCode, fromCountry, toCountry, defaultDesc, defaultHs, declaredCents, incoterm, priceTrial, createShipment }: {
-  orderId: string; orderCode: string; fromCountry: string; toCountry: string; defaultDesc: string; defaultHs: string; declaredCents: number; incoterm: string | null;
+export function ShipmentCreator({ orderId, orderCode, fromCountry, toCountry, defaultDesc, defaultHs, declaredCents, declaredCurrency, incoterm, priceTrial, createShipment }: {
+  orderId: string; orderCode: string; fromCountry: string; toCountry: string; defaultDesc: string; defaultHs: string; declaredCents: number; declaredCurrency: string; incoterm: string | null;
   priceTrial: (i: { toCountry: string; fromCountry: string; weightKg: number; parcels: number }) => Promise<Res<Rate[]>>;
   createShipment: (orderId: string, i: { service: string; rateCents: number; weightKg: number; parcels: number }) => Promise<Res<{ trackingNo: string; labelUrl: string }>>;
 }) {
@@ -30,7 +32,7 @@ export function ShipmentCreator({ orderId, orderCode, fromCountry, toCountry, de
   const create = () => {
     if (pick == null || !rates) return;
     const rate = rates[pick];
-    if (!window.confirm(`Create a YunExpress shipment for ${orderCode} with “${rate.service}” at ${usd(rate.priceCents)}? The order will be marked shipped.`)) return;
+    if (!window.confirm(`Create a YunExpress shipment for ${orderCode} with “${rate.service}” at ${money(rate.priceCents, RATE_CURRENCY)}? The order will be marked shipped.`)) return;
     start(async () => {
       setErr(null);
       const r = await createShipment(orderId, { service: rate.service, rateCents: rate.priceCents, weightKg: weight, parcels: pieces });
@@ -69,7 +71,7 @@ export function ShipmentCreator({ orderId, orderCode, fromCountry, toCountry, de
             <input id="sc-box" className="input mono" placeholder="40 × 30 × 30" />
           </div>
           <div>
-            <label htmlFor="sc-val" className="label">Declared value (USD)</label>
+            <label htmlFor="sc-val" className="label">Declared value ({declaredCurrency})</label>
             <input id="sc-val" className="input mono" defaultValue={(declaredCents / 100).toFixed(2)} />
           </div>
           <div className="sm:col-span-2">
@@ -100,7 +102,7 @@ export function ShipmentCreator({ orderId, orderCode, fromCountry, toCountry, de
               <label key={r.service} className={cn('flex items-center gap-4 rounded-[10px] border-2 px-5 py-4 cursor-pointer', pick === i ? 'border-blue bg-blue-soft' : 'border-line')}>
                 <input type="radio" name="svc" checked={pick === i} onChange={() => setPick(i)} />
                 <div className="flex-1"><div className="font-semibold">{r.carrier} · {r.service}</div><div className="text-sm text-muted">{r.days} days</div></div>
-                <div className="text-right"><div className="mono font-bold text-lg">{usd(r.priceCents)}</div></div>
+                <div className="text-right"><div className="mono font-bold text-lg">{money(r.priceCents, RATE_CURRENCY)}</div></div>
               </label>
             ))}
           </fieldset>

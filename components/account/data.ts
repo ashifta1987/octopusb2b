@@ -38,9 +38,10 @@ export async function getSettings(): Promise<Settings> {
   };
 }
 
-export async function getWalletBalance(): Promise<number> {
+/** Balance of my org's wallet in `currency` (default: the platform currency — SPEC §15.1, one wallet per currency). */
+export async function getWalletBalance(currency?: string | null): Promise<number> {
   const sb = await createClient();
-  const { data } = await sb.rpc('my_wallet_balance');
+  const { data } = await sb.rpc('my_wallet_balance', currency ? { p_currency: currency } : {});
   return Number(data ?? 0);
 }
 

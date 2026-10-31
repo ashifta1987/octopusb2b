@@ -23,7 +23,7 @@ export const REQUEST_FIELDS: Record<RequestType, Section[]> = {
       { name: 'title', label: 'Product name', kind: 'text', required: true, full: true, placeholder: 'e.g. Galvanised steel cable ties, 300 mm' },
       { name: 'details', label: 'Description, specs or a link', kind: 'textarea', required: true, full: true, placeholder: 'Material, size, standard, certifications, reference link' },
       { name: 'quantity', label: 'Quantity', kind: 'int', required: true, placeholder: 'e.g. 20000' },
-      { name: 'target_price', label: 'Target price (USD per unit)', kind: 'money', placeholder: '$' },
+      { name: 'target_price', label: 'Target price ({currency} per unit)', kind: 'money', placeholder: '0.00' },
       { name: 'destination_country', label: 'Destination country', kind: 'country', required: true },
       { name: 'destination_city', label: 'Destination city / port', kind: 'text', placeholder: 'e.g. Rotterdam' },
       { name: 'incoterm', label: 'Preferred Incoterm', kind: 'select', options: ['EXW', 'FOB', 'CIF', 'DAP', 'DDP'] },

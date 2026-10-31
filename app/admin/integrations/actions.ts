@@ -60,3 +60,28 @@ export async function retryOutbox(id: string): Promise<Result> {
   revalidatePath('/admin/integrations');
   return ok('Queued for retry');
 }
+
+const POSTMAN_ID = /^[A-Za-z0-9-]{0,80}$/;
+
+/** Postman card: save workspace / collection / monitor IDs as NON-secret config (the API key stays in env / Vault). */
+export async function savePostmanConfig(_prev: Result | null, fd: FormData): Promise<Result> {
+  const g = await guard('integrations', 'edit');
+  if ('error' in g) return g.error;
+  const val = (k: string) => String(fd.get(k) ?? '').trim();
+  const fields = { workspace_id: val('workspace_id'), public_v1: val('public_v1'), supplier_v1: val('supplier_v1'), monitor_id: val('monitor_id') };
+  if (Object.values(fields).some((v) => !POSTMAN_ID.test(v))) return fail('IDs may only contain letters, digits and dashes.');
+  const { data: row, error: e1 } = await g.sb.from('integrations').select('config').eq('code', 'postman').maybeSingle();
+  if (e1) return fail(e1);
+  if (!row) return fail('NOT_FOUND');
+  const config = {
+    ...((row.config as Record<string, unknown>) ?? {}),
+    workspace_id: fields.workspace_id || null,
+    collection_ids: { public_v1: fields.public_v1 || null, supplier_v1: fields.supplier_v1 || null },
+    monitor_id: fields.monitor_id || null,
+  };
+  const { data, error } = await g.sb.from('integrations').update({ config, updated_at: new Date().toISOString() }).eq('code', 'postman').select('code');
+  if (error) return fail(error);
+  if (!data?.length) return fail('FORBIDDEN');
+  revalidatePath('/admin/integrations');
+  return ok('Postman IDs saved');
+}

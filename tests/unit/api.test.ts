@@ -4,7 +4,7 @@ import { buildPostman } from '@/lib/api/postman';
 import { notificationFor, retryPlan, wantsEmail, BACKOFF_SECONDS } from '@/lib/api/outbox-rules';
 import { problem, problemFromDb } from '@/lib/api/problem';
 import { _resetRateLimits, rateLimit } from '@/lib/api/rate-limit';
-import { publicEventFor } from '@/lib/api/webhooks';
+import { isBroadcastEvent, publicEventFor } from '@/lib/api/webhooks';
 
 describe('rate limit (60/min per key)', () => {
   it('allows 60 then 429 with Retry-After, resets after the window', () => {
@@ -34,6 +34,9 @@ describe('outbox rules', () => {
     expect(publicEventFor('shipment.tracking')).toBe('shipment.tracking');
     expect(publicEventFor('service_request.paid')).toBe('service_request.updated');
     expect(publicEventFor('wallet.updated')).toBe('wallet.updated');
+    expect(publicEventFor('settings.currency_changed')).toBe('settings.currency_changed');
+    expect(isBroadcastEvent('settings.currency_changed')).toBe(true);
+    expect(isBroadcastEvent('order.updated')).toBe(false);
     expect(publicEventFor('product.published')).toBeNull();
   });
   it('emails only for the documented events', () => {
@@ -66,7 +69,7 @@ describe('API docs', () => {
   it('OpenAPI 3.1 document has all endpoints with Zod-generated bodies', () => {
     const doc = buildOpenApi('https://example.test');
     expect(doc.openapi).toBe('3.1.0');
-    for (const p of ['/oauth/token', '/products', '/products/{id}', '/categories', '/rfqs', '/quotes', '/orders', '/orders/{id}', '/shipments/{id}/tracking', '/wallet', '/service-requests', '/webhooks'])
+    for (const p of ['/oauth/token', '/settings/currency', '/products', '/products/{id}', '/categories', '/rfqs', '/quotes', '/orders', '/orders/{id}', '/shipments/{id}/tracking', '/wallet', '/service-requests', '/webhooks'])
       expect(doc.paths).toHaveProperty([p]);
     const rfqBody = (doc.paths['/rfqs'].post as { requestBody: { content: { 'application/json': { schema: { properties: Record<string, unknown> } } } } }).requestBody.content['application/json'].schema;
     expect(rfqBody.properties).toHaveProperty('quantity');
@@ -78,7 +81,8 @@ describe('API docs', () => {
     const c = buildPostman('https://example.test');
     expect(c.info.schema).toContain('v2.1.0');
     const vars = c.variable.map((v) => v.key);
-    for (const k of ['baseUrl', 'client_id', 'client_secret', 'token']) expect(vars).toContain(k);
+    for (const k of ['base_url', 'client_id', 'client_secret', 'access_token', 'currency']) expect(vars).toContain(k);
+    expect(c.variable.find((v) => v.key === 'base_url')!.value).toBe('https://example.test/api/v1');
     expect(c.event[0].listen).toBe('prerequest');
   });
 });

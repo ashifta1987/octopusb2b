@@ -5,7 +5,7 @@ import { Card, PageHeader, StatusBadge, Table, EmptyState, Notice } from '@/comp
 import { ActionForm, RunButton } from '@/components/backoffice/action-form';
 import { FileDrop } from '@/components/client';
 import { IMPORT_COLUMNS, type ImportData } from '@/components/backoffice/import-columns';
-import { usd, fmtDate } from '@/lib/format';
+import { money, fmtDate } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { validateImport, importValidRows, submitImported } from './actions';
 
@@ -90,7 +90,7 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
                   <td className="td mono text-sm">{d.supplier_code}</td>
                   <td className="td text-sm">{d.category_path}</td>
                   <td className="td text-sm">{d.moq ?? '—'} {d.unit}</td>
-                  <td className="td text-xs mono">{d.tiers.map((t) => `${t.min_qty}+ ${usd(t.unit_price_cents)}`).join(' · ')}</td>
+                  <td className="td text-xs mono">{d.tiers.map((t) => `${t.min_qty}+ ${money(t.unit_price_cents, d.currency ?? 'USD')}`).join(' · ')}</td>
                   <td className="td text-sm">
                     {errs.length ? <ul className="text-bad text-xs list-disc pl-4">{errs.map((e) => <li key={e}>{e}</li>)}</ul>
                       : r.product_id ? <Link href={`/distributor/products/${r.product_id}/edit`} className="text-ok font-semibold text-xs">✓ Imported · edit</Link>

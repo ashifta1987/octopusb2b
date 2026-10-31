@@ -38,7 +38,8 @@ export async function validateImport(fd: FormData): Promise<Result<{ jobId: stri
   // header map
   const header = new Map<string, number>();
   ws.getRow(1).eachCell((c, col) => header.set(cellText(c.value).toLowerCase().trim(), col));
-  const missing = IMPORT_COLUMNS.filter((c) => c.required && !header.has(c.key)).map((c) => c.key);
+  // legacy templates (before SPEC §15.1) have tierN_price_usd instead of tierN_price
+  const missing = IMPORT_COLUMNS.filter((c) => c.required && !header.has(c.key) && !header.has(`${c.key}_usd`)).map((c) => c.key);
   if (missing.length) return fail(`Missing columns: ${missing.join(', ')}. Download the latest template.`);
 
   const sb = await createClient();
@@ -96,13 +97,18 @@ export async function validateImport(fd: FormData): Promise<Result<{ jobId: stri
     const lead = intOrNull(raw.lead_time_days);
     if (lead != null && (!Number.isInteger(lead) || lead < 0)) errors.push('lead_time_days must be a whole number ≥ 0');
 
+    const curRaw = (raw.currency || 'USD').toUpperCase();
+    if (curRaw !== 'USD' && curRaw !== 'CNY') errors.push('currency must be USD or CNY');
+    const currency: 'USD' | 'CNY' = curRaw === 'CNY' ? 'CNY' : 'USD';
+
     const tiers: { min_qty: number; unit_price_cents: number }[] = [];
     for (const n of [1, 2, 3]) {
-      const q = raw[`tier${n}_qty`]; const p = raw[`tier${n}_price_usd`];
-      if (q === '' && p === '') { if (n === 1) errors.push('Missing tier1_qty / tier1_price_usd'); continue; }
+      // legacy templates used tierN_price_usd (always USD)
+      const q = raw[`tier${n}_qty`]; const p = raw[`tier${n}_price`] !== '' ? raw[`tier${n}_price`] : get(r, `tier${n}_price_usd`);
+      if (q === '' && p === '') { if (n === 1) errors.push('Missing tier1_qty / tier1_price'); continue; }
       const qn = Number(q); const pc = toCents(p);
       if (!Number.isInteger(qn) || qn <= 0) { errors.push(`tier${n}_qty must be a whole number > 0`); continue; }
-      if (!Number.isFinite(pc) || pc < 0 || p === '') { errors.push(`tier${n}_price_usd must be a number ≥ 0`); continue; }
+      if (!Number.isFinite(pc) || pc < 0 || p === '') { errors.push(`tier${n}_price must be a number ≥ 0`); continue; }
       tiers.push({ min_qty: qn, unit_price_cents: pc });
     }
     for (let i = 1; i < tiers.length; i++) if (tiers[i].min_qty <= tiers[i - 1].min_qty) { errors.push('Tier quantities must go up (tier1 < tier2 < tier3)'); break; }
@@ -117,7 +123,7 @@ export async function validateImport(fd: FormData): Promise<Result<{ jobId: stri
         title, category_path: raw.category_path, category_id, supplier_code: code, supplier_id: sup?.id ?? null,
         unit: raw.unit || 'pcs', moq: moq != null && Number.isFinite(moq) ? moq : null, lead_time_days: lead != null && Number.isFinite(lead) ? lead : null,
         incoterm: raw.incoterm ? raw.incoterm.toUpperCase() : 'FOB', origin_country: raw.origin_country ? raw.origin_country.toUpperCase() : null,
-        hs_code: raw.hs_code || null, tiers, octopus_dropship: yes(raw.octopus_dropship), ready_to_ship: yes(raw.ready_to_ship), description: raw.description || null,
+        hs_code: raw.hs_code || null, currency, tiers, octopus_dropship: yes(raw.octopus_dropship), ready_to_ship: yes(raw.ready_to_ship), description: raw.description || null,
       },
     });
   });
@@ -151,11 +157,12 @@ export async function importValidRows(jobId: string): Promise<Result> {
   for (const r of rows ?? []) {
     const d = r.data as ImportData;
     const prices = d.tiers.map((t) => t.unit_price_cents);
+    const currency = d.currency === 'CNY' ? 'CNY' : 'USD';
     const { data: p, error } = await sb.from('products').insert({
       slug: `${slugify(d.title).slice(0, 80)}-${Math.random().toString(36).slice(2, 8)}`, title: d.title, description: d.description,
       supplier_id: d.supplier_id, category_id: d.category_id, status: 'draft', unit: d.unit, moq: d.moq ?? 1, lead_time_days: d.lead_time_days,
       incoterm: d.incoterm, origin_country: d.origin_country, hs_code: d.hs_code, octopus_dropship: d.octopus_dropship, ready_to_ship: d.ready_to_ship,
-      min_price_cents: prices.length ? Math.min(...prices) : null, created_by: g.s.userId,
+      currency, min_price_cents: prices.length ? Math.min(...prices) : null, created_by: g.s.userId,
       seo_title: `${d.title} | Wholesale`.slice(0, 60),
     }).select('id').single();
     if (error) {
@@ -163,7 +170,7 @@ export async function importValidRows(jobId: string): Promise<Result> {
       await sb.from('import_rows').update({ errors: [error.message] }).eq('id', r.id);
       continue;
     }
-    if (d.tiers.length) await sb.from('price_tiers').insert(d.tiers.map((t) => ({ product_id: p.id, ...t })));
+    if (d.tiers.length) await sb.from('price_tiers').insert(d.tiers.map((t) => ({ product_id: p.id, ...t, currency })));
     await sb.from('import_rows').update({ product_id: p.id }).eq('id', r.id);
     done++;
   }

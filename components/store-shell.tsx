@@ -2,18 +2,24 @@ import Link from 'next/link';
 import { Logo } from '@/components/ui';
 import { getSiteContent, block } from '@/lib/content';
 import { getSession } from '@/lib/auth';
+import { getCurrencyContext } from '@/lib/currency';
+import { withCurrency, CURRENCY_PREFIX } from '@/lib/format';
+import { activeSwitchBanner } from '@/components/store/currency';
+import { CurrencySwitchBanner } from '@/components/store/currency-banner';
 
 /** Storefront layout header + mega-menu (Main.png). All copy from CMS. */
 export async function StoreHeader() {
-  const [{ blocks, company, categories, settings }, session] = await Promise.all([getSiteContent(), getSession()]);
+  const [{ blocks, company, categories, settings }, session, ctx] = await Promise.all([getSiteContent(), getSession(), getCurrencyContext()]);
+  const banner = activeSwitchBanner(ctx);
   const top = categories.filter((c) => c.level === 1);
   const wa = company?.whatsapp ? `https://wa.me/${company.whatsapp.replace(/\D/g, '')}` : '#';
   return (
     <>
       <div className="bg-navy text-[#D5DBE4] text-[13px]">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-2 flex flex-wrap gap-x-6 gap-y-1 justify-between items-center">
-          <span>{block(blocks, 'topbar.left')}</span>
+          <span>{withCurrency(block(blocks, 'topbar.left'), ctx.currency)}</span>
           <div className="flex flex-wrap gap-5 items-center">
+            <span>Currency: <span className="font-semibold text-white">{ctx.currency} ({CURRENCY_PREFIX[ctx.currency]})</span></span>
             <span>Ship to: Worldwide</span>
             <Link href="/contact" className="hover:text-white">Help center</Link>
             <a href={wa} className="hover:text-white" rel="noopener">WhatsApp sales</a>
@@ -55,6 +61,7 @@ export async function StoreHeader() {
           <Link href="/request/dropship" className="text-blue">Dropshipping</Link>
         </nav>
       </header>
+      {banner && <CurrencySwitchBanner to={banner.to} appliedAt={banner.applied_at} />}
     </>
   );
 }
