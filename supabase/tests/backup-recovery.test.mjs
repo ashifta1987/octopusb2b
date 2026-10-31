@@ -25,7 +25,7 @@ try {
   await db.query(`insert into recovery.products (${cols}) select ${cols} from public.products where id = $1`, [p.id]);
 
   const admin = (await one(`select id from profiles where email = 'admin@demo.octopusb2b.com'`)).id;
-  await db.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify({ sub: admin, role: 'authenticated', aal: 'aal2' })]);
+  await db.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify({ sub: admin, role: 'authenticated', aal: 'aal2', amr: [{ method: 'totp', timestamp: Math.floor(Date.now() / 1000) }] })]);
   await db.query('set local role authenticated');
   const cmp = (await one(`select recovery_compare('products', array[$1]::uuid[], 5) v`, [p.id])).v;
   ok(cmp[0]?.status === 'same', `unchanged product compares as "same" (${cmp[0]?.status})`);

@@ -5,7 +5,7 @@ const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { re
 await db.connect();
 const id = async (e) => (await db.query('select id from profiles where email=$1', [e])).rows[0].id;
 const [admin, fin, ops, buyer] = await Promise.all(['admin', 'finance', 'ops', 'buyer'].map((u) => id(`${u}@demo.octopusb2b.com`)));
-const as = async (uid, aal = 'aal2') => { await db.query('reset role'); await db.query(`select set_config('request.jwt.claims',$1,true)`, [JSON.stringify({ sub: uid, role: 'authenticated', aal })]); await db.query('set local role authenticated'); };
+const as = async (uid, aal = 'aal2') => { await db.query('reset role'); await db.query(`select set_config('request.jwt.claims',$1,true)`, [JSON.stringify({ sub: uid, role: 'authenticated', aal, amr: aal === 'aal2' ? [{ method: 'totp', timestamp: Math.floor(Date.now() / 1000) }] : [{ method: 'password', timestamp: Math.floor(Date.now() / 1000) }] })]); await db.query('set local role authenticated'); };
 const one = async (s, p) => (await db.query(s, p)).rows[0];
 let failed = 0;
 const ok = (c, m) => { console.log(c ? '✔' : '✘', m); if (!c) failed++; };
@@ -33,7 +33,7 @@ try {
 
   // restore workflow + maker-checker + MFA
   await as(admin, 'aal1');
-  await expectErr(() => db.query(`select request_restore($1,'full_staging','x')`, [bk]), 'MFA_REQUIRED', 'restore request needs a recent 2FA (aal2)');
+  await expectErr(() => db.query(`select request_restore($1,'full_staging','x')`, [bk]), 'STEP_UP_REQUIRED', 'restore request needs a fresh 2FA code (step-up)');
   await as(admin);
   const rs = (await one(`select request_restore($1,'full_staging','Rebuild staging') v`, [bk])).v;
   await db.query('reset role');
@@ -44,7 +44,7 @@ try {
   await as(ops);
   await expectErr(() => db.query(`select approve_restore($1)`, [rs]), 'FORBIDDEN', 'operations cannot approve a restore');
   await as(fin, 'aal1');
-  await expectErr(() => db.query(`select approve_restore($1)`, [rs]), 'MFA_REQUIRED', 'approver must re-enter 2FA');
+  await expectErr(() => db.query(`select approve_restore($1)`, [rs]), 'STEP_UP_REQUIRED', 'approver must re-enter 2FA (step-up)');
   await as(fin);
   await db.query(`select approve_restore($1)`, [rs]);
   ok((await one(`select status from restore_requests where id=$1`, [rs])).status === 'approved', 'finance (second approver) approves a money-touching restore');

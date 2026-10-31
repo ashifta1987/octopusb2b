@@ -37,7 +37,7 @@ async function as(userId) {
   await q('reset role');
   if (userId) {
     await q(`select set_config('request.jwt.claims', $1, true), set_config('request.jwt.claim.sub', $2, true)`, [
-      JSON.stringify({ sub: userId, role: 'authenticated' }),
+      JSON.stringify({ sub: userId, role: 'authenticated', aal: 'aal2', amr: [{ method: 'totp', timestamp: Math.floor(Date.now() / 1000) }] }), // staff sessions are aal2 (SPEC §17)
       userId,
     ]);
     await q('set local role authenticated');

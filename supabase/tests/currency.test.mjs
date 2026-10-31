@@ -5,7 +5,7 @@ const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { re
 await db.connect();
 const id = async (e) => (await db.query('select id from profiles where email=$1', [e])).rows[0].id;
 const [admin, fin, fin2, ops, buyer] = await Promise.all(['admin', 'finance', 'finance2', 'ops', 'buyer'].map((u) => id(`${u}@demo.octopusb2b.com`)));
-const as = async (uid) => { await db.query('reset role'); await db.query(`select set_config('request.jwt.claims',$1,true)`, [JSON.stringify({ sub: uid, role: 'authenticated' })]); await db.query('set local role authenticated'); };
+const as = async (uid) => { await db.query('reset role'); await db.query(`select set_config('request.jwt.claims',$1,true)`, [JSON.stringify({ sub: uid, role: 'authenticated', aal: 'aal2', amr: [{ method: 'totp', timestamp: Math.floor(Date.now() / 1000) }] })]); await db.query('set local role authenticated'); };
 const one = async (s, p) => (await db.query(s, p)).rows[0];
 const ok = (c, m) => { console.log(c ? '✔' : '✘', m); if (!c) process.exitCode = 1; };
 const expectErr = async (fn, code, m) => { await db.query('savepoint s'); try { await fn(); ok(false, m + ' (no error)'); } catch (e) { ok(e.message.includes(code), `${m} → ${e.message}`); } await db.query('rollback to savepoint s'); };
