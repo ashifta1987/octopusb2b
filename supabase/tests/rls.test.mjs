@@ -257,11 +257,11 @@ await test('API RPCs: explicit org, cross-org quote rejected, order created (ser
   await q('set local role service_role');
   const before = Number((await one('select wallet_balance($1) b', [buyerOrg])).b);
   const { id: rfqId } = await one(`select api_submit_rfq($1, 'API test RFQ', 100, 'details') id`, [buyerOrg]);
-  const rfq = await one('select org_id, status, fee_usd_cents from rfqs where id = $1', [rfqId]);
+  const rfq = await one('select org_id, status, fee_minor from rfqs where id = $1', [rfqId]);
   assert(rfq.org_id === buyerOrg && rfq.status === 'submitted', 'RFQ not created for the given org');
   const after = Number((await one('select wallet_balance($1) b', [buyerOrg])).b);
   const walletOn = (await one(`select setting_bool('wallet_enabled') v`)).v;
-  if (walletOn) assert(before - after === Number(rfq.fee_usd_cents), `wallet charged ${before - after}, fee ${rfq.fee_usd_cents}`);
+  if (walletOn) assert(before - after === Number(rfq.fee_minor), `wallet charged ${before - after}, fee ${rfq.fee_minor}`);
   const ev = await one(`select count(*)::int n from outbox_events where aggregate_id = $1 and event_type = 'rfq.submitted'`, [rfqId]);
   assert(ev.n === 1, 'rfq.submitted outbox event missing');
   if (!quote) throw new SkipError('no open quote in seed to approve');

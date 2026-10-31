@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { cn } from '@/lib/cn';
-import { humanize, usd, fmtDate } from '@/lib/format';
+import { humanize, money, fmtDate } from '@/lib/format';
 
 /* ───────── Logo ───────── */
 export function Logo({ white = false, className }: { white?: boolean; className?: string }) {
@@ -43,8 +43,9 @@ export function StatusBadge({ status, label, tone }: { status: string; label?: s
 }
 
 /* ───────── Money ───────── */
-export function Money({ cents, className, compact }: { cents: number | null | undefined; className?: string; compact?: boolean }) {
-  return <span className={cn('mono font-semibold tabular-nums', className)}>{usd(cents, { compact })}</span>;
+/** MoneyField: minor units in, formatted in the record's currency out (SPEC §15.1). */
+export function Money({ cents, currency = 'USD', className, compact }: { cents: number | null | undefined; currency?: string | null; className?: string; compact?: boolean }) {
+  return <span className={cn('mono font-semibold tabular-nums', className)}>{money(cents, currency, { compact })}</span>;
 }
 
 /* ───────── SupplierCode — buyers only ever see code + country + badge (SPEC §3, §8.4) ───────── */

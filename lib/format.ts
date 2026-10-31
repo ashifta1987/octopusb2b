@@ -1,11 +1,43 @@
-/** Money is stored as integer cents in USD (SPEC §6). */
+/** Supported platform currencies (SPEC §15.1). Amounts are integer minor units (cents / fen) + a currency code. */
+export type Currency = 'USD' | 'CNY';
+export const CURRENCIES: Currency[] = ['USD', 'CNY'];
+/** Code-style symbols avoid confusing CNY with JPY: "US$ 190.00", "CN¥ 1,368.00". */
+export const CURRENCY_PREFIX: Record<Currency, string> = { USD: 'US$', CNY: 'CN¥' };
+
+export function asCurrency(c: string | null | undefined): Currency {
+  return c === 'CNY' ? 'CNY' : 'USD';
+}
+
+/** Format minor units in the record's currency, e.g. money(19000, 'USD') → "US$ 190.00". */
+export function money(minor: number | null | undefined, currency: string | null | undefined = 'USD', opts: { compact?: boolean } = {}) {
+  if (minor == null) return '—';
+  const cur = asCurrency(currency);
+  const v = Number(minor) / 100;
+  const sign = v < 0 ? '-' : '';
+  const abs = Math.abs(v);
+  const num = opts.compact && abs >= 10000
+    ? new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(abs)
+    : new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: abs < 1 && abs !== 0 ? 3 : 2 }).format(abs);
+  return `${sign}${CURRENCY_PREFIX[cur]} ${num}`;
+}
+
+/** @deprecated use money(minor, currency). Kept for USD-only call sites. */
 export function usd(cents: number | null | undefined, opts: { compact?: boolean } = {}) {
-  if (cents == null) return '—';
-  const v = cents / 100;
-  if (opts.compact && Math.abs(v) >= 10000)
-    return '$' + new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(v);
-  const digits = Math.abs(v) < 1 && v !== 0 ? 2 : 2;
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: digits, maximumFractionDigits: Math.abs(v) < 1 ? 3 : 2 }).format(v);
+  return money(cents, 'USD', opts);
+}
+
+/** Mirror of SQL convert_amount(): rate = CNY per 1 USD; rounds to the target currency step (minor units). */
+export function convertMinor(minor: number, from: string, to: string, rate: number, stepMinor = 1) {
+  const f = asCurrency(from), t = asCurrency(to);
+  if (f === t) return minor;
+  const raw = f === 'USD' ? minor * rate : minor / rate;
+  const step = Math.max(1, stepMinor);
+  return Math.round(raw / step) * step;
+}
+
+/** Replace "{currency}" in CMS text with the active currency code. */
+export function withCurrency(text: string, currency: string) {
+  return text.replaceAll('{currency}', asCurrency(currency));
 }
 
 export function toCents(input: string | number) {
