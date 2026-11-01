@@ -99,7 +99,7 @@ export default async function AdsAdminPage() {
                 </td>
                 <td className="td mono">{st.clicks.toLocaleString()}</td>
                 <td className="td mono font-semibold">{money(st.rev, ctx.currency)}</td>
-                <td className="td w-[140px]"><div className="h-2 rounded-full bg-line" aria-label={`${Math.round((st.rev / maxPlacementRev) * 100)}% of top slot`}><div className="h-2 rounded-full bg-blue" style={{ width: `${(st.rev / maxPlacementRev) * 100}%` }} /></div></td>
+                <td className="td w-[140px]"><div className="h-2 rounded-full bg-line" role="img" aria-label={`${Math.round((st.rev / maxPlacementRev) * 100)}% of top slot`}><div className="h-2 rounded-full bg-blue" style={{ width: `${(st.rev / maxPlacementRev) * 100}%` }} /></div></td>
               </tr>
             );
           })}

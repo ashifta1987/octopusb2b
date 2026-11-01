@@ -68,6 +68,9 @@ h1, h2, h3, h4 { font-family: var(--font-display); color: var(--navy); letter-sp
   /* QA §19 (360 px): scroll containers must also contain absolutely-positioned descendants (e.g. .sr-only table
      headers), otherwise those escape the clip and make the whole page scroll sideways. Layered so utilities win. */
   .overflow-x-auto, .overflow-auto { position: relative; }
+  /* Grid items default to min-width:auto, so a wide table inside a `lg:grid-cols-[…]` layout widened the page at
+     360 px. Let grid children shrink; their own scroll regions handle wide content. */
+  .grid > * { min-width: 0; }
 }
 
 @media (min-width: 1000px) {

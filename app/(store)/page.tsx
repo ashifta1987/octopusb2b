@@ -253,7 +253,7 @@ async function Home() {
         <div className="rounded-[18px] bg-blue text-white px-8 sm:px-12 py-10 flex flex-wrap gap-6 justify-between items-center">
           <div>
             <h2 className="!text-white text-[28px] font-bold">{block(blocks, 'home.cta.title')}</h2>
-            <p className="mt-1 text-[#E6EFFC]">{block(blocks, 'home.cta.body')}</p>
+            <p className="mt-1 text-white">{block(blocks, 'home.cta.body')}</p>
           </div>
           <Link href="/request/sourcing" className="btn btn-light">{block(blocks, 'home.cta.button', 'Request a product')}</Link>
         </div>
