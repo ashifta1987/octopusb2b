@@ -222,6 +222,9 @@ async function webhookData(sb: Sb, ev: OutboxEvent, orgId: string | null, pub: s
         total: amt0(unit_price_cents * q.quantity + shipping_cents, currency),
       };
     }
+  } else if (pub === 'rfq.created' && ev.aggregate_id) {
+    const { data: q } = await sb.from('rfqs').select('id, code, title, quantity, unit, status, destination_country, incoterm, created_at').eq('id', ev.aggregate_id).eq('org_id', orgId).maybeSingle();
+    if (q) base.rfq = q;
   } else if (pub === 'wallet.updated') {
     const { data: ws } = await sb.from('wallets').select('currency, balance_minor').eq('org_id', orgId);
     base.balances = (ws ?? []).map((w) => amt(w.balance_minor, w.currency));

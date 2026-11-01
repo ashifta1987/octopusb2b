@@ -11,6 +11,7 @@ export type Endpoint = { id: string; org_id: string; url: string; secret: string
 export function publicEventFor(eventType: string): string | null {
   if (eventType.startsWith('order.') || eventType === 'quote.approved' || eventType === 'payment.confirmed') return 'order.updated';
   if (eventType === 'quote.sent') return 'quote.created';
+  if (eventType === 'rfq.submitted') return 'rfq.created'; // SPEC §21.1 #14
   if (eventType === 'shipment.tracking') return 'shipment.tracking';
   if (eventType.startsWith('service_request.')) return 'service_request.updated';
   if (eventType === 'wallet.updated') return 'wallet.updated';

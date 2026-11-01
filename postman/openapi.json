@@ -3,7 +3,7 @@
   "info": {
     "title": "Octopus B2B Public API",
     "version": "1.1.0",
-    "description": "Catalogue, RFQs & quotes, orders, shipments & tracking, wallet, service requests, settings and webhooks.\n\n* **Auth:** OAuth 2 client credentials (`POST /oauth/token`) → `Authorization: Bearer <token>`. An API key may also be sent directly as the bearer token.\n* **Keys:** `oct_test_…` = sandbox (reads real catalogue + your data; writes are simulated and return `\"simulated\": true`). `oct_live_…` = live, after KYC.\n* **Idempotency:** `Idempotency-Key` header required on every POST.\n* **Rate limit:** 60 requests/minute per key → `429` with `Retry-After`.\n* **Errors:** RFC 7807 `application/problem+json`.\n* **Money:** every amount is `{ \"amount_minor\": 19000, \"currency\": \"USD\" }` (minor units = cents / fen). Quotes, orders, invoices and service requests keep the currency they were created in; catalogue prices keep the supplier's currency and add a `converted` amount in the platform currency. `GET /settings/currency` returns the platform currency (USD or CNY) and the approved rate; the `settings.currency_changed` webhook announces a switch.\n* **Webhooks:** order.updated, quote.created, shipment.tracking, service_request.updated, wallet.updated, settings.currency_changed; signed with `Octopus-Signature: t=…,v1=…` (HMAC-SHA256), retried with backoff (1 m, 5 m, 30 m, 2 h, 6 h).\n* **Postman:** the official collections live in the Octopus B2B public workspace (generated from this document — never edited by hand).",
+    "description": "Catalogue, RFQs & quotes, orders, shipments & tracking, wallet, service requests, settings and webhooks.\n\n* **Auth:** OAuth 2 client credentials (`POST /oauth/token`) → `Authorization: Bearer <token>`. An API key may also be sent directly as the bearer token.\n* **Keys:** `oct_test_…` = sandbox (reads real catalogue + your data; writes are simulated and return `\"simulated\": true`). `oct_live_…` = live, after KYC.\n* **Idempotency:** `Idempotency-Key` header required on every POST.\n* **Rate limit:** 60 requests/minute per key → `429` with `Retry-After`.\n* **Errors:** RFC 7807 `application/problem+json`.\n* **Money:** every amount is `{ \"amount_minor\": 19000, \"currency\": \"USD\" }` (minor units = cents / fen). Quotes, orders, invoices and service requests keep the currency they were created in; catalogue prices keep the supplier's currency and add a `converted` amount in the platform currency. `GET /settings/currency` returns the platform currency (USD or CNY) and the approved rate; the `settings.currency_changed` webhook announces a switch.\n* **Webhooks:** order.updated, quote.created, rfq.created, shipment.tracking, service_request.updated, wallet.updated, settings.currency_changed; signed with `Octopus-Signature: t=…,v1=…` (HMAC-SHA256), retried with backoff (1 m, 5 m, 30 m, 2 h, 6 h).\n* **Postman:** the official collections live in the Octopus B2B public workspace (generated from this document — never edited by hand).",
     "contact": {
       "name": "Octopus B2B",
       "email": "support@octopusb2b.com",
@@ -1983,6 +1983,7 @@
                       "enum": [
                         "order.updated",
                         "quote.created",
+                        "rfq.created",
                         "shipment.tracking",
                         "service_request.updated",
                         "wallet.updated",
@@ -2233,6 +2234,7 @@
                       "enum": [
                         "order.updated",
                         "quote.created",
+                        "rfq.created",
                         "shipment.tracking",
                         "service_request.updated",
                         "wallet.updated",
@@ -2662,6 +2664,25 @@
     "quote.created": {
       "post": {
         "summary": "quote.created event",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WebhookEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return any 2xx to acknowledge"
+          }
+        }
+      }
+    },
+    "rfq.created": {
+      "post": {
+        "summary": "rfq.created event",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4171,6 +4192,7 @@
               "enum": [
                 "order.updated",
                 "quote.created",
+                "rfq.created",
                 "shipment.tracking",
                 "service_request.updated",
                 "wallet.updated",
@@ -4248,6 +4270,7 @@
             "enum": [
               "order.updated",
               "quote.created",
+              "rfq.created",
               "shipment.tracking",
               "service_request.updated",
               "wallet.updated",

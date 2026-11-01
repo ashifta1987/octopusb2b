@@ -76,7 +76,7 @@ export const SUPPLIER_SCOPES = ['products:write', 'inventory:write', 'rfqs:read'
  * Public webhook events. `settings.currency_changed` (SPEC §15.1) is platform-wide: it is delivered to every
  * organization's endpoints that subscribe to it.
  */
-export const WEBHOOK_EVENTS = ['order.updated', 'quote.created', 'shipment.tracking', 'service_request.updated', 'wallet.updated', 'settings.currency_changed'] as const;
+export const WEBHOOK_EVENTS = ['order.updated', 'quote.created', 'rfq.created', 'shipment.tracking', 'service_request.updated', 'wallet.updated', 'settings.currency_changed'] as const;
 export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
 
 // ───────── Money (SPEC §15.1) ─────────
