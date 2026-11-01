@@ -1,0 +1,256 @@
+{
+  "chain": 1,
+  "title": "Signup → KYC → account manager assigned",
+  "started_at": "2026-11-01T02:02:20.308Z",
+  "checks": [
+    {
+      "ok": true,
+      "name": "signup page echoes the trace id",
+      "detail": "e2e-c01-84abda52453d"
+    },
+    {
+      "ok": true,
+      "name": "Google sign-up button present on /signup",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "new user without profile is routed to /onboarding",
+      "detail": "http://localhost:3100/onboarding"
+    },
+    {
+      "ok": true,
+      "name": "complete_onboarding created the organization + membership",
+      "detail": "QA-TRACE A BV"
+    },
+    {
+      "ok": true,
+      "name": "submit_kyc accepted",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "review_kyc → verified",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "worker run",
+      "detail": "{\"ok\":true,\"claimed\":3,\"done\":3,\"retried\":0,\"dead\":0,\"errors\":[],\"duration_ms\":2376}"
+    },
+    {
+      "ok": true,
+      "name": "dashboard received the Realtime push (notifications INSERT) and refreshed",
+      "detail": "1439 ms after the worker started"
+    },
+    {
+      "ok": true,
+      "name": "account_managers row written once with the trace id",
+      "detail": "team Sourcing, reason kyc_verified"
+    },
+    {
+      "ok": true,
+      "name": "status_history kyc row in trace",
+      "detail": "2"
+    },
+    {
+      "ok": true,
+      "name": "exactly one kyc.verified outbox event",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "notify consumer ran for the trace (job_runs)",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "exactly one \"KYC verified\" notification",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "audit: assistant.assigned once",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "audit: kyc.review once",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "welcome email sent to the customer",
+      "detail": "1 email_deliveries rows"
+    },
+    {
+      "ok": true,
+      "name": "replay: second verify refused, still one account manager",
+      "detail": "KYC_INVALID_TRANSITION: already verified"
+    },
+    {
+      "ok": true,
+      "name": "negative: customer calling review_kyc → FORBIDDEN",
+      "detail": "FORBIDDEN"
+    }
+  ],
+  "hops": [
+    {
+      "at": "2026-11-01T02:02:26.242069+00:00",
+      "table": "audit_log",
+      "txid": 5208,
+      "id": 704,
+      "summary": "status.kyc kyc actor=cf2273df"
+    },
+    {
+      "at": "2026-11-01T02:02:26.242069+00:00",
+      "table": "outbox_events",
+      "txid": 5208,
+      "id": "0cf66f1c-a49b-4848-8ebb-150af3c09ddb",
+      "summary": "kyc.submitted [done] agg=kyc:c65a88a6 payload#1abfbfdf80"
+    },
+    {
+      "at": "2026-11-01T02:02:26.242069+00:00",
+      "table": "status_history",
+      "txid": 5208,
+      "id": 512,
+      "summary": "kyc not_started→submitted"
+    },
+    {
+      "at": "2026-11-01T02:02:26.242069+00:00",
+      "table": "kyc_submissions",
+      "txid": null,
+      "id": "c65a88a6-d6e9-4fe1-ad46-fc3ea785c5b2",
+      "summary": "verified"
+    },
+    {
+      "at": "2026-11-01T02:02:26.862569+00:00",
+      "table": "audit_log",
+      "txid": 5213,
+      "id": 705,
+      "summary": "assistant.assigned organizations actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:02:26.862569+00:00",
+      "table": "audit_log",
+      "txid": 5213,
+      "id": 706,
+      "summary": "status.kyc kyc actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:02:26.862569+00:00",
+      "table": "audit_log",
+      "txid": 5213,
+      "id": 707,
+      "summary": "kyc.review kyc_submissions actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:02:26.862569+00:00",
+      "table": "outbox_events",
+      "txid": 5213,
+      "id": "e66aaeae-eb83-4ce7-b1bb-8c08b0fa4ac7",
+      "summary": "account_manager.assigned [done] agg=organization:d481ee2c payload#288fff2fcf"
+    },
+    {
+      "at": "2026-11-01T02:02:26.862569+00:00",
+      "table": "outbox_events",
+      "txid": 5213,
+      "id": "bf3f8b89-a470-46c9-ba3e-ba428fdad0e9",
+      "summary": "kyc.verified [done] agg=kyc:c65a88a6 payload#1abfbfdf80"
+    },
+    {
+      "at": "2026-11-01T02:02:26.862569+00:00",
+      "table": "status_history",
+      "txid": 5213,
+      "id": 513,
+      "summary": "kyc submitted→verified"
+    },
+    {
+      "at": "2026-11-01T02:02:26.862569+00:00",
+      "table": "account_managers",
+      "txid": null,
+      "id": null,
+      "summary": ""
+    },
+    {
+      "at": "2026-11-01T02:02:30.690868+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "0cf66f1c-a49b-4848-8ebb-150af3c09ddb",
+      "summary": "notify → ok (0 ms) evt=0cf66f1c"
+    },
+    {
+      "at": "2026-11-01T02:02:30.969133+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "95d7ad5b-2396-4664-a476-dea92eac8931",
+      "summary": "Meet your account manager"
+    },
+    {
+      "at": "2026-11-01T02:02:31.091472+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "e66aaeae-eb83-4ce7-b1bb-8c08b0fa4ac7",
+      "summary": "notify → ok (97 ms) evt=e66aaeae"
+    },
+    {
+      "at": "2026-11-01T02:02:31.482568+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "40f76ffe-a4d7-489f-a348-65809475e334",
+      "summary": "default:account_manager.assigned → log logged rcpt#5278b812a9 msg=log_1793498551387"
+    },
+    {
+      "at": "2026-11-01T02:02:31.605547+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 96,
+      "summary": "email out 200 log://email req#fed9477dbd res#5ba8504e20"
+    },
+    {
+      "at": "2026-11-01T02:02:31.716585+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "e66aaeae-eb83-4ce7-b1bb-8c08b0fa4ac7",
+      "summary": "email → ok (507 ms) evt=e66aaeae"
+    },
+    {
+      "at": "2026-11-01T02:02:32.189725+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "36411e59-f014-42b6-bbd9-6651f151f845",
+      "summary": "KYC verified"
+    },
+    {
+      "at": "2026-11-01T02:02:32.301856+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "bf3f8b89-a470-46c9-ba3e-ba428fdad0e9",
+      "summary": "notify → ok (100 ms) evt=bf3f8b89"
+    }
+  ],
+  "latency": {
+    "onboarding (SA → complete_onboarding → redirect)": 326,
+    "submit_kyc RPC": 114,
+    "review_kyc RPC (verify → trigger assigns AM)": 110,
+    "outbox worker run": 2385
+  },
+  "notes": [
+    "OAuth click → qrawnqpxvtjmgncxmffu.supabase.co/auth/v1/authorize; Supabase answers \"provider is not enabled\"",
+    "dashboard shows account team card after verify: false"
+  ],
+  "traces": [
+    "e2e-c01-84abda52453d"
+  ],
+  "boundary": {
+    "hop": "Google OAuth",
+    "result": "provider not enabled (blocked: Owner/Admin enables Google in Supabase Auth)"
+  },
+  "realtime": {
+    "channel": "dashboard (order_events, quotes, notifications)",
+    "refreshed_in_ms": 1439
+  },
+  "e2e_ms": 8720,
+  "cookie": 2731,
+  "finished_at": "2026-11-01T02:02:33.035Z"
+}

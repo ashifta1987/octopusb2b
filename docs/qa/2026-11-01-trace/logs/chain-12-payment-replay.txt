@@ -1,0 +1,17 @@
+✔ payment adapter created a test intent — pi_test_0e287c9b1798
+✔ wallet_topups row pending with the trace id — {"id":"26bca21b-3494-4154-b4a0-7a22aabaab24","status":"pending","amount_cents":"500000","currency":"USD","trace_id":"e2e-c12-21eecf4ea5e1"}
+✔ webhook credited the top-up — {"ok":true,"results":[{"event":"evt_trace_98b82213ceac","outcome":"credited"}]}
+✔ replay → 200 duplicate — {"ok":true,"results":[{"event":"evt_trace_98b82213ceac","outcome":"duplicate"}]}
+✔ replay wrote no journal and no notification — journals 1→1, notifications 3→3
+✔ bad HMAC → 401 BAD_SIGNATURE — BAD_SIGNATURE
+✔ signature older than 5 min → 401 — BAD_SIGNATURE
+✔ unknown reference → acknowledged as unmatched, nothing posted — {"ok":true,"results":[{"event":"evt_trace_mm_65d56f52","outcome":"unmatched"}]}
+✔ 1 wallet_topups row 
+✔ exactly 1 journal for the credit — 1
+✔ 2 ledger entries that balance per currency — [[500000,0,"USD"],[0,500000,"USD"]]
+✔ exactly 1 wallet.updated outbox event 
+✔ exactly 1 "Wallet credited" notification 
+✔ replay wrote 1 idempotency_hits row (same trace family) — {"id":29,"key":"evt_trace_98b82213ceac","scope":"payment_webhook","detail":{"outcome":"duplicate","journal_id":"d53d2d49-455d-488d-bc16-f21f47cc1a9d"},"trace_id":"e2e-c12-21eecf4ea5e1","created_at":"2
+✔ rejected webhooks logged (401) with request SHA 
+✔ adapter createIntent logged once (request/response SHA) 
+· email_deliveries for the top-up: 0 (wallet.updated has no e-mail consumer by design — §10.1 lists notify + webhooks only)

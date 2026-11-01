@@ -1,0 +1,15 @@
+✔ oct_test_ key → 201 simulated, no DB row (AP-02: test keys never write) — 201 RFQ-TEST-6918
+✔ API response echoes x-trace-id — e2e-c14-91d7d4d7879c
+✔ oct_live_ key → 201 with the new RFQ id/code — bfee3be0-5ab1-40d5-b6f5-3be21f6e117f RFQ-1066
+✔ signed rfq.created webhook delivered (HTTP 200) — {"id":"evt_20cf2b0e5b594a7a91090412da596150","data":{"rfq":{"id":"bfee3be0-5ab1-40d5-b6f5-3be21f6e117f","code":"RFQ-1066","unit":"pcs","title":"QA-TRACE API RFQ
+✔ webhook payload carries the same RFQ code — RFQ-1066
+✔ replay → same response, Idempotent-Replayed: true, still 1 row — 201 rows=1
+✔ same key, different body → 422 IDEMPOTENCY_KEY_REUSED — IDEMPOTENCY_KEY_REUSED
+✔ missing Idempotency-Key → 400 — IDEMPOTENCY_KEY_REQUIRED
+✔ unknown key → 401 problem+json — application/problem+json
+✔ invalid body → 422 VALIDATION_FAILED — VALIDATION_FAILED
+✔ exactly 1 rfq row in the trace 
+✔ exactly 1 rfq.submitted event 
+✔ exactly 1 rfq.created delivery 
+✔ API replay → idempotency_hits row — 1
+✔ RFQ fee journal (wallet) once — 1

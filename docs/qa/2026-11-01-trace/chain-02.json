@@ -1,0 +1,730 @@
+{
+  "chain": 2,
+  "title": "RFQ → Quote → PI → Deposit → Confirmed order",
+  "started_at": "2026-11-01T02:02:39.790Z",
+  "checks": [
+    {
+      "ok": true,
+      "name": "product page carries the trace id",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "RFQ submitted through the Request form (submit_rfq + fee from wallet)",
+      "detail": "3a2bd43f-3e04-475f-a928-e41515270285"
+    },
+    {
+      "ok": true,
+      "name": "customer RFQ page received the new quote via Realtime (router refresh)",
+      "detail": "475 ms after send"
+    },
+    {
+      "ok": true,
+      "name": "quote visible in the customer DOM without reload",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "operations: transition_order → confirmed",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "customer order page shows \"Confirmed\" live (Realtime order_events)",
+      "detail": "699 ms"
+    },
+    {
+      "ok": true,
+      "name": "end-to-end under 90 s (mocked payment)",
+      "detail": "24670 ms"
+    },
+    {
+      "ok": true,
+      "name": "1 rfq row",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "1 quote row",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "1 proforma invoice",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "1 order",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "status_history has quote.approved and order.deposit_paid",
+      "detail": "rfq:submitted, rfq:quoted, quote:approved, order:deposit_pending, order:deposit_paid, order:confirmed"
+    },
+    {
+      "ok": true,
+      "name": "status_history has order.confirmed",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "1 PI document row",
+      "detail": "receipt:RCT-679323B9:no pdf_path, proforma_invoice:PI-2026-1091:no pdf_path, confirmation:CNF-2308:no pdf_path"
+    },
+    {
+      "ok": false,
+      "name": "PI PDF stored in the private documents bucket",
+      "detail": "receipt:RCT-679323B9:no pdf_path, proforma_invoice:PI-2026-1091:no pdf_path, confirmation:CNF-2308:no pdf_path"
+    },
+    {
+      "ok": true,
+      "name": "every journal in the trace balances per currency",
+      "detail": "3 journals / 6 entries"
+    },
+    {
+      "ok": true,
+      "name": "outbox rfq.submitted exactly once",
+      "detail": "rfq.submitted, quote.approved, order.confirmed, quote.sent, payment.confirmed"
+    },
+    {
+      "ok": true,
+      "name": "outbox quote.sent exactly once",
+      "detail": "rfq.submitted, quote.approved, order.confirmed, quote.sent, payment.confirmed"
+    },
+    {
+      "ok": true,
+      "name": "outbox quote.approved exactly once",
+      "detail": "rfq.submitted, quote.approved, order.confirmed, quote.sent, payment.confirmed"
+    },
+    {
+      "ok": true,
+      "name": "outbox payment.confirmed exactly once",
+      "detail": "rfq.submitted, quote.approved, order.confirmed, quote.sent, payment.confirmed"
+    },
+    {
+      "ok": true,
+      "name": "outbox order.confirmed exactly once",
+      "detail": "rfq.submitted, quote.approved, order.confirmed, quote.sent, payment.confirmed"
+    },
+    {
+      "ok": true,
+      "name": "all outbox events done",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "no consumer ran twice for one event (job_runs unique)",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "PI e-mail + deposit receipt e-mail (1 each)",
+      "detail": "default:quote.sent, default:quote.approved, default:payment.confirmed, default:order.confirmed"
+    },
+    {
+      "ok": true,
+      "name": "signed order.updated webhook delivered (HTTP 200)",
+      "detail": "quote.created:200, order.updated:200, order.updated:200, order.updated:200"
+    },
+    {
+      "ok": true,
+      "name": "every e-mail has an integration_logs row with body SHAs",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "audit entries in the trace",
+      "detail": "status.rfq, status.quote, status.order, status.order, status.order, status.rfq"
+    },
+    {
+      "ok": true,
+      "name": "dispatcher replay of all events → no second e-mail, webhook or notification",
+      "detail": "{\"e\":4,\"w\":4,\"n\":5} → {\"e\":4,\"w\":4,\"n\":5}"
+    },
+    {
+      "ok": true,
+      "name": "replay logged as idempotency_hits (outbox:<consumer>)",
+      "detail": "14"
+    },
+    {
+      "ok": true,
+      "name": "second approve_quote refused",
+      "detail": "QUOTE_NOT_APPROVABLE: approved"
+    },
+    {
+      "ok": true,
+      "name": "negative: overpayment / insufficient wallet refused",
+      "detail": "INVALID_AMOUNT"
+    }
+  ],
+  "hops": [
+    {
+      "at": "2026-11-01T02:02:43.484664+00:00",
+      "table": "rfqs",
+      "txid": null,
+      "id": "3a2bd43f-3e04-475f-a928-e41515270285",
+      "summary": "RFQ-1065"
+    },
+    {
+      "at": "2026-11-01T02:02:43.484664+00:00",
+      "table": "journals",
+      "txid": 5252,
+      "id": "09925144-530b-4864-a527-703fdb76fc62",
+      "summary": "JRN-000463 rfq_fees RFQ fee"
+    },
+    {
+      "at": "2026-11-01T02:02:43.484664+00:00",
+      "table": "audit_log",
+      "txid": 5252,
+      "id": 709,
+      "summary": "status.rfq rfq actor=cf2273df"
+    },
+    {
+      "at": "2026-11-01T02:02:43.484664+00:00",
+      "table": "outbox_events",
+      "txid": 5252,
+      "id": "dd5befe5-e580-499c-85dc-f4a29164a4e7",
+      "summary": "rfq.submitted [done] agg=rfq:3a2bd43f payload#aa4d3d1a37"
+    },
+    {
+      "at": "2026-11-01T02:02:43.484664+00:00",
+      "table": "ledger_entries",
+      "txid": 5252,
+      "id": 979,
+      "summary": "acct=b9de94fa Dr 500 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:02:43.484664+00:00",
+      "table": "ledger_entries",
+      "txid": 5252,
+      "id": 980,
+      "summary": "acct=a101fb4b Dr 0 Cr 500 USD"
+    },
+    {
+      "at": "2026-11-01T02:02:43.484664+00:00",
+      "table": "status_history",
+      "txid": 5252,
+      "id": 515,
+      "summary": "rfq ∅→submitted"
+    },
+    {
+      "at": "2026-11-01T02:02:44.050054+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "950221d0-ffe7-4e9c-a6ba-bbb1ada96f7a",
+      "summary": "RFQ received"
+    },
+    {
+      "at": "2026-11-01T02:02:44.146374+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "dd5befe5-e580-499c-85dc-f4a29164a4e7",
+      "summary": "notify → ok (106 ms) evt=dd5befe5"
+    },
+    {
+      "at": "2026-11-01T02:02:44.346531+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "dd5befe5-e580-499c-85dc-f4a29164a4e7",
+      "summary": "webhooks_out → ok (112 ms) evt=dd5befe5"
+    },
+    {
+      "at": "2026-11-01T02:02:47.767802+00:00",
+      "table": "quotes",
+      "txid": null,
+      "id": "f451f20c-3e3b-4028-99a8-b6b34410f624",
+      "summary": "QT-1065-1"
+    },
+    {
+      "at": "2026-11-01T02:02:47.767802+00:00",
+      "table": "audit_log",
+      "txid": 5264,
+      "id": 710,
+      "summary": "status.rfq rfq actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:02:47.767802+00:00",
+      "table": "outbox_events",
+      "txid": 5264,
+      "id": "fba2e982-dbf7-489c-b494-a175b26633bf",
+      "summary": "quote.sent [done] agg=quote:f451f20c payload#26e66021a9"
+    },
+    {
+      "at": "2026-11-01T02:02:47.767802+00:00",
+      "table": "status_history",
+      "txid": 5264,
+      "id": 516,
+      "summary": "rfq submitted→quoted"
+    },
+    {
+      "at": "2026-11-01T02:02:49.900142+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "251596df-2487-468b-83ab-ca9614a99d41",
+      "summary": "New quote received"
+    },
+    {
+      "at": "2026-11-01T02:02:50.263558+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "fba2e982-dbf7-489c-b494-a175b26633bf",
+      "summary": "notify → ok (375 ms) evt=fba2e982"
+    },
+    {
+      "at": "2026-11-01T02:02:50.719127+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "4bfe2950-312c-4030-ba63-4387b26bdd60",
+      "summary": "default:quote.sent → log logged rcpt#5278b812a9 msg=log_1793498570608"
+    },
+    {
+      "at": "2026-11-01T02:02:50.818075+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 103,
+      "summary": "email out 200 log://email req#ea7609f1a5 res#78e6496bda"
+    },
+    {
+      "at": "2026-11-01T02:02:50.914312+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "fba2e982-dbf7-489c-b494-a175b26633bf",
+      "summary": "email → ok (550 ms) evt=fba2e982"
+    },
+    {
+      "at": "2026-11-01T02:02:52.621769+00:00",
+      "table": "webhook_deliveries",
+      "txid": null,
+      "id": "23515175-e833-4ecc-b605-5f5aa4de8244",
+      "summary": "quote.created → HTTP 200 delivered"
+    },
+    {
+      "at": "2026-11-01T02:02:52.721119+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "fba2e982-dbf7-489c-b494-a175b26633bf",
+      "summary": "webhooks_out:afd1c746-f94c-41f9-b18d-4ba035320eec → ok (1514 ms) evt=fba2e982"
+    },
+    {
+      "at": "2026-11-01T02:02:52.826468+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "fba2e982-dbf7-489c-b494-a175b26633bf",
+      "summary": "webhooks_out → ok (1816 ms) evt=fba2e982"
+    },
+    {
+      "at": "2026-11-01T02:02:53.225496+00:00",
+      "table": "orders",
+      "txid": null,
+      "id": "96c84681-daa9-4a7b-b1fa-37c023c4cfa1",
+      "summary": "ORD-2308"
+    },
+    {
+      "at": "2026-11-01T02:02:53.225496+00:00",
+      "table": "journals",
+      "txid": 5275,
+      "id": "07587e2a-d4b2-4944-894f-eb54af621153",
+      "summary": "JRN-000464 orders PI PI-2026-1091 issued"
+    },
+    {
+      "at": "2026-11-01T02:02:53.225496+00:00",
+      "table": "audit_log",
+      "txid": 5275,
+      "id": 711,
+      "summary": "status.quote quote actor=cf2273df"
+    },
+    {
+      "at": "2026-11-01T02:02:53.225496+00:00",
+      "table": "audit_log",
+      "txid": 5275,
+      "id": 712,
+      "summary": "status.order order actor=cf2273df"
+    },
+    {
+      "at": "2026-11-01T02:02:53.225496+00:00",
+      "table": "documents",
+      "txid": null,
+      "id": "0983d032-e8a1-458c-a650-288e2da2e24a",
+      "summary": "PI-2026-1091"
+    },
+    {
+      "at": "2026-11-01T02:02:53.225496+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "1d1a567a-8a88-4b24-a73f-d5e05955a59e",
+      "summary": "Proforma invoice issued"
+    },
+    {
+      "at": "2026-11-01T02:02:53.225496+00:00",
+      "table": "outbox_events",
+      "txid": 5275,
+      "id": "a4bf4925-c0a2-4932-9fed-391e5caf6c8a",
+      "summary": "quote.approved [done] agg=order:96c84681 payload#da009ea38b"
+    },
+    {
+      "at": "2026-11-01T02:02:53.225496+00:00",
+      "table": "ledger_entries",
+      "txid": 5275,
+      "id": 981,
+      "summary": "acct=f19a89d7 Dr 64500 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:02:53.225496+00:00",
+      "table": "ledger_entries",
+      "txid": 5275,
+      "id": 982,
+      "summary": "acct=515aa3f1 Dr 0 Cr 64500 USD"
+    },
+    {
+      "at": "2026-11-01T02:02:53.225496+00:00",
+      "table": "status_history",
+      "txid": 5275,
+      "id": 517,
+      "summary": "quote sent→approved"
+    },
+    {
+      "at": "2026-11-01T02:02:53.225496+00:00",
+      "table": "status_history",
+      "txid": 5275,
+      "id": 518,
+      "summary": "order ∅→deposit_pending"
+    },
+    {
+      "at": "2026-11-01T02:02:54.303614+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "d1835f66-2182-4d41-a042-886c9294903e",
+      "summary": "Proforma invoice issued"
+    },
+    {
+      "at": "2026-11-01T02:02:54.40529+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "a4bf4925-c0a2-4932-9fed-391e5caf6c8a",
+      "summary": "notify → ok (113 ms) evt=a4bf4925"
+    },
+    {
+      "at": "2026-11-01T02:02:54.846306+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "b12eb7aa-db62-416e-b0c1-87bfb6ddd8ea",
+      "summary": "default:quote.approved → log logged rcpt#5278b812a9 msg=log_1793498574737"
+    },
+    {
+      "at": "2026-11-01T02:02:54.949863+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 104,
+      "summary": "email out 200 log://email req#91fcd18b03 res#88352c3c2d"
+    },
+    {
+      "at": "2026-11-01T02:02:55.038808+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "a4bf4925-c0a2-4932-9fed-391e5caf6c8a",
+      "summary": "email → ok (542 ms) evt=a4bf4925"
+    },
+    {
+      "at": "2026-11-01T02:02:55.624581+00:00",
+      "table": "webhook_deliveries",
+      "txid": null,
+      "id": "0fc20044-6429-4335-aeb0-f636dc4f26b9",
+      "summary": "order.updated → HTTP 200 delivered"
+    },
+    {
+      "at": "2026-11-01T02:02:55.827302+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "a4bf4925-c0a2-4932-9fed-391e5caf6c8a",
+      "summary": "webhooks_out:afd1c746-f94c-41f9-b18d-4ba035320eec → ok (468 ms) evt=a4bf4925"
+    },
+    {
+      "at": "2026-11-01T02:02:55.933995+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "a4bf4925-c0a2-4932-9fed-391e5caf6c8a",
+      "summary": "webhooks_out → ok (797 ms) evt=a4bf4925"
+    },
+    {
+      "at": "2026-11-01T02:02:56.366225+00:00",
+      "table": "journals",
+      "txid": 5287,
+      "id": "ed27992e-c5fe-4567-a78a-9e144863e39b",
+      "summary": "JRN-000465 orders Payment WALLET-ORD-2308-deposit · ORD-2308"
+    },
+    {
+      "at": "2026-11-01T02:02:56.366225+00:00",
+      "table": "payments",
+      "txid": null,
+      "id": "679323b9-76ae-4b3c-baf9-003ca1f7cf5b",
+      "summary": "confirmed"
+    },
+    {
+      "at": "2026-11-01T02:02:56.366225+00:00",
+      "table": "audit_log",
+      "txid": 5287,
+      "id": 713,
+      "summary": "status.order order actor=cf2273df"
+    },
+    {
+      "at": "2026-11-01T02:02:56.366225+00:00",
+      "table": "documents",
+      "txid": null,
+      "id": "6860058c-d87a-4195-bb88-c517cc554044",
+      "summary": "RCT-679323B9"
+    },
+    {
+      "at": "2026-11-01T02:02:56.366225+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "38afabe0-d1e7-42de-ade1-3d413c065c70",
+      "summary": "Payment received"
+    },
+    {
+      "at": "2026-11-01T02:02:56.366225+00:00",
+      "table": "outbox_events",
+      "txid": 5287,
+      "id": "1e2ed23b-383c-4c16-aa6c-4a2ad87794ea",
+      "summary": "payment.confirmed [done] agg=payment:679323b9 payload#d145f89d92"
+    },
+    {
+      "at": "2026-11-01T02:02:56.366225+00:00",
+      "table": "ledger_entries",
+      "txid": 5287,
+      "id": 983,
+      "summary": "acct=b9de94fa Dr 19350 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:02:56.366225+00:00",
+      "table": "ledger_entries",
+      "txid": 5287,
+      "id": 984,
+      "summary": "acct=f19a89d7 Dr 0 Cr 19350 USD"
+    },
+    {
+      "at": "2026-11-01T02:02:56.366225+00:00",
+      "table": "status_history",
+      "txid": 5287,
+      "id": 519,
+      "summary": "order deposit_pending→deposit_paid"
+    },
+    {
+      "at": "2026-11-01T02:02:56.962384+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "7135c5a4-c17b-4997-8e8c-df8870a34a7a",
+      "summary": "Payment confirmed"
+    },
+    {
+      "at": "2026-11-01T02:02:57.055308+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "1e2ed23b-383c-4c16-aa6c-4a2ad87794ea",
+      "summary": "notify → ok (96 ms) evt=1e2ed23b"
+    },
+    {
+      "at": "2026-11-01T02:02:57.480169+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "55d9674d-b42d-4767-8f07-533d9af94edb",
+      "summary": "default:payment.confirmed → log logged rcpt#5278b812a9 msg=log_1793498577363"
+    },
+    {
+      "at": "2026-11-01T02:02:57.596691+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 105,
+      "summary": "email out 200 log://email req#28ae316fba res#232fda8183"
+    },
+    {
+      "at": "2026-11-01T02:02:57.689429+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "1e2ed23b-383c-4c16-aa6c-4a2ad87794ea",
+      "summary": "email → ok (541 ms) evt=1e2ed23b"
+    },
+    {
+      "at": "2026-11-01T02:02:58.260038+00:00",
+      "table": "webhook_deliveries",
+      "txid": null,
+      "id": "2c647d8d-ba3d-40da-9697-930202b530c7",
+      "summary": "order.updated → HTTP 200 delivered"
+    },
+    {
+      "at": "2026-11-01T02:02:58.363106+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "1e2ed23b-383c-4c16-aa6c-4a2ad87794ea",
+      "summary": "webhooks_out:afd1c746-f94c-41f9-b18d-4ba035320eec → ok (382 ms) evt=1e2ed23b"
+    },
+    {
+      "at": "2026-11-01T02:02:58.466314+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "1e2ed23b-383c-4c16-aa6c-4a2ad87794ea",
+      "summary": "webhooks_out → ok (682 ms) evt=1e2ed23b"
+    },
+    {
+      "at": "2026-11-01T02:03:01.725438+00:00",
+      "table": "audit_log",
+      "txid": 5300,
+      "id": 714,
+      "summary": "status.order order actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:03:01.725438+00:00",
+      "table": "documents",
+      "txid": null,
+      "id": "231b2999-6679-4c0a-acf6-132b0c78adb4",
+      "summary": "CNF-2308"
+    },
+    {
+      "at": "2026-11-01T02:03:01.725438+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "e7d12773-236a-4a10-b7e8-bd34c042a0a4",
+      "summary": "Confirmed"
+    },
+    {
+      "at": "2026-11-01T02:03:01.725438+00:00",
+      "table": "outbox_events",
+      "txid": 5300,
+      "id": "23402c54-0a43-46bd-85fa-a808fd48d123",
+      "summary": "order.confirmed [done] agg=order:96c84681 payload#1abfbfdf80"
+    },
+    {
+      "at": "2026-11-01T02:03:01.725438+00:00",
+      "table": "status_history",
+      "txid": 5300,
+      "id": 520,
+      "summary": "order deposit_paid→confirmed"
+    },
+    {
+      "at": "2026-11-01T02:03:03.14308+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "ba33cc81-404c-47f1-a0cc-e24d141fb82d",
+      "summary": "Order confirmed"
+    },
+    {
+      "at": "2026-11-01T02:03:03.237469+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "23402c54-0a43-46bd-85fa-a808fd48d123",
+      "summary": "notify → ok (110 ms) evt=23402c54"
+    },
+    {
+      "at": "2026-11-01T02:03:03.677764+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "14db5df6-b9bc-45c7-ac2e-f335433d295c",
+      "summary": "default:order.confirmed → log logged rcpt#5278b812a9 msg=log_1793498583553"
+    },
+    {
+      "at": "2026-11-01T02:03:03.780189+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 106,
+      "summary": "email out 200 log://email req#f45d3cd31b res#b446bc87f7"
+    },
+    {
+      "at": "2026-11-01T02:03:03.92745+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "23402c54-0a43-46bd-85fa-a808fd48d123",
+      "summary": "email → ok (574 ms) evt=23402c54"
+    },
+    {
+      "at": "2026-11-01T02:03:05.658634+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "23402c54-0a43-46bd-85fa-a808fd48d123",
+      "summary": "webhooks_out:afd1c746-f94c-41f9-b18d-4ba035320eec → ok (1443 ms) evt=23402c54"
+    },
+    {
+      "table": "proforma_invoices",
+      "txid": null,
+      "id": "4095671b-740c-415e-ac26-219d66fefa0c",
+      "summary": "PI-2026-1091"
+    },
+    {
+      "at": "2026-11-01T02:03:05.559493+00:00",
+      "table": "webhook_deliveries",
+      "txid": null,
+      "id": "42efde1a-6a2a-47db-bf09-0aaea420dab6",
+      "summary": "order.updated → HTTP 200 delivered"
+    },
+    {
+      "at": "2026-11-01T02:03:05.759385+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "23402c54-0a43-46bd-85fa-a808fd48d123",
+      "summary": "webhooks_out → ok (1734 ms) evt=23402c54"
+    }
+  ],
+  "latency": {
+    "SA submit_rfq (click → redirect)": 258,
+    "SA send_quote": 830,
+    "SA approve_quote (PI + order + ledger)": 573,
+    "SA record_payment (deposit)": 316,
+    "RPC transition_order confirmed": 232
+  },
+  "notes": [],
+  "traces": [
+    "e2e-c02-9fb364f24fdd"
+  ],
+  "e2e_ms": 24670,
+  "ids": {
+    "rfqId": "3a2bd43f-3e04-475f-a928-e41515270285",
+    "orderId": "96c84681-daa9-4a7b-b1fa-37c023c4cfa1"
+  },
+  "status_history": [
+    "rfq:submitted",
+    "rfq:quoted",
+    "quote:approved",
+    "order:deposit_pending",
+    "order:deposit_paid",
+    "order:confirmed"
+  ],
+  "documents": [
+    "receipt:RCT-679323B9:no pdf_path",
+    "proforma_invoice:PI-2026-1091:no pdf_path",
+    "confirmation:CNF-2308:no pdf_path"
+  ],
+  "outbox": [
+    "rfq.submitted",
+    "quote.approved",
+    "order.confirmed",
+    "quote.sent",
+    "payment.confirmed"
+  ],
+  "emails": [
+    "default:quote.sent",
+    "default:quote.approved",
+    "default:payment.confirmed",
+    "default:order.confirmed"
+  ],
+  "webhooks": [
+    "quote.created:200",
+    "order.updated:200",
+    "order.updated:200",
+    "order.updated:200"
+  ],
+  "timings": {
+    "start": 1793498561186,
+    "rfq_click": 1793498563258,
+    "rfq_done": 1793498563516,
+    "quote_click": 1793498567202,
+    "quote_done": 1793498568032,
+    "approve_click": 1793498573005,
+    "approve_done": 1793498573578,
+    "pay_click": 1793498576155,
+    "pay_done": 1793498576471,
+    "confirm_click": 1793498581493,
+    "confirm_done": 1793498581725,
+    "end": 1793498585856
+  },
+  "finished_at": "2026-11-01T02:03:09.629Z"
+}

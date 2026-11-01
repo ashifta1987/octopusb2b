@@ -1,0 +1,10 @@
+✔ click redirects to the campaign link — 302 http://localhost:3100/products
+✔ duplicate click still redirects (no error to the visitor) 
+✔ first click charged, duplicate within 24 h recorded as invalid with 0 charge — 1e21cb24 1 true | 1e21cb24 0 false | 0815cb0b 1 true | 5a7fc46f 1 true
+✔ budget tick: spent 3/3, campaign auto-paused when the budget ran out — {"status":"paused","spent_today_cents":"3"}
+✔ 3 charge journals (one per valid click), balanced — 3 journals / 6 entries
+✔ all 4 ad_clicks rows carry the trace id — 4
+✔ no outbox event: the charge is synchronous (§10.1 lists ad.clicked → ad charge; implemented inline in record_ad_click) 
+✔ auto-pause written to status_history — 1
+✔ negative: bot click not recorded — 4 → 4
+✔ negative: invalid campaign id → redirect home, nothing written 

@@ -1,0 +1,11 @@
+✔ customer reported a bank transfer top-up (pending) — E2E-TRACE-BANK-MVX6UBVC
+✔ signed in with 2FA → workspace picker — http://localhost:3100/staff/workspace
+✔ finance confirmed the top-up with a fresh 2FA session (wallet credited) — E2E-TRACE-BANK-MVX6UBVC
+✔ audit: auth.sign_in — auth.sign_in, auth.2fa_verified, status.wallet_topup
+✔ audit: auth.2fa_verified — auth.sign_in, auth.2fa_verified, status.wallet_topup
+✔ audit: money approval (top-up confirmation) logged — auth.sign_in, auth.2fa_verified, status.wallet_topup
+✔ one credit journal for the confirmation — 1
+✔ negative: staff without aal2 is sent to /staff/verify — http://localhost:3100/staff/verify?next=%2Fadmin%2Ffinance
+✔ negative: aal1 session calling confirm_topup refused — STEP_UP_REQUIRED
+✔ negative: TOTP older than step_up_minutes → STEP_UP_REQUIRED on the money RPC — STEP_UP_REQUIRED
+· UI maps STEP_UP_REQUIRED to /staff/verify?reason=step_up (lib/staff/step-up.ts), covered by the staff-auth suite.

@@ -1,0 +1,236 @@
+{
+  "chain": 12,
+  "title": "Payment webhook replay",
+  "started_at": "2026-11-01T02:02:33.286Z",
+  "checks": [
+    {
+      "ok": true,
+      "name": "payment adapter created a test intent",
+      "detail": "pi_test_0e287c9b1798"
+    },
+    {
+      "ok": true,
+      "name": "wallet_topups row pending with the trace id",
+      "detail": "{\"id\":\"26bca21b-3494-4154-b4a0-7a22aabaab24\",\"status\":\"pending\",\"amount_cents\":\"500000\",\"currency\":\"USD\",\"trace_id\":\"e2e-c12-21eecf4ea5e1\"}"
+    },
+    {
+      "ok": true,
+      "name": "webhook credited the top-up",
+      "detail": "{\"ok\":true,\"results\":[{\"event\":\"evt_trace_98b82213ceac\",\"outcome\":\"credited\"}]}"
+    },
+    {
+      "ok": true,
+      "name": "replay → 200 duplicate",
+      "detail": "{\"ok\":true,\"results\":[{\"event\":\"evt_trace_98b82213ceac\",\"outcome\":\"duplicate\"}]}"
+    },
+    {
+      "ok": true,
+      "name": "replay wrote no journal and no notification",
+      "detail": "journals 1→1, notifications 3→3"
+    },
+    {
+      "ok": true,
+      "name": "bad HMAC → 401 BAD_SIGNATURE",
+      "detail": "BAD_SIGNATURE"
+    },
+    {
+      "ok": true,
+      "name": "signature older than 5 min → 401",
+      "detail": "BAD_SIGNATURE"
+    },
+    {
+      "ok": true,
+      "name": "unknown reference → acknowledged as unmatched, nothing posted",
+      "detail": "{\"ok\":true,\"results\":[{\"event\":\"evt_trace_mm_65d56f52\",\"outcome\":\"unmatched\"}]}"
+    },
+    {
+      "ok": true,
+      "name": "1 wallet_topups row",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "exactly 1 journal for the credit",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "2 ledger entries that balance per currency",
+      "detail": "[[500000,0,\"USD\"],[0,500000,\"USD\"]]"
+    },
+    {
+      "ok": true,
+      "name": "exactly 1 wallet.updated outbox event",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "exactly 1 \"Wallet credited\" notification",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "replay wrote 1 idempotency_hits row (same trace family)",
+      "detail": "{\"id\":29,\"key\":\"evt_trace_98b82213ceac\",\"scope\":\"payment_webhook\",\"detail\":{\"outcome\":\"duplicate\",\"journal_id\":\"d53d2d49-455d-488d-bc16-f21f47cc1a9d\"},\"trace_id\":\"e2e-c12-21eecf4ea5e1\",\"created_at\":\"2026-11-01T02:02:38.663359+00:00\",\"original_trace_id\":\"e2e-c12-21eecf4ea5e1\"}"
+    },
+    {
+      "ok": true,
+      "name": "rejected webhooks logged (401) with request SHA",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "adapter createIntent logged once (request/response SHA)",
+      "detail": ""
+    }
+  ],
+  "hops": [
+    {
+      "at": "2026-11-01T02:02:35.224045+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 97,
+      "summary": "payment out 200 sandbox://payment/createIntent req#183d499ccd res#cd6a7ec53c"
+    },
+    {
+      "at": "2026-11-01T02:02:35.834999+00:00",
+      "table": "outbox_events",
+      "txid": 5231,
+      "id": "253bb548-b528-4000-8e41-b1256b5df1ed",
+      "summary": "wallet.topup_requested [done] agg=wallet_topup:26bca21b payload#4660a6a829"
+    },
+    {
+      "at": "2026-11-01T02:02:35.834999+00:00",
+      "table": "wallet_topups",
+      "txid": null,
+      "id": "26bca21b-3494-4154-b4a0-7a22aabaab24",
+      "summary": "credited"
+    },
+    {
+      "at": "2026-11-01T02:02:37.071279+00:00",
+      "table": "journals",
+      "txid": 5232,
+      "id": "d53d2d49-455d-488d-bc16-f21f47cc1a9d",
+      "summary": "JRN-000462  Wallet top-up pi_test_0e287c9b1798"
+    },
+    {
+      "at": "2026-11-01T02:02:37.071279+00:00",
+      "table": "audit_log",
+      "txid": 5232,
+      "id": 708,
+      "summary": "status.wallet_topup wallet_topup actor=system"
+    },
+    {
+      "at": "2026-11-01T02:02:37.071279+00:00",
+      "table": "outbox_events",
+      "txid": 5232,
+      "id": "fcc112d9-2bae-4c52-8faa-094902ccd8c0",
+      "summary": "wallet.updated [done] agg=wallet_topup:26bca21b payload#4660a6a829"
+    },
+    {
+      "at": "2026-11-01T02:02:37.071279+00:00",
+      "table": "ledger_entries",
+      "txid": 5232,
+      "id": 977,
+      "summary": "acct=392e3fd1 Dr 500000 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:02:37.071279+00:00",
+      "table": "ledger_entries",
+      "txid": 5232,
+      "id": 978,
+      "summary": "acct=b9de94fa Dr 0 Cr 500000 USD"
+    },
+    {
+      "at": "2026-11-01T02:02:37.071279+00:00",
+      "table": "status_history",
+      "txid": 5232,
+      "id": 514,
+      "summary": "wallet_topup pending→credited"
+    },
+    {
+      "at": "2026-11-01T02:02:37.192937+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 98,
+      "summary": "payment in 200 POST /api/webhooks/payment req#b424dee805 res#3075e12d29"
+    },
+    {
+      "at": "2026-11-01T02:02:37.703454+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "253bb548-b528-4000-8e41-b1256b5df1ed",
+      "summary": "notify → ok (0 ms) evt=253bb548"
+    },
+    {
+      "at": "2026-11-01T02:02:38.004365+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "a0b72d8c-2527-400c-8425-090cd11c6d12",
+      "summary": "Wallet credited"
+    },
+    {
+      "at": "2026-11-01T02:02:38.116237+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "fcc112d9-2bae-4c52-8faa-094902ccd8c0",
+      "summary": "notify → ok (107 ms) evt=fcc112d9"
+    },
+    {
+      "at": "2026-11-01T02:02:38.305269+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "fcc112d9-2bae-4c52-8faa-094902ccd8c0",
+      "summary": "webhooks_out → ok (91 ms) evt=fcc112d9"
+    },
+    {
+      "at": "2026-11-01T02:02:38.663359+00:00",
+      "table": "idempotency_hits",
+      "txid": null,
+      "id": 29,
+      "summary": "payment_webhook key=evt_trace_98b82213ceac orig=e2e-c12-21eecf4ea5e1"
+    },
+    {
+      "at": "2026-11-01T02:02:38.77062+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 99,
+      "summary": "payment in 200 POST /api/webhooks/payment req#b424dee805 res#5d3c422b53"
+    },
+    {
+      "at": "2026-11-01T02:02:39.044524+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 100,
+      "summary": "payment in 401 POST /api/webhooks/payment req#b424dee805 res#"
+    },
+    {
+      "at": "2026-11-01T02:02:39.150146+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 101,
+      "summary": "payment in 401 POST /api/webhooks/payment req#b424dee805 res#"
+    },
+    {
+      "at": "2026-11-01T02:02:39.44677+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 102,
+      "summary": "payment in 200 POST /api/webhooks/payment req#b9df03550f res#9e211305c9"
+    }
+  ],
+  "latency": {
+    "startCardTopup SA (createIntent + request_topup)": 1349,
+    "payment webhook (HMAC → confirm_topup → ledger)": 422,
+    "outbox worker": 1214
+  },
+  "notes": [
+    "email_deliveries for the top-up: 0 (wallet.updated has no e-mail consumer by design — §10.1 lists notify + webhooks only)"
+  ],
+  "traces": [
+    "e2e-c12-21eecf4ea5e1"
+  ],
+  "e2e_ms": 5198,
+  "event_id": "evt_trace_98b82213ceac",
+  "finished_at": "2026-11-01T02:02:39.569Z"
+}

@@ -1,0 +1,147 @@
+{
+  "chain": 16,
+  "title": "Staff login → workspace → money action",
+  "started_at": "2026-11-01T02:05:38.205Z",
+  "checks": [
+    {
+      "ok": true,
+      "name": "customer reported a bank transfer top-up (pending)",
+      "detail": "E2E-TRACE-BANK-MVX6UBVC"
+    },
+    {
+      "ok": true,
+      "name": "signed in with 2FA → workspace picker",
+      "detail": "http://localhost:3100/staff/workspace"
+    },
+    {
+      "ok": true,
+      "name": "finance confirmed the top-up with a fresh 2FA session (wallet credited)",
+      "detail": "E2E-TRACE-BANK-MVX6UBVC"
+    },
+    {
+      "ok": true,
+      "name": "audit: auth.sign_in",
+      "detail": "auth.sign_in, auth.2fa_verified, status.wallet_topup"
+    },
+    {
+      "ok": true,
+      "name": "audit: auth.2fa_verified",
+      "detail": "auth.sign_in, auth.2fa_verified, status.wallet_topup"
+    },
+    {
+      "ok": true,
+      "name": "audit: money approval (top-up confirmation) logged",
+      "detail": "auth.sign_in, auth.2fa_verified, status.wallet_topup"
+    },
+    {
+      "ok": true,
+      "name": "one credit journal for the confirmation",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "negative: staff without aal2 is sent to /staff/verify",
+      "detail": "http://localhost:3100/staff/verify?next=%2Fadmin%2Ffinance"
+    },
+    {
+      "ok": true,
+      "name": "negative: aal1 session calling confirm_topup refused",
+      "detail": "STEP_UP_REQUIRED"
+    },
+    {
+      "ok": true,
+      "name": "negative: TOTP older than step_up_minutes → STEP_UP_REQUIRED on the money RPC",
+      "detail": "STEP_UP_REQUIRED"
+    }
+  ],
+  "hops": [
+    {
+      "at": "2026-11-01T02:05:39.217618+00:00",
+      "table": "outbox_events",
+      "txid": 5742,
+      "id": "ea3dfcc2-2a51-4138-a8e0-338e4ad5409e",
+      "summary": "wallet.topup_requested [pending] agg=wallet_topup:952fa842 payload#4660a6a829"
+    },
+    {
+      "at": "2026-11-01T02:05:39.217618+00:00",
+      "table": "wallet_topups",
+      "txid": null,
+      "id": "952fa842-daf7-45de-8241-7eeb9259083e",
+      "summary": "credited"
+    },
+    {
+      "at": "2026-11-01T02:05:40.458544+00:00",
+      "table": "audit_log",
+      "txid": 5744,
+      "id": 775,
+      "summary": "auth.sign_in auth actor=52c0c49a"
+    },
+    {
+      "at": "2026-11-01T02:05:42.359148+00:00",
+      "table": "audit_log",
+      "txid": 5747,
+      "id": 776,
+      "summary": "auth.2fa_verified auth actor=52c0c49a"
+    },
+    {
+      "at": "2026-11-01T02:05:44.258959+00:00",
+      "table": "journals",
+      "txid": 5751,
+      "id": "be309bb5-30f7-406a-86b3-55e62bf41c01",
+      "summary": "JRN-000498  Wallet top-up E2E-TRACE-BANK-MVX6UBVC"
+    },
+    {
+      "at": "2026-11-01T02:05:44.258959+00:00",
+      "table": "audit_log",
+      "txid": 5751,
+      "id": 777,
+      "summary": "status.wallet_topup wallet_topup actor=52c0c49a"
+    },
+    {
+      "at": "2026-11-01T02:05:44.258959+00:00",
+      "table": "outbox_events",
+      "txid": 5751,
+      "id": "d8bb7659-0c18-473e-9a5a-b64836bbea9a",
+      "summary": "wallet.updated [pending] agg=wallet_topup:952fa842 payload#4660a6a829"
+    },
+    {
+      "at": "2026-11-01T02:05:44.258959+00:00",
+      "table": "ledger_entries",
+      "txid": 5751,
+      "id": 1057,
+      "summary": "acct=392e3fd1 Dr 10000 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:05:44.258959+00:00",
+      "table": "ledger_entries",
+      "txid": 5751,
+      "id": 1058,
+      "summary": "acct=b9de94fa Dr 0 Cr 10000 USD"
+    },
+    {
+      "at": "2026-11-01T02:05:44.258959+00:00",
+      "table": "status_history",
+      "txid": 5751,
+      "id": 569,
+      "summary": "wallet_topup pending→credited"
+    }
+  ],
+  "latency": {
+    "step 1: password → /staff/verify": 1233,
+    "step 2: TOTP → workspace": 1077,
+    "money action: Confirm top-up (confirm_topup + step-up check)": 1034
+  },
+  "notes": [
+    "UI maps STEP_UP_REQUIRED to /staff/verify?reason=step_up (lib/staff/step-up.ts), covered by the staff-auth suite."
+  ],
+  "traces": [
+    "e2e-c16-f55cbfe2c26f"
+  ],
+  "e2e_ms": 5503,
+  "audit": [
+    "auth.sign_in",
+    "auth.2fa_verified",
+    "status.wallet_topup"
+  ],
+  "finished_at": "2026-11-01T02:05:46.673Z"
+}

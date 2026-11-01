@@ -1,0 +1,14 @@
+✔ Back up now → backup row queued; GitHub dispatch refused: GITHUB_NOT_CONFIGURED (boundary) — {"ok":false,"error":"GITHUB_NOT_CONFIGURED","backup_id":"eb512353-8d14-45a7-b058-fc2c2d915103","code":"BK-2026-1101-1005"}
+✔ backups row queued with the trace id — {"code":"BK-2026-1101-1005","status":"queued","trace_id":"e2e-c07-d7f8b8960c25"}
+✔ off-site bucket test → not configured (boundary) — {"ok":false,"error":"OFFSITE_NOT_CONFIGURED","offsite":{"bucket":"","region":"auto","endpoint":"","provider":"S3-compatible","last_test_at":"2026-11-01T02:05:07
+✔ callback with a bad HMAC → 401 — 401
+✔ signed callback → backup completed with checksum (simulated workflow) — {"status":"completed","checksum_ok":true,"size_bytes":"1234567"}
+✔ status card refreshed without reload (3 s poll of the started backup) — live: true, row listed after reload: true
+✔ backup request audited — backup.requested, backup.settings, backup.completed
+· hard delete blocked by FKs (update or delete on table "products" violates foreign key constraint "rfqs_produ); simulated as damaged row instead
+✔ wizard compare shows the product as changed 
+✔ product damaged → restored with backup values — Stainless steel hex bolts, M10 × 40 mm, A2-70
+✔ negative: money tables refused — MONEY_RECORDS_NOT_RESTORABLE: ledger_entries
+✔ audit restore.records with the trace id — restore.records
+✔ storefront revalidation: restoreRecords now calls revalidateTag(products) for catalogue tables (code fix; not observable inside a rolled-back transaction) 
+· Ran in one rolled-back transaction; the real wizard additionally needs a completed off-site backup (BK-01).

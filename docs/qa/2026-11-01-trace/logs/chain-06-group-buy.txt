@@ -1,0 +1,21 @@
+· product MOQ 1000; pool target = tier 2 (5000 pcs @ 17 vs 19)
+✔ A opened the pool and pledged (deposit from wallet) — 22ed0749-9697-4500-84bf-e07afd254ff6
+✔ B (DE) joined 
+✔ /pool/[code] shows buyer code + country only (no names/e-mails) — no identities
+✔ C (US) joined → pool filled 
+✔ pool_public_view exposes no buyer identity — pool_id, buyer_code, country, qty, status, joined_at, deposit_minor, currency, is_starter
+✔ settle_pool ran once from the cron job; a second call is an idempotent no-op — {"expired":0,"settled":1,"defaulted":0,"reminders":0} / {"ok":true,"status":"locked","idempotent":true}
+✔ NL paid the balance from the wallet 
+✔ DE paid the balance from the wallet 
+✔ US paid the balance from the wallet 
+✔ B opened a second pool that will under-fill 
+✔ negative: under-filled pool expired by the cron job and the deposit refunded (refund journal) — expired / pledge withdrawn / refund journals 1
+✔ 1 aggregate supplier PO, no buyer identities — purchase_order PO-POOL-0037 qty 5000
+✔ 3 PIs (one per buyer) — 3
+✔ 3 orders — 3
+✔ 3 PI e-mails (pi.created) — default:pi.created, default:pi.created, default:pi.created, default:order.ready_to_ship, default:order.ready_to_ship, default:order.shipped, default:order.shipped, default:order.shipped, default:payme
+✔ 3 shipments — 3
+✔ pool settle audited — status.pool, status.pool_pledge, status.pool_pledge, status.pool_pledge, status.pool, status.pool_pledge, status.pool_pledge, pool.locked, status.pool, status.pool_pledge, pool.confirmed, status.pool,
+✔ pool.filled + po.created once each 
+✔ every journal (deposits, balances, refunds, top-ups) balances per currency — 16 journals
+· supplier-side view: the supplier portal is not built (QA FN-05); the supplier-facing artefact is the PO document (org_id null, 1 row) — checked for identities above.

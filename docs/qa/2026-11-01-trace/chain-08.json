@@ -1,0 +1,52 @@
+{
+  "chain": 8,
+  "title": "Partial restore of deleted product",
+  "started_at": "2026-11-01T02:05:03.510Z",
+  "checks": [
+    {
+      "ok": true,
+      "name": "wizard compare shows the product as changed",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "product damaged → restored with backup values",
+      "detail": "Stainless steel hex bolts, M10 × 40 mm, A2-70"
+    },
+    {
+      "ok": true,
+      "name": "negative: money tables refused",
+      "detail": "MONEY_RECORDS_NOT_RESTORABLE: ledger_entries"
+    },
+    {
+      "ok": true,
+      "name": "audit restore.records with the trace id",
+      "detail": "restore.records"
+    },
+    {
+      "ok": true,
+      "name": "storefront revalidation: restoreRecords now calls revalidateTag(products) for catalogue tables (code fix; not observable inside a rolled-back transaction)",
+      "detail": ""
+    }
+  ],
+  "hops": [
+    {
+      "at": "2026-11-01T02:05:36.687252+00:00",
+      "table": "audit_log",
+      "txid": 5734,
+      "id": 774,
+      "summary": "restore.records products actor=74cb7745"
+    }
+  ],
+  "latency": {
+    "RPC restore_records": 66
+  },
+  "notes": [
+    "hard delete blocked by FKs (update or delete on table \"products\" violates foreign key constraint \"rfqs_produ); simulated as damaged row instead",
+    "Ran in one rolled-back transaction; the real wizard additionally needs a completed off-site backup (BK-01)."
+  ],
+  "traces": [
+    "e2e-c08-0ead215a3a78"
+  ],
+  "finished_at": "2026-11-01T02:05:37.985Z"
+}

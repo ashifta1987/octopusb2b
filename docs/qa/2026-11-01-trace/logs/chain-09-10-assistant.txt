@@ -1,0 +1,19 @@
+✔ assistant answered — 200 Your order ORD-2308 has been delivered. The shipment was handled by YunExpress and the tracking number is YT34986083259092. The last scan indicates it was deliv
+✔ reply quotes the real tracking number from get_shipment — YT34986083259092
+✘ tools_called logs get_shipment — []
+✔ reply row carries the confidence score and the trace id — confidence 1.00, latency 1609 ms, tokens 1527
+✔ LLM calls logged to integration_logs with request/response SHA — openai 200 1502 ms
+✘ YunExpress response SHA in integration_logs for the same trace — get_shipment reads the webhook-fed tracking_events table — no live carrier call
+✔ customer + bot message rows in the trace — 2
+✔ negative: another org's shipment (ORD-2202) is not revealed (RLS) — I couldn't find any information about order ORD-2202. It may not be in the current records. Please check if the order number is correct.
+✔ escalation row + Support ticket with transcript — sensitive_topic → TKT-1023
+✔ /office/assistant queue refreshed live on the new escalation (Realtime) — 1470 ms
+✔ account manager replied from the back office 
+✔ staff reply visible to the customer in-thread without reload (Realtime) — 772 ms
+✔ exactly 1 escalation in the trace — 1
+✔ ticket + transcript message in the trace — 1 / 1
+✔ outbox assistant.escalated once — assistant.staff_replied, assistant.escalated
+✔ staff notification for the handoff — 1
+✔ audit entries (log_assistant_open / escalation) — assistant.opened
+✔ replay: escalating an open session again is a no-op (1 escalation) — count 1
+✔ negative: customer calling staff_assistant_reply refused — FORBIDDEN

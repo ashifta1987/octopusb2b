@@ -1,0 +1,2186 @@
+{
+  "chain": 6,
+  "title": "Group-buy pool: open → join → fill → settle",
+  "started_at": "2026-11-01T02:16:50.835Z",
+  "checks": [
+    {
+      "ok": true,
+      "name": "A opened the pool and pledged (deposit from wallet)",
+      "detail": "22ed0749-9697-4500-84bf-e07afd254ff6"
+    },
+    {
+      "ok": true,
+      "name": "B (DE) joined",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "/pool/[code] shows buyer code + country only (no names/e-mails)",
+      "detail": "no identities"
+    },
+    {
+      "ok": true,
+      "name": "C (US) joined → pool filled",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "pool_public_view exposes no buyer identity",
+      "detail": "pool_id, buyer_code, country, qty, status, joined_at, deposit_minor, currency, is_starter"
+    },
+    {
+      "ok": true,
+      "name": "settle_pool ran once from the cron job; a second call is an idempotent no-op",
+      "detail": "{\"expired\":0,\"settled\":1,\"defaulted\":0,\"reminders\":0} / {\"ok\":true,\"status\":\"locked\",\"idempotent\":true}"
+    },
+    {
+      "ok": true,
+      "name": "NL paid the balance from the wallet",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "DE paid the balance from the wallet",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "US paid the balance from the wallet",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "B opened a second pool that will under-fill",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "negative: under-filled pool expired by the cron job and the deposit refunded (refund journal)",
+      "detail": "expired / pledge withdrawn / refund journals 1"
+    },
+    {
+      "ok": true,
+      "name": "1 aggregate supplier PO, no buyer identities",
+      "detail": "purchase_order PO-POOL-0037 qty 5000"
+    },
+    {
+      "ok": true,
+      "name": "3 PIs (one per buyer)",
+      "detail": "3"
+    },
+    {
+      "ok": true,
+      "name": "3 orders",
+      "detail": "3"
+    },
+    {
+      "ok": true,
+      "name": "3 PI e-mails (pi.created)",
+      "detail": "default:pi.created, default:pi.created, default:pi.created, default:order.ready_to_ship, default:order.ready_to_ship, default:order.shipped, default:order.shipped, default:order.shipped, default:payment.confirmed, default:payment.confirmed, default:order.ready_to_ship, default:payment.confirmed"
+    },
+    {
+      "ok": true,
+      "name": "3 shipments",
+      "detail": "3"
+    },
+    {
+      "ok": true,
+      "name": "pool settle audited",
+      "detail": "status.pool, status.pool_pledge, status.pool_pledge, status.pool_pledge, status.pool, status.pool_pledge, status.pool_pledge, pool.locked, status.pool, status.pool_pledge, pool.confirmed, status.pool, pool.expired, status.pool, status.pool_pledge"
+    },
+    {
+      "ok": true,
+      "name": "pool.filled + po.created once each",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "every journal (deposits, balances, refunds, top-ups) balances per currency",
+      "detail": "16 journals"
+    }
+  ],
+  "hops": [
+    {
+      "at": "2026-11-01T02:16:52.700975+00:00",
+      "table": "journals",
+      "txid": 6263,
+      "id": "7e214051-c8f0-4fa8-847a-193b3e697854",
+      "summary": "JRN-000545  Wallet top-up pi_test_ec769e83feaf"
+    },
+    {
+      "at": "2026-11-01T02:16:52.700975+00:00",
+      "table": "audit_log",
+      "txid": 6263,
+      "id": 854,
+      "summary": "status.wallet_topup wallet_topup actor=system"
+    },
+    {
+      "at": "2026-11-01T02:16:54.045914+00:00",
+      "table": "journals",
+      "txid": 6268,
+      "id": "96544c52-4976-4169-a4c6-4096e7c6e406",
+      "summary": "JRN-000546  Wallet top-up pi_test_12e8dcd38977"
+    },
+    {
+      "at": "2026-11-01T02:16:54.045914+00:00",
+      "table": "audit_log",
+      "txid": 6268,
+      "id": 855,
+      "summary": "status.wallet_topup wallet_topup actor=system"
+    },
+    {
+      "at": "2026-11-01T02:16:54.539381+00:00",
+      "table": "pools",
+      "txid": null,
+      "id": "22ed0749-9697-4500-84bf-e07afd254ff6",
+      "summary": "POOL-0037"
+    },
+    {
+      "at": "2026-11-01T02:16:54.539381+00:00",
+      "table": "journals",
+      "txid": 6271,
+      "id": "f303012e-aaf7-40f7-b558-48fb5513a188",
+      "summary": "JRN-000547 pools Group-buy deposit · POOL-0037"
+    },
+    {
+      "at": "2026-11-01T02:16:54.539381+00:00",
+      "table": "audit_log",
+      "txid": 6271,
+      "id": 856,
+      "summary": "status.pool pool actor=cf2273df"
+    },
+    {
+      "at": "2026-11-01T02:16:54.539381+00:00",
+      "table": "audit_log",
+      "txid": 6271,
+      "id": 857,
+      "summary": "status.pool_pledge pool_pledge actor=cf2273df"
+    },
+    {
+      "at": "2026-11-01T02:16:54.539381+00:00",
+      "table": "pool_events",
+      "txid": null,
+      "id": 198,
+      "summary": "Pool opened"
+    },
+    {
+      "at": "2026-11-01T02:16:54.539381+00:00",
+      "table": "pool_events",
+      "txid": null,
+      "id": 199,
+      "summary": "A buyer joined"
+    },
+    {
+      "at": "2026-11-01T02:16:54.702565+00:00",
+      "table": "journals",
+      "txid": 6272,
+      "id": "2043eaf2-2fd7-428f-b0ef-0019b7cf5e2b",
+      "summary": "JRN-000548 pools Group-buy deposit · POOL-0037"
+    },
+    {
+      "at": "2026-11-01T02:16:54.702565+00:00",
+      "table": "audit_log",
+      "txid": 6272,
+      "id": 858,
+      "summary": "status.pool_pledge pool_pledge actor=f6d11c5e"
+    },
+    {
+      "at": "2026-11-01T02:16:54.702565+00:00",
+      "table": "pool_events",
+      "txid": null,
+      "id": 200,
+      "summary": "A buyer joined"
+    },
+    {
+      "at": "2026-11-01T02:16:56.13618+00:00",
+      "table": "journals",
+      "txid": 6273,
+      "id": "db3fc6e8-dbb2-4fda-96fd-0ea960885787",
+      "summary": "JRN-000549 pools Group-buy deposit · POOL-0037"
+    },
+    {
+      "at": "2026-11-01T02:16:56.13618+00:00",
+      "table": "audit_log",
+      "txid": 6273,
+      "id": 859,
+      "summary": "status.pool_pledge pool_pledge actor=685e7cd2"
+    },
+    {
+      "at": "2026-11-01T02:16:56.13618+00:00",
+      "table": "pool_events",
+      "txid": null,
+      "id": 201,
+      "summary": "A buyer joined"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "orders",
+      "txid": null,
+      "id": "eb1f1ac5-af59-4601-94fe-8ccc9de629fd",
+      "summary": "ORD-2325"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "orders",
+      "txid": null,
+      "id": "bed6dd1f-753f-4709-90e5-88ff43ef6e41",
+      "summary": "ORD-2323"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "orders",
+      "txid": null,
+      "id": "1089eb41-46ba-4f2d-81f1-a401de8f94ce",
+      "summary": "ORD-2324"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "journals",
+      "txid": 6274,
+      "id": "c2e4395b-2942-412a-aa8f-42346f537113",
+      "summary": "JRN-000550 orders PI PI-2026-1106 issued · POOL-0037"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "journals",
+      "txid": 6274,
+      "id": "9c8a454b-7ed2-49fc-ae4f-19a0954fa4bd",
+      "summary": "JRN-000551 pools Group-buy deposit applied · PI-2026-1106"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "journals",
+      "txid": 6274,
+      "id": "528fc19a-5190-432b-ad3e-7431240c3ba4",
+      "summary": "JRN-000552 orders PI PI-2026-1107 issued · POOL-0037"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "journals",
+      "txid": 6274,
+      "id": "1f358741-22f0-4aad-af10-fab47c17b7da",
+      "summary": "JRN-000553 pools Group-buy deposit applied · PI-2026-1107"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "journals",
+      "txid": 6274,
+      "id": "df1f6bdb-2173-4fd8-892d-b7f0ccaf6235",
+      "summary": "JRN-000554 orders PI PI-2026-1108 issued · POOL-0037"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "journals",
+      "txid": 6274,
+      "id": "cce7c1c3-df5d-43f9-b85f-2512d3bb27b2",
+      "summary": "JRN-000555 pools Group-buy deposit applied · PI-2026-1108"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "audit_log",
+      "txid": 6274,
+      "id": 860,
+      "summary": "status.order order actor=system"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "audit_log",
+      "txid": 6274,
+      "id": 861,
+      "summary": "status.order order actor=system"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "audit_log",
+      "txid": 6274,
+      "id": 862,
+      "summary": "status.order order actor=system"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "audit_log",
+      "txid": 6274,
+      "id": 863,
+      "summary": "pool.locked pools actor=system"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "audit_log",
+      "txid": 6274,
+      "id": 864,
+      "summary": "status.pool pool actor=system"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "documents",
+      "txid": null,
+      "id": "93d000ee-793d-4cef-8981-de23dfc1ca74",
+      "summary": "PI-2026-1106"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "documents",
+      "txid": null,
+      "id": "5702202c-d02d-4627-814c-5fc94beacfc1",
+      "summary": "PI-2026-1107"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "documents",
+      "txid": null,
+      "id": "ea8c618c-334d-4916-8027-5013407d88ce",
+      "summary": "PO-POOL-0037"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "documents",
+      "txid": null,
+      "id": "f0bdffbb-3996-4295-90e3-fec7e211f404",
+      "summary": "PI-2026-1108"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "pool_events",
+      "txid": null,
+      "id": 202,
+      "summary": "Pool filled"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "b97b9dfc-180f-424a-8e92-6a1b1a2ee79e",
+      "summary": "Group buy filled"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "8ddc1d2e-fd79-43c7-b863-d7f8a922224e",
+      "summary": "Group buy filled"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "593df231-ec30-46d0-874a-e9ff3de69186",
+      "summary": "Group buy filled"
+    },
+    {
+      "at": "2026-11-01T02:16:56.954925+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "2c4126be-e9a4-4dc4-a2f0-cd5a58d62437",
+      "summary": "notify → ok (1 ms) evt=2c4126be"
+    },
+    {
+      "at": "2026-11-01T02:16:57.22564+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "344e72fa-bb6d-4c55-8707-d3711c00a235",
+      "summary": "Wallet credited"
+    },
+    {
+      "at": "2026-11-01T02:16:57.333499+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "5cfded9b-a922-44ac-806b-862c2a3c68af",
+      "summary": "notify → ok (106 ms) evt=5cfded9b"
+    },
+    {
+      "at": "2026-11-01T02:16:57.533428+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "5cfded9b-a922-44ac-806b-862c2a3c68af",
+      "summary": "webhooks_out → ok (105 ms) evt=5cfded9b"
+    },
+    {
+      "at": "2026-11-01T02:16:57.953985+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "f4359c59-bd22-484d-be4a-26f9355591f9",
+      "summary": "notify → ok (105 ms) evt=f4359c59"
+    },
+    {
+      "at": "2026-11-01T02:16:58.163339+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "f4359c59-bd22-484d-be4a-26f9355591f9",
+      "summary": "webhooks_out → ok (124 ms) evt=f4359c59"
+    },
+    {
+      "at": "2026-11-01T02:16:58.457368+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "262073d6-34e8-49e5-8fac-ccf7bbd0145e",
+      "summary": "notify → ok (0 ms) evt=262073d6"
+    },
+    {
+      "at": "2026-11-01T02:16:58.780706+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "3b70b8e8-f1ff-4ee1-8f0b-a561ec23cd47",
+      "summary": "notify → ok (0 ms) evt=3b70b8e8"
+    },
+    {
+      "at": "2026-11-01T02:16:59.363013+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "e564af02-2e80-43dd-b0ad-052b41b4b638",
+      "summary": "notify → ok (99 ms) evt=e564af02"
+    },
+    {
+      "at": "2026-11-01T02:16:59.974335+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "e564af02-2e80-43dd-b0ad-052b41b4b638",
+      "summary": "email → ok (523 ms) evt=e564af02"
+    },
+    {
+      "at": "2026-11-01T02:17:00.275547+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "349898a1-e92c-44b4-80cf-bc11b445a583",
+      "summary": "notify → ok (0 ms) evt=349898a1"
+    },
+    {
+      "at": "2026-11-01T02:17:00.672864+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "a763d061-bba7-4129-afac-2feddd4ba842",
+      "summary": "notify → ok (108 ms) evt=a763d061"
+    },
+    {
+      "at": "2026-11-01T02:17:01.384451+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "a763d061-bba7-4129-afac-2feddd4ba842",
+      "summary": "email → ok (596 ms) evt=a763d061"
+    },
+    {
+      "at": "2026-11-01T02:17:01.820166+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "f05bd8af-b681-4f7a-903b-8c068d792a28",
+      "summary": "notify → ok (111 ms) evt=f05bd8af"
+    },
+    {
+      "at": "2026-11-01T02:17:02.514355+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "f05bd8af-b681-4f7a-903b-8c068d792a28",
+      "summary": "email → ok (603 ms) evt=f05bd8af"
+    },
+    {
+      "at": "2026-11-01T02:17:02.788828+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "57e547a0-1d49-47c8-b92e-ee4a9a73bf93",
+      "summary": "notify → ok (0 ms) evt=57e547a0"
+    },
+    {
+      "at": "2026-11-01T02:17:03.093982+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "c0c74c74-b59d-4fe2-b172-e09132b3d37b",
+      "summary": "notify → ok (0 ms) evt=c0c74c74"
+    },
+    {
+      "at": "2026-11-01T02:17:03.482697+00:00",
+      "table": "journals",
+      "txid": 6318,
+      "id": "08846c4d-071f-4ab2-9041-70b8e249132b",
+      "summary": "JRN-000556 orders Payment E2E-POOL-bed6dd1f · ORD-2323"
+    },
+    {
+      "at": "2026-11-01T02:17:03.482697+00:00",
+      "table": "payments",
+      "txid": null,
+      "id": "4644f92d-ab76-4c1d-9d54-b85c5f1fdb08",
+      "summary": "confirmed"
+    },
+    {
+      "at": "2026-11-01T02:17:03.482697+00:00",
+      "table": "audit_log",
+      "txid": 6318,
+      "id": 865,
+      "summary": "status.pool_pledge pool_pledge actor=cf2273df"
+    },
+    {
+      "at": "2026-11-01T02:17:03.482697+00:00",
+      "table": "audit_log",
+      "txid": 6318,
+      "id": 866,
+      "summary": "status.order order actor=cf2273df"
+    },
+    {
+      "at": "2026-11-01T02:17:03.482697+00:00",
+      "table": "documents",
+      "txid": null,
+      "id": "1665d6f5-ddf4-4dad-baf7-bc07fa92bad1",
+      "summary": "RCT-4644F92D"
+    },
+    {
+      "at": "2026-11-01T02:17:03.482697+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "72c5729e-5a79-4472-b7c0-9588697b39f7",
+      "summary": "Payment received"
+    },
+    {
+      "at": "2026-11-01T02:17:03.726505+00:00",
+      "table": "journals",
+      "txid": 6319,
+      "id": "fe07a125-4769-442a-93ea-533f7c16eb17",
+      "summary": "JRN-000557 orders Payment E2E-POOL-1089eb41 · ORD-2324"
+    },
+    {
+      "at": "2026-11-01T02:17:03.726505+00:00",
+      "table": "payments",
+      "txid": null,
+      "id": "02a73939-464c-452b-997b-1d5da9c36647",
+      "summary": "confirmed"
+    },
+    {
+      "at": "2026-11-01T02:17:03.726505+00:00",
+      "table": "audit_log",
+      "txid": 6319,
+      "id": 867,
+      "summary": "status.pool_pledge pool_pledge actor=f6d11c5e"
+    },
+    {
+      "at": "2026-11-01T02:17:03.726505+00:00",
+      "table": "audit_log",
+      "txid": 6319,
+      "id": 868,
+      "summary": "status.order order actor=f6d11c5e"
+    },
+    {
+      "at": "2026-11-01T02:17:03.726505+00:00",
+      "table": "documents",
+      "txid": null,
+      "id": "139192c2-61e5-4a80-9baa-0bae7aafccdf",
+      "summary": "RCT-02A73939"
+    },
+    {
+      "at": "2026-11-01T02:17:03.726505+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "cf12fc82-91e7-4549-89d3-183df07f029b",
+      "summary": "Payment received"
+    },
+    {
+      "at": "2026-11-01T02:17:03.821797+00:00",
+      "table": "journals",
+      "txid": 6320,
+      "id": "09aa6e70-8b83-47b8-9e72-add91ceb6634",
+      "summary": "JRN-000558 orders Payment E2E-POOL-eb1f1ac5 · ORD-2325"
+    },
+    {
+      "at": "2026-11-01T02:17:03.821797+00:00",
+      "table": "payments",
+      "txid": null,
+      "id": "2bf2f81f-560d-4710-9038-754c7fbf86d0",
+      "summary": "confirmed"
+    },
+    {
+      "at": "2026-11-01T02:17:03.821797+00:00",
+      "table": "audit_log",
+      "txid": 6320,
+      "id": 869,
+      "summary": "status.pool_pledge pool_pledge actor=685e7cd2"
+    },
+    {
+      "at": "2026-11-01T02:17:03.821797+00:00",
+      "table": "audit_log",
+      "txid": 6320,
+      "id": 870,
+      "summary": "pool.confirmed pools actor=685e7cd2"
+    },
+    {
+      "at": "2026-11-01T02:17:03.821797+00:00",
+      "table": "audit_log",
+      "txid": 6320,
+      "id": 871,
+      "summary": "status.pool pool actor=685e7cd2"
+    },
+    {
+      "at": "2026-11-01T02:17:03.821797+00:00",
+      "table": "audit_log",
+      "txid": 6320,
+      "id": 872,
+      "summary": "status.order order actor=685e7cd2"
+    },
+    {
+      "at": "2026-11-01T02:17:03.821797+00:00",
+      "table": "documents",
+      "txid": null,
+      "id": "e3cd922d-d3bb-4e3c-8445-345ae62fd3b2",
+      "summary": "RCT-2BF2F81F"
+    },
+    {
+      "at": "2026-11-01T02:17:03.821797+00:00",
+      "table": "pool_events",
+      "txid": null,
+      "id": 203,
+      "summary": "All balances paid"
+    },
+    {
+      "at": "2026-11-01T02:17:03.821797+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "99089f60-cffb-491d-8686-e6fd322354b1",
+      "summary": "Payment received"
+    },
+    {
+      "at": "2026-11-01T02:17:04.441622+00:00",
+      "table": "audit_log",
+      "txid": 6324,
+      "id": 873,
+      "summary": "status.order order actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:17:04.441622+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "6962d807-d935-466f-bfbb-01023e68602f",
+      "summary": "Ready To Ship"
+    },
+    {
+      "at": "2026-11-01T02:17:10.380199+00:00",
+      "table": "shipments",
+      "txid": null,
+      "id": "48288f33-25a1-4aa4-87bd-b81082422d3f",
+      "summary": "SHP-1005"
+    },
+    {
+      "at": "2026-11-01T02:17:10.476363+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "22bd7754-3e7f-4d85-a30c-2faefbc06a64",
+      "summary": "Created"
+    },
+    {
+      "at": "2026-11-01T02:17:10.675448+00:00",
+      "table": "audit_log",
+      "txid": 6330,
+      "id": 874,
+      "summary": "status.order order actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:17:10.675448+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "8ff6d1e5-bbbf-4a62-83f4-f7737455c052",
+      "summary": "Shipped"
+    },
+    {
+      "at": "2026-11-01T02:17:11.832772+00:00",
+      "table": "audit_log",
+      "txid": 6331,
+      "id": 875,
+      "summary": "status.order order actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:17:11.832772+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "d4e71534-3b6d-4194-80fb-26aacc64053b",
+      "summary": "Ready To Ship"
+    },
+    {
+      "at": "2026-11-01T02:17:17.58089+00:00",
+      "table": "shipments",
+      "txid": null,
+      "id": "1bc71143-aa36-48a8-8688-42619896eee4",
+      "summary": "SHP-1006"
+    },
+    {
+      "at": "2026-11-01T02:17:17.676076+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "8cc0be0e-3425-445f-94fd-3989cd10736b",
+      "summary": "Created"
+    },
+    {
+      "at": "2026-11-01T02:17:17.836155+00:00",
+      "table": "audit_log",
+      "txid": 6337,
+      "id": 876,
+      "summary": "status.order order actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:17:17.836155+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "5e233041-14ff-494b-b42d-fb3b81caf297",
+      "summary": "Shipped"
+    },
+    {
+      "at": "2026-11-01T02:17:19.053918+00:00",
+      "table": "audit_log",
+      "txid": 6338,
+      "id": 877,
+      "summary": "status.order order actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:17:19.053918+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "e90f95da-beae-4802-8ddc-e98bbb8bb422",
+      "summary": "Ready To Ship"
+    },
+    {
+      "at": "2026-11-01T02:17:24.815989+00:00",
+      "table": "shipments",
+      "txid": null,
+      "id": "e6230632-092a-4fcb-ba44-3431d405a94d",
+      "summary": "SHP-1007"
+    },
+    {
+      "at": "2026-11-01T02:17:24.918451+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "4338291a-0f8d-458c-918d-1d63759aa6fd",
+      "summary": "Created"
+    },
+    {
+      "at": "2026-11-01T02:17:25.110651+00:00",
+      "table": "audit_log",
+      "txid": 6344,
+      "id": 878,
+      "summary": "status.order order actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:17:25.110651+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "8148aee6-0576-4e5b-9ad7-7e26f586f55f",
+      "summary": "Shipped"
+    },
+    {
+      "at": "2026-11-01T02:17:26.681426+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "e253168f-d4c1-4430-8693-98d36da44812",
+      "summary": "notify → ok (92 ms) evt=e253168f"
+    },
+    {
+      "at": "2026-11-01T02:17:27.236556+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "e253168f-d4c1-4430-8693-98d36da44812",
+      "summary": "email → ok (448 ms) evt=e253168f"
+    },
+    {
+      "at": "2026-11-01T02:17:27.417526+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "e253168f-d4c1-4430-8693-98d36da44812",
+      "summary": "webhooks_out → ok (96 ms) evt=e253168f"
+    },
+    {
+      "at": "2026-11-01T02:17:27.906515+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "aa7ba7da-1da8-42c1-a882-f982948ff391",
+      "summary": "notify → ok (110 ms) evt=aa7ba7da"
+    },
+    {
+      "at": "2026-11-01T02:17:28.473202+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "aa7ba7da-1da8-42c1-a882-f982948ff391",
+      "summary": "email → ok (465 ms) evt=aa7ba7da"
+    },
+    {
+      "at": "2026-11-01T02:17:30.243381+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "aa7ba7da-1da8-42c1-a882-f982948ff391",
+      "summary": "webhooks_out:01d57368-717a-40f7-83ca-b9fe0aa3d4d2 → ok (1485 ms) evt=aa7ba7da"
+    },
+    {
+      "at": "2026-11-01T02:17:30.333575+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "aa7ba7da-1da8-42c1-a882-f982948ff391",
+      "summary": "webhooks_out → ok (1770 ms) evt=aa7ba7da"
+    },
+    {
+      "at": "2026-11-01T02:17:30.708242+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "1bff54df-3b42-402a-97e2-bea40897ec78",
+      "summary": "notify → ok (95 ms) evt=1bff54df"
+    },
+    {
+      "at": "2026-11-01T02:17:30.934483+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "1bff54df-3b42-402a-97e2-bea40897ec78",
+      "summary": "webhooks_out → ok (124 ms) evt=1bff54df"
+    },
+    {
+      "at": "2026-11-01T02:17:31.428394+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "3ed266b2-9e03-444e-bdaf-7e43aa8d9adc",
+      "summary": "notify → ok (122 ms) evt=3ed266b2"
+    },
+    {
+      "at": "2026-11-01T02:17:31.794128+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "3ed266b2-9e03-444e-bdaf-7e43aa8d9adc",
+      "summary": "webhooks_out → ok (186 ms) evt=3ed266b2"
+    },
+    {
+      "at": "2026-11-01T02:17:32.17369+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "e2a7bfe2-8c6a-444a-ba97-2aa2db7c0c96",
+      "summary": "notify → ok (79 ms) evt=e2a7bfe2"
+    },
+    {
+      "at": "2026-11-01T02:17:32.37551+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "e2a7bfe2-8c6a-444a-ba97-2aa2db7c0c96",
+      "summary": "webhooks_out → ok (95 ms) evt=e2a7bfe2"
+    },
+    {
+      "at": "2026-11-01T02:17:32.752577+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "b0a208fe-628c-43c6-963f-70f946338963",
+      "summary": "notify → ok (112 ms) evt=b0a208fe"
+    },
+    {
+      "at": "2026-11-01T02:17:33.373522+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "b0a208fe-628c-43c6-963f-70f946338963",
+      "summary": "email → ok (530 ms) evt=b0a208fe"
+    },
+    {
+      "at": "2026-11-01T02:17:34.012697+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "b0a208fe-628c-43c6-963f-70f946338963",
+      "summary": "webhooks_out:01d57368-717a-40f7-83ca-b9fe0aa3d4d2 → ok (374 ms) evt=b0a208fe"
+    },
+    {
+      "at": "2026-11-01T02:17:34.117187+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "b0a208fe-628c-43c6-963f-70f946338963",
+      "summary": "webhooks_out → ok (644 ms) evt=b0a208fe"
+    },
+    {
+      "at": "2026-11-01T02:17:34.484119+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "fd3e0dce-d43b-4981-b77b-f6771115f26b",
+      "summary": "notify → ok (88 ms) evt=fd3e0dce"
+    },
+    {
+      "at": "2026-11-01T02:17:35.053303+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "fd3e0dce-d43b-4981-b77b-f6771115f26b",
+      "summary": "email → ok (481 ms) evt=fd3e0dce"
+    },
+    {
+      "at": "2026-11-01T02:17:35.253401+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "fd3e0dce-d43b-4981-b77b-f6771115f26b",
+      "summary": "webhooks_out → ok (101 ms) evt=fd3e0dce"
+    },
+    {
+      "at": "2026-11-01T02:17:35.633684+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "71ee4486-0550-4fe5-b913-656bdb0e7968",
+      "summary": "notify → ok (101 ms) evt=71ee4486"
+    },
+    {
+      "at": "2026-11-01T02:17:36.193782+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "71ee4486-0550-4fe5-b913-656bdb0e7968",
+      "summary": "email → ok (473 ms) evt=71ee4486"
+    },
+    {
+      "at": "2026-11-01T02:17:36.364201+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "71ee4486-0550-4fe5-b913-656bdb0e7968",
+      "summary": "webhooks_out → ok (86 ms) evt=71ee4486"
+    },
+    {
+      "at": "2026-11-01T02:17:36.765374+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "4e54f5aa-7e61-441e-83bd-531d18c77211",
+      "summary": "notify → ok (82 ms) evt=4e54f5aa"
+    },
+    {
+      "at": "2026-11-01T02:17:37.333863+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "4e54f5aa-7e61-441e-83bd-531d18c77211",
+      "summary": "email → ok (470 ms) evt=4e54f5aa"
+    },
+    {
+      "at": "2026-11-01T02:17:37.987302+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "4e54f5aa-7e61-441e-83bd-531d18c77211",
+      "summary": "webhooks_out:01d57368-717a-40f7-83ca-b9fe0aa3d4d2 → ok (370 ms) evt=4e54f5aa"
+    },
+    {
+      "at": "2026-11-01T02:17:38.078386+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "4e54f5aa-7e61-441e-83bd-531d18c77211",
+      "summary": "webhooks_out → ok (656 ms) evt=4e54f5aa"
+    },
+    {
+      "at": "2026-11-01T02:17:38.489163+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "ccbfa39c-b80f-4151-9796-bfa7024f3a2c",
+      "summary": "notify → ok (97 ms) evt=ccbfa39c"
+    },
+    {
+      "at": "2026-11-01T02:17:39.046567+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "ccbfa39c-b80f-4151-9796-bfa7024f3a2c",
+      "summary": "email → ok (465 ms) evt=ccbfa39c"
+    },
+    {
+      "at": "2026-11-01T02:17:39.233155+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "ccbfa39c-b80f-4151-9796-bfa7024f3a2c",
+      "summary": "webhooks_out → ok (93 ms) evt=ccbfa39c"
+    },
+    {
+      "at": "2026-11-01T02:17:39.611385+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "e93732eb-91ee-4304-8096-7ac354eee05e",
+      "summary": "notify → ok (93 ms) evt=e93732eb"
+    },
+    {
+      "at": "2026-11-01T02:17:40.216708+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "e93732eb-91ee-4304-8096-7ac354eee05e",
+      "summary": "email → ok (513 ms) evt=e93732eb"
+    },
+    {
+      "at": "2026-11-01T02:17:40.398155+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "e93732eb-91ee-4304-8096-7ac354eee05e",
+      "summary": "webhooks_out → ok (92 ms) evt=e93732eb"
+    },
+    {
+      "at": "2026-11-01T02:17:40.772609+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "b66b5470-d99a-4613-942f-dbcfa49aa0ec",
+      "summary": "notify → ok (101 ms) evt=b66b5470"
+    },
+    {
+      "at": "2026-11-01T02:17:41.293437+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "b66b5470-d99a-4613-942f-dbcfa49aa0ec",
+      "summary": "email → ok (438 ms) evt=b66b5470"
+    },
+    {
+      "at": "2026-11-01T02:17:41.473121+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "b66b5470-d99a-4613-942f-dbcfa49aa0ec",
+      "summary": "webhooks_out → ok (86 ms) evt=b66b5470"
+    },
+    {
+      "at": "2026-11-01T02:17:41.788553+00:00",
+      "table": "pools",
+      "txid": null,
+      "id": "7073f0fd-48fa-4722-ae4c-b0c6ef2463df",
+      "summary": "POOL-0038"
+    },
+    {
+      "at": "2026-11-01T02:17:41.788553+00:00",
+      "table": "journals",
+      "txid": 6428,
+      "id": "ce0d10d6-8ddb-49b1-87b1-393fe2e28193",
+      "summary": "JRN-000559 pools Group-buy deposit · POOL-0038"
+    },
+    {
+      "at": "2026-11-01T02:17:41.788553+00:00",
+      "table": "audit_log",
+      "txid": 6428,
+      "id": 879,
+      "summary": "status.pool pool actor=f6d11c5e"
+    },
+    {
+      "at": "2026-11-01T02:17:41.788553+00:00",
+      "table": "audit_log",
+      "txid": 6428,
+      "id": 880,
+      "summary": "status.pool_pledge pool_pledge actor=f6d11c5e"
+    },
+    {
+      "at": "2026-11-01T02:17:41.788553+00:00",
+      "table": "pool_events",
+      "txid": null,
+      "id": 204,
+      "summary": "Pool opened"
+    },
+    {
+      "at": "2026-11-01T02:17:41.788553+00:00",
+      "table": "pool_events",
+      "txid": null,
+      "id": 205,
+      "summary": "A buyer joined"
+    },
+    {
+      "at": "2026-11-01T02:17:41.920725+00:00",
+      "table": "journals",
+      "txid": 6430,
+      "id": "9b0ace4c-9bbf-48f8-8b79-b2f2bc9d6e84",
+      "summary": "JRN-000560 pools Group-buy pool expired · refund · POOL-0038"
+    },
+    {
+      "at": "2026-11-01T02:17:41.920725+00:00",
+      "table": "audit_log",
+      "txid": 6430,
+      "id": 881,
+      "summary": "pool.expired pools actor=system"
+    },
+    {
+      "at": "2026-11-01T02:17:41.920725+00:00",
+      "table": "pool_events",
+      "txid": null,
+      "id": 206,
+      "summary": "Pool did not fill"
+    },
+    {
+      "at": "2026-11-01T02:17:42.773156+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "4e2120ae-b5b3-402c-950d-75f24a58cb4c",
+      "summary": "notify → ok (0 ms) evt=4e2120ae"
+    },
+    {
+      "table": "pool_pledges",
+      "txid": null,
+      "id": "4382c4f4-9e05-4d15-a262-64f4f1a9fd76",
+      "summary": "shipped"
+    },
+    {
+      "table": "pool_pledges",
+      "txid": null,
+      "id": "f0ccfe93-1c95-4be6-bf92-0fd9c833c89a",
+      "summary": "shipped"
+    },
+    {
+      "table": "pool_pledges",
+      "txid": null,
+      "id": "320a6bbf-e615-4797-9ad7-f947f0d15176",
+      "summary": "shipped"
+    },
+    {
+      "table": "pool_pledges",
+      "txid": null,
+      "id": "986eda02-ec34-4e3b-9295-999be8180047",
+      "summary": "withdrawn"
+    },
+    {
+      "at": "2026-11-01T02:16:52.07952+00:00",
+      "table": "outbox_events",
+      "txid": 6262,
+      "id": "3b70b8e8-f1ff-4ee1-8f0b-a561ec23cd47",
+      "summary": "wallet.topup_requested [done] agg=wallet_topup:6551b6f5 payload#4b5e706e8e"
+    },
+    {
+      "at": "2026-11-01T02:16:52.07952+00:00",
+      "table": "wallet_topups",
+      "txid": null,
+      "id": "6551b6f5-3319-413c-9291-fe8d888a200a",
+      "summary": "credited"
+    },
+    {
+      "at": "2026-11-01T02:16:52.700975+00:00",
+      "table": "outbox_events",
+      "txid": 6263,
+      "id": "5cfded9b-a922-44ac-806b-862c2a3c68af",
+      "summary": "wallet.updated [done] agg=wallet_topup:6551b6f5 payload#4b5e706e8e"
+    },
+    {
+      "at": "2026-11-01T02:16:52.700975+00:00",
+      "table": "ledger_entries",
+      "txid": 6263,
+      "id": 1151,
+      "summary": "acct=392e3fd1 Dr 500000 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:52.700975+00:00",
+      "table": "ledger_entries",
+      "txid": 6263,
+      "id": 1152,
+      "summary": "acct=0ff27257 Dr 0 Cr 500000 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:52.700975+00:00",
+      "table": "status_history",
+      "txid": 6263,
+      "id": 637,
+      "summary": "wallet_topup pending→credited"
+    },
+    {
+      "at": "2026-11-01T02:16:52.799494+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 195,
+      "summary": "payment in 200 POST /api/webhooks/payment req#20e4ea9211 res#fb84ce5781"
+    },
+    {
+      "at": "2026-11-01T02:16:53.310109+00:00",
+      "table": "outbox_events",
+      "txid": 6267,
+      "id": "2c4126be-e9a4-4dc4-a2f0-cd5a58d62437",
+      "summary": "wallet.topup_requested [done] agg=wallet_topup:72ad4f40 payload#8a3dc65388"
+    },
+    {
+      "at": "2026-11-01T02:16:53.310109+00:00",
+      "table": "wallet_topups",
+      "txid": null,
+      "id": "72ad4f40-85b2-42b0-815b-4b3f01229b29",
+      "summary": "credited"
+    },
+    {
+      "at": "2026-11-01T02:16:54.045914+00:00",
+      "table": "outbox_events",
+      "txid": 6268,
+      "id": "f4359c59-bd22-484d-be4a-26f9355591f9",
+      "summary": "wallet.updated [done] agg=wallet_topup:72ad4f40 payload#8a3dc65388"
+    },
+    {
+      "at": "2026-11-01T02:16:54.045914+00:00",
+      "table": "ledger_entries",
+      "txid": 6268,
+      "id": 1153,
+      "summary": "acct=392e3fd1 Dr 500000 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:54.045914+00:00",
+      "table": "ledger_entries",
+      "txid": 6268,
+      "id": 1154,
+      "summary": "acct=b417d05c Dr 0 Cr 500000 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:54.045914+00:00",
+      "table": "status_history",
+      "txid": 6268,
+      "id": 638,
+      "summary": "wallet_topup pending→credited"
+    },
+    {
+      "at": "2026-11-01T02:16:54.163298+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 196,
+      "summary": "payment in 200 POST /api/webhooks/payment req#95b7d4cacf res#2e09ad8355"
+    },
+    {
+      "at": "2026-11-01T02:16:54.539381+00:00",
+      "table": "outbox_events",
+      "txid": 6271,
+      "id": "262073d6-34e8-49e5-8fac-ccf7bbd0145e",
+      "summary": "pool.joined [done] agg=pool:22ed0749 payload#db91251993"
+    },
+    {
+      "at": "2026-11-01T02:16:54.539381+00:00",
+      "table": "outbox_events",
+      "txid": 6271,
+      "id": "57e547a0-1d49-47c8-b92e-ee4a9a73bf93",
+      "summary": "pool.opened [done] agg=pool:22ed0749 payload#fc22c48c22"
+    },
+    {
+      "at": "2026-11-01T02:16:54.539381+00:00",
+      "table": "ledger_entries",
+      "txid": 6271,
+      "id": 1155,
+      "summary": "acct=b9de94fa Dr 3800 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:54.539381+00:00",
+      "table": "ledger_entries",
+      "txid": 6271,
+      "id": 1156,
+      "summary": "acct=da745726 Dr 0 Cr 3800 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:54.539381+00:00",
+      "table": "status_history",
+      "txid": 6271,
+      "id": 639,
+      "summary": "pool ∅→open"
+    },
+    {
+      "at": "2026-11-01T02:16:54.539381+00:00",
+      "table": "status_history",
+      "txid": 6271,
+      "id": 640,
+      "summary": "pool_pledge ∅→paid"
+    },
+    {
+      "at": "2026-11-01T02:16:54.702565+00:00",
+      "table": "outbox_events",
+      "txid": 6272,
+      "id": "c0c74c74-b59d-4fe2-b172-e09132b3d37b",
+      "summary": "pool.joined [done] agg=pool:22ed0749 payload#2846b155a3"
+    },
+    {
+      "at": "2026-11-01T02:16:54.702565+00:00",
+      "table": "ledger_entries",
+      "txid": 6272,
+      "id": 1157,
+      "summary": "acct=0ff27257 Dr 3800 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:54.702565+00:00",
+      "table": "ledger_entries",
+      "txid": 6272,
+      "id": 1158,
+      "summary": "acct=da745726 Dr 0 Cr 3800 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:54.702565+00:00",
+      "table": "status_history",
+      "txid": 6272,
+      "id": 641,
+      "summary": "pool_pledge ∅→paid"
+    },
+    {
+      "at": "2026-11-01T02:16:56.13618+00:00",
+      "table": "outbox_events",
+      "txid": 6273,
+      "id": "349898a1-e92c-44b4-80cf-bc11b445a583",
+      "summary": "pool.joined [done] agg=pool:22ed0749 payload#0363c9fdde"
+    },
+    {
+      "at": "2026-11-01T02:16:56.13618+00:00",
+      "table": "ledger_entries",
+      "txid": 6273,
+      "id": 1159,
+      "summary": "acct=b417d05c Dr 1700 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:56.13618+00:00",
+      "table": "ledger_entries",
+      "txid": 6273,
+      "id": 1160,
+      "summary": "acct=da745726 Dr 0 Cr 1700 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:56.13618+00:00",
+      "table": "status_history",
+      "txid": 6273,
+      "id": 642,
+      "summary": "pool_pledge ∅→paid"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "outbox_events",
+      "txid": 6274,
+      "id": "ce3ef0d0-0271-4f71-89bc-a5b4c00d234e",
+      "summary": "po.created [done] agg=pool:22ed0749 payload#bffa5c36ee"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "outbox_events",
+      "txid": 6274,
+      "id": "b5b90898-ea8c-4923-9abd-6ee5867af42f",
+      "summary": "pool.filled [done] agg=pool:22ed0749 payload#61658ae250"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "outbox_events",
+      "txid": 6274,
+      "id": "e564af02-2e80-43dd-b0ad-052b41b4b638",
+      "summary": "pi.created [done] agg=order:bed6dd1f payload#caa50adf08"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "outbox_events",
+      "txid": 6274,
+      "id": "a763d061-bba7-4129-afac-2feddd4ba842",
+      "summary": "pi.created [done] agg=order:eb1f1ac5 payload#358ea2767d"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "outbox_events",
+      "txid": 6274,
+      "id": "f05bd8af-b681-4f7a-903b-8c068d792a28",
+      "summary": "pi.created [done] agg=order:1089eb41 payload#5be730e753"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "ledger_entries",
+      "txid": 6274,
+      "id": 1161,
+      "summary": "acct=f19a89d7 Dr 34000 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "ledger_entries",
+      "txid": 6274,
+      "id": 1162,
+      "summary": "acct=515aa3f1 Dr 0 Cr 34000 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "ledger_entries",
+      "txid": 6274,
+      "id": 1163,
+      "summary": "acct=da745726 Dr 3800 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "ledger_entries",
+      "txid": 6274,
+      "id": 1164,
+      "summary": "acct=f19a89d7 Dr 0 Cr 3800 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "ledger_entries",
+      "txid": 6274,
+      "id": 1165,
+      "summary": "acct=93f5deee Dr 34000 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "ledger_entries",
+      "txid": 6274,
+      "id": 1166,
+      "summary": "acct=515aa3f1 Dr 0 Cr 34000 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "ledger_entries",
+      "txid": 6274,
+      "id": 1167,
+      "summary": "acct=da745726 Dr 3800 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "ledger_entries",
+      "txid": 6274,
+      "id": 1168,
+      "summary": "acct=93f5deee Dr 0 Cr 3800 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "ledger_entries",
+      "txid": 6274,
+      "id": 1169,
+      "summary": "acct=59277d44 Dr 17000 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "ledger_entries",
+      "txid": 6274,
+      "id": 1170,
+      "summary": "acct=515aa3f1 Dr 0 Cr 17000 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "ledger_entries",
+      "txid": 6274,
+      "id": 1171,
+      "summary": "acct=da745726 Dr 1700 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "ledger_entries",
+      "txid": 6274,
+      "id": 1172,
+      "summary": "acct=59277d44 Dr 0 Cr 1700 USD"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "status_history",
+      "txid": 6274,
+      "id": 643,
+      "summary": "order ∅→balance_pending"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "status_history",
+      "txid": 6274,
+      "id": 644,
+      "summary": "order ∅→balance_pending"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "status_history",
+      "txid": 6274,
+      "id": 645,
+      "summary": "order ∅→balance_pending"
+    },
+    {
+      "at": "2026-11-01T02:16:56.270664+00:00",
+      "table": "status_history",
+      "txid": 6274,
+      "id": 646,
+      "summary": "pool open→locked"
+    },
+    {
+      "at": "2026-11-01T02:16:57.853609+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "f12abe0b-2099-4590-b686-7854cc1f16ff",
+      "summary": "Wallet credited"
+    },
+    {
+      "at": "2026-11-01T02:16:59.273091+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "6733ce74-8305-48b5-af09-57141eb3a3e3",
+      "summary": "Group buy filled — proforma invoice issued"
+    },
+    {
+      "at": "2026-11-01T02:16:59.774045+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "b6eb7d75-7174-4dbd-b89b-68faa19ae732",
+      "summary": "default:pi.created → log logged rcpt#5278b812a9 msg=log_1793499419683"
+    },
+    {
+      "at": "2026-11-01T02:16:59.881779+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 197,
+      "summary": "email out 200 log://email req#9fd0661c15 res#51a315cb54"
+    },
+    {
+      "at": "2026-11-01T02:17:00.578751+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "3ab64d46-8eca-4fde-b509-7c88cf1e76ac",
+      "summary": "Group buy filled — proforma invoice issued"
+    },
+    {
+      "at": "2026-11-01T02:17:01.159729+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "66cb89c3-898d-4f41-91b4-1a149150d900",
+      "summary": "default:pi.created → log logged rcpt#7119dcefc9 msg=log_1793499421031"
+    },
+    {
+      "at": "2026-11-01T02:17:01.268655+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 198,
+      "summary": "email out 200 log://email req#028f8fad18 res#15b1deded9"
+    },
+    {
+      "at": "2026-11-01T02:17:01.699792+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "fc958579-8da4-4669-9219-928524e8980b",
+      "summary": "Group buy filled — proforma invoice issued"
+    },
+    {
+      "at": "2026-11-01T02:17:02.311392+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "9dd63ccd-554a-47c8-9865-61de3956879a",
+      "summary": "default:pi.created → log logged rcpt#c737ef5dff msg=log_1793499422219"
+    },
+    {
+      "at": "2026-11-01T02:17:02.421485+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 199,
+      "summary": "email out 200 log://email req#3d025ae13a res#373c92d0fe"
+    },
+    {
+      "at": "2026-11-01T02:17:03.482697+00:00",
+      "table": "outbox_events",
+      "txid": 6318,
+      "id": "4e54f5aa-7e61-441e-83bd-531d18c77211",
+      "summary": "payment.confirmed [done] agg=payment:4644f92d payload#b5c8b24a7a"
+    },
+    {
+      "at": "2026-11-01T02:17:03.482697+00:00",
+      "table": "ledger_entries",
+      "txid": 6318,
+      "id": 1173,
+      "summary": "acct=b9de94fa Dr 30200 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:17:03.482697+00:00",
+      "table": "ledger_entries",
+      "txid": 6318,
+      "id": 1174,
+      "summary": "acct=f19a89d7 Dr 0 Cr 30200 USD"
+    },
+    {
+      "at": "2026-11-01T02:17:03.482697+00:00",
+      "table": "status_history",
+      "txid": 6318,
+      "id": 647,
+      "summary": "pool_pledge paid→confirmed"
+    },
+    {
+      "at": "2026-11-01T02:17:03.482697+00:00",
+      "table": "status_history",
+      "txid": 6318,
+      "id": 648,
+      "summary": "order balance_pending→balance_paid"
+    },
+    {
+      "at": "2026-11-01T02:17:03.726505+00:00",
+      "table": "outbox_events",
+      "txid": 6319,
+      "id": "b66b5470-d99a-4613-942f-dbcfa49aa0ec",
+      "summary": "payment.confirmed [done] agg=payment:02a73939 payload#3d048b0a6e"
+    },
+    {
+      "at": "2026-11-01T02:17:03.726505+00:00",
+      "table": "ledger_entries",
+      "txid": 6319,
+      "id": 1175,
+      "summary": "acct=0ff27257 Dr 30200 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:17:03.726505+00:00",
+      "table": "ledger_entries",
+      "txid": 6319,
+      "id": 1176,
+      "summary": "acct=93f5deee Dr 0 Cr 30200 USD"
+    },
+    {
+      "at": "2026-11-01T02:17:03.726505+00:00",
+      "table": "status_history",
+      "txid": 6319,
+      "id": 649,
+      "summary": "pool_pledge paid→confirmed"
+    },
+    {
+      "at": "2026-11-01T02:17:03.726505+00:00",
+      "table": "status_history",
+      "txid": 6319,
+      "id": 650,
+      "summary": "order balance_pending→balance_paid"
+    },
+    {
+      "at": "2026-11-01T02:17:03.821797+00:00",
+      "table": "outbox_events",
+      "txid": 6320,
+      "id": "176295ef-0150-4a97-92d4-179f6f28a115",
+      "summary": "pool.confirmed [done] agg=pool:22ed0749 payload#a574fbbfbd"
+    },
+    {
+      "at": "2026-11-01T02:17:03.821797+00:00",
+      "table": "outbox_events",
+      "txid": 6320,
+      "id": "ccbfa39c-b80f-4151-9796-bfa7024f3a2c",
+      "summary": "payment.confirmed [done] agg=payment:2bf2f81f payload#175af672c3"
+    },
+    {
+      "at": "2026-11-01T02:17:03.821797+00:00",
+      "table": "ledger_entries",
+      "txid": 6320,
+      "id": 1177,
+      "summary": "acct=b417d05c Dr 15300 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:17:03.821797+00:00",
+      "table": "ledger_entries",
+      "txid": 6320,
+      "id": 1178,
+      "summary": "acct=59277d44 Dr 0 Cr 15300 USD"
+    },
+    {
+      "at": "2026-11-01T02:17:03.821797+00:00",
+      "table": "status_history",
+      "txid": 6320,
+      "id": 651,
+      "summary": "pool_pledge paid→confirmed"
+    },
+    {
+      "at": "2026-11-01T02:17:03.821797+00:00",
+      "table": "status_history",
+      "txid": 6320,
+      "id": 652,
+      "summary": "pool locked→confirmed"
+    },
+    {
+      "at": "2026-11-01T02:17:03.821797+00:00",
+      "table": "status_history",
+      "txid": 6320,
+      "id": 653,
+      "summary": "order balance_pending→balance_paid"
+    },
+    {
+      "at": "2026-11-01T02:17:04.441622+00:00",
+      "table": "outbox_events",
+      "txid": 6324,
+      "id": "e253168f-d4c1-4430-8693-98d36da44812",
+      "summary": "order.ready_to_ship [done] agg=order:eb1f1ac5 payload#53d39523d2"
+    },
+    {
+      "at": "2026-11-01T02:17:04.441622+00:00",
+      "table": "status_history",
+      "txid": 6324,
+      "id": 654,
+      "summary": "order balance_paid→ready_to_ship"
+    },
+    {
+      "at": "2026-11-01T02:17:07.204609+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 200,
+      "summary": "yunexpress out 200 sandbox://yunexpress/api/WayBill/GetPriceTrial req#75ab95d47a res#868c3adb67"
+    },
+    {
+      "at": "2026-11-01T02:17:10.299087+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 201,
+      "summary": "yunexpress out 200 sandbox://yunexpress/api/WayBill/CreateOrder req#8b38eceb59 res#36a2b09d21"
+    },
+    {
+      "at": "2026-11-01T02:17:10.38+00:00",
+      "table": "tracking_events",
+      "txid": null,
+      "id": "e085ee4a-0563-4d66-94e1-4e3dfc86ecee",
+      "summary": "created"
+    },
+    {
+      "at": "2026-11-01T02:17:10.476363+00:00",
+      "table": "outbox_events",
+      "txid": 6328,
+      "id": "1bff54df-3b42-402a-97e2-bea40897ec78",
+      "summary": "shipment.tracking [done] agg=shipment:48288f33 payload#2e2da99e55"
+    },
+    {
+      "at": "2026-11-01T02:17:10.591088+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 202,
+      "summary": "yunexpress out 200 sandbox://yunexpress/api/Tracking/Subscribe req#1fb1a1434b res#74234e98af"
+    },
+    {
+      "at": "2026-11-01T02:17:10.675448+00:00",
+      "table": "outbox_events",
+      "txid": 6330,
+      "id": "fd3e0dce-d43b-4981-b77b-f6771115f26b",
+      "summary": "order.shipped [done] agg=order:eb1f1ac5 payload#53d39523d2"
+    },
+    {
+      "at": "2026-11-01T02:17:10.675448+00:00",
+      "table": "status_history",
+      "txid": 6330,
+      "id": 655,
+      "summary": "order ready_to_ship→shipped"
+    },
+    {
+      "at": "2026-11-01T02:17:11.832772+00:00",
+      "table": "outbox_events",
+      "txid": 6331,
+      "id": "aa7ba7da-1da8-42c1-a882-f982948ff391",
+      "summary": "order.ready_to_ship [done] agg=order:bed6dd1f payload#1abfbfdf80"
+    },
+    {
+      "at": "2026-11-01T02:17:11.832772+00:00",
+      "table": "status_history",
+      "txid": 6331,
+      "id": 656,
+      "summary": "order balance_paid→ready_to_ship"
+    },
+    {
+      "at": "2026-11-01T02:17:14.393648+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 203,
+      "summary": "yunexpress out 200 sandbox://yunexpress/api/WayBill/GetPriceTrial req#72451cbcf3 res#868c3adb67"
+    },
+    {
+      "at": "2026-11-01T02:17:17.499274+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 204,
+      "summary": "yunexpress out 200 sandbox://yunexpress/api/WayBill/CreateOrder req#42f8ddd0ac res#1b63b0c771"
+    },
+    {
+      "at": "2026-11-01T02:17:17.581+00:00",
+      "table": "tracking_events",
+      "txid": null,
+      "id": "51390604-a407-4d0f-8598-8cd8af245132",
+      "summary": "created"
+    },
+    {
+      "at": "2026-11-01T02:17:17.676076+00:00",
+      "table": "outbox_events",
+      "txid": 6335,
+      "id": "3ed266b2-9e03-444e-bdaf-7e43aa8d9adc",
+      "summary": "shipment.tracking [done] agg=shipment:1bc71143 payload#75438c56cb"
+    },
+    {
+      "at": "2026-11-01T02:17:17.762594+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 205,
+      "summary": "yunexpress out 200 sandbox://yunexpress/api/Tracking/Subscribe req#038713679e res#74234e98af"
+    },
+    {
+      "at": "2026-11-01T02:17:17.836155+00:00",
+      "table": "outbox_events",
+      "txid": 6337,
+      "id": "b0a208fe-628c-43c6-963f-70f946338963",
+      "summary": "order.shipped [done] agg=order:bed6dd1f payload#1abfbfdf80"
+    },
+    {
+      "at": "2026-11-01T02:17:17.836155+00:00",
+      "table": "status_history",
+      "txid": 6337,
+      "id": 657,
+      "summary": "order ready_to_ship→shipped"
+    },
+    {
+      "at": "2026-11-01T02:17:19.053918+00:00",
+      "table": "outbox_events",
+      "txid": 6338,
+      "id": "e93732eb-91ee-4304-8096-7ac354eee05e",
+      "summary": "order.ready_to_ship [done] agg=order:1089eb41 payload#c3a196da8a"
+    },
+    {
+      "at": "2026-11-01T02:17:19.053918+00:00",
+      "table": "status_history",
+      "txid": 6338,
+      "id": 658,
+      "summary": "order balance_paid→ready_to_ship"
+    },
+    {
+      "at": "2026-11-01T02:17:21.596389+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 206,
+      "summary": "yunexpress out 200 sandbox://yunexpress/api/WayBill/GetPriceTrial req#135b15a148 res#868c3adb67"
+    },
+    {
+      "at": "2026-11-01T02:17:24.721101+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 207,
+      "summary": "yunexpress out 200 sandbox://yunexpress/api/WayBill/CreateOrder req#19fdfee27b res#dd4c1ad43b"
+    },
+    {
+      "at": "2026-11-01T02:17:24.823+00:00",
+      "table": "tracking_events",
+      "txid": null,
+      "id": "67b3d454-bc0f-4bd6-bbff-1b8505ba16ad",
+      "summary": "created"
+    },
+    {
+      "at": "2026-11-01T02:17:24.918451+00:00",
+      "table": "outbox_events",
+      "txid": 6342,
+      "id": "e2a7bfe2-8c6a-444a-ba97-2aa2db7c0c96",
+      "summary": "shipment.tracking [done] agg=shipment:e6230632 payload#c5b17d60c4"
+    },
+    {
+      "at": "2026-11-01T02:17:25.018951+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 208,
+      "summary": "yunexpress out 200 sandbox://yunexpress/api/Tracking/Subscribe req#82eac467e5 res#74234e98af"
+    },
+    {
+      "at": "2026-11-01T02:17:25.110651+00:00",
+      "table": "outbox_events",
+      "txid": 6344,
+      "id": "71ee4486-0550-4fe5-b913-656bdb0e7968",
+      "summary": "order.shipped [done] agg=order:1089eb41 payload#c3a196da8a"
+    },
+    {
+      "at": "2026-11-01T02:17:25.110651+00:00",
+      "table": "status_history",
+      "txid": 6344,
+      "id": 659,
+      "summary": "order ready_to_ship→shipped"
+    },
+    {
+      "at": "2026-11-01T02:17:26.587064+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "2d621465-66cb-42f3-a015-5fe957fbc5dd",
+      "summary": "Order ready to ship"
+    },
+    {
+      "at": "2026-11-01T02:17:27.048418+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "22549a9b-7d93-41d8-98f9-cf4f4235b48a",
+      "summary": "default:order.ready_to_ship → log logged rcpt#7119dcefc9 msg=log_1793499446958"
+    },
+    {
+      "at": "2026-11-01T02:17:27.134273+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 209,
+      "summary": "email out 200 log://email req#49327d1965 res#29ccc53bc1"
+    },
+    {
+      "at": "2026-11-01T02:17:27.812516+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "43d4ce53-41f5-4d4b-ae44-d160eb38f4a9",
+      "summary": "Order ready to ship"
+    },
+    {
+      "at": "2026-11-01T02:17:28.272843+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "eed535a2-b8b2-4468-86c1-8166e46a0e6c",
+      "summary": "default:order.ready_to_ship → log logged rcpt#5278b812a9 msg=log_1793499448185"
+    },
+    {
+      "at": "2026-11-01T02:17:28.374931+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 210,
+      "summary": "email out 200 log://email req#cd667f33a8 res#bcdcef1df7"
+    },
+    {
+      "at": "2026-11-01T02:17:30.153738+00:00",
+      "table": "webhook_deliveries",
+      "txid": null,
+      "id": "4c2a2991-dee7-4948-942f-6282c6e1af14",
+      "summary": "order.updated → HTTP 200 delivered"
+    },
+    {
+      "at": "2026-11-01T02:17:30.616777+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "44dcaec6-6468-426c-9d86-66867a54cf00",
+      "summary": "Shipment: created"
+    },
+    {
+      "at": "2026-11-01T02:17:31.219048+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "04819715-d3d0-4161-8634-7f51108afd45",
+      "summary": "Shipment: created"
+    },
+    {
+      "at": "2026-11-01T02:17:32.093307+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "43562858-99d9-42cd-a96a-8e1530ca4916",
+      "summary": "Shipment: created"
+    },
+    {
+      "at": "2026-11-01T02:17:32.637912+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "06a0a96d-27f1-4139-a50f-2f8c54e205e2",
+      "summary": "Order shipped"
+    },
+    {
+      "at": "2026-11-01T02:17:33.164841+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "e94c7d44-51bf-4fdd-ad61-db07d1a2e62b",
+      "summary": "default:order.shipped → log logged rcpt#5278b812a9 msg=log_1793499453079"
+    },
+    {
+      "at": "2026-11-01T02:17:33.281067+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 211,
+      "summary": "email out 200 log://email req#e0ab6f5ebc res#1eb06910c6"
+    },
+    {
+      "at": "2026-11-01T02:17:33.92939+00:00",
+      "table": "webhook_deliveries",
+      "txid": null,
+      "id": "ceec14f6-a9c4-46ff-a541-3512d368f21f",
+      "summary": "order.updated → HTTP 200 delivered"
+    },
+    {
+      "at": "2026-11-01T02:17:34.393045+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "1f0dd116-b8be-4b00-9cfc-89010be3abe9",
+      "summary": "Order shipped"
+    },
+    {
+      "at": "2026-11-01T02:17:34.856414+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "1c524fda-76a9-4f26-9ee2-c14ab31935f6",
+      "summary": "default:order.shipped → log logged rcpt#7119dcefc9 msg=log_1793499454757"
+    },
+    {
+      "at": "2026-11-01T02:17:34.963217+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 212,
+      "summary": "email out 200 log://email req#fa5abb9d5d res#ae56b4e673"
+    },
+    {
+      "at": "2026-11-01T02:17:35.533502+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "2510dddb-3c67-4dd4-8d10-034a498d69d7",
+      "summary": "Order shipped"
+    },
+    {
+      "at": "2026-11-01T02:17:36.028317+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "267ecea0-50cd-458a-8be5-193581c949c9",
+      "summary": "default:order.shipped → log logged rcpt#c737ef5dff msg=log_1793499455936"
+    },
+    {
+      "at": "2026-11-01T02:17:36.108743+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 213,
+      "summary": "email out 200 log://email req#eaa84fd08b res#77664004cc"
+    },
+    {
+      "at": "2026-11-01T02:17:36.634542+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "1b4a4a8f-ea98-45ff-833a-85c210f73e44",
+      "summary": "Payment confirmed"
+    },
+    {
+      "at": "2026-11-01T02:17:37.134378+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "18c51e40-5a1f-48e6-9d9d-e80f926e5c11",
+      "summary": "default:payment.confirmed → log logged rcpt#5278b812a9 msg=log_1793499457049"
+    },
+    {
+      "at": "2026-11-01T02:17:37.233366+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 214,
+      "summary": "email out 200 log://email req#7794f46db2 res#e08443212d"
+    },
+    {
+      "at": "2026-11-01T02:17:37.903895+00:00",
+      "table": "webhook_deliveries",
+      "txid": null,
+      "id": "1c7bc0ca-9708-44f3-ac55-101da3389d83",
+      "summary": "order.updated → HTTP 200 delivered"
+    },
+    {
+      "at": "2026-11-01T02:17:38.400374+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "0a6b9258-54f2-4f5d-bf52-ec567f32cae0",
+      "summary": "Payment confirmed"
+    },
+    {
+      "at": "2026-11-01T02:17:38.872198+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "147e69ac-72e5-4de8-989c-f62efbb5d7ca",
+      "summary": "default:payment.confirmed → log logged rcpt#7119dcefc9 msg=log_1793499458771"
+    },
+    {
+      "at": "2026-11-01T02:17:38.954434+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 215,
+      "summary": "email out 200 log://email req#aff95b5032 res#9033bf0856"
+    },
+    {
+      "at": "2026-11-01T02:17:39.52231+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "f9a55c44-f4cd-475e-87fd-65f03558515c",
+      "summary": "Order ready to ship"
+    },
+    {
+      "at": "2026-11-01T02:17:40.01411+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "86495b57-d878-4b4c-be96-998a6b54720e",
+      "summary": "default:order.ready_to_ship → log logged rcpt#c737ef5dff msg=log_1793499459910"
+    },
+    {
+      "at": "2026-11-01T02:17:40.118143+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 216,
+      "summary": "email out 200 log://email req#0685f1d1f5 res#dcb4693a3d"
+    },
+    {
+      "at": "2026-11-01T02:17:40.674606+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "7c46b164-40e6-4573-a5bb-7da4c94cfc12",
+      "summary": "Payment confirmed"
+    },
+    {
+      "at": "2026-11-01T02:17:41.119088+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "80791a3c-faaf-4a71-927c-80b17a016ddc",
+      "summary": "default:payment.confirmed → log logged rcpt#c737ef5dff msg=log_1793499461031"
+    },
+    {
+      "at": "2026-11-01T02:17:41.207111+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 217,
+      "summary": "email out 200 log://email req#620bed4549 res#bddc9c76b7"
+    },
+    {
+      "at": "2026-11-01T02:17:41.788553+00:00",
+      "table": "outbox_events",
+      "txid": 6428,
+      "id": "4e2120ae-b5b3-402c-950d-75f24a58cb4c",
+      "summary": "pool.joined [done] agg=pool:7073f0fd payload#70a2e1f21d"
+    },
+    {
+      "at": "2026-11-01T02:17:41.788553+00:00",
+      "table": "outbox_events",
+      "txid": 6428,
+      "id": "26c9c9ba-e0fe-4c32-83d8-da83847ede2d",
+      "summary": "pool.opened [done] agg=pool:7073f0fd payload#3f6413c4cb"
+    },
+    {
+      "at": "2026-11-01T02:17:41.788553+00:00",
+      "table": "ledger_entries",
+      "txid": 6428,
+      "id": 1179,
+      "summary": "acct=0ff27257 Dr 1900 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:17:41.788553+00:00",
+      "table": "ledger_entries",
+      "txid": 6428,
+      "id": 1180,
+      "summary": "acct=da745726 Dr 0 Cr 1900 USD"
+    },
+    {
+      "at": "2026-11-01T02:17:41.788553+00:00",
+      "table": "status_history",
+      "txid": 6428,
+      "id": 660,
+      "summary": "pool ∅→open"
+    },
+    {
+      "at": "2026-11-01T02:17:41.788553+00:00",
+      "table": "status_history",
+      "txid": 6428,
+      "id": 661,
+      "summary": "pool_pledge ∅→paid"
+    },
+    {
+      "at": "2026-11-01T02:17:41.920725+00:00",
+      "table": "audit_log",
+      "txid": 6430,
+      "id": 882,
+      "summary": "status.pool pool actor=system"
+    },
+    {
+      "at": "2026-11-01T02:17:41.920725+00:00",
+      "table": "outbox_events",
+      "txid": 6430,
+      "id": "b610baad-8e5d-4d31-bc4c-861c0fd662f1",
+      "summary": "pool.expired [done] agg=pool:7073f0fd payload#4b2f8f031f"
+    },
+    {
+      "at": "2026-11-01T02:17:41.920725+00:00",
+      "table": "ledger_entries",
+      "txid": 6430,
+      "id": 1181,
+      "summary": "acct=da745726 Dr 1900 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:17:41.920725+00:00",
+      "table": "ledger_entries",
+      "txid": 6430,
+      "id": 1182,
+      "summary": "acct=0ff27257 Dr 0 Cr 1900 USD"
+    },
+    {
+      "at": "2026-11-01T02:17:41.920725+00:00",
+      "table": "status_history",
+      "txid": 6430,
+      "id": 662,
+      "summary": "pool open→expired"
+    },
+    {
+      "at": "2026-11-01T02:17:43.06216+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "26c9c9ba-e0fe-4c32-83d8-da83847ede2d",
+      "summary": "notify → ok (0 ms) evt=26c9c9ba"
+    },
+    {
+      "table": "proforma_invoices",
+      "txid": null,
+      "id": "838913ba-2edb-4908-8d6c-cfb7e91c1a6c",
+      "summary": "PI-2026-1106"
+    },
+    {
+      "table": "proforma_invoices",
+      "txid": null,
+      "id": "7e853cc9-79a5-4feb-b2c3-915155e98684",
+      "summary": "PI-2026-1107"
+    },
+    {
+      "table": "proforma_invoices",
+      "txid": null,
+      "id": "94ca2486-4752-432f-81f2-e4597edc8255",
+      "summary": "PI-2026-1108"
+    }
+  ],
+  "latency": {
+    "job_pools → settle_pool": 86
+  },
+  "notes": [
+    "product MOQ 1000; pool target = tier 2 (5000 pcs @ 17 vs 19)",
+    "supplier-side view: the supplier portal is not built (QA FN-05); the supplier-facing artefact is the PO document (org_id null, 1 row) — checked for identities above."
+  ],
+  "traces": [
+    "e2e-c06-11a56e346e47"
+  ],
+  "pool_page_excerpt": "Home\n/\nGroup buying pools\n/\nStainless steel hex bolts, M10 × 40 mm, A2-70\n/\nPool POOL-0037\nProduct photo\nPool closes in\n7d 0h 00m\nGroup buy: Stainless steel hex bolts, M10 × 40 mm, A2-70\nPOOL-0037\nSupplier OCT-1101 · CN\nHS 7318.15\nView product\n\nJoin this pool to buy fewer pieces at the factory tier price. Everyone pays a 10% deposit now. When the pool fills, Octopus places one order with the supplier and ships each buyer their part.\n\nPool progress\nAlmost full\n4,000 / 5,000 pcs\n+4,000 pcs this week\n2 buyers joined · needs 1,000 pcs more\n0\nTarget 5,000\nAT 1,000 PCS\nUS$ 0.19 / pc\ntier 1 · current",
+  "public_view_columns": [
+    "pool_id",
+    "buyer_code",
+    "country",
+    "qty",
+    "status",
+    "joined_at",
+    "deposit_minor",
+    "currency",
+    "is_starter"
+  ],
+  "e2e_ms": 47119,
+  "finished_at": "2026-11-01T02:17:43.541Z"
+}

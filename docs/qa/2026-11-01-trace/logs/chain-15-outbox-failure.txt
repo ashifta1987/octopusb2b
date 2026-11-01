@@ -1,0 +1,27 @@
+· other due events when starting: 0
+┌─────────┬─────┬───────────┬──────────┬───────────┐
+│ (index) │ run │ status    │ attempts │ next_in_s │
+├─────────┼─────┼───────────┼──────────┼───────────┤
+│ 0       │ 1   │ 'pending' │ 1        │ 59        │
+│ 1       │ 2   │ 'pending' │ 2        │ 300       │
+│ 2       │ 3   │ 'pending' │ 3        │ 1800      │
+│ 3       │ 4   │ 'pending' │ 4        │ 7200      │
+│ 4       │ 5   │ 'pending' │ 5        │ 21600     │
+│ 5       │ 6   │ 'dead'    │ 6        │ null      │
+└─────────┴─────┴───────────┴──────────┴───────────┘
+✔ backoff schedule honoured: 1 m, 5 m, 30 m, 2 h, 6 h — 59, 300, 1800, 7200, 21600
+✔ 5 retries, then dead-letter on the 6th failure — {"run":6,"status":"dead","attempts":6,"next_in_s":null}
+✔ 6 failed e-mail attempts logged (email_deliveries) — 6
+✔ each failure in integration_logs (502) with request SHA 
+✔ customer notification sent once despite 6 runs (notify consumer idempotent) — 1
+✔ alert: every admin notified of the dead letter — 2
+✔ alert: integration_logs outbox dead-letter row 
+✔ outbound e-mail call carried x-octopus-trace — x-octopus-trace=e2e-c15-310054694390
+✘ Sentry breadcrumb with the trace id — SENTRY_DSN not configured (IN-02) — structured JSON log line "outbox_dead_letter" carries trace_id instead
+✔ admin Retry button re-queued the event (attempts reset) — {"status":"pending","attempts":0}
+✔ after retry the event is delivered (done) — done
+✔ exactly one successful e-mail after the retry — 1
+✔ still one customer notification (no duplicate on retry) 
+✔ webhook delivered once across all runs — 1
+✔ audit: outbox.retry 
+✔ retries skipped finished consumers (idempotency_hits) — 12

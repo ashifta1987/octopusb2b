@@ -1,0 +1,165 @@
+{
+  "chain": 10,
+  "title": "Escalation → Support ticket → staff reply",
+  "started_at": "2026-11-01T02:04:07.843Z",
+  "checks": [
+    {
+      "ok": true,
+      "name": "escalation row + Support ticket with transcript",
+      "detail": "sensitive_topic → TKT-1023"
+    },
+    {
+      "ok": true,
+      "name": "/office/assistant queue refreshed live on the new escalation (Realtime)",
+      "detail": "1470 ms"
+    },
+    {
+      "ok": true,
+      "name": "account manager replied from the back office",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "staff reply visible to the customer in-thread without reload (Realtime)",
+      "detail": "772 ms"
+    },
+    {
+      "ok": true,
+      "name": "exactly 1 escalation in the trace",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "ticket + transcript message in the trace",
+      "detail": "1 / 1"
+    },
+    {
+      "ok": true,
+      "name": "outbox assistant.escalated once",
+      "detail": "assistant.staff_replied, assistant.escalated"
+    },
+    {
+      "ok": true,
+      "name": "staff notification for the handoff",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "audit entries (log_assistant_open / escalation)",
+      "detail": "assistant.opened"
+    },
+    {
+      "ok": true,
+      "name": "replay: escalating an open session again is a no-op (1 escalation)",
+      "detail": "count 1"
+    },
+    {
+      "ok": true,
+      "name": "negative: customer calling staff_assistant_reply refused",
+      "detail": "FORBIDDEN"
+    }
+  ],
+  "hops": [
+    {
+      "at": "2026-11-01T02:04:21.68183+00:00",
+      "table": "assistant_messages",
+      "txid": null,
+      "id": "7d679bca-34b3-4bc7-9280-46c492b22491",
+      "summary": "7d679bca-34b3-4bc7-9280-46c492b22491"
+    },
+    {
+      "at": "2026-11-01T02:04:22.045728+00:00",
+      "table": "assistant_messages",
+      "txid": null,
+      "id": "b59149a5-88ce-482a-89d7-66fa260e4419",
+      "summary": "b59149a5-88ce-482a-89d7-66fa260e4419"
+    },
+    {
+      "at": "2026-11-01T02:04:22.156437+00:00",
+      "table": "tickets",
+      "txid": null,
+      "id": "fcb42fc4-2cf7-426a-8221-8f1697a7a14d",
+      "summary": "TKT-1023"
+    },
+    {
+      "at": "2026-11-01T02:04:22.156437+00:00",
+      "table": "escalations",
+      "txid": null,
+      "id": "eea28b81-e88c-4a75-97ab-0dcb14a84241",
+      "summary": "eea28b81-e88c-4a75-97ab-0dcb14a84241"
+    },
+    {
+      "at": "2026-11-01T02:04:22.156437+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "9dafdde7-fce3-4e36-a57b-7ab698708f25",
+      "summary": "Customer handed to you by Octo (user)"
+    },
+    {
+      "at": "2026-11-01T02:04:22.156437+00:00",
+      "table": "outbox_events",
+      "txid": 5551,
+      "id": "6b31d553-2b07-4d36-8358-2fd88aee552f",
+      "summary": "assistant.escalated [done] agg=assistant_session:e783f926 payload#2c4d566e16"
+    },
+    {
+      "at": "2026-11-01T02:04:22.156437+00:00",
+      "table": "ticket_messages",
+      "txid": null,
+      "id": "c445908b-9a4d-45d0-b8e4-6c39a137ac2c",
+      "summary": "c445908b-9a4d-45d0-b8e4-6c39a137ac2c"
+    },
+    {
+      "at": "2026-11-01T02:04:22.156437+00:00",
+      "table": "assistant_messages",
+      "txid": null,
+      "id": "6ba7c362-ce1a-4afa-9c4c-e8c813b8220f",
+      "summary": "6ba7c362-ce1a-4afa-9c4c-e8c813b8220f"
+    },
+    {
+      "at": "2026-11-01T02:04:24.128923+00:00",
+      "table": "audit_log",
+      "txid": 5552,
+      "id": 732,
+      "summary": "assistant.opened assistant_sessions actor=56f37861"
+    },
+    {
+      "at": "2026-11-01T02:04:25.595167+00:00",
+      "table": "outbox_events",
+      "txid": 5555,
+      "id": "4b9d7b90-379e-48c3-b194-7de41090fecd",
+      "summary": "assistant.staff_replied [done] agg=assistant_session:e783f926 payload#1abfbfdf80"
+    },
+    {
+      "at": "2026-11-01T02:04:25.595167+00:00",
+      "table": "assistant_messages",
+      "txid": null,
+      "id": "0bd75633-8e61-40ae-8667-6c84e2c4f258",
+      "summary": "0bd75633-8e61-40ae-8667-6c84e2c4f258"
+    },
+    {
+      "at": "2026-11-01T02:04:26.783453+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "4b9d7b90-379e-48c3-b194-7de41090fecd",
+      "summary": "notify → ok (0 ms) evt=4b9d7b90"
+    },
+    {
+      "at": "2026-11-01T02:04:27.082513+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "6b31d553-2b07-4d36-8358-2fd88aee552f",
+      "summary": "notify → ok (0 ms) evt=6b31d553"
+    }
+  ],
+  "latency": {
+    "customer message → escalation row": 1256,
+    "staff reply → visible in customer thread": 509
+  },
+  "notes": [],
+  "traces": [
+    "e2e-c10-5d6f120245c2"
+  ],
+  "e2e_ms": 5914,
+  "finished_at": "2026-11-01T02:04:27.460Z"
+}

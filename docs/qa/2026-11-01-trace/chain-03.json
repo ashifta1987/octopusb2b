@@ -1,0 +1,754 @@
+{
+  "chain": 3,
+  "title": "In production → QC → Balance → Shipped",
+  "started_at": "2026-11-01T02:03:09.900Z",
+  "checks": [
+    {
+      "ok": true,
+      "name": "operations: → in_production",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "operations: → qc",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "operations: → balance_pending",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "balance paid in full",
+      "detail": "{\"status\":\"balance_paid\",\"paid_cents\":\"64500\",\"total_cents\":\"64500\"}"
+    },
+    {
+      "ok": true,
+      "name": "operations: → ready_to_ship",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "customer order timeline shows \"Shipped\" live (Realtime order_events/tracking_events)",
+      "detail": "1956 ms"
+    },
+    {
+      "ok": true,
+      "name": "1 shipment row with the trace id",
+      "detail": "{\"id\":\"65244678-d9c2-4d6d-8d77-147cac30098e\",\"tracking_no\":\"YT34986083259092\",\"status\":\"label_ready\",\"trace_id\":\"e2e-c03-f2a2c9e268e8\"}"
+    },
+    {
+      "ok": true,
+      "name": "tracking event \"created\" recorded through system_record_tracking",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "status_history order → in_production once",
+      "detail": "in_production → qc → balance_pending → balance_paid → ready_to_ship → shipped"
+    },
+    {
+      "ok": true,
+      "name": "status_history order → qc once",
+      "detail": "in_production → qc → balance_pending → balance_paid → ready_to_ship → shipped"
+    },
+    {
+      "ok": true,
+      "name": "status_history order → balance_pending once",
+      "detail": "in_production → qc → balance_pending → balance_paid → ready_to_ship → shipped"
+    },
+    {
+      "ok": true,
+      "name": "status_history order → ready_to_ship once",
+      "detail": "in_production → qc → balance_pending → balance_paid → ready_to_ship → shipped"
+    },
+    {
+      "ok": true,
+      "name": "status_history order → shipped once",
+      "detail": "in_production → qc → balance_pending → balance_paid → ready_to_ship → shipped"
+    },
+    {
+      "ok": true,
+      "name": "balance payment journal balances per currency",
+      "detail": "1 journals"
+    },
+    {
+      "ok": true,
+      "name": "YunExpress adapter calls logged (price trial, create, subscribe) with SHAs",
+      "detail": "sandbox://yunexpress/api/WayBill/GetPriceTrial, sandbox://yunexpress/api/WayBill/CreateOrder, sandbox://yunexpress/api/Tracking/Subscribe"
+    },
+    {
+      "ok": true,
+      "name": "outbox shipment.tracking written",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "shipped e-mail sent once",
+      "detail": "default:order.in_production, default:order.qc, default:order.balance_pending, default:order.ready_to_ship, default:payment.confirmed, default:order.shipped"
+    },
+    {
+      "ok": true,
+      "name": "commercial invoice document on balance_pending",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "replay: second \"shipped\" refused",
+      "detail": "INVALID_TRANSITION: shipped → shipped"
+    },
+    {
+      "ok": true,
+      "name": "negative: customer transition → FORBIDDEN",
+      "detail": "FORBIDDEN"
+    }
+  ],
+  "hops": [
+    {
+      "at": "2026-11-01T02:03:10.878559+00:00",
+      "table": "audit_log",
+      "txid": 5338,
+      "id": 715,
+      "summary": "status.order order actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:03:10.878559+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "84f9cd36-6705-47b9-a83c-9f0aae01e97f",
+      "summary": "In Production"
+    },
+    {
+      "at": "2026-11-01T02:03:10.878559+00:00",
+      "table": "outbox_events",
+      "txid": 5338,
+      "id": "0a6c54af-1d62-4c4f-a4e1-b4e131f27f11",
+      "summary": "order.in_production [done] agg=order:96c84681 payload#1abfbfdf80"
+    },
+    {
+      "at": "2026-11-01T02:03:10.878559+00:00",
+      "table": "status_history",
+      "txid": 5338,
+      "id": 521,
+      "summary": "order confirmed→in_production"
+    },
+    {
+      "at": "2026-11-01T02:03:11.112635+00:00",
+      "table": "audit_log",
+      "txid": 5339,
+      "id": 716,
+      "summary": "status.order order actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:03:11.112635+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "34f41a2b-764a-46f3-874c-7afe027bb187",
+      "summary": "Qc"
+    },
+    {
+      "at": "2026-11-01T02:03:11.112635+00:00",
+      "table": "outbox_events",
+      "txid": 5339,
+      "id": "326e54e0-d2c4-41e4-ba13-c339e07b2cfb",
+      "summary": "order.qc [done] agg=order:96c84681 payload#1abfbfdf80"
+    },
+    {
+      "at": "2026-11-01T02:03:11.112635+00:00",
+      "table": "status_history",
+      "txid": 5339,
+      "id": 522,
+      "summary": "order in_production→qc"
+    },
+    {
+      "at": "2026-11-01T02:03:11.202334+00:00",
+      "table": "audit_log",
+      "txid": 5340,
+      "id": 717,
+      "summary": "status.order order actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:03:11.202334+00:00",
+      "table": "documents",
+      "txid": null,
+      "id": "9f3e4467-7c68-47c4-920e-6bf2555051c2",
+      "summary": "INV-2026-0403"
+    },
+    {
+      "at": "2026-11-01T02:03:11.202334+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "684e7e03-5156-4721-8b28-971fa28aeaf1",
+      "summary": "Balance Pending"
+    },
+    {
+      "at": "2026-11-01T02:03:11.202334+00:00",
+      "table": "outbox_events",
+      "txid": 5340,
+      "id": "914e9a25-4c61-440c-a964-0464be143a46",
+      "summary": "order.balance_pending [done] agg=order:96c84681 payload#1abfbfdf80"
+    },
+    {
+      "at": "2026-11-01T02:03:11.202334+00:00",
+      "table": "status_history",
+      "txid": 5340,
+      "id": 523,
+      "summary": "order qc→balance_pending"
+    },
+    {
+      "at": "2026-11-01T02:03:11.684796+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "09dc93ba-bdf3-41f9-ac86-0669906cc90a",
+      "summary": "Order in production"
+    },
+    {
+      "at": "2026-11-01T02:03:11.879211+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "0a6c54af-1d62-4c4f-a4e1-b4e131f27f11",
+      "summary": "notify → ok (208 ms) evt=0a6c54af"
+    },
+    {
+      "at": "2026-11-01T02:03:12.289978+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "85a53a55-9461-4f02-94aa-d969087310b5",
+      "summary": "default:order.in_production → log logged rcpt#5278b812a9 msg=log_1793498592177"
+    },
+    {
+      "at": "2026-11-01T02:03:12.383615+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 107,
+      "summary": "email out 200 log://email req#06c039f4ef res#2c9c30c9d1"
+    },
+    {
+      "at": "2026-11-01T02:03:12.476952+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "0a6c54af-1d62-4c4f-a4e1-b4e131f27f11",
+      "summary": "email → ok (512 ms) evt=0a6c54af"
+    },
+    {
+      "at": "2026-11-01T02:03:14.111672+00:00",
+      "table": "webhook_deliveries",
+      "txid": null,
+      "id": "d55be4f9-a13b-4144-83cc-3d6e23b9e112",
+      "summary": "order.updated → HTTP 200 delivered"
+    },
+    {
+      "at": "2026-11-01T02:03:14.20462+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "0a6c54af-1d62-4c4f-a4e1-b4e131f27f11",
+      "summary": "webhooks_out:afd1c746-f94c-41f9-b18d-4ba035320eec → ok (1436 ms) evt=0a6c54af"
+    },
+    {
+      "at": "2026-11-01T02:03:14.302491+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "0a6c54af-1d62-4c4f-a4e1-b4e131f27f11",
+      "summary": "webhooks_out → ok (1730 ms) evt=0a6c54af"
+    },
+    {
+      "at": "2026-11-01T02:03:14.600946+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "96716b1c-051e-4c75-bd9e-55e356ebaa5f",
+      "summary": "Order qc"
+    },
+    {
+      "at": "2026-11-01T02:03:14.683903+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "326e54e0-d2c4-41e4-ba13-c339e07b2cfb",
+      "summary": "notify → ok (85 ms) evt=326e54e0"
+    },
+    {
+      "at": "2026-11-01T02:03:15.099746+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "6b1beb1f-996d-4837-9193-e5d2dc995fc3",
+      "summary": "default:order.qc → log logged rcpt#5278b812a9 msg=log_1793498594995"
+    },
+    {
+      "at": "2026-11-01T02:03:15.198936+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 108,
+      "summary": "email out 200 log://email req#5f24ae3a41 res#455bff2e1d"
+    },
+    {
+      "at": "2026-11-01T02:03:15.299119+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "326e54e0-d2c4-41e4-ba13-c339e07b2cfb",
+      "summary": "email → ok (514 ms) evt=326e54e0"
+    },
+    {
+      "at": "2026-11-01T02:03:15.85981+00:00",
+      "table": "webhook_deliveries",
+      "txid": null,
+      "id": "f4dc6b29-54be-4131-8592-75a83c32ad77",
+      "summary": "order.updated → HTTP 200 delivered"
+    },
+    {
+      "at": "2026-11-01T02:03:15.968284+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "326e54e0-d2c4-41e4-ba13-c339e07b2cfb",
+      "summary": "webhooks_out:afd1c746-f94c-41f9-b18d-4ba035320eec → ok (390 ms) evt=326e54e0"
+    },
+    {
+      "at": "2026-11-01T02:03:16.08173+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "326e54e0-d2c4-41e4-ba13-c339e07b2cfb",
+      "summary": "webhooks_out → ok (681 ms) evt=326e54e0"
+    },
+    {
+      "at": "2026-11-01T02:03:16.360073+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "28ea1664-9e05-40df-a666-5d8136e2e659",
+      "summary": "Order balance pending"
+    },
+    {
+      "at": "2026-11-01T02:03:16.460658+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "914e9a25-4c61-440c-a964-0464be143a46",
+      "summary": "notify → ok (95 ms) evt=914e9a25"
+    },
+    {
+      "at": "2026-11-01T02:03:16.862181+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "cdb09162-a7f6-4322-98df-db3d1cbfade9",
+      "summary": "default:order.balance_pending → log logged rcpt#5278b812a9 msg=log_1793498596761"
+    },
+    {
+      "at": "2026-11-01T02:03:16.960626+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 109,
+      "summary": "email out 200 log://email req#ce2b929e3b res#a138eeb89f"
+    },
+    {
+      "at": "2026-11-01T02:03:17.066828+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "914e9a25-4c61-440c-a964-0464be143a46",
+      "summary": "email → ok (512 ms) evt=914e9a25"
+    },
+    {
+      "at": "2026-11-01T02:03:17.618793+00:00",
+      "table": "webhook_deliveries",
+      "txid": null,
+      "id": "8ee6735a-261d-4c06-8bcd-4990f42ea7e9",
+      "summary": "order.updated → HTTP 200 delivered"
+    },
+    {
+      "at": "2026-11-01T02:03:17.721701+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "914e9a25-4c61-440c-a964-0464be143a46",
+      "summary": "webhooks_out:afd1c746-f94c-41f9-b18d-4ba035320eec → ok (363 ms) evt=914e9a25"
+    },
+    {
+      "at": "2026-11-01T02:03:17.817863+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "914e9a25-4c61-440c-a964-0464be143a46",
+      "summary": "webhooks_out → ok (660 ms) evt=914e9a25"
+    },
+    {
+      "at": "2026-11-01T02:03:18.860462+00:00",
+      "table": "journals",
+      "txid": 5370,
+      "id": "d8bbaba2-0f3a-469c-b650-a472afb567b4",
+      "summary": "JRN-000466 orders Payment WALLET-ORD-2308-balance · ORD-2308"
+    },
+    {
+      "at": "2026-11-01T02:03:18.860462+00:00",
+      "table": "payments",
+      "txid": null,
+      "id": "fb285303-994b-4669-ab1d-ef769fc629a8",
+      "summary": "confirmed"
+    },
+    {
+      "at": "2026-11-01T02:03:18.860462+00:00",
+      "table": "audit_log",
+      "txid": 5370,
+      "id": 718,
+      "summary": "status.order order actor=cf2273df"
+    },
+    {
+      "at": "2026-11-01T02:03:18.860462+00:00",
+      "table": "documents",
+      "txid": null,
+      "id": "cb27ebce-73b9-4209-962b-596cad09b2a5",
+      "summary": "RCT-FB285303"
+    },
+    {
+      "at": "2026-11-01T02:03:18.860462+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "a4c05f02-67df-4e68-b2c3-c307bf17f687",
+      "summary": "Payment received"
+    },
+    {
+      "at": "2026-11-01T02:03:18.860462+00:00",
+      "table": "outbox_events",
+      "txid": 5370,
+      "id": "4b490c63-4555-48dd-82f2-de5cf0827183",
+      "summary": "payment.confirmed [done] agg=payment:fb285303 payload#d145f89d92"
+    },
+    {
+      "at": "2026-11-01T02:03:18.860462+00:00",
+      "table": "ledger_entries",
+      "txid": 5370,
+      "id": 985,
+      "summary": "acct=b9de94fa Dr 45150 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:03:18.860462+00:00",
+      "table": "ledger_entries",
+      "txid": 5370,
+      "id": 986,
+      "summary": "acct=f19a89d7 Dr 0 Cr 45150 USD"
+    },
+    {
+      "at": "2026-11-01T02:03:18.860462+00:00",
+      "table": "status_history",
+      "txid": 5370,
+      "id": 524,
+      "summary": "order balance_pending→balance_paid"
+    },
+    {
+      "at": "2026-11-01T02:03:19.751373+00:00",
+      "table": "audit_log",
+      "txid": 5372,
+      "id": 719,
+      "summary": "status.order order actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:03:19.751373+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "1c563cab-f35d-4640-80e7-d6bbb8e0af3c",
+      "summary": "Ready To Ship"
+    },
+    {
+      "at": "2026-11-01T02:03:19.751373+00:00",
+      "table": "outbox_events",
+      "txid": 5372,
+      "id": "8479545c-9f27-46f2-95ce-6657b830b55c",
+      "summary": "order.ready_to_ship [done] agg=order:96c84681 payload#1abfbfdf80"
+    },
+    {
+      "at": "2026-11-01T02:03:19.751373+00:00",
+      "table": "status_history",
+      "txid": 5372,
+      "id": 525,
+      "summary": "order balance_paid→ready_to_ship"
+    },
+    {
+      "at": "2026-11-01T02:03:20.254551+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "73ff1073-164b-4cd4-8502-37e448dc6e28",
+      "summary": "Order ready to ship"
+    },
+    {
+      "at": "2026-11-01T02:03:20.345696+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "8479545c-9f27-46f2-95ce-6657b830b55c",
+      "summary": "notify → ok (94 ms) evt=8479545c"
+    },
+    {
+      "at": "2026-11-01T02:03:20.762846+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "7d50f306-cb41-4698-9221-ee1fcc4f6147",
+      "summary": "default:order.ready_to_ship → log logged rcpt#5278b812a9 msg=log_1793498600660"
+    },
+    {
+      "at": "2026-11-01T02:03:20.873293+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 110,
+      "summary": "email out 200 log://email req#e689838ded res#7da876fb90"
+    },
+    {
+      "at": "2026-11-01T02:03:20.958113+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "8479545c-9f27-46f2-95ce-6657b830b55c",
+      "summary": "email → ok (520 ms) evt=8479545c"
+    },
+    {
+      "at": "2026-11-01T02:03:21.549505+00:00",
+      "table": "webhook_deliveries",
+      "txid": null,
+      "id": "004c5d1e-44a8-465b-aebf-33ec2a1ad3e6",
+      "summary": "order.updated → HTTP 200 delivered"
+    },
+    {
+      "at": "2026-11-01T02:03:21.647646+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "8479545c-9f27-46f2-95ce-6657b830b55c",
+      "summary": "webhooks_out:afd1c746-f94c-41f9-b18d-4ba035320eec → ok (367 ms) evt=8479545c"
+    },
+    {
+      "at": "2026-11-01T02:03:21.740593+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "8479545c-9f27-46f2-95ce-6657b830b55c",
+      "summary": "webhooks_out → ok (690 ms) evt=8479545c"
+    },
+    {
+      "at": "2026-11-01T02:03:22.047044+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "b4ca1e1f-c68f-4f56-991a-e1cbf3534c1f",
+      "summary": "Payment confirmed"
+    },
+    {
+      "at": "2026-11-01T02:03:22.141385+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "4b490c63-4555-48dd-82f2-de5cf0827183",
+      "summary": "notify → ok (109 ms) evt=4b490c63"
+    },
+    {
+      "at": "2026-11-01T02:03:22.50501+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "0b5bf971-0d76-4d70-aea3-ff2916e2b885",
+      "summary": "default:payment.confirmed → log logged rcpt#5278b812a9 msg=log_1793498602411"
+    },
+    {
+      "at": "2026-11-01T02:03:22.602237+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 111,
+      "summary": "email out 200 log://email req#28ae316fba res#1dbb826daf"
+    },
+    {
+      "at": "2026-11-01T02:03:22.708585+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "4b490c63-4555-48dd-82f2-de5cf0827183",
+      "summary": "email → ok (456 ms) evt=4b490c63"
+    },
+    {
+      "at": "2026-11-01T02:03:23.284129+00:00",
+      "table": "webhook_deliveries",
+      "txid": null,
+      "id": "080bacbd-e835-434e-a721-210a5401e6dd",
+      "summary": "order.updated → HTTP 200 delivered"
+    },
+    {
+      "at": "2026-11-01T02:03:23.371728+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "4b490c63-4555-48dd-82f2-de5cf0827183",
+      "summary": "webhooks_out:afd1c746-f94c-41f9-b18d-4ba035320eec → ok (380 ms) evt=4b490c63"
+    },
+    {
+      "at": "2026-11-01T02:03:23.469845+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "4b490c63-4555-48dd-82f2-de5cf0827183",
+      "summary": "webhooks_out → ok (665 ms) evt=4b490c63"
+    },
+    {
+      "at": "2026-11-01T02:03:27.545033+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 112,
+      "summary": "yunexpress out 200 sandbox://yunexpress/api/WayBill/GetPriceTrial req#7cb90480ea res#db87778fe6"
+    },
+    {
+      "at": "2026-11-01T02:03:28.424172+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 113,
+      "summary": "yunexpress out 200 sandbox://yunexpress/api/WayBill/CreateOrder req#4f73bdac5a res#553df6b174"
+    },
+    {
+      "at": "2026-11-01T02:03:28.501+00:00",
+      "table": "tracking_events",
+      "txid": null,
+      "id": "9297d0f9-2727-4f45-8dcc-8db1a65d21f5",
+      "summary": "created"
+    },
+    {
+      "at": "2026-11-01T02:03:28.503617+00:00",
+      "table": "shipments",
+      "txid": null,
+      "id": "65244678-d9c2-4d6d-8d77-147cac30098e",
+      "summary": "SHP-1003"
+    },
+    {
+      "at": "2026-11-01T02:03:28.602387+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "5c77ea3b-7830-4db3-afeb-12ccb64fbb8d",
+      "summary": "Created"
+    },
+    {
+      "at": "2026-11-01T02:03:28.602387+00:00",
+      "table": "outbox_events",
+      "txid": 5397,
+      "id": "4ff681c3-6802-4daa-b495-7fc28bb569bb",
+      "summary": "shipment.tracking [done] agg=shipment:65244678 payload#d1ebeb6f14"
+    },
+    {
+      "at": "2026-11-01T02:03:28.702336+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 114,
+      "summary": "yunexpress out 200 sandbox://yunexpress/api/Tracking/Subscribe req#644f9fd177 res#74234e98af"
+    },
+    {
+      "at": "2026-11-01T02:03:28.784555+00:00",
+      "table": "audit_log",
+      "txid": 5399,
+      "id": 720,
+      "summary": "status.order order actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:03:28.784555+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "e3abced9-9c32-4bf5-aca1-3e4f913e4122",
+      "summary": "Shipped"
+    },
+    {
+      "at": "2026-11-01T02:03:28.784555+00:00",
+      "table": "outbox_events",
+      "txid": 5399,
+      "id": "09f80a04-4e94-4c02-b3cc-eb2601c294d7",
+      "summary": "order.shipped [done] agg=order:96c84681 payload#1abfbfdf80"
+    },
+    {
+      "at": "2026-11-01T02:03:28.784555+00:00",
+      "table": "status_history",
+      "txid": 5399,
+      "id": 526,
+      "summary": "order ready_to_ship→shipped"
+    },
+    {
+      "at": "2026-11-01T02:03:29.826188+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "2eded5f0-8f89-4d60-9ffb-04325aab58d5",
+      "summary": "Order shipped"
+    },
+    {
+      "at": "2026-11-01T02:03:29.929295+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "09f80a04-4e94-4c02-b3cc-eb2601c294d7",
+      "summary": "notify → ok (110 ms) evt=09f80a04"
+    },
+    {
+      "at": "2026-11-01T02:03:30.357532+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "c078feb1-08ac-4204-b1dc-0949593dd5f4",
+      "summary": "default:order.shipped → log logged rcpt#5278b812a9 msg=log_1793498610251"
+    },
+    {
+      "at": "2026-11-01T02:03:30.454955+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 115,
+      "summary": "email out 200 log://email req#044a0d0fee res#9d4c25bf69"
+    },
+    {
+      "at": "2026-11-01T02:03:30.558729+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "09f80a04-4e94-4c02-b3cc-eb2601c294d7",
+      "summary": "email → ok (531 ms) evt=09f80a04"
+    },
+    {
+      "at": "2026-11-01T02:03:32.270336+00:00",
+      "table": "webhook_deliveries",
+      "txid": null,
+      "id": "84da03e4-32ca-4785-bae6-329a40f01f2d",
+      "summary": "order.updated → HTTP 200 delivered"
+    },
+    {
+      "at": "2026-11-01T02:03:32.361951+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "09f80a04-4e94-4c02-b3cc-eb2601c294d7",
+      "summary": "webhooks_out:afd1c746-f94c-41f9-b18d-4ba035320eec → ok (1513 ms) evt=09f80a04"
+    },
+    {
+      "at": "2026-11-01T02:03:32.457672+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "09f80a04-4e94-4c02-b3cc-eb2601c294d7",
+      "summary": "webhooks_out → ok (1806 ms) evt=09f80a04"
+    },
+    {
+      "at": "2026-11-01T02:03:32.791564+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "54dcd183-ad31-45ca-a512-f26f6e1e9cbc",
+      "summary": "Shipment: created"
+    },
+    {
+      "at": "2026-11-01T02:03:32.889809+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "4ff681c3-6802-4daa-b495-7fc28bb569bb",
+      "summary": "notify → ok (111 ms) evt=4ff681c3"
+    },
+    {
+      "at": "2026-11-01T02:03:33.336934+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "4ff681c3-6802-4daa-b495-7fc28bb569bb",
+      "summary": "webhooks_out → ok (345 ms) evt=4ff681c3"
+    }
+  ],
+  "latency": {
+    "RPC transition_order in_production": 127,
+    "RPC transition_order qc": 239,
+    "RPC transition_order balance_pending": 88,
+    "SA record_payment (balance)": 305,
+    "SA priceTrial (adapter)": 65,
+    "SA createShipment (adapter + shipments + system_record_tracking + transition shipped)": 889
+  },
+  "notes": [
+    "order moved to balance_paid automatically after the balance payment"
+  ],
+  "traces": [
+    "e2e-c03-f2a2c9e268e8"
+  ],
+  "e2e_ms": 22686,
+  "status_history": [
+    "in_production",
+    "qc",
+    "balance_pending",
+    "balance_paid",
+    "ready_to_ship",
+    "shipped"
+  ],
+  "adapter_calls": [
+    "sandbox://yunexpress/api/WayBill/GetPriceTrial",
+    "sandbox://yunexpress/api/WayBill/CreateOrder",
+    "sandbox://yunexpress/api/Tracking/Subscribe"
+  ],
+  "finished_at": "2026-11-01T02:03:34.166Z"
+}

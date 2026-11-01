@@ -1,0 +1,17 @@
+✔ QC request paid from the wallet — {"id":"0bd4ed17-5196-4dce-aabc-bfb6da4e10c7","code":"SRV-0324","status":"paid","fee_minor":"19900","currency":"USD","paid_via":"wallet"}
+✔ operations: → accepted 
+✔ operations: → in_progress 
+✔ operations: → report_ready 
+✔ operations: → completed 
+✔ one wallet-debit journal, 2 balanced entries — [[19900,0,"USD"],[0,19900,"USD"]]
+✔ service_request.paid once — service_request.paid, service_request.updated:completed, service_request.updated:in_progress, service_request.updated:report_ready, service_request.updated:accepted
+✔ 4 service_request.updated events (one per step) 
+✔ customer e-mails: receipt (paid), report ready, completed — default:service_request.paid, default:service_request.updated, default:service_request.updated
+✔ customer notifications per step — 5
+✔ status_history: paid → accepted → in_progress → report_ready → completed — paid → accepted → in_progress → report_ready → completed
+✔ audit entry per transition (status.service_request) — 5
+✘ QC coordinator assigned on the request — {"assigned_to":null,"report_path":null}
+✘ QC report PDF stored (report_path) — {"assigned_to":null,"report_path":null}
+✔ same idempotency key twice → one request, one debit — 9e94cf5a-a44a-4ef0-8c7a-47793f8cbc01 / 9e94cf5a-a44a-4ef0-8c7a-47793f8cbc01 / rows 1
+✔ negative: rejected paid request → refunded automatically (refund journal) — refunded
+✔ negative: completed → paid refused — INVALID_TRANSITION: completed → paid

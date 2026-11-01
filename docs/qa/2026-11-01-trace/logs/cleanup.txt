@@ -1,0 +1,60 @@
+{
+  "at": "2026-11-01T01:58:53.083Z",
+  "emails": [
+    "qa-trace-a@demo.octopusb2b.com",
+    "qa-trace-b@demo.octopusb2b.com",
+    "qa-trace-c@demo.octopusb2b.com",
+    "qa-trace-admin@demo.octopusb2b.com"
+  ],
+  "orgs": [
+    "600be277-952b-4c8f-aabe-5117bc228066",
+    "8936d362-a1e5-4731-b1b5-7d7c33cb905f",
+    "d752f2c9-1e5d-4259-bb5d-a85af95757cf",
+    "fc8f9217-1480-4b94-9d0a-d7c189502ad1"
+  ],
+  "deleted": {
+    "account_managers": 1,
+    "ad_campaigns": 1,
+    "api_clients": 1,
+    "assistant_messages": 8,
+    "assistant_sessions": 1,
+    "backups": 1,
+    "documents": 12,
+    "email_deliveries": 35,
+    "idempotency_hits": 28,
+    "integration_logs": 57,
+    "job_runs": 131,
+    "kyc_submissions": 1,
+    "ledger_entries": 56,
+    "notifications": 44,
+    "order_events": 21,
+    "org_members": 3,
+    "outbox_events": 55,
+    "payments": 5,
+    "pool_events": 6,
+    "profiles": 4,
+    "proforma_invoices": 4,
+    "service_requests": 3,
+    "shipments": 1,
+    "status_history": 48,
+    "ticket_messages": 1,
+    "tickets": 1,
+    "user_roles": 1,
+    "wallet_topups": 4,
+    "webhook_deliveries": 4,
+    "webhook_endpoints": 1,
+    "journals": 28,
+    "ledger_accounts": 8,
+    "auth.mfa_factors": 4,
+    "auth.users": 1
+  },
+  "remaining_e2e_rows": {
+    "quotes": 2,
+    "orders": 4,
+    "audit_log": 49,
+    "pools": 1,
+    "pool_pledges": 3,
+    "rfqs": 3
+  },
+  "remaining_qa_trace_users": 3
+}

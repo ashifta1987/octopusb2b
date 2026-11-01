@@ -1,0 +1,20 @@
+✔ signup page echoes the trace id — e2e-c01-84abda52453d
+✔ Google sign-up button present on /signup 
+· OAuth click → qrawnqpxvtjmgncxmffu.supabase.co/auth/v1/authorize; Supabase answers "provider is not enabled"
+✔ new user without profile is routed to /onboarding — http://localhost:3100/onboarding
+✔ complete_onboarding created the organization + membership — QA-TRACE A BV
+✔ submit_kyc accepted 
+✔ review_kyc → verified 
+· dashboard shows account team card after verify: false
+✔ worker run — {"ok":true,"claimed":3,"done":3,"retried":0,"dead":0,"errors":[],"duration_ms":2376}
+✔ dashboard received the Realtime push (notifications INSERT) and refreshed — 1439 ms after the worker started
+✔ account_managers row written once with the trace id — team Sourcing, reason kyc_verified
+✔ status_history kyc row in trace — 2
+✔ exactly one kyc.verified outbox event 
+✔ notify consumer ran for the trace (job_runs) 
+✔ exactly one "KYC verified" notification 
+✔ audit: assistant.assigned once 
+✔ audit: kyc.review once 
+✔ welcome email sent to the customer — 1 email_deliveries rows
+✔ replay: second verify refused, still one account manager — KYC_INVALID_TRANSITION: already verified
+✔ negative: customer calling review_kyc → FORBIDDEN — FORBIDDEN

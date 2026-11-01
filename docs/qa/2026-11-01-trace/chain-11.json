@@ -1,0 +1,580 @@
+{
+  "chain": 11,
+  "title": "Currency switch USD → CNY",
+  "started_at": "2026-11-01T02:04:58.323Z",
+  "checks": [
+    {
+      "ok": true,
+      "name": "maker (admin) cannot approve own switch",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "approved → applied: platform currency CNY",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "switch request applied",
+      "detail": "applied"
+    },
+    {
+      "ok": true,
+      "name": "storefront price converts to CNY at the approved rate",
+      "detail": "{\"unit_price_cents\":\"21500\",\"currency\":\"USD\",\"cny\":\"154800\"}"
+    },
+    {
+      "ok": true,
+      "name": "USD PI from before the switch keeps currency + FX rate",
+      "detail": "{\"currency\":\"USD\",\"fx_rate_id\":\"1b707ba9-0c59-47ba-92ee-165b6e1de068\",\"pi_currency\":\"USD\"}"
+    },
+    {
+      "ok": true,
+      "name": "new PI after the switch carries CNY + rate",
+      "detail": "{\"currency\":\"CNY\",\"fx_rate_id\":\"5bc07c24-0d6d-448d-8fe2-e656c632ad73\",\"pi_currency\":\"CNY\"}"
+    },
+    {
+      "ok": true,
+      "name": "pgTAP: ok 1 - every journal balances per currency",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "outbox settings.currency_changed written once (broadcast webhook consumer)",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "currency switch audited",
+      "detail": "status.quote, status.order, status.rfq, status.rfq, status.quote, status.order, currency.switch_requested, currency.switch_approved, currency.switch_applied, status.rfq, status.rfq"
+    },
+    {
+      "ok": true,
+      "name": "replay: approving an applied switch is refused",
+      "detail": "INVALID_TRANSITION: applied"
+    }
+  ],
+  "hops": [
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "rfqs",
+      "txid": null,
+      "id": "0a784445-e131-4d4a-aa65-92e7d5b5d56c",
+      "summary": "RFQ-1067"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "rfqs",
+      "txid": null,
+      "id": "c39c58ba-2ffc-44ef-a95f-167ec21bc01e",
+      "summary": "RFQ-1068"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "orders",
+      "txid": null,
+      "id": "929461ba-79be-4fe3-8321-119e6bee4dec",
+      "summary": "ORD-2312"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "orders",
+      "txid": null,
+      "id": "6dee1c6c-78f9-44fe-951e-e3f1ef9d1794",
+      "summary": "ORD-2313"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "quotes",
+      "txid": null,
+      "id": "d6637c0b-c55a-4e1e-997f-1b19e12f4513",
+      "summary": "QT-1067-1"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "quotes",
+      "txid": null,
+      "id": "822f262c-d2f9-4251-bb3a-20a486c67ac3",
+      "summary": "QT-1068-1"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "journals",
+      "txid": 5701,
+      "id": "912a01fd-825c-465e-b196-6c19770bb613",
+      "summary": "JRN-000490 rfq_fees RFQ fee"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "journals",
+      "txid": 5701,
+      "id": "25cd361c-d2fb-4dcd-a83a-94ed3182586f",
+      "summary": "JRN-000491 orders PI PI-2026-1095 issued"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "journals",
+      "txid": 5701,
+      "id": "38b967fa-6981-49c3-b8c2-1021209a76bb",
+      "summary": "JRN-000492 fx_conversion Currency switch: wallet converted USD → CNY @ 7.200000"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "journals",
+      "txid": 5701,
+      "id": "7f5cb643-cb21-409b-ae6b-f811fe6c14a8",
+      "summary": "JRN-000493 fx_conversion Currency switch: wallet converted USD → CNY @ 7.200000"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "journals",
+      "txid": 5701,
+      "id": "4b13a8eb-26d6-4b7e-baee-7a069217bed7",
+      "summary": "JRN-000494 fx_conversion Currency switch: wallet converted USD → CNY @ 7.200000"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "journals",
+      "txid": 5701,
+      "id": "5b53c327-9137-4f11-9f76-bc4b269dded6",
+      "summary": "JRN-000495 fx_conversion Currency switch: wallet converted USD → CNY @ 7.200000"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "journals",
+      "txid": 5701,
+      "id": "f43c6299-0793-4e04-869f-16bdebbc5090",
+      "summary": "JRN-000496 rfq_fees RFQ fee"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "journals",
+      "txid": 5701,
+      "id": "5d8c2850-9a37-44c0-ada2-ac1f856b111e",
+      "summary": "JRN-000497 orders PI PI-2026-1096 issued"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "audit_log",
+      "txid": 5701,
+      "id": 768,
+      "summary": "status.quote quote actor=b0233250"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "audit_log",
+      "txid": 5701,
+      "id": 769,
+      "summary": "status.order order actor=b0233250"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "audit_log",
+      "txid": 5701,
+      "id": 759,
+      "summary": "status.rfq rfq actor=b0233250"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "audit_log",
+      "txid": 5701,
+      "id": 760,
+      "summary": "status.rfq rfq actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "audit_log",
+      "txid": 5701,
+      "id": 761,
+      "summary": "status.quote quote actor=b0233250"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "audit_log",
+      "txid": 5701,
+      "id": 762,
+      "summary": "status.order order actor=b0233250"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "audit_log",
+      "txid": 5701,
+      "id": 763,
+      "summary": "currency.switch_requested currency_switch_requests actor=4589715d"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "audit_log",
+      "txid": 5701,
+      "id": 764,
+      "summary": "currency.switch_approved currency_switch_requests actor=52c0c49a"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "audit_log",
+      "txid": 5701,
+      "id": 765,
+      "summary": "currency.switch_applied currency_switch_requests actor=52c0c49a"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "audit_log",
+      "txid": 5701,
+      "id": 766,
+      "summary": "status.rfq rfq actor=b0233250"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "audit_log",
+      "txid": 5701,
+      "id": 767,
+      "summary": "status.rfq rfq actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "documents",
+      "txid": null,
+      "id": "7be25a4c-45f1-40c5-afa9-6cf7c9f86b85",
+      "summary": "PI-2026-1095"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "documents",
+      "txid": null,
+      "id": "a651c931-b1d3-4c4d-b99b-a4e065536f75",
+      "summary": "PI-2026-1096"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "d79d992f-0a74-456a-a365-80d35167c10a",
+      "summary": "Proforma invoice issued"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "f59aa331-3812-4a87-91c7-08b283a42f90",
+      "summary": "Proforma invoice issued"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "outbox_events",
+      "txid": 5701,
+      "id": "c4efa777-92ae-41d0-be6a-c42b6b9219bf",
+      "summary": "rfq.submitted [pending] agg=rfq:0a784445 payload#515dec449a"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "outbox_events",
+      "txid": 5701,
+      "id": "444971ef-32c3-4c05-bc43-d91fe301d4a7",
+      "summary": "quote.sent [pending] agg=quote:d6637c0b payload#225601c627"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "outbox_events",
+      "txid": 5701,
+      "id": "f03007d1-8f95-4ac5-8681-eb220913d4a2",
+      "summary": "quote.approved [pending] agg=order:929461ba payload#ce27fb1a3e"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "outbox_events",
+      "txid": 5701,
+      "id": "e44e99fb-9b44-4db7-975c-08217f63f90f",
+      "summary": "settings.currency_changed [pending] agg=currency_switch:5c044322 payload#d96b17fe33"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "outbox_events",
+      "txid": 5701,
+      "id": "55630a16-28fd-4b41-8d0b-d051007caf1b",
+      "summary": "rfq.submitted [pending] agg=rfq:c39c58ba payload#515dec449a"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "outbox_events",
+      "txid": 5701,
+      "id": "adf118dc-d774-4f91-b22b-4b05afc7ad65",
+      "summary": "quote.sent [pending] agg=quote:822f262c payload#becdf546aa"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "outbox_events",
+      "txid": 5701,
+      "id": "f096a8e4-cb8e-4ca5-aa53-89d140b224e7",
+      "summary": "quote.approved [pending] agg=order:6dee1c6c payload#ee2abc50c7"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1033,
+      "summary": "acct=58b9b6e1 Dr 500 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1034,
+      "summary": "acct=a101fb4b Dr 0 Cr 500 USD"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1035,
+      "summary": "acct=7a39024f Dr 50000 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1036,
+      "summary": "acct=515aa3f1 Dr 0 Cr 50000 USD"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1037,
+      "summary": "acct=58b9b6e1 Dr 28600 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1038,
+      "summary": "acct=c1cf442f Dr 0 Cr 28600 USD"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1039,
+      "summary": "acct=2e80087a Dr 205920 Cr 0 CNY"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1040,
+      "summary": "acct=08cb793e Dr 0 Cr 205920 CNY"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1041,
+      "summary": "acct=0ff27257 Dr 466000 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1042,
+      "summary": "acct=c1cf442f Dr 0 Cr 466000 USD"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1043,
+      "summary": "acct=2e80087a Dr 3355200 Cr 0 CNY"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1044,
+      "summary": "acct=7c25301a Dr 0 Cr 3355200 CNY"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1045,
+      "summary": "acct=b417d05c Dr 483000 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1046,
+      "summary": "acct=c1cf442f Dr 0 Cr 483000 USD"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1047,
+      "summary": "acct=2e80087a Dr 3477600 Cr 0 CNY"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1048,
+      "summary": "acct=432f8923 Dr 0 Cr 3477600 CNY"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1049,
+      "summary": "acct=b9de94fa Dr 380597 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1050,
+      "summary": "acct=c1cf442f Dr 0 Cr 380597 USD"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1051,
+      "summary": "acct=2e80087a Dr 2740298 Cr 0 CNY"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1052,
+      "summary": "acct=aad0c7c5 Dr 0 Cr 2740298 CNY"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1053,
+      "summary": "acct=08cb793e Dr 3600 Cr 0 CNY"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1054,
+      "summary": "acct=edd09a3e Dr 0 Cr 3600 CNY"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1055,
+      "summary": "acct=7d849a4f Dr 990 Cr 0 CNY"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "ledger_entries",
+      "txid": 5701,
+      "id": 1056,
+      "summary": "acct=41f2ac08 Dr 0 Cr 990 CNY"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "status_history",
+      "txid": 5701,
+      "id": 561,
+      "summary": "rfq ∅→submitted"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "status_history",
+      "txid": 5701,
+      "id": 562,
+      "summary": "rfq submitted→quoted"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "status_history",
+      "txid": 5701,
+      "id": 563,
+      "summary": "quote sent→approved"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "status_history",
+      "txid": 5701,
+      "id": 564,
+      "summary": "order ∅→deposit_pending"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "status_history",
+      "txid": 5701,
+      "id": 565,
+      "summary": "rfq ∅→submitted"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "status_history",
+      "txid": 5701,
+      "id": 566,
+      "summary": "rfq submitted→quoted"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "status_history",
+      "txid": 5701,
+      "id": 567,
+      "summary": "quote sent→approved"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "status_history",
+      "txid": 5701,
+      "id": 568,
+      "summary": "order ∅→deposit_pending"
+    },
+    {
+      "table": "proforma_invoices",
+      "txid": null,
+      "id": "b09d1470-5a6e-4447-b37a-e490013d544d",
+      "summary": "PI-2026-1095"
+    },
+    {
+      "table": "proforma_invoices",
+      "txid": null,
+      "id": "91fb07d1-20d6-44d7-bb80-386d6072ac2c",
+      "summary": "PI-2026-1096"
+    },
+    {
+      "at": "2026-11-01T02:04:58.842733+00:00",
+      "table": "currency_switch_requests",
+      "txid": null,
+      "id": "5c044322-a57e-4832-8150-d579d5a144fd",
+      "summary": "applied"
+    }
+  ],
+  "latency": {
+    "RPC request_currency_switch": 65,
+    "RPC approve_currency_switch (apply)": 71
+  },
+  "notes": [
+    "Ran inside one transaction that was rolled back — nothing persisted (incl. the temporary pgtap extension)."
+  ],
+  "traces": [
+    "e2e-c11-6eb39f622ad2"
+  ],
+  "tables": {
+    "rfqs": 2,
+    "orders": 2,
+    "quotes": 2,
+    "journals": 8,
+    "audit_log": 11,
+    "documents": 2,
+    "order_events": 2,
+    "outbox_events": 7,
+    "ledger_entries": 24,
+    "status_history": 8,
+    "proforma_invoices": 2,
+    "currency_switch_requests": 1
+  },
+  "e2e_ms": 3710,
+  "finished_at": "2026-11-01T02:05:03.279Z"
+}

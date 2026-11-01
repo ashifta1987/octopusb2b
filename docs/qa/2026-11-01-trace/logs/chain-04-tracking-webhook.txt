@@ -1,0 +1,16 @@
+✔ webhook recorded the delivered event — {"ok":true,"received":1,"recorded":1,"duplicates":0,"unknown":[]}
+✔ customer timeline shows "Delivered" live (Realtime tracking_events) — 629 ms
+✔ end-to-end (webhook → e-mail delivered) under 15 s — 5025 ms (dispatcher cadence in production: 10 s)
+✔ replay → 200, duplicate, nothing recorded — {"ok":true,"received":1,"recorded":0,"duplicates":1,"unknown":[]}
+✔ bad HMAC → 401 — BAD_SIGNATURE
+✔ unknown tracking number → acknowledged, listed as unknown, nothing written — {"ok":true,"received":1,"recorded":0,"duplicates":0,"unknown":["YT0000000000000"]}
+✔ exactly 1 tracking_events row — 1
+✔ shipment and order → delivered (claim window opened) — delivered / delivered / claim until Sun Nov 08 2026 07:33:38 GMT+0530 (India Standard Time)
+✔ exactly 1 shipment.tracking event — shipment.tracking, order.delivered
+✔ exactly 1 order.delivered event 
+✔ customer e-mail (order delivered) once — default:order.delivered
+✔ shipment notification once — Shipment: delivered, Order delivered
+✔ no shipment.tracking webhook (org endpoint subscribes to order.updated, quote.created only) 
+✔ replay → 1 idempotency_hits row linked to the original trace — {"id":44,"key":"yt_evt_45e6bafc98f5","scope":"yunexpress_webhook","detail":{"tracking_no":"YT34986083259092","tracking_event_id":"6f7e2395-939b-4f61-b27d-5e1f6042b714"},"trace_id":"e2e-c04-964113030cb
+✔ inbound webhook calls logged with HMAC result + body SHA — 5
+· Metric: there is no metrics backend (no Sentry/OTel); integration_logs + job_runs.duration_ms are the only counters/timers.

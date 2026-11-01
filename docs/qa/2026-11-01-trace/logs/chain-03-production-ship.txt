@@ -1,0 +1,21 @@
+✔ operations: → in_production 
+✔ operations: → qc 
+✔ operations: → balance_pending 
+✔ balance paid in full — {"status":"balance_paid","paid_cents":"64500","total_cents":"64500"}
+· order moved to balance_paid automatically after the balance payment
+✔ operations: → ready_to_ship 
+✔ customer order timeline shows "Shipped" live (Realtime order_events/tracking_events) — 1956 ms
+✔ 1 shipment row with the trace id — {"id":"65244678-d9c2-4d6d-8d77-147cac30098e","tracking_no":"YT34986083259092","status":"label_ready","trace_id":"e2e-c03-f2a2c9e268e8"}
+✔ tracking event "created" recorded through system_record_tracking — 1
+✔ status_history order → in_production once — in_production → qc → balance_pending → balance_paid → ready_to_ship → shipped
+✔ status_history order → qc once — in_production → qc → balance_pending → balance_paid → ready_to_ship → shipped
+✔ status_history order → balance_pending once — in_production → qc → balance_pending → balance_paid → ready_to_ship → shipped
+✔ status_history order → ready_to_ship once — in_production → qc → balance_pending → balance_paid → ready_to_ship → shipped
+✔ status_history order → shipped once — in_production → qc → balance_pending → balance_paid → ready_to_ship → shipped
+✔ balance payment journal balances per currency — 1 journals
+✔ YunExpress adapter calls logged (price trial, create, subscribe) with SHAs — sandbox://yunexpress/api/WayBill/GetPriceTrial, sandbox://yunexpress/api/WayBill/CreateOrder, sandbox://yunexpress/api/Tracking/Subscribe
+✔ outbox shipment.tracking written 
+✔ shipped e-mail sent once — default:order.in_production, default:order.qc, default:order.balance_pending, default:order.ready_to_ship, default:payment.confirmed, default:order.shipped
+✔ commercial invoice document on balance_pending 
+✔ replay: second "shipped" refused — INVALID_TRANSITION: shipped → shipped
+✔ negative: customer transition → FORBIDDEN — FORBIDDEN

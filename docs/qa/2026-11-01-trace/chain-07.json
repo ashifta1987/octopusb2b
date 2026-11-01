@@ -1,0 +1,83 @@
+{
+  "chain": 7,
+  "title": "Backup now → upload → UI card",
+  "started_at": "2026-11-01T02:05:03.510Z",
+  "checks": [
+    {
+      "ok": true,
+      "name": "Back up now → backup row queued; GitHub dispatch refused: GITHUB_NOT_CONFIGURED (boundary)",
+      "detail": "{\"ok\":false,\"error\":\"GITHUB_NOT_CONFIGURED\",\"backup_id\":\"eb512353-8d14-45a7-b058-fc2c2d915103\",\"code\":\"BK-2026-1101-1005\"}"
+    },
+    {
+      "ok": true,
+      "name": "backups row queued with the trace id",
+      "detail": "{\"code\":\"BK-2026-1101-1005\",\"status\":\"queued\",\"trace_id\":\"e2e-c07-d7f8b8960c25\"}"
+    },
+    {
+      "ok": true,
+      "name": "off-site bucket test → not configured (boundary)",
+      "detail": "{\"ok\":false,\"error\":\"OFFSITE_NOT_CONFIGURED\",\"offsite\":{\"bucket\":\"\",\"region\":\"auto\",\"endpoint\":\"\",\"provider\":\"S3-compatible\",\"last_test_at\":\"2026-11-01T02:05:07"
+    },
+    {
+      "ok": true,
+      "name": "callback with a bad HMAC → 401",
+      "detail": "401"
+    },
+    {
+      "ok": true,
+      "name": "signed callback → backup completed with checksum (simulated workflow)",
+      "detail": "{\"status\":\"completed\",\"checksum_ok\":true,\"size_bytes\":\"1234567\"}"
+    },
+    {
+      "ok": true,
+      "name": "status card refreshed without reload (3 s poll of the started backup)",
+      "detail": "live: true, row listed after reload: true"
+    },
+    {
+      "ok": true,
+      "name": "backup request audited",
+      "detail": "backup.requested, backup.settings, backup.completed"
+    }
+  ],
+  "hops": [
+    {
+      "at": "2026-11-01T02:05:07.178547+00:00",
+      "table": "backups",
+      "txid": null,
+      "id": "eb512353-8d14-45a7-b058-fc2c2d915103",
+      "summary": "BK-2026-1101-1005"
+    },
+    {
+      "at": "2026-11-01T02:05:07.178547+00:00",
+      "table": "audit_log",
+      "txid": 5729,
+      "id": 771,
+      "summary": "backup.requested backups actor=74cb7745"
+    },
+    {
+      "at": "2026-11-01T02:05:07.700664+00:00",
+      "table": "audit_log",
+      "txid": 5730,
+      "id": 772,
+      "summary": "backup.settings site_settings actor=74cb7745"
+    },
+    {
+      "at": "2026-11-01T02:05:07.858446+00:00",
+      "table": "audit_log",
+      "txid": 5732,
+      "id": 773,
+      "summary": "backup.completed backups actor=system"
+    }
+  ],
+  "latency": {
+    "UI Back up now → POST /api/backups/trigger (request_backup + GitHub dispatch)": 406,
+    "signed status callback → backup_report": 107
+  },
+  "notes": [],
+  "traces": [
+    "e2e-c07-d7f8b8960c25"
+  ],
+  "e2e_ms": 29230,
+  "boundary": "GitHub Actions dispatch + off-site bucket (owner: Owner/Admin — GITHUB_ACTIONS_TOKEN, BACKUP_S3_*, age key; QA BK-01)",
+  "finished_at": "2026-11-01T02:05:37.985Z"
+}

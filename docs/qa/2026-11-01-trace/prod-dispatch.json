@@ -1,0 +1,25 @@
+{
+  "trace": "e2e-c00-7eac2fae5d77",
+  "job": {
+    "jobid": "9",
+    "schedule": "10 seconds",
+    "active": false
+  },
+  "event": "e4ae4bee-4b57-4461-a485-d0ddc92bcd68",
+  "final": {
+    "status": "done",
+    "attempts": 0
+  },
+  "pickup_ms": 15000,
+  "waited_ms": 20896,
+  "job_runs": [
+    "notify ok 672 ms trace=e2e-c00-7eac2fae5d77",
+    "email ok 1644 ms trace=e2e-c00-7eac2fae5d77",
+    "webhooks_out:01d57368-717a-40f7-83ca-b9fe0aa3d4d2 ok 303 ms trace=e2e-c00-7eac2fae5d77",
+    "webhooks_out ok 1475 ms trace=e2e-c00-7eac2fae5d77"
+  ],
+  "http": [
+    "200 {\"ok\":true,\"claimed\":1,\"done\":1,\"retried\":0,\"dead\":0,\"errors\":[],\"duration_ms\":7846}"
+  ],
+  "cron_runs": 2
+}

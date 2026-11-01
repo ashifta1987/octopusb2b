@@ -1,0 +1,179 @@
+{
+  "chain": 13,
+  "title": "Ad click → ledger",
+  "started_at": "2026-11-01T02:03:58.136Z",
+  "checks": [
+    {
+      "ok": true,
+      "name": "click redirects to the campaign link",
+      "detail": "302 http://localhost:3100/products"
+    },
+    {
+      "ok": true,
+      "name": "duplicate click still redirects (no error to the visitor)",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "first click charged, duplicate within 24 h recorded as invalid with 0 charge",
+      "detail": "1e21cb24 1 true | 1e21cb24 0 false | 0815cb0b 1 true | 5a7fc46f 1 true"
+    },
+    {
+      "ok": true,
+      "name": "budget tick: spent 3/3, campaign auto-paused when the budget ran out",
+      "detail": "{\"status\":\"paused\",\"spent_today_cents\":\"3\"}"
+    },
+    {
+      "ok": true,
+      "name": "3 charge journals (one per valid click), balanced",
+      "detail": "3 journals / 6 entries"
+    },
+    {
+      "ok": true,
+      "name": "all 4 ad_clicks rows carry the trace id",
+      "detail": "4"
+    },
+    {
+      "ok": true,
+      "name": "no outbox event: the charge is synchronous (§10.1 lists ad.clicked → ad charge; implemented inline in record_ad_click)",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "auto-pause written to status_history",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "negative: bot click not recorded",
+      "detail": "4 → 4"
+    },
+    {
+      "ok": true,
+      "name": "negative: invalid campaign id → redirect home, nothing written",
+      "detail": ""
+    }
+  ],
+  "hops": [
+    {
+      "at": "2026-11-01T02:03:58.898614+00:00",
+      "table": "journals",
+      "txid": 5505,
+      "id": "6f6d081c-fbb7-47bf-83c3-0dc9401ccae1",
+      "summary": "JRN-000470 ads Ad click · QA-TRACE campaign"
+    },
+    {
+      "at": "2026-11-01T02:03:58.898614+00:00",
+      "table": "ad_clicks",
+      "txid": null,
+      "id": "8c9a7e24-12dc-4c19-ace0-abc9c5820812",
+      "summary": "8c9a7e24-12dc-4c19-ace0-abc9c5820812"
+    },
+    {
+      "at": "2026-11-01T02:03:58.898614+00:00",
+      "table": "ledger_entries",
+      "txid": 5505,
+      "id": 993,
+      "summary": "acct=b9de94fa Dr 1 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:03:58.898614+00:00",
+      "table": "ledger_entries",
+      "txid": 5505,
+      "id": 994,
+      "summary": "acct=bea85d28 Dr 0 Cr 1 USD"
+    },
+    {
+      "at": "2026-11-01T02:03:59.120071+00:00",
+      "table": "ad_clicks",
+      "txid": null,
+      "id": "16cb63c3-a24c-456b-a79d-2007aaf0245c",
+      "summary": "16cb63c3-a24c-456b-a79d-2007aaf0245c"
+    },
+    {
+      "at": "2026-11-01T02:03:59.328602+00:00",
+      "table": "journals",
+      "txid": 5507,
+      "id": "5038a1b5-4156-4539-81da-796f191ad5d6",
+      "summary": "JRN-000471 ads Ad click · QA-TRACE campaign"
+    },
+    {
+      "at": "2026-11-01T02:03:59.328602+00:00",
+      "table": "ad_clicks",
+      "txid": null,
+      "id": "f1574807-0a9a-49f1-b2c7-35c17c872271",
+      "summary": "f1574807-0a9a-49f1-b2c7-35c17c872271"
+    },
+    {
+      "at": "2026-11-01T02:03:59.328602+00:00",
+      "table": "ledger_entries",
+      "txid": 5507,
+      "id": 995,
+      "summary": "acct=b9de94fa Dr 1 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:03:59.328602+00:00",
+      "table": "ledger_entries",
+      "txid": 5507,
+      "id": 996,
+      "summary": "acct=bea85d28 Dr 0 Cr 1 USD"
+    },
+    {
+      "at": "2026-11-01T02:03:59.566314+00:00",
+      "table": "journals",
+      "txid": 5508,
+      "id": "aec294f3-a36b-4a67-83ed-0b51533355f9",
+      "summary": "JRN-000472 ads Ad click · QA-TRACE campaign"
+    },
+    {
+      "at": "2026-11-01T02:03:59.566314+00:00",
+      "table": "ad_clicks",
+      "txid": null,
+      "id": "01d90045-7442-466c-9d73-68715c0c77c3",
+      "summary": "01d90045-7442-466c-9d73-68715c0c77c3"
+    },
+    {
+      "at": "2026-11-01T02:03:59.566314+00:00",
+      "table": "ledger_entries",
+      "txid": 5508,
+      "id": 997,
+      "summary": "acct=b9de94fa Dr 1 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:03:59.566314+00:00",
+      "table": "ledger_entries",
+      "txid": 5508,
+      "id": 998,
+      "summary": "acct=bea85d28 Dr 0 Cr 1 USD"
+    },
+    {
+      "at": "2026-11-01T02:03:59.755768+00:00",
+      "table": "audit_log",
+      "txid": 5509,
+      "id": 730,
+      "summary": "status.ad_campaign ad_campaign actor=system"
+    },
+    {
+      "at": "2026-11-01T02:03:59.755768+00:00",
+      "table": "status_history",
+      "txid": 5509,
+      "id": 536,
+      "summary": "ad_campaign active→paused"
+    }
+  ],
+  "latency": {
+    "click → record_ad_click → 302": 240
+  },
+  "notes": [],
+  "traces": [
+    "e2e-c13-da03f0a65706"
+  ],
+  "e2e_ms": 1084,
+  "clicks": [
+    "1e21cb24 1 true",
+    "1e21cb24 0 false",
+    "0815cb0b 1 true",
+    "5a7fc46f 1 true"
+  ],
+  "finished_at": "2026-11-01T02:04:00.278Z"
+}

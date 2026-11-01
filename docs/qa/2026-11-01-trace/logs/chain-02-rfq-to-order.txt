@@ -1,0 +1,31 @@
+✔ product page carries the trace id 
+✔ RFQ submitted through the Request form (submit_rfq + fee from wallet) — 3a2bd43f-3e04-475f-a928-e41515270285
+✔ customer RFQ page received the new quote via Realtime (router refresh) — 475 ms after send
+✔ quote visible in the customer DOM without reload 
+✔ operations: transition_order → confirmed 
+✔ customer order page shows "Confirmed" live (Realtime order_events) — 699 ms
+✔ end-to-end under 90 s (mocked payment) — 24670 ms
+✔ 1 rfq row — 1
+✔ 1 quote row — 1
+✔ 1 proforma invoice — 1
+✔ 1 order — 1
+✔ status_history has quote.approved and order.deposit_paid — rfq:submitted, rfq:quoted, quote:approved, order:deposit_pending, order:deposit_paid, order:confirmed
+✔ status_history has order.confirmed 
+✔ 1 PI document row — receipt:RCT-679323B9:no pdf_path, proforma_invoice:PI-2026-1091:no pdf_path, confirmation:CNF-2308:no pdf_path
+✘ PI PDF stored in the private documents bucket — receipt:RCT-679323B9:no pdf_path, proforma_invoice:PI-2026-1091:no pdf_path, confirmation:CNF-2308:no pdf_path
+✔ every journal in the trace balances per currency — 3 journals / 6 entries
+✔ outbox rfq.submitted exactly once — rfq.submitted, quote.approved, order.confirmed, quote.sent, payment.confirmed
+✔ outbox quote.sent exactly once — rfq.submitted, quote.approved, order.confirmed, quote.sent, payment.confirmed
+✔ outbox quote.approved exactly once — rfq.submitted, quote.approved, order.confirmed, quote.sent, payment.confirmed
+✔ outbox payment.confirmed exactly once — rfq.submitted, quote.approved, order.confirmed, quote.sent, payment.confirmed
+✔ outbox order.confirmed exactly once — rfq.submitted, quote.approved, order.confirmed, quote.sent, payment.confirmed
+✔ all outbox events done 
+✔ no consumer ran twice for one event (job_runs unique) 
+✔ PI e-mail + deposit receipt e-mail (1 each) — default:quote.sent, default:quote.approved, default:payment.confirmed, default:order.confirmed
+✔ signed order.updated webhook delivered (HTTP 200) — quote.created:200, order.updated:200, order.updated:200, order.updated:200
+✔ every e-mail has an integration_logs row with body SHAs 
+✔ audit entries in the trace — status.rfq, status.quote, status.order, status.order, status.order, status.rfq
+✔ dispatcher replay of all events → no second e-mail, webhook or notification — {"e":4,"w":4,"n":5} → {"e":4,"w":4,"n":5}
+✔ replay logged as idempotency_hits (outbox:<consumer>) — 14
+✔ second approve_quote refused — QUOTE_NOT_APPROVABLE: approved
+✔ negative: overpayment / insufficient wallet refused — INVALID_AMOUNT

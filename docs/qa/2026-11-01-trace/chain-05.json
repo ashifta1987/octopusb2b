@@ -1,0 +1,420 @@
+{
+  "chain": 5,
+  "title": "Service request (QC day) with wallet pay",
+  "started_at": "2026-11-01T02:03:44.499Z",
+  "checks": [
+    {
+      "ok": true,
+      "name": "QC request paid from the wallet",
+      "detail": "{\"id\":\"0bd4ed17-5196-4dce-aabc-bfb6da4e10c7\",\"code\":\"SRV-0324\",\"status\":\"paid\",\"fee_minor\":\"19900\",\"currency\":\"USD\",\"paid_via\":\"wallet\"}"
+    },
+    {
+      "ok": true,
+      "name": "operations: → accepted",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "operations: → in_progress",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "operations: → report_ready",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "operations: → completed",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "one wallet-debit journal, 2 balanced entries",
+      "detail": "[[19900,0,\"USD\"],[0,19900,\"USD\"]]"
+    },
+    {
+      "ok": true,
+      "name": "service_request.paid once",
+      "detail": "service_request.paid, service_request.updated:completed, service_request.updated:in_progress, service_request.updated:report_ready, service_request.updated:accepted"
+    },
+    {
+      "ok": true,
+      "name": "4 service_request.updated events (one per step)",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "customer e-mails: receipt (paid), report ready, completed",
+      "detail": "default:service_request.paid, default:service_request.updated, default:service_request.updated"
+    },
+    {
+      "ok": true,
+      "name": "customer notifications per step",
+      "detail": "5"
+    },
+    {
+      "ok": true,
+      "name": "status_history: paid → accepted → in_progress → report_ready → completed",
+      "detail": "paid → accepted → in_progress → report_ready → completed"
+    },
+    {
+      "ok": true,
+      "name": "audit entry per transition (status.service_request)",
+      "detail": "5"
+    },
+    {
+      "ok": false,
+      "name": "QC coordinator assigned on the request",
+      "detail": "{\"assigned_to\":null,\"report_path\":null}"
+    },
+    {
+      "ok": false,
+      "name": "QC report PDF stored (report_path)",
+      "detail": "{\"assigned_to\":null,\"report_path\":null}"
+    },
+    {
+      "ok": true,
+      "name": "same idempotency key twice → one request, one debit",
+      "detail": "9e94cf5a-a44a-4ef0-8c7a-47793f8cbc01 / 9e94cf5a-a44a-4ef0-8c7a-47793f8cbc01 / rows 1"
+    },
+    {
+      "ok": true,
+      "name": "negative: rejected paid request → refunded automatically (refund journal)",
+      "detail": "refunded"
+    },
+    {
+      "ok": true,
+      "name": "negative: completed → paid refused",
+      "detail": "INVALID_TRANSITION: completed → paid"
+    }
+  ],
+  "hops": [
+    {
+      "at": "2026-11-01T02:03:47.123392+00:00",
+      "table": "journals",
+      "txid": 5448,
+      "id": "f38df1de-c5b6-4523-8467-4cc397100236",
+      "summary": "JRN-000467 service_fees Service fee · qc"
+    },
+    {
+      "at": "2026-11-01T02:03:47.123392+00:00",
+      "table": "audit_log",
+      "txid": 5448,
+      "id": 723,
+      "summary": "status.service_request service_request actor=cf2273df"
+    },
+    {
+      "at": "2026-11-01T02:03:47.123392+00:00",
+      "table": "outbox_events",
+      "txid": 5448,
+      "id": "dda953a5-87e9-41e3-abb1-3a2a2b6a2057",
+      "summary": "service_request.paid [done] agg=service_request:0bd4ed17 payload#81340a86a3"
+    },
+    {
+      "at": "2026-11-01T02:03:47.123392+00:00",
+      "table": "ledger_entries",
+      "txid": 5448,
+      "id": 987,
+      "summary": "acct=b9de94fa Dr 19900 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:03:47.123392+00:00",
+      "table": "ledger_entries",
+      "txid": 5448,
+      "id": 988,
+      "summary": "acct=bba16514 Dr 0 Cr 19900 USD"
+    },
+    {
+      "at": "2026-11-01T02:03:47.123392+00:00",
+      "table": "status_history",
+      "txid": 5448,
+      "id": 529,
+      "summary": "service_request ∅→paid"
+    },
+    {
+      "at": "2026-11-01T02:03:47.123392+00:00",
+      "table": "service_requests",
+      "txid": null,
+      "id": "0bd4ed17-5196-4dce-aabc-bfb6da4e10c7",
+      "summary": "SRV-0324"
+    },
+    {
+      "at": "2026-11-01T02:03:48.271505+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "2c5be247-8f45-48a6-be30-4b933f0d0ce0",
+      "summary": "Service request paid"
+    },
+    {
+      "at": "2026-11-01T02:03:48.655428+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "dda953a5-87e9-41e3-abb1-3a2a2b6a2057",
+      "summary": "notify → ok (379 ms) evt=dda953a5"
+    },
+    {
+      "at": "2026-11-01T02:03:49.075041+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "2916deed-449f-41be-8cb7-f7910ed4764a",
+      "summary": "default:service_request.paid → log logged rcpt#5278b812a9 msg=log_1793498628952"
+    },
+    {
+      "at": "2026-11-01T02:03:49.170503+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 121,
+      "summary": "email out 200 log://email req#0cd334ece7 res#fbde4977ba"
+    },
+    {
+      "at": "2026-11-01T02:03:49.273168+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "dda953a5-87e9-41e3-abb1-3a2a2b6a2057",
+      "summary": "email → ok (509 ms) evt=dda953a5"
+    },
+    {
+      "at": "2026-11-01T02:03:49.479813+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "dda953a5-87e9-41e3-abb1-3a2a2b6a2057",
+      "summary": "webhooks_out → ok (109 ms) evt=dda953a5"
+    },
+    {
+      "at": "2026-11-01T02:03:49.825582+00:00",
+      "table": "audit_log",
+      "txid": 5457,
+      "id": 724,
+      "summary": "status.service_request service_request actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:03:49.825582+00:00",
+      "table": "outbox_events",
+      "txid": 5457,
+      "id": "a2cb8914-1c58-474c-b411-47c12ae63363",
+      "summary": "service_request.updated [done] agg=service_request:0bd4ed17 payload#da43638650"
+    },
+    {
+      "at": "2026-11-01T02:03:49.825582+00:00",
+      "table": "status_history",
+      "txid": 5457,
+      "id": 530,
+      "summary": "service_request paid→accepted"
+    },
+    {
+      "at": "2026-11-01T02:03:50.052487+00:00",
+      "table": "audit_log",
+      "txid": 5458,
+      "id": 725,
+      "summary": "status.service_request service_request actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:03:50.052487+00:00",
+      "table": "outbox_events",
+      "txid": 5458,
+      "id": "b5f9f5ee-388c-422a-8e69-3997723d7d63",
+      "summary": "service_request.updated [done] agg=service_request:0bd4ed17 payload#03f02dd29b"
+    },
+    {
+      "at": "2026-11-01T02:03:50.052487+00:00",
+      "table": "status_history",
+      "txid": 5458,
+      "id": 531,
+      "summary": "service_request accepted→in_progress"
+    },
+    {
+      "at": "2026-11-01T02:03:50.134276+00:00",
+      "table": "audit_log",
+      "txid": 5459,
+      "id": 726,
+      "summary": "status.service_request service_request actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:03:50.134276+00:00",
+      "table": "outbox_events",
+      "txid": 5459,
+      "id": "8446c36d-f1fe-4963-8e99-9347759a11da",
+      "summary": "service_request.updated [done] agg=service_request:0bd4ed17 payload#0b218b5c2c"
+    },
+    {
+      "at": "2026-11-01T02:03:50.134276+00:00",
+      "table": "status_history",
+      "txid": 5459,
+      "id": 532,
+      "summary": "service_request in_progress→report_ready"
+    },
+    {
+      "at": "2026-11-01T02:03:50.258622+00:00",
+      "table": "audit_log",
+      "txid": 5460,
+      "id": 727,
+      "summary": "status.service_request service_request actor=bf12a91b"
+    },
+    {
+      "at": "2026-11-01T02:03:50.258622+00:00",
+      "table": "outbox_events",
+      "txid": 5460,
+      "id": "b462e573-21fe-4cc9-9211-428b11896561",
+      "summary": "service_request.updated [done] agg=service_request:0bd4ed17 payload#9d147aae62"
+    },
+    {
+      "at": "2026-11-01T02:03:50.258622+00:00",
+      "table": "status_history",
+      "txid": 5460,
+      "id": 533,
+      "summary": "service_request report_ready→completed"
+    },
+    {
+      "at": "2026-11-01T02:03:50.814879+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "9370d1cb-6601-4327-8900-e22eb91e70dd",
+      "summary": "Service request accepted"
+    },
+    {
+      "at": "2026-11-01T02:03:50.902773+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "a2cb8914-1c58-474c-b411-47c12ae63363",
+      "summary": "notify → ok (158 ms) evt=a2cb8914"
+    },
+    {
+      "at": "2026-11-01T02:03:51.097833+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "a2cb8914-1c58-474c-b411-47c12ae63363",
+      "summary": "webhooks_out → ok (104 ms) evt=a2cb8914"
+    },
+    {
+      "at": "2026-11-01T02:03:51.379714+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "4e55dbd4-006b-4295-8d4f-9ec2dab4e680",
+      "summary": "Service request completed"
+    },
+    {
+      "at": "2026-11-01T02:03:51.462987+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "b462e573-21fe-4cc9-9211-428b11896561",
+      "summary": "notify → ok (85 ms) evt=b462e573"
+    },
+    {
+      "at": "2026-11-01T02:03:51.853657+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "1364a012-f6fe-4ac5-8a9d-8b0fef6977a7",
+      "summary": "default:service_request.updated → log logged rcpt#5278b812a9 msg=log_1793498631748"
+    },
+    {
+      "at": "2026-11-01T02:03:51.961656+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 122,
+      "summary": "email out 200 log://email req#822095fb71 res#8884a4d204"
+    },
+    {
+      "at": "2026-11-01T02:03:52.066939+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "b462e573-21fe-4cc9-9211-428b11896561",
+      "summary": "email → ok (495 ms) evt=b462e573"
+    },
+    {
+      "at": "2026-11-01T02:03:52.258563+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "b462e573-21fe-4cc9-9211-428b11896561",
+      "summary": "webhooks_out → ok (88 ms) evt=b462e573"
+    },
+    {
+      "at": "2026-11-01T02:03:52.544566+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "5f401820-7ce0-4089-94e1-73423ffa1ef7",
+      "summary": "Service request in progress"
+    },
+    {
+      "at": "2026-11-01T02:03:52.644301+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "b5f9f5ee-388c-422a-8e69-3997723d7d63",
+      "summary": "notify → ok (92 ms) evt=b5f9f5ee"
+    },
+    {
+      "at": "2026-11-01T02:03:52.853503+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "b5f9f5ee-388c-422a-8e69-3997723d7d63",
+      "summary": "webhooks_out → ok (102 ms) evt=b5f9f5ee"
+    },
+    {
+      "at": "2026-11-01T02:03:53.135757+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "45c218c5-956d-42ce-b706-0d5798c3353f",
+      "summary": "Service request report ready"
+    },
+    {
+      "at": "2026-11-01T02:03:53.219699+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "8446c36d-f1fe-4963-8e99-9347759a11da",
+      "summary": "notify → ok (96 ms) evt=8446c36d"
+    },
+    {
+      "at": "2026-11-01T02:03:53.636315+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "a9c29edc-963d-4bc5-b6f2-f32157287d66",
+      "summary": "default:service_request.updated → log logged rcpt#5278b812a9 msg=log_1793498633540"
+    },
+    {
+      "at": "2026-11-01T02:03:53.741837+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 123,
+      "summary": "email out 200 log://email req#e95d09edee res#46fcae494a"
+    },
+    {
+      "at": "2026-11-01T02:03:53.837256+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "8446c36d-f1fe-4963-8e99-9347759a11da",
+      "summary": "email → ok (519 ms) evt=8446c36d"
+    },
+    {
+      "at": "2026-11-01T02:03:54.04311+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "8446c36d-f1fe-4963-8e99-9347759a11da",
+      "summary": "webhooks_out → ok (114 ms) evt=8446c36d"
+    }
+  ],
+  "latency": {
+    "SA request_service (wallet debit)": 665,
+    "RPC transition_service_request accepted": 243,
+    "RPC transition_service_request in_progress": 228,
+    "RPC transition_service_request report_ready": 108,
+    "RPC transition_service_request completed": 104
+  },
+  "notes": [],
+  "traces": [
+    "e2e-c05-8148c00793d9"
+  ],
+  "e2e_ms": 8854,
+  "outbox": [
+    "service_request.paid",
+    "service_request.updated:completed",
+    "service_request.updated:in_progress",
+    "service_request.updated:report_ready",
+    "service_request.updated:accepted"
+  ],
+  "emails": [
+    "default:service_request.paid",
+    "default:service_request.updated",
+    "default:service_request.updated"
+  ],
+  "finished_at": "2026-11-01T02:03:58.045Z"
+}

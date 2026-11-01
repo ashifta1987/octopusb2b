@@ -1,0 +1,185 @@
+{
+  "chain": 14,
+  "title": "Public API POST /v1/rfqs",
+  "started_at": "2026-11-01T02:04:00.381Z",
+  "checks": [
+    {
+      "ok": true,
+      "name": "oct_test_ key → 201 simulated, no DB row (AP-02: test keys never write)",
+      "detail": "201 RFQ-TEST-6918"
+    },
+    {
+      "ok": true,
+      "name": "API response echoes x-trace-id",
+      "detail": "e2e-c14-91d7d4d7879c"
+    },
+    {
+      "ok": true,
+      "name": "oct_live_ key → 201 with the new RFQ id/code",
+      "detail": "bfee3be0-5ab1-40d5-b6f5-3be21f6e117f RFQ-1066"
+    },
+    {
+      "ok": true,
+      "name": "signed rfq.created webhook delivered (HTTP 200)",
+      "detail": "{\"id\":\"evt_20cf2b0e5b594a7a91090412da596150\",\"data\":{\"rfq\":{\"id\":\"bfee3be0-5ab1-40d5-b6f5-3be21f6e117f\",\"code\":\"RFQ-1066\",\"unit\":\"pcs\",\"title\":\"QA-TRACE API RFQ"
+    },
+    {
+      "ok": true,
+      "name": "webhook payload carries the same RFQ code",
+      "detail": "RFQ-1066"
+    },
+    {
+      "ok": true,
+      "name": "replay → same response, Idempotent-Replayed: true, still 1 row",
+      "detail": "201 rows=1"
+    },
+    {
+      "ok": true,
+      "name": "same key, different body → 422 IDEMPOTENCY_KEY_REUSED",
+      "detail": "IDEMPOTENCY_KEY_REUSED"
+    },
+    {
+      "ok": true,
+      "name": "missing Idempotency-Key → 400",
+      "detail": "IDEMPOTENCY_KEY_REQUIRED"
+    },
+    {
+      "ok": true,
+      "name": "unknown key → 401 problem+json",
+      "detail": "application/problem+json"
+    },
+    {
+      "ok": true,
+      "name": "invalid body → 422 VALIDATION_FAILED",
+      "detail": "VALIDATION_FAILED"
+    },
+    {
+      "ok": true,
+      "name": "exactly 1 rfq row in the trace",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "exactly 1 rfq.submitted event",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "exactly 1 rfq.created delivery",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "API replay → idempotency_hits row",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "RFQ fee journal (wallet) once",
+      "detail": "1"
+    }
+  ],
+  "hops": [
+    {
+      "at": "2026-11-01T02:04:02.495388+00:00",
+      "table": "rfqs",
+      "txid": null,
+      "id": "bfee3be0-5ab1-40d5-b6f5-3be21f6e117f",
+      "summary": "RFQ-1066"
+    },
+    {
+      "at": "2026-11-01T02:04:02.495388+00:00",
+      "table": "journals",
+      "txid": 5519,
+      "id": "95ea1465-37e8-4661-8580-d0fd2ec80ed1",
+      "summary": "JRN-000473 rfq_fees RFQ fee"
+    },
+    {
+      "at": "2026-11-01T02:04:02.495388+00:00",
+      "table": "audit_log",
+      "txid": 5519,
+      "id": 731,
+      "summary": "status.rfq rfq actor=system"
+    },
+    {
+      "at": "2026-11-01T02:04:02.495388+00:00",
+      "table": "outbox_events",
+      "txid": 5519,
+      "id": "20cf2b0e-5b59-4a7a-9109-0412da596150",
+      "summary": "rfq.submitted [done] agg=rfq:bfee3be0 payload#2a0ca1377e"
+    },
+    {
+      "at": "2026-11-01T02:04:02.495388+00:00",
+      "table": "ledger_entries",
+      "txid": 5519,
+      "id": 999,
+      "summary": "acct=b9de94fa Dr 500 Cr 0 USD"
+    },
+    {
+      "at": "2026-11-01T02:04:02.495388+00:00",
+      "table": "ledger_entries",
+      "txid": 5519,
+      "id": 1000,
+      "summary": "acct=a101fb4b Dr 0 Cr 500 USD"
+    },
+    {
+      "at": "2026-11-01T02:04:02.495388+00:00",
+      "table": "status_history",
+      "txid": 5519,
+      "id": 537,
+      "summary": "rfq ∅→submitted"
+    },
+    {
+      "at": "2026-11-01T02:04:03.317082+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "96134e88-bcc3-4d81-94cb-a2cdaadaf719",
+      "summary": "RFQ received"
+    },
+    {
+      "at": "2026-11-01T02:04:03.437073+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "20cf2b0e-5b59-4a7a-9109-0412da596150",
+      "summary": "notify → ok (95 ms) evt=20cf2b0e"
+    },
+    {
+      "at": "2026-11-01T02:04:05.147767+00:00",
+      "table": "webhook_deliveries",
+      "txid": null,
+      "id": "1319251f-a10e-4ea9-87e4-6001fced6574",
+      "summary": "rfq.created → HTTP 200 delivered"
+    },
+    {
+      "at": "2026-11-01T02:04:05.257+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "20cf2b0e-5b59-4a7a-9109-0412da596150",
+      "summary": "webhooks_out:01d57368-717a-40f7-83ca-b9fe0aa3d4d2 → ok (1504 ms) evt=20cf2b0e"
+    },
+    {
+      "at": "2026-11-01T02:04:05.350391+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "20cf2b0e-5b59-4a7a-9109-0412da596150",
+      "summary": "webhooks_out → ok (1817 ms) evt=20cf2b0e"
+    },
+    {
+      "at": "2026-11-01T02:04:06.000685+00:00",
+      "table": "idempotency_hits",
+      "txid": null,
+      "id": 46,
+      "summary": "api key=api:d481ee2c-ef35-4a46-8 orig=—"
+    }
+  ],
+  "latency": {
+    "POST /v1/rfqs (auth → scope → idempotency → api_submit_rfq)": 616,
+    "worker (rfq.submitted → notify + webhooks_out)": 2754
+  },
+  "notes": [],
+  "traces": [
+    "e2e-c14-91d7d4d7879c"
+  ],
+  "e2e_ms": 3426,
+  "finished_at": "2026-11-01T02:04:07.614Z"
+}

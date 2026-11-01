@@ -1,0 +1,88 @@
+{
+  "chain": 9,
+  "title": "AI assistant message → tool-call → reply",
+  "started_at": "2026-11-01T02:04:07.843Z",
+  "checks": [
+    {
+      "ok": true,
+      "name": "assistant answered",
+      "detail": "200 Your order ORD-2308 has been delivered. The shipment was handled by YunExpress and the tracking number is YT34986083259092. The last scan indicates it was deliv"
+    },
+    {
+      "ok": true,
+      "name": "reply quotes the real tracking number from get_shipment",
+      "detail": "YT34986083259092"
+    },
+    {
+      "ok": false,
+      "name": "tools_called logs get_shipment",
+      "detail": "[]"
+    },
+    {
+      "ok": true,
+      "name": "reply row carries the confidence score and the trace id",
+      "detail": "confidence 1.00, latency 1609 ms, tokens 1527"
+    },
+    {
+      "ok": true,
+      "name": "LLM calls logged to integration_logs with request/response SHA",
+      "detail": "openai 200 1502 ms"
+    },
+    {
+      "ok": false,
+      "name": "YunExpress response SHA in integration_logs for the same trace",
+      "detail": "get_shipment reads the webhook-fed tracking_events table — no live carrier call"
+    },
+    {
+      "ok": true,
+      "name": "customer + bot message rows in the trace",
+      "detail": "2"
+    },
+    {
+      "ok": true,
+      "name": "negative: another org's shipment (ORD-2202) is not revealed (RLS)",
+      "detail": "I couldn't find any information about order ORD-2202. It may not be in the current records. Please check if the order number is correct."
+    }
+  ],
+  "hops": [
+    {
+      "at": "2026-11-01T02:04:09.361179+00:00",
+      "table": "assistant_messages",
+      "txid": null,
+      "id": "61a54d98-3c08-453b-bfc9-865653e373f8",
+      "summary": "61a54d98-3c08-453b-bfc9-865653e373f8"
+    },
+    {
+      "at": "2026-11-01T02:04:12.048854+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 126,
+      "summary": "openai out 200 https://api.openai.com/v1/chat/completions#gpt-4o-mini req#9805c632c2 res#f3db4073f9"
+    },
+    {
+      "at": "2026-11-01T02:04:12.151305+00:00",
+      "table": "assistant_messages",
+      "txid": null,
+      "id": "8a1ce293-8b0b-4209-9a2b-e3eaf291db10",
+      "summary": "8a1ce293-8b0b-4209-9a2b-e3eaf291db10"
+    }
+  ],
+  "latency": {
+    "POST /api/assistant/reply (RLS context + tools + LLM + record_bot_reply)": 3510
+  },
+  "notes": [
+    "LLM schema-error path is covered by unit tests (parseModelReply → low confidence + escalation); not forced live."
+  ],
+  "traces": [
+    "e2e-c09-cf945d7bf669"
+  ],
+  "bot": {
+    "confidence": "1.00",
+    "tools_called": [],
+    "latency_ms": 1609,
+    "tokens": 1527,
+    "trace_id": "e2e-c09-cf945d7bf669"
+  },
+  "e2e_ms": 3567,
+  "finished_at": "2026-11-01T02:04:27.459Z"
+}

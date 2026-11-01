@@ -1,0 +1,31 @@
+{
+ "dispatcher": [
+  "Migration `20261101000131` enables **pg_net** and schedules pg_cron job `octopus-outbox-dispatch` every **10 s** (pg_cron 1.6.4 supports second schedules \u2014 the \u00a710.3 cadence, better than the 1-minute minimum assumed in the brief). `job_dispatch_outbox()` skips the HTTP call when no event is due and reads `octopus_app_url` / `octopus_cron_secret` from **Vault** by name (no secret in the repo; `scripts/cron-dispatcher-secrets.mjs` writes them from .env.local).",
+  "First firing returned **401**: production's CRON_SECRET differed from .env.local. The Lead rotated a strong CRON_SECRET into .env.local, Vercel (prod + preview) and Vault and redeployed the current production deployment; GET with the new secret \u2192 200, wrong secret \u2192 401.",
+  "Production check (`tests/e2e/trace/prod-dispatch.mjs`, trace `e2e-c00-7eac2fae5d77`): a tagged `order.in_production` event for the test org was picked up by the **deployed** worker via pg_net in **15 s** from insert to first consumer (notify 672 ms, e-mail 1.6 s, webhook 303 ms), pg_net response `200 {claimed:1, done:1}`, `job_runs` carry the event's trace id (parent trigger). The job is **active** now.",
+  "Found while enabling it: 10 pending events belonged to organizations deleted by earlier test clean-ups and failed with `notifications_org_id_fkey` toward the dead-letter queue. The worker now records such consumers as `skipped`; the 10 events were closed (`done`, `last_error` explains why)."
+ ],
+ "cleanup": [
+  "Deleted by `tests/e2e/trace/cleanup.mjs` (by trace id `e2e-%`, test org ids and test user ids, FK-safe loop): 4 auth users (`qa-trace-a/b/c@`, `qa-trace-admin@`) with profiles, user_roles, org_members; 3 orgs `QA-TRACE \u2026`; 16 orders, 16 PIs, 40 documents, 9 pools, 19 pledges, 42 pool_events, 2 rfqs, 1 quote, 2 service requests, 5 shipments, 17 payments, 12 wallet top-ups, 91 journals + 182 ledger entries, 6 ledger accounts, 153 outbox events + 301 job_runs, 94 notifications, 73 email_deliveries, 122 integration_logs, 14 webhook_deliveries + 1 endpoint, 1 API client (+ keys), 30 idempotency_hits, 143 status_history, 65 order_events, 1 ad campaign (+ clicks), 1 backup row, 1 ticket + message, 1 assistant session + 8 messages, 1 account manager row, 1 KYC submission.",
+  "Temporary TOTP factors on ops@, support@, finance@ deleted **by factor id**; the owner's factor on admin@ was never touched (it is the only factor left on demo accounts).",
+  "`backup_settings.offsite` (stamped by the off-site probe) restored to its previous value.",
+  "After clean-up: 0 rows with an `e2e-` trace id outside audit_log, 0 `qa-trace-*` users, 0 `QA-TRACE` orgs, 0 unbalanced journals, 0 orphan ledger entries, outbox 34 done / 0 pending.",
+  "**Kept (append-only by design):** 219 `audit_log` rows with trace ids `e2e-c\u2026` (sign-ins, status changes, currency/backup actions of the test identities) \u2014 delete them only if the Owner wants test audit rows purged.",
+  "Chains 8 and 11 and all stale-claims negatives ran in rolled-back transactions (incl. the temporary `pgtap` extension) \u2014 nothing persisted."
+ ],
+ "notChecked": [
+  "Real e-mail delivery/inbox receipt: no EMAIL_API_KEY (log adapter); e-mails are proven up to the adapter (`email_deliveries` + `integration_logs`), and the live Resend path only against a 503 mock (chain 15).",
+  "Live payment, YunExpress, Google OAuth, GitHub backup workflow and off-site bucket: no credentials \u2014 traced to the sandbox/mock boundary (owners in the matrix).",
+  "Production front-end with the new instrumentation: the TRACE commits are not pushed, so production still runs the old code (no `x-trace-id`, no email_deliveries); the chains ran on a local production build against the production database.",
+  "Sentry breadcrumbs: no SENTRY_DSN; the worker's structured JSON log lines carry `trace_id` instead.",
+  "Client-side forwarding of `x-trace-id` on follow-up fetches is emulated by Playwright request headers; the app itself does not yet wrap `fetch`/Server Action calls to forward the id (each user click is its own trace in production).",
+  "Chain 9's LLM run is non-deterministic: in the final run the model answered from the RLS context snapshot without calling `get_shipment` (in the earlier run it called it). The reply still quoted the real tracking number.",
+  "A `realtime_pushes` table was not built; Realtime delivery is proven in the browser (router refresh / DOM text) instead."
+ ],
+ "verdict": "no-go \u2014 every chain connects end to end with one trace id and replays are no-ops, but external integrations (payments, e-mail, YunExpress, Google, backups) are still sandbox-only and the PI PDF / QC report storage is missing.",
+ "risks": [
+  "**No real external delivery yet** (e-mail log adapter, test payments, sandbox YunExpress, no Google OAuth, no Sentry) \u2014 every chain stops at a mock boundary in production. Owner: **Owner/Admin** (providers + credentials) with **Developer** (live payment adapter).",
+  "**No backups and no restore drill** (chains 7/8 only reach the GitHub/off-site boundary) \u2014 data loss is unrecoverable. Owner: **Owner/Admin** (GitHub token, bucket, age key, PITR) then **Developer** (first backup + drill).",
+  "**Documents are not files**: PIs/receipts/QC reports are rendered on demand or never stored (`pdf_path`/`report_path` null), QC assignment has no screen \u2014 disputes and QC orders lack the artefact the customer was promised. Owner: **Developer** (render-pdf worker, QC assignment + report upload) with **Product** for the QC flow design."
+ ]
+}

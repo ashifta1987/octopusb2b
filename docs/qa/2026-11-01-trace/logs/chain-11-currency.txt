@@ -1,0 +1,11 @@
+✔ maker (admin) cannot approve own switch 
+✔ approved → applied: platform currency CNY 
+✔ switch request applied — applied
+✔ storefront price converts to CNY at the approved rate — {"unit_price_cents":"21500","currency":"USD","cny":"154800"}
+✔ USD PI from before the switch keeps currency + FX rate — {"currency":"USD","fx_rate_id":"1b707ba9-0c59-47ba-92ee-165b6e1de068","pi_currency":"USD"}
+✔ new PI after the switch carries CNY + rate — {"currency":"CNY","fx_rate_id":"5bc07c24-0d6d-448d-8fe2-e656c632ad73","pi_currency":"CNY"}
+✔ pgTAP: ok 1 - every journal balances per currency 
+✔ outbox settings.currency_changed written once (broadcast webhook consumer) — 1
+✔ currency switch audited — status.quote, status.order, status.rfq, status.rfq, status.quote, status.order, currency.switch_requested, currency.switch_approved, currency.switch_applied, status.rfq, status.rfq
+✔ replay: approving an applied switch is refused — INVALID_TRANSITION: applied
+· Ran inside one transaction that was rolled back — nothing persisted (incl. the temporary pgtap extension).

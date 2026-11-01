@@ -1,0 +1,394 @@
+{
+  "chain": 15,
+  "title": "Outbox event with worker failure",
+  "started_at": "2026-11-01T02:05:46.892Z",
+  "checks": [
+    {
+      "ok": true,
+      "name": "backoff schedule honoured: 1 m, 5 m, 30 m, 2 h, 6 h",
+      "detail": "59, 300, 1800, 7200, 21600"
+    },
+    {
+      "ok": true,
+      "name": "5 retries, then dead-letter on the 6th failure",
+      "detail": "{\"run\":6,\"status\":\"dead\",\"attempts\":6,\"next_in_s\":null}"
+    },
+    {
+      "ok": true,
+      "name": "6 failed e-mail attempts logged (email_deliveries)",
+      "detail": "6"
+    },
+    {
+      "ok": true,
+      "name": "each failure in integration_logs (502) with request SHA",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "customer notification sent once despite 6 runs (notify consumer idempotent)",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "alert: every admin notified of the dead letter",
+      "detail": "2"
+    },
+    {
+      "ok": true,
+      "name": "alert: integration_logs outbox dead-letter row",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "outbound e-mail call carried x-octopus-trace",
+      "detail": "x-octopus-trace=e2e-c15-310054694390"
+    },
+    {
+      "ok": false,
+      "name": "Sentry breadcrumb with the trace id",
+      "detail": "SENTRY_DSN not configured (IN-02) — structured JSON log line \"outbox_dead_letter\" carries trace_id instead"
+    },
+    {
+      "ok": true,
+      "name": "admin Retry button re-queued the event (attempts reset)",
+      "detail": "{\"status\":\"pending\",\"attempts\":0}"
+    },
+    {
+      "ok": true,
+      "name": "after retry the event is delivered (done)",
+      "detail": "done"
+    },
+    {
+      "ok": true,
+      "name": "exactly one successful e-mail after the retry",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "still one customer notification (no duplicate on retry)",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "webhook delivered once across all runs",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "audit: outbox.retry",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "retries skipped finished consumers (idempotency_hits)",
+      "detail": "12"
+    }
+  ],
+  "hops": [
+    {
+      "at": "2026-11-01T02:05:47.497186+00:00",
+      "table": "outbox_events",
+      "txid": 5754,
+      "id": "6419c5d4-f635-494c-96c4-21d8073103e2",
+      "summary": "order.in_production [done] agg=order:96c84681 payload#009016aa66"
+    },
+    {
+      "at": "2026-11-01T02:05:48.748758+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "b1e10e67-da5f-4256-9b3b-129f4380396e",
+      "summary": "Order in production"
+    },
+    {
+      "at": "2026-11-01T02:05:48.839433+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "6419c5d4-f635-494c-96c4-21d8073103e2",
+      "summary": "notify → ok (128 ms) evt=6419c5d4"
+    },
+    {
+      "at": "2026-11-01T02:05:49.221058+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "b6e117fc-156c-4800-8a73-cc4bfe6aad85",
+      "summary": "default:order.in_production → resend failed rcpt#5278b812a9 msg=—"
+    },
+    {
+      "at": "2026-11-01T02:05:49.327697+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 142,
+      "summary": "email out 502 http://127.0.0.1:3999/emails req#06c039f4ef res#e4b0eb8160"
+    },
+    {
+      "at": "2026-11-01T02:05:51.134722+00:00",
+      "table": "webhook_deliveries",
+      "txid": null,
+      "id": "5bc02804-560f-404d-8de8-50c2a4b8ebe1",
+      "summary": "order.updated → HTTP 200 delivered"
+    },
+    {
+      "at": "2026-11-01T02:05:51.243233+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "6419c5d4-f635-494c-96c4-21d8073103e2",
+      "summary": "webhooks_out:01d57368-717a-40f7-83ca-b9fe0aa3d4d2 → ok (1486 ms) evt=6419c5d4"
+    },
+    {
+      "at": "2026-11-01T02:05:51.342626+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "6419c5d4-f635-494c-96c4-21d8073103e2",
+      "summary": "webhooks_out → ok (1892 ms) evt=6419c5d4"
+    },
+    {
+      "at": "2026-11-01T02:05:52.978489+00:00",
+      "table": "idempotency_hits",
+      "txid": null,
+      "id": 47,
+      "summary": "outbox:notify key=6419c5d4-f635-494c-96c4- orig=e2e-c15-310054694390"
+    },
+    {
+      "at": "2026-11-01T02:05:53.379523+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "d2c88047-dafa-4a0b-9140-a444693980d7",
+      "summary": "default:order.in_production → resend failed rcpt#5278b812a9 msg=—"
+    },
+    {
+      "at": "2026-11-01T02:05:53.487395+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 143,
+      "summary": "email out 502 http://127.0.0.1:3999/emails req#06c039f4ef res#e4b0eb8160"
+    },
+    {
+      "at": "2026-11-01T02:05:53.603978+00:00",
+      "table": "idempotency_hits",
+      "txid": null,
+      "id": 48,
+      "summary": "outbox:webhooks_out key=6419c5d4-f635-494c-96c4- orig=e2e-c15-310054694390"
+    },
+    {
+      "at": "2026-11-01T02:05:54.60536+00:00",
+      "table": "idempotency_hits",
+      "txid": null,
+      "id": 49,
+      "summary": "outbox:notify key=6419c5d4-f635-494c-96c4- orig=e2e-c15-310054694390"
+    },
+    {
+      "at": "2026-11-01T02:05:54.971461+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "b9123afe-f9d4-4454-9a12-7b72cc66d80c",
+      "summary": "default:order.in_production → resend failed rcpt#5278b812a9 msg=—"
+    },
+    {
+      "at": "2026-11-01T02:05:55.064588+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 144,
+      "summary": "email out 502 http://127.0.0.1:3999/emails req#06c039f4ef res#e4b0eb8160"
+    },
+    {
+      "at": "2026-11-01T02:05:55.165984+00:00",
+      "table": "idempotency_hits",
+      "txid": null,
+      "id": 50,
+      "summary": "outbox:webhooks_out key=6419c5d4-f635-494c-96c4- orig=e2e-c15-310054694390"
+    },
+    {
+      "at": "2026-11-01T02:05:55.864348+00:00",
+      "table": "idempotency_hits",
+      "txid": null,
+      "id": 51,
+      "summary": "outbox:notify key=6419c5d4-f635-494c-96c4- orig=e2e-c15-310054694390"
+    },
+    {
+      "at": "2026-11-01T02:05:56.713601+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "3497145a-e5c2-427d-a826-49e4471d01fc",
+      "summary": "default:order.in_production → resend failed rcpt#5278b812a9 msg=—"
+    },
+    {
+      "at": "2026-11-01T02:05:56.81544+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 145,
+      "summary": "email out 502 http://127.0.0.1:3999/emails req#06c039f4ef res#e4b0eb8160"
+    },
+    {
+      "at": "2026-11-01T02:05:56.9262+00:00",
+      "table": "idempotency_hits",
+      "txid": null,
+      "id": 52,
+      "summary": "outbox:webhooks_out key=6419c5d4-f635-494c-96c4- orig=e2e-c15-310054694390"
+    },
+    {
+      "at": "2026-11-01T02:05:57.966673+00:00",
+      "table": "idempotency_hits",
+      "txid": null,
+      "id": 53,
+      "summary": "outbox:notify key=6419c5d4-f635-494c-96c4- orig=e2e-c15-310054694390"
+    },
+    {
+      "at": "2026-11-01T02:05:58.436908+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "f565bff6-79fc-466e-b7d1-1b2ab1393ccf",
+      "summary": "default:order.in_production → resend failed rcpt#5278b812a9 msg=—"
+    },
+    {
+      "at": "2026-11-01T02:05:58.536872+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 146,
+      "summary": "email out 502 http://127.0.0.1:3999/emails req#06c039f4ef res#e4b0eb8160"
+    },
+    {
+      "at": "2026-11-01T02:05:58.63956+00:00",
+      "table": "idempotency_hits",
+      "txid": null,
+      "id": 54,
+      "summary": "outbox:webhooks_out key=6419c5d4-f635-494c-96c4- orig=e2e-c15-310054694390"
+    },
+    {
+      "at": "2026-11-01T02:05:59.435701+00:00",
+      "table": "idempotency_hits",
+      "txid": null,
+      "id": 55,
+      "summary": "outbox:notify key=6419c5d4-f635-494c-96c4- orig=e2e-c15-310054694390"
+    },
+    {
+      "at": "2026-11-01T02:05:59.86223+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "ad86cfe7-4dba-4a43-8a31-e5e8b60152d3",
+      "summary": "default:order.in_production → resend failed rcpt#5278b812a9 msg=—"
+    },
+    {
+      "at": "2026-11-01T02:05:59.964365+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 147,
+      "summary": "email out 502 http://127.0.0.1:3999/emails req#06c039f4ef res#e4b0eb8160"
+    },
+    {
+      "at": "2026-11-01T02:06:00.085577+00:00",
+      "table": "idempotency_hits",
+      "txid": null,
+      "id": 56,
+      "summary": "outbox:webhooks_out key=6419c5d4-f635-494c-96c4- orig=e2e-c15-310054694390"
+    },
+    {
+      "at": "2026-11-01T02:06:00.402537+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "91c65ac1-87ac-46f2-bc9e-d60f268d6357",
+      "summary": "Outbox job failed permanently (user)"
+    },
+    {
+      "at": "2026-11-01T02:06:00.402537+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "b4b2faea-000f-40cb-afec-b25111909055",
+      "summary": "Outbox job failed permanently (user)"
+    },
+    {
+      "at": "2026-11-01T02:06:00.505082+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 148,
+      "summary": "outbox out 500 outbox://dead-letter req# res#"
+    },
+    {
+      "at": "2026-11-01T02:06:03.330204+00:00",
+      "table": "audit_log",
+      "txid": 5810,
+      "id": 778,
+      "summary": "outbox.retry outbox_events actor=74cb7745"
+    },
+    {
+      "at": "2026-11-01T02:06:04.317063+00:00",
+      "table": "idempotency_hits",
+      "txid": null,
+      "id": 57,
+      "summary": "outbox:notify key=6419c5d4-f635-494c-96c4- orig=e2e-c15-310054694390"
+    },
+    {
+      "at": "2026-11-01T02:06:04.769446+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "36059edc-242d-42aa-9f46-4a953546a3ae",
+      "summary": "default:order.in_production → log logged rcpt#5278b812a9 msg=log_1793498764639"
+    },
+    {
+      "at": "2026-11-01T02:06:04.88818+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 149,
+      "summary": "email out 200 log://email req#06c039f4ef res#c2b7d3d4ee"
+    },
+    {
+      "at": "2026-11-01T02:06:04.975042+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "6419c5d4-f635-494c-96c4-21d8073103e2",
+      "summary": "email → ok (560 ms) evt=6419c5d4"
+    },
+    {
+      "at": "2026-11-01T02:06:05.068219+00:00",
+      "table": "idempotency_hits",
+      "txid": null,
+      "id": 58,
+      "summary": "outbox:webhooks_out key=6419c5d4-f635-494c-96c4- orig=e2e-c15-310054694390"
+    }
+  ],
+  "latency": {},
+  "notes": [
+    "other due events when starting: 0"
+  ],
+  "traces": [
+    "e2e-c15-310054694390"
+  ],
+  "retry_plan": [
+    {
+      "run": 1,
+      "status": "pending",
+      "attempts": 1,
+      "next_in_s": 59
+    },
+    {
+      "run": 2,
+      "status": "pending",
+      "attempts": 2,
+      "next_in_s": 300
+    },
+    {
+      "run": 3,
+      "status": "pending",
+      "attempts": 3,
+      "next_in_s": 1800
+    },
+    {
+      "run": 4,
+      "status": "pending",
+      "attempts": 4,
+      "next_in_s": 7200
+    },
+    {
+      "run": 5,
+      "status": "pending",
+      "attempts": 5,
+      "next_in_s": 21600
+    },
+    {
+      "run": 6,
+      "status": "dead",
+      "attempts": 6,
+      "next_in_s": null
+    }
+  ],
+  "finished_at": "2026-11-01T02:06:05.368Z"
+}

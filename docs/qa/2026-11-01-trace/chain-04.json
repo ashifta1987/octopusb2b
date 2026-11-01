@@ -1,0 +1,272 @@
+{
+  "chain": 4,
+  "title": "YunExpress tracking webhook → Timeline",
+  "started_at": "2026-11-01T02:03:34.406Z",
+  "checks": [
+    {
+      "ok": true,
+      "name": "webhook recorded the delivered event",
+      "detail": "{\"ok\":true,\"received\":1,\"recorded\":1,\"duplicates\":0,\"unknown\":[]}"
+    },
+    {
+      "ok": true,
+      "name": "customer timeline shows \"Delivered\" live (Realtime tracking_events)",
+      "detail": "629 ms"
+    },
+    {
+      "ok": true,
+      "name": "end-to-end (webhook → e-mail delivered) under 15 s",
+      "detail": "5025 ms (dispatcher cadence in production: 10 s)"
+    },
+    {
+      "ok": true,
+      "name": "replay → 200, duplicate, nothing recorded",
+      "detail": "{\"ok\":true,\"received\":1,\"recorded\":0,\"duplicates\":1,\"unknown\":[]}"
+    },
+    {
+      "ok": true,
+      "name": "bad HMAC → 401",
+      "detail": "BAD_SIGNATURE"
+    },
+    {
+      "ok": true,
+      "name": "unknown tracking number → acknowledged, listed as unknown, nothing written",
+      "detail": "{\"ok\":true,\"received\":1,\"recorded\":0,\"duplicates\":0,\"unknown\":[\"YT0000000000000\"]}"
+    },
+    {
+      "ok": true,
+      "name": "exactly 1 tracking_events row",
+      "detail": "1"
+    },
+    {
+      "ok": true,
+      "name": "shipment and order → delivered (claim window opened)",
+      "detail": "delivered / delivered / claim until Sun Nov 08 2026 07:33:38 GMT+0530 (India Standard Time)"
+    },
+    {
+      "ok": true,
+      "name": "exactly 1 shipment.tracking event",
+      "detail": "shipment.tracking, order.delivered"
+    },
+    {
+      "ok": true,
+      "name": "exactly 1 order.delivered event",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "customer e-mail (order delivered) once",
+      "detail": "default:order.delivered"
+    },
+    {
+      "ok": true,
+      "name": "shipment notification once",
+      "detail": "Shipment: delivered, Order delivered"
+    },
+    {
+      "ok": true,
+      "name": "no shipment.tracking webhook (org endpoint subscribes to order.updated, quote.created only)",
+      "detail": ""
+    },
+    {
+      "ok": true,
+      "name": "replay → 1 idempotency_hits row linked to the original trace",
+      "detail": "{\"id\":44,\"key\":\"yt_evt_45e6bafc98f5\",\"scope\":\"yunexpress_webhook\",\"detail\":{\"tracking_no\":\"YT34986083259092\",\"tracking_event_id\":\"6f7e2395-939b-4f61-b27d-5e1f6042b714\"},\"trace_id\":\"e2e-c04-964113030cba\",\"created_at\":\"2026-11-01T02:03:43.425612+00:00\",\"original_trace_id\":\"e2e-c04-964113030cba\"}"
+    },
+    {
+      "ok": true,
+      "name": "inbound webhook calls logged with HMAC result + body SHA",
+      "detail": "5"
+    }
+  ],
+  "hops": [
+    {
+      "at": "2026-11-01T02:03:38.057+00:00",
+      "table": "tracking_events",
+      "txid": null,
+      "id": "6f7e2395-939b-4f61-b27d-5e1f6042b714",
+      "summary": "delivered"
+    },
+    {
+      "at": "2026-11-01T02:03:38.166132+00:00",
+      "table": "audit_log",
+      "txid": 5418,
+      "id": 721,
+      "summary": "status.shipment shipment actor=system"
+    },
+    {
+      "at": "2026-11-01T02:03:38.166132+00:00",
+      "table": "audit_log",
+      "txid": 5418,
+      "id": 722,
+      "summary": "status.order order actor=system"
+    },
+    {
+      "at": "2026-11-01T02:03:38.166132+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "62332aac-f432-4005-b4ef-959266ad7a2c",
+      "summary": "Delivered"
+    },
+    {
+      "at": "2026-11-01T02:03:38.166132+00:00",
+      "table": "order_events",
+      "txid": null,
+      "id": "53b76a0c-e017-4321-9526-1d0cad1b730b",
+      "summary": "Delivered"
+    },
+    {
+      "at": "2026-11-01T02:03:38.166132+00:00",
+      "table": "outbox_events",
+      "txid": 5418,
+      "id": "538ef0ea-bdcb-4c2a-abec-06aa9acc644d",
+      "summary": "shipment.tracking [done] agg=shipment:65244678 payload#276afbc493"
+    },
+    {
+      "at": "2026-11-01T02:03:38.166132+00:00",
+      "table": "outbox_events",
+      "txid": 5418,
+      "id": "55a83ee9-dab4-4069-9a4e-ffebe8c9e465",
+      "summary": "order.delivered [done] agg=order:96c84681 payload#19ff5ced4f"
+    },
+    {
+      "at": "2026-11-01T02:03:38.166132+00:00",
+      "table": "status_history",
+      "txid": 5418,
+      "id": 527,
+      "summary": "shipment label_ready→delivered"
+    },
+    {
+      "at": "2026-11-01T02:03:38.166132+00:00",
+      "table": "status_history",
+      "txid": 5418,
+      "id": 528,
+      "summary": "order shipped→delivered"
+    },
+    {
+      "at": "2026-11-01T02:03:38.289544+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 116,
+      "summary": "yunexpress in 200 POST /api/webhooks/yunexpress req#5c601a8602 res#df4964dedf"
+    },
+    {
+      "at": "2026-11-01T02:03:39.239411+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "8ca26155-f850-4e2f-85e1-048733387fa8",
+      "summary": "Shipment: delivered"
+    },
+    {
+      "at": "2026-11-01T02:03:39.346161+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "538ef0ea-bdcb-4c2a-abec-06aa9acc644d",
+      "summary": "notify → ok (90 ms) evt=538ef0ea"
+    },
+    {
+      "at": "2026-11-01T02:03:39.55211+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "538ef0ea-bdcb-4c2a-abec-06aa9acc644d",
+      "summary": "webhooks_out → ok (94 ms) evt=538ef0ea"
+    },
+    {
+      "at": "2026-11-01T02:03:39.847382+00:00",
+      "table": "notifications",
+      "txid": null,
+      "id": "0ce73361-2d5e-45b3-8673-542af7aaf1d2",
+      "summary": "Order delivered"
+    },
+    {
+      "at": "2026-11-01T02:03:39.961337+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "55a83ee9-dab4-4069-9a4e-ffebe8c9e465",
+      "summary": "notify → ok (106 ms) evt=55a83ee9"
+    },
+    {
+      "at": "2026-11-01T02:03:40.367273+00:00",
+      "table": "email_deliveries",
+      "txid": null,
+      "id": "380b670a-17b4-465e-9e95-5e21e92b09ca",
+      "summary": "default:order.delivered → log logged rcpt#5278b812a9 msg=log_1793498620263"
+    },
+    {
+      "at": "2026-11-01T02:03:40.460388+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 117,
+      "summary": "email out 200 log://email req#328e4e4b39 res#2a75f35d29"
+    },
+    {
+      "at": "2026-11-01T02:03:40.557377+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "55a83ee9-dab4-4069-9a4e-ffebe8c9e465",
+      "summary": "email → ok (504 ms) evt=55a83ee9"
+    },
+    {
+      "at": "2026-11-01T02:03:42.24017+00:00",
+      "table": "webhook_deliveries",
+      "txid": null,
+      "id": "e6ffeef4-ef07-4ad8-8d7c-975fdd5fe53a",
+      "summary": "order.updated → HTTP 200 delivered"
+    },
+    {
+      "at": "2026-11-01T02:03:42.353933+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "55a83ee9-dab4-4069-9a4e-ffebe8c9e465",
+      "summary": "webhooks_out:afd1c746-f94c-41f9-b18d-4ba035320eec → ok (1490 ms) evt=55a83ee9"
+    },
+    {
+      "at": "2026-11-01T02:03:42.448593+00:00",
+      "table": "job_runs",
+      "txid": null,
+      "id": "55a83ee9-dab4-4069-9a4e-ffebe8c9e465",
+      "summary": "webhooks_out → ok (1792 ms) evt=55a83ee9"
+    },
+    {
+      "at": "2026-11-01T02:03:43.425612+00:00",
+      "table": "idempotency_hits",
+      "txid": null,
+      "id": 44,
+      "summary": "yunexpress_webhook key=yt_evt_45e6bafc98f5 orig=e2e-c04-964113030cba"
+    },
+    {
+      "at": "2026-11-01T02:03:43.55894+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 118,
+      "summary": "yunexpress in 200 POST /api/webhooks/yunexpress req#5c601a8602 res#ab93e82819"
+    },
+    {
+      "at": "2026-11-01T02:03:43.754046+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 119,
+      "summary": "yunexpress in 401 POST /api/webhooks/yunexpress req#5c601a8602 res#"
+    },
+    {
+      "at": "2026-11-01T02:03:43.957312+00:00",
+      "table": "integration_logs",
+      "txid": null,
+      "id": 120,
+      "summary": "yunexpress in 200 POST /api/webhooks/yunexpress req#f793a5881f res#119b8a0a6c"
+    }
+  ],
+  "latency": {
+    "webhook (HMAC → system_record_tracking)": 231,
+    "webhook → Realtime refresh in customer DOM": 629,
+    "worker run": 3823
+  },
+  "notes": [
+    "Metric: there is no metrics backend (no Sentry/OTel); integration_logs + job_runs.duration_ms are the only counters/timers."
+  ],
+  "traces": [
+    "e2e-c04-964113030cba"
+  ],
+  "e2e_ms": 5025,
+  "finished_at": "2026-11-01T02:03:44.276Z"
+}
