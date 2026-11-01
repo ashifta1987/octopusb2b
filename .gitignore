@@ -42,3 +42,4 @@ next-env.d.ts
 
 !.env.example
 Octopus-B2B-Antigravity-Kit.zip
+docs/qa/2026-11-01-trace/state.json

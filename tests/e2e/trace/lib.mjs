@@ -103,9 +103,13 @@ export async function ensureBuyer(key, { country = 'NL', company } = {}) {
   const st = loadState();
   let uid = st.users[email];
   if (!uid) {
-    const { data, error } = await admin.auth.admin.createUser({ email, password: PW, email_confirm: true, user_metadata: { full_name: `QA Trace ${key}` } });
-    if (error) throw error;
-    uid = data.user.id;
+    const [existing] = await sql(`select id from auth.users where email=$1`, [email]);
+    if (existing) uid = existing.id;
+    else {
+      const { data, error } = await admin.auth.admin.createUser({ email, password: PW, email_confirm: true, user_metadata: { full_name: `QA Trace ${key}` } });
+      if (error) throw error;
+      uid = data.user.id;
+    }
     remember((s) => { s.users[email] = uid; });
   }
   return { email, uid, company: company ?? `QA-TRACE ${key.toUpperCase()} BV`, country };
@@ -178,12 +182,16 @@ export function balanced(rows) {
 /** Deletes every row of the e2e traces + test orgs/users. Loops until no table makes progress (FK order). */
 export async function cleanup({ keepUsers = false } = {}) {
   const st = loadState();
+  for (const u of await sql(`select id, email from auth.users where email like 'qa-trace-%@demo.octopusb2b.com'`)) st.users[u.email] = u.id;
   const emails = Object.keys(st.users);
   const uids = Object.values(st.users);
   const orgs = [...new Set((await sql(`select distinct org_id from org_members where user_id = any($1::uuid[]) union select id from organizations where name like 'QA-TRACE %'`, [uids])).map((r) => r.org_id).concat(st.orgs ?? []).filter(Boolean))];
   const tables = (await sql(`select c.table_name, array_agg(c.column_name::text) cols from information_schema.columns c join information_schema.tables t on t.table_schema=c.table_schema and t.table_name=c.table_name and t.table_type='BASE TABLE' where c.table_schema='public' group by 1`));
   const userFks = await sql(`select conrelid::regclass::text t, a.attname col from pg_constraint c join pg_attribute a on a.attrelid=c.conrelid and a.attnum = any(c.conkey) where c.contype='f' and c.confrelid='auth.users'::regclass and c.connamespace='public'::regnamespace`);
   const deleted = {};
+  // break the pledge ↔ order cycle of test pools first (pool_pledges.order_id → orders, orders.pool_pledge_id → pledges)
+  await db.query(`update pool_pledges set order_id = null where order_id is not null and (trace_id like 'e2e-%' or org_id = any($1::uuid[]) or pool_id in (select id from pools where trace_id like 'e2e-%' or org_id = any($1::uuid[])))`, [orgs]);
+  await db.query(`update orders set pool_pledge_id = null where pool_pledge_id is not null and (trace_id like 'e2e-%' or org_id = any($1::uuid[]))`, [orgs]);
   for (let pass = 0; pass < 12; pass++) {
     let progress = 0;
     for (const { table_name: t, cols } of tables) {
@@ -209,8 +217,13 @@ export async function cleanup({ keepUsers = false } = {}) {
     const r = await db.query(`delete from auth.mfa_factors where id = any($1::uuid[])`, [st.factors]);
     deleted['auth.mfa_factors'] = r.rowCount;
   }
-  if (!keepUsers) for (const uid of uids) { const { error } = await admin.auth.admin.deleteUser(uid); if (!error) deleted['auth.users'] = (deleted['auth.users'] ?? 0) + 1; }
-  saveState({ users: keepUsers ? st.users : {}, orgs: [], traces: st.traces, factors: [], secrets: {}, extra: [] });
+  const kept = {};
+  if (!keepUsers) for (const [email, uid] of Object.entries(st.users)) {
+    const { error } = await admin.auth.admin.deleteUser(uid);
+    if (!error) deleted['auth.users'] = (deleted['auth.users'] ?? 0) + 1;
+    else { kept[email] = uid; console.warn('cleanup: could not delete', email, error.message); }
+  }
+  saveState({ users: keepUsers ? st.users : kept, orgs: [], traces: st.traces, factors: [], secrets: {}, extra: [] });
   return { emails, orgs, deleted };
 }
 
@@ -232,9 +245,13 @@ export async function ensureTraceAdmin() {
   const email = 'qa-trace-admin@demo.octopusb2b.com';
   let uid = loadState().users[email];
   if (!uid) {
-    const { data, error } = await admin.auth.admin.createUser({ email, password: PW, email_confirm: true, user_metadata: { full_name: 'QA Trace Admin' } });
-    if (error) throw error;
-    uid = data.user.id;
+    const [existing] = await sql(`select id from auth.users where email=$1`, [email]);
+    if (existing) uid = existing.id;
+    else {
+      const { data, error } = await admin.auth.admin.createUser({ email, password: PW, email_confirm: true, user_metadata: { full_name: 'QA Trace Admin' } });
+      if (error) throw error;
+      uid = data.user.id;
+    }
     remember((s) => { s.users[email] = uid; });
   }
   await sql(`insert into profiles(id, email, full_name) values ($1,$2,'QA Trace Admin') on conflict (id) do nothing`, [uid, email]);

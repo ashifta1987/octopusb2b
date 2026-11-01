@@ -3,7 +3,7 @@
 // boundary and the user is created with the Auth admin API (= what the OAuth callback would create). Everything after
 // that runs through the real UI/RPC path with one trace id.
 import { chromium } from '@playwright/test';
-import { admin, BASE, count, cookieFor, ensureBuyer, hops, http, newTrace, pwCookies, remember, reporter, runWorker, signIn, sql, traceRows, until, waitRefresh } from './lib.mjs';
+import { BASE, count, cookieFor, ensureBuyer, hops, newTrace, pwCookies, remember, reporter, runWorker, signIn, sql, traceRows, waitRefresh } from './lib.mjs';
 
 const { r, check, note, save } = reporter(1, 'Signup → KYC → account manager assigned');
 const trace = newTrace(1);

@@ -4,7 +4,7 @@
 import crypto from 'node:crypto';
 import { count, hops, http, loadState, newTrace, remember, reporter, runWorker, sql, traceRows, until } from './lib.mjs';
 
-const { r, check, note, save } = reporter(14, 'Public API POST /v1/rfqs');
+const { r, check, save } = reporter(14, 'Public API POST /v1/rfqs');
 const trace = newTrace(14);
 r.traces.push(trace);
 remember((s) => s.traces.push(trace));

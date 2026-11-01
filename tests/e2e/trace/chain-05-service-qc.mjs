@@ -4,7 +4,7 @@
 import { chromium } from '@playwright/test';
 import { BASE, balanced, count, ensureBuyer, hops, newTrace, pwCookies, remember, reporter, runWorker, signIn, sql, traceRows, until } from './lib.mjs';
 
-const { r, check, note, save } = reporter(5, 'Service request (QC day) with wallet pay');
+const { r, check, save } = reporter(5, 'Service request (QC day) with wallet pay');
 const trace = newTrace(5);
 r.traces.push(trace);
 remember((s) => s.traces.push(trace));

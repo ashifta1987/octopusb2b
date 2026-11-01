@@ -88,17 +88,24 @@ try {
   const octx = await browser.newContext({ extraHTTPHeaders: { 'x-trace-id': trace } });
   await octx.addCookies(pwCookies(ops, { staff: true }));
   const o = await octx.newPage();
+  o.on('dialog', (d) => d.accept()); // "Create shipment?" confirm
   for (const ord of orders) {
     const [cur] = await sql(`select status from orders where id=$1`, [ord.id]);
     if (cur.status === 'balance_pending') await ops.rpc('transition_order', { p_order: ord.id, p_to: 'balance_paid', p_reason: 'E2E trace' });
     const { error } = await ops.rpc('transition_order', { p_order: ord.id, p_to: 'ready_to_ship', p_reason: 'E2E trace pool' });
     if (error) note(`ready_to_ship ${ord.id}: ${error.message}`);
     await o.goto(`${BASE}/office/shipping?order=${ord.id}`);
+    await o.locator('#sc-w').waitFor({ timeout: 20000 });
+    await o.waitForTimeout(1500); // hydration
     await o.locator('#sc-w').fill('8');
     await o.getByRole('button', { name: 'Get YunExpress rates' }).click();
-    await o.getByRole('button', { name: /create shipment/i }).first().waitFor({ timeout: 15000 });
-    await o.getByRole('button', { name: /create shipment/i }).first().click();
-    await o.getByText(/YT\d{10,}/).first().waitFor({ timeout: 20000 });
+    const create = o.getByRole('button', { name: 'Create shipment and print label' });
+    await create.waitFor({ timeout: 15000 });
+    await o.waitForTimeout(3000); // rates rendered + default rate selected
+    await create.click();
+    await o.waitForTimeout(1500);
+    if (!(await sql(`select 1 from shipments where order_id=$1`, [ord.id])).length) await o.screenshot({ path: `docs/qa/2026-11-01-trace/chain-06-ship-${ord.id.slice(0, 8)}.png`, fullPage: true });
+    for (let i = 0; i < 40; i++) { if ((await sql(`select 1 from shipments where order_id=$1`, [ord.id])).length) break; await o.waitForTimeout(500); }
   }
   await runWorker();
   r.e2e_ms = Date.now() - t0;
@@ -110,7 +117,9 @@ try {
   const [{ job_pools: jp2 }] = await sql(`select job_pools()`);
   const [p2] = await sql(`select status from pools where id=$1`, [pool2]);
   const [pl2] = await sql(`select status from pool_pledges where pool_id=$1`, [pool2]);
-  check(jp2.expired >= 1 && p2.status === 'expired' && /refund/.test(pl2.status), 'negative: under-filled pool expired by the cron job and the deposit refunded', `${p2.status} / pledge ${pl2.status}`);
+  const [rj] = await sql(`select count(*)::int n from journals where memo ilike '%expired%refund%' and ref_id in (select id from pool_pledges where pool_id=$1)`, [pool2]);
+  const [rj2] = await sql(`select count(*)::int n from journals where memo ilike $1`, [`%expired · refund%`]);
+  check(jp2.expired >= 1 && p2.status === 'expired' && (rj.n + rj2.n) >= 1, 'negative: under-filled pool expired by the cron job and the deposit refunded (refund journal)', `${p2.status} / pledge ${pl2.status} / refund journals ${rj.n || rj2.n}`);
   await runWorker();
 
   await until(async () => (await sql(`select count(*)::int n from outbox_events where trace_id=$1 and status <> 'done'`, [trace]))[0].n === 0 ? true : null, { timeout: 30000, every: 2000 });

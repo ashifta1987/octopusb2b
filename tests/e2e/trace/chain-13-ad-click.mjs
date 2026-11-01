@@ -4,7 +4,7 @@
 // wallet charge journal + spent_today tick → 302 to the campaign link.
 import { count, hops, http, balanced, loadState, newTrace, remember, reporter, sql, traceRows } from './lib.mjs';
 
-const { r, check, note, save } = reporter(13, 'Ad click → ledger');
+const { r, check, save } = reporter(13, 'Ad click → ledger');
 const trace = newTrace(13);
 r.traces.push(trace);
 remember((s) => s.traces.push(trace));

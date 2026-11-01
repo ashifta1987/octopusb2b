@@ -4,7 +4,7 @@ import { chromium } from '@playwright/test';
 import crypto from 'node:crypto';
 import { BASE, balanced, count, ensureBuyer, hops, loadState, newTrace, pwCookies, remember, reporter, runWorker, signIn, sql, traceRows, until, waitRefresh } from './lib.mjs';
 
-const { r, check, note, save } = reporter(2, 'RFQ → Quote → PI → Deposit → Confirmed order');
+const { r, check, save } = reporter(2, 'RFQ → Quote → PI → Deposit → Confirmed order');
 const trace = newTrace(2);
 r.traces.push(trace);
 remember((s) => s.traces.push(trace));
