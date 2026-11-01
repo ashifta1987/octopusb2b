@@ -9,6 +9,7 @@ import { getSettings, latestTermsId, supplierMap, DOC_LABEL } from '@/components
 import { ACTIVE_ORDER } from '@/components/account/order-utils';
 import { ApproveQuoteButton } from '@/components/account/approve-quote';
 import { RealtimeRefresh } from '@/components/account/realtime-refresh';
+import { AccountTeamStrip } from '@/components/account/assistant/team-card';
 import { approveQuote } from './rfqs/actions';
 
 export const metadata = { title: 'Dashboard' };
@@ -112,6 +113,8 @@ export default async function AccountDashboard() {
         <Stat label="Active orders" value={activeOrders.length} hint={`${inTransit} in transit`} />
         <Stat label={mixedSpend ? 'Spend this quarter (converted)' : 'Spend this quarter'} value={money(spendQuarter, spendCur, { compact: true })} hint={spendHint} />
       </div>
+
+      <AccountTeamStrip orgId={org.id} />
 
       {ad && (
         <div className="mb-6">

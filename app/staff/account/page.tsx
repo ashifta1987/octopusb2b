@@ -7,7 +7,9 @@ import { DISTRIBUTOR_NAV, OFFICE_NAV } from '@/lib/nav';
 import { PageHeader } from '@/components/ui';
 import { fmtDate, humanize } from '@/lib/format';
 import { staffSignOut } from '@/lib/staff/actions';
+import { ToggleSetting } from '@/components/admin/client';
 import { ProfileForm, PasswordForm, BackupCodesButton, SignOutEverywhere } from './account-forms';
+import { setMyOutOfOffice } from './actions';
 
 export const metadata = { title: 'My account · Staff' };
 
@@ -17,7 +19,7 @@ async function AccountBody() {
   if (!s.isStaff) redirect('/login');
   const sb = await createClient();
   const [{ data: prof }, { data: factors }, { count: unused }, { data: sessions }] = await Promise.all([
-    sb.from('profiles').select('full_name, phone, office, email').eq('id', s.userId).maybeSingle(),
+    sb.from('profiles').select('full_name, phone, office, email, team, out_of_office').eq('id', s.userId).maybeSingle(),
     sb.auth.mfa.listFactors(),
     sb.from('staff_backup_codes').select('id', { count: 'exact', head: true }).eq('user_id', s.userId).is('used_at', null),
     sb.rpc('my_active_sessions'),
@@ -33,6 +35,17 @@ async function AccountBody() {
           <h2 className="text-lg font-semibold mb-4">Profile</h2>
           <ProfileForm fullName={prof?.full_name ?? ''} phone={prof?.phone ?? ''} />
           <p className="text-[13px] text-muted mt-4">Role: {s.roles.map((r) => humanize(r)).join(', ') || '—'}. Roles and office are set by an Admin in Staff &amp; roles.</p>
+        </section>
+
+        <section className="card p-6 scroll-mt-6" id="availability">
+          <h2 className="text-lg font-semibold mb-1">Availability</h2>
+          <p className="text-[13px] text-muted mb-4">
+            While you are out of office, customers Octo hands over to you go to the {prof?.team ? `${prof.team} team` : 'team'} queue instead. You get them back when you turn this off.
+          </p>
+          <span className="inline-flex items-center gap-3">
+            <span className="font-semibold text-sm">Out of office</span>
+            <ToggleSetting checked={!!prof?.out_of_office} label="Out of office" onToggle={setMyOutOfOffice} showText />
+          </span>
         </section>
 
         <section className="card p-6 scroll-mt-6" id="password">

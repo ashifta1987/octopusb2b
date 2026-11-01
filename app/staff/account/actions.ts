@@ -67,3 +67,15 @@ export async function signOutEverywhere(): Promise<{ ok: false; error: string; s
   await clearStaffSession();
   redirect('/staff/login');
 }
+
+/** Out of office (SPEC §20.3): while ON, new assistant handoffs for my customers go to my team queue. */
+export async function setMyOutOfOffice(value: boolean): Promise<Result> {
+  const c = await currentClaims();
+  if (!c) redirect('/staff/login?next=/staff/account');
+  const sb = await createClient();
+  const { error } = await sb.rpc('set_out_of_office', { p_value: value });
+  if (error) return isStepUpError(error) ? { ok: false, stepUp: true, error: 'For your security, confirm your 6-digit code first.' } : { ok: false, error: mapDbError(error) };
+  revalidatePath('/staff/account');
+  revalidatePath('/office/assistant');
+  return { ok: true, message: value ? 'Out of office is on.' : 'Out of office is off.' };
+}

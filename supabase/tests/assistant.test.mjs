@@ -104,3 +104,4 @@ try {
 }
 console.log(failed ? `\n${failed} failed` : '\nall assistant checks passed');
 process.exitCode = failed ? 1 : 0;
+

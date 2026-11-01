@@ -5,6 +5,7 @@ export type NavSection = { title?: string; items: NavItem[] };
 export const CUSTOMER_NAV: NavSection[] = [{
   items: [
     { href: '/account', label: 'Dashboard' },
+    { href: '/account/assistant', label: 'AI assistant' },
     { href: '/account/rfqs', label: 'RFQs' },
     { href: '/account/services', label: 'Service requests' },
     { href: '/account/orders', label: 'Orders' },
@@ -41,12 +42,14 @@ export const OFFICE_NAV: NavSection[] = [
       { href: '/office/orders', label: 'Orders', area: 'orders' },
       { href: '/office/shipping', label: 'Shipping', area: 'orders' },
       { href: '/office/support', label: 'Support desk', area: 'support' },
+      { href: '/office/assistant', label: 'Assistant queue', area: 'assistant' },
     ],
   },
   {
     title: 'Admin',
     items: [
       { href: '/admin', label: 'Overview', area: 'dashboard' },
+      { href: '/admin/customers', label: 'Customers', area: 'customers' },
       { href: '/admin/finance', label: 'Finance', area: 'finance' },
       { href: '/admin/wallet', label: 'Wallets & payments', area: 'wallet' },
       { href: '/admin/currency', label: 'Currency', area: 'finance' },
@@ -58,6 +61,7 @@ export const OFFICE_NAV: NavSection[] = [
       { href: '/admin/geography', label: 'Geography', area: 'customers' },
       { href: '/admin/suppliers', label: 'Suppliers', area: 'suppliers' },
       { href: '/admin/staff', label: 'Staff & roles', area: 'staff' },
+      { href: '/admin/assistant', label: 'Assistant', area: 'assistant', action: 'configure' },
       { href: '/admin/integrations', label: 'Integrations', area: 'integrations' },
       { href: '/admin/backups', label: 'Backup & restore', area: 'backups' },
     ],
