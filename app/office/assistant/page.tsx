@@ -10,6 +10,7 @@ import { getQuoteFacts, getShipmentFacts, getWalletFacts } from '@/components/ba
 import { REASON_LABEL, REASON_TONE } from '@/components/backoffice/assistant/sla';
 import { COUNTRY_NAMES, fmtDate, humanize } from '@/lib/format';
 import { cn } from '@/lib/cn';
+import { RealtimeRefresh } from '@/components/account/realtime-refresh';
 import { setOutOfOffice } from './actions';
 
 export const metadata = { title: 'Assistant queue' };
@@ -187,6 +188,8 @@ export default async function AssistantQueuePage({ searchParams }: { searchParam
         subtitle="Customers handed over by Octo, your assigned customers, and conversations where Octo is unsure."
         actions={
           <div className="flex flex-col items-end gap-1">
+            {/* SPEC §20.5 / §21.1 #10: new handoffs nudge the queue live */}
+            <RealtimeRefresh channel="assistant-queue" subs={[{ table: 'escalations', event: 'INSERT' }, { table: 'escalations', event: 'UPDATE' }]} />
             <span className="inline-flex items-center gap-2 text-sm">
               <span className="font-semibold">Out of office</span>
               <ToggleSetting checked={!!me?.out_of_office} label="Out of office" onToggle={setOutOfOffice} showText />
