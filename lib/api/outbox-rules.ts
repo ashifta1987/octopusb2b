@@ -22,7 +22,7 @@ export type OutboxEvent = {
   created_at?: string;
 };
 
-const EMAIL_EVENTS = new Set(['quote.sent', 'quote.approved', 'payment.confirmed', 'account_manager.assigned']);
+const EMAIL_EVENTS = new Set(['quote.sent', 'quote.approved', 'payment.confirmed', 'account_manager.assigned', 'pi.created', 'pool.balance_reminder']);
 
 /** Service-request steps the customer is e-mailed about (SPEC §10.1 "service_request.paid → email receipt", §21.1 #5). */
 const SERVICE_EMAIL_STEPS = new Set(['paid', 'report_ready', 'completed', 'rejected', 'refunded']);
@@ -44,6 +44,9 @@ export function notificationFor(e: Pick<OutboxEvent, 'event_type' | 'aggregate_i
   if (t === 'rfq.submitted') return { title: 'RFQ received', body: 'We are matching suppliers for your request.', link: `/account/rfqs/${id}` };
   if (t === 'quote.sent') return { title: 'New quote received', body: 'A supplier quote is waiting for your review.', link: `/account/rfqs/${p.rfq_id ?? ''}` };
   if (t === 'quote.approved') return { title: 'Proforma invoice issued', body: `${p.pi ?? 'Your proforma invoice'} is ready. Pay the deposit to confirm.`, link: `/account/orders/${id}` };
+  // group buy settled: one PI per buyer (SPEC §18, §21.1 #6)
+  if (t === 'pi.created') return { title: 'Group buy filled — proforma invoice issued', body: `${p.pi ?? 'Your proforma invoice'}${p.pool ? ` for pool ${p.pool}` : ''} is ready. Pay the balance to confirm your order.`, link: `/account/orders/${id}` };
+  if (t === 'pool.balance_reminder') return { title: 'Group buy balance due', body: 'Your pool filled — please pay the balance before the deadline to keep your place.', link: '/account/pools' };
   if (t === 'payment.confirmed') return { title: 'Payment confirmed', body: 'Your payment was received and matched.', link: `/account/orders/${p.order_id ?? ''}` };
   if (t.startsWith('order.')) return { title: `Order ${titleCase(t.slice(6)).toLowerCase()}`, body: `Your order status changed to ${titleCase(t.slice(6)).toLowerCase()}.`, link: `/account/orders/${id}` };
   if (t === 'shipment.tracking') return { title: `Shipment: ${titleCase(String(p.status ?? 'update')).toLowerCase()}`, body: [p.description, p.location].filter(Boolean).join(' · '), link: `/account/orders/${p.order_id ?? ''}` };
