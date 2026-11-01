@@ -1,6 +1,7 @@
 import { getCarrier, verifySignature } from '@/lib/adapters';
 import { json, problem } from '@/lib/api/problem';
 import { createAdminClient } from '@/lib/supabase/server';
+import { sha256, traceLog } from '@/lib/trace';
 
 /**
  * POST /api/webhooks/yunexpress — carrier tracking webhook (SPEC §7, P6).
@@ -14,9 +15,11 @@ export async function POST(req: Request) {
   const secret = process.env.YUNEXPRESS_WEBHOOK_SECRET || process.env.WEBHOOK_SIGNING_SECRET || '';
   const sig = req.headers.get('octopus-signature') ?? req.headers.get('x-yunexpress-signature');
   const sb = createAdminClient();
+  const t0 = Date.now();
+  const endpoint = 'POST /api/webhooks/yunexpress';
   if (!verifySignature(raw, sig, secret)) {
-    console.warn('[webhooks/yunexpress] bad signature');
-    await sb.from('integration_logs').insert({ integration_code: 'yunexpress', direction: 'in', status: 401, summary: 'webhook signature rejected' });
+    traceLog('warn', 'yunexpress_webhook_bad_signature');
+    await sb.from('integration_logs').insert({ integration_code: 'yunexpress', direction: 'in', status: 401, summary: 'webhook signature rejected (hmac failed)', endpoint, request_sha: sha256(raw), duration_ms: Date.now() - t0 });
     return problem(401, 'BAD_SIGNATURE', 'Invalid or expired signature.');
   }
   let body: unknown;
@@ -47,17 +50,26 @@ export async function POST(req: Request) {
         continue;
       }
       console.error('[webhooks/yunexpress]', error.message);
-      await sb.from('integration_logs').insert({ integration_code: 'yunexpress', direction: 'in', status: 500, summary: `record failed: ${error.message}`.slice(0, 500) });
+      await sb.from('integration_logs').insert({ integration_code: 'yunexpress', direction: 'in', status: 500, summary: `record failed: ${error.message}`.slice(0, 500), endpoint, request_sha: sha256(raw), duration_ms: Date.now() - t0 });
       return problem(500, 'RECORD_FAILED', 'Could not record tracking event; please retry.');
     }
     if (data) result.recorded++;
-    else result.duplicates++;
+    else {
+      result.duplicates++;
+      const { data: first } = await sb.from('tracking_events').select('id, trace_id').eq('provider_event_id', e.providerEventId).limit(1).maybeSingle();
+      await sb.from('idempotency_hits').insert({ scope: 'yunexpress_webhook', key: e.providerEventId, original_trace_id: first?.trace_id ?? null, detail: { tracking_no: e.trackingNo, tracking_event_id: first?.id ?? null } });
+    }
   }
+  const out = { ok: true, ...result };
   await sb.from('integration_logs').insert({
     integration_code: 'yunexpress',
     direction: 'in',
     status: 200,
-    summary: `tracking webhook: ${result.recorded} new, ${result.duplicates} duplicate, ${result.unknown.length} unknown`,
+    summary: `tracking webhook (hmac ok): ${result.recorded} new, ${result.duplicates} duplicate, ${result.unknown.length} unknown`,
+    endpoint,
+    request_sha: sha256(raw),
+    response_sha: sha256(JSON.stringify(out)),
+    duration_ms: Date.now() - t0,
   });
-  return json({ ok: true, ...result });
+  return json(out);
 }

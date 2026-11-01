@@ -67,6 +67,8 @@ export function apiRoute<P extends Params = Params>(opts: Options, fn: (a: Handl
         if (prev && prev.scope !== scope) return withHeaders(problem(422, 'IDEMPOTENCY_KEY_REUSED', 'This Idempotency-Key was used for a different endpoint.'), rh, ctx);
         if (!saved) return withHeaders(problem(409, 'IDEMPOTENCY_IN_PROGRESS', 'A request with this Idempotency-Key is still being processed.', { headers: { 'Retry-After': '2' } }), rh, ctx);
         if (saved.hash !== reqHash) return withHeaders(problem(422, 'IDEMPOTENCY_KEY_REUSED', 'This Idempotency-Key was used with a different request body.'), rh, ctx);
+        // SPEC §21: replay answered from the stored response — logged as an idempotency hit
+        await ctx.sb.from('idempotency_hits').insert({ scope: 'api', key: storeKey, detail: { endpoint: scope, status: saved.status } });
         const replay = new Response(JSON.stringify(saved.body), {
           status: saved.status,
           headers: { 'Content-Type': saved.status >= 400 ? 'application/problem+json' : 'application/json', 'Idempotent-Replayed': 'true' },
