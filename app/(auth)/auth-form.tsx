@@ -20,12 +20,6 @@ export function AuthForm({ initialMode, next, initialError }: { initialMode: 'si
   const [busy, setBusy] = useState(false);
   const callback = () => `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
 
-  async function google() {
-    setErr(null);
-    const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: callback() } });
-    if (error) setErr(error.message.includes('provider is not enabled') ? 'Google sign-in is not enabled yet. Use email for now.' : error.message);
-  }
-
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null); setInfo(null); setBusy(true);
@@ -92,11 +86,7 @@ export function AuthForm({ initialMode, next, initialError }: { initialMode: 'si
         <>
           <h2 className="text-[28px] font-semibold">{mode === 'signup' ? 'Create your account' : 'Welcome back'}</h2>
           <p className="text-sm text-muted mt-1">{mode === 'signup' ? 'Free for buyers. Suppliers are verified before going live.' : 'Log in to your Octopus B2B account.'}</p>
-          <button type="button" onClick={google} className="btn btn-ghost w-full mt-6 min-h-[50px]">
-            <span className="w-5 h-5 rounded-full border-2 border-navy text-[10px] font-bold flex items-center justify-center" aria-hidden>G</span>Continue with Google
-          </button>
-          <div className="flex items-center gap-3 my-6 text-sm text-muted"><span className="flex-1 h-px bg-line" />or {mode === 'signup' ? 'sign up' : 'log in'} with email<span className="flex-1 h-px bg-line" /></div>
-          <form onSubmit={submit} className="space-y-5">
+          <form onSubmit={submit} className="space-y-5 mt-6">
             <div>
               <label htmlFor="email" className="label">Work email</label>
               <input id="email" type="email" required autoComplete="email" className="input min-h-12" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />

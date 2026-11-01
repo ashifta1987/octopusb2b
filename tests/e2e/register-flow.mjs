@@ -2,7 +2,7 @@
 // staff-email refusal, and a full sign-up → verify (admin-generated link, no email sent) → onboarding → /account.
 // Cleans up the test user + org afterwards.   Usage: APP=http://localhost:3200 node tests/e2e/register-flow.mjs
 import { chromium } from '@playwright/test';
-import { config } from 'dotenv'; import { createClient } from '@supabase/supabase-js'; import pg from 'pg';
+import { config } from 'dotenv'; import { createClient } from '@supabase/supabase-js';
 config({ path: '.env.local', quiet: true });
 const APP = process.env.APP ?? 'http://localhost:3200';
 const ref = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname.split('.')[0];
@@ -88,18 +88,14 @@ try {
 } finally {
   await browser.close();
   if (userId) {
-    const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } }); await db.connect();
-    const orgs = (await db.query('select org_id from org_members where user_id=$1', [userId])).rows.map((r) => r.org_id);
-    for (const o of orgs) {
-      await db.query('delete from account_managers where org_id=$1', [o]);
-      await db.query('delete from outbox_events where payload->>\'org_id\' = $1', [o]);
-      await db.query('delete from notifications where org_id=$1', [o]);
-      await db.query('delete from ledger_accounts where org_id=$1', [o]);
-      await db.query('delete from org_members where org_id=$1', [o]);
-      await db.query('delete from organizations where id=$1', [o]);
+    // clean up over the REST API (works on networks without IPv6, where the direct DB host may not resolve)
+    const { data: mem } = await admin.from('org_members').select('org_id').eq('user_id', userId);
+    for (const { org_id: o } of mem ?? []) {
+      for (const t of ['account_managers', 'notifications', 'ledger_accounts', 'org_members']) await admin.from(t).delete().eq('org_id', o);
+      await admin.from('outbox_events').delete().eq('payload->>org_id', o);
+      await admin.from('organizations').delete().eq('id', o);
     }
-    await db.query('delete from profiles where id=$1', [userId]);
-    await db.end();
+    await admin.from('profiles').delete().eq('id', userId);
     await admin.auth.admin.deleteUser(userId);
     console.log('cleaned up test user', email);
   }

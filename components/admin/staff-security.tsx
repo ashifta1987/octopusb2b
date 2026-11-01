@@ -81,9 +81,9 @@ export function StaffSecurityForm({ settings, action }: { settings: StaffSecurit
         <legend className="eyebrow">Sign-in</legend>
         <div className="grid gap-4 sm:grid-cols-2 mt-2">
           <div>
-            <label className="label" htmlFor="sec-gd">Google sign-in domain</label>
+            <label className="label" htmlFor="sec-gd">Staff email domain</label>
             <div className="flex items-center gap-1"><span className="text-muted">@</span><input id="sec-gd" name="google_domain" className="input mono" defaultValue={settings.google_domain ?? ''} placeholder="octopusb2b.com" /></div>
-            <p className="text-xs text-muted mt-1">Only Google accounts on this domain can use &quot;Sign in with Google&quot;.</p>
+            <p className="text-xs text-muted mt-1">Shown as the email hint on the staff login page. Staff sign in with email and password only.</p>
           </div>
           <div>
             <span className="label">Two-step verification for all staff</span>

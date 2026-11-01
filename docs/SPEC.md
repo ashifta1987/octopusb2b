@@ -49,7 +49,7 @@ Octopus B2B is a global wholesale marketplace for industrial supplies, priced in
 | Website | octopusb2b.com |
 | Brand | Octopus B2B, "Global Sourcing, Simplified"; navy #11133C, blue #2A6FD6 (logo blue #337BE1), Lexend + Inter + IBM Plex Mono |
 
-**In version 1:** storefront, sign-up with Google or email, customer KYC, RFQ to order, proforma and commercial invoices, ledger, wallet, services (sample, QC, certification, 3PL request, dropship request), YunExpress shipping and tracking, back office, finance and approvals, distributor panel, categories and tags, product creation with AI tools, Excel bulk upload, CMS with Terms versions and branches, advertising, support desk, public API with Postman collection, all admin settings.
+**In version 1:** storefront, sign-up with email (Google sign-in removed 1 Nov 2026), customer KYC, RFQ to order, proforma and commercial invoices, ledger, wallet, services (sample, QC, certification, 3PL request, dropship request), YunExpress shipping and tracking, back office, finance and approvals, distributor panel, categories and tags, product creation with AI tools, Excel bulk upload, CMS with Terms versions and branches, advertising, support desk, public API with Postman collection, all admin settings.
 
 **Built but switched off at launch:** supplier self-service portal, supplier API logins.
 
@@ -64,7 +64,7 @@ One Next.js (React, TypeScript) app on Vercel serves the storefront and every po
 | Front end | Next.js App Router, React, TypeScript, Tailwind CSS, shadcn/ui, React Hook Form + Zod, TanStack Table | All pages; server components for public pages, client components for portals |
 | Hosting | Vercel (production + preview per pull request), Vercel Cron for light schedules | App, API routes, image optimisation, edge caching |
 | Database | Supabase Postgres with Row Level Security, SQL migrations via Supabase CLI | All data, permissions, money ledger |
-| Auth | Supabase Auth: Google OAuth, email + password with 6-digit OTP, staff two-factor | All roles |
+| Auth | Supabase Auth: email + password with 6-digit OTP, staff two-factor (no Google / social sign-in — owner decision 1 Nov 2026) | All roles |
 | Files | Supabase Storage: public bucket (product media), private buckets (KYC, certificates, invoices, tickets) with signed URLs | Photos, PDFs, uploads |
 | Server logic | Next.js Route Handlers and Server Actions (user-facing), Supabase Edge Functions (webhooks, integrations, AI, jobs), Postgres functions (money, state changes) | Business rules |
 | Background | Supabase Cron (pg\_cron) + Supabase Queues (pgmq) + an outbox table | Events, retries, schedules |
@@ -103,7 +103,7 @@ flowchart TB
     RSC[Server Components: reads with RLS, ISR] ; SA[Server Actions: Zod-validated writes] ; RH[Route handlers: /api/v1 and /api/supplier/v1]
   end
   subgraph Supabase
-    AUTH[Auth: Google, email OTP, staff 2FA] ; PG[(Postgres: RLS, RPC, ledger, outbox)] ; ST[Storage] ; RT[Realtime]
+    AUTH[Auth: email + OTP, staff 2FA] ; PG[(Postgres: RLS, RPC, ledger, outbox)] ; ST[Storage] ; RT[Realtime]
     EF[Edge Functions + pgmq workers: email, PDF, notify, carrier, dropship, AI, webhooks]
   end
   subgraph Partners["Partners via adapters"]
@@ -152,7 +152,7 @@ Each flow names the screens (canvas artboards) it passes through. Build and test
 ### 4.1 Buyer: discover → order → deliver (golden path)
 
 1. **Discover.** Home → mega-menu or "All categories" → Products page (50+ items, filters: category, price, MOQ, certifications, Octopus Dropship, ready to ship) → Product detail (tiers, key facts, services row, certificates, 12 recommended products).
-2. **Sign up.** Any action (RFQ, sample, add to quote) opens Auth: Google or email OTP → Create profile (name, company, country, phone, business type) is required before anything else.
+2. **Sign up.** Any action (RFQ, sample, add to quote) opens Auth: email + password with OTP → Create profile (name, company, country, phone, business type) is required before anything else.
 3. **KYC.** Customer → KYC: company registration, address, contact, ID document. Status: pending → verified. Live API keys and payouts to wallet unlock after verification; browsing and RFQs work before it.
 4. **Request.** Request Center (sourcing/RFQ, 3PL, dropship, sample, QC, certification) or the product's service buttons. RFQ fee shown before submit and charged from the wallet (or card if the wallet is off).
 5. **Quote.** Back office (or supplier later) sends quotes; customer compares in Orders → RFQ detail; realtime status updates.
@@ -344,7 +344,7 @@ interface BankAdapter    { createVirtualAccount(org): Promise<VA>; listIncoming(
 | Alibaba.com | SourceAdapter | In | Later | Official partner API only |
 | Shopify, Wix, WooCommerce | ChannelAdapter / public API | In + out | Later | Apps built on the public API; customer installs and connects keys |
 | Other marketplaces (Amazon, Noon, etc.) | ChannelAdapter | Out | Later | Same pattern |
-| Google OAuth | Supabase Auth | In | v1 (P1) | Plus email OTP; staff require 2FA |
+| Google OAuth | Supabase Auth | — | Removed (1 Nov 2026) | Email + password with OTP only; staff require 2FA |
 | Sentry / logging | — | Out | v1 | Frontend + Edge Functions |
 
 ### Public API (for customers, Shopify, Wix, Postman)
@@ -549,7 +549,7 @@ UI / API → Server Action → RPC (one transaction: rows + ledger + status_hist
 - **pgTAP (database):** a customer cannot read another org's orders; storefront role cannot read `suppliers.legal_name`; supplier sees buyer contacts only after payment; ledger journals always balance; invalid state transitions are rejected; wallet cannot go below minus its credit limit; maker cannot approve own request.
 - **Vitest (units):** price tier selection, fee calculation, Zod contracts, adapter mappers (YunExpress payload ↔ internal), webhook signature verification, PDF numbering.
 - **Playwright golden paths:**
-  1. Visitor → Google/email signup → profile → KYC submit.
+  1. Visitor → email signup → profile → KYC submit.
   2. Customer RFQ (fee from wallet) → staff quote → approve → PI PDF downloaded and emailed → deposit recorded → confirmed.
   3. Balance paid → YunExpress sandbox shipment → simulated tracking webhook → customer timeline updates live → delivered.
   4. Sample + QC service purchase with wallet on; same with wallet off (card).
@@ -582,7 +582,7 @@ Sentry (errors and performance), Vercel Analytics (Core Web Vitals), Supabase lo
 | Area | Requirement |
 | --- | --- |
 | Access control | RLS on every table; `has_permission()` for staff; service-role key only in server code and Edge Functions; storefront reads only public views |
-| Authentication | Google OAuth + email OTP for customers; staff and finance require TOTP 2FA; session refresh in middleware; lock after 5 failed attempts |
+| Authentication | Email + password with OTP for customers (no Google sign-in); staff and finance require TOTP 2FA; session refresh in middleware; lock after 5 failed attempts |
 | Secrets | Vercel env vars for platform keys; integration credentials in Supabase Vault; API secrets hashed; keys rotatable from the UI |
 | Money safety | Double-entry ledger; amounts in integer cents; maker–checker approvals; limits per role; daily reconciliation; no card data stored (payment partner handles PCI) |
 | Audit | Append-only `audit_log` for logins, permission changes, price changes, money approvals, KYC document views, customer contact views, content publishes |
@@ -609,10 +609,10 @@ Done when: `pnpm dev` and `supabase start` run; a component gallery page shows e
 ### P1 — Auth, profiles, roles, KYC
 
 ```
-Read docs/SPEC.md sections 3, 4.1 steps 2–3, 6 (Identity & orgs) and 12. Create migrations for profiles, organizations, org_members, roles, permissions, role_permissions, staff_assignments, kyc_submissions, kyc_documents, addresses, audit_log, with RLS. Add has_permission(user, area, action). Implement Supabase Auth with Google OAuth and email OTP; middleware that refreshes the session and sends users without a profile to /onboarding (create profile: name, company, country, phone, business type). Build /account/kyc (match docs/design/CustomerKYC.png) with uploads to a private bucket and the KYC state machine from section 5. Staff 2FA (TOTP) required for /office and /admin. Write pgTAP tests for the RLS rules in section 11.3.
+Read docs/SPEC.md sections 3, 4.1 steps 2–3, 6 (Identity & orgs) and 12. Create migrations for profiles, organizations, org_members, roles, permissions, role_permissions, staff_assignments, kyc_submissions, kyc_documents, addresses, audit_log, with RLS. Add has_permission(user, area, action). Implement Supabase Auth with email + password and email OTP (no Google sign-in); middleware that refreshes the session and sends users without a profile to /onboarding (create profile: name, company, country, phone, business type). Build /account/kyc (match docs/design/CustomerKYC.png) with uploads to a private bucket and the KYC state machine from section 5. Staff 2FA (TOTP) required for /office and /admin. Write pgTAP tests for the RLS rules in section 11.3.
 ```
 
-Done when: Google and email signup work; no profile → forced onboarding; KYC submit → reviewer approves in a basic queue; pgTAP RLS tests pass.
+Done when: email signup works; no profile → forced onboarding; KYC submit → reviewer approves in a basic queue; pgTAP RLS tests pass.
 
 ### P2 — Catalog, product creation, AI tools, bulk upload, certificates
 
@@ -874,7 +874,7 @@ Operations, Finance, Support, Sourcing agent, QC coordinator, Content editor, Di
 
 ### 17.2 Sign-in flow
 
-1. **Sign in:** "Sign in with Google", allowed only for `@octopusb2b.com` accounts, or work email and password. No self sign-up: accounts exist only after Admin invites them in Staff & roles.
+1. **Sign in:** work email and password only (Google sign-in removed 1 Nov 2026). No self sign-up: accounts exist only after Admin invites them in Staff & roles.
 2. **Two-step verification (required):** a 6-digit code from an authenticator app (TOTP through Supabase Auth MFA). On first sign-in the staff member scans a QR code and saves 10 backup codes. "Trust this computer for 12 hours" is optional.
 3. **Choose workspace:** cards for only the areas the person's role allows (Back office, Shipping, Support desk, Finance, Admin, Distributor panel, Site content). If a person has only one area, they go straight to it. A workspace switcher sits in the top bar of every staff page.
 
@@ -901,7 +901,7 @@ Run this together with P1 (auth), or now if P1 is already built.
 
 ```
 Read docs/SPEC.md sections 3, 12 and 17. Build a separate staff sign-in for the back office:
-1. Route /staff/login matching docs/design/StaffLogin.png, StaffLogin-2-verify.png and StaffLogin-3-workspace.png (exact styles in docs/design/html/StaffLogin.html). Step 1: Google sign-in restricted to the octopusb2b.com domain, or email + password. Step 2: TOTP code with Supabase Auth MFA (enrol with QR code and 10 backup codes on first sign-in; optional trust this computer for 12 hours). Step 3: workspace cards built from the user's roles and permissions; skip this step when only one area is allowed.
+1. Route /staff/login matching docs/design/StaffLogin.png, StaffLogin-2-verify.png and StaffLogin-3-workspace.png (exact styles in docs/design/html/StaffLogin.html). Step 1: email + password (no Google sign-in). Step 2: TOTP code with Supabase Auth MFA (enrol with QR code and 10 backup codes on first sign-in; optional trust this computer for 12 hours). Step 3: workspace cards built from the user's roles and permissions; skip this step when only one area is allowed.
 2. Staff are invitation-only: from /admin/staff (docs/design/Staff.png) Admin invites a user, sets roles and office; the invite email has a 24-hour set-password link. Add columns 2FA status, last sign-in, active sessions and actions Resend invite, Reset 2FA, End sessions, Deactivate. Add a Security panel: lockout (5 attempts, 15 minutes), idle timeout 30 minutes, maximum session 12 hours, optional office IP allow-list for Admin and Finance.
 3. Middleware: /office, /admin, /distributor and /staff/* require a staff role and aal2; otherwise redirect to /staff/login. Customers who open these paths go to /login. A staff email cannot create a customer account.
 4. RLS: staff policies check has_permission() and auth.jwt()->>'aal' = 'aal2'. Add a step-up check that asks for a fresh code (older than 10 minutes) before money approvals, restores, KYC document downloads and role changes.
@@ -1166,7 +1166,7 @@ Run this after section 19 (prompt 19-A) and before go-live.
 
 | # | Chain | Starts at | Ends at |
 | --- | --- | --- | --- |
-| 1 | **Signup → KYC → account manager assigned** | Google OAuth button on `/signup` | `account_managers` row + welcome email + Realtime nudge on dashboard |
+| 1 | **Signup → KYC → account manager assigned** | Email sign-up on `/signup` | `account_managers` row + welcome email + Realtime nudge on dashboard |
 | 2 | **RFQ → Quote → PI → Deposit → Confirmed order** | "Request quote" on `/p/[slug]` | Order row confirmed + PI PDF + 3 emails + status\_history + ledger entries + outbox fan-out |
 | 3 | **In production → QC → Balance → Shipped** | Operations marks "in production" | Shipment row + YunExpress tracking + email + Realtime timeline update |
 | 4 | **YunExpress tracking webhook → Timeline** | Carrier POSTs `delivered` event | `tracking_events` row + Realtime push + customer email + metric |

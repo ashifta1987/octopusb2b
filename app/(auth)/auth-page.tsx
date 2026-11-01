@@ -4,7 +4,7 @@ import { AuthForm } from './auth-form';
 
 export const metadata = { title: 'Sign up or log in' };
 
-/** Auth.png — sign up & log in (Google + email with 6-digit OTP). */
+/** Auth.png — sign up & log in (email + password with 6-digit OTP; Google sign-in removed 1 Nov 2026). */
 export default async function AuthPage({ searchParams, mode }: { searchParams: Promise<{ next?: string; error?: string }>; mode: 'signup' | 'login' }) {
   const sp = await searchParams;
   return (

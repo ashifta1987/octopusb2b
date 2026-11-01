@@ -1,6 +1,6 @@
 // Chain 1 — Signup → KYC → account manager assigned (SPEC §21.1 #1).
-// Google OAuth is not enabled on the Supabase project (QA SL-01/SC-03), so the OAuth hop is traced up to the provider
-// boundary and the user is created with the Auth admin API (= what the OAuth callback would create). Everything after
+// Sign-up is email only (Google sign-in removed 1 Nov 2026), so the user is created with the Auth admin API
+// (no e-mail is sent). Everything after
 // that runs through the real UI/RPC path with one trace id.
 import { chromium } from '@playwright/test';
 import { BASE, count, cookieFor, ensureBuyer, hops, newTrace, pwCookies, remember, reporter, runWorker, signIn, sql, traceRows, waitRefresh } from './lib.mjs';
@@ -11,22 +11,14 @@ r.traces.push(trace);
 remember((s) => s.traces.push(trace));
 const browser = await chromium.launch();
 try {
-  // 1 · Google OAuth button → provider boundary
+  // 1 · Sign-up page: email only (Google sign-in removed 1 Nov 2026 — owner decision)
   const ctx0 = await browser.newContext({ extraHTTPHeaders: { 'x-trace-id': trace } });
   const p0 = await ctx0.newPage();
   const signup = await p0.goto(`${BASE}/signup`);
   check(signup.headers()['x-trace-id'] === trace, 'signup page echoes the trace id', signup.headers()['x-trace-id']);
-  const google = p0.getByRole('button', { name: /google/i });
-  const hasGoogle = await google.first().waitFor({ timeout: 10000 }).then(() => true).catch(() => false);
-  check(hasGoogle, 'Google sign-up button present on /signup');
-  if (hasGoogle) {
-    const [req] = await Promise.all([p0.waitForRequest((q) => /\/auth\/v1\/authorize|accounts\.google\.com/.test(q.url()), { timeout: 8000 }).catch(() => null), google.first().click().catch(() => null)]);
-    await p0.waitForTimeout(2500);
-    const body = (await p0.content()).slice(0, 4000);
-    const providerOff = /provider is not enabled|not enabled yet|Unsupported provider|validation_failed/i.test(body);
-    note(`OAuth click → ${req ? new URL(req.url()).host + new URL(req.url()).pathname : 'no authorize request'}; ${providerOff ? 'Supabase answers "provider is not enabled"' : 'landed on ' + p0.url()}`);
-    r.boundary = { hop: 'Google OAuth', result: providerOff ? 'provider not enabled (blocked: Owner/Admin enables Google in Supabase Auth)' : `reached ${p0.url()}` };
-  }
+  const googleCount = await p0.getByRole('button', { name: /google/i }).count();
+  check(googleCount === 0, 'no Google sign-up button on /signup (email only)');
+  check(await p0.getByLabel('Work email').isVisible().catch(() => false), 'email sign-up form present on /signup');
   await ctx0.close();
 
   // 2 · user created (OAuth stand-in) → sign in → onboarding form (UI)

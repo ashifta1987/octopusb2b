@@ -24,7 +24,7 @@ async function LoginBody({ searchParams }: { searchParams: Promise<SP> }) {
         next={sp.next ?? ''}
         initialError={sp.error ?? null}
         notice={notice}
-        googleDomain={sec.google_domain}
+        emailDomain={sec.google_domain}
         attempts={sec.lockout_attempts}
         minutes={sec.lockout_minutes}
       />
@@ -32,7 +32,7 @@ async function LoginBody({ searchParams }: { searchParams: Promise<SP> }) {
   );
 }
 
-/** StaffLogin.png — step 1: Google (@octopusb2b.com) or work email + password. */
+/** StaffLogin.png — step 1: work email + password (Google sign-in removed 1 Nov 2026). */
 export default function StaffLoginPage(props: { searchParams: Promise<SP> }) {
   return (
     <StaffFrame step={0}>

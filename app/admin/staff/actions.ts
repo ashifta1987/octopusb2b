@@ -343,7 +343,7 @@ export async function saveStaffSecurity(_prev: Result | null, fd: FormData): Pro
   const wasEnforced = (cur?.value as { enforce_aal2?: boolean } | null)?.enforce_aal2 !== false;
   if (!enforce && wasEnforced && str(fd, 'confirm_disable_2fa') !== 'CONFIRM') return fail('To turn off required 2FA, type CONFIRM in the box.');
   const domain = str(fd, 'google_domain').toLowerCase().replace(/^@/, '');
-  if (domain && !/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(domain)) return fail('Enter a valid Google Workspace domain, e.g. octopusb2b.com');
+  if (domain && !/^[a-z0-9-]+(\.[a-z0-9-]+)+$/.test(domain)) return fail('Enter a valid email domain, e.g. octopusb2b.com');
 
   const settings = { ...nums, ip_allowlist: ips, ip_rule_roles: ipRoles, ip_rule_enabled: ipEnabled, enforce_aal2: enforce, google_domain: domain || null };
   const { error } = await g.sb.rpc('update_staff_security', { p_settings: settings });
