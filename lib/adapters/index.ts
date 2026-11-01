@@ -1,5 +1,6 @@
 import 'server-only';
 import crypto from 'node:crypto';
+import { logEmailDelivery, logIntegration, outboundTraceHeaders, traceAdapter } from './traced';
 
 /* Adapter interfaces (SPEC §7). Business code depends only on these; providers are swappable. */
 
@@ -45,9 +46,15 @@ export class YunExpressAdapter implements CarrierAdapter {
   }
 }
 
+/** Outbound carrier calls are logged to integration_logs with trace id + body SHAs (SPEC §7, §21). */
 export function getCarrier(code = 'yunexpress'): CarrierAdapter {
   switch (code) {
-    case 'yunexpress': return new YunExpressAdapter();
+    case 'yunexpress': {
+      const a = new YunExpressAdapter();
+      const base = a.mode === 'live' ? 'https://api.yunexpress.com' : 'sandbox://yunexpress';
+      const paths: Record<string, string> = { priceTrial: '/api/WayBill/GetPriceTrial', createShipment: '/api/WayBill/CreateOrder', getLabel: '/api/Label/Print', cancel: '/api/WayBill/Delete', subscribeTracking: '/api/Tracking/Subscribe' };
+      return traceAdapter('yunexpress', a, ['priceTrial', 'createShipment', 'getLabel', 'cancel', 'subscribeTracking'], (m) => base + (paths[m] ?? `/${m}`));
+    }
     default: throw new Error(`No carrier adapter for ${code}`);
   }
 }
@@ -74,13 +81,17 @@ export class TestPaymentAdapter implements PaymentAdapter {
     return [{ providerEventId: b.id, kind: b.type, reference: b.data?.reference, amountCents: b.data?.amount }];
   }
 }
-export function getPayment(): PaymentAdapter { return new TestPaymentAdapter(); }
+export function getPayment(): PaymentAdapter {
+  return traceAdapter('payment', new TestPaymentAdapter(), ['createIntent', 'refund'], (m) => `sandbox://payment/${m}`);
+}
 
 /* ───────── Email (decision #3 open) ───────── */
 export interface EmailAdapter {
   readonly mode: 'log' | 'live';
-  send(m: { to: string; subject: string; html: string; attachments?: { filename: string; url: string }[] }): Promise<{ id: string }>;
+  /** `meta.template` names the template/event for the delivery log; `meta.eventId` links it to the outbox event. */
+  send(m: { to: string; subject: string; html: string; attachments?: { filename: string; url: string }[] }, meta?: EmailMeta): Promise<{ id: string }>;
 }
+export type EmailMeta = { template?: string; eventId?: string | null };
 export class LogEmailAdapter implements EmailAdapter {
   readonly mode = 'log' as const;
   async send(m: { to: string; subject: string }) { console.log('[email:log]', m.to, m.subject); return { id: 'log_' + Date.now() }; }
@@ -88,15 +99,42 @@ export class LogEmailAdapter implements EmailAdapter {
 export class ResendEmailAdapter implements EmailAdapter {
   readonly mode = 'live' as const;
   async send(m: { to: string; subject: string; html: string }) {
-    const r = await fetch('https://api.resend.com/emails', {
-      method: 'POST', headers: { Authorization: `Bearer ${process.env.EMAIL_API_KEY}`, 'Content-Type': 'application/json' },
+    const r = await fetch(process.env.EMAIL_API_URL || 'https://api.resend.com/emails', {
+      method: 'POST', headers: { Authorization: `Bearer ${process.env.EMAIL_API_KEY}`, 'Content-Type': 'application/json', ...outboundTraceHeaders() },
       body: JSON.stringify({ from: process.env.EMAIL_FROM ?? 'Octopus B2B <support@octopusb2b.com>', to: m.to, subject: m.subject, html: m.html }),
     });
     if (!r.ok) throw new Error(`email failed ${r.status}`);
     return { id: (await r.json()).id };
   }
 }
-export function getEmail(): EmailAdapter { return process.env.EMAIL_API_KEY ? new ResendEmailAdapter() : new LogEmailAdapter(); }
+/**
+ * Every message is recorded in email_deliveries (trace id, template, recipient hash, provider message id) and
+ * integration_logs (code 'email', body SHAs) — SPEC §21.4 steps 4–5.
+ */
+class TracedEmail implements EmailAdapter {
+  constructor(private inner: EmailAdapter) {}
+  get mode() { return this.inner.mode; }
+  async send(m: Parameters<EmailAdapter['send']>[0], meta: EmailMeta = {}) {
+    const t0 = Date.now();
+    const provider = this.inner.mode === 'live' ? 'resend' : 'log';
+    const endpoint = this.inner.mode === 'live' ? process.env.EMAIL_API_URL || 'https://api.resend.com/emails' : 'log://email';
+    const template = meta.template ?? 'adhoc';
+    try {
+      const r = await this.inner.send(m, meta);
+      const ms = Date.now() - t0;
+      await logEmailDelivery({ template, to: m.to, provider, messageId: r.id, status: this.inner.mode === 'live' ? 'sent' : 'logged', eventId: meta.eventId, durationMs: ms });
+      await logIntegration({ code: 'email', direction: 'out', endpoint, status: 200, summary: `${template} → ${provider} ${r.id}`, request: { to: m.to, subject: m.subject, html: m.html }, response: r, durationMs: ms, eventId: meta.eventId });
+      return r;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      const ms = Date.now() - t0;
+      await logEmailDelivery({ template, to: m.to, provider, messageId: null, status: 'failed', error: msg, eventId: meta.eventId, durationMs: ms });
+      await logIntegration({ code: 'email', direction: 'out', endpoint, status: 502, summary: `${template} failed: ${msg}`, request: { to: m.to, subject: m.subject, html: m.html }, response: msg, durationMs: ms, eventId: meta.eventId });
+      throw e;
+    }
+  }
+}
+export function getEmail(): EmailAdapter { return new TracedEmail(process.env.EMAIL_API_KEY ? new ResendEmailAdapter() : new LogEmailAdapter()); }
 
 /* ───────── Dropship / Source / Channel / Bank (stubs until APIs exist, SPEC §7) ───────── */
 export interface DropshipAdapter { pushProduct(p: { id: string }): Promise<string>; createOrder(o: { id: string }): Promise<string>; syncStock(ids: string[]): Promise<void>; }
