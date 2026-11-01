@@ -1,0 +1,15 @@
+✔ YunExpress: unsigned → 401
+✔ YunExpress: wrong secret → 401
+✔ YunExpress: timestamp outside 5-min replay window → 401
+✔ YunExpress: body tampered → 401
+   replay response 200 {"ok":true,"received":0,"recorded":0,"duplicates":0,"unknown":[]}
+✔ YunExpress: replay of last 0 tracking events → 0 recorded (0 duplicates expected)
+✔ Payment: unsigned → 401
+✔ Payment: stale timestamp → 401
+✔ Payment: replay of last 1 provider events → all duplicate/already_credited
+   counts before { te: '3', le: '14', j: '7', ob: '34', tc: '1' } after { te: '3', le: '14', j: '7', ob: '34', tc: '1' }
+✔ No new tracking events, ledger rows, journals, outbox events (emails) or credits after replays
+   webhook_deliveries columns: id,endpoint_id,org_id,event_type,payload,response_status,attempts,delivered_at,created_at
+   last outbound deliveries: 0 []
+✔ system_record_tracking replay: first=true second=false; no new rows on replay (te 3->4->4, outbox 34->35->35)
+   cleaned 8 QA integration_logs rows

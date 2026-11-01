@@ -1,0 +1,8 @@
+3
+removed 0 unverified enrolment factor(s) created for qc@ by step 2
+✔ customer at /staff/login refused: "This is the staff portal — use Customer login.Go to Customer loginContinueAfter 5 wrong attempts the account is locked for 15 minutes and Admin is notified" url=/staff/login
+✔ staff password-only → step 2 (/staff/verify?next=%2Fstaff%2Fworkspace)
+✔ …and /office without the code sends back to verify (/staff/verify?next=%2Foffice)
+✔ wrong password → "Wrong email or password.4 attempts left before the account is locked."
+✔ customer opening /office ends at /login
+✔ customer opening /admin ends at /login

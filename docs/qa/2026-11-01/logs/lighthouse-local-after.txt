@@ -1,0 +1,4 @@
+local-after / {"performance":91,"accessibility":100,"best-practices":100,"seo":100} LCP 3.5 s CLS 0 TBT 20 ms
+local-after /p/stainless-steel-hex-bolts-m10-40-mm-a2-70 {"performance":93,"accessibility":100,"best-practices":100,"seo":92} LCP 3.3 s CLS 0 TBT 20 ms
+local-after /products {"performance":93,"accessibility":100,"best-practices":100,"seo":100} LCP 3.2 s CLS 0 TBT 20 ms
+local-after /pools {"performance":91,"accessibility":100,"best-practices":100,"seo":100} LCP 3.6 s CLS 0 TBT 20 ms

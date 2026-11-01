@@ -1,0 +1,4 @@
+/ { performance: 73, accessibility: 93, 'best-practices': 100, seo: 92 } LCP 4.3 s CLS 0.223 TBT 10 ms FCP 1.1 s
+/products { performance: 92, accessibility: 96, 'best-practices': 100, seo: 100 } LCP 2.8 s CLS 0 TBT 30 ms FCP 1.1 s
+/p/stainless-steel-hex-bolts-m10-40-mm-a2-70 { performance: 93, accessibility: 94, 'best-practices': 100, seo: 92 } LCP 2.8 s CLS 0 TBT 10 ms FCP 1.0 s
+/pools { performance: 89, accessibility: 97, 'best-practices': 100, seo: 100 } LCP 3.5 s CLS 0 TBT 10 ms FCP 1.0 s

@@ -1,0 +1,7 @@
+✔ recovery tables created (10/10)
+✔ unchanged product compares as "same" (same)
+✔ damaged product compares as "changed"
+✔ restore_records puts the backup values back
+✔ after restore the row is "same" again
+
+all backup recovery checks passed

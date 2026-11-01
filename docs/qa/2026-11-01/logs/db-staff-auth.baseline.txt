@@ -1,0 +1,27 @@
+(node:22750) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✔ ops with password only (aal1) sees no KYC submissions
+✔ aal1 staff cannot read suppliers
+✔ aal1 staff have no staff permissions
+✔ ops with aal2 can read suppliers
+✔ admin without aal2 is not admin
+✔ customers are unaffected (aal1 still sees own orders)
+✔ money approval with a stale code asks for step-up → STEP_UP_REQUIRED
+✔ money approval with a fresh code succeeds
+✔ role change with a stale code is refused → new row violates row-level security policy for table "user_roles"
+✔ resetting 2FA needs step-up → STEP_UP_REQUIRED
+✔ role change with a fresh code works
+✔ admin can reset 2FA (fresh code)
+✔ admin can end sessions
+✔ Staff & roles security columns (8 staff)
+✔ 2FA reset and session end are audited
+✔ account locked after 5 wrong passwords
+✔ lock status reports locked
+✔ admin is notified of the lockout
+✔ lockout audited with IP and device
+✔ admin can unlock
+✔ a staff user cannot join a customer org → STAFF_CANNOT_BE_CUSTOMER
+✔ a customer cannot be given a staff role → CUSTOMER_CANNOT_BE_STAFF
+✔ octopusb2b.com emails cannot sign up as customers
+
+all staff-auth checks passed

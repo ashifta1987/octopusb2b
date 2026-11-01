@@ -1,0 +1,23 @@
+(node:22728) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+buyer USD wallet 28600 old order {
+  id: '778cd8af-9432-4a65-8cdc-84f67f3bf5c8',
+  currency: 'USD',
+  total_cents: '50000',
+  paid_cents: '0'
+}
+impact {"to":"CNY","from":"USD","wallets":{"USD":{"wallets":1,"total_minor":28600}},"open_pis":{"USD":1},"open_quotes":{"USD":3},"active_ad_budgets":{"USD":{"campaigns":1,"daily_budget_minor":2000}},"services_without_price":["rfq","sample","qc","certification","3pl","dropship"],"payment_adapter_supports":true}
+✔ admin (maker) cannot approve own switch → MAKER_CANNOT_APPROVE
+✔ platform currency is CNY after approval
+✔ switch applied immediately (effective now)
+✔ wallet converted: USD 28600 → CNY 207350
+✔ every journal balances per currency
+✔ QC price converted to CNY: 144275 (converted=true)
+✔ new service request charged in CNY
+✔ new quote is in CNY
+✔ new order + PI locked to CNY with rate
+✔ old order keeps USD
+✔ old USD PI can still be paid in USD
+✔ switch back to USD works
+✔ kept CNY balance stays spendable/visible after switching back (keep option)
+✔ journals still balance per currency

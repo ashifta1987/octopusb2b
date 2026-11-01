@@ -1,0 +1,7 @@
+✔ shipment question answered with real tracking data: "Your order ORD-2202 (10,000 hex bolts M10) is currently in transit with YunExpress. The last scan shows it departed from the origin facility…"
+✔ refund request is handed to the account manager
+✔ Support ticket TKT-1017 opened with the transcript attached
+✔ account manager replied from the back office
+✔ customer received the reply in the same thread live, without reloading
+
+SPEC §20 done-when: all passed

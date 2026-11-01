@@ -1,0 +1,53 @@
+(node:24967) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/ashifabdulkhadar/Desktop/octopusb2bapp/lib/staff/session-cookie.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/ashifabdulkhadar/Desktop/octopusb2bapp/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+/ [anon] status=200/200/200/200 final=/ lang=en h1=1 skip= over360=0 axe=none errs=0
+/products [anon] status=200/200/200/200 final=/products lang=en h1=1 skip= over360=0 axe=none errs=0
+/c/fasteners [anon] status=200/200 final=/c/fasteners lang=en h1=1 skip= over360=0 axe=none errs=0
+/search?q=gloves [anon] status=200/200 final=/search?q=gloves lang=en h1=1 skip= over360=0 axe=none errs=0
+/p/stainless-steel-hex-bolts-m10-40-mm-a2-70 [anon] status=200/200/200/200 final=/p/stainless-steel-hex-bolts-m10-40-mm-a2-70 lang=en h1=1 skip= over360=0 axe=none errs=0
+/request/sourcing [anon] status=200/200/200/200 final=/request/sourcing lang=en h1=1 skip= over360=0 axe=none errs=0
+/pools [anon] status=200/200/200/200 final=/pools lang=en h1=1 skip= over360=0 axe=none errs=0
+/login [anon] status=200/200/200/200 final=/login lang=en h1=1 skip= over360=0 axe=none errs=0
+/signup [anon] status=200/200 final=/signup lang=en h1=1 skip= over360=0 axe=none errs=0
+/staff/login [anon] status=200/200/200/200 final=/staff/login lang=en h1=1 skip= over360=0 axe=none errs=0
+/legal/terms [anon] status=200/200 final=/legal/terms lang=en h1=1 skip= over360=0 axe=none errs=0
+/about [anon] status=200/200 final=/about lang=en h1=1 skip= over360=0 axe=none errs=0
+/contact [anon] status=200/200 final=/contact lang=en h1=1 skip= over360=0 axe=none errs=0
+/account [buyer] status=200/200/200/200 final=/account lang=en h1=1 skip= over360=0 axe=none errs=0
+/account/assistant [buyer] status=200/200/200/200 final=/account/assistant lang=en h1=1 skip= over360=0 axe=none errs=0
+/account/orders [buyer] status=200/200/200/200 final=/account/orders lang=en h1=1 skip= over360=0 axe=none errs=0
+/account/rfqs [buyer] status=200/200 final=/account/rfqs lang=en h1=1 skip= over360=0 axe=none errs=0
+/account/kyc [buyer] status=200/200/200/200 final=/account/kyc lang=en h1=1 skip= over360=0 axe=none errs=2
+/account/wallet [buyer] status=200/200/200/200 final=/account/wallet lang=en h1=1 skip= over360=0 axe=none errs=0
+/account/ledger [buyer] status=200/200/200/200 final=/account/ledger lang=en h1=1 skip= over360=0 axe=none errs=0
+/account/developer [buyer] status=200/200/200/200 final=/account/developer lang=en h1=1 skip= over360=0 axe=none errs=0
+/account/support [buyer] status=200/200/200/200 final=/account/support lang=en h1=1 skip= over360=0 axe=none errs=0
+/account/ads [buyer] status=200/200/200/200 final=/account/ads lang=en h1=1 skip= over360=0 axe=none errs=0
+/account/pools [buyer] status=200/200 final=/account/pools lang=en h1=1 skip= over360=0 axe=none errs=0
+/account/services [buyer] status=200/200 final=/account/services lang=en h1=1 skip= over360=0 axe=none errs=0
+/distributor [distributor] status=200/200/200/200 final=/distributor lang=en h1=1 skip= over360=0 axe=none errs=0
+/distributor/products/new [distributor] status=200/200/200/200 final=/distributor/products/new lang=en h1=1 skip= over360=0 axe=none errs=0
+/distributor/products/import [distributor] status=200/200/200/200 final=/distributor/products/import lang=en h1=1 skip= over360=0 axe=none errs=0
+/distributor/catalog [distributor] status=200/200/200/200 final=/distributor/catalog lang=en h1=1 skip= over360=0 axe=none errs=0
+/office [ops] status=200/200/200/200 final=/office lang=en h1=1 skip= over360=0 axe=none errs=0
+/office/shipping [ops] status=200/200/200/200 final=/office/shipping lang=en h1=1 skip= over360=0 axe=none errs=0
+/office/support [support] status=200/200/200/200 final=/office/support lang=en h1=1 skip= over360=0 axe=none errs=0
+/office/assistant [support] status=200/200 final=/office/assistant lang=en h1=1 skip= over360=0 axe=none errs=0
+/admin [qa-admin] status=200/200/200/200 final=/admin lang=en h1=1 skip= over360=199 axe=none errs=0
+/admin/finance [qa-admin] status=200/200/200/200 final=/admin/finance lang=en h1=1 skip= over360=21 axe=none errs=0
+/admin/ads [qa-admin] status=200/200/200/200 final=/admin/ads lang=en h1=1 skip= over360=0 axe=none errs=0
+/admin/staff [qa-admin] status=200/200/200/200 final=/admin/staff lang=en h1=1 skip= over360=0 axe=none errs=0
+/admin/geography [qa-admin] status=200/200/200/200 final=/admin/geography lang=en h1=1 skip= over360=0 axe=none errs=0
+/admin/services [qa-admin] status=200/200/200/200 final=/admin/services lang=en h1=1 skip= over360=0 axe=none errs=0
+/admin/wallet [qa-admin] status=200/200/200/200 final=/admin/wallet lang=en h1=1 skip= over360=0 axe=none errs=0
+/admin/integrations [qa-admin] status=200/200/200/200 final=/admin/integrations lang=en h1=1 skip= over360=0 axe=none errs=0
+/admin/content [qa-admin] status=200/200/200/200 final=/admin/content lang=en h1=1 skip= over360=0 axe=none errs=0
+/admin/backups [qa-admin] status=200/200/200/200 final=/admin/backups lang=en h1=1 skip= over360=0 axe=none errs=0
+/admin/catalog [qa-admin] status=200/200 final=/admin/catalog lang=en h1=1 skip= over360=0 axe=none errs=0
+/admin/currency [qa-admin] status=200/200 final=/admin/currency lang=en h1=1 skip= over360=0 axe=none errs=0
+/admin/pools [qa-admin] status=200/200 final=/admin/pools lang=en h1=1 skip= over360=0 axe=none errs=0
+/admin/assistant [qa-admin] status=200/200 final=/admin/assistant lang=en h1=1 skip= over360=0 axe=none errs=0
+/staff/workspace [qa-admin] status=200/200 final=/staff/workspace lang=en h1=1 skip= over360=0 axe=none errs=0
+cleaned up 4 QA MFA factors

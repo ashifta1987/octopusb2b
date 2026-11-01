@@ -1,0 +1,96 @@
+(node:22825) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/ashifabdulkhadar/Desktop/octopusb2bapp/lib/staff/session-cookie.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/ashifabdulkhadar/Desktop/octopusb2bapp/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+ok    200 [anon] /
+ok    200 [anon] /products
+ok    200 [anon] /products?page=2
+ok    200 [anon] /c/fasteners
+ok    200 [anon] /c/safety-ppe/gloves
+ok    200 [anon] /search?q=gloves
+ok    200 [anon] /p/stainless-steel-hex-bolts-m10-40-mm-a2-70
+ok    200 [anon] /request/sourcing
+ok    200 [anon] /request/qc
+ok    200 [anon] /legal/terms
+ok    200 [anon] /legal/privacy
+ok    200 [anon] /about
+ok    200 [anon] /contact
+ok    200 [anon] /login
+ok    200 [anon] /signup
+ok    200 [anon] /sitemap.xml
+ok    200 [anon] /robots.txt
+ok    200 [anon] /api/health
+ok    200 [anon] /api/v1/openapi.json
+ok    401 [anon] /api/v1/products
+FAIL  200 [anon] /api/v1/postman.json (error marker in HTML)
+ok    200 [anon] /api/v1/postman/supplier.json
+ok    200 [anon] /api/v1/postman/environment/sandbox.json
+ok    200 [anon] /pools
+ok    200 [anon] /pools/terms
+FAIL  200 [anon] /pools/start (error marker in HTML)
+REDIR 307 [anon] /legal/group-buy → /pools/terms
+ok    200 [anon] /staff/login
+ok    200 [anon] /staff/forgot
+REDIR 307 [anon] /account → /login?next=%2Faccount
+ok    200 [buyer] /account
+ok    200 [buyer] /account/rfqs
+ok    200 [buyer] /account/orders
+ok    200 [buyer] /account/services
+ok    200 [buyer] /account/wallet
+ok    200 [buyer] /account/ledger
+ok    200 [buyer] /account/kyc
+ok    200 [buyer] /account/support
+ok    200 [buyer] /account/developer
+ok    200 [buyer] /account/ads
+ok    200 [buyer] /account/pools
+ok    200 [buyer] /account/assistant
+ok    200 [buyer] /account/ledger/statement
+ok    200 [buyer] /request/sourcing
+REDIR 307 [buyer] /office → /staff/verify?next=%2Foffice
+REDIR 307 [buyer] /admin → /staff/verify?next=%2Fadmin
+ok    200 [distributor] /distributor
+ok    200 [distributor] /distributor/products
+ok    200 [distributor] /distributor/products/new
+ok    200 [distributor] /distributor/products/import
+ok    200 [distributor] /distributor/catalog
+ok    200 [distributor] /distributor/rfqs
+FAIL  200 [distributor] /admin (error marker in HTML)
+ok    200 [ops] /office
+ok    200 [ops] /office/kyc
+ok    200 [ops] /office/products
+ok    200 [ops] /office/rfqs
+ok    200 [ops] /office/services
+ok    200 [ops] /office/orders
+ok    200 [ops] /office/shipping
+ok    200 [ops] /office/support
+ok    200 [ops] /office/assistant
+ok    200 [admin] /admin
+ok    200 [admin] /admin/finance
+ok    200 [admin] /admin/wallet
+ok    200 [admin] /admin/services
+ok    200 [admin] /admin/catalog
+ok    200 [admin] /admin/content
+ok    200 [admin] /admin/ads
+ok    200 [admin] /admin/geography
+ok    200 [admin] /admin/staff
+ok    200 [admin] /admin/integrations
+ok    200 [admin] /admin/suppliers
+ok    200 [admin] /admin/currency
+ok    200 [admin] /admin/backups
+ok    200 [admin] /admin/backups/recovery
+ok    200 [admin] /admin/pools
+ok    200 [admin] /admin/assistant
+ok    200 [admin] /admin/customers
+ok    200 [admin] /staff/workspace
+ok    200 [admin] /staff/account
+ok    200 [admin] /office
+ok    200 [admin] /distributor
+ok    200 [finance] /admin/finance
+ok    200 [finance] /admin/finance/export?type=journals
+ok    200 [finance] /admin/currency
+FAIL  200 [finance] /admin/staff (error marker in HTML)
+ok    200 [buyer] /account/orders/4862dd70-09f2-4774-a182-98661d2af0b4
+ok    200 [buyer] /account/rfqs/248bdfbd-111c-48f5-ae9b-7406d176ff29
+ok    200 [buyer] /account/rfqs/a9670972-4bdf-4c82-ac48-b82bd9d75cab
+ok    200 [buyer] /api/documents/5fbe6e70-ac26-4372-bb15-8db7148a056c/pdf
+cleaned up 4 smoke MFA factors

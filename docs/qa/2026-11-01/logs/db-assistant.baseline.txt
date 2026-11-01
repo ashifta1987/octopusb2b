@@ -1,0 +1,26 @@
+(node:22756) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✔ verified demo customer has support@ as dedicated account manager
+✔ customer sees their account team card (Demo Support, Sourcing)
+✔ bot reply recorded with tools_called, latency and tokens
+✔ customer cannot read another customer's assistant messages
+✔ customer reads their own conversation
+✔ customer cannot post into another customer's session → NOT_FOUND
+✔ account manager reads their customer’s session
+✔ account manager cannot read an unassigned customer’s session
+✔ other staff (ops) cannot read sessions of customers not assigned to them
+✔ escalation assigned to the account manager with a Support ticket
+✔ ticket has the full transcript attached
+✔ customer sees the amber "Octo handed this to …" system message
+✔ account manager notified
+✔ email/WhatsApp notice queued (outbox assistant.escalated)
+✔ escalating again while open is idempotent
+✔ customer sees the staff reply in the same thread, not internal notes
+✔ unassigned staff cannot reply → FORBIDDEN
+✔ primary out of office → escalation goes to the team queue
+✔ KYC verification auto-assigns an account manager (sourcing team, least loaded)
+✔ admin can reassign with a reason
+✔ metrics available (sessions 2, escalation rate 50%)
+✔ customers cannot read assistant metrics → FORBIDDEN
+
+all assistant checks passed

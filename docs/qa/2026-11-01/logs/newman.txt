@@ -1,0 +1,170 @@
+(node:23014) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Octopus B2B API v1
+
+❏ Auth
+↳ Get access token (client credentials)
+  POST http://localhost:3100/api/v1/oauth/token [200 OK, 1.02kB, 814ms]
+  ✓  status is 200
+  ✓  bearer token issued
+
+❏ Settings
+↳ Platform currency and approved exchange rate
+  GET http://localhost:3100/api/v1/settings/currency [200 OK, 545B, 1076ms]
+  ✓  status is 200
+  ✓  response matches the OpenAPI schema (CurrencySettingsEnvelope)
+  ✓  every amount carries a currency
+
+❏ Catalog
+↳ Search live products
+  GET http://localhost:3100/api/v1/products [200 OK, 18.34kB, 972ms]
+  ✓  status is 200
+  ✓  response matches the OpenAPI schema (ProductList)
+  ✓  every amount carries a currency
+
+↳ Product detail with price tiers and specs
+  GET http://localhost:3100/api/v1/products/6094ba3d-d343-4ffd-ae4e-e992a30b6171 [200 OK, 1.9kB, 1006ms]
+  ✓  status is 200
+  ✓  response matches the OpenAPI schema (ProductDetail)
+  ✓  every amount carries a currency
+
+↳ Category tree (flat)
+  GET http://localhost:3100/api/v1/categories [200 OK, 6.81kB, 212ms]
+  ✓  status is 200
+  ✓  response matches the OpenAPI schema (CategoryList)
+  ✓  every amount carries a currency
+
+❏ RFQs & quotes
+↳ List your RFQs
+  GET http://localhost:3100/api/v1/rfqs [200 OK, 1.55kB, 233ms]
+  ✓  status is 200
+  ✓  response matches the OpenAPI schema (RfqList)
+  ✓  every amount carries a currency
+
+↳ Submit an RFQ
+  POST http://localhost:3100/api/v1/rfqs [201 Created, 831B, 1104ms]
+  ✓  status is 201
+  ✓  response matches the OpenAPI schema (RfqEnvelope)
+  ✓  every amount carries a currency
+
+↳ RFQ with its quotes
+  GET http://localhost:3100/api/v1/rfqs/248bdfbd-111c-48f5-ae9b-7406d176ff29 [200 OK, 1.48kB, 431ms]
+  ✓  status is 200
+  ✓  response matches the OpenAPI schema (RfqEnvelope)
+  ✓  every amount carries a currency
+
+↳ Quotes for an RFQ
+  GET http://localhost:3100/api/v1/quotes [200 OK, 2.1kB, 414ms]
+  ✓  status is 200
+  ✓  response matches the OpenAPI schema (QuoteList)
+  ✓  every amount carries a currency
+
+❏ Orders
+↳ List your orders
+  GET http://localhost:3100/api/v1/orders [200 OK, 1.35kB, 305ms]
+  ✓  status is 200
+  ✓  response matches the OpenAPI schema (OrderList)
+  ✓  every amount carries a currency
+
+↳ Create an order from a quote (issues the proforma invoice)
+  POST http://localhost:3100/api/v1/orders [201 Created, 1.17kB, 636ms]
+  ✓  status is 201
+  ✓  response matches the OpenAPI schema (OrderEnvelope)
+  ✓  every amount carries a currency
+
+↳ Order detail with timeline, documents and shipments
+  GET http://localhost:3100/api/v1/orders/4862dd70-09f2-4774-a182-98661d2af0b4 [200 OK, 3.8kB, 979ms]
+  ✓  status is 200
+  ✓  response matches the OpenAPI schema (OrderEnvelope)
+  ✓  every amount carries a currency
+
+❏ Shipments
+↳ Shipment tracking events
+  GET http://localhost:3100/api/v1/shipments/b7ca1879-553a-4e8c-b5df-3f6324702c3d/tracking [200 OK, 1.22kB, 367ms]
+  ✓  status is 200
+  ✓  response matches the OpenAPI schema (TrackingEnvelope)
+  ✓  every amount carries a currency
+
+❏ Wallet & ledger
+↳ Wallet balances per currency and ledger lines
+  GET http://localhost:3100/api/v1/wallet [200 OK, 1.48kB, 662ms]
+  ✓  status is 200
+  ✓  response matches the OpenAPI schema (WalletEnvelope)
+  ✓  every amount carries a currency
+
+❏ Service requests
+↳ List service requests
+  GET http://localhost:3100/api/v1/service-requests [200 OK, 895B, 207ms]
+  ✓  status is 200
+  ✓  response matches the OpenAPI schema (ServiceRequestList)
+  ✓  every amount carries a currency
+
+↳ Request a service (sample, QC, certification, 3PL, dropship)
+  POST http://localhost:3100/api/v1/service-requests [201 Created, 777B, 655ms]
+  ✓  status is 201
+  ✓  response matches the OpenAPI schema (ServiceRequestEnvelope)
+  ✓  every amount carries a currency
+
+❏ Webhooks
+↳ List webhook endpoints
+  GET http://localhost:3100/api/v1/webhooks [200 OK, 379B, 215ms]
+  ✓  status is 200
+  ✓  response matches the OpenAPI schema (WebhookList)
+  ✓  every amount carries a currency
+
+↳ Register a webhook endpoint (secret returned once)
+  POST http://localhost:3100/api/v1/webhooks [201 Created, 734B, 493ms]
+  ✓  status is 201
+  ✓  response matches the OpenAPI schema (WebhookEnvelope)
+  ✓  every amount carries a currency
+
+↳ Webhook endpoint with recent deliveries
+  GET http://localhost:3100/api/v1/webhooks/d9bbfe77-8434-49aa-8e6f-baa00d29749d [200 OK, 620B, 304ms]
+  ✓  status is 200
+  ✓  response matches the OpenAPI schema (WebhookEnvelope)
+  ✓  every amount carries a currency
+
+↳ Update a webhook endpoint
+  PATCH http://localhost:3100/api/v1/webhooks/d9bbfe77-8434-49aa-8e6f-baa00d29749d [200 OK, 605B, 196ms]
+  ✓  status is 200
+  ✓  response matches the OpenAPI schema (WebhookEnvelope)
+  ✓  every amount carries a currency
+
+↳ Send a signed ping event
+  POST http://localhost:3100/api/v1/webhooks/d9bbfe77-8434-49aa-8e6f-baa00d29749d/test [200 OK, 471B, 939ms]
+  ✓  status is 200
+  ✓  response matches the OpenAPI schema (WebhookTestEnvelope)
+  ✓  every amount carries a currency
+
+↳ Delete a webhook endpoint
+  DELETE http://localhost:3100/api/v1/webhooks/d9bbfe77-8434-49aa-8e6f-baa00d29749d [204 No Content, 291B, 222ms]
+  ✓  status is 204
+
+❏ Webhooks · verify signature
+↳ Signed delivery → receiver (mock server)
+  ┌
+  │ 'Skipped: create a Postman mock server from this colle
+  │ ction and set mock_url.'
+  └
+
+┌─────────────────────────┬─────────────────────┬─────────────────────┐
+│                         │            executed │              failed │
+├─────────────────────────┼─────────────────────┼─────────────────────┤
+│              iterations │                   1 │                   0 │
+├─────────────────────────┼─────────────────────┼─────────────────────┤
+│                requests │                  22 │                   0 │
+├─────────────────────────┼─────────────────────┼─────────────────────┤
+│            test-scripts │                  22 │                   0 │
+├─────────────────────────┼─────────────────────┼─────────────────────┤
+│      prerequest-scripts │                  33 │                   0 │
+├─────────────────────────┼─────────────────────┼─────────────────────┤
+│              assertions │                  63 │                   0 │
+├─────────────────────────┴─────────────────────┴─────────────────────┤
+│ total run duration: 13.1s                                           │
+├─────────────────────────────────────────────────────────────────────┤
+│ total data received: 40.33kB (approx)                               │
+├─────────────────────────────────────────────────────────────────────┤
+│ average response time: 565ms [min: 196ms, max: 1104ms, s.d.: 321ms] │
+└─────────────────────────────────────────────────────────────────────┘

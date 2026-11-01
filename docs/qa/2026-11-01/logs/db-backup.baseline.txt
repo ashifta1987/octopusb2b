@@ -1,0 +1,25 @@
+(node:22746) DeprecationWarning: Calling client.query() when the client is already executing a query is deprecated and will be removed in pg@9.0. Use async/await or an external async flow control mechanism instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✔ customer cannot see backups (RLS)
+✔ customer cannot start a backup → FORBIDDEN
+✔ operations cannot start a backup (admin only by default) → FORBIDDEN
+✔ operations cannot export data → FORBIDDEN
+✔ admin sees the completed backup
+✔ admin can request "Back up now"
+✔ second concurrent backup is refused → BACKUP_ALREADY_RUNNING
+✔ restore request needs a fresh 2FA code (step-up) → STEP_UP_REQUIRED
+✔ verified restore waits for a second approver
+✔ requester cannot approve own restore → MAKER_CANNOT_APPROVE
+✔ operations cannot approve a restore → FORBIDDEN
+✔ approver must re-enter 2FA (step-up) → STEP_UP_REQUIRED
+✔ finance (second approver) approves a money-touching restore
+✔ compare screen shows the deleted product as missing
+✔ restore_records refuses ledger rows → MONEY_RECORDS_NOT_RESTORABLE: ledger_entries
+✔ restore_records refuses payment rows → MONEY_RECORDS_NOT_RESTORABLE: payments
+✔ deleted product recovered: Angle grinder 125 mm, 1100 W
+✔ partial restore is in the audit log
+✔ maintenance mode on
+✔ customer cannot toggle maintenance → FORBIDDEN
+✔ admin can queue a data export
+
+all backup checks passed

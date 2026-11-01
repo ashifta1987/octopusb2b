@@ -1,0 +1,2120 @@
+[
+ {
+  "route": "/",
+  "design": "Main",
+  "role": "anon",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Octopus B2B · Global Sourcing, Simplified",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Octopus B2B · Global Sourcing, Simplified"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Octopus B2B · Global Sourcing, Simplified"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Octopus B2B · Global Sourcing, Simplified",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/products",
+  "design": "Products",
+  "role": "anon",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/products",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "All products · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/products",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "All products · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/products",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "All products · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/products",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "All products · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/c/fasteners",
+  "design": "Products",
+  "role": "anon",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/c/fasteners",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Fasteners — wholesale (HS 73) · Octopus B2B",
+    "axe": []
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/c/fasteners",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Fasteners — wholesale (HS 73) · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/search?q=gloves",
+  "design": "Products",
+  "role": "anon",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/search?q=gloves",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Search products · Octopus B2B",
+    "axe": []
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/search?q=gloves",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Search products · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/p/stainless-steel-hex-bolts-m10-40-mm-a2-70",
+  "design": "Product",
+  "role": "anon",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/p/stainless-steel-hex-bolts-m10-40-mm-a2-70",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Stainless steel hex bolts, M10 × 40 mm, A2-70 | Wholesale | Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/p/stainless-steel-hex-bolts-m10-40-mm-a2-70",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Stainless steel hex bolts, M10 × 40 mm, A2-70 | Wholesale | Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/p/stainless-steel-hex-bolts-m10-40-mm-a2-70",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Stainless steel hex bolts, M10 × 40 mm, A2-70 | Wholesale | Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/p/stainless-steel-hex-bolts-m10-40-mm-a2-70",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Stainless steel hex bolts, M10 × 40 mm, A2-70 | Wholesale | Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/request/sourcing",
+  "design": "Request",
+  "role": "anon",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/request/sourcing",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Product sourcing · Request Center · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/request/sourcing",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Product sourcing · Request Center · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/request/sourcing",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Product sourcing · Request Center · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/request/sourcing",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Product sourcing · Request Center · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/pools",
+  "design": "Pools",
+  "role": "anon",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/pools",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Group buying pools — share the MOQ · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/pools",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Group buying pools — share the MOQ · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/pools",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Group buying pools — share the MOQ · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/pools",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Group buying pools — share the MOQ · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/login",
+  "design": "Auth",
+  "role": "anon",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/login",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Log in · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/login",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Log in · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/login",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Log in · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/login",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Log in · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/signup",
+  "design": "Auth",
+  "role": "anon",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/signup",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Create account · Octopus B2B",
+    "axe": []
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/signup",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Create account · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/staff/login",
+  "design": "StaffLogin",
+  "role": "anon",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/staff/login",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Staff sign-in · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/staff/login",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Staff sign-in · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/staff/login",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Staff sign-in · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/staff/login",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Staff sign-in · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/legal/terms",
+  "design": null,
+  "role": "anon",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/legal/terms",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Terms of service (v1.0) · Octopus B2B",
+    "axe": []
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/legal/terms",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Terms of service (v1.0) · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/about",
+  "design": null,
+  "role": "anon",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/about",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "About us · Octopus B2B",
+    "axe": []
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/about",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "About us · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/contact",
+  "design": null,
+  "role": "anon",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/contact",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Contact us · Octopus B2B",
+    "axe": []
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/contact",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Contact us · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/account",
+  "design": "Customer",
+  "role": "buyer",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/account",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Dashboard · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/account",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Dashboard · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/account",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Dashboard · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/account",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Dashboard · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/account/assistant",
+  "design": "Assistant",
+  "role": "buyer",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/account/assistant",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "AI assistant · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/account/assistant",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "AI assistant · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/account/assistant",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "AI assistant · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/account/assistant",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "AI assistant · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/account/orders",
+  "design": "CustomerOrders",
+  "role": "buyer",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/account/orders",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Orders & tracking · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/account/orders",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Orders & tracking · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/account/orders",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Orders & tracking · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/account/orders",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Orders & tracking · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/account/rfqs",
+  "design": "CustomerOrders",
+  "role": "buyer",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/account/rfqs",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "RFQs · Octopus B2B",
+    "axe": []
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/account/rfqs",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "RFQs · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/account/kyc",
+  "design": "CustomerKYC",
+  "role": "buyer",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/account/kyc",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Company profile & KYC · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/account/kyc",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Company profile & KYC · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/account/kyc",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Company profile & KYC · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/account/kyc",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Company profile & KYC · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": [
+   "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+   "console: Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ]
+ },
+ {
+  "route": "/account/wallet",
+  "design": "Wallet",
+  "role": "buyer",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/account/wallet",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Wallet · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/account/wallet",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Wallet · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/account/wallet",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Wallet · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/account/wallet",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Wallet · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/account/ledger",
+  "design": "Ledger",
+  "role": "buyer",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/account/ledger",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Ledger & invoices · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/account/ledger",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Ledger & invoices · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/account/ledger",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Ledger & invoices · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/account/ledger",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Ledger & invoices · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/account/developer",
+  "design": "Developer",
+  "role": "buyer",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/account/developer",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "API & integrations · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/account/developer",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "API & integrations · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/account/developer",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "API & integrations · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/account/developer",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "API & integrations · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/account/support",
+  "design": "Support",
+  "role": "buyer",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/account/support",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Help & complaints · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/account/support",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Help & complaints · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/account/support",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Help & complaints · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/account/support",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Help & complaints · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/account/ads",
+  "design": "AdsCampaign",
+  "role": "buyer",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/account/ads",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Advertising · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/account/ads",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Advertising · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/account/ads",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Advertising · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/account/ads",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Advertising · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/account/pools",
+  "design": "CustomerOrders",
+  "role": "buyer",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/account/pools",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Group buys · Octopus B2B",
+    "axe": []
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/account/pools",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Group buys · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/account/services",
+  "design": null,
+  "role": "buyer",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/account/services",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Service requests · Octopus B2B",
+    "axe": []
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/account/services",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Service requests · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/distributor",
+  "design": "Distributor",
+  "role": "distributor",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/distributor",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Octopus B2B · Global Sourcing, Simplified",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/distributor",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Octopus B2B · Global Sourcing, Simplified"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/distributor",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Octopus B2B · Global Sourcing, Simplified"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/distributor",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Octopus B2B · Global Sourcing, Simplified",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/distributor/products/new",
+  "design": "ProductCreate",
+  "role": "distributor",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/distributor/products/new",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Create product · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/distributor/products/new",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Create product · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/distributor/products/new",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Create product · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/distributor/products/new",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Create product · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/distributor/products/import",
+  "design": "BulkUpload",
+  "role": "distributor",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/distributor/products/import",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Bulk upload (Excel) · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/distributor/products/import",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Bulk upload (Excel) · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/distributor/products/import",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Bulk upload (Excel) · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/distributor/products/import",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Bulk upload (Excel) · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/distributor/catalog",
+  "design": "Catalog",
+  "role": "distributor",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/distributor/catalog",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Categories & tags · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/distributor/catalog",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Categories & tags · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/distributor/catalog",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Categories & tags · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/distributor/catalog",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Categories & tags · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/office",
+  "design": "Office",
+  "role": "ops",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/office",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Queues · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/office",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Queues · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/office",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Queues · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/office",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Queues · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/office/shipping",
+  "design": "Shipping",
+  "role": "ops",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/office/shipping",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Shipping · Back office · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/office/shipping",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Shipping · Back office · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/office/shipping",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Shipping · Back office · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/office/shipping",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Shipping · Back office · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/office/support",
+  "design": "SupportDesk",
+  "role": "support",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/office/support",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Support desk · Back office · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/office/support",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Support desk · Back office · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/office/support",
+    "lang": "en",
+    "over": 91,
+    "wide": [
+     "div (1053)",
+     "label.label (1053)",
+     "input.input.mono (1053)",
+     "input.input (1091)"
+    ],
+    "h1": 1,
+    "skip": null,
+    "title": "Support desk · Back office · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/office/support",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Support desk · Back office · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/office/assistant",
+  "design": null,
+  "role": "support",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/office/assistant",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Assistant queue · Back office · Octopus B2B",
+    "axe": []
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/office/assistant",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Assistant queue · Back office · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/admin",
+  "design": "Admin",
+  "role": "qa-admin",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/admin",
+    "lang": "en",
+    "over": 199,
+    "wide": [
+     "div.flex.md:flex-col.gap-1.5 (1082)",
+     "a.whitespace-nowrap.rounded-[8px].px-3.5 (467)",
+     "a.whitespace-nowrap.rounded-[8px].px-3.5 (622)",
+     "a.whitespace-nowrap.rounded-[8px].px-3.5 (705)"
+    ],
+    "h1": 1,
+    "skip": null,
+    "title": "Overview · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/admin",
+    "lang": "en",
+    "over": 47,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Overview · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/admin",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Overview · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/admin",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Overview · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/admin/finance",
+  "design": "Finance",
+  "role": "qa-admin",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/admin/finance",
+    "lang": "en",
+    "over": 21,
+    "wide": [
+     "div.flex.md:flex-col.gap-1.5 (1082)",
+     "a.whitespace-nowrap.rounded-[8px].px-3.5 (467)",
+     "a.whitespace-nowrap.rounded-[8px].px-3.5 (622)",
+     "a.whitespace-nowrap.rounded-[8px].px-3.5 (705)"
+    ],
+    "h1": 1,
+    "skip": null,
+    "title": "Finance & revenue · Admin · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/admin/finance",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Finance & revenue · Admin · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/admin/finance",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Finance & revenue · Admin · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/admin/finance",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Finance & revenue · Admin · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/admin/ads",
+  "design": "AdsAdmin",
+  "role": "qa-admin",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/admin/ads",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Advertising · Admin · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/admin/ads",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Advertising · Admin · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/admin/ads",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Advertising · Admin · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/admin/ads",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Advertising · Admin · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/admin/staff",
+  "design": "Staff",
+  "role": "qa-admin",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/admin/staff",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Staff & roles · Admin · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/admin/staff",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Staff & roles · Admin · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/admin/staff",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Staff & roles · Admin · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/admin/staff",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Staff & roles · Admin · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/admin/geography",
+  "design": "Geo",
+  "role": "qa-admin",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/admin/geography",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Customer geography · Admin · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/admin/geography",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Customer geography · Admin · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/admin/geography",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Customer geography · Admin · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/admin/geography",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Customer geography · Admin · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/admin/services",
+  "design": "Fees",
+  "role": "qa-admin",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/admin/services",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Services & charges · Admin · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/admin/services",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Services & charges · Admin · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/admin/services",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Services & charges · Admin · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/admin/services",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Services & charges · Admin · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/admin/wallet",
+  "design": "WalletAdmin",
+  "role": "qa-admin",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/admin/wallet",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Wallets & payments · Admin · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/admin/wallet",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Wallets & payments · Admin · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/admin/wallet",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Wallets & payments · Admin · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/admin/wallet",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Wallets & payments · Admin · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/admin/integrations",
+  "design": "Integrations",
+  "role": "qa-admin",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/admin/integrations",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Integrations · Admin · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/admin/integrations",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Integrations · Admin · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/admin/integrations",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Integrations · Admin · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/admin/integrations",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Integrations · Admin · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/admin/content",
+  "design": "CMS",
+  "role": "qa-admin",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/admin/content",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Site content · Admin · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/admin/content",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Site content · Admin · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/admin/content",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Site content · Admin · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/admin/content",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Site content · Admin · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/admin/backups",
+  "design": "Backups",
+  "role": "qa-admin",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/admin/backups",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Backup & restore · Admin · Octopus B2B",
+    "axe": []
+   },
+   "768": {
+    "status": 200,
+    "finalUrl": "/admin/backups",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Backup & restore · Admin · Octopus B2B"
+   },
+   "1024": {
+    "status": 200,
+    "finalUrl": "/admin/backups",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Backup & restore · Admin · Octopus B2B"
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/admin/backups",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Backup & restore · Admin · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/admin/catalog",
+  "design": "Catalog",
+  "role": "qa-admin",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/admin/catalog",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Categories & tags · Admin · Octopus B2B",
+    "axe": []
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/admin/catalog",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Categories & tags · Admin · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/admin/currency",
+  "design": "WalletAdmin",
+  "role": "qa-admin",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/admin/currency",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Currency · Admin · Octopus B2B",
+    "axe": []
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/admin/currency",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Currency · Admin · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/admin/pools",
+  "design": null,
+  "role": "qa-admin",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/admin/pools",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Group buying · Admin · Octopus B2B",
+    "axe": []
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/admin/pools",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Group buying · Admin · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/admin/assistant",
+  "design": null,
+  "role": "qa-admin",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/admin/assistant",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Assistant · Admin · Octopus B2B",
+    "axe": []
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/admin/assistant",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Assistant · Admin · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ },
+ {
+  "route": "/staff/workspace",
+  "design": "StaffLogin-3-workspace",
+  "role": "qa-admin",
+  "vps": {
+   "360": {
+    "status": 200,
+    "finalUrl": "/staff/workspace",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Choose workspace · Staff · Octopus B2B",
+    "axe": []
+   },
+   "1440": {
+    "status": 200,
+    "finalUrl": "/staff/workspace",
+    "lang": "en",
+    "over": 0,
+    "wide": [],
+    "h1": 1,
+    "skip": null,
+    "title": "Choose workspace · Staff · Octopus B2B",
+    "axe": []
+   }
+  },
+  "errors": []
+ }
+]

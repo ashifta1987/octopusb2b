@@ -1,0 +1,59 @@
+(node:23400) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/ashifabdulkhadar/Desktop/octopusb2bapp/lib/staff/session-cookie.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/ashifabdulkhadar/Desktop/octopusb2bapp/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+/ [anon] status=200/200/200/200 final=/ lang=en h1=1 skip= over360=0 axe=360:color-contrast(8),360:link-in-text-block(1),1440:color-contrast(8),1440:link-in-text-block(1) errs=0
+/products [anon] status=200/200/200/200 final=/products lang=en h1=1 skip= over360=0 axe=360:link-in-text-block(1),1440:link-in-text-block(1) errs=0
+/c/fasteners [anon] status=200/200 final=/c/fasteners lang=en h1=1 skip= over360=0 axe=360:link-in-text-block(1),1440:link-in-text-block(1) errs=0
+/search?q=gloves [anon] status=200/200 final=/search?q=gloves lang=en h1=1 skip= over360=0 axe=360:link-in-text-block(1),1440:link-in-text-block(1) errs=0
+/p/stainless-steel-hex-bolts-m10-40-mm-a2-70 [anon] status=200/200/200/200 final=/p/stainless-steel-hex-bolts-m10-40-mm-a2-70 lang=en h1=1 skip= over360=0 axe=360:color-contrast(6),360:link-in-text-block(1),1440:color-contrast(6),1440:link-in-text-block(1) errs=0
+/request/sourcing [anon] status=200/200/200/200 final=/request/sourcing lang=en h1=1 skip= over360=0 axe=360:color-contrast(1),360:link-in-text-block(1),1440:color-contrast(1),1440:link-in-text-block(1) errs=0
+/pools [anon] status=200/200/200/200 final=/pools lang=en h1=1 skip= over360=0 axe=360:link-in-text-block(1),1440:link-in-text-block(1) errs=0
+/login [anon] status=200/200/200/200 final=/login lang=en h1=1 skip= over360=0 axe=360:color-contrast(3),1440:color-contrast(3) errs=0
+/signup [anon] status=200/200 final=/signup lang=en h1=1 skip= over360=0 axe=360:color-contrast(3),1440:color-contrast(3) errs=0
+/staff/login [anon] status=200/200/200/200 final=/staff/login lang=en h1=1 skip= over360=31 axe=360:color-contrast(1),1440:color-contrast(2) errs=0
+/legal/terms [anon] status=200/200 final=/legal/terms lang=en h1=1 skip= over360=0 axe=360:link-in-text-block(1),1440:link-in-text-block(1) errs=0
+/about [anon] status=200/200 final=/about lang=en h1=1 skip= over360=0 axe=360:color-contrast(1),360:link-in-text-block(1),1440:color-contrast(1),1440:link-in-text-block(1) errs=0
+/contact [anon] status=200/200 final=/contact lang=en h1=1 skip= over360=0 axe=360:color-contrast(1),360:link-in-text-block(1),1440:color-contrast(1),1440:link-in-text-block(1) errs=0
+/account [buyer] status=200/200/200/200 final=/account lang=en h1=1 skip= over360=0 axe=360:color-contrast(2),1440:color-contrast(2) errs=0
+/account/assistant [buyer] status=200/200/200/200 final=/account/assistant lang=en h1=1 skip= over360=0 axe=none errs=0
+/account/orders [buyer] status=200/200/200/200 final=/account/orders lang=en h1=1 skip= over360=0 axe=none errs=0
+/account/rfqs [buyer] status=200/200 final=/account/rfqs lang=en h1=1 skip= over360=0 axe=none errs=0
+/account/kyc [buyer] status=200/200/200/200 final=/account/kyc lang=en h1=1 skip= over360=0 axe=none errs=3
+/account/wallet [buyer] status=200/200/200/200 final=/account/wallet lang=en h1=1 skip= over360=0 axe=360:scrollable-region-focusable(1),1440:color-contrast(1) errs=0
+/account/ledger [buyer] status=200/200/200/200 final=/account/ledger lang=en h1=1 skip= over360=214 axe=360:color-contrast(1),360:scrollable-region-focusable(1),1440:color-contrast(4) errs=0
+/account/developer [buyer] status=200/200/200/200 final=/account/developer lang=en h1=1 skip= over360=0 axe=360:definition-list(1),360:scrollable-region-focusable(4),1440:definition-list(1) errs=0
+/account/support [buyer] status=200/200/200/200 final=/account/support lang=en h1=1 skip= over360=309 axe=none errs=0
+/account/ads [buyer] status=200/200/200/200 final=/account/ads lang=en h1=1 skip= over360=0 axe=none errs=0
+/account/pools [buyer] status=200/200 final=/account/pools lang=en h1=1 skip= over360=0 axe=none errs=0
+/account/services [buyer] status=200/200 final=/account/services lang=en h1=1 skip= over360=0 axe=360:scrollable-region-focusable(1) errs=0
+/distributor [distributor] status=200/200/200/200 final=/distributor lang=en h1=1 skip= over360=647 axe=360:color-contrast(4),360:label-content-name-mismatch(1),1440:color-contrast(4),1440:label-content-name-mismatch(1) errs=0
+/distributor/products/new [distributor] status=200/200/200/200 final=/distributor/products/new lang=en h1=1 skip= over360=0 axe=360:label-content-name-mismatch(1),1440:label-content-name-mismatch(1) errs=0
+/distributor/products/import [distributor] status=200/200/200/200 final=/distributor/products/import lang=en h1=1 skip= over360=0 axe=360:label-content-name-mismatch(1),360:label(1),360:scrollable-region-focusable(1),1440:label-content-name-mismatch(1),1440:label(1) errs=0
+/distributor/catalog [distributor] status=200/200/200/200 final=/distributor/catalog lang=en h1=1 skip= over360=0 axe=360:button-name(1),360:color-contrast(14),360:label-content-name-mismatch(1),1440:button-name(1),1440:color-contrast(14),1440:label-content-name-mismatch(1) errs=0
+/office [ops] status=200/200/200/200 final=/office lang=en h1=1 skip= over360=81 axe=360:label-content-name-mismatch(1),1440:label-content-name-mismatch(2) errs=0
+/office/shipping [ops] status=200/200/200/200 final=/office/shipping lang=en h1=1 skip= over360=0 axe=360:color-contrast(1),360:label-content-name-mismatch(1),360:scrollable-region-focusable(1),1440:color-contrast(1),1440:label-content-name-mismatch(2) errs=0
+/office/support [support] status=200/200/200/200 final=/office/support lang=en h1=1 skip= over360=0 axe=360:color-contrast(2),360:label-content-name-mismatch(1),1440:color-contrast(2),1440:label-content-name-mismatch(2) errs=0
+/office/assistant [support] status=200/200 final=/office/assistant lang=en h1=1 skip= over360=0 axe=360:label-content-name-mismatch(1),1440:label-content-name-mismatch(2) errs=0
+cleaned up 3 QA MFA factors
+/Users/ashifabdulkhadar/Desktop/octopusb2bapp/node_modules/.pnpm/@supabase+auth-js@2.118.0/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:88
+    throw new errors_1.AuthApiError(_getErrorMessage(data), error.status || 500, errorCode);
+          ^
+
+AuthApiError: AAL2 required to enroll a new factor
+    at handleError (/Users/ashifabdulkhadar/Desktop/octopusb2bapp/node_modules/.pnpm/@supabase+auth-js@2.118.0/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:88:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async _handleRequest (/Users/ashifabdulkhadar/Desktop/octopusb2bapp/node_modules/.pnpm/@supabase+auth-js@2.118.0/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:133:9)
+    at async _request (/Users/ashifabdulkhadar/Desktop/octopusb2bapp/node_modules/.pnpm/@supabase+auth-js@2.118.0/node_modules/@supabase/auth-js/dist/main/lib/fetch.js:113:18)
+    at async /Users/ashifabdulkhadar/Desktop/octopusb2bapp/node_modules/.pnpm/@supabase+auth-js@2.118.0/node_modules/@supabase/auth-js/dist/main/GoTrueClient.js:4885:42
+    at async SupabaseAuthClient._useSession (/Users/ashifabdulkhadar/Desktop/octopusb2bapp/node_modules/.pnpm/@supabase+auth-js@2.118.0/node_modules/@supabase/auth-js/dist/main/GoTrueClient.js:2502:20)
+    at async SupabaseAuthClient._enroll (/Users/ashifabdulkhadar/Desktop/octopusb2bapp/node_modules/.pnpm/@supabase+auth-js@2.118.0/node_modules/@supabase/auth-js/dist/main/GoTrueClient.js:4874:20)
+    at async cookiesFor (file:///Users/ashifabdulkhadar/.gemini/antigravity/brain/0c47b94a-4c47-4c07-89db-5f1cb450371b/scratch/ui-pass.mjs:30:16)
+    at async ctxFor (file:///Users/ashifabdulkhadar/.gemini/antigravity/brain/0c47b94a-4c47-4c07-89db-5f1cb450371b/scratch/ui-pass.mjs:77:34)
+    at async file:///Users/ashifabdulkhadar/.gemini/antigravity/brain/0c47b94a-4c47-4c07-89db-5f1cb450371b/scratch/ui-pass.mjs:83:17 {
+  __isAuthError: true,
+  status: 403,
+  code: 'insufficient_aal'
+}
+
+Node.js v24.22.2

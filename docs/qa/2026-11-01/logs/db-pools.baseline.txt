@@ -1,0 +1,23 @@
+✔ pool POOL-0014 opened from the product, A pledged 2000
+✔ pledge below the minimum is refused → PLEDGE_BELOW_MINIMUM: 500
+✔ withdrawing before fill refunds the deposit to the wallet
+✔ pledge in a currency-mismatched pool is rejected → POOL_CURRENCY_MISMATCH: pool USD vs platform CNY
+✔ pool reaches its 5,000 target
+✔ participants are visible by buyer code + country only
+✔ settle_pool creates 3 PIs once and is idempotent
+✔ each buyer's PI is at the lower tier price (17¢ vs 19¢)
+✔ 3 proforma invoices issued
+✔ one supplier PO with the aggregate quantity and no customer identities
+✔ two buyers paid their balance (pledges confirmed)
+✔ unpaid balance after 48 h → pledge defaulted
+✔ defaulted deposit applied to the shortfall (forfeit 1700¢)
+✔ remaining balances paid → pool confirmed, supplier PO issued
+✔ PO status issued after balances
+✔ pool under target at the deadline expires and deposits are refunded
+✔ every journal balances per currency
+✔ escrow is empty once pools are settled or expired
+✔ customers cannot cancel pools → FORBIDDEN
+✔ admin can extend and cancel (with refund)
+✔ global Group buy switch OFF blocks new pools → POOLS_DISABLED
+
+all group-buy checks passed

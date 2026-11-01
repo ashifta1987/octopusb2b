@@ -1,0 +1,17 @@
+◇ injected env (12) from .env.local
+✔ PASS customer cannot read another org’s orders
+✔ PASS anon cannot read suppliers (legal_name); public_suppliers hides legal fields
+✔ PASS customer cannot read supplier legal names or product costs
+✔ PASS ledger journals always balance (and unbalanced posts are rejected)
+✔ PASS invalid order transitions are rejected
+✔ PASS wallet cannot go negative
+✔ PASS maker cannot approve their own finance request
+✔ PASS a different finance user (checker) can approve
+✔ PASS customer cannot approve finance requests or confirm top-ups
+✔ PASS content editor cannot publish a legal page
+✔ PASS API/system RPCs are not callable by clients
+✔ PASS API RPCs: explicit org, cross-org quote rejected, order created (service_role)
+✔ PASS tracking webhook RPC: dedupe, shipment status, order → delivered (service_role)
+✔ PASS outbox claim leases events (SKIP LOCKED) for the worker
+
+14 tests: 14 passed, 0 failed, 0 skipped
