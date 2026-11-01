@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
+import { connection } from 'next/server';
 import { Logo } from '@/components/ui';
 import { getSiteContent, block } from '@/lib/content';
 import { getSession } from '@/lib/auth';
@@ -7,10 +9,13 @@ import { withCurrency, CURRENCY_PREFIX } from '@/lib/format';
 import { activeSwitchBanner } from '@/components/store/currency';
 import { CurrencySwitchBanner } from '@/components/store/currency-banner';
 
-/** Storefront layout header + mega-menu (Main.png). All copy from CMS. */
+/**
+ * Storefront layout header + mega-menu (Main.png). All copy from CMS.
+ * QA §19 Performance (CLS): the header itself only reads cached CMS/currency data so it is part of the static shell;
+ * only the session-dependent account links and the time-based currency banner stream in (fixed-size fallbacks).
+ */
 export async function StoreHeader() {
-  const [{ blocks, company, categories, settings }, session, ctx] = await Promise.all([getSiteContent(), getSession(), getCurrencyContext()]);
-  const banner = activeSwitchBanner(ctx);
+  const [{ blocks, company, categories, settings }, ctx] = await Promise.all([getSiteContent(), getCurrencyContext()]);
   const top = categories.filter((c) => c.level === 1);
   const wa = company?.whatsapp ? `https://wa.me/${company.whatsapp.replace(/\D/g, '')}` : '#';
   return (
@@ -45,14 +50,9 @@ export async function StoreHeader() {
             {settings.pool_enabled !== false && <Link href="/pools">Group buying pools</Link>}
             <Link href="/request/sourcing">Request Center</Link>
             {settings.supplier_portal_enabled === true && <Link href="/supplier">Sell on Octopus B2B</Link>}
-            {session ? (
-              <Link href={session.isStaff && !session.org ? (session.roles.includes('distributor') && !session.isAdmin ? '/distributor' : '/office') : '/account'} className="btn btn-primary">My account</Link>
-            ) : (
-              <>
-                <Link href="/login">Sign in</Link>
-                <Link href="/signup" className="btn btn-primary">Get started</Link>
-              </>
-            )}
+            <Suspense fallback={<AnonAccountLinks />}>
+              <AccountLinks />
+            </Suspense>
           </nav>
         </div>
         <nav aria-label="Categories" className="max-w-[1280px] mx-auto px-4 sm:px-8 pb-3 flex gap-6 overflow-x-auto text-sm font-medium whitespace-nowrap">
@@ -62,9 +62,34 @@ export async function StoreHeader() {
           <Link href="/request/dropship" className="text-blue">Dropshipping</Link>
         </nav>
       </header>
-      {banner && <CurrencySwitchBanner to={banner.to} appliedAt={banner.applied_at} />}
+      <Suspense fallback={null}>
+        <SwitchBanner />
+      </Suspense>
     </>
   );
+}
+
+function AnonAccountLinks() {
+  return (
+    <>
+      <Link href="/login">Sign in</Link>
+      <Link href="/signup" className="btn btn-primary">Get started</Link>
+    </>
+  );
+}
+
+/** Session-dependent part of the header (request time). */
+async function AccountLinks() {
+  const session = await getSession();
+  if (!session) return <AnonAccountLinks />;
+  return <Link href={session.isStaff && !session.org ? (session.roles.includes('distributor') && !session.isAdmin ? '/distributor' : '/office') : '/account'} className="btn btn-primary">My account</Link>;
+}
+
+/** Banner for 14 days after a currency switch (time-based, so rendered at request time). */
+async function SwitchBanner() {
+  await connection();
+  const banner = activeSwitchBanner(await getCurrencyContext());
+  return banner ? <CurrencySwitchBanner to={banner.to} appliedAt={banner.applied_at} /> : null;
 }
 
 export async function StoreFooter() {
