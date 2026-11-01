@@ -97,7 +97,7 @@ export default async function AccountDashboard() {
           <p className="mt-1 text-muted">{qList.length ? `${qList.length} quote${qList.length === 1 ? ' is' : 's are'} waiting for your decision.` : 'No quotes are waiting for you right now.'}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <RealtimeRefresh channel="dashboard" subs={[{ table: 'order_events', filter: `org_id=eq.${org.id}` }, { table: 'quotes', event: 'INSERT' }]} />
+          <RealtimeRefresh channel="dashboard" subs={[{ table: 'order_events', filter: `org_id=eq.${org.id}` }, { table: 'quotes', event: 'INSERT' }, { table: 'notifications', event: 'INSERT', filter: `org_id=eq.${org.id}` }]} />
           <Link href="/account/services" className="btn btn-ghost">New service request</Link>
           <Link href="/request/sourcing" className="btn btn-primary">New RFQ</Link>
         </div>

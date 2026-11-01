@@ -86,3 +86,15 @@ describe('API docs', () => {
     expect(c.event[0].listen).toBe('prerequest');
   });
 });
+
+describe('outbox e-mail consumers found by the SPEC §21 trace', () => {
+  it('e-mails the service-request receipt and report steps, not every move', () => {
+    expect(wantsEmail({ event_type: 'service_request.paid', payload: {} })).toBe(true);
+    expect(wantsEmail({ event_type: 'service_request.updated', payload: { to: 'report_ready' } })).toBe(true);
+    expect(wantsEmail({ event_type: 'service_request.updated', payload: { to: 'accepted' } })).toBe(false);
+  });
+  it('welcomes the customer when an account manager is assigned', () => {
+    expect(wantsEmail({ event_type: 'account_manager.assigned', payload: {} })).toBe(true);
+    expect(notificationFor({ event_type: 'account_manager.assigned', aggregate_id: 'x', payload: { manager_name: 'Priya', team: 'Sourcing' } })?.body).toContain('Priya');
+  });
+});

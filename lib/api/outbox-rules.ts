@@ -22,10 +22,15 @@ export type OutboxEvent = {
   created_at?: string;
 };
 
-const EMAIL_EVENTS = new Set(['quote.sent', 'quote.approved', 'payment.confirmed']);
+const EMAIL_EVENTS = new Set(['quote.sent', 'quote.approved', 'payment.confirmed', 'account_manager.assigned']);
+
+/** Service-request steps the customer is e-mailed about (SPEC §10.1 "service_request.paid → email receipt", §21.1 #5). */
+const SERVICE_EMAIL_STEPS = new Set(['paid', 'report_ready', 'completed', 'rejected', 'refunded']);
 
 export function wantsEmail(e: Pick<OutboxEvent, 'event_type' | 'payload'>) {
   if (EMAIL_EVENTS.has(e.event_type) || e.event_type.startsWith('order.')) return true;
+  if (e.event_type === 'service_request.paid') return true;
+  if (e.event_type === 'service_request.updated' && SERVICE_EMAIL_STEPS.has(String(e.payload?.to ?? ''))) return true;
   return e.event_type === 'ticket.replied' && e.payload?.staff === true; // customer gets mail when support replies
 }
 
@@ -48,6 +53,10 @@ export function notificationFor(e: Pick<OutboxEvent, 'event_type' | 'aggregate_i
   }
   if (t === 'wallet.updated') return { title: 'Wallet credited', body: 'Your wallet top-up was credited.', link: '/account/wallet' };
   if (t === 'ticket.replied' && p.staff === true) return { title: 'Support replied', body: 'There is a new reply on your ticket.', link: `/account/support/${id}` };
+  if (t === 'account_manager.assigned') {
+    const who = typeof p.manager_name === 'string' && p.manager_name ? p.manager_name : 'A dedicated account manager';
+    return { title: 'Meet your account manager', body: `${who}${p.team ? ` (${p.team} team)` : ''} is now your dedicated contact for quotes, orders and shipping.`, link: '/account' };
+  }
   if (t.startsWith('kyc.') && t !== 'kyc.submitted') return { title: `KYC ${titleCase(t.slice(4)).toLowerCase()}`, body: 'Your company verification status changed.', link: '/account/kyc' };
   return null;
 }
