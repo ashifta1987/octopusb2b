@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { createClient, subscribeAuthed } from '@/lib/supabase/client';
 import { cn } from '@/lib/cn';
 import { stepUpRedirect } from '@/lib/staff/step-up';
 import {
@@ -100,11 +100,8 @@ export function ConversationWorkspace({
         };
         setLive((prev) => (prev.some((x) => x.id === msg.id) ? prev : [...prev, msg]));
       })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'assistant_sessions', filter: `id=eq.${sessionId}` }, () => router.refresh())
-      .subscribe();
-    return () => {
-      void sb.removeChannel(ch);
-    };
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'assistant_sessions', filter: `id=eq.${sessionId}` }, () => router.refresh());
+    return subscribeAuthed(sb, ch);
   }, [sb, sessionId, router]);
 
   const messages = useMemo(() => {

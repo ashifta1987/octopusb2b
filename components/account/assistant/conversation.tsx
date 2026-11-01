@@ -1,7 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createClient, subscribeAuthed } from '@/lib/supabase/client';
 import { money } from '@/lib/format';
 import { confirmAssistantDraft, setAssistantFeedback } from '@/lib/assistant/actions';
 import { contextLabel, initials, type AccountTeam, type AssistantDraft, type AssistantMessage, type ContextCounts, type ReplyResponse } from '@/lib/assistant/types';
@@ -80,9 +80,8 @@ export function Conversation(p: ConversationProps) {
       .on('postgres_changes' as never, { event: 'INSERT', schema: 'public', table: 'assistant_messages', filter: `session_id=eq.${sessionId}` } as never,
         (payload: { new: AssistantMessage & { hidden_from_customer?: boolean } }) => { if (!payload.new.hidden_from_customer) merge([payload.new]); })
       .on('postgres_changes' as never, { event: 'UPDATE', schema: 'public', table: 'assistant_sessions', filter: `id=eq.${sessionId}` } as never,
-        (payload: { new: { status: string } }) => setStatus(payload.new.status))
-      .subscribe();
-    return () => { sb.removeChannel(ch); };
+        (payload: { new: { status: string } }) => setStatus(payload.new.status));
+    return subscribeAuthed(sb, ch);
   }, [sessionId, merge]);
 
   // existing thumbs for bot messages

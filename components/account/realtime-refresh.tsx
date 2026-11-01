@@ -1,7 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
+import { createClient, subscribeAuthed } from '@/lib/supabase/client';
 
 export type RealtimeSub = { table: string; filter?: string; event?: 'INSERT' | 'UPDATE' | 'DELETE' | '*' };
 
@@ -28,11 +28,9 @@ export function RealtimeRefresh({ channel, subs }: { channel: string; subs: Real
         refresh,
       );
     }
-    ch.subscribe();
-    return () => {
+    return subscribeAuthed(sb, ch, () => {
       if (timer) clearTimeout(timer);
-      sb.removeChannel(ch);
-    };
+    });
   }, [channel, key, router]);
   return (
     <span className="inline-flex items-center gap-1.5 text-xs text-muted" aria-live="polite">
