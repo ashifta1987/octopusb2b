@@ -6,7 +6,7 @@ import { ManualBankAdapter } from '@/lib/adapters';
 import { PageHeader, Card, Table, StatusBadge, EmptyState, Notice, Money } from '@/components/ui';
 import { fmtDate, money, asCurrency, CURRENCIES, CURRENCY_PREFIX, type Currency } from '@/lib/format';
 import { getCurrencyContext } from '@/lib/currency';
-import { getSettings } from '@/components/account/data';
+import { getSettings, getWalletFunds } from '@/components/account/data';
 import { getOrgLedger } from '@/components/account/ledger-data';
 import { TopupForm } from '@/components/account/topup-form';
 import { requestBankTopup, startCardTopup } from './actions';
@@ -30,6 +30,8 @@ export default async function WalletPage({ searchParams }: { searchParams: Promi
     sb.from('wallets').select('currency, balance_minor').eq('org_id', s.org.id),
     getOrgLedger(s.org.id, { account: 'wallet' }),
   ]);
+  // Wallet credit facility (migration 143): the active wallet may go negative down to −credit.
+  const funds = await getWalletFunds(ctx.currency);
   const active = ctx.currency;
   // Service prices in the platform currency (native price or converted from USD).
   const priceRows = await Promise.all((services ?? []).map((sv) =>
@@ -60,11 +62,17 @@ export default async function WalletPage({ searchParams }: { searchParams: Promi
       <section className="rounded-[14px] bg-navy text-white p-6 sm:p-8 mb-6" aria-label="Wallet balance">
         <div className="flex flex-wrap justify-between gap-6">
           <div>
-            <div className="text-sm text-white/70">Available balance · active wallet</div>
-            <div className="font-display text-[44px] font-bold leading-tight mono">{money(balance, active)}</div>
+            <div className="text-sm text-white/70">{funds.credit > 0 ? 'Balance' : 'Available balance'} · active wallet</div>
+            <div className={`font-display text-[44px] font-bold leading-tight mono ${balance < 0 ? 'text-[#FCD34D]' : ''}`}>{money(balance, active)}</div>
             <div className="text-xs text-white/70">{active} ({CURRENCY_PREFIX[active]}) · Wallet ID <span className="mono">{walletId}</span></div>
           </div>
-          <dl className="flex gap-10">
+          <dl className="flex flex-wrap gap-x-10 gap-y-4">
+            {funds.credit > 0 && (
+              <div><dt className="text-xs text-white/70">Credit limit</dt><dd className="text-xl font-bold mono">{money(funds.credit, active)}</dd><dd className="text-xs text-white/60">{balance < 0 ? `${money(-balance, active)} used` : 'not used'}</dd></div>
+            )}
+            {funds.credit > 0 && (
+              <div><dt className="text-xs text-white/70">Available to spend</dt><dd className="text-xl font-bold mono">{money(Math.max(funds.available, 0), active)}</dd><dd className="text-xs text-white/60">balance + credit limit</dd></div>
+            )}
             <div><dt className="text-xs text-white/70">Pending top-up</dt><dd className="text-xl font-bold mono">{money(pendingOf(active), active)}</dd><dd className="text-xs text-white/60">{pending.length ? `${pending.length} on the way` : 'none'}</dd></div>
             <div><dt className="text-xs text-white/70">Spent this month</dt><dd className="text-xl font-bold mono">{money(spentOf(active), active)}</dd><dd className="text-xs text-white/60">services &amp; orders</dd></div>
           </dl>
@@ -74,6 +82,7 @@ export default async function WalletPage({ searchParams }: { searchParams: Promi
           <Link href="/account/support" className="btn border border-white/40 text-white hover:bg-white/10" title={s.org.kyc_status === 'verified' ? undefined : 'Withdrawals need a verified KYC'}>Withdraw to bank</Link>
           <a href="/account/ledger/statement?account=wallet" className="btn border border-white/40 text-white hover:bg-white/10">Download statement</a>
         </div>
+        {balance < 0 && <p className="text-xs text-[#FCD34D] mt-3">You are using {money(-balance, active)} of your credit limit. Top up to bring the wallet back above zero.</p>}
         {s.org.kyc_status !== 'verified' && <p className="text-xs text-white/70 mt-3">Withdrawals to your bank unlock after <Link href="/account/kyc" className="underline">KYC verification</Link>.</p>}
       </section>
 

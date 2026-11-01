@@ -14,11 +14,11 @@ const fmt = (n: number) => n.toLocaleString('en-US');
 export type StartPoolProps = {
   product: { id: string; title: string; unit: string; unitOne: string; moq: number; tiers: PoolTier[]; currency: string };
   rules: { minDays: number; maxDays: number; defaultDays: number; depositPct: number; minPledge: number; maxBuyers: number };
-  addresses: AddressOpt[]; walletEnabled: boolean; walletBalance: number; company: string;
+  addresses: AddressOpt[]; walletEnabled: boolean; walletBalance: number; walletCredit?: number; company: string;
 };
 
 /** Start a pool (SPEC §18): target (≥ MOQ, quick picks for the next tiers), deadline, minimum pledge, and the starter's own pledge. */
-export function StartPoolForm({ product: pr, rules, addresses, walletEnabled, walletBalance, company }: StartPoolProps) {
+export function StartPoolForm({ product: pr, rules, addresses, walletEnabled, walletBalance, walletCredit = 0, company }: StartPoolProps) {
   const router = useRouter();
   const picks = [...new Set([pr.moq, ...pr.tiers.map((t) => t.min_qty).filter((q) => q >= pr.moq)])].sort((a, b) => a - b).slice(0, 4);
   const [target, setTarget] = useState(String(picks[1] ?? pr.moq));
@@ -124,14 +124,14 @@ export function StartPoolForm({ product: pr, rules, addresses, walletEnabled, wa
           <div className="grid gap-2 sm:grid-cols-2">
             <label className={`flex items-center gap-3 rounded-[10px] border-2 px-4 py-3 ${paySource === 'wallet' ? 'border-blue bg-blue-soft/40' : 'border-line'} ${!walletEnabled ? 'opacity-50' : 'cursor-pointer'}`}>
               <input type="radio" name="spay" checked={paySource === 'wallet'} disabled={!walletEnabled} onChange={() => setPay('wallet')} className="accent-[#2A6FD6]" />
-              <span><b>Wallet</b> · <span className="mono">{money(walletBalance, pr.currency)}</span></span>
+              <span><b>Wallet</b> · <span className="mono">{money(walletBalance, pr.currency)}</span>{walletCredit > 0 && <> · credit <span className="mono">{money(walletCredit, pr.currency)}</span></>}</span>
             </label>
             <label className={`flex items-center gap-3 rounded-[10px] border-2 px-4 py-3 cursor-pointer ${paySource === 'card' ? 'border-blue bg-blue-soft/40' : 'border-line'}`}>
               <input type="radio" name="spay" checked={paySource === 'card'} onChange={() => setPay('card')} className="accent-[#2A6FD6]" />
               <b>Card / bank transfer</b>
             </label>
           </div>
-          {paySource === 'wallet' && walletBalance < m.deposit && <p className="text-[12px] text-bad mt-1.5">Wallet balance is below the deposit. <Link href="/account/wallet" className="underline">Top up</Link> or pay by card / bank transfer.</p>}
+          {paySource === 'wallet' && walletBalance + walletCredit < m.deposit && <p className="text-[12px] text-bad mt-1.5">Wallet balance is below the deposit. <Link href="/account/wallet" className="underline">Top up</Link> or pay by card / bank transfer.</p>}
         </fieldset>
         <div>
           <label className="flex items-start gap-2.5 text-[13px] cursor-pointer">
@@ -145,7 +145,7 @@ export function StartPoolForm({ product: pr, rules, addresses, walletEnabled, wa
           <button type="button" className="btn btn-primary w-full" onClick={() => setShowErrors(true)}>Open pool · pay {money(m.deposit, pr.currency)} deposit</button>
         ) : paySource === 'wallet' ? (
           <ConfirmCharge label={`Open pool · pay ${money(m.deposit, pr.currency)} deposit`} title="Open the pool — deposit from your wallet" priceCents={m.deposit}
-            balanceCents={walletBalance} walletEnabled currency={pr.currency} buttonClass="btn btn-primary w-full" onConfirm={submit} />
+            balanceCents={walletBalance} creditCents={walletCredit} walletEnabled currency={pr.currency} buttonClass="btn btn-primary w-full" onConfirm={submit} />
         ) : (
           <button type="button" className="btn btn-primary w-full" disabled={pending} onClick={() => {
             if (!window.confirm(`Open the pool and reserve your ${fmt(q)} ${pr.unit} pledge? Pay the ${money(m.deposit, pr.currency)} deposit by card / bank transfer; your pledge counts once Octopus confirms it.`)) return;

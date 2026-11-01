@@ -51,11 +51,13 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
   const fee = svc?.priceCents ?? 0;
   const svcCurrency = svc?.currency ?? ctx.currency;
   let balance: number | null = null;
+  let credit = 0;
   if (session?.org) {
     const sb = await createClient();
-    // Charges use the wallet in the platform currency (SPEC §15.1).
-    const { data } = await sb.rpc('my_wallet_balance', { p_currency: svcCurrency });
-    balance = data == null ? 0 : Number(data);
+    // Charges use the wallet in the platform currency (SPEC §15.1); the wallet may use its credit limit (migration 143).
+    const { data } = await sb.rpc('my_wallet_credit', { p_currency: svcCurrency }).maybeSingle<{ balance_minor: number; credit_limit_minor: number }>();
+    balance = data == null ? 0 : Number(data.balance_minor);
+    credit = data == null ? 0 : Number(data.credit_limit_minor);
   }
   const productQs = product ? `?product=${product.id}` : '';
   const loginHref = `/login?next=${encodeURIComponent(`/request/${type}${productQs}`)}`;
@@ -130,7 +132,7 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
             type={type} action={submitRequest} defaults={defaults} productId={product?.id ?? null}
             feeCents={fee} serviceName={svc?.name ?? 'Service fee'}
             feeLabel={fee > 0 ? `Charged once ${svc?.unit ?? 'per request'} when you submit it.` : 'No fee to submit — you will receive a quote.'}
-            balanceCents={balance} walletEnabled={walletEnabled} currency={svcCurrency} mode={mode} loginHref={loginHref}
+            balanceCents={balance} creditCents={credit} walletEnabled={walletEnabled} currency={svcCurrency} mode={mode} loginHref={loginHref}
           />
         </section>
 

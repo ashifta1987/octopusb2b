@@ -10,7 +10,7 @@ import { getStoreContent } from '@/components/store/currency';
 import { getPool, getGroupBuyTerms, type PoolDetail, type PoolParticipant } from '@/components/store/data';
 import { ProductImage, unitOne } from '@/components/store/product-card';
 import { Breadcrumbs, JsonLd, breadcrumbLd, SITE_URL } from '@/components/store/seo';
-import { getSettings, getWalletBalance } from '@/components/account/data';
+import { getSettings, getWalletFunds } from '@/components/account/data';
 import { getCurrencyContext } from '@/lib/currency';
 import { Countdown } from '@/components/store/pools/countdown';
 import { JoinPoolForm, type AddressOpt } from '@/components/store/pools/join-form';
@@ -281,7 +281,7 @@ async function JoinPanel({ pool: p, rules, termsId }: { pool: PoolDetail; rules:
       .eq('pool_id', p.id).eq('org_id', s.org.id).in('status', ACTIVE).order('joined_at', { ascending: false }).limit(1).maybeSingle(),
     sb.from('addresses').select('id, label, line1, city, country').eq('org_id', s.org.id).order('is_default', { ascending: false }).order('created_at'),
     getSettings(),
-    getWalletBalance(p.currency),
+    getWalletFunds(p.currency),
     getCurrencyContext(),
   ]);
   if (mine) return <MyPledgeCard pledge={mine as MyPledge} pool={p} />;
@@ -292,7 +292,7 @@ async function JoinPanel({ pool: p, rules, termsId }: { pool: PoolDetail; rules:
   return (
     <JoinPoolForm
       pool={{ id: p.id, code: p.code, currency: p.currency, min_pledge: p.min_pledge, filled_qty: p.filled_qty, target_qty: p.target_qty, deposit_pct: p.deposit_pct, tiers: p.tiers, unit: p.product.unit, unitOne: unitOne(p.product.unit) }}
-      addresses={(addr ?? []) as AddressOpt[]} walletEnabled={settings.wallet_enabled} walletBalance={balance} termsId={termsId} company={s.org.name}
+      addresses={(addr ?? []) as AddressOpt[]} walletEnabled={settings.wallet_enabled} walletBalance={balance.balance} walletCredit={balance.credit} termsId={termsId} company={s.org.name}
     />
   );
 }

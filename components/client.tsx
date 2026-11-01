@@ -5,15 +5,18 @@ import { money } from '@/lib/format';
 
 /* ───────── ConfirmCharge — shows price + wallet balance before any deduction (SPEC §8.2) ───────── */
 export function ConfirmCharge({
-  label, title, priceCents, balanceCents, walletEnabled, onConfirm, className, buttonClass = 'btn btn-primary', currency = 'USD',
+  label, title, priceCents, balanceCents, walletEnabled, onConfirm, className, buttonClass = 'btn btn-primary', currency = 'USD', creditCents = 0,
 }: {
   label: string; title: string; priceCents: number; balanceCents: number | null; walletEnabled: boolean; currency?: string;
+  /** Wallet credit facility (migration 143): the wallet may go negative down to −creditCents. */
+  creditCents?: number;
   onConfirm: () => Promise<{ ok: boolean; error?: string } | void>; className?: string; buttonClass?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [pending, start] = useTransition();
-  const insufficient = walletEnabled && balanceCents != null && balanceCents < priceCents;
+  const insufficient = walletEnabled && balanceCents != null && balanceCents + creditCents < priceCents;
+  const after = (balanceCents ?? 0) - priceCents;
   return (
     <>
       <button type="button" className={cn(buttonClass, className)} onClick={() => { setErr(null); setOpen(true); }}>{label}</button>
@@ -26,13 +29,15 @@ export function ConfirmCharge({
               {walletEnabled ? (
                 <>
                   <div className="flex justify-between"><dt className="text-muted">Wallet balance</dt><dd className="mono">{money(balanceCents, currency)}</dd></div>
-                  <div className="flex justify-between border-t border-line pt-2"><dt className="text-muted">Balance after</dt><dd className={cn('mono font-semibold', insufficient && 'text-bad')}>{money((balanceCents ?? 0) - priceCents, currency)}</dd></div>
+                  {creditCents > 0 && <div className="flex justify-between"><dt className="text-muted">Credit limit</dt><dd className="mono">{money(creditCents, currency)}</dd></div>}
+                  <div className="flex justify-between border-t border-line pt-2"><dt className="text-muted">Balance after</dt><dd className={cn('mono font-semibold', insufficient ? 'text-bad' : after < 0 && 'text-warn')}>{money(after, currency)}</dd></div>
+                  {!insufficient && after < 0 && <p className="text-[13px] text-muted">{money(-after, currency)} of your credit limit will be used. Top up later to bring the wallet back above zero.</p>}
                 </>
               ) : (
                 <p className="text-sm text-muted">The wallet is switched off — this charge will be added to your next invoice / card payment.</p>
               )}
             </dl>
-            {insufficient && <p className="mt-3 text-sm text-bad">Insufficient wallet balance. <a href="/account/wallet" className="underline">Top up your wallet</a>.</p>}
+            {insufficient && <p className="mt-3 text-sm text-bad">{creditCents > 0 ? 'Not enough available in your wallet (balance + credit limit).' : 'Insufficient wallet balance.'} <a href="/account/wallet" className="underline">Top up your wallet</a>.</p>}
             {err && <p className="mt-3 text-sm text-bad" role="alert">{err}</p>}
             <div className="mt-6 flex justify-end gap-3">
               <button className="btn btn-ghost" onClick={() => setOpen(false)} disabled={pending}>Cancel</button>

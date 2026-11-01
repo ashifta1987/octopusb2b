@@ -6,7 +6,7 @@ import { getSiteContent } from '@/lib/content';
 import { Card, StatusBadge, Notice, Money, SupplierCode, OrderProgress, Timeline } from '@/components/ui';
 import { DocumentButton } from '@/components/client';
 import { fmtDate, humanize } from '@/lib/format';
-import { getSettings, getWalletBalance, supplierMap, DOC_LABEL } from '@/components/account/data';
+import { getSettings, getWalletFunds, supplierMap, DOC_LABEL } from '@/components/account/data';
 import { RealtimeRefresh } from '@/components/account/realtime-refresh';
 import { OrderList, type OrderListItem } from '@/components/account/order-list';
 import { PayWalletButton, CancelOrderButton } from '@/components/account/order-actions';
@@ -23,7 +23,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
   const sb = await createClient();
   const { data: o } = await sb.from('orders').select('*').eq('id', id).maybeSingle();
   if (!o) notFound();
-  const [{ data: docs }, { data: events }, { data: shipments }, { data: list }, { data: pi }, settings, balance, content] = await Promise.all([
+  const [{ data: docs }, { data: events }, { data: shipments }, { data: list }, { data: pi }, settings, funds, content] = await Promise.all([
     sb.from('documents').select('id, doc_type, number, amount_cents, currency, status, created_at').eq('order_id', id).order('created_at'),
     sb.from('order_events').select('id, kind, title, body, created_at').eq('order_id', id).order('created_at', { ascending: false }),
     sb.from('shipments').select('id, code, carrier_code, service_code, tracking_no, status, weight_kg, parcels, eta, last_event_at, created_at').eq('order_id', id).order('created_at', { ascending: false }),
@@ -31,7 +31,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
     sb.from('proforma_invoices').select('number').eq('order_id', id).maybeSingle(),
     getSettings(),
     // Orders are paid from the wallet in the ORDER's currency (an old USD order stays payable in USD after a switch).
-    getWalletBalance(o.currency as string),
+    getWalletFunds(o.currency as string),
     getSiteContent(),
   ]);
   const shipIds = (shipments ?? []).map((x) => x.id as string);
@@ -44,6 +44,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
   const due = dueNow(money);
   const cur = o.currency as string;
   const balanceDue = money.total_cents - money.paid_cents;
+  const balance = funds.balance;
   const depositLeft = Math.max(0, money.deposit_cents - money.paid_cents);
   const ship = shipments?.[0];
   const lastTrack = tracking?.[0];
@@ -116,8 +117,8 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
                   {settings.wallet_enabled ? (
                     <div className="rounded-[10px] border border-line p-4">
                       <div className="font-semibold">Pay from {cur} wallet</div>
-                      <p className="text-sm text-muted mt-1">{cur} wallet balance: <Money cents={balance} currency={cur} className="text-navy" /></p>
-                      <div className="mt-3"><PayWalletButton orderId={id} amountCents={due.amount} balanceCents={balance} currency={cur} purpose={due.purpose} action={payFromWallet} /></div>
+                      <p className="text-sm text-muted mt-1">{cur} wallet balance: <Money cents={balance} currency={cur} className="text-navy" />{funds.credit > 0 && <> · credit limit <Money cents={funds.credit} currency={cur} className="text-navy" /></>}</p>
+                      <div className="mt-3"><PayWalletButton orderId={id} amountCents={due.amount} balanceCents={balance} creditCents={funds.credit} currency={cur} purpose={due.purpose} action={payFromWallet} /></div>
                     </div>
                   ) : null}
                   <div className="rounded-[10px] border border-line p-4">

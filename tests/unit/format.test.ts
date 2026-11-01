@@ -54,7 +54,7 @@ describe('money helpers', () => {
 
 describe('mapDbError', () => {
   it('maps RPC error codes to friendly messages', () => {
-    expect(mapDbError({ message: 'WALLET_INSUFFICIENT: balance 10 needed 20' })).toMatch(/wallet balance is too low/i);
+    expect(mapDbError({ message: 'WALLET_INSUFFICIENT: available 10 needed 20' })).toMatch(/not enough available in your wallet/i);
     expect(mapDbError({ message: 'MAKER_CANNOT_APPROVE' })).toMatch(/maker/i);
     expect(mapDbError({ message: 'INVALID_TRANSITION: shipped → confirmed' })).toMatch(/not allowed/i);
   });

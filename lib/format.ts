@@ -74,7 +74,7 @@ export function mapDbError(e: { message?: string } | null | undefined): string {
   const m = e?.message ?? 'Something went wrong';
   const code = m.split(':')[0].trim();
   const map: Record<string, string> = {
-    WALLET_INSUFFICIENT: 'Your wallet balance is too low. Top up your wallet and try again.',
+    WALLET_INSUFFICIENT: 'Not enough available in your wallet (balance plus any credit limit). Top up your wallet and try again.',
     WALLET_DISABLED: 'The wallet is switched off. This will be invoiced instead.',
     FORBIDDEN: 'You do not have permission to do this.',
     NO_ORG: 'Please complete your company profile first.',

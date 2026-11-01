@@ -10,6 +10,7 @@ import { CurrencyTotals, sumByCurrency, rateLabel } from '@/components/admin/cur
 import { setSetting, saveSettings } from '../actions';
 import { confirmTopup } from '../finance/actions';
 import { StepUpNote } from '@/components/admin/step-up';
+import { saveCreditDefault, saveCustomerCredit } from './credit-actions';
 
 export const metadata = { title: 'Wallets & payments' };
 
@@ -27,14 +28,15 @@ export default async function WalletAdminPage() {
   const sb = await createClient();
   const monthStart = new Date(); monthStart.setUTCDate(1); monthStart.setUTCHours(0, 0, 0, 0);
 
-  const [settings, wallets, topups, services, prices, rev, ctx] = await Promise.all([
-    sb.from('site_settings').select('key, value').in('key', ['wallet_enabled', ...PLATFORM_SETTINGS.map((p) => p.key)]),
+  const [settings, wallets, topups, services, prices, rev, ctx, credit] = await Promise.all([
+    sb.from('site_settings').select('key, value').in('key', ['wallet_enabled', 'wallet_credit_default', ...PLATFORM_SETTINGS.map((p) => p.key)]),
     sb.rpc('admin_wallet_balances'),
     sb.from('wallet_topups').select('id, org_id, amount_cents, currency, method, reference, status, created_at, organizations(name, country)').order('created_at', { ascending: false }).limit(40),
     sb.from('services').select('code, name, unit, active, sort').order('sort'),
     sb.from('service_prices').select('service_code, amount_minor, currency, effective_from').order('effective_from', { ascending: false }),
     can(s, 'finance', 'view') || can(s, 'dashboard', 'view') ? sb.rpc('admin_revenue_by_stream', { p_from: monthStart.toISOString() }) : Promise.resolve({ data: [] }),
     getCurrencyContext(),
+    sb.rpc('admin_wallet_credit_overview'),
   ]);
 
   const set = new Map((settings.data ?? []).map((r) => [r.key, r.value]));
@@ -57,6 +59,12 @@ export default async function WalletAdminPage() {
     else scheduled.set(k, { amount: Number(p.amount_minor), from: p.effective_from });
   });
   const cur = ctx.currency;
+  // Wallet credit facility (migration 143)
+  const creditDefault = (set.get('wallet_credit_default') ?? {}) as { amount_minor?: number; currency?: string; verified_only?: boolean };
+  type CreditRow = { org_id: string; org_name: string; country: string | null; kyc_status: string; currency: string; balance_minor: number; credit_limit_minor: number; available_minor: number; override_minor: number | null; override_currency: string | null; note: string | null };
+  const creditRows = (credit.data ?? []) as CreditRow[];
+  const creditUsedBy = creditRows.reduce((a, r) => a + Math.max(-Number(r.balance_minor), 0), 0);
+  const major = (m: number | null | undefined) => (m == null ? '' : (Number(m) / 100).toFixed(2));
   const priceIn = (code: string) => {
     const own = current.get(`${code}|${cur}`);
     if (own != null) return { amount: own, converted: false };
@@ -86,6 +94,59 @@ export default async function WalletAdminPage() {
         <Stat label="Top-ups this month" value={<CurrencyTotals totals={topupsBy} ctx={ctx} />} hint={`${creditedThisMonth.length} top-ups`} />
         <Stat label="Spent on services" value={<CurrencyTotals totals={spentBy} ctx={ctx} />} hint="this month (services, RFQ fees, ads)" />
         <Stat label="Transfers to match" value={pending.length} hint={`${pending.filter((t) => !t.reference).length} without reference`} hintTone={pending.length ? 'warn' : undefined} />
+      </div>
+
+      <div id="credit" className="scroll-mt-6">
+      <Card className="mb-6" title="Credit facility" action={<span className="text-xs text-muted">Wallets may go below zero down to the credit limit · {s.isAdmin ? 'Admin can edit' : 'Admin only'}</span>}>
+        <div className="px-6 pb-2 grid gap-6 lg:grid-cols-[1fr_1.6fr]">
+          <div>
+            <h3 className="font-semibold mb-1">Default limit</h3>
+            <p className="text-sm text-muted mb-3">Applies to every customer without their own limit. Set 0 to give no credit by default. Credit used now: <b className="mono text-navy">{money(creditUsedBy, cur)}</b>.</p>
+            <ActionForm action={saveCreditDefault} className="grid gap-3" submitLabel="Save default" hideSubmit={!s.isAdmin} confirm="Change the default wallet credit limit for all customers without their own limit?">
+              <div className="grid grid-cols-[1fr_110px] gap-3">
+                <Field label="Credit limit" htmlFor="cd-amount" hint="e.g. 1000.00"><input id="cd-amount" name="amount" inputMode="decimal" className="input mono" defaultValue={major(creditDefault.amount_minor ?? 0)} disabled={!s.isAdmin} required /></Field>
+                <Field label="Currency" htmlFor="cd-cur">
+                  <select id="cd-cur" name="currency" className="input" defaultValue={creditDefault.currency ?? cur} disabled={!s.isAdmin}>{CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}</select>
+                </Field>
+              </div>
+              <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="verified_only" defaultChecked={creditDefault.verified_only !== false} disabled={!s.isAdmin} /> Only KYC-verified customers get the default</label>
+              {creditDefault.currency && creditDefault.currency !== cur && <Notice tone="amber">The default is in {creditDefault.currency} but the platform bills in {cur}, so it does not apply. Save it in {cur}.</Notice>}
+            </ActionForm>
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-semibold mb-1">Customer limit</h3>
+            <p className="text-sm text-muted mb-3">Give one customer a higher or lower limit (0 = no credit). Tick “Use default” to remove their own limit.</p>
+            <ActionForm action={saveCustomerCredit} className="grid gap-3 sm:grid-cols-[1.4fr_1fr_100px]" submitLabel="Save customer limit" hideSubmit={!s.isAdmin} confirm="Change this customer's wallet credit limit?">
+              <Field label="Customer" htmlFor="cc-org">
+                <select id="cc-org" name="org_id" className="input" required disabled={!s.isAdmin} defaultValue="">
+                  <option value="" disabled>Choose…</option>
+                  {creditRows.map((r) => <option key={r.org_id} value={r.org_id}>{r.org_name}</option>)}
+                </select>
+              </Field>
+              <Field label="Credit limit" htmlFor="cc-amount" hint="e.g. 2500"><input id="cc-amount" name="amount" inputMode="decimal" className="input mono" disabled={!s.isAdmin} /></Field>
+              <Field label="Currency" htmlFor="cc-cur">
+                <select id="cc-cur" name="currency" className="input" defaultValue={cur} disabled={!s.isAdmin}>{CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}</select>
+              </Field>
+              <Field label="Note (optional)" htmlFor="cc-note" className="sm:col-span-2"><input id="cc-note" name="note" className="input" maxLength={200} placeholder="e.g. approved by director, 60-day terms" disabled={!s.isAdmin} /></Field>
+              <label className="flex items-center gap-2 text-sm sm:pt-7"><input type="checkbox" name="use_default" disabled={!s.isAdmin} /> Use default</label>
+            </ActionForm>
+          </div>
+        </div>
+        <Table head={['Customer', 'KYC', 'Balance', 'Credit limit', 'Available', 'Source']} empty={<EmptyState title="No customers yet" />}>
+          {creditRows.map((r) => (
+            <tr key={r.org_id}>
+              <td className="td font-semibold">{r.org_name} <CountryTag code={r.country} /></td>
+              <td className="td"><StatusBadge status={r.kyc_status} /></td>
+              <td className={`td mono font-semibold ${Number(r.balance_minor) < 0 ? 'text-warn' : ''}`}>{money(Number(r.balance_minor), r.currency)}</td>
+              <td className="td mono">{money(Number(r.credit_limit_minor), r.currency)}</td>
+              <td className="td mono">{money(Number(r.available_minor), r.currency)}</td>
+              <td className="td text-sm">{r.override_minor != null
+                ? <span title={r.note ?? undefined}>Own limit {money(Number(r.override_minor), r.override_currency ?? r.currency)}{r.override_currency && r.override_currency !== r.currency ? ' (other currency — not applied)' : ''}{r.note ? ` · ${r.note}` : ''}</span>
+                : <span className="text-muted">Default{creditDefault.verified_only !== false && r.kyc_status !== 'verified' ? ' · not verified → no credit' : ''}</span>}</td>
+            </tr>
+          ))}
+        </Table>
+      </Card>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr] mb-6">

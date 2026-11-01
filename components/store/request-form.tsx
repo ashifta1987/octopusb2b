@@ -12,12 +12,12 @@ type Props = {
   type: RequestType; action: (type: string, values: RequestValues, productId: string | null, idem: string) => Promise<{ ok: boolean; error?: string; redirect?: string }>;
   defaults: RequestValues; productId: string | null; feeCents: number; feeLabel: string; serviceName: string;
   /** Platform currency: the fee (service_price_info) and the wallet balance (my_wallet_balance(p_currency)) are both in it. */
-  balanceCents: number | null; walletEnabled: boolean; currency: string;
+  balanceCents: number | null; creditCents?: number; walletEnabled: boolean; currency: string;
   mode: 'ready' | 'guest' | 'no-org'; loginHref: string;
 };
 
 /** Request.png form: React Hook Form + the shared zod schema; submit goes through <ConfirmCharge/> (fee + wallet balance). */
-export function RequestForm({ type, action, defaults, productId, feeCents, feeLabel, serviceName, balanceCents, walletEnabled, currency, mode, loginHref }: Props) {
+export function RequestForm({ type, action, defaults, productId, feeCents, feeLabel, serviceName, balanceCents, creditCents = 0, walletEnabled, currency, mode, loginHref }: Props) {
   const router = useRouter();
   const sections = REQUEST_FIELDS[type];
   const schema = useMemo(() => requestSchema(type), [type]);
@@ -66,7 +66,7 @@ export function RequestForm({ type, action, defaults, productId, feeCents, feeLa
             {walletEnabled ? 'Charged from your wallet when you submit. You get a reference number right away.' : 'The wallet is off — the fee is added to your next invoice. You get a reference number right away.'}
           </p>
           {mode === 'ready' && (
-            <ConfirmChargeCurrency label={submitLabel} title={`Confirm ${serviceName.toLowerCase()}`} priceCents={feeCents} balanceCents={balanceCents} currency={currency}
+            <ConfirmChargeCurrency label={submitLabel} title={`Confirm ${serviceName.toLowerCase()}`} priceCents={feeCents} balanceCents={balanceCents} creditCents={creditCents} currency={currency}
               walletEnabled={walletEnabled && feeCents > 0} onConfirm={onConfirm} />
           )}
           {mode === 'guest' && <Link href={loginHref} className="btn btn-primary">Sign in to submit</Link>}

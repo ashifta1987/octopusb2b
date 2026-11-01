@@ -162,19 +162,21 @@ await test('invalid order transitions are rejected', async () => {
   await expectError(() => q(`update orders set status = 'closed' where id = $1`, [o.id]), /permission denied/i);
 });
 
-await test('wallet cannot go negative', async () => {
+// SPEC amended 1 Nov 2026 (migration 143): a wallet may go negative only down to its credit limit.
+await test('wallet cannot go below its credit limit', async () => {
   const buyer = uid('buyer');
   const { org_id } = await one('select org_id from org_members where user_id = $1', [buyer]);
-  const { bal } = await one('select wallet_balance($1)::bigint bal', [org_id]);
+  const { avail } = await one('select wallet_available($1)::bigint avail', [org_id]);
   await expectError(
-    () => q(`select wallet_charge($1, $2, 'rls test', 'service_fees', 'rls-test-' || gen_random_uuid())`, [org_id, Number(bal) + 1]),
+    () => q(`select wallet_charge($1, $2, 'rls test', 'service_fees', 'rls-test-' || gen_random_uuid())`, [org_id, Number(avail) + 1]),
     /WALLET_INSUFFICIENT/,
   );
-  const neg = await q(
-    `select la.code, sum(le.credit_cents - le.debit_cents) bal from ledger_entries le join ledger_accounts la on la.id = le.account_id
-     where la.code like 'wallet:%' group by la.code having sum(le.credit_cents - le.debit_cents) < 0`,
+  const over = await q(
+    `select la.code, la.org_id, la.currency, sum(le.credit_cents - le.debit_cents) bal from ledger_entries le join ledger_accounts la on la.id = le.account_id
+     where la.code like 'wallet:%' group by la.code, la.org_id, la.currency
+     having sum(le.credit_cents - le.debit_cents) < -wallet_credit_limit(la.org_id, la.currency)`,
   );
-  assert(neg.rows.length === 0, `${neg.rows.length} wallet(s) with negative balance`);
+  assert(over.rows.length === 0, `${over.rows.length} wallet(s) below their credit limit`);
 });
 
 await test('maker cannot approve their own finance request', async () => {

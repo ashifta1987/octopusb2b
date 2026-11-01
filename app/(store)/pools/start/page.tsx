@@ -10,7 +10,7 @@ import { getStoreContent } from '@/components/store/currency';
 import { getPoolStartProduct, listOpenPools } from '@/components/store/data';
 import { ProductImage, unitOne } from '@/components/store/product-card';
 import { Breadcrumbs } from '@/components/store/seo';
-import { getSettings, getWalletBalance } from '@/components/account/data';
+import { getSettings, getWalletFunds } from '@/components/account/data';
 import { StartPoolForm } from '@/components/store/pools/start-form';
 import type { AddressOpt } from '@/components/store/pools/join-form';
 import { poolSettings } from '@/components/store/pools/shared';
@@ -56,7 +56,7 @@ async function Content({ searchParams }: { searchParams: SP }) {
   const [{ data: addr }, st, balance, open] = await Promise.all([
     sb.from('addresses').select('id, label, line1, city, country').eq('org_id', s.org.id).order('is_default', { ascending: false }).order('created_at'),
     getSettings(),
-    getWalletBalance(product.currency),
+    getWalletFunds(product.currency),
     listOpenPools({ productId: product.id, sort: 'filled', limit: 1 }),
   ]);
   const existing = open.items[0];
@@ -84,7 +84,7 @@ async function Content({ searchParams }: { searchParams: SP }) {
       <StartPoolForm
         product={{ id: product.id, title: product.title, unit: product.unit, unitOne: u, moq: Math.max(1, product.moq), tiers: product.tiers, currency: product.currency }}
         rules={{ minDays: rules.minDays, maxDays: rules.maxDays, defaultDays: rules.defaultDays, depositPct: rules.depositPct, minPledge: product.pool_minimum_pledge ?? rules.minPledgeDefault, maxBuyers: rules.maxBuyers }}
-        addresses={(addr ?? []) as AddressOpt[]} walletEnabled={st.wallet_enabled} walletBalance={balance} company={s.org.name}
+        addresses={(addr ?? []) as AddressOpt[]} walletEnabled={st.wallet_enabled} walletBalance={balance.balance} walletCredit={balance.credit} company={s.org.name}
       />
     </div>,
   );

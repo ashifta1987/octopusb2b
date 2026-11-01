@@ -6,8 +6,8 @@ import { ConfirmChargeCurrency } from '@/components/store/confirm-charge-currenc
 type Res = { ok: true } | { ok: false; error: string };
 
 /** Pays from the wallet in the ORDER's currency (record_payment debits wallet(order.currency)); `balanceCents` = that wallet. */
-export function PayWalletButton({ orderId, amountCents, balanceCents, currency, purpose, action }: {
-  orderId: string; amountCents: number; balanceCents: number; currency: string; purpose: 'deposit' | 'balance'; action: (id: string) => Promise<Res>;
+export function PayWalletButton({ orderId, amountCents, balanceCents, creditCents = 0, currency, purpose, action }: {
+  orderId: string; amountCents: number; balanceCents: number; creditCents?: number; currency: string; purpose: 'deposit' | 'balance'; action: (id: string) => Promise<Res>;
 }) {
   const router = useRouter();
   return (
@@ -16,6 +16,7 @@ export function PayWalletButton({ orderId, amountCents, balanceCents, currency, 
       title={`Pay the ${purpose} from your ${currency} wallet`}
       priceCents={amountCents}
       balanceCents={balanceCents}
+      creditCents={creditCents}
       currency={currency}
       walletEnabled
       onConfirm={async () => {

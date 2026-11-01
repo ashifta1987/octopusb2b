@@ -45,6 +45,14 @@ export async function getWalletBalance(currency?: string | null): Promise<number
   return Number(data ?? 0);
 }
 
+/** Wallet credit facility (migration 143): balance, credit limit and spendable amount of my org's wallet in `currency`. */
+export async function getWalletFunds(currency?: string | null): Promise<{ balance: number; credit: number; available: number }> {
+  const sb = await createClient();
+  const { data } = await sb.rpc('my_wallet_credit', currency ? { p_currency: currency } : {}).maybeSingle<{ balance_minor: number; credit_limit_minor: number; available_minor: number }>();
+  const balance = Number(data?.balance_minor ?? 0), credit = Number(data?.credit_limit_minor ?? 0);
+  return { balance, credit, available: balance + credit };
+}
+
 export async function latestTermsId(): Promise<{ id: string; version: string } | null> {
   const sb = await createClient();
   const { data } = await sb.from('terms_versions').select('id, version').eq('status', 'published').eq('kind', 'general').order('published_at', { ascending: false }).limit(1).maybeSingle();

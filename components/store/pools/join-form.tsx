@@ -11,7 +11,7 @@ import { joinPool } from '@/app/(store)/pool/actions';
 export type AddressOpt = { id: string; label: string | null; line1: string; city: string | null; country: string };
 export type JoinPoolProps = {
   pool: { id: string; code: string; currency: string; min_pledge: number; filled_qty: number; target_qty: number; deposit_pct: number; tiers: PoolTier[]; unit: string; unitOne: string };
-  addresses: AddressOpt[]; walletEnabled: boolean; walletBalance: number; termsId: string | null; company: string;
+  addresses: AddressOpt[]; walletEnabled: boolean; walletBalance: number; walletCredit?: number; termsId: string | null; company: string;
 };
 
 const fmt = (n: number) => n.toLocaleString('en-US');
@@ -56,7 +56,7 @@ export function AddressFields({ prefix, values, onChange, errors }: {
 }
 
 /** Pool.png "Join this pool" form — zod-validated, live deposit maths in the pool currency, ConfirmCharge for wallet deposits. */
-export function JoinPoolForm({ pool, addresses, walletEnabled, walletBalance, termsId, company }: JoinPoolProps) {
+export function JoinPoolForm({ pool, addresses, walletEnabled, walletBalance, walletCredit = 0, termsId, company }: JoinPoolProps) {
   const router = useRouter();
   const savedRaw = useSyncExternalStore(subscribeStorage, readSaved, () => '');
   const saved = savedPools(savedRaw)[pool.code];
@@ -92,7 +92,7 @@ export function JoinPoolForm({ pool, addresses, walletEnabled, walletBalance, te
   };
   const parsed = joinSchema(pool.min_pledge).safeParse(values);
   const issues = parsed.success ? {} : Object.fromEntries(parsed.error.issues.map((i) => [String(i.path[0] ?? 'form'), i.message]));
-  const insufficient = paySource === 'wallet' && walletBalance < m.deposit;
+  const insufficient = paySource === 'wallet' && walletBalance + walletCredit < m.deposit;
 
   const submit = async () => {
     if (!parsed.success) return { ok: false, error: 'Check the form' };
@@ -148,14 +148,14 @@ export function JoinPoolForm({ pool, addresses, walletEnabled, walletBalance, te
         <div className="space-y-2">
           <label className={`flex items-center gap-3 rounded-[10px] border-2 px-4 py-3 cursor-pointer ${paySource === 'wallet' ? 'border-blue bg-blue-soft/40' : 'border-line'} ${!walletEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
             <input type="radio" name="pay" value="wallet" checked={paySource === 'wallet'} disabled={!walletEnabled} onChange={() => setPay('wallet')} className="accent-[#2A6FD6]" />
-            <span><span className="font-semibold">Wallet</span> · balance <span className="mono">{money(walletBalance, pool.currency)}</span>{!walletEnabled && ' (wallet switched off)'}</span>
+            <span><span className="font-semibold">Wallet</span> · balance <span className="mono">{money(walletBalance, pool.currency)}</span>{walletCredit > 0 && <> · credit <span className="mono">{money(walletCredit, pool.currency)}</span></>}{!walletEnabled && ' (wallet switched off)'}</span>
           </label>
           <label className={`flex items-center gap-3 rounded-[10px] border-2 px-4 py-3 cursor-pointer ${paySource === 'card' ? 'border-blue bg-blue-soft/40' : 'border-line'}`}>
             <input type="radio" name="pay" value="card" checked={paySource === 'card'} onChange={() => setPay('card')} className="accent-[#2A6FD6]" />
             <span className="font-semibold">Card / bank transfer</span>
           </label>
         </div>
-        {paySource === 'wallet' && insufficient && <p className="text-[12px] text-bad mt-1.5">Your wallet balance is below the deposit. <Link href="/account/wallet" className="underline">Top up</Link> or pay by card / bank transfer.</p>}
+        {paySource === 'wallet' && insufficient && <p className="text-[12px] text-bad mt-1.5">{walletCredit > 0 ? 'Your wallet balance plus credit limit is below the deposit.' : 'Your wallet balance is below the deposit.'} <Link href="/account/wallet" className="underline">Top up</Link> or pay by card / bank transfer.</p>}
         {paySource === 'card' && <p className="text-[12px] text-muted mt-1.5">Your pledge is reserved now; Octopus confirms the deposit when your payment arrives. Unpaid pledges lapse when the pool fills.</p>}
       </fieldset>
 
@@ -173,7 +173,7 @@ export function JoinPoolForm({ pool, addresses, walletEnabled, walletBalance, te
         <button type="button" className="btn btn-primary w-full min-h-12" onClick={() => setShowErrors(true)}>Join pool · pay {money(m.deposit, pool.currency)} deposit</button>
       ) : paySource === 'wallet' ? (
         <ConfirmCharge label={`Join pool · pay ${money(m.deposit, pool.currency)} deposit`} title={`Join ${pool.code} — deposit from your wallet`} priceCents={m.deposit}
-          balanceCents={walletBalance} walletEnabled currency={pool.currency} buttonClass="btn btn-primary w-full min-h-12" onConfirm={submit} />
+          balanceCents={walletBalance} creditCents={walletCredit} walletEnabled currency={pool.currency} buttonClass="btn btn-primary w-full min-h-12" onConfirm={submit} />
       ) : (
         <>
           <button type="button" className="btn btn-primary w-full min-h-12" onClick={() => { setErr(null); setCardOpen(true); }}>Join pool · reserve {money(m.deposit, pool.currency)} deposit</button>

@@ -301,6 +301,15 @@ Key RLS policies:
 - Staff: `has_permission(auth.uid(), '<area>', '<action>')` security-definer function.
 - Storefront: anonymous `select` only on live products, public categories, `public_suppliers` and published content.
 
+### Wallet credit facility (amended 1 Nov 2026)
+
+- A customer wallet may go below zero, down to minus its **credit limit**. A negative balance is money the customer owes Octopus; the ledger is unchanged (journals still balance).
+- **Default limit:** `site_settings.wallet_credit_default` = `{amount_minor, currency, verified_only}` — initially US$ 1,000.00 for KYC-verified customers. 0 = no credit by default.
+- **Per-customer override:** `wallet_credit_limits` (org_id, limit_minor, currency, note). 0 = no credit for that customer; removing the override falls back to the default.
+- Only an **Admin** changes limits (Admin → Wallets & payments → Credit facility); every change is written to the audit log. Customers can read their own limit only.
+- Every wallet spend (service fees, RFQ fees, order payments from wallet, group-buy deposits, ad clicks) checks `wallet_available = balance + credit limit`. The ConfirmCharge dialog shows the credit limit and warns when credit will be used.
+- A limit applies only in its currency. A platform currency switch with "convert" moves negative balances (debts) to the new currency too; Admin then re-enters limits in the new currency.
+
 ## 7. Integration design
 
 Every outside service sits behind an adapter interface in `packages/integrations`, so a new carrier, marketplace or dropship app is a new adapter plus an `integrations` row, with no changes to business code. Each adapter has a `sandbox` and `live` mode, reads its credentials from Supabase Vault, logs every call to `integration_logs`, and is called only from Edge Functions or queue workers, never from the browser.
@@ -537,7 +546,7 @@ UI / API → Server Action → RPC (one transaction: rows + ledger + status_hist
 
 ### 11.3 What to test
 
-- **pgTAP (database):** a customer cannot read another org's orders; storefront role cannot read `suppliers.legal_name`; supplier sees buyer contacts only after payment; ledger journals always balance; invalid state transitions are rejected; wallet cannot go negative; maker cannot approve own request.
+- **pgTAP (database):** a customer cannot read another org's orders; storefront role cannot read `suppliers.legal_name`; supplier sees buyer contacts only after payment; ledger journals always balance; invalid state transitions are rejected; wallet cannot go below minus its credit limit; maker cannot approve own request.
 - **Vitest (units):** price tier selection, fee calculation, Zod contracts, adapter mappers (YunExpress payload ↔ internal), webhook signature verification, PDF numbering.
 - **Playwright golden paths:**
   1. Visitor → Google/email signup → profile → KYC submit.
@@ -632,7 +641,7 @@ Done when: Playwright golden path 2 passes; PI PDF matches the Invoice artboard;
 ### P5 — Services, charges, wallet and payments
 
 ```
-Read docs/SPEC.md sections 4.2, 5 (Service request, Wallet), 6 (Services & fees, Money) and 7 (Payment, Bank). Build services and service_prices with /admin/services (Fees.png: edit price per service, add new services, effective dates). Build wallets with wallet_debit_for_service RPC (never negative, ConfirmCharge dialog first), top-ups through PaymentAdapter (test mode) and manual bank transfer matching, /account/wallet (Wallet.png), and /admin/wallet (WalletAdmin.png) with the wallet ON/OFF switch and price list. When wallet_enabled is false, services are paid by card/invoice. RFQ fee, sample, QC, certification, 3PL and dropship requests all use this path. Payment webhook Edge Function with signature check and idempotency.
+Read docs/SPEC.md sections 4.2, 5 (Service request, Wallet), 6 (Services & fees, Money) and 7 (Payment, Bank). Build services and service_prices with /admin/services (Fees.png: edit price per service, add new services, effective dates). Build wallets with wallet_debit_for_service RPC (never below minus the credit limit — see "Wallet credit facility" in section 6 — ConfirmCharge dialog first), top-ups through PaymentAdapter (test mode) and manual bank transfer matching, /account/wallet (Wallet.png), and /admin/wallet (WalletAdmin.png) with the wallet ON/OFF switch and price list. When wallet_enabled is false, services are paid by card/invoice. RFQ fee, sample, QC, certification, 3PL and dropship requests all use this path. Payment webhook Edge Function with signature check and idempotency.
 ```
 
 Done when: golden path 4 passes with wallet on and off; changing a price in Admin changes the next charge; payment webhook replay is ignored.
@@ -987,7 +996,7 @@ Added 1 Nov 2026. One deep review pass that walks every feature in the spec agai
 | **Functional** | Every role flow in §4 end to end; every state machine in §5 transitions in the right direction and refuses the wrong ones; every RPC in §9 is idempotent and runs in one transaction; every outbox event (§10) has a consumer and a retry path; scheduled jobs (§10.3) all fire |
 | **Data** | Row Level Security on every table (§6 and 12); `has_permission()` guards staff endpoints; `aal=aal2` enforced on staff tables (§17); ledger journals balance per currency (§15); no column named after one currency; no orphan rows, no unused foreign keys; soft-delete respected everywhere |
 | **Integrations** | Each adapter in §7 has sandbox + live modes, HMAC signature checks on every inbound webhook, 24-hour retry window, dead-letter queue surfaced in `/admin/integrations`, idempotency keys honoured, replay of a webhook event changes nothing |
-| **Money** | Deposit %, balance %, service prices, claim windows, quote validity, group-buy minimums all read from settings, never hard-coded; wallet never negative; maker–checker enforced (checker cannot be requester); refund paths exist for every failure branch; FX rate on each document is locked |
+| **Money** | Deposit %, balance %, service prices, claim windows, quote validity, group-buy minimums all read from settings, never hard-coded; wallet never below minus its credit limit (section 6, Wallet credit facility); maker–checker enforced (checker cannot be requester); refund paths exist for every failure branch; FX rate on each document is locked |
 | **UI vs design** | Every route in §8.3 renders the matching `docs/design/*.png` and matches the HTML snapshot (`docs/design/html/*.html`) in colour, spacing, font sizes and copy; portal sidebars collapse to a horizontal tab bar under 760 px; all CTAs reachable without horizontal scroll on a 360 px viewport; empty, loading and error states exist for every list |
 | **Copy and CMS** | No hard-coded prices, contacts or legal text in components; every string comes from CMS, `site_settings`, `service_prices`, `company_profile` or product data; T&C version id is written on every order and pledge |
 | **Accessibility** | WCAG 2.2 AA on every route: colour contrast ≥ 4.5:1, keyboard flow follows reading order, visible focus ring, labels on every input, status never by colour alone, tap targets ≥ 24 px, reduced-motion respected, lang attribute set, headings in order |
