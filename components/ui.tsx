@@ -36,7 +36,7 @@ const STATUS_TONE: Record<string, keyof typeof TONES> = {
 export function StatusBadge({ status, label, tone }: { status: string; label?: string; tone?: keyof typeof TONES }) {
   const t = tone ?? STATUS_TONE[status] ?? 'gray';
   return (
-    <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap', TONES[t])}>
+    <span className={cn('inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap', TONES[t])}>
       {label ?? humanize(status)}
     </span>
   );

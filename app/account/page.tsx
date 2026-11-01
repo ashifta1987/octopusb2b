@@ -138,7 +138,7 @@ export default async function AccountDashboard() {
             const sp = sup.get(q.supplier_id as string);
             return (
               <tr key={q.id}>
-                <td className="td mono text-sm">{q.rfq.code}</td>
+                <td className="td mono text-sm whitespace-nowrap">{q.rfq.code}</td>
                 <td className="td font-semibold">{q.rfq.title}</td>
                 <td className="td mono text-sm">{sp?.code ?? '—'} {sp?.country && <span className="text-[10px] font-semibold bg-surface border border-line rounded px-1 ml-1">{sp.country}</span>}</td>
                 <td className="td"><Money cents={Number(q.unit_price_cents)} currency={q.currency as string} /></td>
