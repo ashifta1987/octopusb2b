@@ -2,15 +2,30 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient as createJsClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { connection } from 'next/server';
+import { currentTraceId, TRACE_HEADER } from '@/lib/trace';
 
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+/**
+ * fetch that adds the request's trace id as `x-trace-id` (SPEC §21). Postgres reads it with `app_trace_id()` and the
+ * BEFORE INSERT triggers stamp it on status_history, journals, ledger_entries, outbox_events, audit_log, … The id is
+ * resolved per call, so one client created early still tags later writes made inside a `withTrace()` scope.
+ */
+const tracedFetch: typeof fetch = (input, init) => {
+  const id = currentTraceId();
+  if (!id) return fetch(input, init);
+  const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
+  if (!headers.has(TRACE_HEADER)) headers.set(TRACE_HEADER, id);
+  return fetch(input, { ...init, headers });
+};
 
 /** Per-request client with the user's cookie, so RLS applies (SPEC §9). */
 export async function createClient() {
   await connection(); // per-user data: always render at request time
   const cookieStore = await cookies();
   return createServerClient(URL, ANON, {
+    global: { fetch: tracedFetch },
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll: (list) => {
@@ -33,6 +48,6 @@ export function createPublicClient() {
 export function createAdminClient() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!key) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set');
-  return createJsClient(URL, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  return createJsClient(URL, key, { auth: { persistSession: false, autoRefreshToken: false }, global: { fetch: tracedFetch } });
 }
 

@@ -13,19 +13,46 @@ const STAFF_OPEN = ['/staff/login', '/staff/verify', '/staff/forgot', '/staff/se
 
 const under = (path: string, p: string) => path === p || path.startsWith(`${p}/`);
 
+/** Machine endpoints: no session refresh or redirects here, only the trace id (they authenticate themselves). */
+const MACHINE = ['/api/v1', '/api/webhooks', '/api/cron', '/api/health', '/api/supplier'];
+/** SPEC §21: every request carries a trace id; a valid incoming one (client follow-up fetch, partner retry) is kept. */
+const TRACE_HEADER = 'x-trace-id';
+const TRACE_RE = /^[A-Za-z0-9._:-]{8,64}$/;
+
+/** Mints (or keeps) the trace id and forwards it to the route as a request header. */
+function traceRequest(request: NextRequest) {
+  const incoming = request.headers.get(TRACE_HEADER);
+  const id = incoming && TRACE_RE.test(incoming) ? incoming : crypto.randomUUID();
+  request.headers.set(TRACE_HEADER, id);
+  return id;
+}
+
 /**
  * Refreshes the Supabase session cookie and does optimistic auth redirects (SPEC §9 "Auth & session", §17.3).
  * Real authorization happens in RLS (has_permission + aal2) and server code; this only routes users and
  * enforces the staff idle (30 min, unless "trust this computer") and maximum (12 h) session limits.
  */
 export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  const traceId = traceRequest(request);
+  const path = request.nextUrl.pathname;
+  if (MACHINE.some((p) => under(path, p))) {
+    const res = NextResponse.next({ request: { headers: request.headers } });
+    res.headers.set(TRACE_HEADER, traceId);
+    return res;
+  }
+  const res = await route(request);
+  res.headers.set(TRACE_HEADER, traceId);
+  return res;
+}
+
+async function route(request: NextRequest) {
+  let response = NextResponse.next({ request: { headers: request.headers } });
   const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll: (list) => {
         list.forEach(({ name, value }) => request.cookies.set(name, value));
-        response = NextResponse.next({ request });
+        response = NextResponse.next({ request: { headers: request.headers } });
         list.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
       },
     },
@@ -90,5 +117,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/v1|api/webhooks|api/cron|api/health|api/supplier|.*\\.(?:png|jpg|jpeg|svg|webp|ico)$).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|webp|ico)$).*)'],
 };
