@@ -498,3 +498,31 @@ export async function getPoolStartProduct(id: string): Promise<(PoolProduct & { 
     currency: ctx.currency, tiers, pool_minimum_pledge: data.pool_minimum_pledge as number | null, supplier: sup.get(data.supplier_id as string) ?? null,
   };
 }
+
+/* ───────── Home (Main.png redesign) ───────── */
+/** Category names each supplier actually lists live products in (for the "Verified suppliers" cards).
+ *  Reads live products through the anon client (supplier_id + category only — never supplier legal data). */
+export async function getSupplierCategories(supplierIds: string[], max = 3): Promise<Record<string, string[]>> {
+  'use cache';
+  cacheLife({ revalidate: 300 });
+  cacheTag('products', 'site-content');
+  const ids = [...new Set(supplierIds)].filter(Boolean);
+  if (!ids.length) return {};
+  const sb = createPublicClient();
+  const [{ data: rows }, { data: cats }] = await Promise.all([
+    sb.from('products').select('supplier_id, category_id').eq('status', 'live').is('archived_at', null).in('supplier_id', ids).limit(2000),
+    sb.from('categories').select('id, name').eq('active', true),
+  ]);
+  const names = new Map((cats ?? []).map((c) => [c.id as string, c.name as string]));
+  const tally = new Map<string, Map<string, number>>();
+  (rows ?? []).forEach((r) => {
+    const name = r.category_id ? names.get(r.category_id as string) : undefined;
+    if (!name) return;
+    const m = tally.get(r.supplier_id as string) ?? new Map<string, number>();
+    m.set(name, (m.get(name) ?? 0) + 1);
+    tally.set(r.supplier_id as string, m);
+  });
+  const out: Record<string, string[]> = {};
+  tally.forEach((m, id) => { out[id] = [...m.entries()].sort((a, b) => b[1] - a[1]).slice(0, max).map(([n]) => n); });
+  return out;
+}

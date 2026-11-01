@@ -4,11 +4,11 @@ import { listOpenPools } from '@/components/store/data';
 import { PoolCard } from './pool-card';
 import { poolSettings } from './shared';
 
-/** Main.png — "MOQ too big? Pool with other buyers" (4 open pools). Hidden when group buying is off or no pools are open. */
+/** Main.png — "MOQ too big? Pool with other buyers" (4 open pools). Hidden when group buying is off; empty state when no pool is open. */
 export async function HomePoolsSection() {
   const [{ settings }, { items }] = await Promise.all([getSiteContent(), listOpenPools({ sort: 'filled', limit: 4 })]);
   const rules = poolSettings(settings);
-  if (!rules.enabled || !items.length) return null;
+  if (!rules.enabled) return null;
   return (
     <section className="max-w-[1280px] mx-auto px-4 sm:px-8 pt-[72px]" aria-labelledby="home-pools-h">
       <span className="inline-flex rounded-full bg-[#FFF3D6] text-[#8A5A00] text-[11px] font-semibold px-2.5 py-1 uppercase tracking-wide">Group buying</span>
@@ -21,9 +21,16 @@ export async function HomePoolsSection() {
         </div>
         <Link href="/pools" className="font-semibold text-blue">See all open pools <span aria-hidden>→</span></Link>
       </div>
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {items.map((p) => <li key={p.id}><PoolCard pool={p} variant="compact" /></li>)}
-      </ul>
+      {items.length ? (
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {items.map((p) => <li key={p.id}><PoolCard pool={p} variant="compact" /></li>)}
+        </ul>
+      ) : (
+        <div className="card p-6 sm:p-8 flex flex-wrap items-center justify-between gap-4">
+          <p className="text-[15px] text-[#3B4556]">No pools are open right now. Start one on any product and share the MOQ with other buyers.</p>
+          <Link href="/pools#how" className="btn btn-dark min-h-11">How group buying works</Link>
+        </div>
+      )}
     </section>
   );
 }
