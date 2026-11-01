@@ -1864,6 +1864,8 @@ No ❌ cells remain. 🟡 cells and their owners: Google OAuth (1), YunExpress l
 | `3a9a29c` | cron-settled pools keep the group buy's trace id; buyers get the PI e-mail + notification on settle and the balance reminder (chain 6) |
 | `9610c14` | partial restore revalidates the storefront tags of restored catalogue/CMS tables (chain 8) |
 | `4049730` | drivers for chains 6–8, 11, 13–16 |
+| `467b62d` | run-all, production dispatcher check, report generator; robust clean-up (pledge↔order cycle, existing users); pool shipment confirm dialog |
+| `e8077b5` | E2E connection trace report — 1 Nov 2026 (SPEC §21) with chain results, logs and screenshots |
 
 Migrations `20261101000130`–`20261101000136` are applied to the live database (additive columns/tables/triggers/functions; `core_request_service`, `assign_account_manager` and `job_pools` redefined with their previous bodies plus the fix). The Vault secrets `octopus_app_url` / `octopus_cron_secret` were written by `scripts/cron-dispatcher-secrets.mjs` (the Lead rotated CRON_SECRET in .env.local, Vercel and Vault).
 
