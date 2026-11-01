@@ -79,7 +79,7 @@ export default async function OfficeQueues() {
           );
         })}
       </div>
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {visible.map((q) => (
           <Card key={q.key} title={q.title} action={<Link href={q.href} className="text-sm font-semibold text-blue">Open queue →</Link>}>
             {q.items.length === 0 ? <EmptyState title="Nothing waiting" body="This queue is clear." /> : (

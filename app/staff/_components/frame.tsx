@@ -45,7 +45,7 @@ export function StaffFrame({ step, children }: { step: 0 | 1 | 2 | null; childre
           <Suspense fallback={null}><CompanyName /></Suspense>
         </div>
       </aside>
-      <main className="flex-[1.3_1_520px] flex items-start justify-center px-4 sm:px-6 py-14">
+      <main className="flex-[1.3_1_520px] min-w-0 flex items-start justify-center px-4 sm:px-6 py-14">
         <div className="w-full max-w-[480px] flex flex-col gap-6">
           {step !== null && <StepBar step={step} />}
           {children}

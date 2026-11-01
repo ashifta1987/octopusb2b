@@ -111,9 +111,9 @@ export default async function LedgerPage({ searchParams }: { searchParams: Promi
               <div className="text-sm text-muted">{money(Number(quote.unit_price_cents), qCur)} per unit · {quote.incoterm}{quote.lead_time_days ? ` · ${quote.lead_time_days} days lead time` : ''}</div>
             </div>
             <div className="text-right"><div className="text-xs text-muted">Total</div><Money cents={qTotal} currency={qCur} className="text-xl" /><div className="text-xs text-muted">{settings.deposit_pct}% deposit {money(Math.round(qTotal * settings.deposit_pct / 100), qCur)}</div></div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <Link href="/account/rfqs" className="btn btn-ghost">View quotations</Link>
-              <ApproveQuoteButton quoteId={quote.id as string} quoteCode={quote.code as string} totalCents={qTotal} currency={qCur} depositPct={settings.deposit_pct} termsVersion={terms?.version} action={approveQuote} label="Approve quote and create proforma invoice" className="btn btn-primary" />
+              <ApproveQuoteButton quoteId={quote.id as string} quoteCode={quote.code as string} totalCents={qTotal} currency={qCur} depositPct={settings.deposit_pct} termsVersion={terms?.version} action={approveQuote} label="Approve quote and create proforma invoice" className="btn btn-primary whitespace-normal text-left leading-snug py-2.5 max-w-full" />
             </div>
           </div>
         </Card>
@@ -130,7 +130,7 @@ export default async function LedgerPage({ searchParams }: { searchParams: Promi
             {rows.length === 0 && !opening.receivable && !opening.wallet ? (
               <EmptyState title={`No ${cur} ledger entries for this period`} body="Entries appear when a proforma invoice is issued, a payment is matched or your wallet is used." />
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable table">
                 <table className="w-full border-collapse">
                   <caption className="sr-only">Ledger entries in {cur}</caption>
                   <thead><tr>{['Date', 'Journal', 'Description', 'Account', 'Currency', 'Debit', 'Credit', 'Balance'].map((h, i) => <th key={h} className={`th ${i >= 5 ? 'text-right' : ''}`}>{h}</th>)}</tr></thead>
