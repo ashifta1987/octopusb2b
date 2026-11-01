@@ -1,5 +1,6 @@
 import 'server-only';
 import OpenAI from 'openai';
+import { traceAdapter } from './traced';
 
 /**
  * Chat-with-tools adapter for Octo (SPEC §7 AiAdapter family, §20). OpenAI Chat Completions when OPENAI_API_KEY is set;
@@ -101,6 +102,8 @@ class MockChatAdapter implements ChatAdapter {
   }
 }
 
+/** Every model call is logged to integration_logs (trace id, request/response SHA only — no content) — SPEC §21.4 step 4. */
 export function getChatAdapter(): ChatAdapter {
-  return process.env.OPENAI_API_KEY ? new OpenAiChatAdapter() : new MockChatAdapter();
+  const a = process.env.OPENAI_API_KEY ? new OpenAiChatAdapter() : new MockChatAdapter();
+  return traceAdapter(a.mode === 'live' ? 'openai' : 'ai-mock', a, ['complete'], () => (a.mode === 'live' ? `https://api.openai.com/v1/chat/completions#${a.model}` : 'mock://chat'));
 }
