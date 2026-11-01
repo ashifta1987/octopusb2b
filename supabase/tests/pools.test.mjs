@@ -71,6 +71,8 @@ try {
   const s1 = (await one(`select settle_pool($1) v`, [pool])).v;
   const s2 = (await one(`select settle_pool($1) v`, [pool])).v;
   ok(s1.orders === 3 && s2.idempotent === true, 'settle_pool creates 3 PIs once and is idempotent');
+  const aud = await one(`select count(*)::int n from audit_log where entity='pools' and entity_id=$1 and action='pool.locked'`, [String(pool)]);
+  ok(aud.n === 1, `pool settle is in the audit log exactly once (${aud.n})`);
   const orders = (await db.query(`select o.*, pl.org_id pl_org from orders o join pool_pledges pl on pl.id=o.pool_pledge_id where o.pool_id=$1 order by o.created_at`, [pool])).rows;
   ok(orders.every((o) => Number(o.unit_price_cents) === Number(tiers[1].unit_price_cents) && Number(tiers[1].unit_price_cents) < Number(tiers[0].unit_price_cents)),
      `each buyer's PI is at the lower tier price (${tiers[1].unit_price_cents}¢ vs ${tiers[0].unit_price_cents}¢)`);
