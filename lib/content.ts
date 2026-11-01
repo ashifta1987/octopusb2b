@@ -31,8 +31,14 @@ export async function getSiteContent() {
 export type Company = {
   legal_name: string; brand: string | null; tagline: string | null; address: string | null; address_cn: string | null;
   contact_person: string | null; phone: string | null; whatsapp: string | null; email: string | null; website: string | null;
+  legal_name_cn?: string | null; registered_in?: string | null; governing_law?: string | null;
 };
-export type Branch = { id: string; name: string; city: string | null; country: string | null; address: string | null; phone: string | null; email: string | null };
+export type Branch = {
+  id: string; name: string; city: string | null; country: string | null; address: string | null; phone: string | null; email: string | null;
+  // About page office card (migration 142)
+  city_local?: string | null; province?: string | null; badge?: string | null; is_hq?: boolean; tagline?: string | null;
+  specialities?: string[] | null; description?: string | null; hours?: string | null; tone?: string | null;
+};
 export type Category = { id: string; name: string; slug: string; level: number; parent_id: string | null; hs_code: string | null; sort: number };
 
 export function block(blocks: Record<string, string>, key: string, fallback = '') {

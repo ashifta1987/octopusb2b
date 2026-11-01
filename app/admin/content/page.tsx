@@ -323,11 +323,12 @@ async function CompanyTab({ editable }: { editable: boolean }) {
   const fields: [string, string, boolean?][] = [
     ['legal_name', 'Legal name'], ['brand', 'Brand'], ['tagline', 'Tagline'], ['contact_person', 'Contact person'],
     ['phone', 'Phone'], ['whatsapp', 'WhatsApp'], ['email', 'Email'], ['website', 'Website'], ['address', 'Address', true], ['address_cn', 'Address (Chinese)', true],
+    ['legal_name_cn', 'Legal name (Chinese)'], ['registered_in', 'Registered in'], ['governing_law', 'T&C governed by'],
   ];
   const countries = Object.entries(COUNTRY_NAMES).sort((a, b) => a[1].localeCompare(b[1]));
   return (
     <div className="grid gap-6">
-      <Card title="Company details" action={<span className="text-sm text-muted">Shown in the footer, contact page and every document</span>}>
+      <Card title="Company details" action={<span className="text-sm text-muted">Shown in the footer, About and Contact pages and every document</span>}>
         <ActionForm action={saveCompany} className="px-6 pb-6 grid gap-4 sm:grid-cols-2" submitLabel="Save company details" hideSubmit={!editable}>
           {fields.map(([k, label, wide]) => (
             <Field key={k} label={label} htmlFor={`co-${k}`} className={wide ? 'sm:col-span-2' : undefined}>
@@ -387,6 +388,28 @@ function BranchFields({ b, editable, countries, prefix }: { b: Record<string, un
         <Field label="Sort" htmlFor={`${prefix}-sort`}><input id={`${prefix}-sort`} name="sort" type="number" className="input" defaultValue={v('sort')} disabled={!editable} /></Field>
         <label className="flex items-center gap-2 pb-3 text-sm"><input type="checkbox" name="active" defaultChecked={b.active !== false} disabled={!editable} /> Active</label>
       </div>
+      <details className="sm:col-span-3 rounded-lg border border-line px-4 py-3">
+        <summary className="cursor-pointer text-sm font-semibold">About page card</summary>
+        <div className="grid gap-3 sm:grid-cols-3 mt-3">
+          <Field label="City (local script)" htmlFor={`${prefix}-city_local`}><input id={`${prefix}-city_local`} name="city_local" className="input" defaultValue={v('city_local')} disabled={!editable} lang="zh-CN" /></Field>
+          <Field label="Province" htmlFor={`${prefix}-province`}><input id={`${prefix}-province`} name="province" className="input" defaultValue={v('province')} disabled={!editable} /></Field>
+          <Field label="Badge" htmlFor={`${prefix}-badge`}><input id={`${prefix}-badge`} name="badge" className="input" defaultValue={v('badge')} placeholder="Sourcing office" disabled={!editable} /></Field>
+          <Field label="Tagline" htmlFor={`${prefix}-tagline`} className="sm:col-span-2"><input id={`${prefix}-tagline`} name="tagline" className="input" defaultValue={v('tagline')} disabled={!editable} /></Field>
+          <Field label="Opening hours" htmlFor={`${prefix}-hours`}><input id={`${prefix}-hours`} name="hours" className="input" defaultValue={v('hours')} placeholder="Mon–Sat 09:00–18:30 CST" disabled={!editable} /></Field>
+          <Field label="Specialities (comma-separated)" htmlFor={`${prefix}-specialities`} className="sm:col-span-2">
+            <input id={`${prefix}-specialities`} name="specialities" className="input" defaultValue={Array.isArray(b.specialities) ? (b.specialities as string[]).join(', ') : ''} disabled={!editable} />
+          </Field>
+          <Field label="Chip colour" htmlFor={`${prefix}-tone`}>
+            <select id={`${prefix}-tone`} name="tone" className="input" defaultValue={v('tone') || 'blue'} disabled={!editable}>
+              {['blue', 'rose', 'cyan', 'pink', 'amber', 'green', 'purple'].map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+          </Field>
+          <Field label="Description" htmlFor={`${prefix}-description`} className="sm:col-span-3">
+            <textarea id={`${prefix}-description`} name="description" className="input py-2 min-h-20" defaultValue={v('description')} disabled={!editable} />
+          </Field>
+          <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="is_hq" defaultChecked={b.is_hq === true} disabled={!editable} /> Headquarters</label>
+        </div>
+      </details>
     </>
   );
 }

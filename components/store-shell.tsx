@@ -121,15 +121,14 @@ export async function StoreFooter() {
               {company.email && <a href={`mailto:${company.email}`} className="font-semibold text-white">{company.email}</a>}
             </address>
           )}
-          {branches.length > 1 && <div className="text-[13px]">Branches: {branches.map((b) => b.city).join(' · ')}</div>}
         </div>
         <FooterCol title="Marketplace" links={[['/products', 'Products'], ['/products', 'Categories'], ['/request/sourcing', 'Request Center'], ['/signup', 'Register as a buyer'], ['/login', 'Sign in']]} />
         <FooterCol title="Group buy" links={[['/pools', 'Open pools'], ['/pools#how', 'Start a pool'], ['/pools/terms', 'Group Buy Terms'], ['/account/pools', 'My pledges']]} />
         <FooterCol title="Suppliers" links={[['/contact', 'Sell on Octopus B2B'], ['/about', 'Verification'], ['/login', 'Supplier login']]} />
-        <FooterCol title="Company" links={[['/about', 'About us'], ['/contact', 'Contact'], ['/legal/privacy', 'Privacy policy'], ['/legal/terms', 'Terms of service']]} />
+        <FooterCol title="Company" links={[['/about', 'About us'], ...(branches.length ? [['/about#offices', branches.length > 1 ? 'Our China offices' : 'Our office'] as [string, string]] : []), ['/contact', 'Contact'], ['/legal/privacy', 'Privacy policy'], ['/legal/terms', 'Terms of service']]} />
       </div>
       <div className="border-t border-white/10">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-5 text-[13px]">© 2026 {company?.brand ?? 'Octopus B2B'} · {company?.legal_name}. All rights reserved. · <Link href="/staff/login" className="text-[#C5CEDB] underline underline-offset-2 hover:text-white">Staff login</Link></div>
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-5 text-[13px]">© 2026 {company?.brand ?? 'Octopus B2B'} · {company?.legal_name}. All rights reserved.{branches.length > 1 && <> · {branches.map((b) => b.city ?? b.name).join(' · ')}</>} · <Link href="/staff/login" className="text-[#C5CEDB] underline underline-offset-2 hover:text-white">Staff login</Link></div>
       </div>
     </footer>
   );

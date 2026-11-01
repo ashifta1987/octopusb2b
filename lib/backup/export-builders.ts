@@ -229,7 +229,7 @@ export function buildCms(blocks: Row[], pages: Row[], terms: Row[], company: Row
     sheet('cms', 'pages', pages.map((p) => ({ slug: p.slug, title: p.title, status: p.status, is_legal: p.is_legal, body: p.body, published_at: p.published_at, updated_at: p.updated_at }))),
     sheet('cms', 'terms_versions', terms.map((t) => ({ version: t.version, status: t.status, sections: t.sections, publish_at: t.publish_at, published_at: t.published_at, created_at: t.created_at }))),
     sheet('cms', 'company', company.map((c) => ({ ...c }))),
-    sheet('cms', 'branches', branches.map((b) => ({ name: b.name, city: b.city, country: b.country, address: b.address, phone: b.phone, email: b.email, sort: b.sort, active: b.active }))),
+    sheet('cms', 'branches', branches.map((b) => ({ name: b.name, city: b.city, country: b.country, address: b.address, phone: b.phone, email: b.email, sort: b.sort, active: b.active, city_local: b.city_local, province: b.province, badge: b.badge, is_hq: b.is_hq, tagline: b.tagline, specialities: Array.isArray(b.specialities) ? (b.specialities as string[]).join(', ') : b.specialities, description: b.description, hours: b.hours }))),
   ];
 }
 

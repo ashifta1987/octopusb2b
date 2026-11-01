@@ -198,12 +198,15 @@ const Company = z.object({
   whatsapp: z.string().trim().max(40).optional(),
   email: z.string().trim().email().optional().or(z.literal('')),
   website: z.string().trim().max(120).optional(),
+  legal_name_cn: z.string().trim().max(200).optional(),
+  registered_in: z.string().trim().max(200).optional(),
+  governing_law: z.string().trim().max(200).optional(),
 });
 
 export async function saveCompany(_prev: Result | null, fd: FormData): Promise<Result> {
   const g = await guard('content', 'edit');
   if ('error' in g) return g.error;
-  const raw = Object.fromEntries(['legal_name', 'brand', 'tagline', 'address', 'address_cn', 'contact_person', 'phone', 'whatsapp', 'email', 'website'].map((k) => [k, str(fd, k)]));
+  const raw = Object.fromEntries(['legal_name', 'brand', 'tagline', 'address', 'address_cn', 'contact_person', 'phone', 'whatsapp', 'email', 'website', 'legal_name_cn', 'registered_in', 'governing_law'].map((k) => [k, str(fd, k)]));
   const p = Company.safeParse(raw);
   if (!p.success) return fail(p.error.issues[0]?.path.join('.') + ': ' + p.error.issues[0]?.message);
   const clean = Object.fromEntries(Object.entries(p.data).map(([k, v]) => [k, v === '' ? null : v]));
@@ -211,9 +214,11 @@ export async function saveCompany(_prev: Result | null, fd: FormData): Promise<R
   if (error) return fail(error);
   if (!data?.length) return fail('FORBIDDEN');
   await snapshot(g.sb, 'company_profile', '1', clean, g.s.userId);
-  refresh(['/', '/contact']);
+  refresh(['/', '/contact', '/about']);
   return ok('Company details saved');
 }
+
+const BRANCH_TONES = ['blue', 'rose', 'cyan', 'pink', 'amber', 'green', 'purple'] as const;
 
 export async function saveBranch(_prev: Result | null, fd: FormData): Promise<Result> {
   const g = await guard('content', 'edit');
@@ -222,13 +227,18 @@ export async function saveBranch(_prev: Result | null, fd: FormData): Promise<Re
   const row = {
     name: str(fd, 'name'), city: str(fd, 'city') || null, country: str(fd, 'country') || null, address: str(fd, 'address') || null,
     phone: str(fd, 'phone') || null, email: str(fd, 'email') || null, sort: Number(str(fd, 'sort') || 0), active: bool(fd, 'active'),
+    // About page office card
+    city_local: str(fd, 'city_local') || null, province: str(fd, 'province') || null, badge: str(fd, 'badge') || null,
+    is_hq: bool(fd, 'is_hq'), tagline: str(fd, 'tagline') || null, description: str(fd, 'description') || null, hours: str(fd, 'hours') || null,
+    specialities: str(fd, 'specialities').split(',').map((x) => x.trim()).filter(Boolean).slice(0, 12),
+    tone: BRANCH_TONES.includes(str(fd, 'tone') as (typeof BRANCH_TONES)[number]) ? str(fd, 'tone') : 'blue',
   };
   if (row.name.length < 2) return fail('Branch name is required.');
   const q = id ? g.sb.from('branches').update(row).eq('id', id).select('id') : g.sb.from('branches').insert(row).select('id');
   const { data, error } = await q;
   if (error) return fail(error);
   if (!data?.length) return fail('FORBIDDEN');
-  refresh(['/contact']);
+  refresh(['/contact', '/about']);
   return ok(id ? 'Branch saved' : 'Branch added');
 }
 
@@ -238,6 +248,6 @@ export async function deleteBranch(id: string): Promise<Result> {
   const { data, error } = await g.sb.from('branches').delete().eq('id', id).select('id');
   if (error) return fail(error);
   if (!data?.length) return fail('FORBIDDEN');
-  refresh(['/contact']);
+  refresh(['/contact', '/about']);
   return ok('Branch deleted');
 }

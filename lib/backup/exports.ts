@@ -98,7 +98,7 @@ export async function buildModule(sb: Sb, m: ExportModule, range: Range): Promis
         await fetchAll(sb, 'pages', 'slug, title, body, status, is_legal, published_at, updated_at', undefined, 'slug'),
         await fetchAll(sb, 'terms_versions', 'version, status, sections, publish_at, published_at, created_at'),
         await fetchAll(sb, 'company_profile', 'legal_name, brand, tagline, address, address_cn, contact_person, phone, whatsapp, email, website, updated_at', undefined, 'updated_at'),
-        await fetchAll(sb, 'branches', 'name, city, country, address, phone, email, sort, active', undefined, 'sort'),
+        await fetchAll(sb, 'branches', 'name, city, country, address, phone, email, sort, active, city_local, province, badge, is_hq, tagline, specialities, description, hours', undefined, 'sort'),
       );
   }
 }
