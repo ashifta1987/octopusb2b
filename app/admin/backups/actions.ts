@@ -145,5 +145,12 @@ export async function restoreRecords(table: string, ids: string[], reason: strin
   const { data, error } = await g.sb.rpc('restore_records', { p_table: table, p_ids: ids, p_reason: reason.trim() });
   if (error) return bad(error);
   revalidatePath(`${PAGE}/recovery`);
+  // SPEC §16.3 / §21.1 #8: restored catalogue or CMS rows must reappear on the storefront without waiting for ISR
+  const STOREFRONT_TAGS: Record<string, string[]> = {
+    products: ['products'], product_variants: ['products'], price_tiers: ['products'], product_media: ['products'], product_specs: ['products'],
+    categories: ['products', 'site-content'], suppliers: ['suppliers', 'products'], pages: ['site-content'], page_sections: ['site-content'],
+    content_blocks: ['site-content'], company_profile: ['site-content'], branches: ['site-content'], banners: ['site-content'],
+  };
+  for (const tag of STOREFRONT_TAGS[table] ?? []) revalidateTag(tag, 'max');
   return { ok: true, count: (data as number) ?? 0 };
 }
