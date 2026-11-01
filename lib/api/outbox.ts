@@ -2,7 +2,8 @@ import 'server-only';
 import { getEmail } from '@/lib/adapters';
 import { getMaintenance } from '@/lib/backup/maintenance';
 import type { createAdminClient } from '@/lib/supabase/server';
-import { notificationFor, retryPlan, wantsEmail, type OutboxEvent } from './outbox-rules';
+import { currentTraceId, traceLog, withTrace } from '@/lib/trace';
+import { MAX_ATTEMPTS, notificationFor, retryPlan, wantsEmail, type OutboxEvent } from './outbox-rules';
 import { amt, amt0, cur } from './money';
 import { deliverWebhook, isBroadcastEvent, publicEventFor, type Endpoint } from './webhooks';
 
@@ -28,49 +29,104 @@ export async function processOutbox(sb: Sb, limit = 50) {
   const env = await loadEnv(sb);
 
   for (const ev of list) {
-    const failures: string[] = [];
-    const run = async (consumer: string, fn: () => Promise<void>) => {
-      if (doneRuns.has(`${ev.id}|${consumer}`)) return;
-      const t0 = Date.now();
-      try {
-        await fn();
-        const { error: e } = await sb.from('job_runs').insert({ event_id: ev.id, consumer, outcome: 'ok', duration_ms: Date.now() - t0 });
-        if (e && e.code !== '23505') throw new Error(e.message);
-        doneRuns.add(`${ev.id}|${consumer}`);
-      } catch (e) {
-        failures.push(`${consumer}: ${e instanceof Error ? e.message : String(e)}`);
-      }
-    };
-
-    const orgId = typeof ev.payload?.org_id === 'string' ? (ev.payload.org_id as string) : null;
-    if (orgId) {
-      await run('notify', () => notify(sb, ev, orgId));
-      if (wantsEmail(ev)) await run('email', () => email(sb, ev, orgId, env));
-      const pub = publicEventFor(ev.event_type);
-      if (pub) await run('webhooks_out', () => webhooksOut(sb, ev, orgId, pub, doneRuns));
-    } else {
-      // platform-wide events (settings.currency_changed): deliver to every org's subscribed endpoints
-      const pub = publicEventFor(ev.event_type);
-      if (pub && isBroadcastEvent(pub)) await run('webhooks_out', () => webhooksOut(sb, ev, null, pub, doneRuns));
-    }
-
-    if (!failures.length) {
-      await sb.from('outbox_events').update({ status: 'done', last_error: null }).eq('id', ev.id);
-      summary.done++;
-    } else {
-      const plan = retryPlan(ev.attempts);
-      await sb
-        .from('outbox_events')
-        .update({ status: plan.status, attempts: plan.attempts, available_at: plan.availableAt, last_error: failures.join(' | ').slice(0, 2000) })
-        .eq('id', ev.id);
-      if (plan.status === 'dead') {
-        summary.dead++;
-        console.error('[outbox] dead letter', ev.id, ev.event_type, failures);
-      } else summary.retried++;
-      summary.errors.push(`${ev.event_type} ${ev.id}: ${failures.join(' | ')}`);
-    }
+    // SPEC §21: the event's trace id travels into everything this event causes (job_runs, notifications,
+    // email_deliveries, webhook_deliveries, integration_logs) and onto outbound calls as x-octopus-trace
+    await withTrace(ev.trace_id ?? currentTraceId(), () => processEvent(sb, ev, doneRuns, env, summary));
   }
   return summary;
+}
+
+async function processEvent(
+  sb: Sb,
+  ev: OutboxEvent,
+  doneRuns: Set<string>,
+  env: Awaited<ReturnType<typeof loadEnv>>,
+  summary: { claimed: number; done: number; retried: number; dead: number; errors: string[]; paused: boolean },
+) {
+  const failures: string[] = [];
+  traceLog('info', 'outbox_pickup', { event_id: ev.id, event_type: ev.event_type, attempt: ev.attempts + 1, queued_ms: ev.created_at ? Date.now() - Date.parse(ev.created_at) : null });
+  const run = async (consumer: string, fn: () => Promise<void | 'skipped'>) => {
+    if (doneRuns.has(`${ev.id}|${consumer}`)) {
+      // SPEC §10.2: redelivery of an event is a no-op per consumer — recorded so a replay is provable (SPEC §21)
+      await sb.from('idempotency_hits').insert({ scope: `outbox:${consumer}`, key: ev.id, original_trace_id: ev.trace_id ?? null, detail: { event_type: ev.event_type, attempt: ev.attempts + 1 } });
+      return;
+    }
+    const t0 = Date.now();
+    try {
+      const r = await fn();
+      const { error: e } = await sb.from('job_runs').insert({ event_id: ev.id, consumer, outcome: r === 'skipped' ? 'skipped' : 'ok', duration_ms: Date.now() - t0 });
+      if (e && e.code !== '23505') throw new Error(e.message);
+      doneRuns.add(`${ev.id}|${consumer}`);
+    } catch (e) {
+      failures.push(`${consumer}: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  const orgId = typeof ev.payload?.org_id === 'string' ? (ev.payload.org_id as string) : null;
+  // the organization may have been deleted after the event was written (e.g. a removed test org): nothing to deliver,
+  // so every consumer is recorded as skipped instead of failing into the dead-letter queue
+  const orgGone = orgId ? !(await sb.from('organizations').select('id').eq('id', orgId).maybeSingle()).data : false;
+  if (orgId && orgGone) {
+    traceLog('warn', 'outbox_org_missing', { event_id: ev.id, event_type: ev.event_type, org_id: orgId });
+    await run('notify', async () => 'skipped');
+  } else if (orgId) {
+    await run('notify', () => notify(sb, ev, orgId));
+    if (wantsEmail(ev)) await run('email', () => email(sb, ev, orgId, env));
+    const pub = publicEventFor(ev.event_type);
+    if (pub) await run('webhooks_out', () => webhooksOut(sb, ev, orgId, pub, doneRuns));
+  } else {
+    // platform-wide events (settings.currency_changed): deliver to every org's subscribed endpoints
+    const pub = publicEventFor(ev.event_type);
+    if (pub && isBroadcastEvent(pub)) await run('webhooks_out', () => webhooksOut(sb, ev, null, pub, doneRuns));
+  }
+
+  if (!failures.length) {
+    await sb.from('outbox_events').update({ status: 'done', last_error: null }).eq('id', ev.id);
+    summary.done++;
+  } else {
+    const plan = retryPlan(ev.attempts);
+    await sb
+      .from('outbox_events')
+      .update({ status: plan.status, attempts: plan.attempts, available_at: plan.availableAt, last_error: failures.join(' | ').slice(0, 2000) })
+      .eq('id', ev.id);
+    if (plan.status === 'dead') {
+      summary.dead++;
+      traceLog('error', 'outbox_dead_letter', { event_id: ev.id, event_type: ev.event_type, failures });
+      await alertDeadLetter(sb, ev, failures);
+    } else {
+      summary.retried++;
+      traceLog('warn', 'outbox_retry', { event_id: ev.id, event_type: ev.event_type, attempts: plan.attempts, next_at: plan.availableAt, failures });
+    }
+    summary.errors.push(`${ev.event_type} ${ev.id}: ${failures.join(' | ')}`);
+  }
+}
+
+/**
+ * SPEC §10.2 "alert on dead letters": every admin gets an in-app notification linking to Admin → Integrations →
+ * Failed jobs, and integration_logs gets an 'outbox' row with the trace id. (Sentry is not configured — SC/IN-02.)
+ */
+async function alertDeadLetter(sb: Sb, ev: OutboxEvent, failures: string[]) {
+  try {
+    const { data: admins } = await sb.from('user_roles').select('user_id').eq('role_code', 'admin');
+    const rows = [...new Set((admins ?? []).map((a) => a.user_id as string))].map((user_id) => ({
+      user_id,
+      title: 'Outbox job failed permanently',
+      body: `${ev.event_type} moved to Failed jobs after ${MAX_ATTEMPTS} retries.`,
+      link: '/admin/integrations',
+      trace_id: ev.trace_id ?? currentTraceId(),
+    }));
+    if (rows.length) await sb.from('notifications').insert(rows);
+    await sb.from('integration_logs').insert({
+      integration_code: 'outbox',
+      direction: 'out',
+      status: 500,
+      summary: `dead letter ${ev.event_type} ${ev.id}: ${failures.join(' | ')}`.slice(0, 500),
+      endpoint: 'outbox://dead-letter',
+      event_id: ev.id,
+    });
+  } catch (e) {
+    traceLog('error', 'outbox_dead_letter_alert_failed', { event_id: ev.id, error: e instanceof Error ? e.message : String(e) });
+  }
 }
 
 async function loadEnv(sb: Sb) {
@@ -81,7 +137,7 @@ async function loadEnv(sb: Sb) {
 async function notify(sb: Sb, ev: OutboxEvent, orgId: string) {
   const n = notificationFor(ev);
   if (!n) return;
-  const { error } = await sb.from('notifications').insert({ org_id: orgId, title: n.title, body: n.body, link: n.link });
+  const { error } = await sb.from('notifications').insert({ org_id: orgId, title: n.title, body: n.body, link: n.link, trace_id: ev.trace_id ?? currentTraceId() });
   if (error) throw new Error(error.message);
 }
 
@@ -116,7 +172,7 @@ async function email(sb: Sb, ev: OutboxEvent, orgId: string, env: Awaited<Return
   <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>
   <p style="font-size:12px;color:#6b7280">${esc(brand)}${env.company?.address ? ` · ${esc(env.company.address)}` : ''}${env.company?.email ? ` · ${esc(env.company.email)}` : ''}</p>
 </div>`;
-    await mailer.send({ to: r.email!, subject, html });
+    await mailer.send({ to: r.email!, subject, html }, { template: tpl ? ev.event_type : `default:${ev.event_type}`, eventId: ev.id });
   }
 }
 

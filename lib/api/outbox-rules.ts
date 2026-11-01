@@ -17,6 +17,9 @@ export type OutboxEvent = {
   aggregate_id: string | null;
   payload: Record<string, unknown>;
   attempts: number;
+  /** SPEC §21: trace id of the request that wrote the event (stamped by trigger). */
+  trace_id?: string | null;
+  created_at?: string;
 };
 
 const EMAIL_EVENTS = new Set(['quote.sent', 'quote.approved', 'payment.confirmed']);

@@ -2,6 +2,7 @@ import 'server-only';
 import crypto from 'node:crypto';
 import { signPayload } from '@/lib/adapters';
 import type { createAdminClient } from '@/lib/supabase/server';
+import { currentTraceId, OUTBOUND_TRACE_HEADER } from '@/lib/trace';
 
 type Sb = ReturnType<typeof createAdminClient>;
 export type Endpoint = { id: string; org_id: string; url: string; secret: string; events: string[]; active: boolean };
@@ -63,6 +64,7 @@ export async function deliverWebhook(
           'Octopus-Signature': signPayload(body, ep.secret),
           'Octopus-Event': type,
           'Octopus-Delivery': eventId,
+          ...(currentTraceId() ? { [OUTBOUND_TRACE_HEADER]: currentTraceId()! } : {}),
         },
         body,
         redirect: 'manual',
@@ -83,6 +85,7 @@ export async function deliverWebhook(
     response_status: status || null,
     attempts: opts.attempt ?? 1,
     delivered_at: ok ? new Date().toISOString() : null,
+    trace_id: currentTraceId(),
   });
   return { ok, status, error, eventId };
 }
