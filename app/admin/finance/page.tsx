@@ -300,7 +300,7 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
           {(journals.data ?? []).length === 0 ? <EmptyState title="No journals yet" /> : (
             <ul className="px-6 pb-5">
               {(journals.data ?? []).map((j) => (
-                <li key={j.id} className="grid grid-cols-[110px_120px_1fr_auto] gap-3 py-2.5 border-b border-line last:border-0 text-sm">
+                <li key={j.id} className="grid grid-cols-[1fr_auto] sm:grid-cols-[110px_120px_1fr_auto] gap-x-3 gap-y-1 py-2.5 border-b border-line last:border-0 text-sm [overflow-wrap:anywhere]">
                   <span className="mono text-xs text-muted">{fmtDate(j.created_at, true)}</span>
                   <span className="font-semibold truncate">{j.created_by ? who.get(j.created_by) ?? 'Staff' : 'System'}</span>
                   <span>{j.memo} <span className="mono text-xs text-muted">{j.number}{j.stream ? ` · ${j.stream}` : ''}</span></span>

@@ -223,7 +223,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
         {activity.length === 0 ? <EmptyState title="No activity yet" /> : (
           <ul className="px-6 pb-5">
             {activity.map((a) => (
-              <li key={a.key} className="grid grid-cols-[130px_160px_1fr] gap-4 py-3 border-b border-line last:border-0 text-[15px]">
+              <li key={a.key} className="grid grid-cols-1 sm:grid-cols-[130px_160px_1fr] gap-x-4 gap-y-1 py-3 border-b border-line last:border-0 text-[15px] [overflow-wrap:anywhere]">
                 <span className="mono text-xs text-muted pt-0.5">{fmtDate(a.at, true)}</span>
                 <span className="font-semibold truncate">{a.who}</span>
                 <span className="text-muted">{a.what}</span>
