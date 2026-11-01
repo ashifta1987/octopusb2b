@@ -223,7 +223,7 @@ function BuyersTable({ pool: p, me }: { pool: PoolDetail; me?: { code: string; c
   if (!rows.length) return <p className="px-6 pb-6 text-sm text-muted">No buyers yet — be the first to pledge.</p>;
   const paid = (r: PoolParticipant) => r.status !== 'pending';
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable table">
       <table className="w-full border-collapse">
         <thead><tr>{['Buyer', 'Country', 'Pledged', 'Deposit', 'Joined'].map((h) => <th key={h} className="th">{h}</th>)}</tr></thead>
         <tbody>

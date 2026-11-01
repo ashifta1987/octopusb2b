@@ -121,7 +121,7 @@ export default async function SupportPage({ searchParams }: { searchParams: Prom
         {tickets.length === 0 ? (
           <EmptyState title="No tickets yet" body="Complaints, questions and feedback you send will appear here with our replies." />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable table">
             <table className="w-full border-collapse">
               <thead>
                 <tr>

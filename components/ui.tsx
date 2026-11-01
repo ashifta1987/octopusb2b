@@ -157,7 +157,7 @@ export function OrderProgress({ status }: { status: string }) {
 export function Table({ head, children, empty }: { head: React.ReactNode[]; children: React.ReactNode; empty?: React.ReactNode }) {
   const hasRows = Array.isArray(children) ? children.flat().filter(Boolean).length > 0 : !!children;
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable table">
       <table className="w-full border-collapse">
         <thead><tr>{head.map((h, i) => <th key={i} className="th">{h}</th>)}</tr></thead>
         <tbody>{hasRows ? children : <tr><td colSpan={head.length}>{empty ?? <EmptyState title="Nothing here yet" />}</td></tr>}</tbody>

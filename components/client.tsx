@@ -62,10 +62,11 @@ export function FileDrop({ name, accept, multiple, hint, onFiles }: { name?: str
       onDragOver={(e) => { e.preventDefault(); setOver(true); }}
       onDragLeave={() => setOver(false)}
       onDrop={(e) => { e.preventDefault(); setOver(false); if (ref.current) { ref.current.files = e.dataTransfer.files; } set(e.dataTransfer.files); }}
-      className={cn('rounded-[10px] border-2 border-dashed px-4 py-6 text-center cursor-pointer', over ? 'border-blue bg-blue-soft' : 'border-line-2 bg-surface')}
+      className={cn('rounded-[10px] border-2 border-dashed px-4 py-6 text-center cursor-pointer focus-within:ring-2 focus-within:ring-blue focus-within:ring-offset-2', over ? 'border-blue bg-blue-soft' : 'border-line-2 bg-surface')}
       onClick={() => ref.current?.click()}
     >
-      <input ref={ref} type="file" name={name} accept={accept} multiple={multiple} className="sr-only" onChange={(e) => set(e.target.files)} />
+      {/* The visually hidden input stays keyboard-focusable; the zone shows the focus ring (SPEC §12 keyboard + labels). */}
+      <input ref={ref} type="file" name={name} accept={accept} multiple={multiple} className="sr-only" aria-label={hint ? `Choose files (${hint})` : 'Choose files'} onClick={(e) => e.stopPropagation()} onChange={(e) => set(e.target.files)} />
       <div className="font-semibold text-sm">{files.length ? files.map((f) => f.name).join(', ') : 'Drop files here or click to browse'}</div>
       {hint && <div className="text-xs text-muted mt-1">{hint}</div>}
     </div>

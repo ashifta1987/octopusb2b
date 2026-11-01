@@ -71,7 +71,7 @@ export default async function DistributorHome() {
         {suppliers.length === 0 ? (
           <EmptyState title="No suppliers assigned yet" body="Ask an Admin to assign suppliers to you in Admin › Staff & roles." />
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable table">
             <table className="w-full border-collapse">
               <thead>
                 <tr>

@@ -108,7 +108,7 @@ export function BackupsTable({ backups, filter, names, canDownload, canRestore }
       {rows.length === 0 ? (
         <EmptyState title={filter === 'all' ? 'No backups yet' : 'No backups match this filter'} body={filter === 'all' ? 'The nightly backup runs at 02:00 China time once the backup workflow is set up. You can also press “Back up now”.' : undefined} />
       ) : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable table">
           <table className="w-full min-w-[960px] border-collapse">
             <thead>
               <tr>{['Backup', 'Time (China)', 'Type', 'Includes', 'Size', 'Status', ''].map((h, i) => <th key={i} className="th">{h || <span className="sr-only">Actions</span>}</th>)}</tr>
@@ -307,7 +307,7 @@ export function RestoreList({ requests, backups, names, selected }: { requests: 
   return (
     <Card title="Restore requests" className="mb-6">
       {requests.length === 0 ? <EmptyState title="No restore requests yet" body="Requests, their verification results and reports are listed here." /> : (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable table">
           <table className="w-full min-w-[760px] border-collapse">
             <thead><tr>{['Request', 'Backup', 'Type', 'Requested', 'Status', ''].map((h, i) => <th key={i} className="th">{h || <span className="sr-only">Open</span>}</th>)}</tr></thead>
             <tbody>

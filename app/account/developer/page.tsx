@@ -194,8 +194,8 @@ export default async function DeveloperPage({ searchParams }: { searchParams: Pr
               <div className="flex justify-between"><dt className="text-muted">Active apps</dt><dd className="mono font-semibold">{activeApps.length}</dd></div>
               <div className="flex justify-between"><dt className="text-muted">Active secrets</dt><dd className="mono font-semibold">{keys.filter((k) => !k.revoked_at).length}</dd></div>
               <div className="flex justify-between"><dt className="text-muted">Last API call</dt><dd className="mono text-sm">{lastUsed ? fmtDate(lastUsed, true) : 'Never'}</dd></div>
-              <p className="pt-2 text-sm text-muted">Rate limit: 60 requests per minute per key. Access tokens are valid for 1 hour.</p>
             </dl>
+            <p className="px-6 pb-6 -mt-4 text-sm text-muted">Rate limit: 60 requests per minute per key. Access tokens are valid for 1 hour.</p>
           </Card>
         </div>
       </div>
@@ -204,12 +204,12 @@ export default async function DeveloperPage({ searchParams }: { searchParams: Pr
       <Card title="Quick start" className="mt-6">
         <div className="px-6 pb-6 space-y-4">
           <p className="text-[15px]">1. Get an access token (valid 1 hour)</p>
-          <pre className="m-0 bg-navy text-[#E4E8EE] rounded-[12px] p-[18px] mono text-[13px] leading-[1.7] overflow-x-auto whitespace-pre">{`curl -X POST ${base}/oauth/token \\
+          <pre tabIndex={0} aria-label="Code example" className="m-0 bg-navy text-[#E4E8EE] rounded-[12px] p-[18px] mono text-[13px] leading-[1.7] overflow-x-auto whitespace-pre">{`curl -X POST ${base}/oauth/token \\
   -d grant_type=client_credentials \\
   -d client_id=${clientIdForDocs} \\
   -d client_secret=YOUR_CLIENT_SECRET`}</pre>
           <p className="text-[15px]">2. Call the API with the token</p>
-          <pre className="m-0 bg-navy text-[#E4E8EE] rounded-[12px] p-[18px] mono text-[13px] leading-[1.7] overflow-x-auto whitespace-pre">{`curl "${base}/products?limit=50" \\
+          <pre tabIndex={0} aria-label="Code example" className="m-0 bg-navy text-[#E4E8EE] rounded-[12px] p-[18px] mono text-[13px] leading-[1.7] overflow-x-auto whitespace-pre">{`curl "${base}/products?limit=50" \\
   -H "Authorization: Bearer ACCESS_TOKEN"`}</pre>
         </div>
       </Card>

@@ -210,7 +210,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
             </div>
             <ActionForm key={selRole.code} action={savePermissions} className="px-6 pb-6 pt-3" submitLabel="Save permissions" hideSubmit={!edit || selRole.code === 'admin'} confirm={`Save the permission matrix for ${selRole.name}?`}>
               <input type="hidden" name="role" value={selRole.code} />
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable table">
                 <table className="w-full border-collapse">
                   <thead><tr><th className="th">Area</th>{ACTIONS.map((a) => <th key={a} className="th text-center">{a}</th>)}</tr></thead>
                   <tbody>

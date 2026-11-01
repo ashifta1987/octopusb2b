@@ -73,7 +73,7 @@ export default async function RfqDetail({ params }: { params: Promise<{ id: stri
         {quotes.length === 0 ? (
           <EmptyState title="No quotes yet" body="Suppliers usually reply within 48 hours. This page updates automatically when a quote arrives." />
         ) : (
-          <div className="overflow-x-auto px-2 pb-4">
+          <div className="overflow-x-auto px-2 pb-4" tabIndex={0} role="region" aria-label="Scrollable table">
             <table className="w-full border-collapse min-w-[640px]">
               <thead>
                 <tr>

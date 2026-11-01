@@ -76,7 +76,7 @@ export function RecoveryCompare({ table, rows, restorable, canRestore, reasonDis
                   <StatusBadge status={r.status} tone={TONE[r.status]} label={LABEL[r.status]} />
                 </div>
                 {isOpen && (
-                  <div className="px-5 pb-4 overflow-x-auto">
+                  <div className="px-5 pb-4 overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable table">
                     <table className="w-full min-w-[640px] border-collapse text-xs">
                       <thead><tr><th className="th w-[180px]">Field</th><th className="th">Backup</th><th className="th">Current (live)</th></tr></thead>
                       <tbody>

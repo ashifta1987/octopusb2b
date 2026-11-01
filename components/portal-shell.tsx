@@ -77,9 +77,10 @@ function WorkspaceSwitcher({ session, current }: { session: Session; current?: s
   if (list.length < 2) return null;
   return (
     <details className="relative group">
-      <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer btn btn-ghost btn-sm gap-2" aria-label="Switch workspace">
+      <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer btn btn-ghost btn-sm gap-2">
+        <span className="sr-only">Switch workspace{current ? ', current: ' : ''}</span>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
-        <span className="hidden md:inline">{current ?? 'Workspace'}</span>
+        <span className="hidden md:inline">{current ?? 'Workspace'}</span>{current && <span className="sr-only md:hidden">{current}</span>}
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden className="transition-transform group-open:rotate-180"><path d="m6 9 6 6 6-6" /></svg>
       </summary>
       <div className="absolute right-0 mt-2 w-[300px] bg-white border border-line rounded-[10px] shadow-lg p-2 z-50" role="menu" aria-label="Workspaces">
@@ -105,7 +106,8 @@ function StaffUserMenu({ name, initials, sub, email }: { name: string; initials:
   const item = 'block w-full text-left px-3 py-2 rounded-md text-sm font-semibold text-navy hover:bg-surface';
   return (
     <details className="relative">
-      <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer flex items-center gap-3 rounded-md px-1 py-1 hover:bg-surface" aria-label="Account menu">
+      <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer flex items-center gap-3 rounded-md px-1 py-1 hover:bg-surface">
+        <span className="sr-only">Account menu: </span>
         <span className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center font-semibold text-sm" aria-hidden>{initials}</span>
         <span className="hidden sm:block leading-tight text-left">
           <span className="block font-semibold text-[15px]">{name}</span>

@@ -64,10 +64,12 @@ export function CatalogManager({ categories, tags, canEdit, actions }: {
           return (
             <li key={c.id} role="treeitem" aria-expanded={kids.length ? isOpen : undefined} aria-selected={selected === c.id}>
               <div className={cn('flex items-center gap-2 pr-4 py-2 border-l-[3px]', selected === c.id ? 'bg-blue-soft border-blue' : 'border-transparent hover:bg-surface')} style={{ paddingLeft: 12 + depth * 20 }}>
-                <button type="button" className="w-5 text-muted text-xs" aria-label={kids.length ? (isOpen ? `Collapse ${c.name}` : `Expand ${c.name}`) : undefined} disabled={!kids.length}
-                  onClick={() => setOpen((s) => { const n = new Set(s); if (n.has(c.id)) n.delete(c.id); else n.add(c.id); return n; })}>
-                  {kids.length ? (isOpen ? '▾' : '▸') : ''}
-                </button>
+                {kids.length ? (
+                  <button type="button" className="w-5 text-muted text-xs" aria-label={isOpen ? `Collapse ${c.name}` : `Expand ${c.name}`}
+                    onClick={() => setOpen((s) => { const n = new Set(s); if (n.has(c.id)) n.delete(c.id); else n.add(c.id); return n; })}>
+                    {isOpen ? '▾' : '▸'}
+                  </button>
+                ) : <span className="w-5" aria-hidden />}
                 <span className={cn('mono text-[10px] font-bold rounded px-1', c.level === 1 ? 'bg-navy text-white' : 'bg-blue-soft text-[#1E4F9C]')}>L{c.level}</span>
                 <button type="button" className={cn('flex-1 text-left text-[15px]', selected === c.id && 'font-semibold', !c.active && 'line-through text-muted')} onClick={() => setSelected(c.id)}>
                   {c.name}{!c.active && <span className="sr-only"> (hidden)</span>}
@@ -267,7 +269,7 @@ function TagItem({ tag, canEdit, pending, onSave, onDelete }: { tag: TagRow; can
   );
   return (
     <li className="flex items-center gap-2">
-      <span className="rounded-full bg-blue-soft text-[#1E4F9C] text-sm font-semibold px-3 py-1">{tag.name} <span className="mono text-[11px] opacity-70">{tag.products}</span></span>
+      <span className="rounded-full bg-blue-soft text-[#1E4F9C] text-sm font-semibold px-3 py-1">{tag.name} <span className="mono text-[11px] text-[#2A4A7F]">{tag.products}</span></span>
       {canEdit && <>
         <button type="button" className="text-xs text-blue font-semibold" onClick={() => setEdit(true)} aria-label={`Edit tag ${tag.name}`}>Edit</button>
         <button type="button" className="text-xs text-bad font-semibold" onClick={onDelete} aria-label={`Delete tag ${tag.name}`}>Delete</button>

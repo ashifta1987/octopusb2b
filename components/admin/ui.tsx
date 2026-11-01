@@ -12,7 +12,7 @@ export function Tabs({ tabs, active, base, param = 'tab' }: { tabs: { key: strin
           aria-current={active === t.key ? 'page' : undefined}
           className={cn('rounded-full border px-4 py-2 text-sm font-semibold', active === t.key ? 'bg-navy text-white border-navy' : 'bg-white text-navy border-line-2 hover:border-navy')}
         >
-          {t.label}{t.count != null && <span className="ml-1.5 mono text-xs opacity-70">{t.count}</span>}
+          {t.label}{t.count != null && <span className="ml-1.5 mono text-xs opacity-85">{t.count}</span>}
         </Link>
       ))}
     </nav>
