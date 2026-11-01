@@ -110,7 +110,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
         title="Platform overview"
         subtitle={`Figures come from orders, the ledger and live queues. Charts are in ${ctx.currency}${mixed ? `; amounts in other currencies are converted at the approved rate (${rateLabel(ctx)})` : ''}.`}
         actions={
-          <form className="flex items-center gap-3" action="/admin">
+          <form className="flex flex-wrap items-center gap-3" action="/admin">
             <label htmlFor="months" className="text-sm text-muted">Period</label>
             <select id="months" name="months" defaultValue={String(months)} className="input w-auto">
               <option value="3">Last 3 months</option><option value="6">Last 6 months</option><option value="12">Last 12 months</option>
