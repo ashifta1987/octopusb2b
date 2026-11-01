@@ -226,3 +226,18 @@ export function waitRefresh(page, timeout = 20000) {
   return page.waitForRequest((q) => { const h = q.headers(); return h['rsc'] === '1' && !h['next-router-prefetch'] && new URL(q.url()).pathname === path; }, { timeout })
     .then(() => Date.now()).catch(() => null);
 }
+
+/** Temporary admin (qa-trace-admin@…): never touches admin@ (its TOTP factor belongs to the owner). Removed by cleanup(). */
+export async function ensureTraceAdmin() {
+  const email = 'qa-trace-admin@demo.octopusb2b.com';
+  let uid = loadState().users[email];
+  if (!uid) {
+    const { data, error } = await admin.auth.admin.createUser({ email, password: PW, email_confirm: true, user_metadata: { full_name: 'QA Trace Admin' } });
+    if (error) throw error;
+    uid = data.user.id;
+    remember((s) => { s.users[email] = uid; });
+  }
+  await sql(`insert into profiles(id, email, full_name) values ($1,$2,'QA Trace Admin') on conflict (id) do nothing`, [uid, email]);
+  await sql(`insert into user_roles(user_id, role_code) values ($1,'admin') on conflict do nothing`, [uid]);
+  return { email, uid };
+}
