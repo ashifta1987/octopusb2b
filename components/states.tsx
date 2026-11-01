@@ -44,3 +44,4 @@ export function PageSkeleton({ rows = 6 }: { rows?: number }) {
     </div>
   );
 }
+

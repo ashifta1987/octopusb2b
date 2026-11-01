@@ -22,3 +22,4 @@ create index if not exists restore_requests_status_idx on public.restore_request
 create index if not exists currency_switch_requests_status_idx on public.currency_switch_requests (status);
 create index if not exists assistant_sessions_status_idx on public.assistant_sessions (status, last_message_at);
 create index if not exists integration_logs_created_idx on public.integration_logs (created_at desc);
+
