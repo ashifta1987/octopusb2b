@@ -39,7 +39,7 @@ export function PriceCalculator({ productId, tiers, currency, unit, unitOne, moq
               <li key={t.min_qty}>
                 <button type="button" aria-pressed={on} onClick={() => setQty(t.min_qty)}
                   className={`w-full text-left rounded-[10px] border-[1.5px] px-3 py-3 ${on ? 'bg-blue border-blue text-white' : 'bg-white border-line hover:border-navy'}`}>
-                  <span className={`block text-[12px] ${on ? 'text-white/85' : 'text-muted'}`}>
+                  <span className={`block text-[12px] ${on ? 'text-white' : 'text-muted'}`}>
                     {t.min_qty.toLocaleString('en-US')}{next ? `–${(next.min_qty - 1).toLocaleString('en-US')}` : '+'} {unit}
                   </span>
                   <span className="block font-display text-[22px] font-bold mt-1">{fmt(t.unit_price_cents)}</span>

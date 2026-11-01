@@ -15,12 +15,20 @@
   --green: #1f9d55;
   --amber: #d98a00;
   --red: #d64545;
+  /* QA §19 / SPEC §12 (WCAG 2.2 AA, contrast >= 4.5:1): the status tokens above are used for text, white-on-fill
+     buttons and borders, where #1f9d55 (3.5:1), #d98a00 (2.8:1) and #d64545 (4.4:1) fail on white. These are the
+     same hues darkened just enough to pass on white and on --surface. --blue-text is the brand blue one step darker
+     (#2a6fd6 is 4.47:1 on --surface). */
+  --green-ink: #157a44;
+  --amber-ink: #9a6200;
+  --red-ink: #c03434;
+  --blue-text: #2a6ed4;
 }
 
 @theme inline {
   --color-navy: var(--navy);
   --color-navy-2: var(--navy-2);
-  --color-blue: var(--blue);
+  --color-blue: var(--blue-text);
   --color-blue-dark: var(--blue-dark);
   --color-blue-soft: var(--blue-soft);
   --color-ink: var(--ink);
@@ -28,9 +36,9 @@
   --color-line: var(--line);
   --color-line-2: var(--line-2);
   --color-surface: var(--surface);
-  --color-ok: var(--green);
-  --color-warn: var(--amber);
-  --color-bad: var(--red);
+  --color-ok: var(--green-ink);
+  --color-warn: var(--amber-ink);
+  --color-bad: var(--red-ink);
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-display: var(--font-lexend), sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
@@ -57,6 +65,9 @@ h1, h2, h3, h4 { font-family: var(--font-display); color: var(--navy); letter-sp
   .mono { font-family: var(--font-mono); }
   .th { @apply text-left text-xs font-semibold uppercase tracking-wider text-muted px-4 py-3 border-b border-line whitespace-nowrap; }
   .td { @apply px-4 py-3.5 border-b border-line text-[15px] align-middle; }
+  /* QA §19 (360 px): scroll containers must also contain absolutely-positioned descendants (e.g. .sr-only table
+     headers), otherwise those escape the clip and make the whole page scroll sideways. Layered so utilities win. */
+  .overflow-x-auto, .overflow-auto { position: relative; }
 }
 
 @media (min-width: 1000px) {

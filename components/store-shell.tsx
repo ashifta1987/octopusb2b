@@ -92,7 +92,7 @@ export async function StoreFooter() {
         <FooterCol title="Company" links={[['/about', 'About us'], ['/contact', 'Contact'], ['/legal/privacy', 'Privacy policy'], ['/legal/terms', 'Terms of service']]} />
       </div>
       <div className="border-t border-white/10">
-        <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-5 text-[13px]">© 2026 {company?.brand ?? 'Octopus B2B'} · {company?.legal_name}. All rights reserved. · <Link href="/staff/login" className="text-[#9AA6B8] hover:text-white">Staff login</Link></div>
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-5 text-[13px]">© 2026 {company?.brand ?? 'Octopus B2B'} · {company?.legal_name}. All rights reserved. · <Link href="/staff/login" className="text-[#C5CEDB] underline underline-offset-2 hover:text-white">Staff login</Link></div>
       </div>
     </footer>
   );
