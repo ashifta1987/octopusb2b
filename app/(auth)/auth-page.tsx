@@ -5,8 +5,8 @@ import { AuthForm } from './auth-form';
 export const metadata = { title: 'Sign up or log in' };
 
 /** Auth.png — sign up & log in (email + password with 6-digit OTP; Google sign-in removed 1 Nov 2026). */
-export default async function AuthPage({ searchParams, mode }: { searchParams: Promise<{ next?: string; error?: string }>; mode: 'signup' | 'login' }) {
-  const sp = await searchParams;
+/** Two-column Auth.png frame (navy benefits panel + form column), shared by login, sign-up and password reset. */
+export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen grid md:grid-cols-[637fr_803fr]">
       <aside className="bg-navy text-white px-8 sm:px-12 py-12 flex flex-col">
@@ -24,7 +24,7 @@ export default async function AuthPage({ searchParams, mode }: { searchParams: P
       </aside>
       <main className="bg-surface px-6 py-12 flex justify-center">
         <div className="w-full max-w-[480px]">
-          <AuthForm initialMode={mode} next={sp.next ?? '/account'} initialError={sp.error} />
+          {children}
           <p className="text-center text-sm text-muted mt-6">
             By continuing you agree to the <Link href="/legal/terms" className="text-blue font-semibold">Terms</Link> and <Link href="/legal/privacy" className="text-blue font-semibold">Privacy Policy</Link>.
           </p>
@@ -37,3 +37,12 @@ export default async function AuthPage({ searchParams, mode }: { searchParams: P
   );
 }
 
+export default async function AuthPage({ searchParams, mode }: { searchParams: Promise<{ next?: string; error?: string; reset?: string }>; mode: 'signup' | 'login' }) {
+  const sp = await searchParams;
+  return (
+    <AuthShell>
+      {sp.reset === '1' && <p role="status" className="mb-5 rounded-[10px] border border-line bg-blue-soft px-3.5 py-3 text-[13px] text-[#1E4F9C]">Your password was changed. Log in with the new password.</p>}
+      <AuthForm initialMode={mode} next={sp.next ?? '/account'} initialError={sp.error} />
+    </AuthShell>
+  );
+}

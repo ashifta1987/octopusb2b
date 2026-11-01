@@ -1,9 +1,11 @@
 'use client';
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/cn';
 import { checkCustomerSignupEmail, staffRedirectAfterCustomerSignIn } from '@/lib/staff/customer-guard';
+import { customerSignIn, customerSignUp } from './actions';
 
 type Step = 'email' | 'verify';
 
@@ -20,24 +22,25 @@ export function AuthForm({ initialMode, next, initialError }: { initialMode: 'si
   const [busy, setBusy] = useState(false);
   const callback = () => `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
 
+  // Email + password go through server actions: per-IP rate limit, 5-strikes lockout and audit log (ADDON-22).
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null); setInfo(null); setBusy(true);
     try {
       if (mode === 'signup') {
         if (password.length < 8 || !/\d/.test(password)) throw new Error('Password needs at least 8 characters, with a number.');
-        const guard = await checkCustomerSignupEmail(email);
-        if (!guard.ok) throw new Error(guard.error);
-        const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: callback() } });
-        if (error) throw error;
-        if (data.session) return router.push('/onboarding');
+        const r = await customerSignUp({ email, password, next });
+        if (!r.ok) throw new Error(r.error);
+        if (r.redirect) return router.push(r.redirect);
         setStep('verify');
         setInfo(`We sent a 6-digit code to ${email}.`);
       } else {
-        const { error } = await sb.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        const staffTarget = await staffRedirectAfterCustomerSignIn();
-        router.push(staffTarget ?? next); router.refresh();
+        const r = await customerSignIn({ email, password, next });
+        if (!r.ok) {
+          const until = r.lockedUntil ? new Date(r.lockedUntil).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : null;
+          throw new Error(r.error + (until ? ` Try again after ${until}.` : '') + (typeof r.remaining === 'number' && r.remaining > 0 && r.remaining < 3 ? ` ${r.remaining} attempt${r.remaining === 1 ? '' : 's'} left before the account is locked.` : ''));
+        }
+        router.push(r.redirect ?? next); router.refresh();
       }
     } catch (e) { setErr((e as Error).message); } finally { setBusy(false); }
   }
@@ -92,7 +95,10 @@ export function AuthForm({ initialMode, next, initialError }: { initialMode: 'si
               <input id="email" type="email" required autoComplete="email" className="input min-h-12" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div>
-              <label htmlFor="password" className="label">Password</label>
+              <div className="flex justify-between items-baseline">
+                <label htmlFor="password" className="label">Password</label>
+                {mode === 'login' && <Link href="/forgot" className="text-[13px] font-semibold text-blue">Forgot password?</Link>}
+              </div>
               <input id="password" type="password" required autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} className="input min-h-12" value={password} onChange={(e) => setPassword(e.target.value)} />
               {mode === 'signup' && <p className="text-sm text-muted mt-2">At least 8 characters, with a number.</p>}
             </div>

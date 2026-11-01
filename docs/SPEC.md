@@ -1246,3 +1246,16 @@ If any gap cannot be closed safely alone (schema change touching money, destruct
 Done when: `docs/E2E_TRACE_REPORT.md` exists for today's date, every chain in §21.1 is green end-to-end with a shared `trace_id`, idempotency replays are no-ops, and the cross-chain matrix shows no red cells (or the red cells are listed with named owners).
 
 Sources for the spec: Octopus B2B Terms & Conditions draft (PDF), the sample quotation/proforma (image), the design canvas, and the requirements gathered in this conversation.
+
+## 22. Addendum: email-only sign-in (no Google)
+
+Full prompt: `docs/ADDON-22-no-google-customer-login.md`. **Owner decision (1 Nov 2026): no Google / social sign-in for anyone — customers and staff.** `site_settings.auth.social_providers = []`; the Google provider is disabled in Supabase Auth.
+
+- **Customers:** sign-up = email + password → 6-digit code → create profile → dashboard. Sign-in = email + password (or a 6-digit email code). Password rule: ≥ 8 characters with a number.
+- **Forgot password:** `/forgot` → one-time link (expires after 1 hour, Supabase email OTP expiry) → `/reset-password` → new password; every other session of that user is signed out.
+- **Abuse protection:** 10 attempts per IP per minute on login / sign-up / reset (`auth_rate_hit`); 5 consecutive wrong passwords lock the account for 15 minutes (Staff security settings), the account owner gets an alert email with the IP and admins get a "Customer account locked" notification.
+- **Audit log:** `auth.sign_up`, `auth.sign_in`, `auth.password_failed`, `auth.lockout`, `auth.password_reset_requested`, `auth.password_reset` — with user id, IP, device and `provider = 'email'`.
+- **Staff:** `/staff/login` = work email + password, then TOTP (section 17) — no Google button.
+- **Future (default off):** optional customer 2FA opt-in from /account.
+- **Tests:** `tests/e2e/customer-auth.mjs` (no Google at 360/768/1440, sign-in, lockout + alert email, reset link single use + sessions revoked, per-IP rate limit), `tests/e2e/register-flow.mjs` (sign-up → verify → profile).
+
