@@ -1,7 +1,7 @@
 'use server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { getCarrier, type RateQuote } from '@/lib/adapters';
 import { toCents, money } from '@/lib/format';
 import { actionSession, fail, ok, type Result } from '@/components/backoffice/server-utils';
@@ -96,12 +96,15 @@ export async function createShipment(orderId: string, input: { service: string; 
   try {
     res = await carrier.createShipment({ orderCode: o.code, toCountry: org?.country ?? 'US', toCity: org?.city ?? undefined, weightKg: input.weightKg, parcels: input.parcels, service: input.service });
   } catch (e) { return fail(`YunExpress: ${(e as Error).message}`); }
-  const { data: sh, error } = await sb.from('shipments').insert({
+  const { error } = await sb.from('shipments').insert({
     order_id: o.id, org_id: o.org_id, carrier_code: carrier.code, service_code: input.service, tracking_no: res.trackingNo, label_url: res.labelUrl,
     status: 'label_ready', weight_kg: input.weightKg, parcels: input.parcels, rate_cents: Math.round(input.rateCents), currency: CARRIER_RATE_CURRENCY, last_event_at: new Date().toISOString(),
   }).select('id').single();
   if (error) return fail(error);
-  await sb.from('tracking_events').insert({ shipment_id: sh.id, org_id: o.org_id, provider_event_id: `created-${res.trackingNo}`, status: 'created', description: `Shipment created with ${input.service}. Label ready.`, location: 'Origin' });
+  await createAdminClient().rpc('system_record_tracking', {
+    p_tracking_no: res.trackingNo, p_provider_event: `created-${res.trackingNo}`, p_status: 'created',
+    p_description: `Shipment created with ${input.service}. Label ready.`, p_location: 'Origin', p_occurred_at: new Date().toISOString(),
+  });
   try { await carrier.subscribeTracking(res.trackingNo); } catch { /* cron fallback picks it up */ }
   const { error: te } = await sb.rpc('transition_order', { p_order: o.id, p_to: 'shipped', p_reason: `${carrier.code} ${res.trackingNo}` });
   if (te) return fail(`Shipment created (${res.trackingNo}) but the order could not be marked shipped: ${te.message}`);
@@ -129,15 +132,16 @@ export async function simulateTracking(shipmentId: string, kind: 'next' | 'excep
     ? { status: 'exception', text: 'Delivery exception — address issue, carrier will retry', loc: 'Destination hub' }
     : s.status === 'exception' ? { status: 'in_transit', text: 'Exception resolved — back in transit', loc: 'Destination hub' } : NEXT_SHIP[s.status];
   if (!step) return fail(`No further sandbox events after “${s.status}”.`);
-  const now = new Date().toISOString();
-  const { error } = await sb.from('tracking_events').insert({ shipment_id: s.id, org_id: s.org_id, provider_event_id: `sim-${s.id}-${Date.now()}`, status: step.status, description: step.text, location: step.loc, occurred_at: now });
+  if (!s.tracking_no) return fail('This shipment has no tracking number yet.');
+  // SPEC §5/§11.3 golden path 3: a simulated event runs through the same path as the YunExpress webhook
+  // (system_record_tracking: tracking event + shipment status + status_history + `shipment.tracking` outbox event
+  // + order → delivered), never a direct status update. That RPC is service-role only, so call it with the admin
+  // client after the staff permission check above.
+  const { error } = await createAdminClient().rpc('system_record_tracking', {
+    p_tracking_no: s.tracking_no, p_provider_event: `sim-${s.id}-${Date.now()}`, p_status: step.status,
+    p_description: step.text, p_location: step.loc, p_occurred_at: new Date().toISOString(),
+  });
   if (error) return fail(error);
-  const { error: ue } = await sb.from('shipments').update({ status: step.status, last_event_at: now }).eq('id', s.id);
-  if (ue) return fail(ue);
-  if (step.status === 'delivered') {
-    const { data: o } = await sb.from('orders').select('status').eq('id', s.order_id).maybeSingle();
-    if (o?.status === 'shipped') await sb.rpc('transition_order', { p_order: s.order_id, p_to: 'delivered', p_reason: `Delivered · ${s.tracking_no}` });
-  }
   revalidatePath('/office/shipping'); revalidatePath(`/office/orders/${s.order_id}`);
   return ok(undefined, `Event added: ${step.status}`);
 }
