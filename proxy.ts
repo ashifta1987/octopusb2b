@@ -40,6 +40,18 @@ export async function proxy(request: NextRequest) {
     res.headers.set(TRACE_HEADER, traceId);
     return res;
   }
+  // Supabase sends failed OAuth sign-ins back to the Site URL ("/?error=…&error_description=…"):
+  // show the message on the login page instead of silently landing on the home page.
+  const oauthError = request.nextUrl.searchParams.get('error_description');
+  if (path === '/' && oauthError) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/login';
+    url.search = '';
+    url.searchParams.set('error', `Sign-in with Google failed: ${oauthError.slice(0, 200)}`);
+    const res = NextResponse.redirect(url);
+    res.headers.set(TRACE_HEADER, traceId);
+    return res;
+  }
   const res = await route(request);
   res.headers.set(TRACE_HEADER, traceId);
   return res;
