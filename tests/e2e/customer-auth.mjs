@@ -1,4 +1,5 @@
-// ADDON-22 customer auth E2E: no Google anywhere (360/768/1440), email + password sign-in → dashboard, 5 wrong passwords
+// Customer auth E2E (ADDON-22 + 5 Nov 2026 decision): Google button on /login + /signup only when enabled in Supabase,
+// never on /staff/login (360/768/1440), email + password sign-in → dashboard, 5 wrong passwords
 // → lockout notice + alert email logged, forgot password → one-time reset link → new password → other sessions revoked.
 // Uses a temporary customer user (created with the Auth admin API, no email sent) and removes it afterwards.
 // Usage: APP=http://localhost:3100 DEMO_PASSWORD=... node tests/e2e/customer-auth.mjs
@@ -24,24 +25,28 @@ async function login(page, em, pw) {
 }
 
 try {
-  // 1 · Google is gone from every sign-in page, at every viewport
+  // 1 · Google: customers only, and only when the provider is enabled in Supabase; never for staff
+  const settings = await (await fetch(`${URL_}/auth/v1/settings`, { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY } })).json();
+  const googleOn = settings?.external?.google === true;
+  console.log(`  (Supabase Google provider: ${googleOn ? 'enabled' : 'disabled'})`);
   for (const w of [360, 768, 1440]) {
     const ctx = await browser.newContext({ viewport: { width: w, height: 900 } });
     const page = await ctx.newPage();
     for (const path of ['/signup', '/login', '/staff/login']) {
       await page.goto(APP + path, { waitUntil: 'networkidle', timeout: 120000 });
-      const google = await page.getByText(/google/i).count();
+      const google = await page.getByRole('button', { name: /google/i }).count();
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-      ok(google === 0 && overflow <= 0, `${w}px ${path}: no Google button / text, no horizontal scroll`);
+      const expected = path === '/staff/login' ? 0 : googleOn ? 1 : 0;
+      ok(google === expected && overflow <= 0, `${w}px ${path}: Google button ${expected ? 'shown' : 'not shown'} as expected, no horizontal scroll`);
     }
     await page.goto(APP + '/login', { waitUntil: 'networkidle' });
     ok(await page.getByRole('link', { name: 'Forgot password?' }).waitFor({ timeout: 15000 }).then(() => true, () => false), `${w}px /login: "Forgot password?" link`);
     await ctx.close();
   }
-  const settings = await (await fetch(`${URL_}/auth/v1/settings`, { headers: { apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY } })).json();
-  ok(settings?.external?.google === false, 'Supabase Auth: Google provider is disabled (cannot create a Google identity)');
   const { data: sp } = await admin.from('site_settings').select('value').eq('key', 'auth.social_providers').maybeSingle();
-  ok(Array.isArray(sp?.value) && sp.value.length === 0, 'site_settings auth.social_providers = []');
+  ok(Array.isArray(sp?.value) && sp.value.join() === 'google', 'site_settings auth.social_providers = ["google"] (customers)');
+  const staffCb = await fetch(`${APP}/auth/callback?staff=1`, { redirect: 'manual' });
+  ok(/\/staff\/login\?error=/.test(staffCb.headers.get('location') ?? ''), 'old staff Google callback is closed (→ /staff/login with an error)');
 
   // temp customer (confirmed, no email sent)
   const { data: cu, error: ce } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: 'Auth E2E' } });

@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { Logo } from '@/components/ui';
 import { AuthForm } from './auth-form';
+import { getCustomerSocialProviders } from '@/lib/auth-providers';
 
 export const metadata = { title: 'Sign up or log in' };
 
-/** Auth.png — sign up & log in (email + password with 6-digit OTP; Google sign-in removed 1 Nov 2026). */
+/** Auth.png — sign up & log in (email + password with 6-digit OTP, plus "Continue with Google" for customers when enabled in Supabase — 5 Nov 2026). */
 /** Two-column Auth.png frame (navy benefits panel + form column), shared by login, sign-up and password reset. */
 export function AuthShell({ children }: { children: React.ReactNode }) {
   return (
@@ -38,11 +39,11 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
 }
 
 export default async function AuthPage({ searchParams, mode }: { searchParams: Promise<{ next?: string; error?: string; reset?: string }>; mode: 'signup' | 'login' }) {
-  const sp = await searchParams;
+  const [sp, social] = await Promise.all([searchParams, getCustomerSocialProviders()]);
   return (
     <AuthShell>
       {sp.reset === '1' && <p role="status" className="mb-5 rounded-[10px] border border-line bg-blue-soft px-3.5 py-3 text-[13px] text-[#1E4F9C]">Your password was changed. Log in with the new password.</p>}
-      <AuthForm initialMode={mode} next={sp.next ?? '/account'} initialError={sp.error} />
+      <AuthForm initialMode={mode} next={sp.next ?? '/account'} initialError={sp.error} google={social.google} />
     </AuthShell>
   );
 }

@@ -1259,3 +1259,4 @@ Full prompt: `docs/ADDON-22-no-google-customer-login.md`. **Owner decision (1 No
 - **Future (default off):** optional customer 2FA opt-in from /account.
 - **Tests:** `tests/e2e/customer-auth.mjs` (no Google at 360/768/1440, sign-in, lockout + alert email, reset link single use + sessions revoked, per-IP rate limit), `tests/e2e/register-flow.mjs` (sign-up → verify → profile).
 
+- **Update 5 Nov 2026 (owner):** "Continue with Google" is back for **customers only** on `/login` and `/signup`. `site_settings.auth.social_providers = ["google"]`; the button appears only when Google is also enabled in Supabase Auth → Providers. `/auth/callback?via=google` audits `auth.sign_up` / `auth.sign_in` with `provider = 'google'`; staff accounts and staff-domain emails are refused (signed out, sent to `/staff/login`). Staff remain email + password + TOTP; the old staff Google entry (`/auth/callback?staff=1`) is closed.
