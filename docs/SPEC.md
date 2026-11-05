@@ -404,7 +404,7 @@ The design screens are the visual source of truth: one PNG per screen in `docs/d
 | `/supplier`, `/supplier/rfqs` | Supplier | Supplier |
 | `/supplier/customers` | SupplierCustomers | Supplier |
 | `/supplier/integrations` | SupplierAPI | Supplier |
-| `/supplier/ads`, `/account/ads` | AdsCampaign | Advertiser |
+| `/supplier/ads` (planned; `/account/ads` redirects customers to the dashboard — ADDON-23) | AdsCampaign | Advertiser |
 | `/distributor` | Distributor | Distributor |
 | `/distributor/products/new`, `/products/[id]/edit` | ProductCreate | Distributor, supplier, admin |
 | `/distributor/products/import` | BulkUpload | Distributor, supplier, admin |
@@ -1260,3 +1260,8 @@ Full prompt: `docs/ADDON-22-no-google-customer-login.md`. **Owner decision (1 No
 - **Tests:** `tests/e2e/customer-auth.mjs` (no Google at 360/768/1440, sign-in, lockout + alert email, reset link single use + sessions revoked, per-IP rate limit), `tests/e2e/register-flow.mjs` (sign-up → verify → profile).
 
 - **Update 5 Nov 2026 (owner):** "Continue with Google" is back for **customers only** on `/login` and `/signup`. `site_settings.auth.social_providers = ["google"]`; the button appears only when Google is also enabled in Supabase Auth → Providers. `/auth/callback?via=google` audits `auth.sign_up` / `auth.sign_in` with `provider = 'google'`; staff accounts and staff-domain emails are refused (signed out, sent to `/staff/login`). Staff remain email + password + TOTP; the old staff Google entry (`/auth/callback?staff=1`) is closed.
+
+## 23. Addendum: no Advertising in the customer portal
+
+Full prompt: `docs/ADDON-23-remove-advertising-from-customer-nav.md`. Customers buy, they don't advertise. The customer sidebar is exactly: Dashboard · AI assistant · RFQs · Service requests · Orders · Group buys · Wallet · Ledger & invoices · Company & KYC · API & integrations · Help & complaints. `/account/ads` redirects to `/account` with "That area isn't part of your account." The sponsored card on the dashboard no longer links to "Advertise here". The campaign screen is kept (not routed) in `app/account/ads/campaign-manager.tsx` for the future supplier / Advertiser portal (`/supplier/ads`); admin moderation stays at `/admin/ads`. Test: `tests/e2e/customer-nav.mjs`.
+

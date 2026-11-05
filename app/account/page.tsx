@@ -16,12 +16,16 @@ export const metadata = { title: 'Dashboard' };
 
 const OPEN_RFQ = ['submitted', 'assigned', 'quoting', 'quoted'];
 
-export default async function AccountDashboard() {
+const NOTICES: Record<string, string> = { 'not-in-account': "That area isn't part of your account." };
+
+export default async function AccountDashboard({ searchParams }: { searchParams: Promise<{ notice?: string }> }) {
   const s = await requireCustomer('/account');
+  const notice = NOTICES[(await searchParams).notice ?? ''];
   const firstName = (s.profile?.full_name ?? '').split(/\s+/)[0] || 'there';
   if (!s.org) {
     return (
       <>
+        {notice && <div className="mb-4"><Notice tone="blue">{notice}</Notice></div>}
         <h1 className="text-[30px] font-bold">Welcome back, {firstName}</h1>
         <div className="mt-4"><Notice tone="amber">Your staff account has no buyer company. <Link href="/onboarding" className="underline">Create a company profile</Link> to use the customer portal.</Notice></div>
       </>
@@ -91,6 +95,7 @@ export default async function AccountDashboard() {
 
   return (
     <>
+      {notice && <div className="mb-4"><Notice tone="blue">{notice}</Notice></div>}
       <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
         <div>
           <h1 className="text-[30px] font-bold leading-tight">Welcome back, {firstName}</h1>
@@ -127,7 +132,7 @@ export default async function AccountDashboard() {
             <div className="flex-1 min-w-[200px]"><div className="font-semibold">{ad.headline}</div>{ad.body && <div className="text-sm text-muted">{ad.body}</div>}</div>
             <a href={`/api/ads/click?c=${ad.id}`} rel="sponsored noopener" className="btn btn-ghost btn-sm">Learn more</a>
           </div>
-          <div className="text-right text-xs text-muted mt-1">Ad · <Link href="/account/ads" className="underline">Advertise here</Link></div>
+          <div className="text-right text-xs text-muted mt-1">Ad</div>
         </div>
       )}
 

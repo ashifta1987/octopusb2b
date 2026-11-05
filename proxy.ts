@@ -53,6 +53,15 @@ export async function proxy(request: NextRequest) {
     res.headers.set(TRACE_HEADER, traceId);
     return res;
   }
+  // ADDON-23: advertising is not part of the customer account → dashboard with a one-line notice (real 307)
+  if (path === '/account/ads' || path.startsWith('/account/ads/')) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/account';
+    url.search = '?notice=not-in-account';
+    const res = NextResponse.redirect(url);
+    res.headers.set(TRACE_HEADER, traceId);
+    return res;
+  }
   const res = await route(request);
   res.headers.set(TRACE_HEADER, traceId);
   return res;

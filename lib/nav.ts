@@ -13,7 +13,6 @@ export const CUSTOMER_NAV: NavSection[] = [{
     { href: '/account/wallet', label: 'Wallet' },
     { href: '/account/ledger', label: 'Ledger & invoices' },
     { href: '/account/kyc', label: 'Company & KYC' },
-    { href: '/account/ads', label: 'Advertising' },
     { href: '/account/developer', label: 'API & integrations' },
     { href: '/account/support', label: 'Help & complaints' },
   ],
