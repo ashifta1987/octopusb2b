@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr';
+import { friendlyAuthError } from '@/lib/auth-errors';
 import { NextResponse, type NextRequest } from 'next/server';
 import {
   DEFAULT_LIMITS, EXPIRED_COOKIE, STAFF_COOKIE, sessionState, signExpiredMarker, signStaffCookie, staffCookieOptions, verifyStaffCookie,
@@ -47,7 +48,7 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.search = '';
-    url.searchParams.set('error', `Sign-in with Google failed: ${oauthError.slice(0, 200)}`);
+    url.searchParams.set('error', friendlyAuthError(oauthError));
     const res = NextResponse.redirect(url);
     res.headers.set(TRACE_HEADER, traceId);
     return res;

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { emailIsStaff, isStaffUser } from '@/lib/staff/server';
 import { metaFromHeaders } from '@/lib/staff/request-meta';
+import { friendlyAuthError } from '@/lib/auth-errors';
 
 /**
  * OAuth / email-link callback: exchanges the code for a session, then routes to onboarding if there is no profile.
@@ -21,12 +22,15 @@ export async function GET(req: NextRequest) {
   }
 
   const oauthError = url.searchParams.get('error_description');
-  if (oauthError) return to(`/login?error=${encodeURIComponent(oauthError)}`);
+  if (oauthError) {
+    const msg = friendlyAuthError(oauthError);
+    return to(/staff sign in at Back office/.test(msg) ? `/staff/login?error=${encodeURIComponent(msg)}` : `/login?error=${encodeURIComponent(msg)}`);
+  }
 
   if (code) {
     const sb = await createClient();
     const { error } = await sb.auth.exchangeCodeForSession(code);
-    if (error) return to(`/login?error=${encodeURIComponent(error.message)}`);
+    if (error) return to(`/login?error=${encodeURIComponent(friendlyAuthError(error.message))}`);
     const { data: u } = await sb.auth.getUser();
     const user = u.user!;
     const email = (user.email ?? '').toLowerCase();

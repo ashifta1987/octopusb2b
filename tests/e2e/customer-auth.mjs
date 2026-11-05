@@ -47,6 +47,18 @@ try {
   ok(Array.isArray(sp?.value) && sp.value.join() === 'google', 'site_settings auth.social_providers = ["google"] (customers)');
   const staffCb = await fetch(`${APP}/auth/callback?staff=1`, { redirect: 'manual' });
   ok(/\/staff\/login\?error=/.test(staffCb.headers.get('location') ?? ''), 'old staff Google callback is closed (→ /staff/login with an error)');
+  // OAuth failure paths end on a page with a plain-language message (never raw provider text)
+  for (const [label, path, want] of [
+    ['cancelled at Google', '/auth/callback?via=google&error=access_denied&error_description=access_denied', /\/login\?error=.*cancelled/i],
+    ['bad client secret (back on Site URL)', '/?error=server_error&error_description=Unable+to+exchange+external+code%3A+4%2F0A', /\/login\?error=.*temporarily unavailable/i],
+    ['staff email blocked by DB guard', '/auth/callback?via=google&error=server_error&error_description=Database+error+saving+new+user', /\/staff\/login\?error=/],
+    ['expired PKCE code', '/auth/callback?via=google&code=bogus', /\/login\?error=.*different browser/i],
+  ]) {
+    const r = await fetch(APP + path, { redirect: 'manual' });
+    const loc = r.headers.get('location') ?? '';
+    const readable = decodeURIComponent(loc.replace(/\+/g, ' ')).replace(APP, '');
+    ok(want.test(readable) && !/4\/0A|PKCE|Database/i.test(readable), `OAuth error path — ${label} → ${readable.slice(0, 90)}`);
+  }
 
   // temp customer (confirmed, no email sent)
   const { data: cu, error: ce } = await admin.auth.admin.createUser({ email, password, email_confirm: true, user_metadata: { full_name: 'Auth E2E' } });
