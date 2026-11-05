@@ -3,6 +3,8 @@ import { Inter, Lexend, IBM_Plex_Mono } from 'next/font/google';
 import { block, getSiteContent } from '@/lib/content';
 import { getCurrencyContext } from '@/lib/currency';
 import { withCurrency } from '@/lib/format';
+import { revealTimeout } from '@/lib/password-reveal';
+import { PasswordRevealProvider } from '@/components/password/password-input';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
@@ -22,10 +24,14 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // ADDON-25: how long a revealed password stays visible (site_settings auth.password_reveal_timeout_s, cached)
+  const { settings } = await getSiteContent();
   return (
     <html lang="en" className={`${inter.variable} ${lexend.variable} ${plex.variable}`}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <PasswordRevealProvider timeoutS={revealTimeout(settings['auth.password_reveal_timeout_s'])}>{children}</PasswordRevealProvider>
+      </body>
     </html>
   );
 }

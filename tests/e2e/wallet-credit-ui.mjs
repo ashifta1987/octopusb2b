@@ -12,8 +12,8 @@ try {
     const page = await ctx.newPage();
     await page.goto(`${APP}/login?next=/account/wallet`);
     await page.getByLabel('Work email').fill('buyer@demo.octopusb2b.com');
-    await page.getByLabel('Password').fill(PW);
-    await page.getByLabel('Password').press('Enter');
+    await page.getByLabel('Password', { exact: true }).fill(PW);
+    await page.getByLabel('Password', { exact: true }).press('Enter');
     await page.waitForURL(/\/account\/wallet/, { timeout: 60000 });
     const hero = page.getByRole('region', { name: 'Wallet balance' });
     ok(await hero.getByText('Credit limit', { exact: true }).waitFor({ timeout: 30000 }).then(() => true, () => false), `${name}: wallet page shows the credit limit`);

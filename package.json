@@ -14,7 +14,9 @@
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit -p .",
     "db:migrate": "node scripts/db-migrate.mjs",
-    "db:seed": "node scripts/db-migrate.mjs --seed"
+    "db:seed": "node scripts/db-migrate.mjs --seed",
+    "db:backup": "node scripts/db-backup.mjs",
+    "db:wipe-demo": "node scripts/wipe-demo.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^6.0.2",
@@ -34,6 +36,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
     "@playwright/test": "^1.64.1",
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",

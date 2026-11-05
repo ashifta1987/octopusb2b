@@ -1,4 +1,5 @@
 'use client';
+import { PasswordInput } from '@/components/password/password-input';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -109,12 +110,12 @@ export function SetPasswordForm() {
       />
       <div className="flex flex-col gap-1.5">
         <label htmlFor="np" className="text-sm font-semibold">New password</label>
-        <input id="np" type="password" required minLength={PASSWORD_MIN} autoComplete="new-password" className="input min-h-12" value={pw} onChange={(e) => setPw(e.target.value)} aria-describedby="np-hint" />
+        <PasswordInput id="np" required minLength={PASSWORD_MIN} autoComplete="new-password" className="input min-h-12" value={pw} onChange={(e) => setPw(e.target.value)} aria-describedby="np-hint" />
         <span id="np-hint" className="text-[13px] text-muted">At least {PASSWORD_MIN} characters, with a letter and a number.</span>
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor="np2" className="text-sm font-semibold">Repeat password</label>
-        <input id="np2" type="password" required autoComplete="new-password" className="input min-h-12" value={pw2} onChange={(e) => setPw2(e.target.value)} />
+        <PasswordInput id="np2" required autoComplete="new-password" className="input min-h-12" value={pw2} onChange={(e) => setPw2(e.target.value)} />
       </div>
       {err && <p className="text-sm text-bad m-0" role="alert">{err}</p>}
       <button className="btn btn-primary w-full min-h-[50px]" disabled={busy}>{busy ? 'Saving…' : 'Save password and continue'}</button>

@@ -105,7 +105,7 @@ test.describe('Staff areas are closed to customers', () => {
   test('the staff login refuses a customer account', async ({ page }) => {
     await page.goto('/staff/login');
     await page.getByLabel('Work email').fill(BUYER);
-    await page.getByLabel('Password').fill(PASSWORD);
+    await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
     await page.getByRole('button', { name: 'Continue' }).click();
     await expect(page.getByRole('alert')).toContainText(/staff portal/i);
   });
@@ -113,7 +113,7 @@ test.describe('Staff areas are closed to customers', () => {
   test('a wrong password shows the remaining attempts', async ({ page }) => {
     await page.goto('/staff/login');
     await page.getByLabel('Work email').fill(`nobody+${Date.now()}@demo.octopusb2b.com`);
-    await page.getByLabel('Password').fill('wrong-password-1');
+    await page.getByLabel('Password', { exact: true }).fill('wrong-password-1');
     await page.getByRole('button', { name: 'Continue' }).click();
     await expect(page.getByRole('alert')).toContainText(/attempts? left/i);
   });

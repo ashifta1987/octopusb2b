@@ -1,5 +1,6 @@
 'use client';
-import { useActionState } from 'react';
+import { PasswordInput } from '@/components/password/password-input';
+import { useActionState, useState } from 'react';
 import Link from 'next/link';
 import { staffSignIn, type SignInState } from './actions';
 import { StaffHeading, LockNotice } from '../_components/bits';
@@ -14,6 +15,8 @@ export function StaffLoginForm({ next, initialError, notice, emailDomain, attemp
   next: string; initialError: string | null; notice: string | null; emailDomain: string; attempts: number; minutes: number;
 }) {
   const [state, action, pending] = useActionState<SignInState, FormData>(staffSignIn, initialError ? { error: initialError } : null);
+  // controlled so a wrong password doesn't wipe the email (React resets uncontrolled fields after a form action)
+  const [email, setEmail] = useState('');
   const until = fmtTime(state?.lockedUntil);
   return (
     <div className="flex flex-col gap-5">
@@ -23,14 +26,14 @@ export function StaffLoginForm({ next, initialError, notice, emailDomain, attemp
         <input type="hidden" name="next" value={next} />
         <div className="flex flex-col gap-1.5">
           <label htmlFor="se" className="text-sm font-semibold">Work email</label>
-          <input id="se" name="email" type="email" required autoComplete="username" className="input min-h-12" placeholder={`name@${emailDomain}`} />
+          <input id="se" name="email" type="email" required autoComplete="username" className="input min-h-12" placeholder={`name@${emailDomain}`} value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
         <div className="flex flex-col gap-1.5">
           <div className="flex justify-between items-baseline">
             <label htmlFor="sp" className="text-sm font-semibold">Password</label>
             <Link href="/staff/forgot" className="text-[13px] font-semibold text-blue">Forgot password?</Link>
           </div>
-          <input id="sp" name="password" type="password" required autoComplete="current-password" className="input min-h-12" />
+          <PasswordInput id="sp" name="password" required autoComplete="current-password" className="input min-h-12" />
         </div>
         {state?.error && (
           <div role="alert" className="text-sm text-bad">

@@ -31,7 +31,7 @@ export async function getHomeLiveData(): Promise<HomeLiveData> {
   try { admin = createAdminClient(); } catch { admin = null; }
 
   const [prodCount, supCount, tiers] = await Promise.all([
-    pub.from('products').select('id', { count: 'exact', head: true }).eq('status', 'live').is('archived_at', null),
+    pub.from('products').select('id', { count: 'exact', head: true }).eq('status', 'live').is('archived_at', null).eq('is_seed', false),
     pub.from('public_suppliers').select('id', { count: 'exact', head: true }).eq('verified', true),
     pub.from('price_tiers').select('product_id, min_qty, unit_price_cents').limit(5000),
   ]);
@@ -54,7 +54,7 @@ export async function getHomeLiveData(): Promise<HomeLiveData> {
   let markets = 0, destinations: string[] = [], shipments = 0, carriers = 0, liveRfq: LiveRfq | null = null;
   if (admin) {
     const [orders, ships, carr, rfqs] = await Promise.all([
-      admin.from('orders').select('org_id, organizations(country)').neq('status', 'cancelled').limit(5000),
+      admin.from('orders').select('org_id, organizations(country)').neq('status', 'cancelled').eq('is_seed', false).limit(5000),
       admin.from('shipments').select('id, org_id', { count: 'exact' }).limit(5000),
       admin.from('carriers').select('code', { count: 'exact', head: true }).eq('active', true),
       admin.from('rfqs').select('id, code, quantity, unit, title, destination_country, product_id, products(title), created_at')

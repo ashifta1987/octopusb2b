@@ -1265,3 +1265,11 @@ Full prompt: `docs/ADDON-22-no-google-customer-login.md`. **Owner decision (1 No
 
 Full prompt: `docs/ADDON-23-remove-advertising-from-customer-nav.md`. Customers buy, they don't advertise. The customer sidebar is exactly: Dashboard · AI assistant · RFQs · Service requests · Orders · Group buys · Wallet · Ledger & invoices · Company & KYC · API & integrations · Help & complaints. `/account/ads` redirects to `/account` with "That area isn't part of your account." The sponsored card on the dashboard no longer links to "Advertise here". The campaign screen is kept (not routed) in `app/account/ads/campaign-manager.tsx` for the future supplier / Advertiser portal (`/supplier/ads`); admin moderation stays at `/admin/ads`. Test: `tests/e2e/customer-nav.mjs`.
 
+## 24. Addendum: remove demo data, prepare for real data
+
+Full prompt: `docs/ADDON-24-remove-demo-data.md`. Business tables carry `is_seed boolean` (back-filled by deterministic rules in `tag_seed_rows()`); dashboards and the revenue / geography / wallet RPCs filter `is_seed = false` server-side. `pnpm db:backup` writes a local JSON backup; `pnpm db:wipe-demo --env production --operator <staff email> [--merge-duplicates "<company>"]` refuses unless the environment matches `site_settings.app_environment` and the operator types `DELETE DEMO DATA FOR <project-ref>`; it deletes every seed row and the demo users in one transaction (idempotent), restarts the human codes at 1001 (OCT-, RFQ-, ORD-, SHP-, TKT-, POOL-, SRV-, PI-, INV-, EX-, RS-, JRN-), verifies (no seed rows, ledger balanced, wallets 0, no open pools), writes audit `demo_data_wiped` and `site_settings.demo_wipe`, and flips launch defaults (wallet credit default 0 until KYC, supplier portal off, pools on). `/admin` shows "Demo data cleared on <date> by <admin>. Add your first supplier" until a real supplier exists. `supabase/seed.sql` and the seed scripts refuse to run when `app_environment = production`. Owner decisions: see the note at the top of the add-on file.
+
+## 25. Addendum: show / hide password
+
+Full prompt: `docs/ADDON-25-password-eye-icon.md`. One `PasswordInput` (eye / eye-off, `aria-pressed`, keyboard Space/Enter, auto-hide after `site_settings.auth.password_reveal_timeout_s` seconds — default 15, 0 = never — and re-hidden on submit) on every password field. The 6-digit 2FA code input has no reveal.
+

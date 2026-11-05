@@ -5,6 +5,7 @@ import { config } from 'dotenv';
 import pg from 'pg';
 import fs from 'node:fs';
 import path from 'node:path';
+import { assertNotProduction } from './lib-env-guard.mjs';
 config({ path: '.env.local' });
 const url = process.env.DATABASE_URL;
 if (!url) throw new Error('DATABASE_URL missing');
@@ -34,6 +35,7 @@ for (const f of files) {
   }
 }
 if (process.argv.includes('--seed')) {
+  await assertNotProduction(client, 'seed.sql');
   process.stdout.write('→ seed.sql … ');
   try { await client.query(fs.readFileSync('supabase/seed.sql', 'utf8')); console.log('ok'); }
   catch (e) { console.log('FAILED'); console.error(e.message, e.where ?? ''); process.exit(1); }

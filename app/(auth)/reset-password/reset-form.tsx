@@ -1,4 +1,5 @@
 'use client';
+import { PasswordInput } from '@/components/password/password-input';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -91,12 +92,12 @@ export function ResetPasswordForm() {
       </div>
       <div>
         <label htmlFor="np" className="label">New password</label>
-        <input id="np" type="password" required autoComplete="new-password" className="input min-h-12" value={pw} onChange={(e) => setPw(e.target.value)} />
+        <PasswordInput id="np" required autoComplete="new-password" className="input min-h-12" value={pw} onChange={(e) => setPw(e.target.value)} />
         <p className="text-sm text-muted mt-2">At least 8 characters, with a number.</p>
       </div>
       <div>
         <label htmlFor="np2" className="label">Repeat new password</label>
-        <input id="np2" type="password" required autoComplete="new-password" className="input min-h-12" value={pw2} onChange={(e) => setPw2(e.target.value)} />
+        <PasswordInput id="np2" required autoComplete="new-password" className="input min-h-12" value={pw2} onChange={(e) => setPw2(e.target.value)} />
       </div>
       {err && <p className="text-sm text-bad" role="alert">{err}</p>}
       <button className="btn btn-primary w-full min-h-[50px]" disabled={busy}>{busy ? 'Saving…' : 'Save new password'}</button>

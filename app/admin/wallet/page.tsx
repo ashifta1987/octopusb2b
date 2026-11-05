@@ -31,7 +31,7 @@ export default async function WalletAdminPage() {
   const [settings, wallets, topups, services, prices, rev, ctx, credit] = await Promise.all([
     sb.from('site_settings').select('key, value').in('key', ['wallet_enabled', 'wallet_credit_default', ...PLATFORM_SETTINGS.map((p) => p.key)]),
     sb.rpc('admin_wallet_balances'),
-    sb.from('wallet_topups').select('id, org_id, amount_cents, currency, method, reference, status, created_at, organizations(name, country)').order('created_at', { ascending: false }).limit(40),
+    sb.from('wallet_topups').select('id, org_id, amount_cents, currency, method, reference, status, created_at, organizations(name, country)').eq('is_seed', false).order('created_at', { ascending: false }).limit(40),
     sb.from('services').select('code, name, unit, active, sort').order('sort'),
     sb.from('service_prices').select('service_code, amount_minor, currency, effective_from').order('effective_from', { ascending: false }),
     can(s, 'finance', 'view') || can(s, 'dashboard', 'view') ? sb.rpc('admin_revenue_by_stream', { p_from: monthStart.toISOString() }) : Promise.resolve({ data: [] }),

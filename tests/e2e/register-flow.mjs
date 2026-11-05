@@ -41,11 +41,11 @@ try {
     const page = await ctx.newPage();
     await page.goto(APP + '/signup', { waitUntil: 'networkidle' });
     await page.getByLabel('Work email').fill('someone@example.com');
-    await page.getByLabel('Password').fill('short');
+    await page.getByLabel('Password', { exact: true }).fill('short');
     await page.getByRole('button', { name: 'Create account with email' }).click();
     ok(await page.getByRole('alert').filter({ hasText: /8 characters/ }).waitFor({ timeout: 30000 }).then(() => true, () => false), 'weak password is refused with a clear message');
     await page.getByLabel('Work email').fill('new.staff@octopusb2b.com');
-    await page.getByLabel('Password').fill('LongEnough123');
+    await page.getByLabel('Password', { exact: true }).fill('LongEnough123');
     await page.getByRole('button', { name: 'Create account with email' }).click();
     const staffMsg = page.getByText('This is an Octopus staff email', { exact: false });
     ok(await staffMsg.waitFor({ timeout: 30000 }).then(() => true, () => false), 'staff-domain email cannot register as a customer ("This is an Octopus staff email…")');

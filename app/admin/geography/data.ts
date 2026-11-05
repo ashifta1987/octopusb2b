@@ -21,8 +21,8 @@ export type Org = { id: string; country: string | null; city: string | null; bus
 export async function loadGeography(f: { kyc?: string; type?: string; since?: string; region?: string }) {
   const sb = await createClient();
   const [{ data: orgsRaw }, { data: orders }, ctx] = await Promise.all([
-    sb.from('organizations').select('id, country, city, business_type, kyc_status, created_at').is('archived_at', null).limit(20000),
-    sb.from('orders').select('org_id, total_cents, currency, status, created_at').neq('status', 'cancelled').limit(50000),
+    sb.from('organizations').select('id, country, city, business_type, kyc_status, created_at').is('archived_at', null).eq('is_seed', false).limit(20000),
+    sb.from('orders').select('org_id, total_cents, currency, status, created_at').neq('status', 'cancelled').eq('is_seed', false).limit(50000),
     getCurrencyContext(),
   ]);
   let orgs = (orgsRaw ?? []) as Org[];

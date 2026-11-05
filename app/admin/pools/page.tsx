@@ -36,7 +36,7 @@ export default async function AdminPoolsPage({ searchParams }: { searchParams: S
   const [{ data: poolRows, error }, settingsRes, counts, ctx] = await Promise.all([
     q,
     sb.from('site_settings').select('key, value').like('key', 'pool_%'),
-    sb.from('pools').select('status'),
+    sb.from('pools').select('status').eq('is_seed', false),
     getCurrencyContext(),
   ]);
   const pools = (poolRows ?? []) as unknown as {

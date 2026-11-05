@@ -3,6 +3,7 @@
 import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
 import pg from 'pg';
+import { assertNotProduction } from './lib-env-guard.mjs';
 config({ path: '.env.local' });
 
 const password = process.env.DEMO_PASSWORD;
@@ -12,6 +13,7 @@ const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUP
 });
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 await db.connect();
+await assertNotProduction(db, 'seed-users');
 
 const users = [
   { email: 'admin@demo.octopusb2b.com', name: 'Demo Admin', roles: ['admin'] },

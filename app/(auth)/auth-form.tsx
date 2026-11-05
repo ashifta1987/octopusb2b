@@ -1,4 +1,5 @@
 'use client';
+import { PasswordInput } from '@/components/password/password-input';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -116,7 +117,7 @@ export function AuthForm({ initialMode, next, initialError, google = false }: { 
                 <label htmlFor="password" className="label">Password</label>
                 {mode === 'login' && <Link href="/forgot" className="text-[13px] font-semibold text-blue">Forgot password?</Link>}
               </div>
-              <input id="password" type="password" required autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} className="input min-h-12" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <PasswordInput id="password" required autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} className="input min-h-12" value={password} onChange={(e) => setPassword(e.target.value)} />
               {mode === 'signup' && <p className="text-sm text-muted mt-2">At least 8 characters, with a number.</p>}
             </div>
             {err && <p className="text-sm text-bad" role="alert">{err}</p>}

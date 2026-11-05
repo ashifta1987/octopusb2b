@@ -1,5 +1,15 @@
 -- Octopus B2B — seed data (SPEC §11.4). Idempotent where practical.
 
+-- ── ADDON-24 guard: never seed a production database ──
+do $$
+begin
+  if current_setting('app.environment', true) = 'production'
+     or (to_regclass('public.site_settings') is not null
+         and exists (select 1 from public.site_settings where key = 'app_environment' and value = '"production"'::jsonb)) then
+    raise exception 'SEED_BLOCKED: this is the production database (site_settings.app_environment = production). Seed only staging / local projects.';
+  end if;
+end $$;
+
 -- ── Roles & permission matrix (§3) ──
 insert into roles(code, name, description, is_staff, sort) values
  ('admin','Admin','Owner: everything incl. master switches, approvals over limits, staff', true, 1),

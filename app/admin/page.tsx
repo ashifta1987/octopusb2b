@@ -30,20 +30,25 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
   const sb = await createClient();
 
   const [orders, revenue, orgs, liveProducts, openRfqs, openTickets, srs, settings, audit, history, staffRoles, suppliers, ctx] = await Promise.all([
-    sb.from('orders').select('id, total_cents, currency, status, created_at, supplier_id, org_id').neq('status', 'cancelled').limit(5000),
+    sb.from('orders').select('id, total_cents, currency, status, created_at, supplier_id, org_id').neq('status', 'cancelled').eq('is_seed', false).limit(5000),
     sb.rpc('admin_revenue_by_stream', { p_from: since.toISOString() }),
-    sb.from('organizations').select('id, kyc_status, country').is('archived_at', null).limit(10000),
-    sb.from('products').select('id', { count: 'exact', head: true }).eq('status', 'live'),
-    sb.from('rfqs').select('id', { count: 'exact', head: true }).in('status', OPEN_RFQ),
-    sb.from('tickets').select('id', { count: 'exact', head: true }).in('status', OPEN_TICKET),
-    sb.from('service_requests').select('service_code').limit(5000),
+    sb.from('organizations').select('id, kyc_status, country').is('archived_at', null).eq('is_seed', false).limit(10000),
+    sb.from('products').select('id', { count: 'exact', head: true }).eq('status', 'live').eq('is_seed', false),
+    sb.from('rfqs').select('id', { count: 'exact', head: true }).in('status', OPEN_RFQ).eq('is_seed', false),
+    sb.from('tickets').select('id', { count: 'exact', head: true }).in('status', OPEN_TICKET).eq('is_seed', false),
+    sb.from('service_requests').select('service_code').eq('is_seed', false).limit(5000),
     sb.from('site_settings').select('key, value').in('key', SWITCHES.map((x) => x.key)),
     can(s, 'audit', 'view') ? sb.from('audit_log').select('id, actor_id, action, entity, entity_id, created_at').order('created_at', { ascending: false }).limit(8) : Promise.resolve({ data: [] as never[] }),
     sb.from('status_history').select('id, entity, entity_id, from_status, to_status, actor_id, reason, created_at').order('created_at', { ascending: false }).limit(8),
     can(s, 'staff', 'view') ? sb.from('user_roles').select('user_id, role_code, roles!inner(is_staff)').eq('roles.is_staff', true) : Promise.resolve({ data: [] as never[] }),
-    sb.from('suppliers').select('id, code, legal_name, country'),
+    sb.from('suppliers').select('id, code, legal_name, country, is_seed'),
     getCurrencyContext(),
   ]);
+  // ADDON-24: one-time banner after the demo wipe, until the first real supplier exists
+  const { data: wipeRow } = await sb.from('site_settings').select('value').eq('key', 'demo_wipe').maybeSingle();
+  const wipe = wipeRow?.value as { at?: string; by_name?: string | null } | undefined;
+  const realSuppliers = (suppliers.data ?? []).filter((x) => !x.is_seed).length;
+  const showFirstSupplier = !!wipe?.at && realSuppliers === 0;
 
   const allOrders = orders.data ?? [];
   const periodOrders = allOrders.filter((o) => new Date(o.created_at) >= since);
@@ -106,6 +111,14 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
 
   return (
     <>
+      {showFirstSupplier && (
+        <section className="mb-6 rounded-[14px] border border-blue/30 bg-blue-soft px-5 py-4 flex flex-wrap items-center justify-between gap-4" aria-label="Get started">
+          <p className="text-[15px] text-[#1E4F9C]">
+            Demo data cleared on <strong>{fmtDate(wipe!.at!)}</strong>{wipe!.by_name ? <> by <strong>{wipe!.by_name}</strong></> : null}. Add your first supplier to get started.
+          </p>
+          {can(s, 'suppliers', 'create') && <Link href="/admin/suppliers?new=1" className="btn btn-primary">Create first supplier</Link>}
+        </section>
+      )}
       <PageHeader
         title="Platform overview"
         subtitle={`Figures come from orders, the ledger and live queues. Charts are in ${ctx.currency}${mixed ? `; amounts in other currencies are converted at the approved rate (${rateLabel(ctx)})` : ''}.`}

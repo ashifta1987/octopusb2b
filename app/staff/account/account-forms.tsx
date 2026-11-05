@@ -1,4 +1,5 @@
 'use client';
+import { PasswordInput } from '@/components/password/password-input';
 import { useActionState, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { stepUpRedirect } from '@/lib/staff/step-up';
@@ -35,10 +36,10 @@ export function PasswordForm() {
     <form action={action} className="grid gap-4">
       <div>
         <label htmlFor="cp-new" className="label">New password</label>
-        <input id="cp-new" name="password" type="password" required minLength={PASSWORD_MIN} autoComplete="new-password" className="input" aria-describedby="cp-hint" />
+        <PasswordInput id="cp-new" name="password" required minLength={PASSWORD_MIN} autoComplete="new-password" className="input" aria-describedby="cp-hint" />
         <p id="cp-hint" className="text-[13px] text-muted mt-1">At least {PASSWORD_MIN} characters, with a letter and a number.</p>
       </div>
-      <div><label htmlFor="cp-confirm" className="label">Repeat new password</label><input id="cp-confirm" name="confirm" type="password" required autoComplete="new-password" className="input" /></div>
+      <div><label htmlFor="cp-confirm" className="label">Repeat new password</label><PasswordInput id="cp-confirm" name="confirm" required autoComplete="new-password" className="input" /></div>
       <Msg r={state} />
       <div><button className="btn btn-primary" disabled={pending}>{pending ? 'Saving…' : 'Change password'}</button></div>
     </form>
