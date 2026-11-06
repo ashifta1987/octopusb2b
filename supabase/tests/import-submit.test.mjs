@@ -17,7 +17,8 @@ try {
   if (process.env.MIGRATION) await db.query(fs.readFileSync(process.env.MIGRATION, 'utf8'));
   const adminId = (await one(`select ur.user_id from user_roles ur join auth.users u on u.id = ur.user_id where ur.role_code = 'admin' order by u.created_at limit 1`)).user_id;
   const okSup = (await one(`select id from suppliers where identity_status = 'ok' and archived_at is null order by code limit 1`)).id;
-  const bwj = await one(`select p.id, p.supplier_id from products p where p.sku like 'CN-GD-BWJ-%' and p.status = 'draft' and exists (select 1 from price_tiers t where t.product_id = p.id) limit 1`);
+  const bwj = await one(`select p.id, p.supplier_id from products p where p.sku like 'CN-GD-BWJ-%' and exists (select 1 from price_tiers t where t.product_id = p.id) order by p.sku limit 1`);
+  await db.query(`update products set status = 'draft' where id = $1`, [bwj.id]);   // fixture (rolled back)
   const asAdmin = async () => {
     await db.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify({ sub: adminId, role: 'authenticated', aal: 'aal2' })]);
     await db.query('set local role authenticated');
@@ -70,6 +71,20 @@ try {
   const r4 = (await one(`select submit_import_job($1) r`, [job3])).r;
   await asOwner();
   ok(r4.job_status === 'submit_failed', 'a job where nothing could be submitted is "submit_failed", never "submitted"');
+  // 5b · ADDON-27 import run (no import job): submit_import_run submits every product of the run, reasons per Product Id
+  const run = await one(`select id, (select count(distinct s->>'external_id') from jsonb_array_elements(staging->'products') s) n from import_runs where status = 'committed' order by committed_at limit 1`);
+  if (run) {
+    const runSkus = (await db.query(`select distinct s->>'external_id' sku from import_runs ru, jsonb_array_elements(ru.staging->'products') s where ru.id = $1`, [run.id])).rows.map((x) => x.sku);
+    await db.query(`update products set status = 'archived' where sku = $1`, [runSkus[0]]);   // one product that cannot be submitted
+    await asAdmin();
+    const rr = (await one(`select submit_import_run($1) r`, [run.id])).r;
+    await asOwner();
+    const inQueue = Number((await one(`select count(*) n from products where sku = any($1) and status in ('submitted', 'in_review')`, [runSkus])).n);
+    ok(rr.total === Number(run.n) && rr.failed === 1 && /archived/.test(rr.results[runSkus[0]]) && inQueue === rr.submitted + rr.already_in_moderation && rr.status === 'partially_submitted',
+      `import run submit: ${rr.submitted} submitted + ${rr.already_in_moderation} already = ${inQueue} in the queue; 1 reported ("${rr.results[runSkus[0]]}")`);
+    const ra = await one(`select details from audit_log where action = 'import_run.submitted' and entity_id = $1 order by id desc limit 1`, [run.id]);
+    ok(ra?.details?.total === Number(run.n), 'audit_log row written for the run submit');
+  }
   // 6 · identity unresolved: in the queue, but publishing is still blocked
   await asAdmin();
   const pub = await db.query('savepoint p').then(() => db.query(`select transition_product($1, 'live')`, [bwj.id])).then(() => 'published', (e) => e.message);

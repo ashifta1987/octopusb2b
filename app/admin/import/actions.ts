@@ -122,3 +122,17 @@ export async function setProductPricing(_prev: Result | null, fd: FormData): Pro
   return ok(mode === 'manual' ? 'Manual prices — edit the tiers on the product' : 'Buyer prices recalculated');
 }
 
+
+/** Submit every product of a committed run for moderation (submit_import_run: same per-product rules as distributor jobs;
+ *  a plain reason is stored per Product Id for anything that cannot be submitted). */
+export async function submitImportRun(runId: string): Promise<Result> {
+  const g = await guard('products', 'edit');
+  if ('error' in g) return g.error;
+  const { data, error } = await g.sb.rpc('submit_import_run', { p_run: runId });
+  revalidatePath(`/admin/import/${runId}`);
+  revalidatePath('/office/products');
+  if (error) return fail(error);
+  const r = data as { submitted: number; already_in_moderation: number; failed: number };
+  const msg = `${r.submitted} submitted for moderation${r.already_in_moderation ? ` · ${r.already_in_moderation} already in moderation or live` : ''}${r.failed ? ` · ${r.failed} could not be submitted — see each row` : ''}`;
+  return r.submitted || r.already_in_moderation ? ok(msg) : fail(msg);
+}

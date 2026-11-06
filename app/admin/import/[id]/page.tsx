@@ -7,7 +7,7 @@ import { RunButton } from '@/components/admin/client';
 import { fmtDate, humanize } from '@/lib/format';
 import type { StagingBatch } from '@/lib/import/types';
 import type { ImportDiff } from '@/lib/import/core';
-import { commitImportRun, discardImportRun } from '../actions';
+import { commitImportRun, discardImportRun, submitImportRun } from '../actions';
 
 export const metadata = { title: 'Import preview' };
 
@@ -30,6 +30,10 @@ export default async function ImportRunPage({ params }: { params: Promise<{ id: 
   const reviewBy = new Map<string, number>();
   batch.review.forEach((r) => reviewBy.set(r.external_id, (reviewBy.get(r.external_id) ?? 0) + 1));
   const errors = batch.errors ?? [];
+  const submitRes = ((run.submit_report as { results?: Record<string, string> } | null)?.results ?? {}) as Record<string, string>;
+  const { data: liveStatus } = committed ? await sb.from('products').select('sku, status').in('sku', batch.products.map((x) => x.external_id)) : { data: [] };
+  const statusOf = new Map((liveStatus ?? []).map((x) => [x.sku as string, x.status as string]));
+  const drafts = [...statusOf.values()].filter((v) => v === 'draft' || v === 'rejected').length;
   const changes = diff.changes ?? [];
   const { data: sup } = await sb.from('suppliers').select('id, code, identity_status').eq('external_id', batch.supplier.external_id).maybeSingle();
 
@@ -122,13 +126,20 @@ export default async function ImportRunPage({ params }: { params: Promise<{ id: 
       )}
 
       <Card title="Products in this workbook" className="mb-6" action={<span className="text-xs text-muted">Blank = not provided by the supplier (never zero)</span>}>
+        {committed && can(s, 'products', 'edit') && (
+          <div className="px-6 pb-4 flex flex-wrap items-center gap-3">
+            <span className="text-sm text-muted">{statusOf.size - drafts} of {statusOf.size} products are in moderation or live.</span>
+            {drafts > 0 && <RunButton className="btn btn-dark btn-sm" confirm={`Submit ${drafts} draft products of this import for moderation?`} action={submitImportRun.bind(null, id)}>Submit {drafts} for moderation</RunButton>}
+          </div>
+        )}
         <Table head={['Product Id', 'Model / name', 'Sheet', 'Status', 'Supplier prices (cost)', 'Review']}>
           {batch.products.map((p) => (
             <tr key={p.external_id}>
               <td className="td mono text-sm">{p.external_id}</td>
               <td className="td text-sm"><div className="font-semibold">{p.name ?? p.factory_model ?? '—'}</div>{p.name && <div className="text-muted">{p.factory_model}</div>}</td>
               <td className="td text-sm">{p.sheet}</td>
-              <td className="td"><StatusBadge status={p.listing_status} /></td>
+              <td className="td"><StatusBadge status={p.listing_status} />{statusOf.get(p.external_id) && <div className="mt-1"><StatusBadge status={statusOf.get(p.external_id)!} /></div>}
+                {submitRes[p.external_id] && !['submitted', 'already'].includes(submitRes[p.external_id]) && <p className="text-bad text-xs mt-1" data-testid="submit-error">Not submitted: {submitRes[p.external_id]}</p>}</td>
               <td className="td mono text-xs">{(byProduct.get(p.external_id) ?? []).map((x, i) => <div key={i}>{x.incoterm} · MOQ {x.moq_tier_min}{x.variant_label ? ` · ${x.variant_label}` : ''} · {usd4(x.price_minor)}</div>)}
                 {!byProduct.get(p.external_id)?.length && <span className="text-muted">no price</span>}</td>
               <td className="td text-sm">{reviewBy.get(p.external_id) ? <span className="text-warn font-semibold">{reviewBy.get(p.external_id)} item{reviewBy.get(p.external_id) === 1 ? '' : 's'}</span> : '—'}</td>
