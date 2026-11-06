@@ -7,6 +7,8 @@ import { ActionForm, RunButton, ToggleSetting } from '@/components/admin/client'
 import { COUNTRY_NAMES, fmtDate } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { createSupplier, updateSupplier, setSwitch, setArchived } from './actions';
+import { setCanonicalName } from '../import/actions';
+import { Notice } from '@/components/ui';
 
 export const metadata = { title: 'Suppliers' };
 
@@ -29,6 +31,9 @@ export default async function SuppliersPage({ searchParams }: { searchParams: Pr
   const prodCount = new Map<string, { live: number; total: number }>();
   (counts ?? []).forEach((p) => { const a = prodCount.get(p.supplier_id) ?? { live: 0, total: 0 }; a.total++; if (p.status === 'live') a.live++; prodCount.set(p.supplier_id, a); });
   const sel = sp.new ? null : list.find((x) => x.id === sp.id) ?? null;
+  // ADDON-27: legal-name variants collected by bulk imports — one must be chosen before the supplier's products can be published
+  const { data: variants } = sel ? await sb.from('supplier_name_variants').select('id, variant_name, variant_address, seen_in, is_canonical').eq('supplier_id', sel.id).order('created_at') : { data: [] };
+  const needsIdentity = sel?.identity_status === 'needs_identity_review';
   const edit = can(s, 'suppliers', 'edit');
   const countries = Object.entries(COUNTRY_NAMES).sort((a, b) => a[1].localeCompare(b[1]));
   const sw = (x: (typeof list)[number]) => (Array.isArray(x.supplier_switches) ? x.supplier_switches[0] : x.supplier_switches) ?? {};
@@ -45,6 +50,24 @@ export default async function SuppliersPage({ searchParams }: { searchParams: Pr
         <button className="btn btn-ghost" type="submit">Search</button>
       </form>
 
+      {sel && (variants ?? []).length > 0 && (
+        <Card title="Legal-name variants" className="mb-6">
+          <div className="px-6 pb-6 grid gap-3">
+            {needsIdentity
+              ? <Notice tone="amber"><b>{(variants ?? []).length} legal names in use — resolve before the first order ships.</b> None of this supplier&apos;s imported products can be published until you choose the entity that signs contracts.</Notice>
+              : <Notice tone="green">Canonical legal name chosen: <b>{String(sel.legal_name)}</b></Notice>}
+            <ul className="grid gap-2">
+              {(variants ?? []).map((v) => (
+                <li key={v.id} className="flex flex-wrap items-start justify-between gap-3 border border-line rounded-[10px] px-4 py-3">
+                  <div className="text-sm"><div className="font-semibold">{v.variant_name} {v.is_canonical && <StatusBadge status="canonical" tone="green" label="Canonical" />}</div>
+                    {v.variant_address && <div className="text-muted">{v.variant_address}</div>}<div className="text-xs text-muted">Seen in: {String(v.seen_in ?? '').replace(/_/g, ' ')}</div></div>
+                  {edit && !v.is_canonical && <RunButton className="btn btn-ghost btn-sm" confirm={`Make "${v.variant_name}" the canonical legal name? It becomes the supplier's legal name on contracts and documents.`} action={setCanonicalName.bind(null, sel.id, v.id)}>Use this name</RunButton>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Card>
+      )}
       {(sp.new || sel) && (
         <Card title={sel ? `Edit ${sel.code}` : 'New supplier'} className="mb-6" action={<Link href="/admin/suppliers" className="text-sm text-blue">Close</Link>}>
           <ActionForm key={sel?.id ?? 'new'} action={sel ? updateSupplier : createSupplier} className="px-6 pb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" submitLabel={sel ? 'Save supplier' : 'Create supplier'} hideSubmit={sel ? !edit : false} resetOnSuccess={!sel}>

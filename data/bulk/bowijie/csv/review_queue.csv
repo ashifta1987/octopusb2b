@@ -1,0 +1,12 @@
+product_id,issue,evidence
+CN-GD-BWJ-F8,"Quote says 75 pcs/carton, dashboard says 80. One is wrong.",Bowijie fan quote 2026.11 vs live listing
+CN-GD-BWJ-F3,"Dashboard says 1800mAh, quote says 3000mAh.",Live listing vs quote
+CN-GD-BWJ-J1000,"Dashboard says 3600mAh, quote says 3000mAh.",Live listing vs quote
+CN-GD-BWJ-G2000,One listing coded G2000 states 2000mAh; quote says 4000mAh. Second neck fan has no Product Id.,Live catalogue
+CN-GD-BWJ-S13,"Price 12.208 is 4-5× the rest of the range, specs blank, row untranslated.",Quote
+CN-GD-BWJ-S15,"Price 9.8062 is 4-5× the rest of the range, specs blank, row untranslated.",Quote
+CN-GD-BWJ-S16,"Price 10.54 is 4-5× the rest of the range, specs blank, row untranslated.",Quote
+CN-GD-BWJ-P06,"Dimensions, carton and weight identical to P05 despite different shape and 300ml vs 280ml tank.",Specs cross-check
+CN-GD-BWJ-P08,"Quote says 2 filters, catalogue says 2 cleaning swabs.",Quote vs catalogue
+CN-GD-BWJ-P09,"Dimensions/weights/carton/price identical to P08, only material differs (PC/ABS vs ABS).",Specs cross-check
+CN-GD-BWJ-P10,"Marked ""In Development"", no price. Not listable yet.",Quote

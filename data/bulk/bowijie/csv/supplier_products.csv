@@ -1,0 +1,70 @@
+supplier_id,product_id,supplier_model,moq,exclusive_channels,status,exclusivity_flag
+CN-GD-BWJ-0010,CN-GD-BWJ-F8,F8制冷手持风扇,3000,"Amazon, Japan market",quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-F9,F9制冷手持风扇,3000,Pinduoduo,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-F11,F11 散热手持风扇,3000,"Pinduoduo, Douyin, TEMU",quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-F12,F12冷却手持风扇,3000,All China domestic platforms,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-F13,F13制冷手持风扇,3000,"Pinduoduo, Amazon, Korea & Japan",quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-MINI1,迷你风扇1,3000,None stated,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-MINI2,迷你风扇2,3000,None stated,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-G1000,G1000 挂脖风扇,3000,None stated,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-G2000,G2000 颈挂风扇,3000,None stated,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-F15,F15,3000,None stated,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-F16,F16,3000,"TikTok, TEMU",quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-F17,F17,3000,None stated,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-F18,F18,3000,None stated,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-F20,F20,3000,None stated,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-F22,F22,3000,None stated,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-Z1000,Z1000,3000,None stated,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-J1000,J1000,3000,None stated,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-F3,F3,3000,None stated,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-XXJ06,XXJ06 香薰机,3000,包销平台,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-XXJ07,XXJ07 香薰机,3000,包销平台,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-XXJ08,XXJ08 香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-XXJ010,XXJ010 香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-XXJ015,XXJ015 香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-XXJ016,XXJ016 香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-XXJ017,XXJ017 香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-XXJ018,XXJ018 香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-S1,S1 香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-S19,S19 香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-S1PRO,S1PRO香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-S2,S2香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-S5,S5 香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-S6,S6香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-S7,S7 香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-S8,S8香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-S9,S9 香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-S10,S10 香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-S11,S11 香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-S12,S12 香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-S13,S13 香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-S15,S15 香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-S16,S16 香薰机,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-P05,P05 Humidifier,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-P06,P06 Humidifier,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-P07,P07 Humidifier,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-P08,P08 Humidifier,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-P09,P09 Humidifier,3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-P10,P10 Humidifier (In Development),,Region Already Exclusively Distributed,no_price,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-P11,P11 Humidifier (New for October),3000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-P12,P12 Humidifier (New for October),5000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-P13,P13 Humidifier (New for October),5000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-P15,P15 Humidifier (New for October),5000,Region Already Exclusively Distributed,quoted,Region Already Exclusively Distributed
+CN-GD-BWJ-0010,CN-GD-BWJ-MQ01,MQ01,,,needs_quote,
+CN-GD-BWJ-0010,CN-GD-BWJ-MQ002,MQ002,,,needs_quote,
+CN-GD-BWJ-0010,CN-GD-BWJ-MQ06,MQ06,,,needs_quote,
+CN-GD-BWJ-0010,CN-GD-BWJ-MQ07,MQ07,,,needs_quote,
+CN-GD-BWJ-0010,CN-GD-BWJ-MQ08,MQ08,,,needs_quote,
+CN-GD-BWJ-0010,CN-GD-BWJ-MQ09,MQ09,,,needs_quote,
+CN-GD-BWJ-0010,CN-GD-BWJ-MQ010,MQ010,,,needs_quote,
+CN-GD-BWJ-0010,CN-GD-BWJ-MQ011,MQ011,,,needs_quote,
+CN-GD-BWJ-0010,CN-GD-BWJ-MQ012,MQ012,,,needs_quote,
+CN-GD-BWJ-0010,CN-GD-BWJ-WS01,WS01,,,needs_quote,
+CN-GD-BWJ-0010,CN-GD-BWJ-WS03,WS03,,,needs_quote,
+CN-GD-BWJ-0010,CN-GD-BWJ-WS05,WS05,,,needs_quote,
+CN-GD-BWJ-0010,CN-GD-BWJ-WS07,WS07,,,needs_quote,
+CN-GD-BWJ-0010,CN-GD-BWJ-AROMA-001,AROMA-001,,,needs_quote,
+CN-GD-BWJ-0010,CN-GD-BWJ-AROMA-002,AROMA-002,,,needs_quote,
+CN-GD-BWJ-0010,CN-GD-BWJ-AROMA-BAR,AROMA-BAR,,,needs_quote,
+CN-GD-BWJ-0010,CN-GD-BWJ-P01,P01,,,needs_quote,
+CN-GD-BWJ-0010,CN-GD-BWJ-SO1,SO1,,,needs_quote,

@@ -16,7 +16,8 @@
     "db:migrate": "node scripts/db-migrate.mjs",
     "db:seed": "node scripts/db-migrate.mjs --seed",
     "db:backup": "node scripts/db-backup.mjs",
-    "db:wipe-demo": "node scripts/wipe-demo.mjs"
+    "db:wipe-demo": "node scripts/wipe-demo.mjs",
+    "import:bulk": "node scripts/import-bulk.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^6.0.2",
@@ -25,6 +26,7 @@
     "@tanstack/react-table": "^9.3.1",
     "clsx": "^2.1.1",
     "exceljs": "^4.4.0",
+    "fflate": "^0.8.3",
     "lucide-react": "^1.65.0",
     "next": "16.4.3",
     "openai": "^7.45.1",

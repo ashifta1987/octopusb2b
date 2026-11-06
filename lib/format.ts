@@ -90,6 +90,8 @@ export function mapDbError(e: { message?: string } | null | undefined): string {
     KYC_INVALID_TRANSITION: 'KYC cannot be changed from its current status.',
     USE_TRANSITION_PRODUCT: 'Publishing must go through moderation.',
   };
+  // ADDON-27 publish gate: the reason after the code is already plain language
+  if (code === 'IMPORT_PUBLISH_BLOCKED') return m.slice(m.indexOf(':') + 1).trim().replace(/^./, (c) => c.toUpperCase()) + '.';
   return map[code] ?? m;
 }
 

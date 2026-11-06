@@ -10,6 +10,8 @@ const one = async (s, p) => (await db.query(s, p)).rows[0];
 const ok = (c, m) => { console.log(c ? '✔' : '✘', m); if (!c) process.exitCode = 1; };
 const REF = 'qrawnqpxvtjmgncxmffu';
 
+// sequences are NOT transactional (setval/nextval survive a rollback) — snapshot them and put them back afterwards
+const seqSnapshot = (await db.query(`select sequencename, last_value from pg_sequences where schemaname = 'public'`)).rows;
 await db.query('begin');
 try {
   const before = await one(`select (select count(*) from organizations where not is_seed) real_orgs,
@@ -90,6 +92,10 @@ try {
   ok(false, 'unexpected: ' + e.message);
 } finally {
   await db.query('rollback');
+  for (const r of seqSnapshot) {
+    if (r.last_value == null) await db.query(`select setval($1, 1, false)`, [r.sequencename]);
+    else await db.query(`select setval($1, $2, true)`, [r.sequencename, r.last_value]);
+  }
   const still = await one(`select (select count(*) from products) p, (select count(*) from auth.users) u`);
   ok(Number(still.p) > 0 && Number(still.u) > 1, `rolled back — production data untouched (${still.p} products, ${still.u} users)`);
   await db.end();

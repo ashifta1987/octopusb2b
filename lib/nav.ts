@@ -59,6 +59,7 @@ export const OFFICE_NAV: NavSection[] = [
       { href: '/admin/ads', label: 'Advertising', area: 'ads' },
       { href: '/admin/geography', label: 'Geography', area: 'customers' },
       { href: '/admin/suppliers', label: 'Suppliers', area: 'suppliers' },
+      { href: '/admin/import', label: 'Bulk import', area: 'products', action: 'edit' },
       { href: '/admin/staff', label: 'Staff & roles', area: 'staff' },
       { href: '/admin/assistant', label: 'Assistant', area: 'assistant', action: 'configure' },
       { href: '/admin/integrations', label: 'Integrations', area: 'integrations' },

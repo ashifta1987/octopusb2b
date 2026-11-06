@@ -1273,3 +1273,11 @@ Full prompt: `docs/ADDON-24-remove-demo-data.md`. Business tables carry `is_seed
 
 Full prompt: `docs/ADDON-25-password-eye-icon.md`. One `PasswordInput` (eye / eye-off, `aria-pressed`, keyboard Space/Enter, auto-hide after `site_settings.auth.password_reveal_timeout_s` seconds — default 15, 0 = never — and re-hidden on submit) on every password field. The 6-digit 2FA code input has no reveal.
 
+## 26. Addendum: reachable from mainland China (planned)
+
+Full prompt: `docs/ADDON-26-china-access.md`. Not built yet. Owner decision overrides step 7: no staff Google sign-in.
+
+## 27. Addendum: bulk upload, multi-supplier products, tiered supplier prices
+
+Full prompt: `docs/ADDON-27-bulk-upload.md` (see its implementation note). Data model: `suppliers.external_id / identity_status`, `supplier_name_variants` (one canonical), `supplier_contacts`, `products.external_id` + raw supplier fields (`specification_raw`, sizes, carton data, `listing_status`), `supplier_products` (supplier × product, one preferred), `supplier_product_prices` (incoterm × MOQ tier × variant, `price_minor` = price × 10000, validity, `is_superseded`), `import_runs`, `import_review_items`. Supplier costs are staff-only (RLS); buyer `price_tiers` = preferred supplier cost × (1 + markup) via `recompute_sell_prices()`; `set_product_pricing()` sets a per-product markup or manual mode. `/admin/import`: upload XLSX + photo ZIP (browser → private `imports` bucket) → preview with create / update / skip per table, warnings and review queue → Commit (`commit_import_run`, one transaction, idempotent; audit `bulk_import_committed`). New products are drafts. Publish gate (`guard_import_publish`): an imported product cannot be submitted or published while its supplier has unresolved legal-name variants, it has open/held review items, it needs a quote, or it has no buyer price. CLI: `pnpm import:bulk --xlsx … --images … [--commit=true]`. Settings: `import.price_validity_default_days` 30, `import.outlier_threshold_median_x` 3, `import.images.max_bytes_each`, `import.images.max_total_bytes`, `pricing.default_markup_pct` 25.
+
