@@ -12,8 +12,10 @@ export async function GET(req: Request) {
   if (!s || (!s.isAdmin && !s.roles.includes('distributor'))) return new Response('Forbidden', { status: 403 });
   const sb = await createClient();
   const [suppliers, { paths }] = await Promise.all([getManagedSuppliers(s), categoryPaths(sb)]);
-  const only = new URL(req.url).searchParams.get('supplier')?.toUpperCase();
+  const only = new URL(req.url).searchParams.get('supplier')?.trim().toUpperCase();
   const mine = suppliers.filter((x) => !only || x.code.toUpperCase() === only);
+  // suppliers come from the caller's RLS view: an unassigned or unknown code is not found (never an empty or full export)
+  if (only && !mine.length) return new Response('Supplier not found', { status: 404 });
   const codeOf = new Map(mine.map((x) => [x.id, x.code]));
   const ids = mine.map((x) => x.id);
   const products: Record<string, unknown>[] = [];
@@ -40,6 +42,6 @@ export async function GET(req: Request) {
     };
   });
   const buf = await buildProductWorkbook({ categoryPaths: [...paths.values()].sort(), supplierCodes: suppliers.map((x) => x.code), rows });
-  return new Response(new Uint8Array(buf), { headers: XLSX_HEADERS(`octopus-my-products-${new Date().toISOString().slice(0, 10)}.xlsx`) });
+  return new Response(new Uint8Array(buf), { headers: XLSX_HEADERS(`octopus-my-products-${only ? `${only.toLowerCase()}-` : ''}${new Date().toISOString().slice(0, 10)}.xlsx`) });
 }
 

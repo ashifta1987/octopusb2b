@@ -83,6 +83,9 @@ export async function validateImport(fd: FormData): Promise<Result<{ jobId: stri
   const admin = createAdminClient();
   const suppliers = await getManagedSuppliers(g.s);
   const supByCode = new Map(suppliers.map((s) => [s.code.toUpperCase(), s]));
+  // upload scoped to one supplier (?supplier=<code> on the page): must be one of the caller's suppliers
+  const only = String(fd.get('supplier') ?? '').trim().toUpperCase() || null;
+  if (only && !supByCode.has(only)) return fail(`Supplier ${only} was not found among your suppliers.`);
   const { data: allSup } = await sb.from('public_suppliers').select('id, code');
   const knownCodes = new Set((allSup ?? []).map((s) => s.code.toUpperCase()));
   const { data: cats } = await sb.from('categories').select('id, name, parent_id').eq('active', true);
@@ -134,9 +137,10 @@ export async function validateImport(fd: FormData): Promise<Result<{ jobId: stri
     const category_id = raw.category_path ? resolveCategory(raw.category_path) : null;
     // blank category: required for new products, keeps the current category on an update (decided once the SKU is known)
     if (raw.category_path && !category_id) errors.push(`Unknown category "${raw.category_path}"`);
-    const code = raw.supplier_code.toUpperCase();
+    const code = raw.supplier_code.toUpperCase() || only || '';
     const sup = supByCode.get(code);
     if (!code) errors.push('Missing supplier_code');
+    else if (only && code !== only) errors.push(`Row is for ${code}, but this upload is for ${only}`);
     else if (!sup) errors.push(knownCodes.has(code) ? `Supplier ${code} is not assigned to you` : `Unknown supplier ${code}`);
     else if (sup.supplier_switches?.product_upload === false) errors.push(`Product upload is off for ${code}`);
     const moq = intOrNull(raw.moq);

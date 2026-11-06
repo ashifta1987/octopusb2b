@@ -117,7 +117,7 @@ export default async function DistributorHome() {
                       <td className="td">
                         <div className="flex gap-2 justify-end">
                           <Link className="btn btn-ghost btn-sm" href={`/distributor/products/new?supplier=${sup.id}`}>+ Product</Link>
-                          <Link className="btn btn-ghost btn-sm" href={`/distributor/products?supplier=${sup.id}`}>Products</Link>
+                          <Link className="btn btn-ghost btn-sm" href={`/distributor/products?supplier=${encodeURIComponent(sup.code)}`} data-testid={`products-${sup.code}`}>Products</Link>
                         </div>
                       </td>
                     </tr>

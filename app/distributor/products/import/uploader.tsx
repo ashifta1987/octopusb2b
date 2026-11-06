@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/client';
 import { createZipUpload, validateImport } from './actions';
 
 /** Step 2 + 3 of the bulk upload: the workbook and (optional) images .zip → private Storage → validate. */
-export function ImportUploader() {
+export function ImportUploader({ supplier = null }: { supplier?: string | null }) {
   const [xlsx, setXlsx] = useState<File | null>(null);
   const [zip, setZip] = useState<File | null>(null);
   const [step, setStep] = useState<string | null>(null);
@@ -27,7 +27,7 @@ export function ImportUploader() {
           zipPath = up.data!.path;
         }
         setStep('Checking every row, SKU and image…');
-        const fd = new FormData(); fd.set('file', xlsx); if (zipPath) fd.set('zip_path', zipPath);
+        const fd = new FormData(); fd.set('file', xlsx); if (zipPath) fd.set('zip_path', zipPath); if (supplier) fd.set('supplier', supplier);
         const r = await validateImport(fd);   // redirects to the report on success
         setStep(null);
         if (r && !r.ok) setErr(r.error ?? 'Could not check the file.');

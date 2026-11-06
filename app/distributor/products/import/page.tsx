@@ -8,6 +8,7 @@ import { money, fmtDate, productStatusView } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { importValidRows, submitImported, confirmCostPrices } from './actions';
 import { ImportUploader } from './uploader';
+import { supplierScope } from '@/lib/distributor/supplier-scope';
 
 export const metadata = { title: 'Bulk upload (Excel)' };
 
@@ -15,9 +16,11 @@ const MODE: Record<string, { label: string; tone: string }> = {
   create: { label: 'Create', tone: 'text-blue' }, update: { label: 'Update', tone: 'text-warn' }, unchanged: { label: 'No change', tone: 'text-muted' },
 };
 
-export default async function ImportPage({ searchParams }: { searchParams: Promise<{ job?: string }> }) {
-  const { job: jobId } = await searchParams;
+export default async function ImportPage({ searchParams }: { searchParams: Promise<{ job?: string; supplier?: string }> }) {
+  const { job: jobId, supplier: supplierParam } = await searchParams;
   const s = (await getSession())!;
+  const { selected } = await supplierScope(s, supplierParam);   // unassigned code → 404
+  const supQ = selected ? `?supplier=${encodeURIComponent(selected.code)}` : '';
   const sb = await createClient();
   const [{ data: history }, jobRes] = await Promise.all([
     sb.from('import_jobs').select('id, file_name, status, total_rows, valid_rows, error_rows, created_at, suppliers(code)').eq('created_by', s.userId).order('created_at', { ascending: false }).limit(15),
@@ -41,7 +44,9 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <PageHeader title="Bulk upload (Excel)" subtitle="Create or update hundreds of products at once. Every product has a platform-wide unique SKU: a new SKU creates a product, a SKU you already own updates it." />
+      <PageHeader title={selected ? `Bulk upload · ${selected.code} · ${selected.legal_name}` : 'Bulk upload (Excel)'}
+        eyebrow={selected ? <Link href="/distributor/products/import" className="inline-flex items-center gap-1.5 rounded-full border border-line-2 bg-white px-3 py-1 text-[13px] font-semibold hover:border-navy"><span aria-hidden>×</span> All suppliers</Link> : undefined}
+        subtitle="Create or update hundreds of products at once. Every product has a platform-wide unique SKU: a new SKU creates a product, a SKU you already own updates it." />
       <ol className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6" aria-label="Progress">
         {steps.map((t, i) => (
           <li key={t} aria-current={i + 1 === step ? 'step' : undefined}>
@@ -57,7 +62,7 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
             <p className="text-sm text-muted">One row per product. <b>sku</b> is column A and required; up to three photos per product in <b>image_file</b>, <b>image_file_2</b>, <b>image_file_3</b> (file names inside a .zip you upload in step 2).</p>
             <div className="flex flex-wrap gap-2 mt-4">
               <a href="/distributor/products/import/template" className="btn btn-primary">Download template (.xlsx)</a>
-              <a href="/distributor/products/import/export" className="btn btn-ghost">Download my products</a>
+              <a href={`/distributor/products/import/export${supQ}`} className="btn btn-ghost">Download my products{selected ? ` (${selected.code})` : ''}</a>
             </div>
             <form action="/distributor/products/import/fill-skus" method="post" encType="multipart/form-data" className="mt-5 rounded-[10px] border border-line p-4 space-y-2">
               <div className="font-semibold text-sm">Generate SKUs</div>
@@ -88,7 +93,8 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
 
         <Card title="2 · Upload sheet + images">
           <div className="px-6 pb-6">
-            <ImportUploader />
+            {selected && <p className="text-sm mb-3" data-testid="upload-scope">Uploading for <b className="mono">{selected.code}</b>: rows with a blank <span className="mono">supplier_code</span> are assigned to it, rows for another supplier are rejected.</p>}
+            <ImportUploader supplier={selected?.code ?? null} />
             <p className="text-xs text-muted mt-3">Nothing is saved until you confirm. Each row is checked for: SKU (blank, format, repeated in the file, used by another supplier), missing title, unknown category or supplier, supplier not assigned to you, bad numbers, tiers that don&apos;t go up, and image names missing from the zip.</p>
           </div>
         </Card>

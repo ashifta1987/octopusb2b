@@ -2,19 +2,35 @@ import Link from 'next/link';
 import { getSession, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { Card, PageHeader, StatusBadge, Table, EmptyState, Money } from '@/components/ui';
-import { getManagedSuppliers, one } from '@/components/backoffice/server-utils';
+import { one } from '@/components/backoffice/server-utils';
+import { supplierScope } from '@/lib/distributor/supplier-scope';
 import { RunButton } from '@/components/backoffice/action-form';
 import { transitionProduct } from './actions';
 import { productStatusView, fmtDate } from '@/lib/format';
 
 const STATUSES = ['draft', 'submitted', 'in_review', 'live', 'rejected', 'paused', 'archived'];
 
-export default async function DistributorProducts({ searchParams }: { searchParams: Promise<{ status?: string; supplier?: string; q?: string; page?: string }> }) {
+export default async function DistributorProducts({ searchParams }: { searchParams: Promise<{ status?: string; supplier?: string; category?: string; q?: string; page?: string }> }) {
   const sp = await searchParams;
   const s = (await getSession())!;
   const sb = await createClient();
-  const suppliers = await getManagedSuppliers(s);
-  const ids = suppliers.filter((x) => !sp.supplier || x.id === sp.supplier).map((x) => x.id);
+  // ?supplier=<code>: resolved against the suppliers this user can see (RLS) — an unassigned code is a 404
+  const { suppliers, selected } = await supplierScope(s, sp.supplier);
+  const supParam = selected?.code;
+  const ids = selected ? [selected.id] : suppliers.map((x) => x.id);
+  const allIds = suppliers.map((x) => x.id);
+  // per-supplier counts (dropdown) and the categories in use, for every assigned supplier, not archived
+  const facets: { supplier_id: string; category_id: string | null }[] = [];
+  for (let from = 0; allIds.length; from += 1000) {
+    const { data } = await sb.from('products').select('supplier_id, category_id').in('supplier_id', allIds).neq('status', 'archived').range(from, from + 999);
+    facets.push(...((data ?? []) as typeof facets));
+    if ((data ?? []).length < 1000) break;
+  }
+  const countBy = new Map<string, number>();
+  facets.forEach((f) => countBy.set(f.supplier_id, (countBy.get(f.supplier_id) ?? 0) + 1));
+  const catIds = [...new Set(facets.filter((f) => ids.includes(f.supplier_id) && f.category_id).map((f) => f.category_id as string))];
+  const { data: catRows } = catIds.length ? await sb.from('categories').select('id, name').in('id', catIds).order('name') : { data: [] as { id: string; name: string }[] };
+  const category = sp.category && /^[0-9a-f-]{36}$/i.test(sp.category) ? sp.category : undefined;
   const page = Math.max(1, Number(sp.page) || 1);
   const size = 50;
   type Row = { id: string; external_id: string | null; title: string; status: string; listing_status: string | null; moq: number; unit: string; min_price_cents: number | null; currency: string; image_url: string | null; updated_at: string; rejection_reason: string | null; suppliers: { code: string } | null; categories: { name: string } | null };
@@ -26,6 +42,7 @@ export default async function DistributorProducts({ searchParams }: { searchPara
       .in('supplier_id', ids).order('updated_at', { ascending: false }).range((page - 1) * size, page * size - 1);
     if (sp.status && STATUSES.includes(sp.status)) q = q.eq('status', sp.status);
     else q = q.neq('status', 'archived');
+    if (category) q = q.eq('category_id', category);
     if (sp.q) { const t = sp.q.replace(/[%,()]/g, ' ').trim(); q = q.or(`title.ilike.%${t}%,external_id.ilike.%${t}%`); }
     const { data, count } = await q;
     rows = ((data ?? []) as unknown as (Row & { suppliers: Row['suppliers'] | Row['suppliers'][]; categories: Row['categories'] | Row['categories'][] })[])
@@ -35,17 +52,25 @@ export default async function DistributorProducts({ searchParams }: { searchPara
   const canApprove = can(s, 'products', 'approve');
   const qs = (o: Record<string, string | undefined>) => {
     const p = new URLSearchParams();
-    const merged = { status: sp.status, supplier: sp.supplier, q: sp.q, ...o };
+    const merged = { supplier: supParam, status: sp.status, category, q: sp.q, ...o };
     Object.entries(merged).forEach(([k, v]) => v && p.set(k, v));
     return `?${p.toString()}`;
   };
 
   return (
     <>
-      <PageHeader title="Products" subtitle="Products of the suppliers assigned to you. Drafts autosave; submit them for moderation when ready."
+      <PageHeader title={selected ? `Products · ${selected.code} · ${selected.legal_name}` : 'Products'}
+        subtitle={selected ? 'Only this supplier\'s products. Drafts autosave; submit them for moderation when ready.' : 'Products of the suppliers assigned to you. Drafts autosave; submit them for moderation when ready.'}
+        eyebrow={selected ? (
+          <Link href={qs({ supplier: undefined, page: undefined })} data-testid="clear-supplier"
+            className="inline-flex items-center gap-1.5 rounded-full border border-line-2 bg-white px-3 py-1 text-[13px] font-semibold hover:border-navy">
+            <span aria-hidden>×</span> All suppliers
+          </Link>
+        ) : undefined}
         actions={<>
-          <Link href="/distributor/products/import" className="btn btn-ghost">Bulk upload</Link>
-          <Link href="/distributor/products/new" className="btn btn-primary">+ Create product</Link>
+          <a href={`/distributor/products/import/export${supParam ? `?supplier=${encodeURIComponent(supParam)}` : ''}`} className="btn btn-ghost" data-testid="download-mine">Download my products</a>
+          <Link href={`/distributor/products/import${supParam ? `?supplier=${encodeURIComponent(supParam)}` : ''}`} className="btn btn-ghost">Bulk upload</Link>
+          <Link href={`/distributor/products/new${selected ? `?supplier=${selected.id}` : ''}`} className="btn btn-primary">+ Create product</Link>
         </>} />
 
       <form className="card p-4 mb-4 flex flex-wrap gap-3 items-end" role="search">
@@ -55,9 +80,9 @@ export default async function DistributorProducts({ searchParams }: { searchPara
         </div>
         <div>
           <label htmlFor="f-sup" className="label">Supplier</label>
-          <select id="f-sup" name="supplier" defaultValue={sp.supplier ?? ''} className="input">
-            <option value="">All assigned</option>
-            {suppliers.map((x) => <option key={x.id} value={x.id}>{x.code} · {x.legal_name}</option>)}
+          <select id="f-sup" name="supplier" defaultValue={supParam ?? ''} className="input" data-testid="supplier-filter">
+            <option value="">All suppliers ({facets.length})</option>
+            {suppliers.map((x) => <option key={x.id} value={x.code}>{x.code} · {x.legal_name} ({countBy.get(x.id) ?? 0})</option>)}
           </select>
         </div>
         <div>
@@ -67,8 +92,15 @@ export default async function DistributorProducts({ searchParams }: { searchPara
             {STATUSES.map((x) => <option key={x} value={x}>{x.replace('_', ' ')}</option>)}
           </select>
         </div>
+        <div>
+          <label htmlFor="f-cat" className="label">Category</label>
+          <select id="f-cat" name="category" defaultValue={category ?? ''} className="input">
+            <option value="">All categories</option>
+            {(catRows ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
         <button className="btn btn-dark">Filter</button>
-        <Link href="/distributor/products" className="btn btn-ghost">Reset</Link>
+        <Link href={supParam ? `/distributor/products?supplier=${encodeURIComponent(supParam)}` : '/distributor/products'} className="btn btn-ghost">Reset</Link>
       </form>
 
       <Card>
@@ -108,9 +140,9 @@ export default async function DistributorProducts({ searchParams }: { searchPara
             </tr>
           ))}
         </Table>
-        {total > size && (
+        {total > 0 && (
           <div className="flex justify-between items-center px-6 py-4 border-t border-line text-sm">
-            <span className="text-muted">{total} products · page {page} of {Math.ceil(total / size)}</span>
+            <span className="text-muted" data-testid="product-count">{total} product{total === 1 ? '' : 's'}{selected ? ` · ${selected.code}` : ''} · page {page} of {Math.max(1, Math.ceil(total / size))}</span>
             <span className="flex gap-2">
               {page > 1 && <Link className="btn btn-ghost btn-sm" href={qs({ page: String(page - 1) })}>Previous</Link>}
               {page * size < total && <Link className="btn btn-ghost btn-sm" href={qs({ page: String(page + 1) })}>Next</Link>}
