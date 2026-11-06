@@ -25,6 +25,8 @@ try {
   await db.query('rollback to savepoint s');
 
   const adminId = (await one(`select id from auth.users where email = 'admin@demo.octopusb2b.com'`)).id;
+  // real (non-demo) catalogue loaded since launch, e.g. Bowijie OCT-1132 — must survive the wipe
+  const real = await one(`select (select count(*) from suppliers where not is_seed) suppliers, (select count(*) from products where not is_seed) products, (select coalesce(max(nullif(regexp_replace(code, '\\D', '', 'g'), '')::int), 1000) from suppliers where not is_seed) max_code`);
   const counts = (await one(`select wipe_demo_data($1, $2) c`, [`DELETE DEMO DATA FOR ${REF}`, adminId])).c;
   console.log('  deleted:', JSON.stringify(counts));
 
@@ -43,14 +45,16 @@ try {
     (select count(*) from wallet_topups) topups`);
   ok(Number(after.seed_left) === 0, 'every is_seed row is gone');
   ok(Number(after.demo_users) === 1 && after.demo_left === 'admin@demo.octopusb2b.com', `demo staff + demo buyer removed; only the kept admin remains (${after.demo_left})`);
-  ok(Number(after.suppliers) === 0 && Number(after.products) === 0 && Number(after.orders) === 0, 'suppliers, products and orders are empty');
+  ok(Number(after.suppliers) === Number(real.suppliers) && Number(after.products) === Number(real.products) && Number(after.orders) === 0,
+    `only real suppliers/products remain (${after.suppliers} suppliers, ${after.products} products), no orders`);
   ok(Number(after.ledger_sum) === 0 && Number(after.nonzero_wallets) === 0, 'ledger balanced and every wallet balance is 0');
   ok(after.real_orgs === before.real_orgs && after.real_users === before.real_users, `real customers kept (${after.real_orgs} companies, ${after.real_users} users)`);
   ok(after.cats === before.cats && after.blocks === before.blocks && after.services === before.services, 'categories, CMS content and services untouched');
   ok(after.topups === before.real_topups, 'real customers\' top-ups kept, demo top-up removed');
 
   const seqs = await one(`select nextval('seq_supplier_code') sup, nextval('seq_order') ord, nextval('seq_rfq') rfq, nextval('seq_pool') pool, nextval('seq_ticket') tkt`);
-  ok(Object.values(seqs).every((v) => Number(v) === 1001), `next codes start at 1001 (OCT-${seqs.sup}, ORD-${seqs.ord}, RFQ-${seqs.rfq}, POOL-${seqs.pool}, TKT-${seqs.tkt})`);
+  const nextSup = Math.max(1001, Number(real.max_code) + 1);
+  ok(Number(seqs.sup) === nextSup && [seqs.ord, seqs.rfq, seqs.pool, seqs.tkt].every((v) => Number(v) === 1001), `next codes: supplier after the real ones, others 1001 (OCT-${seqs.sup}, ORD-${seqs.ord}, RFQ-${seqs.rfq}, POOL-${seqs.pool}, TKT-${seqs.tkt})`);
 
   const audit = await one(`select count(*) n from audit_log where action = 'demo_data_wiped' and actor_id = $1`, [adminId]);
   ok(Number(audit.n) === 1, 'audit_log "demo_data_wiped" written with the operator');
