@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Turnkey · Trampoline & indoor playground</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6F8}*{box-sizing:border-box}
+a{color:#11133C;text-decoration:none}a:hover{color:#2A6FD6}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:8px;font:600 15px/1 Inter,system-ui,sans-serif;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+.btn-primary{background:#2A6FD6;color:#FFFFFF}.btn-dark{background:#11133C;color:#FFFFFF}.btn-ghost{background:#FFFFFF;color:#11133C;border-color:#C5CCD6}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid #1D4ED8;outline-offset:2px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase}
+.pill-live{background:#DCFCE7;color:#15803D}.pill-top{background:#FEF3C7;color:#92400E}.pill-soft{background:#E6EFFC;color:#1E58B0}
+.pill-cat-food{background:#FFE4E6;color:#9F1239}.pill-cat-self{background:#E0E7FF;color:#3730A3}.pill-cat-leis{background:#DCFCE7;color:#166534}.pill-cat-fact{background:#FEF3C7;color:#854D0E}.pill-cat-infr{background:#CFFAFE;color:#155E75}.pill-cat-fit{background:#F3E8FF;color:#6B21A8}
+.pill-dark{background:rgba(255,255,255,.08);color:#C9D0E8;border:1px solid rgba(255,255,255,.14)}
+.card{background:#FFFFFF;border:1px solid #E2E5EA;border-radius:14px;overflow:hidden}
+.k{font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#5A6475;text-transform:uppercase}
+.tab{padding:14px 20px;border-radius:12px 12px 0 0;background:#F5F6F8;color:#5A6475;font:600 14px Inter,system-ui,sans-serif;cursor:pointer;border:1px solid #E2E5EA;border-bottom:0;flex:1;text-align:left;min-width:0}
+.tab .k{color:#5A6475}.tab .pr{font:800 22px Lexend,sans-serif;color:#11133C;margin-top:4px}
+.tab.active{background:#FFFFFF;color:#11133C}.tab.active .pr{color:#2A6FD6}
+.row{display:grid;grid-template-columns:48px 1fr 100px 100px;gap:14px;padding:14px 0;border-bottom:1px solid #EEF0F4;align-items:center}
+.row:last-child{border-bottom:0}
+.row .n{width:48px;height:48px;border-radius:10px;background:repeating-linear-gradient(135deg,#EDEFF3 0 8px,#E5E8ED 8px 16px);display:flex;align-items:center;justify-content:center;font:600 10px 'IBM Plex Mono',monospace;color:#5A6475;text-align:center;padding:4px}
+@media (min-width:1000px){.stick{position:sticky;top:94px;align-self:flex-start}}
+@media (max-width:1000px){.layout{grid-template-columns:minmax(0,1fr) !important}.rail{order:-1 !important}}
+@media (max-width:760px){.tabs-row{overflow-x:auto}.row{grid-template-columns:40px 1fr}.row > *:nth-child(3),.row > *:nth-child(4){grid-column:2;text-align:left !important}.rev-grid{grid-template-columns:1fr !important}.stat4{grid-template-columns:repeat(2,1fr) !important}.hub2{grid-template-columns:1fr !important}}
+@media (max-width:640px){[style*="max-width: 1360px"]{padding-left:16px !important;padding-right:16px !important}h1{font-size:30px !important}}
+</style>
+</helmet>
+<div style="font-family:Inter,system-ui,sans-serif;color:#11133C;background:#F5F6F8;min-height:100vh;">
+
+<header style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;position:sticky;top:0;z-index:20;">
+<div style="max-width:1360px;margin:0 auto;padding:14px 32px;display:flex;flex-wrap:wrap;gap:14px 20px;align-items:center;">
+<a href="Main.dc.html"><img src="assets/octopus-logo.png" alt="Octopus B2B" style="height:44px;width:auto;display:block;"></a>
+<form role="search" style="flex:1 1 440px;display:flex;min-width:0;border:1.5px solid #11133C;border-radius:10px;overflow:hidden;background:#FFFFFF;">
+<input type="search" placeholder="Search projects, hubs, equipment" style="flex:1;min-width:0;border:0;padding:0 16px;min-height:46px;font-size:15px;">
+<button type="submit" class="btn btn-dark" style="border-radius:0;min-height:46px;" aria-label="Search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+</form>
+<a href="Customer.dc.html" class="btn btn-ghost" style="min-height:46px;">My account</a>
+</div>
+</header>
+
+<div style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;">
+<div style="max-width:1360px;margin:0 auto;padding:12px 32px;font:500 13px 'IBM Plex Mono',monospace;color:#5A6475;">
+<a href="Main.dc.html" style="color:#5A6475;">Home</a> › <a href="TurnkeyHub.dc.html" style="color:#5A6475;">Turnkey Projects</a> › <a href="TurnkeyAtlas.dc.html" style="color:#5A6475;">Atlas</a> › <span style="color:#11133C;">Trampoline & indoor playground</span>
+</div>
+</div>
+
+<section style="background:linear-gradient(180deg,#11133C 0%,#171A4F 100%);color:#FFFFFF;">
+<div style="max-width:1360px;margin:0 auto;padding:36px 32px 32px;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:36px;align-items:center;">
+<div style="display:flex;flex-direction:column;gap:14px;">
+<div style="display:flex;gap:6px;flex-wrap:wrap;"><span class="pill pill-top">Register interest</span><span class="pill pill-dark">Leisure & sport</span><span class="pill pill-dark">Quote in 24 h</span></div>
+<h1 style="margin:0;font:800 44px/1.05 Lexend,sans-serif;letter-spacing:-0.02em;">Trampoline & indoor playground</h1>
+<p style="margin:0;color:#C9D0E8;font-size:15.5px;line-height:1.55;max-width:620px;">Modular zones from 150 m² to 1 200 m². TÜV + ASTM compliant components. Wenzhou + Yongjia hubs make them to spec.</p>
+<div style="display:flex;flex-wrap:wrap;gap:4px 22px;margin-top:4px;color:#8B93B5;font-size:13px;">
+<span>✓ Full liability certs</span><span>✓ Ships modular</span><span>✓ Payback 10–22 months</span><span>✓ TÜV + ASTM</span>
+</div>
+</div>
+<div style="min-height:220px;border-radius:14px;background:repeating-linear-gradient(135deg,#1C204C 0 10px,#171A3F 10px 20px);color:#8B93B5;display:flex;align-items:center;justify-content:center;font:500 13px 'IBM Plex Mono',monospace;">Trampoline & indoor playground layout render</div>
+</div>
+</section>
+
+<section style="background:#F5F6F8;">
+<div class="layout" style="max-width:1360px;margin:0 auto;padding:28px 32px 44px;display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:28px;">
+<div>
+<div class="tabs-row" style="display:flex;gap:4px;">
+<button class="tab">
+<div class="k">Starter · 150 m² · 30 users peak</div>
+<div class="pr">$52,000</div>
+<div style="font-size:12px;color:#5A6475;margin-top:4px;">5 items · 200 m² · 70 days</div>
+</button><button class="tab active">
+<div class="k">Standard · 500 m² · 80 users</div>
+<div class="pr">$128,000</div>
+<div style="font-size:12px;color:#11133C;margin-top:4px;">6 items · 700 m² · 85 days</div>
+</button><button class="tab">
+<div class="k">Pro · 1 200 m² · 200 users</div>
+<div class="pr">$260,000</div>
+<div style="font-size:12px;color:#5A6475;margin-top:4px;">6 items · 1 600 m² · 110 days</div>
+</button>
+</div>
+
+<div class="card" style="border-top-left-radius:0;padding:24px 24px 16px;">
+<div class="stat4" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px;">
+<div style="background:#F5F6F8;padding:12px;border-radius:10px;"><div class="k">Capacity</div><div style="font:700 15px Lexend;margin-top:2px;">500 m² · 80 users</div></div>
+<div style="background:#F5F6F8;padding:12px;border-radius:10px;"><div class="k">Space</div><div style="font:700 15px Lexend;margin-top:2px;">700 m²</div></div>
+<div style="background:#F5F6F8;padding:12px;border-radius:10px;"><div class="k">Lead time</div><div style="font:700 15px Lexend;margin-top:2px;">85 days</div></div>
+<div style="background:#F5F6F8;padding:12px;border-radius:10px;"><div class="k">Container</div><div style="font:700 15px Lexend;margin-top:2px;">2 × 40 ft HC</div></div>
+</div>
+
+<div class="k" style="color:#2A6FD6;">Equipment included · 6 items</div>
+<div style="margin-top:6px;">
+<div class="row"><div class="n">Tr</div><div><div style="font-weight:600;">Trampolines 180 m²</div><div style="color:#5A6475;font-size:12.5px;margin-top:2px;">+ dodgeball + basket</div></div><div class="k" style="text-align:right;">set</div><div style="text-align:right;font-weight:600;">$42,000</div></div>
+<div class="row"><div class="n">Fm</div><div><div style="font-weight:600;">Foam pits ×2</div><div style="color:#5A6475;font-size:12.5px;margin-top:2px;">Giant + landing</div></div><div class="k" style="text-align:right;">set</div><div style="text-align:right;font-weight:600;">$18,000</div></div>
+<div class="row"><div class="n">Ninja</div><div><div style="font-weight:600;">Ninja course</div><div style="color:#5A6475;font-size:12.5px;margin-top:2px;">12 obstacles</div></div><div class="k" style="text-align:right;">set</div><div style="text-align:right;font-weight:600;">$18,000</div></div>
+<div class="row"><div class="n">Soft</div><div><div style="font-weight:600;">Soft play 200 m²</div><div style="color:#5A6475;font-size:12.5px;margin-top:2px;">Multi-storey</div></div><div class="k" style="text-align:right;">set</div><div style="text-align:right;font-weight:600;">$32,000</div></div>
+<div class="row"><div class="n">Mat</div><div><div style="font-weight:600;">Safety + branding</div><div style="color:#5A6475;font-size:12.5px;margin-top:2px;">Full</div></div><div class="k" style="text-align:right;">set</div><div style="text-align:right;font-weight:600;">$9,500</div></div>
+<div class="row"><div class="n">Fit</div><div><div style="font-weight:600;">Reception · café · lockers</div><div style="color:#5A6475;font-size:12.5px;margin-top:2px;">Branded</div></div><div class="k" style="text-align:right;">set</div><div style="text-align:right;font-weight:600;">$8,500</div></div>
+</div>
+
+<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0 0;border-top:2px solid #11133C;margin-top:4px;">
+<div>
+<div class="k">Package total · FOB Shenzhen / nearest port</div>
+<div style="color:#5A6475;font-size:12.5px;margin-top:2px;">+ consolidation, QC and door shipping quoted separately</div>
+</div>
+<div style="font:800 24px Lexend,sans-serif;">$128,000</div>
+</div>
+</div>
+
+<div style="margin-top:28px;">
+<div class="k" style="color:#2A6FD6;">Rough revenue &amp; payback</div>
+<h2 style="margin:4px 0 14px;font:700 22px Lexend,sans-serif;">What this tier typically earns</h2>
+<div class="rev-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+<div class="card" style="padding:18px;"><div class="k">Capacity</div><div style="font:800 22px Lexend;margin-top:4px;">500 m² · 80 users</div><p style="margin:4px 0 0;color:#5A6475;font-size:13px;">At the usage levels this tier is designed for.</p></div>
+<div class="card" style="padding:18px;"><div class="k">Monthly revenue</div><div style="font:800 22px Lexend;margin-top:4px;">$8,000 – $20,000</div><p style="margin:4px 0 0;color:#5A6475;font-size:13px;">Rough range from comparable installs in the Gulf, Africa and South Asia.</p></div>
+<div class="card" style="padding:18px;background:#E6EFFC;border-color:#BFD8F7;"><div class="k" style="color:#1E58B0;">Payback</div><div style="font:800 22px Lexend;margin-top:4px;color:#1E58B0;">10–18 months</div><p style="margin:4px 0 0;color:#1E58B0;font-size:13px;">Excludes rent and civil works; depends on footfall and rent.</p></div>
+</div>
+</div>
+
+<div style="margin-top:28px;">
+<div class="k" style="color:#2A6FD6;">Where it's sourced from</div>
+<h2 style="margin:4px 0 14px;font:700 22px Lexend,sans-serif;">Your consolidated-shipment hubs</h2>
+<div class="hub2" style="display:grid;grid-template-columns:1fr;gap:14px;"><div class="card" style="padding:18px;"><span class="pill pill-soft">Zhejiang · Wenzhou + Yongjia</span><div style="font:700 15px Lexend;margin-top:8px;">Soft play + trampolines</div><p style="margin:4px 0 0;color:#5A6475;font-size:13px;">All modular. Foam, netting, mats, climbers.</p></div></div>
+</div>
+</div>
+
+<aside class="rail stick">
+<div class="card" style="padding:20px;">
+<div class="k" style="color:#2A6FD6;">Standard package</div>
+<div style="font:800 32px Lexend,sans-serif;margin-top:4px;">$128,000</div>
+<div style="color:#5A6475;font-size:13px;margin-top:2px;">Packages ship the moment 10 interest signals are logged. No commitment.</div>
+
+<a href="TurnkeyQuoteForm.dc.html" class="btn btn-primary" style="width:100%;margin-top:14px;min-height:50px;font-size:16px;">Register interest →</a>
+<a href="#" class="btn btn-ghost" style="width:100%;margin-top:8px;">Download spec PDF</a>
+<a href="#" class="btn btn-ghost" style="width:100%;margin-top:8px;background:transparent;border:0;color:#2A6FD6;">Talk to a sourcing lead</a>
+
+<div style="height:1px;background:#E2E5EA;margin:16px 0;"></div>
+<div class="k">Quick quote</div>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+<label style="font-size:12.5px;color:#5A6475;">Destination country
+<select style="width:100%;margin-top:3px;padding:10px 12px;border:1px solid #C5CCD6;border-radius:8px;font:500 14px Inter,system-ui;"><option>United Arab Emirates</option><option>Saudi Arabia</option><option>Nigeria</option><option>Kenya</option><option>Pakistan</option><option>Other</option></select>
+</label>
+<label style="font-size:12.5px;color:#5A6475;">Target opening
+<input type="date" style="width:100%;margin-top:3px;padding:10px 12px;border:1px solid #C5CCD6;border-radius:8px;font:500 14px Inter,system-ui;" value="2027-02-01">
+</label>
+<label style="font-size:12.5px;color:#5A6475;">Delivery term
+<select style="width:100%;margin-top:3px;padding:10px 12px;border:1px solid #C5CCD6;border-radius:8px;font:500 14px Inter,system-ui;"><option>DAP · door</option><option>CIF · port</option><option>FOB · Shenzhen</option></select>
+</label>
+<a href="TurnkeyQuoteForm.dc.html" class="btn btn-dark" style="margin-top:4px;">Send to sourcing →</a>
+</div>
+
+<div style="height:1px;background:#E2E5EA;margin:16px 0;"></div>
+<div class="k">Covered on every order</div>
+<ul style="margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13.5px;">
+<li style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#15803D;font-weight:700;">✓</span> Pre-shipment QC, photos + video</li>
+<li style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#15803D;font-weight:700;">✓</span> Consolidated shipment</li>
+<li style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#15803D;font-weight:700;">✓</span> Floor plan review by our team</li>
+<li style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#15803D;font-weight:700;">✓</span> On-site install &amp; staff training (opt)</li>
+<li style="display:flex;gap:8px;align-items:flex-start;"><span style="color:#15803D;font-weight:700;">✓</span> 12-month post-sale support</li>
+</ul>
+</div>
+</aside>
+</div>
+</section>
+
+<footer style="background:#0C0E30;color:#8B93B5;">
+<div style="max-width:1360px;margin:0 auto;padding:28px 32px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;font-size:13px;">
+<div>© 2026 Shenzhen Octopus Trading Co. Ltd.</div>
+<div>Octopusb2b.com · ceooctopusb2b@gmail.com</div>
+</div>
+</footer>
+
+</div>
+</x-dc>
+</body>
+</html>

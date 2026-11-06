@@ -1289,3 +1289,11 @@ Full prompt: `docs/ADDON-28-mobile-pwa.md`. Not built yet.
 
 Full prompt: `docs/ADDON-29-template-fix.md` (see its implementation note). `/admin/import` → "Download template": Blank or Pre-filled with a supplier's existing products (`GET /admin/import/template`), plus a "Generate Product Ids" helper. Every category sheet has the same 20 columns (Product Id first, Image file ninth). Every product has a unique `external_id` (Product Id), assigned by trigger when missing. Blocking validation errors (Product Id, required columns, image names vs ZIP, exact case) stop the commit. An unedited pre-filled export re-imports with zero changes.
 
+## 30. Addendum: Dubai data-centre migration (planned)
+
+Full prompt: `docs/ADDON-30-dubai-migration.md`. Not built — owner chose a readiness checklist first (`docs/ADDON-30-readiness-checklist.md`).
+
+## 31. Addendum: Turnkey Projects
+
+Full prompt: `docs/ADDON-31-turnkey-projects.md` (see its implementation note). 25 complete businesses (4 live with Starter / Standard / Pro packages, 21 register-interest), 12 factory hubs, quote / interest leads routed country → region → round-robin sourcing agent (triage pool otherwise), `/admin/turnkey` for leads, projects, packages, equipment and demand signals. Catalogue rows are real content (`is_seed = false`).
+

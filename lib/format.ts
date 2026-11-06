@@ -100,5 +100,9 @@ export const COUNTRY_NAMES: Record<string, string> = {
   US: 'United States', GB: 'United Kingdom', IN: 'India', SA: 'Saudi Arabia', FR: 'France', ES: 'Spain', IT: 'Italy', BR: 'Brazil',
   AU: 'Australia', CA: 'Canada', JP: 'Japan', KR: 'South Korea', SG: 'Singapore', ZA: 'South Africa', NG: 'Nigeria', EG: 'Egypt',
   QA: 'Qatar', KW: 'Kuwait', OM: 'Oman', BH: 'Bahrain', PK: 'Pakistan', BD: 'Bangladesh', ID: 'Indonesia', TH: 'Thailand', PH: 'Philippines', MX: 'Mexico', PL: 'Poland',
+  // ADDON-31: Turnkey buyer markets (Gulf, Africa, South Asia)
+  KE: 'Kenya', GH: 'Ghana', TZ: 'Tanzania', UG: 'Uganda', ET: 'Ethiopia', RW: 'Rwanda', CI: "Côte d'Ivoire", SN: 'Senegal', CM: 'Cameroon', ZM: 'Zambia',
+  AO: 'Angola', MA: 'Morocco', DZ: 'Algeria', TN: 'Tunisia', LY: 'Libya', JO: 'Jordan', LB: 'Lebanon', IQ: 'Iraq', YE: 'Yemen', NP: 'Nepal',
+  AF: 'Afghanistan', MV: 'Maldives', KH: 'Cambodia', MM: 'Myanmar', SD: 'Sudan', DJ: 'Djibouti', SO: 'Somalia', MZ: 'Mozambique', ZW: 'Zimbabwe',
 };
 

@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Turnkey Projects — Atlas</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6F8}
+*{box-sizing:border-box}
+a{color:#11133C;text-decoration:none}a:hover{color:#2A6FD6}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:8px;font:600 15px/1 Inter,system-ui,sans-serif;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+.btn-primary{background:#2A6FD6;color:#FFFFFF}.btn-dark{background:#11133C;color:#FFFFFF}
+.btn-ghost{background:#FFFFFF;color:#11133C;border-color:#C5CCD6}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid #1D4ED8;outline-offset:2px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase}
+.pill-live{background:#DCFCE7;color:#15803D}
+.pill-top{background:#FEF3C7;color:#92400E}
+.pill-soft{background:#E6EFFC;color:#1E58B0}
+.pill-cat-food{background:#FFE4E6;color:#9F1239}
+.pill-cat-self{background:#E0E7FF;color:#3730A3}
+.pill-cat-leis{background:#DCFCE7;color:#166534}
+.pill-cat-fact{background:#FEF3C7;color:#854D0E}
+.pill-cat-infr{background:#CFFAFE;color:#155E75}
+.pill-cat-fit{background:#F3E8FF;color:#6B21A8}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:#FFFFFF;border:1px solid #C5CCD6;color:#3B4556;font:500 13.5px Inter,system-ui,sans-serif;cursor:pointer;white-space:nowrap}
+.chip.active{background:#11133C;color:#FFFFFF;border-color:#11133C}
+.chip .ct{font:600 11px 'IBM Plex Mono',monospace;opacity:.75}
+.card{background:#FFFFFF;border:1px solid #E2E5EA;border-radius:14px;overflow:hidden}
+.k{font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#5A6475;text-transform:uppercase}
+.hub{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:4px}
+.hub .dot{width:20px;height:20px;border-radius:50%;background:#2A6FD6;border:3px solid #60A5FA;box-shadow:0 0 0 4px rgba(96,165,250,.18)}
+.hub .dot.big{width:28px;height:28px}
+.hub .dot.small{width:14px;height:14px;border-width:2px}
+.hub .lbl{font:600 11px 'IBM Plex Mono',monospace;color:#C9D0E8;background:rgba(17,19,60,.72);padding:2px 7px;border-radius:999px;white-space:nowrap}
+.hub.active .dot{background:#F59E0B;border-color:#FDE68A;box-shadow:0 0 0 6px rgba(253,230,138,.22)}
+.hub.active .lbl{background:#F59E0B;color:#422006}
+@media (max-width:760px){
+.grid-25{grid-template-columns:repeat(2,1fr) !important}
+.map-wrap{height:260px !important}
+.starter-grid{grid-template-columns:1fr 1fr !important;overflow-x:auto;grid-auto-flow:column !important;grid-auto-columns:220px !important;grid-template-columns:none !important}
+}
+@media (max-width:640px){
+main,[style*="max-width: 1360px"]{padding-left:16px !important;padding-right:16px !important}
+h1{font-size:34px !important;line-height:1.08 !important}
+.grid-25{grid-template-columns:1fr !important}
+}
+</style>
+</helmet>
+
+<div style="font-family:Inter,system-ui,sans-serif;color:#11133C;background:#F5F6F8;min-height:100vh;">
+
+<!-- HEADER (same) -->
+<header style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;position:sticky;top:0;z-index:20;">
+<div style="max-width:1360px;margin:0 auto;padding:14px 32px;display:flex;flex-wrap:wrap;gap:14px 20px;align-items:center;">
+<a href="Main.dc.html" aria-label="Octopus B2B home"><img src="assets/octopus-logo.png" alt="Octopus B2B" style="height:44px;width:auto;display:block;"></a>
+<form role="search" style="flex:1 1 440px;display:flex;min-width:0;border:1.5px solid #11133C;border-radius:10px;overflow:hidden;background:#FFFFFF;">
+<label for="q" class="sr">Search</label>
+<input id="q" type="search" placeholder="Search projects, hubs, equipment" style="flex:1;min-width:0;border:0;padding:0 16px;min-height:46px;font-size:15px;">
+<button type="submit" class="btn btn-dark" style="border-radius:0;min-height:46px;" aria-label="Search">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+</button>
+</form>
+<a href="Customer.dc.html" class="btn btn-ghost" style="min-height:46px;">My account</a>
+</div>
+</header>
+
+<!-- BREADCRUMB -->
+<div style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;">
+<div style="max-width:1360px;margin:0 auto;padding:12px 32px;font:500 13px 'IBM Plex Mono',monospace;color:#5A6475;">
+<a href="Main.dc.html" style="color:#5A6475;">Home</a> › <a href="TurnkeyHub.dc.html" style="color:#5A6475;">Turnkey Projects</a> › <span style="color:#11133C;">Project Atlas</span>
+</div>
+</div>
+
+<!-- DARK HERO WITH MAP -->
+<section style="background:linear-gradient(180deg,#0C0E30 0%,#171A4F 100%);color:#FFFFFF;">
+<div style="max-width:1360px;margin:0 auto;padding:44px 32px 40px;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.3fr);gap:40px;align-items:center;">
+<div style="display:flex;flex-direction:column;gap:16px;">
+<span class="pill" style="background:rgba(255,255,255,.08);color:#C9D0E8;border:1px solid rgba(255,255,255,.14);align-self:flex-start;">Project Atlas</span>
+<h1 style="margin:0;font:800 48px/1.04 Lexend,sans-serif;letter-spacing:-0.025em;">25 businesses.<br>11 factory hubs.<br>One shipment.</h1>
+<p style="margin:0;color:#C9D0E8;font-size:16px;line-height:1.6;max-width:500px;">Tap a hub to see what it supplies, or jump straight to the project. Four modules are live and quotable today. The other twenty-one are open for register-interest — packages ship the moment demand is there.</p>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;">
+<a href="#projects" class="btn btn-primary" style="min-height:48px;">Browse all 25 →</a>
+<a href="TurnkeyHub.dc.html" class="btn btn-ghost" style="background:transparent;color:#FFFFFF;border-color:rgba(255,255,255,.3);min-height:48px;">Live packages</a>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,auto);gap:8px 22px;margin-top:10px;color:#8B93B5;font-size:13px;">
+<span><strong style="color:#FFFFFF;">4</strong> Live</span>
+<span><strong style="color:#FFFFFF;">21</strong> Register-interest</span>
+<span><strong style="color:#FFFFFF;">11</strong> Hubs</span>
+</div>
+</div>
+
+<!-- MAP OF CHINA WITH HUB DOTS -->
+<div class="map-wrap" style="position:relative;height:440px;background:#1C204C;border:1px solid #2A2F5E;border-radius:16px;overflow:hidden;">
+<!-- Stylised map silhouette (abstract, not geo-accurate) -->
+<svg viewBox="0 0 800 500" style="position:absolute;inset:0;width:100%;height:100%;opacity:.55" aria-hidden="true">
+<path fill="#262A6B" stroke="#3A3F80" stroke-width="1.5" d="M120,260 C140,200 180,150 240,130 C290,112 330,105 380,110 C440,116 490,100 540,110 C600,124 650,145 690,180 C720,210 735,240 720,290 C700,340 670,370 620,390 C560,414 510,420 460,410 C390,400 340,425 290,420 C230,412 180,390 150,350 C125,318 108,295 120,260 Z"/>
+<path fill="#1C204C" stroke="#3A3F80" stroke-width="1" opacity=".7" d="M520,150 C560,140 600,148 630,170 C660,196 672,230 650,260 C620,290 580,296 540,284 C498,270 480,230 490,195 C498,170 508,158 520,150 Z"/>
+<!-- faint grid lines -->
+<g stroke="#2A2F5E" stroke-width=".5" opacity=".6">
+<line x1="0" y1="125" x2="800" y2="125"/><line x1="0" y1="250" x2="800" y2="250"/><line x1="0" y1="375" x2="800" y2="375"/>
+<line x1="200" y1="0" x2="200" y2="500"/><line x1="400" y1="0" x2="400" y2="500"/><line x1="600" y1="0" x2="600" y2="500"/>
+</g>
+</svg>
+
+<div class="k" style="position:absolute;left:18px;top:14px;color:#8B93B5;">Factory hubs · tap to filter</div>
+
+<!-- 11 HUBS -->
+<div class="hub" style="left:22%;top:26%;"><span class="dot small"></span><span class="lbl">Shenyang</span></div>
+<div class="hub" style="left:46%;top:20%;"><span class="dot small"></span><span class="lbl">Qingdao</span></div>
+<div class="hub" style="left:38%;top:38%;"><span class="dot small"></span><span class="lbl">Zhengzhou</span></div>
+<div class="hub active" style="left:52%;top:42%;"><span class="dot big"></span><span class="lbl">Zhangjiagang</span></div>
+<div class="hub" style="left:58%;top:52%;"><span class="dot"></span><span class="lbl">Ningbo</span></div>
+<div class="hub" style="left:50%;top:54%;"><span class="dot small"></span><span class="lbl">Wenzhou</span></div>
+<div class="hub" style="left:46%;top:60%;"><span class="dot small"></span><span class="lbl">Ruian · Fujian</span></div>
+<div class="hub" style="left:38%;top:70%;"><span class="dot"></span><span class="lbl">Foshan</span></div>
+<div class="hub" style="left:42%;top:74%;"><span class="dot big"></span><span class="lbl">Guangzhou</span></div>
+<div class="hub" style="left:46%;top:78%;"><span class="dot big"></span><span class="lbl">Shenzhen</span></div>
+<div class="hub" style="left:34%;top:72%;"><span class="dot small"></span><span class="lbl">Chaozhou</span></div>
+
+<!-- SELECTED HUB PANEL -->
+<div style="position:absolute;left:18px;right:18px;bottom:16px;background:rgba(245,158,11,.1);border:1px solid rgba(253,230,138,.35);border-radius:12px;padding:14px 16px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;">
+<div>
+<div class="k" style="color:#FDE68A;">Filter · Zhangjiagang</div>
+<div style="color:#FFFFFF;font:700 15px Lexend,sans-serif;margin-top:2px;">Known for bottling lines &amp; plastic injection machinery · 2 projects</div>
+</div>
+<a href="#" style="color:#FDE68A;font:600 13px 'IBM Plex Mono',monospace;">Clear filter ×</a>
+</div>
+</div>
+</div>
+</section>
+
+<!-- STARTER STRIP -->
+<section style="background:#FFFFFF;">
+<div style="max-width:1360px;margin:0 auto;padding:32px 32px 20px;">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+<div>
+<div class="k" style="color:#2A6FD6;">Where to start</div>
+<h2 style="margin:4px 0 0;font:700 24px Lexend,sans-serif;">Top 5 picks for your region</h2>
+</div>
+</div>
+<div class="starter-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;">
+<div class="card" style="padding:14px;"><span class="pill pill-top">#1</span><div style="font:700 14px Lexend;margin-top:8px;">Water bottling plant</div><div class="k" style="margin-top:4px;">Zhangjiagang · From $38 k</div></div>
+<div class="card" style="padding:14px;"><span class="pill pill-top">#2</span><div style="font:700 14px Lexend;margin-top:8px;">Concrete block &amp; paver</div><div class="k" style="margin-top:4px;">Fujian · From $24 k</div></div>
+<div class="card" style="padding:14px;"><span class="pill pill-top">#3</span><div style="font:700 14px Lexend;margin-top:8px;">Padel &amp; pickleball</div><div class="k" style="margin-top:4px;">Multi-hub · From $22 k</div></div>
+<div class="card" style="padding:14px;"><span class="pill pill-top">#4</span><div style="font:700 14px Lexend;margin-top:8px;">Trampoline park</div><div class="k" style="margin-top:4px;">Wenzhou · From $52 k</div></div>
+<div class="card" style="padding:14px;"><span class="pill pill-top">#5</span><div style="font:700 14px Lexend;margin-top:8px;">Touchless car wash</div><div class="k" style="margin-top:4px;">Shenyang · From $64 k</div></div>
+</div>
+</div>
+</section>
+
+<!-- FILTER CHIPS -->
+<section id="projects" style="background:#F5F6F8;">
+<div style="max-width:1360px;margin:0 auto;padding:30px 32px 0;">
+<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:18px;">
+<span class="chip active">All <span class="ct">25</span></span>
+<span class="chip">Self-service &amp; automated <span class="ct">5</span></span>
+<span class="chip">Food &amp; hospitality <span class="ct">4</span></span>
+<span class="chip">Leisure &amp; sport <span class="ct">3</span></span>
+<span class="chip">Small factories <span class="ct">6</span></span>
+<span class="chip">Infrastructure <span class="ct">3</span></span>
+<span class="chip">Fit-out <span class="ct">4</span></span>
+<span style="margin-left:auto;display:flex;gap:10px;align-items:center;color:#5A6475;font-size:13px;">
+Sort:
+<select style="padding:7px 12px;border-radius:8px;border:1px solid #C5CCD6;background:#FFFFFF;">
+<option>Starting budget (low → high)</option><option>Lead time</option><option>Factory hub</option>
+</select>
+<a href="#" style="color:#2A6FD6;font-weight:600;">Clear filters</a>
+</span>
+</div>
+
+<!-- 25 PROJECT CARDS -->
+<div class="grid-25" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding-bottom:40px;">
+
+<!-- row: live modules -->
+<a href="TurnkeyProject_Gym.dc.html" class="card" style="display:flex;flex-direction:column;">
+<div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Gym fit-out</div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;">
+<div style="display:flex;gap:4px;flex-wrap:wrap;"><span class="pill pill-live">Live</span><span class="pill pill-cat-leis">Leisure</span></div>
+<div style="font:700 15px Lexend,sans-serif;">Gym fit-out</div>
+<div style="color:#5A6475;font-size:12.5px;line-height:1.45;flex:1;">Cardio · Strength · Functional. 3 tiers up to $165 k.</div>
+<div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;"><span><strong>From $28 k</strong></span><span class="k">Shandong · ~60 d</span></div>
+</div>
+</a>
+<a href="TurnkeyProject_Laundry.dc.html" class="card" style="display:flex;flex-direction:column;">
+<div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Laundry</div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;">
+<div style="display:flex;gap:4px;flex-wrap:wrap;"><span class="pill pill-live">Live</span><span class="pill pill-cat-self">Self-service</span></div>
+<div style="font:700 15px Lexend,sans-serif;">Coin / app laundry</div>
+<div style="color:#5A6475;font-size:12.5px;line-height:1.45;flex:1;">8–20 washers, matched dryers, cashless payment.</div>
+<div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;"><span><strong>From $42 k</strong></span><span class="k">Foshan · ~55 d</span></div>
+</div>
+</a>
+<a href="TurnkeyProject_Vending.dc.html" class="card" style="display:flex;flex-direction:column;">
+<div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Vending</div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;">
+<div style="display:flex;gap:4px;flex-wrap:wrap;"><span class="pill pill-live">Live</span><span class="pill pill-cat-self">Self-service</span></div>
+<div style="font:700 15px Lexend,sans-serif;">Vending network</div>
+<div style="color:#5A6475;font-size:12.5px;line-height:1.45;flex:1;">Snack · Drink · Mixed · 5 / 15 / 40 machines.</div>
+<div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;"><span><strong>From $18 k</strong></span><span class="k">Guangdong · ~45 d</span></div>
+</div>
+</a>
+<a href="TurnkeyProject_RoboticCafe.dc.html" class="card" style="display:flex;flex-direction:column;">
+<div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Robotic café</div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;">
+<div style="display:flex;gap:4px;flex-wrap:wrap;"><span class="pill pill-live">Live</span><span class="pill pill-cat-food">Food</span></div>
+<div style="font:700 15px Lexend,sans-serif;">Robotic café kiosk</div>
+<div style="color:#5A6475;font-size:12.5px;line-height:1.45;flex:1;">Barista arm, espresso group, kiosk + POS.</div>
+<div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;"><span><strong>From $36 k</strong></span><span class="k">Guangzhou · ~70 d</span></div>
+</div>
+</a>
+
+<!-- row: starter picks (register-interest) -->
+<a href="TurnkeyProject_WaterBottling.dc.html" class="card" style="display:flex;flex-direction:column;position:relative;">
+<div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Water bottling</div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;">
+<div style="display:flex;gap:4px;flex-wrap:wrap;"><span class="pill pill-top">Top pick</span><span class="pill pill-cat-fact">Small factory</span></div>
+<div style="font:700 15px Lexend,sans-serif;">Water bottling plant</div>
+<div style="color:#5A6475;font-size:12.5px;line-height:1.45;flex:1;">500 · 1 000 · 2 000 BPH. Strong demand in GCC &amp; East Africa.</div>
+<div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;"><span><strong>From $38 k</strong></span><span class="k">Zhangjiagang · ~90 d</span></div>
+</div>
+</a>
+<a href="TurnkeyProject_BlockMaking.dc.html" class="card" style="display:flex;flex-direction:column;">
+<div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Block making</div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;">
+<div style="display:flex;gap:4px;flex-wrap:wrap;"><span class="pill pill-top">Top pick</span><span class="pill pill-cat-fact">Small factory</span></div>
+<div style="font:700 15px Lexend,sans-serif;">Concrete block &amp; paver</div>
+<div style="color:#5A6475;font-size:12.5px;line-height:1.45;flex:1;">Hollow · Solid · Paver tiles. Manual, semi-auto or auto lines.</div>
+<div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;"><span><strong>From $24 k</strong></span><span class="k">Fujian · ~70 d</span></div>
+</div>
+</a>
+<a href="TurnkeyProject_Padel.dc.html" class="card" style="display:flex;flex-direction:column;">
+<div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Padel</div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;">
+<div style="display:flex;gap:4px;flex-wrap:wrap;"><span class="pill pill-top">Top pick</span><span class="pill pill-cat-leis">Leisure</span></div>
+<div style="font:700 15px Lexend,sans-serif;">Padel &amp; pickleball courts</div>
+<div style="color:#5A6475;font-size:12.5px;line-height:1.45;flex:1;">Panoramic + crystal glass. Turf, LED, net system.</div>
+<div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;"><span><strong>From $22 k/court</strong></span><span class="k">Multi-hub · ~60 d</span></div>
+</div>
+</a>
+<a href="TurnkeyProject_TrampolinePark.dc.html" class="card" style="display:flex;flex-direction:column;">
+<div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Trampoline park</div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;">
+<div style="display:flex;gap:4px;flex-wrap:wrap;"><span class="pill pill-top">Top pick</span><span class="pill pill-cat-leis">Leisure</span></div>
+<div style="font:700 15px Lexend,sans-serif;">Trampoline park</div>
+<div style="color:#5A6475;font-size:12.5px;line-height:1.45;flex:1;">Modular zones 150–1 200 m². TÜV + ASTM.</div>
+<div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;"><span><strong>From $52 k</strong></span><span class="k">Wenzhou · ~85 d</span></div>
+</div>
+</a>
+
+<!-- row: other 21, condensed -->
+<a href="TurnkeyProject_CarWash.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Car wash</div><div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;"><div style="display:flex;gap:4px;"><span class="pill pill-cat-self">Self-service</span></div><div style="font:700 15px Lexend,sans-serif;">Touchless car wash</div><div style="color:#5A6475;font-size:12.5px;flex:1;">Gantry + bay, chem station, dryer, kiosk.</div><div style="display:flex;justify-content:space-between;font-size:12.5px;"><span><strong>From $64 k</strong></span><span class="k">Shenyang</span></div></div></a>
+<a href="TurnkeyProject_EvCharging.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">EV charging</div><div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;"><div style="display:flex;gap:4px;"><span class="pill pill-cat-self">Self-service</span></div><div style="font:700 15px Lexend,sans-serif;">EV charging hub</div><div style="color:#5A6475;font-size:12.5px;flex:1;">AC + DC fast chargers, canopy, backend.</div><div style="display:flex;justify-content:space-between;font-size:12.5px;"><span><strong>From $78 k</strong></span><span class="k">Shenzhen</span></div></div></a>
+<a href="TurnkeyProject_WaterVending.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Water vending</div><div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;"><div style="display:flex;gap:4px;"><span class="pill pill-cat-self">Self-service</span></div><div style="font:700 15px Lexend,sans-serif;">Purified water &amp; ice</div><div style="color:#5A6475;font-size:12.5px;flex:1;">RO + chiller + dispenser kiosks. Ice maker.</div><div style="display:flex;justify-content:space-between;font-size:12.5px;"><span><strong>From $14 k</strong></span><span class="k">Guangdong</span></div></div></a>
+<a href="TurnkeyProject_Lockers.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Lockers</div><div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;"><div style="display:flex;gap:4px;"><span class="pill pill-cat-self">Self-service</span></div><div style="font:700 15px Lexend,sans-serif;">Parcel lockers &amp; power-bank</div><div style="color:#5A6475;font-size:12.5px;flex:1;">Smart lockers, power-bank rental network, apps.</div><div style="display:flex;justify-content:space-between;font-size:12.5px;"><span><strong>From $12 k</strong></span><span class="k">Shenzhen</span></div></div></a>
+<a href="TurnkeyProject_ClawFec.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">FEC / claw</div><div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;"><div style="display:flex;gap:4px;"><span class="pill pill-cat-self">Self-service</span></div><div style="font:700 15px Lexend,sans-serif;">Claw machines &amp; FEC</div><div style="color:#5A6475;font-size:12.5px;flex:1;">Claws, gift carousels, redemption setup.</div><div style="display:flex;justify-content:space-between;font-size:12.5px;"><span><strong>From $18 k</strong></span><span class="k">Panyu</span></div></div></a>
+<a href="TurnkeyProject_BubbleTea.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Bubble tea</div><div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;"><div style="display:flex;gap:4px;"><span class="pill pill-cat-food">Food</span></div><div style="font:700 15px Lexend,sans-serif;">Bubble tea / bakery fit-out</div><div style="color:#5A6475;font-size:12.5px;flex:1;">Counter, equipment, signage, POS.</div><div style="display:flex;justify-content:space-between;font-size:12.5px;"><span><strong>From $22 k</strong></span><span class="k">Guangzhou</span></div></div></a>
+<a href="TurnkeyProject_CloudKitchen.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Cloud kitchen</div><div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;"><div style="display:flex;gap:4px;"><span class="pill pill-cat-food">Food</span></div><div style="font:700 15px Lexend,sans-serif;">Cloud kitchen</div><div style="color:#5A6475;font-size:12.5px;flex:1;">Commercial kitchen equipment, hoods, prep.</div><div style="display:flex;justify-content:space-between;font-size:12.5px;"><span><strong>From $48 k</strong></span><span class="k">Foshan</span></div></div></a>
+<a href="TurnkeyProject_ContainerCafe.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Container café</div><div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;"><div style="display:flex;gap:4px;"><span class="pill pill-cat-food">Food</span></div><div style="font:700 15px Lexend,sans-serif;">Container café / shop</div><div style="color:#5A6475;font-size:12.5px;flex:1;">20 ft fit-out + equipment, custom skins.</div><div style="display:flex;justify-content:space-between;font-size:12.5px;"><span><strong>From $28 k</strong></span><span class="k">Shandong</span></div></div></a>
+<a href="TurnkeyProject_HotelFfe.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Hotel FF&amp;E</div><div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;"><div style="display:flex;gap:4px;"><span class="pill pill-cat-fit">Fit-out</span></div><div style="font:700 15px Lexend,sans-serif;">Hotel / apartment FF&amp;E</div><div style="color:#5A6475;font-size:12.5px;flex:1;">Furniture, sanitaryware, soft goods.</div><div style="display:flex;justify-content:space-between;font-size:12.5px;"><span><strong>From $1 k/room</strong></span><span class="k">Foshan · Chaozhou</span></div></div></a>
+
+<a href="TurnkeyProject_VrCinema.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">VR cinema</div><div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;"><div style="display:flex;gap:4px;"><span class="pill pill-cat-leis">Leisure</span></div><div style="font:700 15px Lexend,sans-serif;">VR / 5D cinema zone</div><div style="color:#5A6475;font-size:12.5px;flex:1;">Pods, motion seats, headsets, content.</div><div style="display:flex;justify-content:space-between;font-size:12.5px;"><span><strong>From $44 k</strong></span><span class="k">Guangzhou</span></div></div></a>
+<a href="TurnkeyProject_PaperCup.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Paper cup</div><div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;"><div style="display:flex;gap:4px;"><span class="pill pill-cat-fact">Small factory</span></div><div style="font:700 15px Lexend,sans-serif;">Paper cup &amp; tissue</div><div style="color:#5A6475;font-size:12.5px;flex:1;">Cup-forming, printing, tissue converting.</div><div style="display:flex;justify-content:space-between;font-size:12.5px;"><span><strong>From $32 k</strong></span><span class="k">Ruian · Fujian</span></div></div></a>
+<a href="TurnkeyProject_InjectionMoulding.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Injection</div><div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;"><div style="display:flex;gap:4px;"><span class="pill pill-cat-fact">Small factory</span></div><div style="font:700 15px Lexend,sans-serif;">Plastic injection / recycling</div><div style="color:#5A6475;font-size:12.5px;flex:1;">Injection moulding or recycling line.</div><div style="display:flex;justify-content:space-between;font-size:12.5px;"><span><strong>From $35 k</strong></span><span class="k">Ningbo</span></div></div></a>
+<a href="TurnkeyProject_LaserSignage.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Laser shop</div><div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;"><div style="display:flex;gap:4px;"><span class="pill pill-cat-fact">Small factory</span></div><div style="font:700 15px Lexend,sans-serif;">Laser engraving &amp; signage</div><div style="color:#5A6475;font-size:12.5px;flex:1;">Fibre laser, UV print, CNC router.</div><div style="display:flex;justify-content:space-between;font-size:12.5px;"><span><strong>From $18 k</strong></span><span class="k">Jinan</span></div></div></a>
+<a href="TurnkeyProject_FeedMill.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Feed mill</div><div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;"><div style="display:flex;gap:4px;"><span class="pill pill-cat-fact">Small factory</span></div><div style="font:700 15px Lexend,sans-serif;">Feed pellet / flour mill</div><div style="color:#5A6475;font-size:12.5px;flex:1;">Hammer mill, pellet, bagging, dust control.</div><div style="display:flex;justify-content:space-between;font-size:12.5px;"><span><strong>From $26 k</strong></span><span class="k">Zhengzhou</span></div></div></a>
+<a href="TurnkeyProject_ColdRoom.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Cold room</div><div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;"><div style="display:flex;gap:4px;"><span class="pill pill-cat-infr">Infra</span></div><div style="font:700 15px Lexend,sans-serif;">Cold rooms &amp; storage</div><div style="color:#5A6475;font-size:12.5px;flex:1;">Walk-in cold rooms, compressor racks.</div><div style="display:flex;justify-content:space-between;font-size:12.5px;"><span><strong>From $14 k</strong></span><span class="k">Zhejiang</span></div></div></a>
+<a href="TurnkeyProject_Solar.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Solar</div><div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;"><div style="display:flex;gap:4px;"><span class="pill pill-cat-infr">Infra</span></div><div style="font:700 15px Lexend,sans-serif;">Solar + battery backup</div><div style="color:#5A6475;font-size:12.5px;flex:1;">Panels, inverter, LiFePO4 pack, mounting.</div><div style="display:flex;justify-content:space-between;font-size:12.5px;"><span><strong>From $8 k</strong></span><span class="k">Jiangsu</span></div></div></a>
+<a href="TurnkeyProject_Minimart.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="background:repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px);aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;color:#5A6475;font:500 12px 'IBM Plex Mono',monospace;">Mini-mart</div><div style="padding:14px;display:flex;flex-direction:column;gap:6px;flex:1;"><div style="display:flex;gap:4px;"><span class="pill pill-cat-fit">Fit-out</span></div><div style="font:700 15px Lexend,sans-serif;">Mini-mart fit-out</div><div style="color:#5A6475;font-size:12.5px;flex:1;">Shelving, refrigeration, POS, signage.</div><div style="display:flex;justify-content:space-between;font-size:12.5px;"><span><strong>From $16 k</strong></span><span class="k">Multi-hub</span></div></div></a>
+</div>
+
+</div>
+</section>
+
+<!-- FOUR TESTS -->
+<section style="background:#FFFFFF;border-top:1px solid #E2E5EA;">
+<div style="max-width:1360px;margin:0 auto;padding:44px 32px;">
+<div class="k" style="color:#2A6FD6;">What makes a good turnkey project</div>
+<h2 style="margin:4px 0 20px;font:700 26px Lexend,sans-serif;">Four tests every project on this page passes</h2>
+<div class="grid-25" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+<div class="card" style="padding:18px;"><div style="font:800 22px Lexend;color:#2A6FD6;">01</div><div style="font:700 15px Lexend;margin-top:6px;">Equipment is most of the cost</div><p style="margin:4px 0 0;color:#5A6475;font-size:13px;line-height:1.5;">So sourcing moves the needle. Civil works and real estate aren't in our scope.</p></div>
+<div class="card" style="padding:18px;"><div style="font:800 22px Lexend;color:#2A6FD6;">02</div><div style="font:700 15px Lexend;margin-top:6px;">Ships in containers</div><p style="margin:4px 0 0;color:#5A6475;font-size:13px;line-height:1.5;">So one consolidated shipment reaches your door intact.</p></div>
+<div class="card" style="padding:18px;"><div style="font:800 22px Lexend;color:#2A6FD6;">03</div><div style="font:700 15px Lexend;margin-top:6px;">Revenue model is simple</div><p style="margin:4px 0 0;color:#5A6475;font-size:13px;line-height:1.5;">So the payback period is predictable. We publish the range.</p></div>
+<div class="card" style="padding:18px;"><div style="font:800 22px Lexend;color:#2A6FD6;">04</div><div style="font:700 15px Lexend;margin-top:6px;">Buyer isn't an expert</div><p style="margin:4px 0 0;color:#5A6475;font-size:13px;line-height:1.5;">So the specification, QC and training we provide actually earns its keep.</p></div>
+</div>
+</div>
+</section>
+
+<footer style="background:#0C0E30;color:#8B93B5;">
+<div style="max-width:1360px;margin:0 auto;padding:28px 32px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;font-size:13px;">
+<div>© 2026 Shenzhen Octopus Trading Co. Ltd. · <a href="About.dc.html" style="color:#8B93B5;">About</a></div>
+<div>Octopusb2b.com · ceooctopusb2b@gmail.com</div>
+</div>
+</footer>
+
+</div>
+</x-dc>
+</body>
+</html>

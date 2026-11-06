@@ -48,6 +48,13 @@ export async function StoreHeader() {
               <AllCategoriesIcon />All categories
             </Link>
           </li>
+          {settings['turnkey.enabled'] !== false && (
+            <li className="shrink-0">
+              <Link href="/turnkey" className={`${pill} text-navy font-semibold`}>
+                Turnkey Projects<span className="mono text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#92400E]">New</span>
+              </Link>
+            </li>
+          )}
           {top.map((c) => (
             <li key={c.id} className="shrink-0">
               <Link href={`/c/${c.slug}`} className={`${pill} text-[#3B4556]`}><CategoryIcon slug={c.slug} />{c.name}</Link>
@@ -105,10 +112,10 @@ async function SwitchBanner() {
 }
 
 export async function StoreFooter() {
-  const { blocks, company, branches } = await getSiteContent();
+  const { blocks, company, branches, settings } = await getSiteContent();
   return (
     <footer className="bg-navy text-[#D5DBE4] mt-16">
-      <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-12 grid gap-10 md:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]">
+      <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-12 grid gap-10 md:grid-cols-3 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr_1fr]">
         <div className="text-sm space-y-3">
           <Logo white />
           <p className="max-w-sm">{block(blocks, 'footer.about')}</p>
@@ -123,6 +130,7 @@ export async function StoreFooter() {
           )}
         </div>
         <FooterCol title="Marketplace" links={[['/products', 'Products'], ['/products', 'Categories'], ['/request/sourcing', 'Request Center'], ['/signup', 'Register as a buyer'], ['/login', 'Sign in']]} />
+        {settings['turnkey.enabled'] !== false && <FooterCol title="Turnkey projects" links={[['/turnkey', 'All projects'], ['/turnkey/atlas', 'Project Atlas'], ['/turnkey/gym', 'Gym'], ['/turnkey/water-bottling', 'Water bottling']]} />}
         <FooterCol title="Group buy" links={[['/pools', 'Open pools'], ['/pools#how', 'Start a pool'], ['/pools/terms', 'Group Buy Terms'], ['/account/pools', 'My pledges']]} />
         <FooterCol title="Suppliers" links={[['/contact', 'Sell on Octopus B2B'], ['/about', 'Verification'], ['/login', 'Supplier login']]} />
         <FooterCol title="Company" links={[['/about', 'About us'], ...(branches.length ? [['/about#offices', branches.length > 1 ? 'Our China offices' : 'Our office'] as [string, string]] : []), ['/contact', 'Contact'], ['/legal/privacy', 'Privacy policy'], ['/legal/terms', 'Terms of service']]} />
