@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { requireStaff } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { HsCode } from '@/components/hs-badge';
+import { ProductGallery } from '@/components/store/product-gallery';
 import { Card, PageHeader, StatusBadge, EmptyState, Money, Notice } from '@/components/ui';
 import { ReasonButton, RunButton } from '@/components/backoffice/action-form';
 import { one } from '@/components/backoffice/server-utils';
@@ -21,7 +22,7 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
     .in('status', ['submitted', 'in_review']).order('updated_at').limit(100);
   const sel = selId ?? queue?.[0]?.id;
   const { data: p } = sel ? await sb.from('products')
-    .select('id, external_id, title, description, status, moderation_hold, moderation_hold_reason, hs_code_status, hs_code_source, hs_code_note, unit, moq, lead_time_days, incoterm, origin_country, hs_code, octopus_dropship, ready_to_ship, seo_title, seo_description, image_url, updated_at, rejection_reason, suppliers!products_supplier_id_fkey(code, legal_name, country, verified, supplier_switches(listings_live)), categories(name), currency, price_tiers(min_qty, unit_price_cents, currency), product_specs(name, value, sort), product_media(url, sort), product_tags(tags(name)), product_certificates(certificates(name, status))')
+    .select('id, external_id, title, description, status, moderation_hold, moderation_hold_reason, hs_code_status, hs_code_source, hs_code_note, unit, moq, lead_time_days, incoterm, origin_country, hs_code, octopus_dropship, ready_to_ship, seo_title, seo_description, image_url, updated_at, rejection_reason, suppliers!products_supplier_id_fkey(code, legal_name, country, verified, supplier_switches(listings_live)), categories(name), currency, price_tiers(min_qty, unit_price_cents, currency), product_specs(name, value, sort), product_media(url, sort, kind), product_tags(tags(name)), product_certificates(certificates(name, status))')
     .eq('id', sel).maybeSingle() : { data: null };
   const sup = p ? one(p.suppliers as unknown as { code: string; legal_name: string; country: string; verified: boolean; supplier_switches: { listings_live: boolean } | { listings_live: boolean }[] | null } | null) : null;
   // import gate (ADDON-27, moved to publish 6 Nov 2026): in the queue, but cannot go live until resolved
@@ -32,7 +33,7 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
   const lowest = tiers[tiers.length - 1];
   // storefront shows catalogue prices converted to the platform currency (SPEC §15.1)
   const lowestPlatform = lowest && lowest.currency !== cx.currency ? toPlatform(cx, lowest.unit_price_cents, lowest.currency) : null;
-  const media = ((p?.product_media ?? []) as { url: string; sort: number }[]).sort((a, b) => a.sort - b.sort);
+  const media = ((p?.product_media ?? []) as { url: string; sort: number; kind: string }[]).filter((m) => m.kind === 'image').sort((a, b) => a.sort - b.sort);
   const issues = p ? [
     !p.description || p.description.length < 80 ? 'Description is short (under 80 characters)' : null,
     !tiers.length ? 'No price tiers' : null,
@@ -81,14 +82,10 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
             {issues.length > 0 && <div className="mt-4"><Notice tone="amber"><b>Check:</b> {issues.join(' · ')}</Notice></div>}
             <div className="grid md:grid-cols-[260px_1fr] gap-6 mt-5">
               <div>
-                {(media[0]?.url ?? p.image_url)
-                  // eslint-disable-next-line @next/next/no-img-element
-                  ? <img src={media[0]?.url ?? p.image_url!} alt={p.title} className="w-full aspect-square object-cover rounded-[10px] border border-line" />
-                  : <div className="ph aspect-square rounded-[10px]">No photo</div>}
-                <div className="flex gap-2 mt-2 flex-wrap">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {media.slice(1, 5).map((m) => <img key={m.url} src={m.url} alt="" className="w-14 h-14 object-cover rounded-md border border-line" />)}
-                </div>
+                {/* same gallery as the storefront: real images only, no placeholder, no strip for a single image */}
+                {(media.length || p.image_url)
+                  ? <ProductGallery images={media.length ? media.map((m) => ({ url: m.url, alt: null })) : [{ url: p.image_url!, alt: null }]} title={p.title} framed={false} />
+                  : <p className="text-sm text-muted" data-testid="no-photo">No photo uploaded</p>}
               </div>
               <div className="space-y-4">
                 <div>

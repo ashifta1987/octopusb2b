@@ -31,7 +31,7 @@ export type CardProduct = {
   tiers: Tier[]; tags: TagRef[]; supplier: PublicSupplier | null;
 };
 export type ProductDetail = CardProduct & {
-  description: string | null; lead_time_days: number | null; incoterm: string | null; origin_country: string | null; hs_code: string | null; hs_code_status?: string | null;
+  description: string | null; lead_time_days: number | null; incoterm: string | null; origin_country: string | null; hs_code: string | null; hs_code_status?: string | null; qty_per_carton?: string | null;
   seo_title: string | null; seo_description: string | null; updated_at: string;
   specs: { name: string; value: string }[]; media: { url: string; alt: string | null }[];
   certificates: { id: string; name: string; issuer: string | null; status: string; expires_at: string | null }[];
@@ -188,7 +188,7 @@ export async function getProduct(slug: string): Promise<ProductDetail | null> {
   cacheTag('products', `product:${slug}`, 'currency');
   const sb = createPublicClient();
   const { data } = await sb.from('products')
-    .select(`${CARD_COLS}, description, lead_time_days, incoterm, origin_country, hs_code, hs_code_status, seo_title, seo_description, updated_at,
+    .select(`${CARD_COLS}, description, lead_time_days, incoterm, origin_country, hs_code, hs_code_status, qty_per_carton, seo_title, seo_description, updated_at,
       product_specs(name, value, sort), product_media(url, alt, sort, kind),
       product_certificates(certificates(id, name, issuer, status, expires_at))`)
     .eq('slug', slug).eq('status', 'live').is('archived_at', null).maybeSingle();
@@ -210,7 +210,7 @@ export async function getProduct(slug: string): Promise<ProductDetail | null> {
   return {
     ...card,
     description: raw.description, lead_time_days: raw.lead_time_days, incoterm: raw.incoterm, origin_country: raw.origin_country,
-    hs_code: raw.hs_code, seo_title: raw.seo_title, seo_description: raw.seo_description, updated_at: raw.updated_at,
+    hs_code: raw.hs_code, hs_code_status: raw.hs_code_status ?? null, qty_per_carton: raw.qty_per_carton ?? null, seo_title: raw.seo_title, seo_description: raw.seo_description, updated_at: raw.updated_at,
     specs: [...(product_specs ?? [])].sort((a, b) => a.sort - b.sort).map(({ name, value }) => ({ name, value })),
     media: [...(product_media ?? [])].filter((m) => m.kind === 'image').sort((a, b) => a.sort - b.sort).map(({ url, alt }) => ({ url, alt })),
     certificates,

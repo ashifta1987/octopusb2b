@@ -7,8 +7,10 @@ import { getStoreContent } from '@/components/store/currency';
 import { money, fmtDate, COUNTRY_NAMES } from '@/lib/format';
 import { SupplierCode, StatusBadge } from '@/components/ui';
 import { getProduct, getRecommendations, getServices } from '@/components/store/data';
-import { ProductGrid, ProductImage, GridSkeleton, unitOne, fmtQty } from '@/components/store/product-card';
+import { ProductGrid, GridSkeleton, unitOne, fmtQty } from '@/components/store/product-card';
 import { PriceCalculator } from '@/components/store/price-calculator';
+import { cartonQty } from '@/lib/qty';
+import { ProductGallery } from '@/components/store/product-gallery';
 import { AdSlot } from '@/components/store/ad-slot';
 import { Breadcrumbs, JsonLd, breadcrumbLd, parts, SITE_URL } from '@/components/store/seo';
 import { ProductPoolCard } from '@/components/store/pools/product-pool-card';
@@ -94,19 +96,11 @@ async function Content({ params }: { params: Params }) {
       <JsonLd data={breadcrumbLd(crumbs)} />
       <Breadcrumbs items={crumbs} />
 
-      <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_1fr] items-start">
+      <div className="mt-5 grid gap-6 lg:grid-cols-[1fr_1fr] items-start" data-testid="product-top">
         {/* Gallery + key facts */}
         <div className="space-y-4 min-w-0">
-          <div className="card overflow-hidden">
-            <ProductImage src={images[0]?.url ?? null} alt={images[0]?.alt ?? p.title} className="aspect-square" label="Main product photo" width={800} height={800} />
-          </div>
-          <ul className="grid grid-cols-4 gap-3" aria-label="More photos">
-            {(images.length > 1 ? images.slice(1, 5) : [null, null, null, null]).map((img, i) => (
-              <li key={i} className={`card overflow-hidden ${i === 0 && !img ? 'border-navy border-2' : ''}`}>
-                {img ? <ProductImage src={img.url} alt={img.alt ?? p.title} className="aspect-[4/3]" width={200} height={150} /> : <div className="ph aspect-[4/3]" aria-hidden>{i === 3 ? 'Packaging' : i + 1}</div>}
-              </li>
-            ))}
-          </ul>
+          {/* only real images: none → no gallery, one → no thumbnail strip (6 Nov 2026) */}
+          <ProductGallery images={images} title={p.title} />
           <section className="card p-6" aria-labelledby="facts-h">
             <h2 id="facts-h" className="text-base font-semibold mb-4">Key facts</h2>
             <dl className="grid grid-cols-2 gap-x-6 gap-y-4">
@@ -142,7 +136,7 @@ async function Content({ params }: { params: Params }) {
               ))}
             </div>
           )}
-          <PriceCalculator productId={p.id} tiers={p.tiers} currency={p.currency} feeCurrency={services.rfq?.currency ?? p.currency} unit={p.unit} unitOne={u} moq={p.moq} incoterm={p.incoterm}
+          <PriceCalculator productId={p.id} tiers={p.tiers} currency={p.currency} feeCurrency={services.rfq?.currency ?? p.currency} unit={p.unit} unitOne={u} moq={p.moq} orderMultiple={cartonQty(p.qty_per_carton)} incoterm={p.incoterm}
             rfqFee={services.rfq?.priceCents ?? null} sampleFee={services.sample?.priceCents ?? null} whatsapp={wa} />
           {/* SPEC §18 — group buying card after the Request quote CTA */}
           <Suspense fallback={null}>
@@ -282,7 +276,7 @@ function ProductSkeleton() {
     <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-6" aria-busy="true" aria-label="Loading product">
       <div className="h-4 w-64 bg-line rounded" />
       <div className="mt-5 grid gap-6 lg:grid-cols-2">
-        <div className="ph aspect-square rounded-[12px]" />
+        <div className="aspect-square rounded-[12px] bg-surface animate-pulse" />
         <div className="space-y-4"><div className="h-10 bg-line rounded w-4/5" /><div className="card h-[420px]" /></div>
       </div>
       <div className="mt-10"><GridSkeleton n={6} cols="lg:grid-cols-6" /></div>

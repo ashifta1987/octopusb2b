@@ -31,3 +31,4 @@ Added 6 Nov 2026. Covers the bulk import, the single product form and the cron j
 ## Model choice (6 Nov 2026)
 - The first preview with gpt-4o-mini and a short prompt gave wrong headings at 0.9 confidence (aroma diffusers → 8480 "moulding boxes").
 - A reason-first prompt that asks for the official heading title, run with gpt-4.1, gave consistent results: fans 8414, humidifiers and diffusers 8509, thermo-hygrometers 9025. Bare model codes with no specs were left for manual entry.
+

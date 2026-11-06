@@ -28,7 +28,7 @@ export async function AdSlot({ placement, layout = 'banner' }: { placement: AdPl
   const thumb = view.image
     // eslint-disable-next-line @next/next/no-img-element
     ? <img src={view.image} alt="" width={56} height={56} loading="lazy" className="w-14 h-14 rounded-lg object-cover shrink-0" />
-    : <span className="ph w-14 h-14 rounded-lg shrink-0" aria-hidden />;
+    : null;   // no striped placeholder when the ad has no image
   const cta = (
     view.sponsored ? (
       // Plain <a>: the click route records + charges the click server-side, then redirects (never prefetched).

@@ -29,3 +29,4 @@ export const HS_SCHEMA = {
     } } },
   },
 } as const;
+

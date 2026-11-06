@@ -5,23 +5,38 @@ import { money } from '@/lib/format';
 
 type Tier = { min_qty: number; unit_price_cents: number };
 
+
 /**
- * Product.png "Bulk price tiers" card: tier picker, quantity stepper, unit price + estimated subtotal.
+ * Product.png "Bulk price tiers" card: tier picker, quantity field (no stepper: preset chips or typing; MOQ, whole numbers and full cartons on blur), unit price + estimated subtotal.
  * `tiers` must already be converted to the platform `currency`; `rfqFee`/`sampleFee` come from service_price_info() in `feeCurrency`.
  */
-export function PriceCalculator({ productId, tiers, currency, unit, unitOne, moq, rfqFee, sampleFee, feeCurrency, whatsapp, incoterm }: {
-  productId: string; tiers: Tier[]; currency: string; unit: string; unitOne: string; moq: number; rfqFee: number | null; sampleFee: number | null;
+export function PriceCalculator({ productId, tiers, currency, unit, unitOne, moq, orderMultiple, rfqFee, sampleFee, feeCurrency, whatsapp, incoterm }: {
+  productId: string; tiers: Tier[]; currency: string; unit: string; unitOne: string; moq: number; orderMultiple?: number | null; rfqFee: number | null; sampleFee: number | null;
   feeCurrency?: string; whatsapp: string | null; incoterm: string | null;
 }) {
   const fmt = (minor: number) => money(minor, currency);
   const fee = (minor: number) => money(minor, feeCurrency ?? currency);
   const sorted = [...tiers].sort((a, b) => a.min_qty - b.min_qty);
-  const [qty, setQty] = useState(Math.max(moq, sorted[0]?.min_qty ?? moq));
-  const tier = sorted.reduce<Tier | undefined>((pick, t) => (qty >= t.min_qty ? t : pick), undefined);
+  const mult = orderMultiple && orderMultiple > 1 ? orderMultiple : null;
+  const [qty, setQty] = useState(moq);
+  const [text, setText] = useState(String(moq));
+  const [note, setNote] = useState<string | null>(null);
+  const typed = Math.floor(Number(text.replace(/[,\s]/g, '')));
+  // price and subtotal follow what is in the box while typing; on blur the value is corrected (MOQ, whole number, cartons)
+  const live = Number.isFinite(typed) && typed > 0 ? typed : qty;
+  const tier = sorted.reduce<Tier | undefined>((pick, t) => (live >= t.min_qty ? t : pick), undefined);
   const base = sorted[0]?.unit_price_cents ?? 0;
-  const below = qty < moq;
-  const step = moq >= 100 ? Math.round(moq / 10) || 1 : 1;
-  const quick = [...new Set([moq, ...sorted.map((t) => t.min_qty), (sorted[sorted.length - 1]?.min_qty ?? moq) * 2.5].map(Math.round))].slice(0, 4);
+  const fq = (n: number) => `${n.toLocaleString('en-US')} ${unit}`;
+  const quick = [...new Set([moq, ...sorted.map((t) => t.min_qty)].filter((n) => n >= moq))].sort((a, b) => a - b);
+  const set = (n: number) => { setQty(n); setText(String(n)); setNote(null); };
+  const commit = () => {
+    const msgs: string[] = [];
+    let n = Number.isFinite(typed) && typed > 0 ? typed : moq;
+    if (n < moq) { n = moq; msgs.push(`Minimum order is ${fq(moq)}`); }
+    // the MOQ itself is always accepted (it is the supplier's own number); larger quantities go up to full cartons
+    if (mult && n > moq && n % mult) { const up = Math.ceil(n / mult) * mult; msgs.push(`Rounded up to ${fq(up)} (full cartons of ${mult.toLocaleString('en-US')})`); n = up; }
+    setQty(n); setText(String(n)); setNote(msgs.length ? msgs.join('. ') : null);
+  };
 
   return (
     <section className="card p-6 space-y-5" aria-labelledby="tiers-h">
@@ -37,7 +52,7 @@ export function PriceCalculator({ productId, tiers, currency, unit, unitOne, moq
             const save = base && i > 0 ? Math.round((1 - t.unit_price_cents / base) * 100) : 0;
             return (
               <li key={t.min_qty}>
-                <button type="button" aria-pressed={on} onClick={() => setQty(t.min_qty)}
+                <button type="button" aria-pressed={on} onClick={() => set(Math.max(moq, t.min_qty))}
                   className={`w-full text-left rounded-[10px] border-[1.5px] px-3 py-3 ${on ? 'bg-blue border-blue text-white' : 'bg-white border-line hover:border-navy'}`}>
                   <span className={`block text-[12px] ${on ? 'text-white' : 'text-muted'}`}>
                     {t.min_qty.toLocaleString('en-US')}{next ? `–${(next.min_qty - 1).toLocaleString('en-US')}` : '+'} {unit}
@@ -53,31 +68,33 @@ export function PriceCalculator({ productId, tiers, currency, unit, unitOne, moq
 
       <div>
         <label htmlFor="qty" className="label">Quantity ({unit})</label>
-        <div className="flex border border-line-2 rounded-[8px] overflow-hidden">
-          <button type="button" className="px-4 bg-surface font-bold" aria-label="Decrease quantity" onClick={() => setQty((q) => Math.max(1, q - step))}>−</button>
-          <input id="qty" type="number" min={1} inputMode="numeric" value={qty} onChange={(e) => setQty(Math.max(1, Number(e.target.value) || 1))}
-            className="flex-1 min-w-0 text-center min-h-11 font-semibold outline-none" aria-describedby={below ? 'qty-err' : undefined} />
-          <button type="button" className="px-4 bg-surface font-bold" aria-label="Increase quantity" onClick={() => setQty((q) => q + step)}>+</button>
-        </div>
-        {below && <p id="qty-err" className="text-[13px] text-bad mt-1" role="alert">Minimum order is {moq.toLocaleString('en-US')} {unit}.</p>}
-        <div className="flex flex-wrap gap-2 mt-3" role="group" aria-label="Quick quantities">
-          {quick.map((n) => (
-            <button key={n} type="button" onClick={() => setQty(n)} aria-pressed={qty === n}
-              className={`rounded-full border px-3 py-1 text-[13px] ${qty === n ? 'border-navy bg-navy text-white' : 'border-line-2 bg-white'}`}>
-              {n.toLocaleString('en-US')} {unit}
-            </button>
-          ))}
-        </div>
+        <input id="qty" type="text" inputMode="numeric" pattern="[0-9]*" autoComplete="off" value={text} data-testid="qty-input"
+          onChange={(e) => setText(e.target.value.replace(/[^0-9,]/g, ''))}
+          onBlur={commit} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } }}
+          className="input text-center font-semibold" aria-describedby="qty-help" />
+        <p id="qty-help" className={`text-[13px] mt-1 ${note ? 'text-bad' : 'text-muted'}`} role={note ? 'alert' : undefined} data-testid="qty-note">
+          {note ?? `Minimum ${fq(moq)}${mult ? ` · packed ${mult.toLocaleString('en-US')} per carton` : ''}`}
+        </p>
+        {quick.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-3" role="group" aria-label="Quick quantities">
+            {quick.map((n) => (
+              <button key={n} type="button" onClick={() => set(n)} aria-pressed={qty === n} data-testid="qty-chip"
+                className={`rounded-full border px-3 py-1 text-[13px] ${qty === n ? 'border-navy bg-navy text-white' : 'border-line-2 bg-white'}`}>
+                {fq(n)}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="rounded-[10px] bg-surface px-4 py-3 flex flex-wrap justify-between items-end gap-3" aria-live="polite">
         <div>
           <div className="text-[13px] text-muted">Your unit price</div>
-          <div className="font-display font-bold text-lg">{tier ? `${fmt(tier.unit_price_cents)} / ${unitOne}` : '—'}</div>
+          <div className="font-display font-bold text-lg"><span data-testid="unit-price">{tier ? `${fmt(tier.unit_price_cents)} / ${unitOne}` : '—'}</span></div>
         </div>
         <div className="text-right">
           <div className="text-[13px] text-muted">Estimated subtotal (excl. freight{incoterm ? `, ${incoterm}` : ''})</div>
-          <div className="font-display font-bold text-2xl">{tier ? fmt(tier.unit_price_cents * qty) : '—'}</div>
+          <div className="font-display font-bold text-2xl"><span data-testid="subtotal">{tier ? fmt(tier.unit_price_cents * live) : '—'}</span></div>
         </div>
       </div>
 
