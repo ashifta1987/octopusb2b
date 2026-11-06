@@ -15,12 +15,12 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
   await requireStaff('products', 'approve', '/office/products');
   const { p: selId } = await searchParams;
   const sb = await createClient();
-  const { data: queue } = await sb.from('products')
-    .select('id, title, status, updated_at, image_url, moderation_hold, suppliers(code, country)')
+  const { data: queue, error: queueError } = await sb.from('products')
+    .select('id, title, status, updated_at, image_url, moderation_hold, suppliers!products_supplier_id_fkey(code, country)')
     .in('status', ['submitted', 'in_review']).order('updated_at').limit(100);
   const sel = selId ?? queue?.[0]?.id;
   const { data: p } = sel ? await sb.from('products')
-    .select('id, external_id, title, description, status, moderation_hold, moderation_hold_reason, unit, moq, lead_time_days, incoterm, origin_country, hs_code, octopus_dropship, ready_to_ship, seo_title, seo_description, image_url, updated_at, rejection_reason, suppliers(code, legal_name, country, verified, supplier_switches(listings_live)), categories(name), currency, price_tiers(min_qty, unit_price_cents, currency), product_specs(name, value, sort), product_media(url, sort), product_tags(tags(name)), product_certificates(certificates(name, status))')
+    .select('id, external_id, title, description, status, moderation_hold, moderation_hold_reason, unit, moq, lead_time_days, incoterm, origin_country, hs_code, octopus_dropship, ready_to_ship, seo_title, seo_description, image_url, updated_at, rejection_reason, suppliers!products_supplier_id_fkey(code, legal_name, country, verified, supplier_switches(listings_live)), categories(name), currency, price_tiers(min_qty, unit_price_cents, currency), product_specs(name, value, sort), product_media(url, sort), product_tags(tags(name)), product_certificates(certificates(name, status))')
     .eq('id', sel).maybeSingle() : { data: null };
   const sup = p ? one(p.suppliers as unknown as { code: string; legal_name: string; country: string; verified: boolean; supplier_switches: { listings_live: boolean } | { listings_live: boolean }[] | null } | null) : null;
   // import gate (ADDON-27, moved to publish 6 Nov 2026): in the queue, but cannot go live until resolved
@@ -45,7 +45,7 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
       <PageHeader title="Product moderation" subtitle="Check listings before they go live. Approve publishes to the storefront; reject sends the reason back to the distributor." />
       <div className="grid lg:grid-cols-[360px_1fr] gap-6 items-start">
         <Card title={`Queue · ${queue?.length ?? 0}`}>
-          {!queue?.length ? <EmptyState title="Queue is clear" body="Submitted products appear here." /> : (
+          {queueError ? <div className="px-5 pb-5"><Notice tone="red">The moderation queue could not be loaded: {queueError.message}</Notice></div> : !queue?.length ? <EmptyState title="Queue is clear" body="Submitted products appear here." /> : (
             <ul className="border-t border-line divide-y divide-line">
               {queue.map((q) => (
                 <li key={q.id}>

@@ -22,7 +22,7 @@ export default async function DistributorProducts({ searchParams }: { searchPara
   let total = 0;
   if (ids.length) {
     let q = sb.from('products')
-      .select('id, external_id, title, status, listing_status, moq, unit, min_price_cents, currency, image_url, updated_at, rejection_reason, suppliers(code), categories(name)', { count: 'exact' })
+      .select('id, external_id, title, status, listing_status, moq, unit, min_price_cents, currency, image_url, updated_at, rejection_reason, suppliers!products_supplier_id_fkey(code), categories(name)', { count: 'exact' })
       .in('supplier_id', ids).order('updated_at', { ascending: false }).range((page - 1) * size, page * size - 1);
     if (sp.status && STATUSES.includes(sp.status)) q = q.eq('status', sp.status);
     else q = q.neq('status', 'archived');
