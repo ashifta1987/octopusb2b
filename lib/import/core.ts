@@ -73,7 +73,7 @@ export async function computeDiff(sb: SupabaseClient, batch: StagingBatch): Prom
   const productDiff: TableDiff = { create: 0, update: 0, skip: 0, conflicts: [] };
   const changes: FieldChange[] = [];
   const show = (v: unknown) => (v == null ? null : String(v).slice(0, 160));
-  const FIELDS = ['factory_model', 'specification_raw', 'selling_points_raw', 'net_weight', 'product_size_mm', 'size_notes', 'colour_box_mm', 'carton_size_mm', 'qty_per_carton', 'gross_weight', 'listing_status', 'import_notes', 'incoterm', 'title'];
+  const FIELDS = ['factory_model', 'specification_raw', 'selling_points_raw', 'net_weight', 'product_size_mm', 'size_notes', 'colour_box_mm', 'carton_size_mm', 'qty_per_carton', 'gross_weight', 'import_notes', 'incoterm', 'title'];
   const spDiff: TableDiff = { create: 0, update: 0, skip: 0 };
   const spBy = new Map((sps ?? []).map((r) => [r.product_id as string, r]));
   for (const p of batch.products) {
@@ -81,7 +81,8 @@ export async function computeDiff(sb: SupabaseClient, batch: StagingBatch): Prom
     if (!e) { productDiff.create++; spDiff.create++; continue; }
     const fields: [unknown, unknown][] = [[e.factory_model, p.factory_model], [e.specification_raw, p.specification_raw], [e.selling_points_raw, p.selling_points_raw],
       [e.net_weight, p.net_weight], [e.product_size_mm, p.product_size_mm], [e.size_notes, p.size_notes], [e.colour_box_mm, p.colour_box_mm],
-      [e.carton_size_mm, p.carton_size_mm], [e.qty_per_carton, p.qty_per_carton], [e.gross_weight, p.gross_weight], [e.listing_status, p.listing_status],
+      [e.carton_size_mm, p.carton_size_mm], [e.qty_per_carton, p.qty_per_carton], [e.gross_weight, p.gross_weight],
+      // Platform status (listing_status) only applies to NEW products — an update never lowers a product (bug fix 6 Nov 2026)
       [e.import_notes, p.notes], [e.incoterm, p.incoterm ?? e.incoterm], [e.title, p.name || e.title]];
     if (fields.some(([a, b]) => changed(a, b))) {
       productDiff.update++;

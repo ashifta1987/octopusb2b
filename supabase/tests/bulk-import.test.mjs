@@ -27,15 +27,15 @@ try {
   const r1 = (await one(`select commit_import_run($1, $2) c`, [await stage(batch, 'Bowijie test'), admin])).c;
   console.log('  first commit:', JSON.stringify(r1));
   // the live catalogue may already hold Bowijie (loaded 6 Nov 2026) → count create + skip
-  const n = (t) => (t.create ?? 0) + (t.skip ?? 0);
+  const n = (t) => (t.create ?? 0) + (t.skip ?? 0) + (t.update ?? 0);
   ok(n(r1.suppliers) === 1 && n(r1.products) === 69 && n(r1.supplier_products) === 69 && n(r1.prices) === 77 && n(r1.images) === 53,
     `69 draft products, 1 supplier, 69 supplier links, 77 tiered prices, 53 images (${r1.products.create ? 'created' : 'already loaded'})`);
   const sup = await one(`select id, code, legal_name, identity_status, (select count(*) from supplier_name_variants v where v.supplier_id = s.id) variants,
     (select count(*) from supplier_contacts c where c.supplier_id = s.id) contacts from suppliers s where external_id = 'CN-GD-BWJ-0010'`);
   ok(sup.identity_status === 'needs_identity_review' && Number(sup.variants) === 3 && Number(sup.contacts) === 1, `supplier ${sup.code} "${sup.legal_name}" — 3 name variants, identity review pending, 1 contact`);
-  const st = await one(`select count(*) filter (where status = 'draft') drafts, count(*) filter (where listing_status = 'needs_quote') nq,
+  const st = await one(`select count(*) filter (where status in ('draft', 'submitted', 'in_review')) drafts, count(*) filter (where listing_status = 'needs_quote') nq,
     count(*) filter (where listing_status = 'in_development') dev, count(*) n from products where external_id like 'CN-GD-BWJ-%'`);
-  ok(Number(st.drafts) === 69 && Number(st.nq) === 18 && Number(st.dev) === 1, `all 69 are drafts (18 need a quote, 1 in development)`);
+  ok(Number(st.drafts) === 69 && Number(st.nq) === 18 && Number(st.dev) === 1, `none of the 69 is live (draft or in moderation; 18 need a quote, 1 in development)`);
   const rv = await one(`select count(*) n from import_review_items where external_id like 'CN-GD-BWJ-%' and status = 'open'`);
   ok(Number(rv.n) === batch.review.length, `${rv.n} review items waiting for a decision`);
 
@@ -48,22 +48,22 @@ try {
   const s13 = await one(`select (select count(*) from supplier_product_prices x where x.product_id = p.id and price_minor = 122080) n from products p where external_id = 'CN-GD-BWJ-S13'`);
   ok(Number(s13.n) === 1, 'S13 price 12.208 stored with 4-dp precision (122080)');
 
-  // 2 · publish gate
-  await expectErr(() => db.query(`update products set status = 'submitted' where external_id = 'CN-GD-BWJ-F9'`), /IMPORT_PUBLISH_BLOCKED.*legal-name/, 'cannot publish while the supplier identity is unresolved');
+  // 2 · publish gate (since 6 Nov 2026 it guards → live; products may wait in the moderation queue)
+  await expectErr(() => db.query(`update products set status = 'live' where external_id = 'CN-GD-BWJ-F9'`), /IMPORT_PUBLISH_BLOCKED.*legal-name/, 'cannot publish while the supplier identity is unresolved');
   await db.query(`update supplier_name_variants set is_canonical = true where supplier_id = $1 and seen_in = 'fan_quotation_2026_11'`, [sup.id]);
   await db.query(`update suppliers set identity_status = 'ok' where id = $1`, [sup.id]);
-  await expectErr(() => db.query(`update products set status = 'submitted' where external_id = 'CN-GD-BWJ-F8'`), /IMPORT_PUBLISH_BLOCKED.*review/, 'F8 still blocked by its open review item');
-  await expectErr(() => db.query(`update products set status = 'submitted' where external_id = 'CN-GD-BWJ-MQ01'`), /IMPORT_PUBLISH_BLOCKED.*not quoted/, 'a needs-quote product cannot be published');
+  await expectErr(() => db.query(`update products set status = 'live' where external_id = 'CN-GD-BWJ-F8'`), /IMPORT_PUBLISH_BLOCKED.*review/, 'F8 still blocked by its open review item');
+  await expectErr(() => db.query(`update products set status = 'live' where external_id = 'CN-GD-BWJ-MQ01'`), /IMPORT_PUBLISH_BLOCKED.*not quoted/, 'a needs-quote product cannot be published');
   await db.query(`update import_review_items set status = 'resolved' where external_id = 'CN-GD-BWJ-F8'`);
-  await db.query(`update products set status = 'submitted' where external_id = 'CN-GD-BWJ-F8'`);
-  ok((await one(`select status from products where external_id = 'CN-GD-BWJ-F8'`)).status === 'submitted', 'F8 can go to moderation once identity + review are resolved');
-  await db.query(`update products set status = 'submitted' where external_id = 'CN-GD-BWJ-F15'`).then(() => ok(true, 'a product without review items (F15) can go to moderation'), (e) => ok(false, 'F15: ' + e.message));
+  await db.query(`update products set status = 'live' where external_id = 'CN-GD-BWJ-F8'`);
+  ok((await one(`select status from products where external_id = 'CN-GD-BWJ-F8'`)).status === 'live', 'F8 can be published once identity + review are resolved');
+  await db.query(`update products set status = 'live' where external_id = 'CN-GD-BWJ-F15'`).then(() => ok(true, 'a product without review items (F15) can be published'), (e) => ok(false, 'F15: ' + e.message));
 
   // 3 · idempotent re-import
   const r2 = (await one(`select commit_import_run($1, $2) c`, [await stage(batch, 'Bowijie again'), admin])).c;
   ok(r2.products.create === 0 && r2.products.update === 0 && r2.products.skip === 69 && r2.prices.create === 0 && r2.prices.update === 0 && r2.prices.skip === 77
      && r2.images.create === 0 && r2.supplier_products.create === 0 && r2.review.create === 0, `importing the same workbook again changes nothing → ${JSON.stringify({ p: r2.products, pr: r2.prices, i: r2.images })}`);
-  ok((await one(`select status from products where external_id = 'CN-GD-BWJ-F8'`)).status === 'submitted', 're-import keeps a product\'s status (no reset to draft)');
+  ok((await one(`select status from products where external_id = 'CN-GD-BWJ-F8'`)).status === 'live', 're-import keeps a product\'s status (live stays live, no reset to draft)');
 
   // 4 · modified workbook: 1 new product + 1 changed price
   const mod = structuredClone(batch);

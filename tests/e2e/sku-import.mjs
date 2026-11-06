@@ -96,6 +96,15 @@ try {
   const made = (await db.query(`select p.id, p.sku, (select count(*) from product_media m where m.product_id = p.id) imgs, (select source_file_name from product_media m where m.product_id = p.id limit 1) src from products p where p.sku like $1 order by p.sku`, [`${P}-%`])).rows;
   ok(made.length === 2 && Number(made[0].imgs) === 1 && made[0].src === 'QA1.JPG' && Number(made[1].imgs) === 0, `commit: 2 products created (${made.map((m) => `${m.sku}:${m.imgs} img`).join(', ')}), bad rows not saved`);
 
+  // 2b · submit for moderation from the UI → products really change; the job only says "submitted" if they did
+  page.once('dialog', (d) => d.accept());
+  await page.getByRole('button', { name: /Submit \d+ for moderation/ }).click();
+  await page.waitForTimeout(1500); await page.reload(); await page.getByTestId('import-summary').waitFor();
+  const subSt = (await db.query(`select status, count(*)::int n from products where sku like $1 group by 1`, [`${P}-%`])).rows;
+  const jobSt = (await db.query(`select status from import_jobs where id = $1`, [job1])).rows[0].status;
+  ok(subSt.length === 1 && subSt[0].status === 'submitted' && subSt[0].n === 2 && jobSt === 'submitted', `Submit for moderation: 2 products → submitted, job ${jobSt}`);
+  const queueCount = Number((await db.query(`select count(*) n from products where sku like $1 and status in ('submitted', 'in_review')`, [`${P}-%`])).rows[0].n);
+  ok(queueCount === 2, `moderation queue (submitted / in_review) holds both (${queueCount})`);
   // 3 · same file again → updates nothing (no duplicates)
   const tpl2 = new ExcelJS.Workbook(); await tpl2.xlsx.readFile(path.join(tmp, fs.readdirSync(tmp).filter((f) => f.startsWith('up-')).sort()[0]));
   await upload(tpl2, zip1);
@@ -118,6 +127,7 @@ try {
   ok(/1 updates/.test(await page.getByTestId('import-summary').innerText()) && /price tiers/.test(await rowText(2)), 'one edited price → 1 update with a field diff');
   await confirm();
   ok(Number((await db.query(`select unit_price_cents c from price_tiers t join products p on p.id = t.product_id where p.sku = $1 and t.min_qty = 100`, [`${P}-001`])).rows[0].c) === 21, 'the update saved the new price');
+  ok((await db.query(`select status from products where sku = $1`, [`${P}-001`])).rows[0].status === 'submitted', 're-import (update) after submit keeps status submitted');
 
   // 6 · race: two jobs validated with the same new SKU; the second commit reports a row error, not a 500
   ew.getCell('A2').value = `${P}-RACE`; ew.spliceRows(3, 1);
@@ -140,7 +150,6 @@ try {
   const s2 = String(gw.getWorksheet('Products').getCell('A2').value), s3 = String(gw.getWorksheet('Products').getCell('A3').value);
   const taken = (await db.query(`select count(*) n from sku_reservations where sku_norm in ($1, $2)`, [s2, s3])).rows[0].n;
   ok(/^[A-Z]{3}-\d{6}$/.test(s2) && /^[A-Z]{3}-\d{6}$/.test(s3) && s2 !== s3 && Number(taken) === 0, `Generate SKUs filled blanks with free SKUs (${s2}, ${s3})`);
-  void job1;
   await ctx.close();
 } catch (e) {
   ok(false, 'unexpected error: ' + e.message);

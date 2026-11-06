@@ -94,7 +94,7 @@ try {
   // 6 · drafts are not on the storefront; publish gate message is friendly
   const store = await (await fetch(`${APP}/search?q=${encodeURIComponent('Handheld Fan with Animated Face')}`)).text();
   ok(!/CN-GD-BWJ|Animated Face Display, 4000mAh/.test(store), 'draft Bowijie products are not on the storefront');
-  const gate = await db.query(`update products set status = 'submitted' where external_id = 'CN-GD-BWJ-F15'`).then(() => 'no error', (e) => e.message);
+  const gate = await db.query(`update products set status = 'live' where external_id = 'CN-GD-BWJ-F15'`).then(() => 'no error', (e) => e.message);
   ok(/IMPORT_PUBLISH_BLOCKED.*legal-name/.test(gate), `publish gate blocks while the identity is unresolved (${gate.slice(0, 80)}…)`);
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   ok(overflow <= 0, `no horizontal scroll on the admin page (${overflow}px)`);

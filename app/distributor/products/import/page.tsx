@@ -21,15 +21,18 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
   const sb = await createClient();
   const [{ data: history }, jobRes] = await Promise.all([
     sb.from('import_jobs').select('id, file_name, status, total_rows, valid_rows, error_rows, created_at, suppliers(code)').eq('created_by', s.userId).order('created_at', { ascending: false }).limit(15),
-    jobId ? sb.from('import_jobs').select('id, file_name, status, total_rows, valid_rows, error_rows, unchanged_rows, zip_path, zip_unreferenced, created_at').eq('id', jobId).maybeSingle() : Promise.resolve({ data: null }),
+    jobId ? sb.from('import_jobs').select('id, file_name, status, total_rows, valid_rows, error_rows, unchanged_rows, zip_path, zip_unreferenced, submit_report, created_at').eq('id', jobId).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   const job = jobRes.data;
-  const { data: rows } = job ? await sb.from('import_rows').select('id, row_no, data, errors, warnings, product_id').eq('job_id', job.id).order('row_no') : { data: null };
+  const { data: rows } = job ? await sb.from('import_rows').select('id, row_no, data, errors, warnings, product_id, submit_error, products(status)').eq('job_id', job.id).order('row_no') : { data: null };
   const pendingRows = (rows ?? []).filter((r) => !r.errors && !r.product_id);
   const importable = pendingRows.filter((r) => (r.data as ImportData).mode !== 'unchanged').length;
   const creates = pendingRows.filter((r) => (r.data as ImportData).mode !== 'update' && (r.data as ImportData).mode !== 'unchanged').length;
   const updates = pendingRows.filter((r) => (r.data as ImportData).mode === 'update').length;
   const imported = (rows ?? []).filter((r) => r.product_id).length;
+  const pstatus = (r: { products?: unknown }) => ((Array.isArray(r.products) ? r.products[0] : r.products) as { status?: string } | null)?.status ?? null;
+  const submittable = (rows ?? []).filter((r) => r.product_id && !r.errors && ['draft', 'rejected'].includes(pstatus(r) ?? '')).length;
+  const failedSubmit = (rows ?? []).filter((r) => r.submit_error).length;
   const step = !job ? 1 : job.status === 'validated' ? 3 : 4;
   const steps = ['Get template', 'Upload sheet + images', 'Check results', 'Import'];
   const extra = (job?.zip_unreferenced ?? []) as string[];
@@ -96,8 +99,9 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
             <span className="text-sm" data-testid="import-summary"><b>{job.total_rows}</b> rows · <span className="text-blue font-semibold">{creates} new</span> · <span className="text-warn font-semibold">{updates} updates</span> · <span className="text-muted">{(rows ?? []).filter((r) => (r.data as ImportData).mode === 'unchanged' && !r.errors).length} unchanged</span> · <span className="text-bad font-semibold">{(rows ?? []).filter((r) => r.errors).length} with errors</span> · {imported} imported</span>
             <span className="flex-1" />
             {importable > 0 && <RunButton className="btn btn-primary btn-sm" action={importValidRows.bind(null, job.id)} confirm={`Save ${creates} new products (drafts) and ${updates} updates?`}>Confirm and import {importable}</RunButton>}
-            {imported > 0 && job.status !== 'submitted' && <RunButton className="btn btn-dark btn-sm" action={submitImported.bind(null, job.id)} confirm={`Submit the imported drafts for moderation?`}>Submit drafts for moderation</RunButton>}
+            {submittable > 0 && <RunButton className="btn btn-dark btn-sm" action={submitImported.bind(null, job.id)} confirm={`Submit ${submittable} products of this job for moderation?`}>Submit {submittable} for moderation</RunButton>}
           </div>
+          {failedSubmit > 0 && <div className="px-6 pb-4"><Notice tone="red">{failedSubmit} product{failedSubmit === 1 ? '' : 's'} could not be submitted for moderation — the reason is shown on each row. Fix it and press Submit again.</Notice></div>}
           {importable === 0 && imported === 0 && <div className="px-6 pb-4"><Notice tone="amber">Nothing to import: fix the errors in your file and upload it again (rows without changes are skipped).</Notice></div>}
           {extra.length > 0 && <div className="px-6 pb-4"><Notice tone="blue">{extra.length} file{extra.length === 1 ? '' : 's'} in the zip {extra.length === 1 ? 'is' : 'are'} not used by any row and will be ignored: {extra.slice(0, 20).join(', ')}{extra.length > 20 ? ' …' : ''}</Notice></div>}
           <Table head={['Row', 'SKU', 'Title', 'Supplier', 'Tiers', 'Action', 'Result']}>
@@ -122,8 +126,9 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
                   </td>
                   <td className="td text-sm">
                     {errs.length ? <ul className="text-bad text-xs list-disc pl-4" data-testid="row-errors">{errs.map((e) => <li key={e}>{e}</li>)}</ul>
-                      : r.product_id ? <Link href={`/distributor/products/${r.product_id}/edit`} className="text-ok font-semibold text-xs">✓ Saved · edit</Link>
+                      : r.product_id ? <><Link href={`/distributor/products/${r.product_id}/edit`} className="text-ok font-semibold text-xs">✓ Saved · edit</Link>{pstatus(r) && <span className="ml-2"><StatusBadge status={pstatus(r)!} /></span>}</>
                         : <span className="text-ok text-xs font-semibold">✓ Valid</span>}
+                    {r.submit_error && <p className="text-bad text-xs mt-1" data-testid="submit-error">Not submitted: {r.submit_error}</p>}
                     {warns.length > 0 && <ul className="text-warn text-xs list-disc pl-4 mt-1" data-testid="row-warnings">{warns.map((w) => <li key={w}>{w}</li>)}</ul>}
                   </td>
                 </tr>

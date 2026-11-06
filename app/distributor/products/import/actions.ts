@@ -314,21 +314,23 @@ export async function importValidRows(jobId: string): Promise<Result> {
   return ok(undefined, `${created} created as drafts · ${updated} updated · ${skipped} unchanged${failures.length ? ` · ${failures.length} failed` : ''}`);
 }
 
-/** Submit every imported draft of this job for moderation via transition_product. */
+/**
+ * Submit every valid product of the job (creates AND updates) for moderation — submit_import_job(): one transaction,
+ * products → 'submitted' (what /office/products reads), per-row reasons when a product cannot be submitted, job status
+ * set from what really changed, audit_log row. Never reports success when nothing moved.
+ */
 export async function submitImported(jobId: string): Promise<Result> {
   const g = await actionSession('products', 'edit');
   if ('error' in g) return fail(g.error);
   const sb = await createClient();
-  const { data: rows } = await sb.from('import_rows').select('product_id, products(status)').eq('job_id', jobId).not('product_id', 'is', null);
-  let n = 0; let firstErr: string | null = null;
-  for (const r of rows ?? []) {
-    const st = (Array.isArray(r.products) ? r.products[0] : r.products) as { status: string } | null;
-    if (st?.status !== 'draft') continue;
-    const { error } = await sb.rpc('transition_product', { p_product: r.product_id, p_to: 'submitted', p_reason: 'bulk import' });
-    if (error) firstErr ??= error.message; else n++;
-  }
-  await sb.from('import_jobs').update({ status: 'submitted' }).eq('id', jobId);
+  const { data, error } = await sb.rpc('submit_import_job', { p_job: jobId });
   revalidatePath('/distributor/products/import');
-  if (!n && firstErr) return fail(firstErr);
-  return ok(undefined, `${n} products submitted for moderation`);
+  revalidatePath('/office/products');
+  if (error) return fail(error);
+  const r = data as { total: number; submitted: number; already_in_moderation: number; failed: number; job_status: string };
+  const parts = [`${r.submitted} submitted for moderation`];
+  if (r.already_in_moderation) parts.push(`${r.already_in_moderation} already in moderation or live`);
+  if (r.failed) parts.push(`${r.failed} could not be submitted — see the reason on each row`);
+  if (!r.submitted && !r.already_in_moderation) return fail(parts.join(' · '));
+  return ok(undefined, parts.join(' · '));
 }

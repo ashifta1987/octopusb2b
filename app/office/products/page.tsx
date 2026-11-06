@@ -23,6 +23,8 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
     .select('id, external_id, title, description, status, unit, moq, lead_time_days, incoterm, origin_country, hs_code, octopus_dropship, ready_to_ship, seo_title, seo_description, image_url, updated_at, rejection_reason, suppliers(code, legal_name, country, verified, supplier_switches(listings_live)), categories(name), currency, price_tiers(min_qty, unit_price_cents, currency), product_specs(name, value, sort), product_media(url, sort), product_tags(tags(name)), product_certificates(certificates(name, status))')
     .eq('id', sel).maybeSingle() : { data: null };
   const sup = p ? one(p.suppliers as unknown as { code: string; legal_name: string; country: string; verified: boolean; supplier_switches: { listings_live: boolean } | { listings_live: boolean }[] | null } | null) : null;
+  // import gate (ADDON-27, moved to publish 6 Nov 2026): in the queue, but cannot go live until resolved
+  const { data: blocker } = p ? await sb.rpc('product_publish_blocker', { p_product: p.id }) : { data: null };
   const listingsOff = sup ? one(sup.supplier_switches)?.listings_live === false : false;
   const tiers = ((p?.price_tiers ?? []) as { min_qty: number; unit_price_cents: number; currency: string }[]).sort((a, b) => a.min_qty - b.min_qty);
   const cx = await getCurrencyContext();
@@ -71,6 +73,7 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
               </div>
               <StatusBadge status={p.status} />
             </div>
+            {blocker && <div className="mt-4" data-testid="publish-blocker"><Notice tone="red"><b>Cannot be approved yet:</b> {String(blocker)}. You can review it now; approval works once this is resolved.</Notice></div>}
             {listingsOff && <div className="mt-4"><Notice tone="red">This supplier&apos;s “listings live” switch is off — approval will fail until it is turned on.</Notice></div>}
             {issues.length > 0 && <div className="mt-4"><Notice tone="amber"><b>Check:</b> {issues.join(' · ')}</Notice></div>}
             <div className="grid md:grid-cols-[260px_1fr] gap-6 mt-5">

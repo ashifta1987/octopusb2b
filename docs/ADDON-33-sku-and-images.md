@@ -72,3 +72,7 @@ Done when: the downloaded template has the 3 image columns and a SKU first colum
 
 - Run after ADDON-27 and ADDON-29. If ADDON-29 already added `Product Id` to the Bowijie format, keep that name there and map it to `products.sku`; the rule is the same.
 - SKU is a separate thing from `supplier_code` (OCT-1101), which identifies the supplier and stays as is.
+
+## Bug fix (6 Nov 2026): "Submit for moderation" left bulk-imported products in draft
+
+Job `b1e4cb86…` (50 Bowijie UPDATE rows) showed "submitted" while every product stayed `draft`. Causes: the ADDON-27 import gate refused `draft → submitted` for all 50 (supplier OCT-1132 identity under review), and the submit action ignored the per-product errors and set the job to "submitted" anyway. Fix (migration `20261101000162_import_submit_fix.sql`): the gate now guards publishing (`→ live`) only, so blocked products can wait in the queue with the blocker shown to moderators. `submit_import_job()` submits creates and updates in one transaction, stores a reason on each row that fails, sets the job to `submitted` / `partially_submitted` / `submit_failed` from what really changed, and writes an `import_job.submitted` audit row. Imports never lower a product: the workbook's Platform status applies to new rows only. The 50 products were repaired through the same function. Tests: `supabase/tests/import-submit.test.mjs`, plus the submit step in `tests/e2e/sku-import.mjs`.
