@@ -60,7 +60,7 @@ async function Content({ params }: { params: Params }) {
             {p.overview_md && <p className="text-[#C9D0E8] text-[16px] max-w-2xl">{p.overview_md}</p>}
             {p.highlights.length > 0 && <ul className="flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-[#A9B2D0]">{p.highlights.map((h) => <li key={h}>✓ {h}</li>)}</ul>}
           </div>
-          <TkImage p={p} label={`${p.title} layout render`} className="h-[200px] sm:h-[220px] rounded-[14px] opacity-80" />
+          <TkImage p={p} label={`${p.title} layout render`} priority className={`h-[200px] sm:h-[220px] rounded-[14px] ${p.hero_image_path ? '' : 'opacity-80'}`} />
         </div>
       </section>
 

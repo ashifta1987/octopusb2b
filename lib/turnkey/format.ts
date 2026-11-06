@@ -25,7 +25,7 @@ export type TurnkeyProject = {
   project_id: string; title: string; category: TurnkeyCategory; short_reason: string | null;
   starting_budget_usd: number | null; budget_unit: string | null; lead_time_days: number | null;
   best_markets: string[]; factory_hub_ids: string[]; hub_label: string | null; status: TurnkeyStatus;
-  is_starter_pick: boolean; starter_rank: number | null; sort_rank: number; hero_image_path: string | null;
+  is_starter_pick: boolean; starter_rank: number | null; sort_rank: number; hero_image_path: string | null; hero_image_alt?: string | null;
   overview_md: string | null; highlights: string[]; earn: { label: string; value: string; note: string }[];
   four_tests: Record<string, unknown>; seo_title: string | null; seo_description: string | null;
 };

@@ -64,7 +64,7 @@ export async function saveProject(_prev: Result | null, fd: FormData): Promise<R
     lead_time_days: lead, hub_label: txt(fd, 'hub_label') || null, factory_hub_ids: fd.getAll('factory_hub_ids').map(String).filter(Boolean),
     best_markets: txt(fd, 'best_markets').split(',').map((x) => x.trim()).filter(Boolean), is_starter_pick: pick, starter_rank: pick ? rank : null,
     overview_md: txt(fd, 'overview_md') || null, highlights: txt(fd, 'highlights').split('\n').map((x) => x.trim()).filter(Boolean).slice(0, 6),
-    hero_image_path: txt(fd, 'hero_image_path') || null, seo_title: txt(fd, 'seo_title') || null, seo_description: txt(fd, 'seo_description') || null,
+    hero_image_path: txt(fd, 'hero_image_path') || null, hero_image_alt: txt(fd, 'hero_image_alt') || null, seo_title: txt(fd, 'seo_title') || null, seo_description: txt(fd, 'seo_description') || null,
     updated_at: new Date().toISOString(),
   };
   if (row.hero_image_path && !/^https:\/\//.test(row.hero_image_path)) return fail('Hero image must be an https:// URL.');

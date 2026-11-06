@@ -12,11 +12,12 @@ export const CategoryPill = ({ p }: { p: Pick<TurnkeyProject, 'category'> }) => 
 export const Eyebrow = ({ children, className = 'text-blue' }: { children: React.ReactNode; className?: string }) =>
   <div className={`mono text-[11px] font-semibold uppercase tracking-[.08em] ${className}`}>{children}</div>;
 
-/** Striped placeholder (the design has no photography yet). An admin-set hero image replaces it. */
-export function TkImage({ p, label, className = '' }: { p?: Pick<TurnkeyProject, 'hero_image_path' | 'title'>; label: string; className?: string }) {
+/** Project photo (1200×800, set 7 Nov 2026) with its alt text; striped placeholder only if a project has no photo. */
+export function TkImage({ p, label, className = '', priority = false }: { p?: Pick<TurnkeyProject, 'hero_image_path' | 'title'> & { hero_image_alt?: string | null }; label: string; className?: string; priority?: boolean }) {
   if (p?.hero_image_path) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={p.hero_image_path} alt="" className={`object-cover w-full h-full ${className}`} loading="lazy" />;
+    return <img src={p.hero_image_path} alt={p.hero_image_alt || p.title} width={1200} height={800} decoding="async"
+      loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : undefined} className={`object-cover w-full h-full bg-surface ${className}`} />;
   }
   return (
     <div aria-hidden className={`flex items-center justify-center mono text-[12px] text-muted ${className}`}

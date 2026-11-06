@@ -55,6 +55,7 @@ export default async function TurnkeyProjectAdmin({ params }: { params: Promise<
             <label className="block sm:col-span-2"><span className="label">Overview</span><textarea name="overview_md" defaultValue={p?.overview_md ?? ''} rows={3} className="input py-2" disabled={!edit} /></label>
             <label className="block sm:col-span-2"><span className="label">Hero ticks (one per line, max 6)</span><textarea name="highlights" defaultValue={p?.highlights.join('\n') ?? ''} rows={4} className="input py-2" disabled={!edit} /></label>
             <F edit={edit} label="Hero image URL (https, optional)" name="hero_image_path" value={p?.hero_image_path} wide />
+            <F edit={edit} label="Hero image alt text (describes the photo)" name="hero_image_alt" value={p?.hero_image_alt} wide />
             <F edit={edit} label="SEO title" name="seo_title" value={p?.seo_title} />
             <F edit={edit} label="SEO description" name="seo_description" value={p?.seo_description} />
           </div>
