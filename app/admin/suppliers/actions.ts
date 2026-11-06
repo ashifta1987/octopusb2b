@@ -2,6 +2,7 @@
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 import { guard, fail, ok, str, bool, type Result } from '@/components/admin/server';
+import { createAdminClient } from '@/lib/supabase/server';
 
 const SWITCHES = ['portal_login', 'product_upload', 'rfq_replies', 'listings_live', 'ai_tools'] as const;
 
@@ -79,4 +80,38 @@ export async function setArchived(id: string, archived: boolean): Promise<Result
   return ok(archived
     ? `Supplier ${r.code} archived${r.products ? ` with its ${r.products} product${r.products === 1 ? '' : 's'} (${parts})` : ''}`
     : `Supplier ${r.code} restored${r.products ? ` — ${r.products} product${r.products === 1 ? '' : 's'} back as ${parts}` : ''}`);
+}
+
+/**
+ * Delete a supplier for good (migration 170): Admin only, the typed code must match. delete_supplier() erases the supplier,
+ * all its products (incl. moderation), imports and history in one transaction, releases its SKUs and frees the code for the
+ * next new supplier; it refuses when the supplier has business history. Photo files no other product uses and its import
+ * zips are then removed from Storage.
+ */
+export async function deleteSupplier(_prev: Result | null, fd: FormData): Promise<Result> {
+  const g = await guard('suppliers', 'edit');
+  if ('error' in g) return g.error;
+  if (!g.s.isAdmin) return fail('Only an Admin can delete a supplier.');
+  const id = str(fd, 'id');
+  const confirm = str(fd, 'confirm_code').toUpperCase();
+  if (!id) return fail('NOT_FOUND');
+  if (!confirm) return fail('Type the supplier code to confirm.');
+  const { data, error } = await g.sb.rpc('delete_supplier', { p_supplier: id, p_confirm_code: confirm });
+  if (error) {
+    const m = /^(CONFIRM_MISMATCH|SUPPLIER_DELETE_BLOCKED|FORBIDDEN): (.*)$/.exec(error.message);
+    return fail(m ? m[2].charAt(0).toUpperCase() + m[2].slice(1) + '.' : error);
+  }
+  const r = data as { code: string; products: number; skus_released: number; storage: Record<string, string[]> };
+  // Storage clean-up (service role): files are content-addressed, the RPC only returns ones no remaining product uses
+  const admin = createAdminClient();
+  let filesLeft = 0;
+  for (const [bucket, paths] of Object.entries(r.storage ?? {})) {
+    for (let i = 0; i < paths.length; i += 100) {
+      const { error: se } = await admin.storage.from(bucket).remove(paths.slice(i, i + 100));
+      if (se) filesLeft += paths.slice(i, i + 100).length;
+    }
+  }
+  refresh();
+  revalidatePath('/office/products'); revalidatePath('/office'); revalidatePath('/distributor'); revalidatePath('/distributor/products');
+  return ok(`Supplier ${r.code} deleted with its ${r.products} product${r.products === 1 ? '' : 's'}; ${r.skus_released} product IDs released. The code ${r.code} will be given to the next new supplier.${filesLeft ? ` ${filesLeft} file(s) could not be removed from storage — retry later.` : ''}`);
 }

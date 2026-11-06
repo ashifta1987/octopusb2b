@@ -6,7 +6,7 @@ import { Field, CountryTag } from '@/components/admin/ui';
 import { ActionForm, RunButton, ToggleSetting } from '@/components/admin/client';
 import { COUNTRY_NAMES, fmtDate } from '@/lib/format';
 import { cn } from '@/lib/cn';
-import { createSupplier, updateSupplier, setSwitch, setArchived } from './actions';
+import { createSupplier, updateSupplier, setSwitch, setArchived, deleteSupplier } from './actions';
 import { setCanonicalName } from '../import/actions';
 import { Notice } from '@/components/ui';
 
@@ -34,6 +34,9 @@ export default async function SuppliersPage({ searchParams }: { searchParams: Pr
   // ADDON-27: legal-name variants collected by bulk imports — one must be chosen before the supplier's products can be published
   const { data: variants } = sel ? await sb.from('supplier_name_variants').select('id, variant_name, variant_address, seen_in, is_canonical').eq('supplier_id', sel.id).order('created_at') : { data: [] };
   const needsIdentity = sel?.identity_status === 'needs_identity_review';
+  // delete-for-good preview (Admin only): what would be erased and what blocks it (supplier_delete_preview, migration 170)
+  type DelPreview = { code: string; products: number; products_by_status: Record<string, number>; in_moderation: number; photos: number; skus_released: number; contacts: number; name_variants: number; certificates: number; import_jobs: number; import_runs: number; distributors: number; blockers: string[]; can_delete: boolean };
+  const delPreview = sel && s.isAdmin ? ((await sb.rpc('supplier_delete_preview', { p_supplier: sel.id })).data as DelPreview | null) : null;
   const edit = can(s, 'suppliers', 'edit');
   const countries = Object.entries(COUNTRY_NAMES).sort((a, b) => a[1].localeCompare(b[1]));
   const sw = (x: (typeof list)[number]) => (Array.isArray(x.supplier_switches) ? x.supplier_switches[0] : x.supplier_switches) ?? {};
@@ -95,6 +98,32 @@ export default async function SuppliersPage({ searchParams }: { searchParams: Pr
               <RunButton confirm={sel.archived_at
                 ? 'Restore this supplier? Products archived with it come back: live ones as paused (resume them in Moderation), ones that were in moderation go back to the queue, drafts stay drafts.'
                 : (() => { const c = prodCount.get(sel.id); return c?.total ? `Archive ${sel.code}? All ${c.total} of its products will be archived too — ${c.live} live, ${c.review} in moderation, ${c.total - c.live - c.review} other. They disappear from the storefront, the moderation queue and the distributor portal. You can restore the supplier later.` : `Archive ${sel.code}? It has no active products.`; })()} action={setArchived.bind(null, sel.id, !sel.archived_at)}>{sel.archived_at ? 'Restore supplier' : 'Archive supplier'}</RunButton>
+            </div>
+          )}
+          {sel && delPreview && (
+            <div className="mx-6 mb-6 rounded-[10px] border-2 border-bad/40 bg-[#FDF2F2] p-5" data-testid="delete-supplier">
+              <h3 className="font-semibold text-bad">Delete {delPreview.code} permanently</h3>
+              <p className="text-sm mt-1">Erases the supplier and everything below from the platform. This cannot be undone. The code <b className="mono">{delPreview.code}</b> is then given to the next new supplier.</p>
+              <ul className="text-sm mt-3 grid sm:grid-cols-2 gap-x-6 gap-y-1">
+                <li><b>{delPreview.products}</b> product{delPreview.products === 1 ? '' : 's'}{Object.keys(delPreview.products_by_status ?? {}).length ? ` (${Object.entries(delPreview.products_by_status).map(([k, n]) => `${n} ${k.replace('_', ' ')}`).join(', ')})` : ''}</li>
+                <li><b>{delPreview.in_moderation}</b> in moderation</li>
+                <li><b>{delPreview.photos}</b> product photo{delPreview.photos === 1 ? '' : 's'}</li>
+                <li><b>{delPreview.skus_released}</b> product ID{delPreview.skus_released === 1 ? '' : 's'} released for reuse</li>
+                <li><b>{delPreview.contacts}</b> contact(s), <b>{delPreview.name_variants}</b> legal-name variant(s), <b>{delPreview.certificates}</b> certificate(s)</li>
+                <li><b>{delPreview.import_jobs + delPreview.import_runs}</b> import(s), <b>{delPreview.distributors}</b> distributor assignment(s)</li>
+                <li className="sm:col-span-2 text-muted">The audit log keeps one &ldquo;supplier deleted&rdquo; entry (code, who, when, counts); older entries are scrubbed of names and contacts.</li>
+              </ul>
+              {delPreview.can_delete ? (
+                <ActionForm action={deleteSupplier} submitLabel={`Delete ${delPreview.code} permanently`} submitClass="btn bg-bad text-white"
+                  confirm={`Permanently delete ${delPreview.code} and its ${delPreview.products} products? This cannot be undone.`} className="mt-4">
+                  <input type="hidden" name="id" value={sel.id} />
+                  <Field label={`Type ${delPreview.code} to confirm`} htmlFor="del-code">
+                    <input id="del-code" name="confirm_code" className="input max-w-xs mono" autoComplete="off" placeholder={delPreview.code} required />
+                  </Field>
+                </ActionForm>
+              ) : (
+                <div className="mt-4"><Notice tone="amber"><b>Cannot be deleted:</b> {delPreview.blockers.join(', ')}. Records with buyers or money attached must stay — archive the supplier instead.</Notice></div>
+              )}
             </div>
           )}
         </Card>
