@@ -28,8 +28,8 @@ export default async function SuppliersPage({ searchParams }: { searchParams: Pr
   const [{ data }, { data: counts }] = await Promise.all([q, sb.from('products').select('supplier_id, status').limit(20000)]);
   let list = (data ?? []) as (Sup & { supplier_switches: Record<string, boolean> | Record<string, boolean>[] | null })[];
   if (sp.q) { const t = sp.q.toLowerCase(); list = list.filter((x) => `${x.code} ${x.legal_name} ${x.country} ${x.city ?? ''}`.toLowerCase().includes(t)); }
-  const prodCount = new Map<string, { live: number; total: number }>();
-  (counts ?? []).forEach((p) => { const a = prodCount.get(p.supplier_id) ?? { live: 0, total: 0 }; a.total++; if (p.status === 'live') a.live++; prodCount.set(p.supplier_id, a); });
+  const prodCount = new Map<string, { live: number; total: number; review: number }>();
+  (counts ?? []).forEach((p) => { const a = prodCount.get(p.supplier_id) ?? { live: 0, total: 0, review: 0 }; if (p.status !== 'archived') a.total++; if (p.status === 'live') a.live++; if (p.status === 'submitted' || p.status === 'in_review') a.review++; prodCount.set(p.supplier_id, a); });
   const sel = sp.new ? null : list.find((x) => x.id === sp.id) ?? null;
   // ADDON-27: legal-name variants collected by bulk imports — one must be chosen before the supplier's products can be published
   const { data: variants } = sel ? await sb.from('supplier_name_variants').select('id, variant_name, variant_address, seen_in, is_canonical').eq('supplier_id', sel.id).order('created_at') : { data: [] };
@@ -92,7 +92,9 @@ export default async function SuppliersPage({ searchParams }: { searchParams: Pr
           </ActionForm>
           {sel && edit && (
             <div className="px-6 pb-5">
-              <RunButton confirm={sel.archived_at ? 'Restore this supplier?' : 'Archive this supplier? Its listings stop showing to buyers.'} action={setArchived.bind(null, sel.id, !sel.archived_at)}>{sel.archived_at ? 'Restore supplier' : 'Archive supplier'}</RunButton>
+              <RunButton confirm={sel.archived_at
+                ? 'Restore this supplier? Products archived with it come back: live ones as paused (resume them in Moderation), ones that were in moderation go back to the queue, drafts stay drafts.'
+                : (() => { const c = prodCount.get(sel.id); return c?.total ? `Archive ${sel.code}? All ${c.total} of its products will be archived too — ${c.live} live, ${c.review} in moderation, ${c.total - c.live - c.review} other. They disappear from the storefront, the moderation queue and the distributor portal. You can restore the supplier later.` : `Archive ${sel.code}? It has no active products.`; })()} action={setArchived.bind(null, sel.id, !sel.archived_at)}>{sel.archived_at ? 'Restore supplier' : 'Archive supplier'}</RunButton>
             </div>
           )}
         </Card>

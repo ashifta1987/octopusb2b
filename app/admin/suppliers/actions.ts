@@ -66,9 +66,17 @@ export async function setSwitch(supplierId: string, key: string, value: boolean)
 export async function setArchived(id: string, archived: boolean): Promise<Result> {
   const g = await guard('suppliers', 'edit');
   if ('error' in g) return g.error;
-  const { data, error } = await g.sb.from('suppliers').update({ archived_at: archived ? new Date().toISOString() : null }).eq('id', id).select('id');
+  // archive_supplier / restore_supplier (migration 168): the supplier and all its products in one audited transaction —
+  // archiving removes them from the storefront, the moderation queue and the distributor lists; restore brings them back
+  const { data, error } = archived
+    ? await g.sb.rpc('archive_supplier', { p_supplier: id, p_reason: null })
+    : await g.sb.rpc('restore_supplier', { p_supplier: id });
   if (error) return fail(error);
-  if (!data?.length) return fail('FORBIDDEN');
+  const r = data as { code: string; products: number; by_status: Record<string, number> };
+  const parts = Object.entries(r.by_status ?? {}).map(([k, n]) => `${n} ${k.replace('_', ' ')}`).join(', ');
   refresh();
-  return ok(archived ? 'Supplier archived' : 'Supplier restored');
+  revalidatePath('/office/products'); revalidatePath('/office'); revalidatePath('/distributor/products');
+  return ok(archived
+    ? `Supplier ${r.code} archived${r.products ? ` with its ${r.products} product${r.products === 1 ? '' : 's'} (${parts})` : ''}`
+    : `Supplier ${r.code} restored${r.products ? ` — ${r.products} product${r.products === 1 ? '' : 's'} back as ${parts}` : ''}`);
 }

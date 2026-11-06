@@ -81,7 +81,7 @@ try {
     await asAdmin();
     const rr = (await one(`select submit_import_run($1) r`, [run.id])).r;
     await asOwner();
-    const inQueue = Number((await one(`select count(*) n from products where sku = any($1) and status in ('submitted', 'in_review')`, [runSkus])).n);
+    const inQueue = Number((await one(`select count(*) n from products where sku = any($1) and status in ('submitted', 'in_review', 'live', 'paused')`, [runSkus])).n);
     const reasons = Object.entries(rr.results).filter(([, v]) => !['submitted', 'already'].includes(v));
     ok(rr.total === Number(run.n) && /archived/.test(rr.results[runSkus[0]]) && inQueue === rr.submitted + rr.already_in_moderation
        && reasons.every(([, v]) => v && !/^[A-Z_]+:/.test(v)) && rr.status !== 'submitted',
