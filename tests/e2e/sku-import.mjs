@@ -129,6 +129,18 @@ try {
   ok(Number((await db.query(`select unit_price_cents c from price_tiers t join products p on p.id = t.product_id where p.sku = $1 and t.min_qty = 100`, [`${P}-001`])).rows[0].c) === 21, 'the update saved the new price');
   ok((await db.query(`select status from products where sku = $1`, [`${P}-001`])).rows[0].status === 'submitted', 're-import (update) after submit keeps status submitted');
 
+  // 5b · step C guard: prices equal to the supplier cost on every tier → flagged, commit blocked until confirmed
+  const p1 = (await db.query(`select id from products where sku = $1`, [`${P}-001`])).rows[0].id;
+  await db.query(`insert into supplier_products(supplier_id, product_id, status) values ($1, $2, 'quoted') on conflict do nothing`, [supplier.id, p1]);
+  await db.query(`insert into supplier_product_prices(supplier_id, product_id, incoterm, moq_tier_min, price_minor, valid_from) values ($1, $2, 'FOB', 100, 2100, current_date), ($1, $2, 'FOB', 500, 1500, current_date)`, [supplier.id, p1]);
+  ew.getCell('M2').value = 0.21; ew.getCell('O2').value = 0.15;   // = supplier cost on both tiers
+  await upload(exp, null);
+  ok(/price equals supplier cost, buyer price not applied/.test(await rowText(2)) && await page.getByTestId('cost-flag').isVisible() && await page.getByRole('button', { name: /Confirm and import/ }).count() === 0,
+    'price = supplier cost on every tier → row flagged, Confirm and import hidden');
+  page.once('dialog', (d) => d.accept()); await page.getByRole('button', { name: 'I confirm these prices' }).click();
+  await page.getByText(/confirmed on/).waitFor({ timeout: 30000 });
+  ok(await page.getByRole('button', { name: /Confirm and import/ }).count() === 1, 'after explicit confirmation the import can go ahead (audited)');
+  ew.getCell('O2').value = null; ew.getCell('N2').value = null; ew.getCell('M2').value = 0.26;   // single tier, buyer price above cost for the next steps
   // 6 · race: two jobs validated with the same new SKU; the second commit reports a row error, not a 500
   ew.getCell('A2').value = `${P}-RACE`; ew.spliceRows(3, 1);
   const jobA = await upload(exp, null); const jobB = await upload(exp, null);

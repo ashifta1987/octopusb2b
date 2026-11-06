@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SKU_ERRORS, categoryCode, duplicateSkus, nextSkus, normalizeSku, skuDbError, skuProblem } from '@/lib/sku';
-import { diffProduct, exportImageName, exportPrice, inFileDuplicateErrors, matchImage, unreferenced, zipImageEntries } from '@/lib/product-import';
+import { pricesEqualSupplierCost, diffProduct, exportImageName, exportPrice, inFileDuplicateErrors, matchImage, unreferenced, zipImageEntries } from '@/lib/product-import';
 import { productSchema } from '@/components/backoffice/product-schema';
 import { toCents } from '@/lib/format';
 
@@ -73,6 +73,21 @@ describe('bulk template v2 helpers', () => {
     for (const c of [19, 1600, 1, 99999, 12345]) expect(toCents(String(exportPrice(c)))).toBe(c);
     expect(exportImageName({ source_file_name: 'Bolt.jpg', url: 'https://x/y/abc.jpg' })).toBe('Bolt.jpg');
     expect(exportImageName({ source_file_name: null, url: 'https://x/storage/v1/object/public/product-media/import/A%20B.jpg' })).toBe('A B.jpg');
+  });
+});
+
+describe('price equals supplier cost guard (step C)', () => {
+  const costs = [{ moq_tier_min: 3000, price_minor: 46100 }, { moq_tier_min: 1000, price_minor: 13400 }, { moq_tier_min: 1000, price_minor: 15000 }];
+  it('flags a row whose every tier is the supplier cost (within 1 cent)', () => {
+    expect(pricesEqualSupplierCost([{ min_qty: 3000, unit_price_cents: 461 }], costs)).toBe(true);           // F8 case
+    expect(pricesEqualSupplierCost([{ min_qty: 1000, unit_price_cents: 134 }, { min_qty: 3000, unit_price_cents: 462 }], costs)).toBe(true);
+    expect(pricesEqualSupplierCost([{ min_qty: 3000, unit_price_cents: 1221 }], [{ moq_tier_min: 3000, price_minor: 122080 }])).toBe(true); // 12.208 → 12.21
+  });
+  it('does not flag buyer prices (cost × 1.25) or partial matches', () => {
+    expect(pricesEqualSupplierCost([{ min_qty: 3000, unit_price_cents: 577 }], costs)).toBe(false);
+    expect(pricesEqualSupplierCost([{ min_qty: 1000, unit_price_cents: 134 }, { min_qty: 3000, unit_price_cents: 577 }], costs)).toBe(false);
+    expect(pricesEqualSupplierCost([{ min_qty: 500, unit_price_cents: 134 }], costs)).toBe(false);   // no cost at that MOQ
+    expect(pricesEqualSupplierCost([{ min_qty: 3000, unit_price_cents: 461 }], [])).toBe(false);
   });
 });
 

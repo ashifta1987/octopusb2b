@@ -20,6 +20,8 @@ const stage = async (b, name) => (await one(`insert into import_runs(name, stagi
 const before = Number((await one(`select count(*) n from products`)).n);
 const seqSnapshot = (await db.query(`select sequencename, last_value from pg_sequences where schemaname = 'public'`)).rows;
 await db.query('begin');
+// fixture (rolled back): the live Bowijie rows may be on a moderation hold (6 Nov 2026); the gate tests below need it off
+await db.query(`update products set moderation_hold = false where sku like 'CN-GD-BWJ-%'`);
 try {
   const admin = (await one(`select id from auth.users where email = 'admin@demo.octopusb2b.com'`)).id;
 

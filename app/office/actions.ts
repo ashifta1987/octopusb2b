@@ -25,7 +25,10 @@ export async function moderateProduct(productId: string, to: 'in_review' | 'live
   if (to === 'rejected' && !reason.trim()) return fail('A rejection reason is required.');
   const sb = await createClient();
   const { error } = await sb.rpc('transition_product', { p_product: productId, p_to: to, p_reason: reason.trim() || null });
-  if (error) return fail(error);
+  if (error) {
+    const m = /^(SUBMIT_BLOCKED|IMPORT_PUBLISH_BLOCKED|MODERATION_HOLD): (.*)$/.exec(error.message);
+    return fail(m ? m[2].charAt(0).toUpperCase() + m[2].slice(1) + '.' : error);
+  }
   revalidatePath('/office/products'); revalidatePath('/office');
   revalidateTag('products', 'max');
   return ok(undefined, to === 'live' ? 'Published' : to === 'rejected' ? 'Rejected' : 'In review');

@@ -9,7 +9,7 @@ import { slugify, toCents } from '@/lib/format';
 import { actionSession, fail, ok, getManagedSuppliers, type Result } from '@/components/backoffice/server-utils';
 import { IMPORT_COLUMNS, type ImportData, type ImportImage } from '@/components/backoffice/import-columns';
 import { SKU_ERRORS, normalizeSku, skuDbError, skuProblem } from '@/lib/sku';
-import { IMAGE_COLS, IMAGE_EXT, MAX_IMAGE_BYTES, MAX_ZIP_BYTES, diffProduct, exportImageName, inFileDuplicateErrors, matchImage, unreferenced, zipImageEntries, type ZipEntry } from '@/lib/product-import';
+import { COST_PRICE_WARNING, pricesEqualSupplierCost, IMAGE_COLS, IMAGE_EXT, MAX_IMAGE_BYTES, MAX_ZIP_BYTES, diffProduct, exportImageName, inFileDuplicateErrors, matchImage, unreferenced, zipImageEntries, type ZipEntry } from '@/lib/product-import';
 
 const MAX_ROWS = 2000;
 
@@ -189,6 +189,13 @@ export async function validateImport(fd: FormData): Promise<Result<{ jobId: stri
     ? await admin.from('products').select('id, supplier_id, title, category_id, unit, moq, lead_time_days, incoterm, origin_country, hs_code, currency, octopus_dropship, ready_to_ship, description, price_tiers(min_qty, unit_price_cents), product_media(sort, url, source_file_name, sha256)').in('id', updIds)
     : { data: [] };
   const exById = new Map((existing ?? []).map((p) => [p.id as string, p]));
+  // Step C: supplier costs of the products being updated (preferred supplier, current quotes)
+  const { data: costRows } = updIds.length
+    ? await admin.from('supplier_product_prices').select('product_id, supplier_id, moq_tier_min, price_minor').in('product_id', updIds).eq('is_superseded', false)
+    : { data: [] };
+  const costsBy = new Map<string, { moq_tier_min: number; price_minor: number }[]>();
+  for (const c of costRows ?? []) costsBy.set(c.product_id as string, [...(costsBy.get(c.product_id as string) ?? []), { moq_tier_min: Number(c.moq_tier_min), price_minor: Number(c.price_minor) }]);
+  let costFlagged = 0;
   let unchanged = 0;
   for (const r of rows) {
     const d = r.data;
@@ -223,6 +230,11 @@ export async function validateImport(fd: FormData): Promise<Result<{ jobId: stri
         if (!d.diff.length && !r.errors.length) { d.mode = 'unchanged'; unchanged++; }
       }
     }
+    if (d.product_id && pricesEqualSupplierCost(d.tiers, costsBy.get(d.product_id) ?? [])) {
+      d.cost_flag = true; costFlagged++;
+      if (d.mode === 'unchanged') { d.mode = 'update'; unchanged--; }   // never silently skip a flagged row
+      r.warnings.push(`${COST_PRICE_WARNING} — the tier prices in this row are the supplier's cost. Confirm before importing, or enter buyer prices.`);
+    }
     for (const img of d.images ?? []) {
       if (img.status === 'missing') r.warnings.push(`Image "${img.cell}" was not found in the zip — imported without it`);
       if (img.status === 'case') r.warnings.push(`Image "${img.cell}" matched "${img.zip_name}" in the zip (different upper/lower case)`);
@@ -234,7 +246,7 @@ export async function validateImport(fd: FormData): Promise<Result<{ jobId: stri
   const supplierIds = [...new Set(rows.map((r) => r.data.supplier_id).filter(Boolean))];
   const { data: job, error } = await sb.from('import_jobs').insert({
     file_name: file.name, status: 'validated', total_rows: rows.length, valid_rows: valid, error_rows: rows.length - valid, unchanged_rows: unchanged,
-    created_by: g.s.userId, supplier_id: supplierIds.length === 1 ? supplierIds[0] : null, zip_path: zipPath || null, zip_unreferenced: extra,
+    created_by: g.s.userId, supplier_id: supplierIds.length === 1 ? supplierIds[0] : null, zip_path: zipPath || null, zip_unreferenced: extra, cost_flagged_rows: costFlagged,
   }).select('id').single();
   if (error) return fail(error);
   for (let i = 0; i < rows.length; i += 500) {
@@ -254,8 +266,11 @@ export async function importValidRows(jobId: string): Promise<Result> {
   if ('error' in g) return fail(g.error);
   const sb = await createClient();
   const admin = createAdminClient();
-  const { data: job } = await sb.from('import_jobs').select('id, status, zip_path').eq('id', jobId).maybeSingle();
+  const { data: job } = await sb.from('import_jobs').select('id, status, zip_path, cost_flagged_rows, cost_confirmed_at').eq('id', jobId).maybeSingle();
   if (!job) return fail('Import job not found');
+  if ((job.cost_flagged_rows ?? 0) > 0 && !job.cost_confirmed_at) {
+    return fail(`${job.cost_flagged_rows} row${job.cost_flagged_rows === 1 ? '' : 's'}: ${COST_PRICE_WARNING}. Confirm these prices first (or fix the sheet and upload it again).`);
+  }
   const { data: rows } = await sb.from('import_rows').select('id, row_no, data, errors, product_id').eq('job_id', jobId).is('errors', null).is('product_id', null).order('row_no');
   // inflate only the zip entries that rows actually use
   const want = new Set((rows ?? []).flatMap((r) => ((r.data as ImportData).images ?? []).filter((i) => i.zip_path && (i.status === 'matched' || i.status === 'case')).map((i) => i.zip_path!)));
@@ -333,4 +348,18 @@ export async function submitImported(jobId: string): Promise<Result> {
   if (r.failed) parts.push(`${r.failed} could not be submitted — see the reason on each row`);
   if (!r.submitted && !r.already_in_moderation) return fail(parts.join(' · '));
   return ok(undefined, parts.join(' · '));
+}
+
+/** Step C: the user confirms that rows whose prices equal the supplier cost really are buyer prices. Audited. */
+export async function confirmCostPrices(jobId: string): Promise<Result> {
+  const g = await actionSession('products', 'create');
+  if ('error' in g) return fail(g.error);
+  const sb = await createClient();
+  const { data, error } = await sb.from('import_jobs').update({ cost_confirmed_at: new Date().toISOString(), cost_confirmed_by: g.s.userId })
+    .eq('id', jobId).gt('cost_flagged_rows', 0).is('cost_confirmed_at', null).select('cost_flagged_rows').maybeSingle();
+  if (error) return fail(error);
+  if (!data) return fail('Nothing to confirm on this job.');
+  await createAdminClient().from('audit_log').insert({ actor_id: g.s.userId, action: 'import_job.cost_prices_confirmed', entity: 'import_jobs', entity_id: jobId, details: { rows: data.cost_flagged_rows } });
+  revalidatePath('/distributor/products/import');
+  return ok(undefined, 'Prices confirmed — you can import now');
 }

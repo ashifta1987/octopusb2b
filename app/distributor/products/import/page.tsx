@@ -4,9 +4,9 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, PageHeader, StatusBadge, Table, EmptyState, Notice } from '@/components/ui';
 import { RunButton } from '@/components/backoffice/action-form';
 import { IMPORT_COLUMNS, type ImportData } from '@/components/backoffice/import-columns';
-import { money, fmtDate } from '@/lib/format';
+import { money, fmtDate, productStatusView } from '@/lib/format';
 import { cn } from '@/lib/cn';
-import { importValidRows, submitImported } from './actions';
+import { importValidRows, submitImported, confirmCostPrices } from './actions';
 import { ImportUploader } from './uploader';
 
 export const metadata = { title: 'Bulk upload (Excel)' };
@@ -21,16 +21,17 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
   const sb = await createClient();
   const [{ data: history }, jobRes] = await Promise.all([
     sb.from('import_jobs').select('id, file_name, status, total_rows, valid_rows, error_rows, created_at, suppliers(code)').eq('created_by', s.userId).order('created_at', { ascending: false }).limit(15),
-    jobId ? sb.from('import_jobs').select('id, file_name, status, total_rows, valid_rows, error_rows, unchanged_rows, zip_path, zip_unreferenced, submit_report, created_at').eq('id', jobId).maybeSingle() : Promise.resolve({ data: null }),
+    jobId ? sb.from('import_jobs').select('id, file_name, status, total_rows, valid_rows, error_rows, unchanged_rows, zip_path, zip_unreferenced, submit_report, cost_flagged_rows, cost_confirmed_at, created_at').eq('id', jobId).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   const job = jobRes.data;
-  const { data: rows } = job ? await sb.from('import_rows').select('id, row_no, data, errors, warnings, product_id, submit_error, products(status)').eq('job_id', job.id).order('row_no') : { data: null };
+  const { data: rows } = job ? await sb.from('import_rows').select('id, row_no, data, errors, warnings, product_id, submit_error, products(status, listing_status)').eq('job_id', job.id).order('row_no') : { data: null };
   const pendingRows = (rows ?? []).filter((r) => !r.errors && !r.product_id);
   const importable = pendingRows.filter((r) => (r.data as ImportData).mode !== 'unchanged').length;
   const creates = pendingRows.filter((r) => (r.data as ImportData).mode !== 'update' && (r.data as ImportData).mode !== 'unchanged').length;
   const updates = pendingRows.filter((r) => (r.data as ImportData).mode === 'update').length;
   const imported = (rows ?? []).filter((r) => r.product_id).length;
-  const pstatus = (r: { products?: unknown }) => ((Array.isArray(r.products) ? r.products[0] : r.products) as { status?: string } | null)?.status ?? null;
+  const prod = (r: { products?: unknown }) => (Array.isArray(r.products) ? r.products[0] : r.products) as { status?: string; listing_status?: string | null } | null;
+  const pstatus = (r: { products?: unknown }) => prod(r)?.status ?? null;
   const submittable = (rows ?? []).filter((r) => r.product_id && !r.errors && ['draft', 'rejected'].includes(pstatus(r) ?? '')).length;
   const failedSubmit = (rows ?? []).filter((r) => r.submit_error).length;
   const step = !job ? 1 : job.status === 'validated' ? 3 : 4;
@@ -98,9 +99,17 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
           <div className="px-6 pb-4 flex flex-wrap gap-3 items-center">
             <span className="text-sm" data-testid="import-summary"><b>{job.total_rows}</b> rows · <span className="text-blue font-semibold">{creates} new</span> · <span className="text-warn font-semibold">{updates} updates</span> · <span className="text-muted">{(rows ?? []).filter((r) => (r.data as ImportData).mode === 'unchanged' && !r.errors).length} unchanged</span> · <span className="text-bad font-semibold">{(rows ?? []).filter((r) => r.errors).length} with errors</span> · {imported} imported</span>
             <span className="flex-1" />
-            {importable > 0 && <RunButton className="btn btn-primary btn-sm" action={importValidRows.bind(null, job.id)} confirm={`Save ${creates} new products (drafts) and ${updates} updates?`}>Confirm and import {importable}</RunButton>}
+            {importable > 0 && !((job.cost_flagged_rows ?? 0) > 0 && !job.cost_confirmed_at) && <RunButton className="btn btn-primary btn-sm" action={importValidRows.bind(null, job.id)} confirm={`Save ${creates} new products (drafts) and ${updates} updates?`}>Confirm and import {importable}</RunButton>}
             {submittable > 0 && <RunButton className="btn btn-dark btn-sm" action={submitImported.bind(null, job.id)} confirm={`Submit ${submittable} products of this job for moderation?`}>Submit {submittable} for moderation</RunButton>}
           </div>
+          {(job.cost_flagged_rows ?? 0) > 0 && (
+            <div className="px-6 pb-4" data-testid="cost-flag">
+              {job.cost_confirmed_at
+                ? <Notice tone="amber">{job.cost_flagged_rows} row{job.cost_flagged_rows === 1 ? '' : 's'} had prices equal to the supplier cost — confirmed on {fmtDate(job.cost_confirmed_at, true)}.</Notice>
+                : <Notice tone="red"><b>{job.cost_flagged_rows} row{job.cost_flagged_rows === 1 ? '' : 's'}: price equals supplier cost, buyer price not applied.</b> The prices in these rows are the supplier&apos;s cost, so buyers would pay cost with no margin. Fix the sheet and upload it again, or confirm that these really are the buyer prices.
+                    <div className="mt-2"><RunButton className="btn btn-ghost btn-sm" action={confirmCostPrices.bind(null, job.id)} confirm="Confirm that these prices are the buyer prices (no margin over supplier cost)?">I confirm these prices</RunButton></div></Notice>}
+            </div>
+          )}
           {failedSubmit > 0 && <div className="px-6 pb-4"><Notice tone="red">{failedSubmit} product{failedSubmit === 1 ? '' : 's'} could not be submitted for moderation — the reason is shown on each row. Fix it and press Submit again.</Notice></div>}
           {importable === 0 && imported === 0 && <div className="px-6 pb-4"><Notice tone="amber">Nothing to import: fix the errors in your file and upload it again (rows without changes are skipped).</Notice></div>}
           {extra.length > 0 && <div className="px-6 pb-4"><Notice tone="blue">{extra.length} file{extra.length === 1 ? '' : 's'} in the zip {extra.length === 1 ? 'is' : 'are'} not used by any row and will be ignored: {extra.slice(0, 20).join(', ')}{extra.length > 20 ? ' …' : ''}</Notice></div>}
@@ -126,7 +135,7 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
                   </td>
                   <td className="td text-sm">
                     {errs.length ? <ul className="text-bad text-xs list-disc pl-4" data-testid="row-errors">{errs.map((e) => <li key={e}>{e}</li>)}</ul>
-                      : r.product_id ? <><Link href={`/distributor/products/${r.product_id}/edit`} className="text-ok font-semibold text-xs">✓ Saved · edit</Link>{pstatus(r) && <span className="ml-2"><StatusBadge status={pstatus(r)!} /></span>}</>
+                      : r.product_id ? <><Link href={`/distributor/products/${r.product_id}/edit`} className="text-ok font-semibold text-xs">✓ Saved · edit</Link>{pstatus(r) && <span className="ml-2"><StatusBadge {...productStatusView(pstatus(r), prod(r)?.listing_status)} /></span>}</>
                         : <span className="text-ok text-xs font-semibold">✓ Valid</span>}
                     {r.submit_error && <p className="text-bad text-xs mt-1" data-testid="submit-error">Not submitted: {r.submit_error}</p>}
                     {warns.length > 0 && <ul className="text-warn text-xs list-disc pl-4 mt-1" data-testid="row-warnings">{warns.map((w) => <li key={w}>{w}</li>)}</ul>}

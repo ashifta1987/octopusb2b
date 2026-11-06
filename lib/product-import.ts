@@ -79,3 +79,19 @@ export function inFileDuplicateErrors(rows: { row: number; sku: string }[], mess
   return errs;
 }
 
+
+export const COST_PRICE_WARNING = 'price equals supplier cost, buyer price not applied';
+
+/**
+ * Step C guard (6 Nov 2026): true when EVERY tier price in the row equals the supplier cost for that MOQ (within 1 cent),
+ * i.e. somebody pasted supplier costs into the buyer-price columns. costs = supplier_product_prices rows (price_minor = 4-dp).
+ */
+export function pricesEqualSupplierCost(tiers: { min_qty: number; unit_price_cents: number }[], costs: { moq_tier_min: number; price_minor: number }[]) {
+  if (!tiers.length || !costs.length) return false;
+  return tiers.every((t) => {
+    const at = costs.filter((c) => Number(c.moq_tier_min) === t.min_qty).map((c) => Number(c.price_minor));
+    if (!at.length) return false;
+    const exact = at.map((m) => m / 100);              // cost in cents, unrounded (4-dp source)
+    return exact.some((c) => Math.abs(t.unit_price_cents - c) <= 1);
+  });
+}

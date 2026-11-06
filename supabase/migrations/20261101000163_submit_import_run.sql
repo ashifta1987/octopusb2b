@@ -69,3 +69,4 @@ begin
 end $$;
 revoke execute on function submit_import_run(uuid) from public, anon;
 grant execute on function submit_import_run(uuid) to authenticated;
+

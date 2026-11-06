@@ -4,7 +4,7 @@ import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { Card, PageHeader, Notice, StatusBadge, Table, Stat } from '@/components/ui';
 import { RunButton } from '@/components/admin/client';
-import { fmtDate, humanize } from '@/lib/format';
+import { fmtDate, humanize, productStatusView } from '@/lib/format';
 import type { StagingBatch } from '@/lib/import/types';
 import type { ImportDiff } from '@/lib/import/core';
 import { commitImportRun, discardImportRun, submitImportRun } from '../actions';
@@ -31,9 +31,10 @@ export default async function ImportRunPage({ params }: { params: Promise<{ id: 
   batch.review.forEach((r) => reviewBy.set(r.external_id, (reviewBy.get(r.external_id) ?? 0) + 1));
   const errors = batch.errors ?? [];
   const submitRes = ((run.submit_report as { results?: Record<string, string> } | null)?.results ?? {}) as Record<string, string>;
-  const { data: liveStatus } = committed ? await sb.from('products').select('sku, status').in('sku', batch.products.map((x) => x.external_id)) : { data: [] };
+  const { data: liveStatus } = committed ? await sb.from('products').select('sku, status, listing_status').in('sku', batch.products.map((x) => x.external_id)) : { data: [] };
   const statusOf = new Map((liveStatus ?? []).map((x) => [x.sku as string, x.status as string]));
-  const drafts = [...statusOf.values()].filter((v) => v === 'draft' || v === 'rejected').length;
+  const listingOf = new Map((liveStatus ?? []).map((x) => [x.sku as string, x.listing_status as string | null]));
+  const drafts = [...statusOf.entries()].filter(([k, v]) => (v === 'draft' || v === 'rejected') && !['needs_quote', 'in_development'].includes(listingOf.get(k) ?? '')).length;
   const changes = diff.changes ?? [];
   const { data: sup } = await sb.from('suppliers').select('id, code, identity_status').eq('external_id', batch.supplier.external_id).maybeSingle();
 
@@ -138,7 +139,7 @@ export default async function ImportRunPage({ params }: { params: Promise<{ id: 
               <td className="td mono text-sm">{p.external_id}</td>
               <td className="td text-sm"><div className="font-semibold">{p.name ?? p.factory_model ?? '—'}</div>{p.name && <div className="text-muted">{p.factory_model}</div>}</td>
               <td className="td text-sm">{p.sheet}</td>
-              <td className="td"><StatusBadge status={p.listing_status} />{statusOf.get(p.external_id) && <div className="mt-1"><StatusBadge status={statusOf.get(p.external_id)!} /></div>}
+              <td className="td"><StatusBadge status={p.listing_status} />{statusOf.get(p.external_id) && <div className="mt-1"><StatusBadge {...productStatusView(statusOf.get(p.external_id), listingOf.get(p.external_id))} /></div>}
                 {submitRes[p.external_id] && !['submitted', 'already'].includes(submitRes[p.external_id]) && <p className="text-bad text-xs mt-1" data-testid="submit-error">Not submitted: {submitRes[p.external_id]}</p>}</td>
               <td className="td mono text-xs">{(byProduct.get(p.external_id) ?? []).map((x, i) => <div key={i}>{x.incoterm} · MOQ {x.moq_tier_min}{x.variant_label ? ` · ${x.variant_label}` : ''} · {usd4(x.price_minor)}</div>)}
                 {!byProduct.get(p.external_id)?.length && <span className="text-muted">no price</span>}</td>

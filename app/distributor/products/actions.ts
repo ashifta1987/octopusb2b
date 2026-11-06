@@ -117,7 +117,11 @@ export async function transitionProduct(id: string, to: 'submitted' | 'paused' |
     if (!(p.price_tiers as unknown[] | null)?.length) return fail('Add at least one price tier before submitting.');
   }
   const { error } = await sb.rpc('transition_product', { p_product: id, p_to: to, p_reason: reason ?? null });
-  if (error) return fail(error);
+  if (error) {
+    // plain reasons from the database rules (submit requirements, publish gate, moderation hold)
+    const m = /^(SUBMIT_BLOCKED|IMPORT_PUBLISH_BLOCKED|MODERATION_HOLD): (.*)$/.exec(error.message);
+    return fail(m ? m[2].charAt(0).toUpperCase() + m[2].slice(1) + '.' : error);
+  }
   revalidatePath('/distributor/products');
   revalidateTag('products', 'max');
   return ok(undefined, to === 'submitted' ? 'Submitted for moderation' : 'Updated');

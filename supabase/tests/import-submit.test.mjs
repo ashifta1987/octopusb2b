@@ -80,11 +80,34 @@ try {
     const rr = (await one(`select submit_import_run($1) r`, [run.id])).r;
     await asOwner();
     const inQueue = Number((await one(`select count(*) n from products where sku = any($1) and status in ('submitted', 'in_review')`, [runSkus])).n);
-    ok(rr.total === Number(run.n) && rr.failed === 1 && /archived/.test(rr.results[runSkus[0]]) && inQueue === rr.submitted + rr.already_in_moderation && rr.status === 'partially_submitted',
-      `import run submit: ${rr.submitted} submitted + ${rr.already_in_moderation} already = ${inQueue} in the queue; 1 reported ("${rr.results[runSkus[0]]}")`);
+    const reasons = Object.entries(rr.results).filter(([, v]) => !['submitted', 'already'].includes(v));
+    ok(rr.total === Number(run.n) && /archived/.test(rr.results[runSkus[0]]) && inQueue === rr.submitted + rr.already_in_moderation
+       && reasons.every(([, v]) => v && !/^[A-Z_]+:/.test(v)) && rr.status !== 'submitted',
+      `import run submit: ${rr.submitted} submitted + ${rr.already_in_moderation} already = ${inQueue} in the queue; ${reasons.length} reported with plain reasons (e.g. "${rr.results[runSkus[0]]}")`);
     const ra = await one(`select details from audit_log where action = 'import_run.submitted' and entity_id = $1 order by id desc limit 1`, [run.id]);
     ok(ra?.details?.total === Number(run.n), 'audit_log row written for the run submit');
   }
+  // 5c · submit requirements (every route): no buyer price, needs_quote, in_development → reason on the row; withdraw is audited
+  const np = await mk('QA-SUB-NOPRICE'); await db.query(`delete from price_tiers where product_id = $1`, [np]);
+  const nq = await mk('QA-SUB-NQ'); await db.query(`update products set listing_status = 'needs_quote' where id = $1`, [nq]);
+  const dev = await mk('QA-SUB-DEV'); await db.query(`update products set listing_status = 'in_development' where id = $1`, [dev]);
+  const job4 = (await one(`insert into import_jobs(file_name, status, created_by) values ('qa4.xlsx', 'imported', $1) returning id`, [adminId])).id;
+  await db.query(`insert into import_rows(job_id, row_no, data, product_id) values ($1, 2, '{}', $2), ($1, 3, '{}', $3), ($1, 4, '{}', $4)`, [job4, np, nq, dev]);
+  await asAdmin();
+  const r5 = (await one(`select submit_import_job($1) r`, [job4])).r;
+  const single = await db.query('savepoint sf').then(() => db.query(`select transition_product($1, 'submitted')`, [np])).then(() => 'submitted', (e) => e.message);
+  await db.query('rollback to savepoint sf');
+  await asOwner();
+  const reasons = (await db.query(`select row_no, submit_error from import_rows where job_id = $1 order by row_no`, [job4])).rows.map((x) => x.submit_error);
+  ok(r5.submitted === 0 && r5.failed === 3 && r5.job_status === 'submit_failed'
+     && /no buyer price/.test(reasons[0]) && /not quoted/.test(reasons[1]) && /in development/.test(reasons[2]),
+    `unpriced / needs-quote / in-development products are refused with a reason on each row (${reasons.join(' · ')})`);
+  ok(/SUBMIT_BLOCKED.*no buyer price/.test(single), 'the single-form route (transition_product) is refused too');
+  await asAdmin();
+  const w = (await one(`select withdraw_from_moderation($1, 'qa') w`, [a])).w;
+  await asOwner();
+  const wa = await one(`select status, (select count(*) from audit_log where action = 'product.withdrawn_from_moderation' and entity_id = $1::uuid::text) n from products where id = $1::uuid`, [a]);
+  ok(w === 'withdrawn' && wa.status === 'draft' && Number(wa.n) === 1, 'withdraw from moderation → draft, one audit row');
   // 6 · identity unresolved: in the queue, but publishing is still blocked
   await asAdmin();
   const pub = await db.query('savepoint p').then(() => db.query(`select transition_product($1, 'live')`, [bwj.id])).then(() => 'published', (e) => e.message);

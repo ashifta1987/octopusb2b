@@ -51,4 +51,6 @@ export type ImportData = {
   images?: ImportImage[];
   warnings?: string[];
   diff?: { field: string; from: string; to: string }[];
+  /** Step C: every tier price equals the supplier cost */
+  cost_flag?: boolean;
 };

@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, PageHeader, EmptyState, StatusBadge, Table, Notice } from '@/components/ui';
 import { Tabs } from '@/components/admin/ui';
 import { ActionForm, RunButton } from '@/components/admin/client';
-import { fmtDate, humanize, money } from '@/lib/format';
+import { fmtDate, humanize, money, productStatusView } from '@/lib/format';
 import { decideReview, setProductPricing } from '../actions';
 
 export const metadata = { title: 'Import review' };
@@ -77,7 +77,7 @@ export default async function ImportReviewPage({ searchParams }: { searchParams:
             return (
               <tr key={p.id}>
                 <td className="td text-sm"><div className="mono">{p.external_id}</div><div className="text-muted max-w-[260px] truncate">{p.title}</div></td>
-                <td className="td"><StatusBadge status={p.status} /> <span className="text-xs text-muted">{humanize(p.listing_status)}</span></td>
+                <td className="td"><StatusBadge {...productStatusView(p.status, p.listing_status)} /> <span className="text-xs text-muted">{humanize(p.listing_status)}</span></td>
                 <td className="td mono text-sm">{cost ? money(cost.supplier_cost_cents, p.currency) : '—'}</td>
                 <td className="td mono text-xs">{[...(p.price_tiers ?? [])].sort((a, b) => a.min_qty - b.min_qty).map((t) => <div key={t.min_qty}>{t.min_qty}+ · {money(t.unit_price_cents, p.currency)}</div>)}{!p.price_tiers?.length && <span className="text-muted">none</span>}</td>
                 <td className="td">

@@ -5,7 +5,7 @@ import { Card, PageHeader, StatusBadge, Table, EmptyState, Money } from '@/compo
 import { getManagedSuppliers, one } from '@/components/backoffice/server-utils';
 import { RunButton } from '@/components/backoffice/action-form';
 import { transitionProduct } from './actions';
-import { fmtDate } from '@/lib/format';
+import { productStatusView, fmtDate } from '@/lib/format';
 
 const STATUSES = ['draft', 'submitted', 'in_review', 'live', 'rejected', 'paused', 'archived'];
 
@@ -17,12 +17,12 @@ export default async function DistributorProducts({ searchParams }: { searchPara
   const ids = suppliers.filter((x) => !sp.supplier || x.id === sp.supplier).map((x) => x.id);
   const page = Math.max(1, Number(sp.page) || 1);
   const size = 50;
-  type Row = { id: string; external_id: string | null; title: string; status: string; moq: number; unit: string; min_price_cents: number | null; currency: string; image_url: string | null; updated_at: string; rejection_reason: string | null; suppliers: { code: string } | null; categories: { name: string } | null };
+  type Row = { id: string; external_id: string | null; title: string; status: string; listing_status: string | null; moq: number; unit: string; min_price_cents: number | null; currency: string; image_url: string | null; updated_at: string; rejection_reason: string | null; suppliers: { code: string } | null; categories: { name: string } | null };
   let rows: Row[] = [];
   let total = 0;
   if (ids.length) {
     let q = sb.from('products')
-      .select('id, external_id, title, status, moq, unit, min_price_cents, currency, image_url, updated_at, rejection_reason, suppliers(code), categories(name)', { count: 'exact' })
+      .select('id, external_id, title, status, listing_status, moq, unit, min_price_cents, currency, image_url, updated_at, rejection_reason, suppliers(code), categories(name)', { count: 'exact' })
       .in('supplier_id', ids).order('updated_at', { ascending: false }).range((page - 1) * size, page * size - 1);
     if (sp.status && STATUSES.includes(sp.status)) q = q.eq('status', sp.status);
     else q = q.neq('status', 'archived');
@@ -94,7 +94,7 @@ export default async function DistributorProducts({ searchParams }: { searchPara
               <td className="td text-sm">{p.categories?.name ?? <span className="text-warn">None</span>}</td>
               <td className="td"><Money cents={p.min_price_cents} currency={p.currency} /></td>
               <td className="td text-sm">{p.moq} {p.unit}</td>
-              <td className="td"><StatusBadge status={p.status} /></td>
+              <td className="td"><StatusBadge {...productStatusView(p.status, p.listing_status)} /></td>
               <td className="td text-sm text-muted">{fmtDate(p.updated_at)}</td>
               <td className="td">
                 <div className="flex flex-wrap gap-2 justify-end">

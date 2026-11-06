@@ -106,3 +106,11 @@ export const COUNTRY_NAMES: Record<string, string> = {
   AF: 'Afghanistan', MV: 'Maldives', KH: 'Cambodia', MM: 'Myanmar', SD: 'Sudan', DJ: 'Djibouti', SO: 'Somalia', MZ: 'Mozambique', ZW: 'Zimbabwe',
 };
 
+
+/** Product status as shown to staff: a draft that is waiting for a supplier quote / still in development says so (6 Nov 2026). */
+export function productStatusView(status: string | null | undefined, listingStatus?: string | null): { status: string; label?: string; tone?: 'amber' | 'gray' } {
+  const s = status ?? 'draft';
+  if (s === 'draft' && listingStatus === 'needs_quote') return { status: 'needs_quote', label: 'Needs quote', tone: 'amber' };
+  if (s === 'draft' && listingStatus === 'in_development') return { status: 'in_development', label: 'In development', tone: 'gray' };
+  return { status: s };
+}
