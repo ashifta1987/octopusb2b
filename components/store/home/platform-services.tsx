@@ -53,3 +53,4 @@ export function PlatformServices({ blocks, poolsOn, order, vars }: { blocks: Blo
     </section>
   );
 }
+

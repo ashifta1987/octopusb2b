@@ -60,3 +60,4 @@ try {
   console.log(failed ? `\nhome: ${failed} check(s) failed` : '\nhome: all passed');
   process.exitCode = failed ? 1 : 0;
 }
+

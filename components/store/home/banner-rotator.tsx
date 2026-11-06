@@ -42,3 +42,4 @@ export function TrackSlot({ slot, children, className }: { slot: string; childre
   useEffect(() => { void logBannerEvent(null, slot, 'impression'); }, [slot]);
   return <div className={className} onClickCapture={(e) => { if ((e.target as HTMLElement).closest('a')) void logBannerEvent(null, slot, 'click'); }}>{children}</div>;
 }
+

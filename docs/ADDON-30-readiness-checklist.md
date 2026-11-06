@@ -56,3 +56,4 @@ Owner decision (6 Nov 2026): **do not migrate yet**; produce a readiness checkli
 1. Decide §2. 2. Build the DC per §3 and run self-hosted Supabase there with a **copy** of production. 3. Point a Vercel preview deployment at it and run every test. 4. Dry-run the cut-over and measure downtime. 5. Only then schedule the production window (spec 30-A step 8).
 
 Stage 2 (moving the Next.js app off Vercel) and Stage 3 (HA/DR/multi-region) should wait until Stage 1 has run for 2–3 months, as the add-on itself recommends.
+

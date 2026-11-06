@@ -89,3 +89,4 @@ export function LiveOnPlatform({ blocks, liveRfq, pool, featured }: { blocks: Bl
     </section>
   );
 }
+

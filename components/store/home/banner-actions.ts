@@ -18,3 +18,4 @@ export async function logBannerEvent(bannerId: string | null, slot: string, even
     await admin.rpc('log_banner_event', { p_banner: bannerId, p_slot: slot, p_event: event, p_region: region });
   } catch { /* analytics never break the page */ }
 }
+

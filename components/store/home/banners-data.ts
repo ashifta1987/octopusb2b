@@ -19,3 +19,4 @@ export async function getHomeBanners(): Promise<HomeBanner[]> {
     .filter((b) => (!b.starts_at || new Date(b.starts_at).getTime() <= now) && (!b.ends_at || new Date(b.ends_at).getTime() > now))
     .slice(0, 3);
 }
+

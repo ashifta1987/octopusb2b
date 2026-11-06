@@ -83,3 +83,4 @@ insert into content_blocks(key, value) values
   ('home.platform.api', 'API & integrations|Sync catalogues and orders with your store or ERP. Postman collection included.|View API'),
   ('home.octo', 'Your account team|Chat with Octo, 24 / 7.|Instant answers on orders, wallet and shipping — a human account manager steps in the moment it matters.|Open the assistant →')
 on conflict (key) do nothing;
+
