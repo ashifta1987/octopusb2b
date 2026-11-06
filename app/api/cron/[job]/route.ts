@@ -2,6 +2,7 @@ import { getCarrier } from '@/lib/adapters';
 import { checkCron } from '@/lib/api/cron';
 import { json, problem } from '@/lib/api/problem';
 import { createAdminClient } from '@/lib/supabase/server';
+import { runHsClassification } from '@/lib/hs/server';
 
 /**
  * GET /api/cron/{job} — scheduled jobs (SPEC §10.3), protected by CRON_SECRET.
@@ -62,6 +63,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ job: str
   const started = Date.now();
   try {
     if (job === 'tracking-poll') return json({ ok: true, job, result: await trackingPoll(sb), duration_ms: Date.now() - started });
+    // HS headings for products still queued (imports over the per-run AI cap, or interrupted background runs)
+    if (job === 'hs-classify') return json({ ok: true, job, result: await runHsClassification(), duration_ms: Date.now() - started });
     const fn = SQL_JOBS[job];
     if (!fn) return problem(404, 'NOT_FOUND', `Unknown job "${job}". Jobs: ${[...Object.keys(SQL_JOBS), 'tracking-poll', 'outbox'].join(', ')}`);
     const { data, error } = await sb.rpc(fn);

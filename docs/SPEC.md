@@ -1305,3 +1305,7 @@ Full prompt: `docs/ADDON-32-homepage-rebuild.md` (see its implementation note). 
 
 Full prompt: `docs/ADDON-33-sku-and-images.md` (see its implementation note). SKU = `products.external_id` (generated `sku`, `sku_norm`), unique across the platform, never reused (`sku_reservations`), immutable for non-admins. Bulk template v2 with `sku` first and `image_file`, `image_file_2`, `image_file_3`; images .zip, create / update / no-change preview with diffs, "Download my products" round-trip, "Generate SKUs".
 
+## 34. Addendum: automatic HS code detection (4-digit heading)
+
+Full note: `docs/ADDON-34-hs-codes.md`. Blank hs_code → confirmed rule → unconfirmed rule (suggested) → AI (≥ 0.8 suggested, else blank + "HS code needs manual entry"), cached per product type, batches of 20, per-run cost cap, cron for leftovers. Sheet / manual codes are never overwritten. Admin → HS codes (Confirm / Change with preview, backfill preview → apply). Suggested codes do not block approval.
+

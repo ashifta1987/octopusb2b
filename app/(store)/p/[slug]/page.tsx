@@ -84,7 +84,7 @@ async function Content({ params }: { params: Params }) {
     ['Lead time', p.lead_time_days ? `${p.lead_time_days} days` : 'On request'],
     ['Incoterm', p.incoterm ?? 'On request'],
     ['Ships from', origin ?? '—'],
-    ['HS code', p.hs_code ?? '—'],
+    ['HS code', p.hs_code ? (p.hs_code_status === 'suggested' ? `${p.hs_code} (indicative)` : p.hs_code) : '—'],
     ['Unit', p.unit],
   ];
 

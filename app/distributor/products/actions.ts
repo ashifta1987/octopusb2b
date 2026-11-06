@@ -1,6 +1,8 @@
 'use server';
 import { skuDbError } from '@/lib/sku';
 import { revalidatePath, revalidateTag } from 'next/cache';
+import { after } from 'next/server';
+import { runHsClassification } from '@/lib/hs/server';
 import { createClient } from '@/lib/supabase/server';
 import { slugify, toCents, asCurrency } from '@/lib/format';
 import { actionSession, fail, ok, type Result } from '@/components/backoffice/server-utils';
@@ -100,6 +102,8 @@ export async function saveProduct(id: string | null, values: ProductFormValues, 
   const ce = await replaceChildren(sb, pid!, values);
   if (ce) return fail(ce);
   if (mode === 'draft') return ok({ id: pid! }, 'Draft saved'); // no route refresh while typing
+  // blank HS code → detect a 4-digit heading in the background (rule, then AI); a typed code is kept as manual
+  if (!(values.hs_code ?? '').trim()) after(() => runHsClassification([pid!]));
   revalidatePath('/distributor/products');
   revalidateTag('products', 'max');
   return ok({ id: pid! }, 'Saved');

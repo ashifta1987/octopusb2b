@@ -3,6 +3,8 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { guard, fail, ok, type Result } from '@/components/admin/server';
 import { createAdminClient } from '@/lib/supabase/server';
 import { commitImport, stageImport } from '@/lib/import/core';
+import { after } from 'next/server';
+import { queueHsClassification, runHsClassification } from '@/lib/hs/server';
 
 /** ADDON-27 bulk import — server actions. Permission: products.edit (RPCs re-check in the database). */
 
@@ -72,6 +74,13 @@ export async function commitImportRun(runId: string): Promise<Result> {
     const zip = await download((run.source as { images_path?: string | null })?.images_path);
     const report = await commitImport(admin, { runId, actor: g.s.userId, zip }) as Record<string, { create?: number }>;
     revalidateTag('products', 'max');
+    // HS headings for the run's products that have none (the workbook has no HS column): background, batched, capped
+    const { data: staged } = await admin.from('import_runs').select('staging').eq('id', runId).single();
+    const skus = (((staged?.staging as { products?: { external_id: string }[] })?.products) ?? []).map((x) => x.external_id);
+    const { data: ps } = skus.length ? await admin.from('products').select('id').in('sku', skus).is('hs_code', null) : { data: [] };
+    const hsIds = (ps ?? []).map((x) => x.id as string);
+    await queueHsClassification(hsIds);
+    after(() => runHsClassification(hsIds));
     revalidatePath('/admin/import');
     return ok(`Committed: ${report.products?.create ?? 0} new products, ${report.prices?.create ?? 0} new prices, ${report.images?.create ?? 0} images.`);
   } catch (e) {

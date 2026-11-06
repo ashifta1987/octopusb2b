@@ -21,6 +21,7 @@ export async function ProductEditor({ session, productId, presetSupplier }: { se
   ]);
 
   let status = 'draft';
+  let hsInfo: { status: string | null; source: string | null; note: string | null } | null = null;
   let initial: ProductFormValues = {
     sku: '', title: '', supplier_id: presetSupplier && ids.includes(presetSupplier) ? presetSupplier : (suppliers.length === 1 ? suppliers[0].id : ''),
     category_id: null, tag_ids: [], unit: 'pcs', moq: 1, lead_time_days: null, incoterm: 'FOB', origin_country: null, hs_code: null,
@@ -30,10 +31,11 @@ export async function ProductEditor({ session, productId, presetSupplier }: { se
 
   if (productId) {
     const { data: p } = await sb.from('products')
-      .select('id, sku, title, supplier_id, category_id, status, unit, moq, lead_time_days, incoterm, origin_country, hs_code, octopus_dropship, ready_to_ship, description, seo_title, seo_description, image_url, currency, price_tiers(min_qty, unit_price_cents, currency), product_specs(name, value, sort), product_tags(tag_id), product_certificates(certificate_id), product_media(url, sort)')
+      .select('id, sku, title, supplier_id, category_id, status, hs_code_status, hs_code_source, hs_code_note, unit, moq, lead_time_days, incoterm, origin_country, hs_code, octopus_dropship, ready_to_ship, description, seo_title, seo_description, image_url, currency, price_tiers(min_qty, unit_price_cents, currency), product_specs(name, value, sort), product_tags(tag_id), product_certificates(certificate_id), product_media(url, sort)')
       .eq('id', productId).maybeSingle();
     if (!p || !ids.includes(p.supplier_id)) notFound();
     status = p.status;
+    hsInfo = { status: p.hs_code_status as string | null, source: p.hs_code_source as string | null, note: p.hs_code_note as string | null };
     const media = ((p.product_media ?? []) as { url: string; sort: number }[]).sort((a, b) => a.sort - b.sort).map((m) => m.url);
     initial = {
       sku: p.sku ?? '', title: p.title, supplier_id: p.supplier_id, category_id: p.category_id, unit: p.unit, moq: p.moq, lead_time_days: p.lead_time_days,
@@ -54,6 +56,7 @@ export async function ProductEditor({ session, productId, presetSupplier }: { se
       key={productId ?? 'new'}
       productId={productId}
       status={status}
+      hsInfo={hsInfo}
       initial={initial}
       suppliers={suppliers.map((s) => ({ id: s.id, code: s.code, legal_name: s.legal_name, country: s.country, product_upload: s.supplier_switches?.product_upload ?? true, ai_tools: s.supplier_switches?.ai_tools ?? true }))}
       categories={(cats ?? []) as FormCategory[]}

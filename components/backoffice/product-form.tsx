@@ -16,9 +16,9 @@ export type FormTag = { id: string; name: string; kind: string };
 export type FormCert = { id: string; supplier_id: string; name: string; issuer: string | null; status: string; expires_at: string | null };
 
 export function ProductForm({
-  productId: initialId, status, initial, suppliers, categories, tags, certificates, countries, aiMode, saveAction, submitAction,
+  productId: initialId, status, initial, hsInfo, suppliers, categories, tags, certificates, countries, aiMode, saveAction, submitAction,
 }: {
-  productId: string | null; status: string; initial: ProductFormValues; suppliers: FormSupplier[]; categories: FormCategory[];
+  productId: string | null; status: string; initial: ProductFormValues; hsInfo?: { status: string | null; source: string | null; note: string | null } | null; suppliers: FormSupplier[]; categories: FormCategory[];
   tags: FormTag[]; certificates: FormCert[]; countries: Record<string, string>; aiMode: 'live' | 'mock';
   saveAction: (id: string | null, v: ProductFormValues, mode: 'draft' | 'full') => Promise<Result>;
   submitAction: (id: string, to: 'submitted') => Promise<Result>;
@@ -406,7 +406,11 @@ export function ProductForm({
           <div className="grid sm:grid-cols-3 gap-4">
             <div>
               <label htmlFor="pf-hs" className="label">HS code</label>
-              <input id="pf-hs" className="input mono" {...register('hs_code')} placeholder="7318.15" />
+              <input id="pf-hs" className="input mono" {...register('hs_code')} placeholder="Leave blank to detect automatically" />
+              {hsInfo?.status === 'suggested' && <p className="text-xs mt-1 text-[#8A5A00]" data-testid="hs-suggested">Suggested by {hsInfo.source === 'ai' ? 'the AI classifier' : 'a product-type rule'} — check it. Typing a code here makes it a manual (confirmed) code.</p>}
+              {hsInfo?.status === 'confirmed' && hsInfo.source && <p className="text-xs mt-1 text-ok">Confirmed ({hsInfo.source === 'sheet' ? 'from the import sheet' : hsInfo.source === 'manual' ? 'entered manually' : 'product-type rule'})</p>}
+              {hsInfo?.status === 'missing' && hsInfo.note && <p className="text-xs mt-1 text-bad">{hsInfo.note}</p>}
+              {!hsInfo && <p className="text-xs mt-1 text-muted">Blank = a 4-digit heading is detected automatically after saving.</p>}
             </div>
             <div>
               <label htmlFor="pf-origin" className="label">Country of origin</label>

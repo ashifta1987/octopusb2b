@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireStaff } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { HsCode } from '@/components/hs-badge';
 import { Card, PageHeader, StatusBadge, EmptyState, Money, Notice } from '@/components/ui';
 import { ReasonButton, RunButton } from '@/components/backoffice/action-form';
 import { one } from '@/components/backoffice/server-utils';
@@ -20,7 +21,7 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
     .in('status', ['submitted', 'in_review']).order('updated_at').limit(100);
   const sel = selId ?? queue?.[0]?.id;
   const { data: p } = sel ? await sb.from('products')
-    .select('id, external_id, title, description, status, moderation_hold, moderation_hold_reason, unit, moq, lead_time_days, incoterm, origin_country, hs_code, octopus_dropship, ready_to_ship, seo_title, seo_description, image_url, updated_at, rejection_reason, suppliers!products_supplier_id_fkey(code, legal_name, country, verified, supplier_switches(listings_live)), categories(name), currency, price_tiers(min_qty, unit_price_cents, currency), product_specs(name, value, sort), product_media(url, sort), product_tags(tags(name)), product_certificates(certificates(name, status))')
+    .select('id, external_id, title, description, status, moderation_hold, moderation_hold_reason, hs_code_status, hs_code_source, hs_code_note, unit, moq, lead_time_days, incoterm, origin_country, hs_code, octopus_dropship, ready_to_ship, seo_title, seo_description, image_url, updated_at, rejection_reason, suppliers!products_supplier_id_fkey(code, legal_name, country, verified, supplier_switches(listings_live)), categories(name), currency, price_tiers(min_qty, unit_price_cents, currency), product_specs(name, value, sort), product_media(url, sort), product_tags(tags(name)), product_certificates(certificates(name, status))')
     .eq('id', sel).maybeSingle() : { data: null };
   const sup = p ? one(p.suppliers as unknown as { code: string; legal_name: string; country: string; verified: boolean; supplier_switches: { listings_live: boolean } | { listings_live: boolean }[] | null } | null) : null;
   // import gate (ADDON-27, moved to publish 6 Nov 2026): in the queue, but cannot go live until resolved
@@ -37,6 +38,7 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
     !tiers.length ? 'No price tiers' : null,
     !media.length && !p.image_url ? 'No photos' : null,
     !p.hs_code ? 'Missing HS code' : null,
+    p.hs_code && p.hs_code_status === 'suggested' ? `HS code ${p.hs_code} is a suggestion — check it (does not block approval)` : null,
     !one(p.categories as unknown as { name: string } | null) ? 'No category' : null,
   ].filter(Boolean) as string[] : [];
 
@@ -98,7 +100,7 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
                   ) : <p className="text-sm text-bad">No tiers</p>}
                 </div>
                 <dl className="grid grid-cols-2 gap-2 text-sm">
-                  {[['Product Id', p.external_id], ['MOQ', `${p.moq} ${p.unit}`], ['Lead time', p.lead_time_days ? `${p.lead_time_days} days` : '—'], ['Incoterm', p.incoterm], ['Origin', p.origin_country], ['HS code', p.hs_code],
+                  {[['Product Id', p.external_id], ['MOQ', `${p.moq} ${p.unit}`], ['Lead time', p.lead_time_days ? `${p.lead_time_days} days` : '—'], ['Incoterm', p.incoterm], ['Origin', p.origin_country], ['HS code', <HsCode key="hs" code={p.hs_code} status={p.hs_code_status} source={p.hs_code_source} note={p.hs_code_note} />],
                     ['Flags', [p.octopus_dropship && 'Octopus Dropship', p.ready_to_ship && 'Ready to ship'].filter(Boolean).join(', ') || '—']]
                     .map(([l, v]) => <div key={l as string}><dt className="text-muted">{l}</dt><dd className="font-medium">{v || '—'}</dd></div>)}
                 </dl>

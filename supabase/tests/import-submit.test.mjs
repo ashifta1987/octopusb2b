@@ -19,6 +19,8 @@ try {
   const okSup = (await one(`select id from suppliers where identity_status = 'ok' and archived_at is null order by code limit 1`)).id;
   const bwj = await one(`select p.id, p.supplier_id from products p where p.sku like 'CN-GD-BWJ-%' and exists (select 1 from price_tiers t where t.product_id = p.id) order by p.sku limit 1`);
   await db.query(`update products set status = 'draft' where id = $1`, [bwj.id]);   // fixture (rolled back)
+  // fixture: this supplier's legal name is under review (live Bowijie was resolved on 6 Nov, so don't rely on live state)
+  await db.query(`update suppliers set identity_status = 'needs_identity_review' where id = $1`, [bwj.supplier_id]);
   const asAdmin = async () => {
     await db.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify({ sub: adminId, role: 'authenticated', aal: 'aal2' })]);
     await db.query('set local role authenticated');

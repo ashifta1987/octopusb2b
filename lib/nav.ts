@@ -62,6 +62,7 @@ export const OFFICE_NAV: NavSection[] = [
       { href: '/admin/suppliers', label: 'Suppliers', area: 'suppliers' },
       { href: '/admin/import', label: 'Bulk import', area: 'products', action: 'edit' },
       { href: '/admin/turnkey', label: 'Turnkey projects', area: 'turnkey' },
+      { href: '/admin/hs-codes', label: 'HS codes', area: 'products', action: 'approve' },
       { href: '/admin/staff', label: 'Staff & roles', area: 'staff' },
       { href: '/admin/assistant', label: 'Assistant', area: 'assistant', action: 'configure' },
       { href: '/admin/integrations', label: 'Integrations', area: 'integrations' },

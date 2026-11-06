@@ -3,6 +3,8 @@ import ExcelJS from 'exceljs';
 import { unzipSync } from 'fflate';
 import { createHash } from 'node:crypto';
 import { redirect } from 'next/navigation';
+import { after } from 'next/server';
+import { queueHsClassification, runHsClassification } from '@/lib/hs/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
 import { slugify, toCents } from '@/lib/format';
@@ -303,7 +305,7 @@ export async function importValidRows(jobId: string): Promise<Result> {
     }
     return { sha, url: uploaded.get(sha)!, key: `products/sha/${sha}.${(path.split('.').pop() ?? 'jpg').toLowerCase()}` };
   };
-  let created = 0, updated = 0, skipped = 0; const failures: string[] = [];
+  let created = 0, updated = 0, skipped = 0; const failures: string[] = []; const savedIds: string[] = [];
   for (const r of rows ?? []) {
     const d = r.data as ImportData;
     if (d.mode === 'unchanged') { skipped++; continue; }
@@ -328,6 +330,7 @@ export async function importValidRows(jobId: string): Promise<Result> {
       continue;
     }
     await sb.from('import_rows').update({ product_id: pid as string }).eq('id', r.id);
+    savedIds.push(pid as string);
     if (mode === 'update') updated++; else created++;
   }
   const { count: errCount } = await sb.from('import_rows').select('id', { count: 'exact', head: true }).eq('job_id', jobId).not('errors', 'is', null);
@@ -336,6 +339,9 @@ export async function importValidRows(jobId: string): Promise<Result> {
   revalidatePath('/distributor/products/import');
   revalidatePath('/distributor/products');
   revalidateTag('products', 'max');
+  // HS headings for rows without an hs_code: rules + AI in the background (batched, cost-capped; leftovers picked up by cron)
+  await queueHsClassification(savedIds);
+  after(() => runHsClassification(savedIds));
   // always "ok" once rows were processed, so the report refreshes and shows each failed row's error next to it
   return ok(undefined, `${created} created as drafts · ${updated} updated · ${skipped} unchanged${failures.length ? ` · ${failures.length} failed` : ''}`);
 }
