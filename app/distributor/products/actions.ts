@@ -1,4 +1,5 @@
 'use server';
+import { skuDbError } from '@/lib/sku';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { slugify, toCents, asCurrency } from '@/lib/format';
@@ -35,7 +36,7 @@ async function replaceChildren(sb: Sb, id: string, v: ProductFormValues) {
     v.specs?.length ? sb.from('product_specs').insert(v.specs.filter((s) => s.name && s.value).map((s, i) => ({ product_id: id, name: s.name, value: s.value, sort: i + 1 }))) : null,
     v.tag_ids?.length ? sb.from('product_tags').insert(v.tag_ids.map((t) => ({ product_id: id, tag_id: t }))) : null,
     v.certificate_ids?.length ? sb.from('product_certificates').insert(v.certificate_ids.map((c) => ({ product_id: id, certificate_id: c }))) : null,
-    v.images?.length ? sb.from('product_media').insert(v.images.map((url, i) => ({ product_id: id, url, sort: i, alt: v.title }))) : null,
+    v.images?.length ? sb.from('product_media').insert(v.images.map((url, i) => ({ product_id: id, url, sort: i + 1, alt: v.title }))) : null,
   ]);
   return ins.find((r) => r?.error)?.error ?? null;
 }
@@ -87,12 +88,13 @@ export async function saveProduct(id: string | null, values: ProductFormValues, 
     if (!cur) return fail('Product not found or not editable.');
     if (mode === 'draft' && !['draft', 'rejected'].includes(cur.status)) return fail('Autosave only runs on drafts.');
     const { error, data } = await sb.from('products').update(cols).eq('id', pid).select('id');
-    if (error) return fail(error);
+    if (error) return fail(skuDbError(error.message) ?? error);
     if (!data?.length) return fail('You cannot edit this product.');
   } else {
     const slug = `${slugify(cols.title).slice(0, 80)}-${Math.random().toString(36).slice(2, 8)}`;
-    const { data, error } = await sb.from('products').insert({ ...cols, slug, status: 'draft', created_by: g.s.userId }).select('id').single();
-    if (error) return fail(error);
+    const sku = (values.sku ?? '').trim().toUpperCase();
+    const { data, error } = await sb.from('products').insert({ ...cols, ...(sku ? { external_id: sku } : {}), slug, status: 'draft', created_by: g.s.userId }).select('id').single();
+    if (error) return fail(skuDbError(error.message) ?? error);
     pid = data.id as string;
   }
   const ce = await replaceChildren(sb, pid!, values);

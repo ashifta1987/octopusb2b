@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { SKU_ERRORS, SKU_RE } from '@/lib/sku';
 
 /** Shared product form schema (client form + server action). Prices are entered in the product currency (USD or CNY)
  *  and stored as minor units (cents / fen) with price_tiers.currency + products.currency (SPEC §15.1). */
@@ -9,6 +10,8 @@ export const tierSchema = z.object({
 export const specSchema = z.object({ name: z.string().trim().min(1, 'Name required'), value: z.string().trim().min(1, 'Value required') });
 
 export const productSchema = z.object({
+  /** ADDON-33: Product Id / SKU. Optional on create (blank = automatic), fixed after creation (Admin only can change). */
+  sku: z.string().trim().transform((v) => v.toUpperCase()).refine((v) => v === '' || (SKU_RE.test(v) && !/\s/.test(v)), SKU_ERRORS.format).optional(),
   title: z.string().trim().min(3, 'At least 3 characters').max(160),
   supplier_id: z.string().uuid('Choose a supplier'),
   category_id: z.string().uuid('Choose a category').nullable(),

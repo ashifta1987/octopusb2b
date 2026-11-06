@@ -1301,3 +1301,7 @@ Full prompt: `docs/ADDON-31-turnkey-projects.md` (see its implementation note). 
 
 Full prompt: `docs/ADDON-32-homepage-rebuild.md` (see its implementation note). CMS lead banners (`home_banners`, Admin → Site content → Home page), banner analytics (`banner_events`), announcement bar, 6-tile live stats strip, live cards, Turnkey section, 10 feature cards (order/visibility in `home.feature_cards`). Real data only; empty sections are hidden.
 
+## 33. Addendum: Product Id (SKU) + images in the bulk template
+
+Full prompt: `docs/ADDON-33-sku-and-images.md` (see its implementation note). SKU = `products.external_id` (generated `sku`, `sku_norm`), unique across the platform, never reused (`sku_reservations`), immutable for non-admins. Bulk template v2 with `sku` first and `image_file`, `image_file_2`, `image_file_3`; images .zip, create / update / no-change preview with diffs, "Download my products" round-trip, "Generate SKUs".
+

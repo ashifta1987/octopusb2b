@@ -159,6 +159,7 @@ try {
     if (prodIds.length) await db.query('delete from products where id = any($1)', [prodIds]);
     if (supIds.length) for (const r of await refs('public.suppliers')) await db.query(`delete from ${r.t} where ${r.col} = any($1)`, [supIds]);
     if (supIds.length) await db.query('delete from suppliers where id = any($1)', [supIds]);
+    await db.query(`delete from sku_reservations where sku_norm like 'CN-ZZ-QAT-%'`);   // ADDON-33: test SKUs only
     await db.query('commit');
   } catch (e) { await db.query('rollback'); console.log('✘ clean-up failed:', e.message); failed++; }
   const { data: objs } = await admin.storage.from('product-media').list(`import/${QA}`);

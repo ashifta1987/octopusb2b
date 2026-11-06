@@ -213,6 +213,13 @@ export function ProductForm({
         <section className="card p-6 space-y-4">
           <h2 className="text-lg font-semibold">Basics</h2>
           <div>
+            <label htmlFor="pf-sku" className="label">SKU (Product Id)</label>
+            <input id="pf-sku" className="input mono uppercase" maxLength={40} {...register('sku')} readOnly={!!productId} aria-describedby="pf-sku-hint"
+              placeholder={productId ? '' : 'e.g. FST-BLT-M10X40-A2 — leave blank for an automatic one'} />
+            <p id="pf-sku-hint" className="text-xs text-muted mt-1">{productId ? 'The SKU is fixed once the product exists (an Admin can change it).' : '3–40 characters, letters/digits/dash/dot/underscore, no spaces. Unique across the whole platform and never reused.'}</p>
+            {err(errors.sku)}
+          </div>
+          <div>
             <label htmlFor="pf-title" className="label">Product title *</label>
             <input id="pf-title" className="input" maxLength={160} {...register('title')} placeholder="e.g. Stainless steel hex bolts, M10 × 40 mm, A2-70" />
             <p className="text-xs text-muted mt-1">{title.length} / 120 characters · include material, size and standard</p>

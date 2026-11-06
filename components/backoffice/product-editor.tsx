@@ -22,7 +22,7 @@ export async function ProductEditor({ session, productId, presetSupplier }: { se
 
   let status = 'draft';
   let initial: ProductFormValues = {
-    title: '', supplier_id: presetSupplier && ids.includes(presetSupplier) ? presetSupplier : (suppliers.length === 1 ? suppliers[0].id : ''),
+    sku: '', title: '', supplier_id: presetSupplier && ids.includes(presetSupplier) ? presetSupplier : (suppliers.length === 1 ? suppliers[0].id : ''),
     category_id: null, tag_ids: [], unit: 'pcs', moq: 1, lead_time_days: null, incoterm: 'FOB', origin_country: null, hs_code: null,
     currency: 'USD', tiers: [{ min_qty: 1, price: NaN }], specs: [], certificate_ids: [], octopus_dropship: false, ready_to_ship: false, images: [],
     description: '', seo_title: '', seo_description: '',
@@ -30,13 +30,13 @@ export async function ProductEditor({ session, productId, presetSupplier }: { se
 
   if (productId) {
     const { data: p } = await sb.from('products')
-      .select('id, title, supplier_id, category_id, status, unit, moq, lead_time_days, incoterm, origin_country, hs_code, octopus_dropship, ready_to_ship, description, seo_title, seo_description, image_url, currency, price_tiers(min_qty, unit_price_cents, currency), product_specs(name, value, sort), product_tags(tag_id), product_certificates(certificate_id), product_media(url, sort)')
+      .select('id, sku, title, supplier_id, category_id, status, unit, moq, lead_time_days, incoterm, origin_country, hs_code, octopus_dropship, ready_to_ship, description, seo_title, seo_description, image_url, currency, price_tiers(min_qty, unit_price_cents, currency), product_specs(name, value, sort), product_tags(tag_id), product_certificates(certificate_id), product_media(url, sort)')
       .eq('id', productId).maybeSingle();
     if (!p || !ids.includes(p.supplier_id)) notFound();
     status = p.status;
     const media = ((p.product_media ?? []) as { url: string; sort: number }[]).sort((a, b) => a.sort - b.sort).map((m) => m.url);
     initial = {
-      title: p.title, supplier_id: p.supplier_id, category_id: p.category_id, unit: p.unit, moq: p.moq, lead_time_days: p.lead_time_days,
+      sku: p.sku ?? '', title: p.title, supplier_id: p.supplier_id, category_id: p.category_id, unit: p.unit, moq: p.moq, lead_time_days: p.lead_time_days,
       incoterm: p.incoterm ?? 'FOB', origin_country: p.origin_country, hs_code: p.hs_code, octopus_dropship: p.octopus_dropship, ready_to_ship: p.ready_to_ship,
       description: p.description ?? '', seo_title: p.seo_title ?? '', seo_description: p.seo_description ?? '',
       currency: asCurrency((p.price_tiers as { currency: string }[] | null)?.[0]?.currency ?? p.currency),
