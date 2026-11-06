@@ -10,10 +10,11 @@ export type AdPlacement = 'home_banner' | 'category_banner' | 'product_side' | '
  * (anon RLS can read active campaigns). Clicks go through /api/ads/click which records + charges the click
  * server-side, then redirects. Falls back to a house ad from content_blocks `ads.house`.
  */
-export async function AdSlot({ placement, layout = 'banner' }: { placement: AdPlacement; layout?: 'banner' | 'card' }) {
+export async function AdSlot({ placement, layout = 'banner', houseFallback = true }: { placement: AdPlacement; layout?: 'banner' | 'card'; houseFallback?: boolean }) {
   const [{ settings, blocks }, ads] = await Promise.all([getStoreContent(), getActiveAds(placement)]);
   const enabled = settings.ads_enabled !== false;
   const ad = enabled ? ads[0] : undefined;
+  if (!ad && !houseFallback) return null;   // e.g. the home suppliers grid: only a real sponsored listing, no house ad
   const [hHead, hBody, hLink, hCta] = parts(blocks, 'ads.house', "Can't find what you need?|Send one RFQ and get quotes from several verified suppliers.|/request/sourcing|Start an RFQ");
   const view = ad
     ? { headline: ad.headline, body: ad.body, href: `/api/ads/click?c=${ad.id}`, image: ad.image_url, cta: 'View', sponsored: true }

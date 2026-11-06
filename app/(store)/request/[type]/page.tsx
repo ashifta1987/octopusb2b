@@ -16,7 +16,7 @@ import { parts } from '@/components/store/seo';
 import { submitRequest } from './actions';
 
 type Params = Promise<{ type: string }>;
-type SP = Promise<{ product?: string; qty?: string }>;
+type SP = Promise<{ product?: string; qty?: string; title?: string; country?: string }>;
 
 const FALLBACK: Record<RequestType, string> = {
   sourcing: 'Product sourcing|Find a product we don’t list yet', '3pl': '3PL service|Warehousing and fulfillment', dropship: 'Dropshipping|Ship straight to your customers',
@@ -59,7 +59,8 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
     balance = data == null ? 0 : Number(data.balance_minor);
     credit = data == null ? 0 : Number(data.credit_limit_minor);
   }
-  const productQs = product ? `?product=${product.id}` : '';
+  const prefill = !product ? new URLSearchParams(Object.entries({ title: sp.title, qty: sp.qty, country: sp.country }).filter(([, v]) => typeof v === 'string' && v) as [string, string][]).toString() : '';
+  const productQs = product ? `?product=${product.id}` : prefill ? `?${prefill}` : '';
   const loginHref = `/login?next=${encodeURIComponent(`/request/${type}${productQs}`)}`;
   const mode = !session ? 'guest' : !session.org ? 'no-org' : 'ready';
   const orgCountry = session?.org?.country && session.org.country in COUNTRY_NAMES ? session.org.country : '';
@@ -71,6 +72,14 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
     if (type === 'sourcing') defaults.quantity = String(sp.qty && /^\d+$/.test(sp.qty) ? sp.qty : product.moq);
   }
   if (orgCountry) { defaults.destination_country = orgCountry; defaults.warehouse_country = orgCountry; defaults.target_market = orgCountry; }
+  // home "Get quotes in 24 h" form: ?title=&qty=&country= prefill the sourcing request (validated, never trusted)
+  if (!product && type === 'sourcing') {
+    const t = typeof sp.title === 'string' ? sp.title.trim().slice(0, 200) : '';
+    if (t) { defaults.title = t; defaults.product = t; }
+    if (typeof sp.qty === 'string' && /^\d{1,9}$/.test(sp.qty)) defaults.quantity = sp.qty;
+    const c = typeof sp.country === 'string' ? sp.country.toUpperCase() : '';
+    if (c in COUNTRY_NAMES) defaults.destination_country = c;
+  }
 
   const [talkT, talkB] = parts(blocks, 'request.talk', 'Prefer to talk it through?|Message our sourcing team and share photos directly.');
   const [loginT, loginB] = parts(blocks, 'request.login', 'Sign in to submit|An account is needed to submit requests.');

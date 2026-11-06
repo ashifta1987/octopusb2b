@@ -47,6 +47,8 @@
 html { -webkit-text-size-adjust: 100%; }
 body { background: var(--surface); color: var(--navy); font-family: var(--font-sans); }
 h1, h2, h3, h4 { font-family: var(--font-display); color: var(--navy); letter-spacing: -0.01em; }
+/* Nov 2026 home design (Home-desktop-full.png) uses Inter for headings */
+.home-v2 :is(h1, h2, h3, h4) { font-family: var(--font-sans); }
 :focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
 
 @layer components {

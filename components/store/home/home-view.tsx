@@ -1,42 +1,33 @@
 import { Suspense } from 'react';
-import { block } from '@/lib/content';
 import { getStoreContent } from '@/components/store/currency';
-import { getFeatured, getVerifiedSuppliers, listOpenPools, getSupplierCategories } from '@/components/store/data';
-import { ProductGrid, GridSkeleton } from '@/components/store/product-card';
+import { getFeatured, getVerifiedSuppliers, listOpenPools, getSupplierCategories, listProducts } from '@/components/store/data';
+import { GridSkeleton } from '@/components/store/product-card';
 import { AdSlot } from '@/components/store/ad-slot';
 import { JsonLd, SITE_URL } from '@/components/store/seo';
-import { HomePoolsSection } from '@/components/store/pools/home-section';
 import { poolSettings } from '@/components/store/pools/shared';
 import { getTurnkeyCatalogue } from '@/lib/turnkey/data';
-import { getOpenProjectCard } from '@/lib/turnkey/live';
-import { LogisticsBand, type LogisticsStats } from './logistics-band';
-import { PlatformServices } from './platform-services';
-import { VerifiedSuppliers, Testimonials, HomeCta } from './sections';
-import { SectionHead } from './shared';
+import { HomeCta } from './sections';
 import { getHomeLiveData } from './live-data';
-import { getHomeBanners } from './banners-data';
-import { BannerGrid, StatsStrip, TurnkeySection, OctoCard } from './top';
-import { LiveOnPlatform } from './live-on-platform';
+import { OctoCard } from './top';
+import { SourcingHero, ServiceCards, SourcingSteps, Dropshipping, Pools, Warehousing, ShippingBand, Turnkey, StatsAndServices, Suppliers, type ShippingStats } from './v2';
 
-/** ADDON-32 storefront home (design/Main.png): Turnkey lead banner + side banners, stats strip, live cards, Turnkey section,
- *  10-card feature grid, global shipping band, featured products, pools, verified suppliers, reviews, CTA + Octo.
- *  Only REAL data is rendered; a section without data is hidden (placeholders only with site_settings home.show_placeholders). */
+/** Storefront home — Nov 2026 design (Home-desktop-full.png): five numbered services (sourcing hero with quote form,
+ *  dropshipping, MOQ pools, 3PL, Turnkey), how-it-works steps, ready-to-order products, open pools, shipping band,
+ *  stats, other services, verified suppliers, CTA. Only REAL data is rendered; sections without data are hidden. */
 export async function HomeView() {
-  const [{ blocks, settings, company, categories, branches, ctx }, featured, suppliers, poolsFilled, poolsClosing, live, turnkey, banners, open] = await Promise.all([
-    getStoreContent(), getFeatured(4), getVerifiedSuppliers(3), listOpenPools({ sort: 'filled', limit: 1 }), listOpenPools({ sort: 'closing', limit: 1 }),
-    getHomeLiveData(), getTurnkeyCatalogue(), getHomeBanners(), getOpenProjectCard(),
+  const [{ blocks, settings, company, branches }, featured, suppliers, pools, live, turnkey] = await Promise.all([
+    getStoreContent(), getFeatured(4), getVerifiedSuppliers(3), listOpenPools({ sort: 'filled', limit: 3 }), getHomeLiveData(), getTurnkeyCatalogue(),
   ]);
   const supplierCats = await getSupplierCategories(suppliers.map((s) => s.id));
+  // "Ready to order": featured products, else the newest live products that have a photo (real listings only)
+  const ready = featured.length ? featured : (await listProducts({ sort: 'newest' })).items.filter((p) => p.image_url).slice(0, 4);
   const rules = poolSettings(settings);
   const turnkeyOn = settings['turnkey.enabled'] !== false;
-  const catName = Object.fromEntries(categories.map((c) => [c.id, c.name]));
   const fmt = (v: number) => new Intl.NumberFormat('en-US').format(v);
-  const logistics = (settings.logistics_stats ?? {}) as LogisticsStats;
-  const showPlaceholders = settings['home.show_placeholders'] === true;
-  const turnkeyCount = turnkeyOn ? turnkey.projects.length : 0;
-  const vars = { turnkey: turnkeyCount || null, deposit_pct: rules.depositPct, countries: logistics.countries, currency: ctx.currency };
+  const stats = (settings.logistics_stats ?? {}) as ShippingStats;
   const offices = typeof settings['home.china_offices'] === 'number' ? (settings['home.china_offices'] as number) : branches.filter((b) => (b.country ?? 'CN') === 'CN').length;
-  const order = Array.isArray(settings['home.feature_cards']) ? (settings['home.feature_cards'] as unknown[]).filter((k) => turnkeyOn || k !== 'turnkey') : undefined;
+  const turnkeyCount = turnkeyOn ? turnkey.projects.length : 0;
+  const defaultCountry = typeof settings['home.default_destination'] === 'string' ? (settings['home.default_destination'] as string) : 'AE';
 
   const orgLd = company && {
     '@context': 'https://schema.org', '@type': 'Organization',
@@ -47,40 +38,26 @@ export async function HomeView() {
   };
 
   return (
-    <>
+    <div className="home-v2">
       {orgLd && <JsonLd data={orgLd} />}
-      <BannerGrid blocks={blocks} banners={turnkeyOn ? banners : banners.filter((b) => !b.cta_href?.startsWith('/turnkey'))} open={turnkeyOn ? open : null}
-        pool={rules.enabled ? poolsFilled.items[0] ?? null : null} poolsOn={rules.enabled} vars={vars} />
-      <StatsStrip tiles={[
-        { label: 'Products', value: live.products ? fmt(live.products) : null },
+      <SourcingHero blocks={blocks} defaultCountry={defaultCountry} />
+      <ServiceCards blocks={blocks} poolsOn={rules.enabled} turnkeyOn={turnkeyOn} />
+      <SourcingSteps blocks={blocks} products={ready} />
+      <Dropshipping blocks={blocks} countries={stats.countries} />
+      {rules.enabled && <Pools blocks={blocks} pools={pools.items} depositPct={rules.depositPct} />}
+      <Warehousing blocks={blocks} />
+      <ShippingBand blocks={blocks} stats={stats} />
+      {turnkeyOn && <Turnkey blocks={blocks} projects={turnkey.projects} packages={turnkey.packages} />}
+      <StatsAndServices blocks={blocks} tiles={[
+        { label: 'Products live', value: live.products ? fmt(live.products) : null },
         { label: 'Verified suppliers', value: live.verifiedSuppliers ? fmt(live.verifiedSuppliers) : null },
         { label: 'Turnkey projects', value: turnkeyCount ? fmt(turnkeyCount) : null },
-        { label: 'Countries shipped', value: logistics.countries ?? (live.destinations.length ? fmt(live.destinations.length) : null) },
         { label: offices === 1 ? 'China office' : 'China offices', value: offices ? fmt(offices) : null },
-        { label: 'Saved with bulk tiers', value: live.maxBulkSavingPct ? `${live.maxBulkSavingPct}%` : null },
       ]} />
-      <LiveOnPlatform blocks={blocks} liveRfq={live.liveRfq} pool={rules.enabled ? poolsClosing.items[0] ?? null : null} featured={featured} />
-      {turnkeyOn && <TurnkeySection blocks={blocks} projects={turnkey.projects} packages={turnkey.packages} vars={vars} />}
-      <PlatformServices blocks={blocks} poolsOn={rules.enabled} order={order} vars={vars} />
-      <LogisticsBand blocks={blocks} stats={logistics} live={live} />
-
-      {featured.length > 0 && (
-        <section aria-labelledby="home-featured-h" className="max-w-[1280px] mx-auto px-4 sm:px-8 pt-[72px]">
-          <SectionHead id="home-featured-h" title={block(blocks, 'home.featured.title', 'Featured products')} href="/products" link={block(blocks, 'home.featured.link', 'View all products')} />
-          <ProductGrid products={featured} categoryNames={catName} variant="featured" />
-        </section>
-      )}
-
-      <Suspense fallback={null}>
-        <HomePoolsSection />
-      </Suspense>
-
-      <VerifiedSuppliers blocks={blocks} suppliers={suppliers} categories={supplierCats} showPlaceholders={showPlaceholders}
-        sponsored={<Suspense fallback={null}><AdSlot placement="home_banner" /></Suspense>} />
-
-      <Testimonials blocks={blocks} showPlaceholders={showPlaceholders} />
+      <Suppliers blocks={blocks} suppliers={suppliers} categories={supplierCats}
+        sponsored={<Suspense fallback={null}><AdSlot placement="home_banner" layout="card" houseFallback={false} /></Suspense>} />
       <HomeCta blocks={blocks} aside={<OctoCard blocks={blocks} />} />
-    </>
+    </div>
   );
 }
 
