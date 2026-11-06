@@ -79,3 +79,4 @@ begin
 end $$;
 drop trigger if exists trg_guard_moderation_hold on products;
 create trigger trg_guard_moderation_hold before update of status on products for each row execute function guard_moderation_hold();
+

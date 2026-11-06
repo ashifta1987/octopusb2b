@@ -2,7 +2,7 @@
 export const IMPORT_COLUMNS = [
   { key: 'sku', required: true, width: 22, note: 'Product Id = your SKU code, e.g. FST-BLT-M10X40-A2. 3-40 characters, letters/digits/dash/dot/underscore, no spaces; saved in UPPERCASE. Must be unique across the WHOLE platform (all suppliers), never reused, even after a product is deleted.' },
   { key: 'title', required: true, width: 48, note: 'Product title, e.g. "Stainless steel hex bolts, M10 × 40 mm, A2-70"' },
-  { key: 'category_path', required: true, width: 44, note: 'Full category path separated by ">", e.g. "Fasteners > Bolts > Hex bolts" (see Lists sheet)' },
+  { key: 'category_path', required: true, width: 44, note: 'Full category path separated by ">", e.g. "Fasteners > Bolts > Hex bolts" (see Lists sheet). Required for new products; on an update a blank cell keeps the current category, a different category is highlighted before you import.' },
   { key: 'supplier_code', required: true, width: 14, note: 'Supplier code, e.g. OCT-1101 (must be assigned to you)' },
   { key: 'unit', required: false, width: 10, note: 'pcs, pairs, sets, units, boxes… (default pcs)' },
   { key: 'moq', required: true, width: 10, note: 'Minimum order quantity (whole number > 0)' },

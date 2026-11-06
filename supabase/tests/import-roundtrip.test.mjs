@@ -37,3 +37,12 @@ const priceChanges = (d2.changes ?? []).filter((c) => c.field.startsWith('price'
 ok(d2.prices.update === 1 && d2.prices.create === 0 && d2.products.update === 0 && d2.products.skip === 69 && priceChanges.length === 1 && priceChanges[0].external_id === 'CN-GD-BWJ-F9',
   `one edited price → exactly 1 price UPDATE (${priceChanges.map((c) => `${c.external_id} ${c.field}: ${c.from} → ${c.to}`).join('')}); all products SKIP`);
 
+// category rule: a filled, different category cell is a (highlighted) change; a blank one keeps the current category
+for (const ws of wb.worksheets) ws.eachRow((row) => { if (row.getCell(1).value === 'CN-GD-BWJ-F9') { row.getCell(5).value = 4.61; row.getCell(4).value = 'Kitchen'; } });
+const d3 = await computeDiff(sb, await parseWorkbook(Buffer.from(await wb.xlsx.writeBuffer()), opts));
+const cat3 = (d3.changes ?? []).filter((c) => c.field === 'category');
+ok(cat3.length === 1 && cat3[0].external_id === 'CN-GD-BWJ-F9' && cat3[0].to === 'Kitchen' && d3.products.update === 1, `a different category cell shows as a category change (${cat3.map((c) => `${c.from} → ${c.to}`).join('')})`);
+for (const ws of wb.worksheets) ws.eachRow((row) => { if (row.getCell(1).value === 'CN-GD-BWJ-F9') row.getCell(4).value = null; });
+const d4 = await computeDiff(sb, await parseWorkbook(Buffer.from(await wb.xlsx.writeBuffer()), opts));
+ok(!(d4.changes ?? []).some((c) => c.field === 'category'), 'a blank category cell keeps the current category (no change)');
+

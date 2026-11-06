@@ -94,6 +94,16 @@ export async function validateImport(fd: FormData): Promise<Result<{ jobId: stri
     const n = c.name.toLowerCase().trim();
     nameCount.set(n, [...(nameCount.get(n) ?? []), c.id]);
   }
+  { // display names for every category, including switched-off ones created by the workbook import (e.g. "Home & Garden")
+    const { data: allCats } = await admin.from('categories').select('id, name, parent_id');
+    const all = new Map((allCats ?? []).map((c) => [c.id as string, c]));
+    for (const c of allCats ?? []) {
+      if (pathOf.has(c.id as string)) continue;
+      const parts: string[] = []; let cur: typeof c | undefined = c;
+      while (cur) { parts.unshift(cur.name as string); cur = cur.parent_id ? all.get(cur.parent_id as string) : undefined; }
+      pathOf.set(c.id as string, parts.join(' > '));
+    }
+  }
   const resolveCategory = (p: string) => {
     const norm = p.split('>').map((x) => x.trim().toLowerCase()).filter(Boolean).join(' > ');
     if (pathMap.has(norm)) return pathMap.get(norm)!;
@@ -120,8 +130,8 @@ export async function validateImport(fd: FormData): Promise<Result<{ jobId: stri
     if (!title) errors.push('Missing title');
     else if (title.length < 3) errors.push('Title too short');
     const category_id = raw.category_path ? resolveCategory(raw.category_path) : null;
-    if (!raw.category_path) errors.push('Missing category_path');
-    else if (!category_id) errors.push(`Unknown category "${raw.category_path}"`);
+    // blank category: required for new products, keeps the current category on an update (decided once the SKU is known)
+    if (raw.category_path && !category_id) errors.push(`Unknown category "${raw.category_path}"`);
     const code = raw.supplier_code.toUpperCase();
     const sup = supByCode.get(code);
     if (!code) errors.push('Missing supplier_code');
@@ -199,9 +209,9 @@ export async function validateImport(fd: FormData): Promise<Result<{ jobId: stri
   let unchanged = 0;
   for (const r of rows) {
     const d = r.data;
-    if (!d.sku || skuProblem(d.sku)) continue;
+    if (!d.sku || skuProblem(d.sku)) { if (!d.category_path) r.errors.push('Missing category_path'); continue; }
     const st = status.get(d.sku);
-    if (!st || st.state === 'free') { d.mode = 'create'; d.unit ||= 'pcs'; d.incoterm ??= 'FOB'; }
+    if (!st || st.state === 'free') { d.mode = 'create'; d.unit ||= 'pcs'; d.incoterm ??= 'FOB'; if (!d.category_path) r.errors.push('Missing category_path'); }
     else if (st.state === 'retired') r.errors.push(SKU_ERRORS.retired);
     else if (st.supplier_id !== d.supplier_id || !d.supplier_id) r.errors.push(SKU_ERRORS.otherSupplier);
     else {
@@ -212,6 +222,7 @@ export async function validateImport(fd: FormData): Promise<Result<{ jobId: stri
         d.unit ||= cur.unit as string;
         d.incoterm ??= cur.incoterm as string | null; d.origin_country ??= cur.origin_country as string | null; d.hs_code ??= cur.hs_code as string | null;
         d.lead_time_days ??= cur.lead_time_days as number | null; d.description ??= cur.description as string | null;
+        if (!d.category_path) { d.category_id = cur.category_id as string | null; d.category_path = pathOf.get(cur.category_id as string) ?? ''; }   // blank → keep
         const media = ((cur.product_media ?? []) as { sort: number; url: string; source_file_name: string | null; sha256: string | null }[]);
         for (const img of d.images ?? []) {
           const at = media.find((m) => m.sort === img.position);

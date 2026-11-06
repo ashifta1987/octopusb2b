@@ -34,6 +34,7 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
   const pstatus = (r: { products?: unknown }) => prod(r)?.status ?? null;
   const submittable = (rows ?? []).filter((r) => r.product_id && !r.errors && ['draft', 'rejected'].includes(pstatus(r) ?? '')).length;
   const failedSubmit = (rows ?? []).filter((r) => r.submit_error).length;
+  const catChanges = (rows ?? []).filter((r) => !r.errors && !r.product_id && (r.data as ImportData).diff?.some((x) => x.field === 'category')).length;
   const step = !job ? 1 : job.status === 'validated' ? 3 : 4;
   const steps = ['Get template', 'Upload sheet + images', 'Check results', 'Import'];
   const extra = (job?.zip_unreferenced ?? []) as string[];
@@ -102,6 +103,7 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
             {importable > 0 && !((job.cost_flagged_rows ?? 0) > 0 && !job.cost_confirmed_at) && <RunButton className="btn btn-primary btn-sm" action={importValidRows.bind(null, job.id)} confirm={`Save ${creates} new products (drafts) and ${updates} updates?`}>Confirm and import {importable}</RunButton>}
             {submittable > 0 && <RunButton className="btn btn-dark btn-sm" action={submitImported.bind(null, job.id)} confirm={`Submit ${submittable} products of this job for moderation?`}>Submit {submittable} for moderation</RunButton>}
           </div>
+          {catChanges > 0 && <div className="px-6 pb-4" data-testid="category-change-notice"><Notice tone="amber"><b>{catChanges} product{catChanges === 1 ? '' : 's'} will move to another category</b> (highlighted below). Check before importing — leave the category cell blank to keep the current category.</Notice></div>}
           {(job.cost_flagged_rows ?? 0) > 0 && (
             <div className="px-6 pb-4" data-testid="cost-flag">
               {job.cost_confirmed_at
@@ -127,9 +129,10 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
                   <td className="td mono text-sm">{d.supplier_code}</td>
                   <td className="td text-xs mono">{d.tiers.map((t) => `${t.min_qty}+ ${money(t.unit_price_cents, d.currency ?? 'USD')}`).join(' · ')}</td>
                   <td className={cn('td text-sm font-semibold', m.tone)}>{errs.length ? '—' : m.label}
+                    {!errs.length && d.diff?.some((x) => x.field === 'category') && <div><span className="inline-block mt-1 text-[11px] font-semibold px-1.5 py-0.5 rounded bg-[#FFF3D6] text-[#8A5A00]" data-testid="category-change">Category change</span></div>}
                     {d.diff && d.diff.length > 0 && (
                       <details className="font-normal"><summary className="cursor-pointer text-xs text-blue">{d.diff.length} change{d.diff.length === 1 ? '' : 's'}</summary>
-                        <ul className="text-xs text-navy mt-1 space-y-0.5">{d.diff.map((x) => <li key={x.field}><b>{x.field}</b>: <span className="text-muted line-through">{x.from}</span> → {x.to}</li>)}</ul>
+                        <ul className="text-xs text-navy mt-1 space-y-0.5">{d.diff.map((x) => <li key={x.field} data-field={x.field} className={x.field === 'category' ? 'bg-[#FFF3D6] rounded px-1 -mx-1' : undefined}><b>{x.field}</b>: <span className="text-muted line-through">{x.from}</span> → {x.to}</li>)}</ul>
                       </details>
                     )}
                   </td>

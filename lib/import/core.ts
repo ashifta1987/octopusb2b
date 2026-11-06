@@ -49,7 +49,7 @@ export async function computeDiff(sb: SupabaseClient, batch: StagingBatch): Prom
   const ids = batch.products.map((p) => p.external_id);
   const [{ data: sup }, { data: prods }] = await Promise.all([
     sb.from('suppliers').select('id, manufacturer_code, province, handle, contact_name, contact_email, contact_phone, legal_name').eq('external_id', batch.supplier.external_id).maybeSingle(),
-    ids.length ? sb.from('products').select('id, external_id, title, factory_model, specification_raw, selling_points_raw, net_weight, product_size_mm, size_notes, colour_box_mm, carton_size_mm, qty_per_carton, gross_weight, listing_status, import_notes, incoterm').in('external_id', ids) : Promise.resolve({ data: [] }),
+    ids.length ? sb.from('products').select('id, external_id, title, factory_model, specification_raw, selling_points_raw, net_weight, product_size_mm, size_notes, colour_box_mm, carton_size_mm, qty_per_carton, gross_weight, listing_status, import_notes, incoterm, category_id, categories(name)').in('external_id', ids) : Promise.resolve({ data: [] }),
   ]);
   const byExt = new Map((prods ?? []).map((p) => [p.external_id as string, p]));
   const pids = (prods ?? []).map((p) => p.id as string);
@@ -84,9 +84,13 @@ export async function computeDiff(sb: SupabaseClient, batch: StagingBatch): Prom
       [e.carton_size_mm, p.carton_size_mm], [e.qty_per_carton, p.qty_per_carton], [e.gross_weight, p.gross_weight],
       // Platform status (listing_status) only applies to NEW products — an update never lowers a product (bug fix 6 Nov 2026)
       [e.import_notes, p.notes], [e.incoterm, p.incoterm ?? e.incoterm], [e.title, p.name || e.title]];
-    if (fields.some(([a, b]) => changed(a, b))) {
+    // category: only a filled cell that names a different category changes it (blank keeps the current one) — shown as a highlighted change
+    const curCat = ((Array.isArray(e.categories) ? e.categories[0] : e.categories) as { name?: string } | null)?.name ?? null;
+    const catChange = !!p.category && (curCat ?? '').trim().toLowerCase() !== p.category.trim().toLowerCase();
+    if (fields.some(([a, b]) => changed(a, b)) || catChange) {
       productDiff.update++;
       fields.forEach(([a, b], i) => { if (changed(a, b) && changes.length < 500) changes.push({ external_id: p.external_id, field: FIELDS[i], from: show(a), to: show(b) }); });
+      if (catChange && changes.length < 500) changes.push({ external_id: p.external_id, field: 'category', from: show(curCat), to: show(p.category) });
     } else productDiff.skip++;
     if (p.name && e.title !== p.name) productDiff.conflicts!.push(`${p.external_id}: title "${e.title}" → "${p.name}"`);
     const sp = spBy.get(e.id as string);

@@ -91,9 +91,10 @@ export default async function ImportRunPage({ params }: { params: Promise<{ id: 
 
       {changes.length > 0 && (
         <Card title={`Field changes (${changes.length}${changes.length >= 500 ? '+' : ''})`} className="mb-6">
+          {changes.some((c) => c.field === 'category') && <div className="px-6 pb-3"><Notice tone="amber"><b>{changes.filter((c) => c.field === 'category').length} product{changes.filter((c) => c.field === 'category').length === 1 ? '' : 's'} will move to another category</b> (highlighted). Check before committing — a blank category cell keeps the current category.</Notice></div>}
           <Table head={['Product Id', 'Field', 'From', 'To']}>
             {changes.map((c, i) => (
-              <tr key={i} data-testid="field-change">
+              <tr key={i} data-testid="field-change" data-field={c.field} className={c.field === 'category' ? 'bg-[#FFF7E0]' : undefined}>
                 <td className="td mono text-sm">{c.external_id}</td><td className="td text-sm">{humanize(c.field)}</td>
                 <td className="td text-sm text-muted break-all">{c.from ?? '—'}</td><td className="td text-sm font-semibold break-all">{c.to ?? '—'}</td>
               </tr>

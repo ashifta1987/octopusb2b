@@ -122,6 +122,17 @@ try {
   await upload(exp, null);
   const sum0 = await page.getByTestId('import-summary').innerText();
   ok(/0 new · 0 updates · 2 unchanged · 0 with errors/.test(sum0), `export → import round-trip yields zero changes (${sum0.trim()})`);
+  // category rule: blank on an update keeps it; a different category is a highlighted change before commit
+  const catCell = ew.getCell('C2').value;
+  ew.getCell('C2').value = null;
+  await upload(exp, null);
+  ok(/No change/.test(await rowText(2)) && await page.getByTestId('category-change').count() === 0, 'blank category cell on an update keeps the current category (no change)');
+  const otherCat = (await db.query(`select name from categories where active and parent_id is null and name <> split_part($1, ' > ', 1) order by name limit 1`, [String(catCell)])).rows[0].name;
+  ew.getCell('C2').value = otherCat;
+  await upload(exp, null);
+  ok(await page.getByTestId('category-change').count() === 1 && await page.getByTestId('category-change-notice').isVisible() && /category/.test(await rowText(2)),
+    `a different category (${otherCat}) shows as a highlighted "Category change" before commit`);
+  ew.getCell('C2').value = catCell;
   ew.getCell('M2').value = 0.21;
   await upload(exp, null);
   ok(/1 updates/.test(await page.getByTestId('import-summary').innerText()) && /price tiers/.test(await rowText(2)), 'one edited price → 1 update with a field diff');
