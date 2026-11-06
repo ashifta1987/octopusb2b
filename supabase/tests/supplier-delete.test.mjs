@@ -18,6 +18,9 @@ try {
   if (!s) throw new Error('OCT-1134 not found (already deleted?)');
   const skus = (await db.query(`select external_id from products where supplier_id = $1`, [s.id])).rows.map((r) => r.external_id);
   const pids = (await db.query(`select id from products where supplier_id = $1`, [s.id])).rows.map((r) => r.id);
+  // another supplier with the same legal name (OCT-1135 re-added) must keep its audit rows untouched
+  const twin = await one(`select id, code from suppliers where id <> $1 and lower(legal_name) = lower($2) limit 1`, [s.id, s.legal_name]);
+  const twinAudit = twin ? (await db.query(`select id, details::text d from audit_log where entity = 'suppliers' and entity_id = $1 order by id`, [twin.id])).rows : [];
 
   // non-admin refused
   const dist = (await one(`insert into auth.users(id, email, aud, role, instance_id) values (gen_random_uuid(), 'del-dist@example.com', 'authenticated', 'authenticated', '00000000-0000-0000-0000-000000000000') returning id`)).id;
@@ -50,7 +53,13 @@ try {
     ok(!(await db.query(`select 1 from ${t} where supplier_id = $1`, [s.id])).rowCount, `${t}: nothing left`);
   for (const t of ['product_media', 'price_tiers', 'product_specs', 'import_review_items', 'import_rows'])
     ok(!(await db.query(`select 1 from ${t} where product_id = any($1)`, [pids])).rowCount, `${t}: nothing left`);
-  ok(!(await db.query(`select 1 from audit_log where details::text ilike '%' || $1 || '%'`, [s.legal_name])).rowCount, 'no audit row still contains the legal name');
+  ok(!(await db.query(`select 1 from audit_log where entity = 'suppliers' and entity_id = $1 and details::text ilike '%' || $2 || '%'`, [s.id, s.legal_name])).rowCount, 'no audit row of the deleted supplier still contains its name');
+  if (twin) {
+    const after = (await db.query(`select id, details::text d from audit_log where entity = 'suppliers' and entity_id = $1 order by id`, [twin.id])).rows;
+    ok(JSON.stringify(after) === JSON.stringify(twinAudit) && after.length > 0, `${twin.code} (same legal name) keeps its ${after.length} audit row(s) untouched`);
+  } else if (!(await db.query(`select 1 from suppliers where lower(legal_name) = lower($1)`, [s.legal_name])).rowCount) {
+    ok(!(await db.query(`select 1 from audit_log where details::text ilike '%' || $1 || '%'`, [s.legal_name])).rowCount, 'no audit row anywhere still contains the legal name');
+  }
   ok(!(await db.query(`select 1 from status_history where entity = 'product' and entity_id = any($1)`, [pids])).rowCount, 'status history of its products removed');
   const rec = await one(`select details from audit_log where action = 'supplier.deleted' and entity_id = $1 order by id desc limit 1`, [s.code]);
   ok(rec && rec.details.code === s.code && rec.details.products === skus.length && !JSON.stringify(rec.details).includes(s.legal_name), 'one "supplier.deleted" record kept (code, counts, no name)');
