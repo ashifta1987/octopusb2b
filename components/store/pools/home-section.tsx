@@ -9,6 +9,7 @@ export async function HomePoolsSection() {
   const [{ settings }, { items }] = await Promise.all([getSiteContent(), listOpenPools({ sort: 'filled', limit: 4 })]);
   const rules = poolSettings(settings);
   if (!rules.enabled) return null;
+  if (!items.length) return null; // ADDON-32: sections without real data are hidden on the home page
   return (
     <section className="max-w-[1280px] mx-auto px-4 sm:px-8 pt-[72px]" aria-labelledby="home-pools-h">
       <span className="inline-flex rounded-full bg-[#FFF3D6] text-[#8A5A00] text-[11px] font-semibold px-2.5 py-1 uppercase tracking-wide">Group buying</span>

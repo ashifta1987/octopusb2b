@@ -1,3 +1,12 @@
+> **Implementation note (6 Nov 2026).** Built ahead of ADDON-26/28 (self-hosted fonts and PWA bottom nav come with those).
+> - `/` order: announcement bar (all storefront pages, `home.announcement` + `home.announcement_enabled`) → header → rail (All categories · Turnkey Projects New · Group buys · Request a quote · Dropship & 3PL · | · categories) → banner grid (rotating CMS lead banner, Group-buy and Dropship · 3PL side banners) → stats strip → Live on the platform → Turnkey section → 10-card feature grid → `#global-shipping` → featured → pools → verified suppliers + sponsored slot → reviews → CTA + Octo card.
+> - Migration `20261101000158_home_rebuild.sql`: `home_banners` (CMS, up to 3 rotate every 7 s, pause on hover/focus, no auto-rotation with reduced motion), `banner_events` + `log_banner_event()` (impressions / clicks / region, CTR shown in Admin → Site content → **Home page**), `home.feature_cards`, `home.show_placeholders` (false), `home.china_offices`.
+> - **Owner rule kept (1 Nov 2026): only real figures.** The design's 220+ / 30+ hubs / 1M+ / 100+ carrier numbers appear only after an Admin enters them in `site_settings.logistics_stats`; until then the shipping band and the "Countries shipped" tile use live data or hide. "China offices" = active branches. Stat tiles without a real value are hidden.
+> - Sections with no real data are hidden (live cards, featured, pools, suppliers, reviews). Suppliers with `identity_status <> 'ok'` (Bowijie OCT-1132) never appear as verified. The open-project card shows only a real lead in `contacted`/`quoted` status.
+> - **Demo data:** until the ADDON-24 wipe is run, demo suppliers/products/RFQs are still "real rows" to the page (they are filtered only by the wipe).
+> - Header keeps Sign in + Register for signed-out visitors (the design shows only "My account").
+> - Tests: `tests/e2e/home.mjs` (1440 / 820 / 390). Visual-regression (2 %) and Lighthouse / axe gates not run yet.
+
 # Add-on: rebuild the storefront home page (Turnkey banner + all features)
 
 ## Why

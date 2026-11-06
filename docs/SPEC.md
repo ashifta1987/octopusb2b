@@ -1297,3 +1297,7 @@ Full prompt: `docs/ADDON-30-dubai-migration.md`. Not built — owner chose a rea
 
 Full prompt: `docs/ADDON-31-turnkey-projects.md` (see its implementation note). 25 complete businesses (4 live with Starter / Standard / Pro packages, 21 register-interest), 12 factory hubs, quote / interest leads routed country → region → round-robin sourcing agent (triage pool otherwise), `/admin/turnkey` for leads, projects, packages, equipment and demand signals. Catalogue rows are real content (`is_seed = false`).
 
+## 32. Addendum: storefront home rebuild (Turnkey banner + all features)
+
+Full prompt: `docs/ADDON-32-homepage-rebuild.md` (see its implementation note). CMS lead banners (`home_banners`, Admin → Site content → Home page), banner analytics (`banner_events`), announcement bar, 6-tile live stats strip, live cards, Turnkey section, 10 feature cards (order/visibility in `home.feature_cards`). Real data only; empty sections are hidden.
+

@@ -44,7 +44,7 @@ export function LogisticsBand({ blocks, stats, live }: { blocks: Blocks; stats: 
   const moreChips = Math.max(0, live.destinations.length - MAX_CHIPS);
 
   return (
-    <section aria-labelledby="home-logistics-h" className="relative overflow-hidden text-white mt-8 bg-[linear-gradient(135deg,#0A0B2A_0%,#11133C_50%,#1A1F5C_100%)]">
+    <section id="global-shipping" aria-labelledby="home-logistics-h" className="scroll-mt-24 relative overflow-hidden text-white mt-8 bg-[linear-gradient(135deg,#0A0B2A_0%,#11133C_50%,#1A1F5C_100%)]">
       <div aria-hidden className="pointer-events-none absolute -top-20 -right-20 w-[480px] h-[480px] rounded-full bg-[radial-gradient(circle,rgba(42,111,214,0.25),transparent_60%)]" />
       <div aria-hidden className="pointer-events-none absolute -bottom-[120px] -left-[60px] w-[420px] h-[420px] rounded-full bg-[radial-gradient(circle,rgba(111,168,242,0.18),transparent_60%)]" />
       <div className="relative max-w-[1360px] mx-auto px-4 sm:px-8 py-12 sm:py-14">

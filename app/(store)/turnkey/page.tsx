@@ -38,7 +38,7 @@ async function Hub() {
             <span className="inline-block mono text-[10.5px] uppercase tracking-[.08em] px-2.5 py-1 rounded-full border border-white/20 bg-white/5 text-[#C9D0E8]">
               Turnkey projects · {live.length} live · {interest.length} coming
             </span>
-            <h1 className="font-display font-extrabold text-[36px] sm:text-[52px] leading-[1.05]">Open a business,<br />one container.</h1>
+            <h1 className="!text-white font-display font-extrabold text-[36px] sm:text-[52px] leading-[1.05]">Open a business,<br />one container.</h1>
             <p className="text-[16px] sm:text-[17px] text-[#C9D0E8] max-w-xl">
               {projects.length === 25 ? 'Twenty-five' : projects.length} complete businesses, specified by us and sourced from the right Chinese factory hub. Layout, equipment, QC, consolidation
               and one shipment to your door — with the quote in your inbox within 24 hours.
@@ -144,7 +144,7 @@ async function Hub() {
       <section className="bg-navy text-white">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-8 flex flex-wrap gap-5 items-center justify-between">
           <div>
-            <h2 className="font-display font-bold text-[20px]">Not ready for a quote? Chat with Octo.</h2>
+            <h2 className="!text-white font-display font-bold text-[20px]">Not ready for a quote? Chat with Octo.</h2>
             <p className="text-[#C9D0E8] text-[14px] max-w-xl">Our AI assistant can walk you through packages, hubs and rough budgets. A human sourcing lead takes over the moment it matters.</p>
           </div>
           <div className="flex flex-wrap gap-2.5">

@@ -9,6 +9,8 @@ import { activeSwitchBanner } from '@/components/store/currency';
 import { CurrencySwitchBanner } from '@/components/store/currency-banner';
 import { CategoryIcon, AllCategoriesIcon } from '@/components/store/home/category-icon';
 import { getHomeLiveData } from '@/components/store/home/live-data';
+import { AnnouncementBar } from '@/components/store/home/top';
+import { getTurnkeyCatalogue } from '@/lib/turnkey/data';
 
 /**
  * Storefront layout header + category bar (Main.png, Nov 2026 redesign). All copy from CMS.
@@ -55,17 +57,16 @@ export async function StoreHeader() {
               </Link>
             </li>
           )}
+          {settings.pool_enabled !== false && <li className="shrink-0"><Link href="/pools" className={`${pill} text-navy font-semibold`}>Group buys</Link></li>}
+          <li className="shrink-0"><Link href="/request/sourcing" className={`${pill} text-navy font-semibold`}>Request a quote</Link></li>
+          <li className="shrink-0"><Link href="/#global-shipping" className={`${pill} text-navy font-semibold`}>Dropship &amp; 3PL</Link></li>
+          {settings.supplier_portal_enabled === true && <li className="shrink-0"><Link href="/supplier" className={`${pill} text-navy font-semibold`}>Sell on Octopus B2B</Link></li>}
+          <li className="shrink-0 w-px h-5 bg-line mx-1.5" aria-hidden />
           {top.map((c) => (
             <li key={c.id} className="shrink-0">
               <Link href={`/c/${c.slug}`} className={`${pill} text-[#3B4556]`}><CategoryIcon slug={c.slug} />{c.name}</Link>
             </li>
           ))}
-          <li className="shrink-0 w-px h-5 bg-line mx-1.5" aria-hidden />
-          {settings.pool_enabled !== false && <li className="shrink-0"><Link href="/pools" className={`${pill} text-blue font-semibold`}>Group buying pools</Link></li>}
-          <li className="shrink-0"><Link href="/request" className={`${pill} text-blue font-semibold`}>Request Center</Link></li>
-          <li className="shrink-0"><Link href="/request/3pl" className={`${pill} text-blue font-semibold`}>3PL services</Link></li>
-          <li className="shrink-0"><Link href="/request/dropship" className={`${pill} text-blue font-semibold`}>Dropshipping</Link></li>
-          {settings.supplier_portal_enabled === true && <li className="shrink-0"><Link href="/supplier" className={`${pill} text-blue font-semibold`}>Sell on Octopus B2B</Link></li>}
         </ul>
       </nav>
       <Suspense fallback={null}>
@@ -73,6 +74,15 @@ export async function StoreHeader() {
       </Suspense>
     </>
   );
+}
+
+/** ADDON-32 announcement bar (above the sticky header on every storefront page). Switch: site_settings home.announcement_enabled. */
+export async function StoreAnnouncement() {
+  const [{ settings, blocks }, turnkey] = await Promise.all([getSiteContent(), getTurnkeyCatalogue()]);
+  if (settings['home.announcement_enabled'] === false) return null;
+  const vars = { turnkey: settings['turnkey.enabled'] !== false && turnkey.projects.length ? turnkey.projects.length : null };
+  if (settings['turnkey.enabled'] === false && /turnkey/i.test(blocks['home.announcement'] ?? '')) return null;
+  return <AnnouncementBar blocks={blocks} vars={vars} />;
 }
 
 /** Signed-out header actions: Sign in + Register (customer sign-up → /signup → verify → /onboarding). */

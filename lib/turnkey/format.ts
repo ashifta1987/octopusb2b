@@ -63,7 +63,14 @@ export const paybackLabel = (k: Pick<TurnkeyPackage, 'payback_months_low' | 'pay
 export const equipmentTotal = (k: Pick<TurnkeyPackage, 'equipment'>) => k.equipment.reduce((s, e) => s + (e.budget_usd ?? 0), 0);
 
 /** Approximate lat/lng → position (%) inside the Atlas map box (China, roughly 18–45°N, 98–126°E). Not geo-accurate by design. */
-export function hubPosition(h: Pick<TurnkeyHub, 'lat' | 'lng'>) {
+/** Map positions from design/TurnkeyAtlas.dc.html (stylised, not geo-accurate); Jinan added between Qingdao and Zhengzhou. */
+const MAP_POS: Record<string, { left: number; top: number }> = {
+  'CN-LN-SY': { left: 30, top: 18 }, 'CN-SD-QD': { left: 52, top: 26 }, 'CN-SD-JN': { left: 42, top: 30 }, 'CN-HA-ZZ': { left: 34, top: 40 },
+  'CN-JS-ZJG': { left: 54, top: 44 }, 'CN-ZJ-NB': { left: 62, top: 52 }, 'CN-ZJ-WZ': { left: 56, top: 60 }, 'CN-FJ-RA': { left: 50, top: 66 },
+  'CN-GD-CZ': { left: 46, top: 74 }, 'CN-GD-FS': { left: 26, top: 76 }, 'CN-GD-GZ': { left: 33, top: 70 }, 'CN-GD-SZ': { left: 38, top: 82 },
+};
+export function hubPosition(h: Pick<TurnkeyHub, 'lat' | 'lng'> & { hub_id?: string }) {
+  if (h.hub_id && MAP_POS[h.hub_id]) return MAP_POS[h.hub_id];
   const lat = Number(h.lat ?? 30), lng = Number(h.lng ?? 115);
   const x = ((lng - 98) / (126 - 98)) * 100;
   const y = ((45 - lat) / (45 - 18)) * 100;

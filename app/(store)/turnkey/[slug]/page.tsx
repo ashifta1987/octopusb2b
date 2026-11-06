@@ -56,7 +56,7 @@ async function Content({ params }: { params: Params }) {
               <TkPill className="bg-white/10 text-[#C9D0E8] border border-white/15">{CATEGORY_LABEL[p.category]}</TkPill>
               <TkPill className="bg-white/10 text-[#C9D0E8] border border-white/15">Quote in 24 h</TkPill>
             </div>
-            <h1 className="font-display font-extrabold text-[32px] sm:text-[42px] leading-tight">{p.title}</h1>
+            <h1 className="!text-white font-display font-extrabold text-[32px] sm:text-[42px] leading-tight">{p.title}</h1>
             {p.overview_md && <p className="text-[#C9D0E8] text-[16px] max-w-2xl">{p.overview_md}</p>}
             {p.highlights.length > 0 && <ul className="flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-[#A9B2D0]">{p.highlights.map((h) => <li key={h}>✓ {h}</li>)}</ul>}
           </div>

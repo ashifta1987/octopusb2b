@@ -36,7 +36,7 @@ async function Atlas() {
         <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-10 grid gap-8 lg:grid-cols-[1fr_1.15fr] items-center">
           <div className="space-y-5">
             <span className="inline-block mono text-[10.5px] uppercase tracking-[.08em] px-2.5 py-1 rounded-full bg-white/10 text-[#C9D0E8]">Project Atlas</span>
-            <h1 className="font-display font-extrabold text-[34px] sm:text-[44px] leading-[1.08]">{projects.length} businesses.<br />{hubs.length} factory hubs.<br />One shipment.</h1>
+            <h1 className="!text-white font-display font-extrabold text-[34px] sm:text-[44px] leading-[1.08]">{projects.length} businesses.<br />{hubs.length} factory hubs.<br />One shipment.</h1>
             <p className="text-[#C9D0E8] text-[15px] max-w-lg">
               Tap a hub to see what it supplies, or jump straight to the project. {live} modules are live and quotable today. The other {projects.length - live} are open for register-interest — packages ship the moment demand is there.
             </p>

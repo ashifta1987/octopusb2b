@@ -7,7 +7,9 @@ import { SectionHead } from './shared';
 type Blocks = Record<string, string>;
 
 /** Main.png "Verified suppliers": supplier code + country + badges (public_suppliers only) and the categories they list in. */
-export function VerifiedSuppliers({ blocks, suppliers, categories }: { blocks: Blocks; suppliers: PublicSupplier[]; categories: Record<string, string[]> }) {
+export function VerifiedSuppliers({ blocks, suppliers, categories, showPlaceholders = false, sponsored }: { blocks: Blocks; suppliers: PublicSupplier[]; categories: Record<string, string[]>; showPlaceholders?: boolean; sponsored?: React.ReactNode }) {
+  // ADDON-32: no real verified supplier → hide the section (bracketed placeholder cards only with home.show_placeholders)
+  if (!suppliers.length && !showPlaceholders) return null;
   return (
     <section aria-labelledby="home-suppliers-h" className="max-w-[1280px] mx-auto px-4 sm:px-8 pt-[72px]">
       <SectionHead id="home-suppliers-h" title={block(blocks, 'home.suppliers.title', 'Verified suppliers')} href="/contact" link={block(blocks, 'home.suppliers.link', 'Become a supplier')} />
@@ -37,16 +39,23 @@ export function VerifiedSuppliers({ blocks, suppliers, categories }: { blocks: B
             );
           })}
         </ul>
-      ) : <p className="text-muted">Supplier verification is in progress.</p>}
+      ) : (
+        <ul className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(100%,270px),1fr))]" aria-label="Placeholder supplier cards">
+          {[0, 1, 2].map((i) => <li key={i} className="card rounded-[14px] p-[22px] border-dashed text-muted">[Supplier name] · [City], China · [Type] · [Categories]</li>)}
+        </ul>
+      )}
+      {sponsored && <div className="mt-4">{sponsored}</div>}
     </section>
   );
 }
 
 /** Main.png "What buyers say" — `testimonials` block, one "quote|who" per line (placeholder copy until launch, dashed cards). */
-export function Testimonials({ blocks }: { blocks: Blocks }) {
+export function Testimonials({ blocks, showPlaceholders = false }: { blocks: Blocks; showPlaceholders?: boolean }) {
   // Placeholder lines ("[Customer testimonial: …]") are never shown as if they were real reviews → empty state instead.
   const items = (blocks.testimonials ?? '').split('\n').map((l) => l.split('|').map((s) => s.trim())).filter((t) => t[0] && !t[0].startsWith('['));
   if (!items.length) {
+    // ADDON-32: hidden in production; the bracketed placeholders only show with site_settings home.show_placeholders
+    if (!showPlaceholders) return null;
     return (
       <section aria-labelledby="home-testimonials-h" className="max-w-[1280px] mx-auto px-4 sm:px-8 pt-[72px]">
         <SectionHead id="home-testimonials-h" title={block(blocks, 'home.testimonials.title', 'What buyers say')} />
@@ -76,16 +85,17 @@ export function Testimonials({ blocks }: { blocks: Blocks }) {
 }
 
 /** Main.png closing CTA — "Can't find what you need?" (home.cta.*). */
-export function HomeCta({ blocks }: { blocks: Blocks }) {
+export function HomeCta({ blocks, aside }: { blocks: Blocks; aside?: React.ReactNode }) {
   return (
-    <section aria-labelledby="home-cta-h" className="max-w-[1280px] mx-auto px-4 sm:px-8 pt-[72px] pb-6">
-      <div className="rounded-[20px] bg-[#2A6ED4] text-white px-6 py-10 sm:p-12 flex flex-wrap gap-6 justify-between items-center">
+    <section aria-labelledby="home-cta-h" className={`max-w-[1280px] mx-auto px-4 sm:px-8 pt-[72px] pb-6 ${aside ? 'grid gap-4 lg:grid-cols-[1.6fr_1fr]' : ''}`}>
+      <div className="rounded-[20px] bg-navy text-white px-6 py-10 sm:p-12 flex flex-wrap gap-6 justify-between items-center">
         <div className="flex-[1_1_420px] min-w-0 flex flex-col gap-2.5">
           <h2 id="home-cta-h" className="!text-white text-[28px] sm:text-[34px] font-extrabold leading-[1.1]">{block(blocks, 'home.cta.title')}</h2>
           <p className="text-[16px] sm:text-[18px] text-white">{block(blocks, 'home.cta.body')}</p>
         </div>
         <Link href="/request/sourcing" className="btn btn-light min-h-[52px] px-[26px] text-[16px]">{block(blocks, 'home.cta.button', 'Request a product')}</Link>
       </div>
+      {aside}
     </section>
   );
 }

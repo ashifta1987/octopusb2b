@@ -1,6 +1,6 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
-import { createPublicClient } from '@/lib/supabase/server';
+import { createPublicClient, createAdminClient } from '@/lib/supabase/server';
 import { getCurrencyContext, toPlatform, type CurrencyContext } from '@/lib/currency';
 import { asCurrency, convertMinor, type Currency } from '@/lib/format';
 import { priceAt, type PoolTier } from '@/components/store/pools/shared';
@@ -256,8 +256,14 @@ export async function getVerifiedSuppliers(limit = 4): Promise<PublicSupplier[]>
   'use cache';
   cacheLife({ revalidate: 300 });
   cacheTag('suppliers');
-  const { data } = await createPublicClient().from('public_suppliers').select('id, code, country, verified, supplier_type').eq('verified', true).order('code').limit(limit);
-  return (data ?? []) as PublicSupplier[];
+  const { data } = await createPublicClient().from('public_suppliers').select('id, code, country, verified, supplier_type').eq('verified', true).order('code').limit(limit + 10);
+  // ADDON-32: a supplier whose legal identity is still under review (e.g. several name variants) is never shown as "verified"
+  let blocked = new Set<string>();
+  try {
+    const { data: rev } = await createAdminClient().from('suppliers').select('id').neq('identity_status', 'ok');
+    blocked = new Set((rev ?? []).map((r) => r.id as string));
+  } catch { /* no service key (local preview) → public view only */ }
+  return ((data ?? []) as PublicSupplier[]).filter((x) => !blocked.has(x.id)).slice(0, limit);
 }
 
 export async function getSitemapProducts(): Promise<{ slug: string; updated_at: string }[]> {

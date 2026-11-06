@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { StoreHeader, StoreFooter } from '@/components/store-shell';
+import { StoreHeader, StoreFooter, StoreAnnouncement } from '@/components/store-shell';
 import { MaintenanceNotice } from '@/components/maintenance-notice';
 
 /** Storefront layout (SPEC §8.2): top bar + header + mega-menu, CMS footer. */
@@ -10,6 +10,9 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
       {/* Maintenance mode (SPEC §16.3): prominent CMS notice; pages stay browsable. */}
       <Suspense fallback={null}>
         <MaintenanceNotice variant="prominent" />
+      </Suspense>
+      <Suspense fallback={null}>
+        <StoreAnnouncement />
       </Suspense>
       {/* Header reads the session cookie → streamed; fixed-height fallback avoids layout shift. */}
       <Suspense fallback={<div className="h-[150px] bg-white border-b border-line" aria-hidden />}>

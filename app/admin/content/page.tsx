@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { HomeTab } from './home-tab';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { Card, PageHeader, EmptyState, StatusBadge, Notice, Table } from '@/components/ui';
@@ -22,6 +23,7 @@ const TABS = [
   { key: 'pages', label: 'Pages' },
   { key: 'blocks', label: 'Content blocks' },
   { key: 'company', label: 'Company & branches' },
+  { key: 'home', label: 'Home page' },
 ];
 
 /** Admin → Site content (CMS.png). Content editors draft; Admin publishes legal pages. */
@@ -43,6 +45,7 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
       {tab === 'pages' && <PagesTab isAdmin={sess.isAdmin} editable={editable} canCreate={can(sess, 'content', 'create')} slug={sp.page} />}
       {tab === 'blocks' && <BlocksTab editable={editable} canCreate={can(sess, 'content', 'create')} />}
       {tab === 'company' && <CompanyTab editable={editable} />}
+      {tab === 'home' && <HomeTab editable={editable} isAdmin={sess.isAdmin} />}
     </>
   );
 }
