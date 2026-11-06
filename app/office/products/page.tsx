@@ -20,7 +20,7 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
     .in('status', ['submitted', 'in_review']).order('updated_at').limit(100);
   const sel = selId ?? queue?.[0]?.id;
   const { data: p } = sel ? await sb.from('products')
-    .select('id, title, description, status, unit, moq, lead_time_days, incoterm, origin_country, hs_code, octopus_dropship, ready_to_ship, seo_title, seo_description, image_url, updated_at, rejection_reason, suppliers(code, legal_name, country, verified, supplier_switches(listings_live)), categories(name), currency, price_tiers(min_qty, unit_price_cents, currency), product_specs(name, value, sort), product_media(url, sort), product_tags(tags(name)), product_certificates(certificates(name, status))')
+    .select('id, external_id, title, description, status, unit, moq, lead_time_days, incoterm, origin_country, hs_code, octopus_dropship, ready_to_ship, seo_title, seo_description, image_url, updated_at, rejection_reason, suppliers(code, legal_name, country, verified, supplier_switches(listings_live)), categories(name), currency, price_tiers(min_qty, unit_price_cents, currency), product_specs(name, value, sort), product_media(url, sort), product_tags(tags(name)), product_certificates(certificates(name, status))')
     .eq('id', sel).maybeSingle() : { data: null };
   const sup = p ? one(p.suppliers as unknown as { code: string; legal_name: string; country: string; verified: boolean; supplier_switches: { listings_live: boolean } | { listings_live: boolean }[] | null } | null) : null;
   const listingsOff = sup ? one(sup.supplier_switches)?.listings_live === false : false;
@@ -94,7 +94,7 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
                   ) : <p className="text-sm text-bad">No tiers</p>}
                 </div>
                 <dl className="grid grid-cols-2 gap-2 text-sm">
-                  {[['MOQ', `${p.moq} ${p.unit}`], ['Lead time', p.lead_time_days ? `${p.lead_time_days} days` : '—'], ['Incoterm', p.incoterm], ['Origin', p.origin_country], ['HS code', p.hs_code],
+                  {[['Product Id', p.external_id], ['MOQ', `${p.moq} ${p.unit}`], ['Lead time', p.lead_time_days ? `${p.lead_time_days} days` : '—'], ['Incoterm', p.incoterm], ['Origin', p.origin_country], ['HS code', p.hs_code],
                     ['Flags', [p.octopus_dropship && 'Octopus Dropship', p.ready_to_ship && 'Ready to ship'].filter(Boolean).join(', ') || '—']]
                     .map(([l, v]) => <div key={l as string}><dt className="text-muted">{l}</dt><dd className="font-medium">{v || '—'}</dd></div>)}
                 </dl>

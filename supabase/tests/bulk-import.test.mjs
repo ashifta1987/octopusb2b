@@ -17,6 +17,7 @@ batch.images.forEach((i) => (i.url = `https://example.invalid/import/${i.externa
 const stage = async (b, name) => (await one(`insert into import_runs(name, staging) values ($1, $2) returning id`, [name, JSON.stringify(b)])).id;
 
 // sequences are NOT transactional (setval/nextval survive a rollback) — snapshot them and put them back afterwards
+const before = Number((await one(`select count(*) n from products`)).n);
 const seqSnapshot = (await db.query(`select sequencename, last_value from pg_sequences where schemaname = 'public'`)).rows;
 await db.query('begin');
 try {
@@ -25,8 +26,10 @@ try {
   // 1 · first import
   const r1 = (await one(`select commit_import_run($1, $2) c`, [await stage(batch, 'Bowijie test'), admin])).c;
   console.log('  first commit:', JSON.stringify(r1));
-  ok(r1.suppliers.create === 1 && r1.products.create === 69 && r1.supplier_products.create === 69 && r1.prices.create === 77 && r1.images.create === 53,
-    '69 draft products, 1 supplier, 69 supplier links, 77 tiered prices, 53 images');
+  // the live catalogue may already hold Bowijie (loaded 6 Nov 2026) → count create + skip
+  const n = (t) => (t.create ?? 0) + (t.skip ?? 0);
+  ok(n(r1.suppliers) === 1 && n(r1.products) === 69 && n(r1.supplier_products) === 69 && n(r1.prices) === 77 && n(r1.images) === 53,
+    `69 draft products, 1 supplier, 69 supplier links, 77 tiered prices, 53 images (${r1.products.create ? 'created' : 'already loaded'})`);
   const sup = await one(`select id, code, legal_name, identity_status, (select count(*) from supplier_name_variants v where v.supplier_id = s.id) variants,
     (select count(*) from supplier_contacts c where c.supplier_id = s.id) contacts from suppliers s where external_id = 'CN-GD-BWJ-0010'`);
   ok(sup.identity_status === 'needs_identity_review' && Number(sup.variants) === 3 && Number(sup.contacts) === 1, `supplier ${sup.code} "${sup.legal_name}" — 3 name variants, identity review pending, 1 contact`);
@@ -109,7 +112,7 @@ try {
     if (r.last_value == null) await db.query(`select setval($1, 1, false)`, [r.sequencename]);
     else await db.query(`select setval($1, $2, true)`, [r.sequencename, r.last_value]);
   }
-  const left = await one(`select count(*) n from products where external_id like 'CN-GD-BWJ-%'`);
-  ok(Number(left.n) === 0, 'rolled back — nothing persisted');
+  const left = await one(`select count(*) n from products`);
+  ok(Number(left.n) === before, `rolled back — nothing persisted (${before} products before and after)`);
   await db.end();
 }

@@ -29,6 +29,8 @@ export default async function ImportRunPage({ params }: { params: Promise<{ id: 
   batch.prices.forEach((p) => byProduct.set(p.external_id, [...(byProduct.get(p.external_id) ?? []), p]));
   const reviewBy = new Map<string, number>();
   batch.review.forEach((r) => reviewBy.set(r.external_id, (reviewBy.get(r.external_id) ?? 0) + 1));
+  const errors = batch.errors ?? [];
+  const changes = diff.changes ?? [];
   const { data: sup } = await sb.from('suppliers').select('id, code, identity_status').eq('external_id', batch.supplier.external_id).maybeSingle();
 
   return (
@@ -38,6 +40,20 @@ export default async function ImportRunPage({ params }: { params: Promise<{ id: 
         actions={<StatusBadge status={run.status} />} />
 
       {run.error && <div className="mb-4"><Notice tone="red">Last commit attempt failed: {run.error}</Notice></div>}
+      {errors.length > 0 && (
+        <Card title={`${errors.length} error${errors.length === 1 ? '' : 's'} — fix the workbook and upload again`} className="mb-6 border-red-300" >
+          <div className="px-6 pb-2"><Notice tone="red">Nothing can be committed while the workbook has errors. Correct these rows, save as .xlsx and start a new import.</Notice></div>
+          <Table head={['Sheet', 'Row', 'Column', 'Problem']}>
+            {errors.slice(0, 300).map((e, i) => (
+              <tr key={i} data-testid="import-error">
+                <td className="td text-sm">{e.sheet}</td><td className="td mono text-sm">{e.row ?? '—'}</td>
+                <td className="td text-sm">{e.column ?? '—'}</td><td className="td text-sm text-red-700">{e.message}</td>
+              </tr>
+            ))}
+          </Table>
+          {errors.length > 300 && <p className="px-6 pb-4 text-sm text-muted">…and {errors.length - 300} more.</p>}
+        </Card>
+      )}
       {committed && report && (
         <div className="mb-6"><Notice tone="green">
           Committed {fmtDate(run.committed_at, true)}: {report.products?.create ?? 0} new and {report.products?.update ?? 0} updated products, {report.prices?.create ?? 0} new prices
@@ -67,6 +83,19 @@ export default async function ImportRunPage({ params }: { params: Promise<{ id: 
           })}
         </Table>
       </Card>
+
+      {changes.length > 0 && (
+        <Card title={`Field changes (${changes.length}${changes.length >= 500 ? '+' : ''})`} className="mb-6">
+          <Table head={['Product Id', 'Field', 'From', 'To']}>
+            {changes.map((c, i) => (
+              <tr key={i} data-testid="field-change">
+                <td className="td mono text-sm">{c.external_id}</td><td className="td text-sm">{humanize(c.field)}</td>
+                <td className="td text-sm text-muted break-all">{c.from ?? '—'}</td><td className="td text-sm font-semibold break-all">{c.to ?? '—'}</td>
+              </tr>
+            ))}
+          </Table>
+        </Card>
+      )}
 
       <Card title={`Supplier ${batch.supplier.external_id}${sup ? ` · ${sup.code}` : ''}`} className="mb-6">
         <div className="px-6 pb-6 grid gap-3 text-sm">
@@ -110,8 +139,8 @@ export default async function ImportRunPage({ params }: { params: Promise<{ id: 
 
       {!committed && run.status === 'previewed' && can(s, 'products', 'edit') && (
         <div className="flex flex-wrap items-start gap-3 mb-10">
-          <RunButton className="btn btn-primary" confirm={`Commit "${run.name}"? This writes ${diff.products.create} new / ${diff.products.update} updated products and ${diff.prices.create} new prices in one transaction. New products are drafts.`}
-            action={commitImportRun.bind(null, id)}>Commit import</RunButton>
+          {errors.length === 0 && <RunButton className="btn btn-primary" confirm={`Commit "${run.name}"? This writes ${diff.products.create} new / ${diff.products.update} updated products and ${diff.prices.create} new prices in one transaction. New products are drafts.`}
+            action={commitImportRun.bind(null, id)}>Commit import</RunButton>}
           <RunButton className="btn btn-ghost" confirm="Discard this preview? Nothing has been written." action={discardImportRun.bind(null, id)}>Discard</RunButton>
         </div>
       )}

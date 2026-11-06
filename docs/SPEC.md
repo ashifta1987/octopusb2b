@@ -1281,3 +1281,11 @@ Full prompt: `docs/ADDON-26-china-access.md`. Not built yet. Owner decision over
 
 Full prompt: `docs/ADDON-27-bulk-upload.md` (see its implementation note). Data model: `suppliers.external_id / identity_status`, `supplier_name_variants` (one canonical), `supplier_contacts`, `products.external_id` + raw supplier fields (`specification_raw`, sizes, carton data, `listing_status`), `supplier_products` (supplier × product, one preferred), `supplier_product_prices` (incoterm × MOQ tier × variant, `price_minor` = price × 10000, validity, `is_superseded`), `import_runs`, `import_review_items`. Supplier costs are staff-only (RLS); buyer `price_tiers` = preferred supplier cost × (1 + markup) via `recompute_sell_prices()`; `set_product_pricing()` sets a per-product markup or manual mode. `/admin/import`: upload XLSX + photo ZIP (browser → private `imports` bucket) → preview with create / update / skip per table, warnings and review queue → Commit (`commit_import_run`, one transaction, idempotent; audit `bulk_import_committed`). New products are drafts. Publish gate (`guard_import_publish`): an imported product cannot be submitted or published while its supplier has unresolved legal-name variants, it has open/held review items, it needs a quote, or it has no buyer price. CLI: `pnpm import:bulk --xlsx … --images … [--commit=true]`. Settings: `import.price_validity_default_days` 30, `import.outlier_threshold_median_x` 3, `import.images.max_bytes_each`, `import.images.max_total_bytes`, `pricing.default_markup_pct` 25.
 
+## 28. Addendum: mobile optimisation + PWA (planned)
+
+Full prompt: `docs/ADDON-28-mobile-pwa.md`. Not built yet.
+
+## 29. Addendum: bulk-update download template
+
+Full prompt: `docs/ADDON-29-template-fix.md` (see its implementation note). `/admin/import` → "Download template": Blank or Pre-filled with a supplier's existing products (`GET /admin/import/template`), plus a "Generate Product Ids" helper. Every category sheet has the same 20 columns (Product Id first, Image file ninth). Every product has a unique `external_id` (Product Id), assigned by trigger when missing. Blocking validation errors (Product Id, required columns, image names vs ZIP, exact case) stop the commit. An unedited pre-filled export re-imports with zero changes.
+

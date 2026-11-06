@@ -9,9 +9,13 @@ import type { StagingBatch } from './types.ts';
  */
 
 export type TableDiff = { create: number; update: number; skip: number; conflicts?: string[] };
+export type FieldChange = { external_id: string; field: string; from: string | null; to: string | null };
 export type ImportDiff = {
   suppliers: TableDiff; products: TableDiff; supplier_products: TableDiff; prices: TableDiff; images: TableDiff;
   review: { total: number; by_kind: Record<string, number>; already_known: number };
+  /** ADDON-29: every field that differs on an UPDATE (capped at 500) */
+  changes?: FieldChange[];
+  errors?: number;
 };
 
 type Settings = { validDays: number; outlierX: number; maxImageBytes: number; maxZipBytes: number };
@@ -29,7 +33,7 @@ export async function loadImportSettings(sb: SupabaseClient): Promise<Settings> 
 
 export function readZip(bytes: Uint8Array, s: Pick<Settings, 'maxImageBytes' | 'maxZipBytes'>) {
   if (bytes.byteLength > s.maxZipBytes) throw new Error(`IMPORT_ZIP_TOO_LARGE: the image ZIP is larger than ${s.maxZipBytes} bytes`);
-  const files = unzipSync(bytes, { filter: (f) => !f.name.startsWith('__MACOSX/') && !f.name.split('/').pop()!.startsWith('.') && /\.(jpe?g|png|webp|gif)$/i.test(f.name) });
+  const files = unzipSync(bytes, { filter: (f) => !f.name.startsWith('__MACOSX/') && !f.name.split('/').pop()!.startsWith('.') && /\.(jpe?g|png|webp|gif|avif)$/i.test(f.name) });
   const out = new Map<string, Uint8Array>();
   for (const [name, data] of Object.entries(files)) {
     if (data.byteLength > s.maxImageBytes) throw new Error(`IMPORT_IMAGE_TOO_LARGE: ${name} is larger than ${s.maxImageBytes} bytes`);
@@ -67,6 +71,9 @@ export async function computeDiff(sb: SupabaseClient, batch: StagingBatch): Prom
   }
 
   const productDiff: TableDiff = { create: 0, update: 0, skip: 0, conflicts: [] };
+  const changes: FieldChange[] = [];
+  const show = (v: unknown) => (v == null ? null : String(v).slice(0, 160));
+  const FIELDS = ['factory_model', 'specification_raw', 'selling_points_raw', 'net_weight', 'product_size_mm', 'size_notes', 'colour_box_mm', 'carton_size_mm', 'qty_per_carton', 'gross_weight', 'listing_status', 'import_notes', 'incoterm', 'title'];
   const spDiff: TableDiff = { create: 0, update: 0, skip: 0 };
   const spBy = new Map((sps ?? []).map((r) => [r.product_id as string, r]));
   for (const p of batch.products) {
@@ -76,7 +83,10 @@ export async function computeDiff(sb: SupabaseClient, batch: StagingBatch): Prom
       [e.net_weight, p.net_weight], [e.product_size_mm, p.product_size_mm], [e.size_notes, p.size_notes], [e.colour_box_mm, p.colour_box_mm],
       [e.carton_size_mm, p.carton_size_mm], [e.qty_per_carton, p.qty_per_carton], [e.gross_weight, p.gross_weight], [e.listing_status, p.listing_status],
       [e.import_notes, p.notes], [e.incoterm, p.incoterm ?? e.incoterm], [e.title, p.name || e.title]];
-    if (fields.some(([a, b]) => changed(a, b))) productDiff.update++; else productDiff.skip++;
+    if (fields.some(([a, b]) => changed(a, b))) {
+      productDiff.update++;
+      fields.forEach(([a, b], i) => { if (changed(a, b) && changes.length < 500) changes.push({ external_id: p.external_id, field: FIELDS[i], from: show(a), to: show(b) }); });
+    } else productDiff.skip++;
     if (p.name && e.title !== p.name) productDiff.conflicts!.push(`${p.external_id}: title "${e.title}" → "${p.name}"`);
     const sp = spBy.get(e.id as string);
     if (!sp) spDiff.create++;
@@ -90,7 +100,11 @@ export async function computeDiff(sb: SupabaseClient, batch: StagingBatch): Prom
   for (const p of batch.prices) {
     const e = priceBy.get(`${p.external_id}|${p.incoterm}|${p.moq_tier_min}|${p.variant_label}|${p.valid_from}`);
     if (!e) priceDiff.create++;
-    else if (Number(e.price_minor) !== p.price_minor || e.currency !== p.currency || (e.valid_to ?? null) !== (p.valid_to ?? null)) priceDiff.update++;
+    else if (Number(e.price_minor) !== p.price_minor || e.currency !== p.currency || (e.valid_to ?? null) !== (p.valid_to ?? null)) {
+      priceDiff.update++;
+      if (changes.length < 500) changes.push({ external_id: p.external_id, field: `price ${p.incoterm} · MOQ ${p.moq_tier_min}${p.variant_label ? ` · ${p.variant_label}` : ''}`,
+        from: `${(Number(e.price_minor) / 10000).toFixed(4).replace(/0{1,2}$/, '')} ${e.currency}`, to: `${(p.price_minor / 10000).toFixed(4).replace(/0{1,2}$/, '')} ${p.currency}` });
+    }
     else priceDiff.skip++;
   }
 
@@ -104,6 +118,7 @@ export async function computeDiff(sb: SupabaseClient, batch: StagingBatch): Prom
   return {
     suppliers: supplierDiff, products: productDiff, supplier_products: spDiff, prices: priceDiff, images: imgDiff,
     review: { total: batch.review.length, by_kind: byKind, already_known: batch.review.filter((r) => known.has(`${r.external_id}|${r.issue}`)).length },
+    changes, errors: batch.errors?.length ?? 0,
   };
 }
 
@@ -115,7 +130,7 @@ export async function stageImport(sb: SupabaseClient, input: {
   const batch = await parseWorkbook(Buffer.from(input.xlsx), {
     validFrom: input.validFrom, validDays: settings.validDays, outlierX: settings.outlierX, imageFiles: images ? [...images.keys()] : null,
   });
-  if (!batch.products.length) throw new Error('IMPORT_NO_PRODUCTS: no sheet with "Product Id" in cell A1 was found');
+  if (!batch.products.length && !batch.errors.length) throw new Error('IMPORT_NO_PRODUCTS: no sheet with "Product Id" in cell A1 was found');
   const diff = await computeDiff(sb, batch);
   const { data, error } = await sb.from('import_runs')
     .insert({ name: input.name, staging: batch, diff, source: input.source, created_by: input.actor })
@@ -130,21 +145,25 @@ export async function commitImport(sb: SupabaseClient, input: { runId: string; a
   if (error || !run) throw new Error('IMPORT_NOT_FOUND');
   if (run.status === 'committed') return run.report as Record<string, unknown>;
   const batch = run.staging as StagingBatch;
+  if (batch.errors?.length) throw new Error(`IMPORT_HAS_ERRORS: fix the ${batch.errors.length} error(s) in the workbook and upload it again`);
   const uploaded: string[] = [];
   try {
     if (input.zip && batch.images.length) {
       const settings = await loadImportSettings(sb);
       const files = readZip(input.zip, settings);
+      const done = new Map<string, string>();   // a photo used by several rows is stored once (ADDON-29)
       for (const img of batch.images) {
-        const bytes = files.get(img.file) ?? files.get([...files.keys()].find((k) => k.toLowerCase() === img.file.toLowerCase()) ?? '');
+        if (done.has(img.file)) { img.url = done.get(img.file); continue; }
+        const bytes = files.get(img.file);
         if (!bytes) continue;
-        const key = `import/${img.external_id}/${img.file}`;
-        const type = /\.png$/i.test(img.file) ? 'image/png' : /\.webp$/i.test(img.file) ? 'image/webp' : 'image/jpeg';
+        const key = `import/${batch.supplier.external_id}/${img.file}`;
+        const type = /\.png$/i.test(img.file) ? 'image/png' : /\.webp$/i.test(img.file) ? 'image/webp' : /\.avif$/i.test(img.file) ? 'image/avif' : 'image/jpeg';
         const up = await sb.storage.from('product-media').upload(key, bytes, { contentType: type, upsert: true });
         if (up.error) throw new Error(`image ${img.file}: ${up.error.message}`);
         uploaded.push(key);
         img.url = sb.storage.from('product-media').getPublicUrl(key).data.publicUrl;
         img.bytes = bytes.byteLength;
+        done.set(img.file, img.url);
       }
       await sb.from('import_runs').update({ staging: batch }).eq('id', input.runId);
     }

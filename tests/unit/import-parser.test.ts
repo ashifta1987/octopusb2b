@@ -81,6 +81,7 @@ describe('parseWorkbook — Bowijie source.xlsx matches the kit golden CSVs', as
     expect(batch.supplier.name_variants).toHaveLength(3);
     expect(batch.supplier.status).toBe('needs_identity_review');
     expect(batch.unmatched_images).toEqual([]);
+    expect(batch.errors).toEqual([]);
   });
 
   it('price rows equal supplier_product_prices.csv exactly', () => {

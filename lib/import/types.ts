@@ -54,7 +54,7 @@ export type StagedImage = { external_id: string; file: string; sort: number; rol
 export type ReviewKind = 'note' | 'outlier' | 'needs_quote' | 'in_development' | 'identity';
 export type StagedReview = { external_id: string; kind: ReviewKind; issue: string; evidence: string | null };
 
-export type NameVariant = { variant_name: string; variant_address: string | null; seen_in: string };
+export type NameVariant = { variant_name: string; variant_address: string | null; seen_in: string; is_canonical?: boolean };
 export type Contact = { name: string; role: string | null; phone: string | null; wechat: string | null; email: string | null; is_primary: boolean };
 
 export type StagedSupplier = {
@@ -83,9 +83,13 @@ export type StagingBatch = {
   valid_from: string;
   valid_to: string | null;
   warnings: string[];
+  /** blocking validation errors (ADDON-29): the run cannot be committed while any exist */
+  errors: ImportError[];
   unmatched_images: string[];
   missing_images: string[];
 };
+
+export type ImportError = { sheet: string; row: number | null; column: string | null; message: string };
 
 export type ImportOptions = {
   /** quote validity window written on every price row */

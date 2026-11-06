@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, PageHeader, EmptyState, StatusBadge, Table } from '@/components/ui';
 import { fmtDate } from '@/lib/format';
 import { ImportUploadForm } from './upload-form';
+import { TemplateCard } from './template-card';
 
 export const metadata = { title: 'Bulk import' };
 
@@ -17,6 +18,7 @@ export default async function ImportPage() {
     sb.from('import_runs').select('id, name, status, created_at, committed_at, diff, report').order('created_at', { ascending: false }).limit(30),
     sb.from('import_review_items').select('id', { count: 'exact', head: true }).in('status', ['open', 'held']),
   ]);
+  const { data: suppliers } = await sb.from('suppliers').select('id, code, legal_name, external_id').is('archived_at', null).order('code');
   const now = new Date();
   const firstOfMonth = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}-01`;
 
@@ -24,6 +26,9 @@ export default async function ImportPage() {
     <>
       <PageHeader title="Bulk import" subtitle="Load a supplier's products, tiered prices and photos from one workbook. You see every change before it is written; new products arrive as drafts."
         actions={openReview ? <Link href="/admin/import/review" className="btn btn-ghost">Review queue ({openReview})</Link> : undefined} />
+      <Card title="Download template" className="mb-6">
+        <TemplateCard suppliers={(suppliers ?? []) as { id: string; code: string | null; legal_name: string | null; external_id: string | null }[]} />
+      </Card>
       <Card title="New import" className="mb-6">
         <div className="px-6 pb-6"><ImportUploadForm defaultValidFrom={firstOfMonth} /></div>
       </Card>

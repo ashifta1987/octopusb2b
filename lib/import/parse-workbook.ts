@@ -2,7 +2,7 @@ import ExcelJS from 'exceljs';
 import { median, parsePriceOptions, toPriceMinor } from './parse-prices.ts';
 import { parseSpecs, splitSizeNotes } from './parse-specs.ts';
 import type {
-  Contact, ImportOptions, Incoterm, ListingStatus, NameVariant, StagedImage, StagedPrice, StagedProduct, StagedReview,
+  Contact, ImportError, ImportOptions, Incoterm, ListingStatus, NameVariant, StagedImage, StagedPrice, StagedProduct, StagedReview,
   StagedSupplier, StagingBatch, SupplierProductStatus,
 } from './types.ts';
 
@@ -15,6 +15,10 @@ import type {
  */
 
 type Cell = string | number | null;
+
+/** <country>-<province>-<supplier code>-<model|seq>, e.g. CN-GD-BWJ-F8 / CN-GD-BWJ-0010 (ADDON-29) */
+export const PRODUCT_ID_RE = /^[A-Z]{2}-[A-Z0-9]{2,3}-[A-Z0-9]{2,8}-[A-Z0-9][A-Z0-9-]{0,40}$/;
+export const IMAGE_EXT_RE = /\.(jpe?g|png|webp|avif)$/i;
 
 function cellText(v: ExcelJS.CellValue): Cell {
   if (v == null) return null;
@@ -48,7 +52,7 @@ function seenIn(label: string): string {
   return l.replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40) || 'unknown';
 }
 
-function parseSupplier(ws: ExcelJS.Worksheet | undefined, warnings: string[]): { supplier: StagedSupplier; exclusivityFlag: string | null } {
+function parseSupplier(ws: ExcelJS.Worksheet | undefined, warnings: string[], errors: ImportError[]): { supplier: StagedSupplier; exclusivityFlag: string | null } {
   const kv = new Map<string, Cell>();
   const variants: NameVariant[] = [];
   let section = '';
@@ -57,7 +61,16 @@ function parseSupplier(ws: ExcelJS.Worksheet | undefined, warnings: string[]): {
     const k = str(cellText(row.getCell(1).value));
     const v = cellText(row.getCell(2).value);
     if (!k) return;
-    if (v == null) { section = k.toUpperCase(); return; }
+    const c3 = str(cellText(row.getCell(3).value));
+    const c4 = str(cellText(row.getCell(4).value));
+    if (v == null && c3 == null) { section = k.toUpperCase(); return; }
+    // template form (ADDON-29): Variant name | Address | Seen in | Canonical
+    if (/NAMES IN CIRCULATION|NAME VARIANTS|COMPANY NAMES/.test(section) && (c3 != null || c4 != null)) {
+      if (/^variant name$/i.test(k)) return;
+      variants.push({ variant_name: k.replace(/\s+/g, ' ').trim(), variant_address: str(v), seen_in: c3 ?? 'unknown', is_canonical: /^(true|yes|1)$/i.test(c4 ?? '') });
+      return;
+    }
+    if (v == null) return;
     if (/NAMES IN CIRCULATION|NAME VARIANTS|COMPANY NAMES/.test(section) && !/^why/i.test(k)) {
       const [name, ...addr] = String(v).split(/\s+[—–]\s+/);
       // "Weite Shijia (深圳市维特世嘉科技有限公司)" → "Weite Shijia 深圳市维特世嘉科技有限公司"
@@ -73,8 +86,10 @@ function parseSupplier(ws: ExcelJS.Worksheet | undefined, warnings: string[]): {
     kv.set(k.toLowerCase(), v);
   });
   const get = (...keys: string[]) => { for (const k of keys) { const v = kv.get(k.toLowerCase()); if (v != null) return str(v); } return null; };
-  const external = get('Supplier ID', 'Supplier Id') ?? 'UNKNOWN-SUPPLIER';
-  if (external === 'UNKNOWN-SUPPLIER') warnings.push('Supplier sheet has no "Supplier ID" — using UNKNOWN-SUPPLIER');
+  const external = (get('Supplier ID', 'Supplier Id') ?? '').toUpperCase();
+  if (!external) errors.push({ sheet: 'Supplier', row: null, column: 'Supplier ID', message: 'The Supplier sheet has no Supplier ID (e.g. CN-GD-BWJ-0010).' });
+  else if (!PRODUCT_ID_RE.test(external)) errors.push({ sheet: 'Supplier', row: null, column: 'Supplier ID', message: `Supplier ID "${external}" is not in the format <country>-<province>-<supplier code>-<seq>, e.g. CN-GD-BWJ-0010.` });
+  void warnings;
   const contactRaw = get('Contact');
   const [contactName, ...roleParts] = (contactRaw ?? '').split(/,\s*/);
   const phone = get('Phone / WeChat', 'Phone', 'Mobile');
@@ -90,9 +105,9 @@ function parseSupplier(ws: ExcelJS.Worksheet | undefined, warnings: string[]): {
   return {
     exclusivityFlag,
     supplier: {
-      external_id: external,
+      external_id: external || 'UNKNOWN-SUPPLIER',
       manufacturer_code: get('Manufacturer code'),
-      legal_name: variants[0]?.variant_name ?? get('Legal name', 'Company') ?? external,
+      legal_name: (variants.filter((x) => x.is_canonical).length === 1 ? variants.find((x) => x.is_canonical)!.variant_name : variants[0]?.variant_name) ?? get('Legal name', 'Company') ?? (external || 'Unknown supplier'),
       country, province, city,
       handle: get('Handle'),
       status: distinctNames.size > 1 ? 'needs_identity_review' : 'ok',
@@ -118,7 +133,8 @@ export async function parseWorkbook(buffer: ArrayBuffer | Buffer, opts: ImportOp
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.load(buffer as ArrayBuffer);
   const warnings: string[] = [];
-  const { supplier, exclusivityFlag } = parseSupplier(wb.getWorksheet('Supplier'), warnings);
+  const errors: ImportError[] = [];
+  const { supplier, exclusivityFlag } = parseSupplier(wb.getWorksheet('Supplier'), warnings, errors);
   const validTo = (() => {
     if (!opts.validDays) return null;
     const d = new Date(`${opts.validFrom}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + opts.validDays - 1);
@@ -143,17 +159,26 @@ export async function parseWorkbook(buffer: ArrayBuffer | Buffer, opts: ImportOp
       selling: col('Selling points (supplier)', 'Selling points'), excl: col('Exclusive channels'), platform: col('Platform status'),
       notes: col('Notes / discrepancies', 'Why it is not listable yet', 'Notes'),
     };
-    const quoted = c.price > 0 || c.quote > 0;
+    // the "Not Quoted" sheet may carry the full 20 template columns but never has prices
+    const quoted = (c.price > 0 || c.quote > 0) && !/not\s*quoted/i.test(ws.name);
     const defaultInc = sheetIncoterm(ws.name);
     const sheetPrices: { external_id: string; price: number }[] = [];
 
     ws.eachRow((row, r) => {
       if (r === 1) return;
       const v = (i: number) => (i ? cellText(row.getCell(i).value) : null);
-      const id = str(v(c.id));
-      if (!id) return;
-      if (seen.has(id)) { warnings.push(`${ws.name} row ${r}: duplicate Product Id ${id} skipped`); return; }
+      const rawId = str(v(c.id));
+      const hasContent = row.values && (row.values as unknown[]).slice(1).some((x) => cellText(x as ExcelJS.CellValue) != null);
+      if (!rawId) {
+        if (hasContent) errors.push({ sheet: ws.name, row: r, column: 'Product Id', message: `${ws.name} row ${r}: Product Id is blank. Every row needs one (e.g. CN-GD-BWJ-F8) — it is the match key for updates.` });
+        return;
+      }
+      const id = rawId.toUpperCase();
+      if (!PRODUCT_ID_RE.test(id)) { errors.push({ sheet: ws.name, row: r, column: 'Product Id', message: `${ws.name} row ${r}: Product Id "${rawId}" is not in the format <country>-<province>-<supplier code>-<model>, e.g. CN-GD-BWJ-F8.` }); return; }
+      if (seen.has(id)) { errors.push({ sheet: ws.name, row: r, column: 'Product Id', message: `${ws.name} row ${r}: Product Id ${id} appears more than once in the workbook.` }); return; }
       seen.add(id);
+      if (c.model && !str(v(c.model))) errors.push({ sheet: ws.name, row: r, column: 'Factory model', message: `${ws.name} row ${r} (${id}): Factory model is required.` });
+      if (c.cat && !str(v(c.cat))) errors.push({ sheet: ws.name, row: r, column: 'Category', message: `${ws.name} row ${r} (${id}): Category is required.` });
       const notes = str(v(c.notes));
       const size = splitSizeNotes(str(v(c.size)));
       const model = str(v(c.model));
@@ -161,8 +186,10 @@ export async function parseWorkbook(buffer: ArrayBuffer | Buffer, opts: ImportOp
         ? parsePriceOptions(str(v(c.quote)), { priceColumn: num(v(c.price)), defaultIncoterm: defaultInc, defaultMoq: num(v(c.moq)) })
         : { rows: [], noPrice: true, warnings: [] as string[] };
       priceParse.warnings.forEach((w) => warnings.push(`${id}: ${w}`));
-      const inDev = /in development/i.test(`${model ?? ''} ${notes ?? ''}`);
-      const listing: ListingStatus = !quoted ? 'needs_quote' : inDev ? 'in_development' : priceParse.noPrice ? 'needs_quote' : 'draft';
+      const platform = str(v(c.platform))?.toLowerCase().replace(/\s+/g, '_') ?? '';
+      const inDev = /in development/i.test(`${model ?? ''} ${notes ?? ''}`) || platform === 'in_development';
+      const listing: ListingStatus = !quoted ? 'needs_quote' : inDev ? 'in_development' : priceParse.noPrice ? 'needs_quote'
+        : platform === 'needs_review' ? 'needs_review' : 'draft';
       const supStatus: SupplierProductStatus = !quoted ? 'needs_quote' : priceParse.noPrice ? 'no_price' : 'quoted';
       const moqs = priceParse.rows.map((p) => p.moq);
       products.push({
@@ -182,7 +209,11 @@ export async function parseWorkbook(buffer: ArrayBuffer | Buffer, opts: ImportOp
       }
       if (priceParse.rows.length) sheetPrices.push({ external_id: id, price: Math.min(...priceParse.rows.map((p) => p.price)) });
       const img = str(v(c.image));
-      if (img) images.push({ external_id: id, file: img, sort: 1, role: 'primary' });
+      if (img) {
+        if (/[\\/]/.test(img)) errors.push({ sheet: ws.name, row: r, column: 'Image file', message: `${ws.name} row ${r} (${id}): Image file "${img}" must be a file name, not a path (e.g. F8.jpg).` });
+        else if (!IMAGE_EXT_RE.test(img)) errors.push({ sheet: ws.name, row: r, column: 'Image file', message: `${ws.name} row ${r} (${id}): Image file "${img}" must be .jpg, .jpeg, .png, .webp or .avif.` });
+        else images.push({ external_id: id, file: img, sort: 1, role: 'primary', row: r, sheet: ws.name } as StagedImage & { row: number; sheet: string });
+      }
       if (notes && quoted) review.push({ external_id: id, kind: inDev ? 'in_development' : 'note', issue: notes, evidence: `${ws.name} sheet — Notes / discrepancies` });
     });
 
@@ -197,15 +228,32 @@ export async function parseWorkbook(buffer: ArrayBuffer | Buffer, opts: ImportOp
     }
   }
 
-  const available = opts.imageFiles ? new Set(opts.imageFiles.map((f) => f.split('/').pop()!.toLowerCase())) : null;
-  const referenced = new Set(images.map((i) => i.file.toLowerCase()));
-  const missing = available ? images.filter((i) => !available.has(i.file.toLowerCase())).map((i) => i.file) : [];
-  const unmatched = opts.imageFiles ? opts.imageFiles.map((f) => f.split('/').pop()!).filter((f) => f && !f.startsWith('.') && !referenced.has(f.toLowerCase())) : [];
-  if (missing.length) warnings.push(`${missing.length} image file(s) named in the workbook are not in the ZIP: ${missing.slice(0, 10).join(', ')}`);
+  // ADDON-29: every non-blank Image file must match a file in the ZIP exactly (including case)
+  const zipNames = opts.imageFiles ? opts.imageFiles.map((f) => f.split('/').pop()!).filter((f) => f && !f.startsWith('.')) : null;
+  const exact = zipNames ? new Set(zipNames) : null;
+  const lower = zipNames ? new Map(zipNames.map((f) => [f.toLowerCase(), f])) : null;
+  const missing: string[] = [];
+  if (exact && lower) {
+    for (const img of images as (StagedImage & { row: number; sheet: string })[]) {
+      if (exact.has(img.file)) continue;
+      const near = lower.get(img.file.toLowerCase());
+      errors.push({ sheet: img.sheet, row: img.row, column: 'Image file', message: near
+        ? `${img.sheet} row ${img.row} (${img.external_id}): Image file "${img.file}" does not match "${near}" in the ZIP — names must match exactly, including case.`
+        : `${img.sheet} row ${img.row} (${img.external_id}): Image file "${img.file}" is not in the ZIP.` });
+      missing.push(img.file);
+    }
+  }
+  const counts = new Map<string, string[]>();
+  images.forEach((i) => counts.set(i.file, [...(counts.get(i.file) ?? []), i.external_id]));
+  for (const [file, ids] of counts) if (ids.length > 1) warnings.push(`Image ${file} is used by ${ids.length} products (${ids.join(', ')}) — the same photo is linked to each.`);
+  const referenced = new Set(images.map((i) => i.file));
+  const unmatched = zipNames ? zipNames.filter((f) => !referenced.has(f)) : [];
+  const cleanImages = images
+    .filter((i) => !exact || exact.has(i.file))
+    .map(({ external_id, file, sort, role }) => ({ external_id, file, sort, role }));
 
   return {
-    supplier, products, prices,
-    images: available ? images.filter((i) => available.has(i.file.toLowerCase())) : images,
-    review, valid_from: opts.validFrom, valid_to: validTo, warnings, unmatched_images: unmatched, missing_images: missing,
+    supplier, products, prices, images: cleanImages,
+    review, valid_from: opts.validFrom, valid_to: validTo, warnings, errors, unmatched_images: unmatched, missing_images: missing,
   };
 }
