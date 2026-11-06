@@ -44,3 +44,7 @@ next-env.d.ts
 Octopus-B2B-Antigravity-Kit.zip
 docs/qa/2026-11-01-trace/state.json
 /backups/
+
+# Playwright output
+/test-results/
+/playwright-report/
