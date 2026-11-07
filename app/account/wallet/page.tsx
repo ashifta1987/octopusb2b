@@ -25,7 +25,7 @@ export default async function WalletPage() {
     getSettings(),
     getCompanyBankAccount('USD'),
     sb.rpc('my_wallet_summary'),
-    sb.from('wallet_topups').select('id, amount_cents, amount_received_cents, currency, method, reference, bank_ref, status, reject_reason, created_at, confirmed_at').eq('org_id', org.id).order('created_at', { ascending: false }).limit(25),
+    sb.from('wallet_topups').select('id, amount_cents, amount_received_cents, received_note, currency, method, reference, bank_ref, status, reject_reason, created_at, confirmed_at').eq('org_id', org.id).order('created_at', { ascending: false }).limit(25),
     sb.from('wallet_holds').select('id, amount_cents, service, ref_type, ref_id, status, captured_cents, created_at, closed_at').eq('org_id', org.id).order('created_at', { ascending: false }).limit(25),
     getOrgLedger(org.id, { account: 'wallet', currency: 'USD' }),
   ]);
@@ -87,8 +87,15 @@ export default async function WalletPage() {
             return (
               <tr key={t.id}>
                 <td className="td text-sm">{fmtDate(t.created_at as string, true)}</td>
-                <td className="td mono">{money(Number(t.amount_cents), 'USD')}</td>
-                <td className="td mono">{t.amount_received_cents != null ? money(Number(t.amount_received_cents), 'USD') : '—'}</td>
+                <td className="td mono whitespace-nowrap">{money(Number(t.amount_cents), 'USD')}</td>
+                <td className="td">
+                  <span className="mono whitespace-nowrap">{t.amount_received_cents != null ? money(Number(t.amount_received_cents), 'USD') : '—'}</span>
+                  {t.amount_received_cents != null && Number(t.amount_received_cents) !== Number(t.amount_cents) && (
+                    <div className="text-xs text-[#9A4A10] mt-0.5" data-testid="transfer-difference">
+                      {money(Math.abs(Number(t.amount_cents) - Number(t.amount_received_cents)), 'USD')} {Number(t.amount_received_cents) < Number(t.amount_cents) ? 'less' : 'more'} than claimed{t.received_note ? ` (${t.received_note})` : ''}
+                    </div>
+                  )}
+                </td>
                 <td className="td mono text-xs">{(t.bank_ref as string) ?? '—'}</td>
                 <td className="td"><StatusBadge status={t.status as string} tone={tone} label={label} />{t.reject_reason && <div className="text-xs text-bad mt-1">{t.reject_reason as string}</div>}</td>
               </tr>

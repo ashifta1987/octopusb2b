@@ -21,6 +21,7 @@ const as = async (sub) => {
 const service = async () => { await db.query(`select set_config('request.jwt.claims', '{"role":"service_role"}', true)`); await db.query('set local role service_role'); };
 const owner = () => db.query('reset role');
 const tryQ = async (sql, p) => { await db.query('savepoint t'); try { const r = await db.query(sql, p); await db.query('release savepoint t'); return r; } catch (e) { await db.query('rollback to savepoint t'); return e.message; } };
+// (hold descriptions use plain names: "Hold · Dropshipping order …")
 const user = async (email) => (await one(`insert into auth.users(id, email, aud, role, instance_id) values (gen_random_uuid(), $1, 'authenticated', 'authenticated', '00000000-0000-0000-0000-000000000000') returning id`, [email])).id;
 const env41 = (await one(`select value #>> '{}' v from site_settings where key = 'app_environment'`))?.v;
 if (env41 === 'production' && !process.env.ALLOW_PRODUCTION) { console.error('Refusing to run on production'); process.exit(1); }
@@ -102,7 +103,8 @@ try {
   const tp = (await one(`select submit_bank_transfer(100000, $1, 'TT-123') v`, [`${orgA.id}/slip.pdf`])).v;
   ok(/FORBIDDEN/.test(String(await tryQ(`select confirm_bank_transfer($1, 100000, 'X')`, [tp]))), 'a customer cannot confirm their own transfer');
   await owner(); await as(finU);
-  await db.query(`select confirm_bank_transfer($1, 99000, 'SCB-REF-1')`, [tp]);     // US$ 990 actually arrived (bank fee)
+  ok(/DIFFERENCE_REASON_REQUIRED/.test(String(await tryQ(`select confirm_bank_transfer($1, 99000, 'SCB-REF-1')`, [tp]))), 'a received amount that differs needs a reason');
+  await db.query(`select confirm_bank_transfer($1, 99000, 'SCB-REF-1', 'bank charges')`, [tp]);     // US$ 990 actually arrived (bank fee)
   const tp2 = await (async () => { await owner(); await as(custA); const v = (await one(`select submit_bank_transfer(5000, $1) v`, [`${orgA.id}/s2.png`])).v; await owner(); await as(finU); return v; })();
   ok(/REASON_REQUIRED/.test(String(await tryQ(`select reject_bank_transfer($1, ' ')`, [tp2]))), 'rejecting needs a reason');
   await db.query(`select reject_bank_transfer($1, 'Not on the statement')`, [tp2]);
@@ -111,6 +113,14 @@ try {
   ok(bal === 99000, `wallet is credited with the amount received, not claimed (${bal})`);
   const t1 = await one(`select status, amount_received_cents, receipt_id from wallet_topups where id = $1`, [tp]);
   ok(t1.status === 'credited' && Number(t1.amount_received_cents) === 99000 && t1.receipt_id, 'transfer confirmed with a receipt');
+  ok((await one(`select received_note from wallet_topups where id = $1`, [tp])).received_note === 'bank charges', 'the reason for the difference is saved');
+  // a service proforma posts a receivable (Orders) debit
+  await service();
+  const pi = (await one(`select issue_service_proforma($1, 'brand', 'project', 'MB-T41', 'Test', '[{"description":"Deposit","amount_cents":120000}]'::jsonb) v`, [orgA.id])).v;
+  await owner();
+  const ar = Number((await one(`select coalesce(sum(debit_cents - credit_cents), 0) n from ledger_entries le join ledger_accounts la on la.id = le.account_id where la.code like 'ar:%' and le.org_id = $1`, [orgA.id])).n);
+  ok(ar === 120000, `issuing a service proforma posts a receivable debit (${ar})`);
+  ok((await one(`select count(*) n from invoice_lines where document_id = $1`, [pi])).n === '1', 'proforma lines saved');
   ok((await one(`select status, reject_reason from wallet_topups where id = $1`, [tp2])).reject_reason === 'Not on the statement', 'rejected transfer keeps the reason');
 
   // holds
@@ -126,6 +136,7 @@ try {
   const h2 = (await one(`select place_hold($1, 20000, 'warehouse', 'charge', 'T41-2') v`, [orgA.id])).v;
   await owner();
   ok(h1 === h1b, 'placing the same hold twice is idempotent');
+  ok((await one(`select memo from journals where ref_id = $1 and ref_type = 'wallet_hold'`, [h1])).memo === 'Hold · Dropshipping order T41-1', 'hold description uses plain names');
   ok(Number((await one(`select wallet_balance($1, 'USD') b`, [orgA.id])).b) === 49000, 'holds reduce the available balance at once');
   await service();
   await db.query(`select capture_hold($1, 'dropship', 25000)`, [h1]);                 // partial capture: 5,000 goes back

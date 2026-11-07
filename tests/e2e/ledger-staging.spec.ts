@@ -58,33 +58,58 @@ test('wallet card = newest running balance; STAGING badge; no duplicate tab pref
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/wallet-desktop.png`, fullPage: true });
 });
 
-test('ledger: last 90 days filled in and in the heading; only USD offered; CSV and PDF have the same rows', async ({ page }) => {
+test('ledger: last 90 days in the heading; only USD; grouped by account; Totals + closing per account; CSV = PDF rows', async ({ page }) => {
   await login(page, '/account/ledger');
   const from = await page.locator('#from').inputValue();
   const to = await page.locator('#to').inputValue();
-  expect(from).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   expect(Math.round((Date.parse(to) - Date.parse(from)) / 864e5)).toBe(89);
   await expect(page.getByTestId('ledger-period')).toBeVisible();
   await expect(page.locator('#currency option')).toHaveText(['All currencies', 'USD (US$)']);
   await expect(page.locator('h1:visible')).toContainText('Ledger and statements');
 
-  // running balance of the last wallet row equals the wallet card
-  const walletRows = page.locator('tbody tr').filter({ has: page.getByText('Wallet', { exact: true }) });
-  expect(usd(await walletRows.last().locator('td').last().innerText())).toBe(1695);
+  // groups in a fixed order, each with its own running balance
+  const t = page.getByTestId('ledger-USD');
+  expect(await t.locator('tbody[data-account]').evaluateAll((els) => els.map((e) => e.getAttribute('data-account')))).toEqual(['receivable', 'wallet', 'hold']);
+  const lastBal = async (k: string) => usd(await t.locator(`tbody[data-account="${k}"] tr[data-row="entry"]`).last().locator('td').last().innerText());
+  expect(await lastBal('receivable')).toBe(1200);
+  expect(await lastBal('wallet')).toBe(1695);
+  expect(await lastBal('hold')).toBe(250);
+  await expect(t.locator('tfoot tr[data-row="totals"]')).toContainText('Totals');
+  expect(await t.locator('tfoot tr[data-row="closing-summary"]').allInnerTexts()).toEqual([
+    expect.stringMatching(/Orders due\s+US\$ 1,200\.00/), expect.stringMatching(/Wallet available\s+US\$ 1,695\.00/), expect.stringMatching(/On hold\s+US\$ 250\.00/),
+  ]);
+  await expect(t).toContainText('Hold · Dropshipping order SO-TEST-1001');
+  await expect(t).toContainText('Hold · 3PL warehouse charge WH-TEST-OCT');
+  // amounts and journal numbers never wrap
+  const ws = await t.locator('tr[data-row="entry"] td').evaluateAll((tds) => tds.filter((_, i) => i % 6 !== 2).map((td) => getComputedStyle(td).whiteSpace));
+  expect(new Set(ws)).toEqual(new Set(['nowrap']));
+  // cards: Balance due includes the proforma
+  await expect(page.getByTestId('balance-due')).toContainText('US$ 1,200.00');
+  await expect(page.getByTestId('due-now')).toContainText('US$ 1,200.00');
 
-  // CSV rows → [journal, debit, credit, balance] in cents
+  // CSV rows vs printable statement rows → [journal, debit, credit, balance] in cents
   const cents = (v: string) => (v ? Math.round(Number(v.replace(/−/g, '-').replace(/[^\d.-]/g, '')) * 100) : 0);
-  const csvHref = await page.getByTestId('export-csv').getAttribute('href');
-  const csv = await (await page.request.get(csvHref!)).text();
+  const csv = await (await page.request.get((await page.getByTestId('export-csv').getAttribute('href'))!)).text();
   const csvRows = csv.split(/\r\n/).map((l) => l.split('","').map((c) => c.replace(/^\uFEFF?"|"$/g, '')))
     .filter((c) => /^\d{4}-\d{2}-\d{2}$/.test(c[0] ?? '')).map((c) => [c[1], cents(c[5]), cents(c[6]), cents(c[7])].join('|'));
-  // printable statement (PDF) rows
-  const pdfHref = await page.getByTestId('export-pdf').getAttribute('href');
-  await page.goto(pdfHref!);
-  const cells = await page.locator('.statement tbody tr').evaluateAll((trs) => trs.map((tr) => [...tr.querySelectorAll('td')].map((td) => (td.textContent ?? '').trim())));
-  const pdfRows = cells.filter((t) => t.length === 8).map((t) => [t[1], cents(t[5]), cents(t[6]), cents(t[7])].join('|'));
-  expect(csvRows.length).toBe(8); // 2 top-ups, 2 holds (wallet + hold account each), 1 capture (hold account), 1 refund
+  await page.goto((await page.getByTestId('export-pdf').getAttribute('href'))!);
+  const cells = await page.locator('.statement tr[data-row="entry"]').evaluateAll((trs) => trs.map((tr) => [...tr.querySelectorAll('td')].map((td) => (td.textContent ?? '').trim())));
+  const pdfRows = cells.map((c) => [c[1], cents(c[3]), cents(c[4]), cents(c[5])].join('|'));
+  expect(csvRows.length).toBe(9); // proforma (Orders) + 2 top-ups, 2 holds, refund (Wallet) + 2 holds, 1 charge (On hold)
   expect(pdfRows).toEqual(csvRows);
+});
+
+test('invoices: "For" filled; awaiting payment total = ledger Due now; wallet shows the received difference', async ({ page }) => {
+  await login(page, '/account/invoices');
+  const row = page.locator('tr').filter({ hasText: 'PI-TEST-0001' });
+  await expect(row).toContainText('Make My Brand · MB-TEST-0001');
+  const awaiting = usd(await page.getByTestId('awaiting-total').locator('[data-currency="USD"]').innerText());
+  await page.goto('/account/ledger');
+  const dueNow = usd(await page.getByTestId('due-now').innerText()); // label and hint have no digits
+  expect(awaiting).toBe(1200);
+  expect(dueNow).toBe(awaiting);
+  await page.goto('/account/wallet');
+  await expect(page.getByTestId('transfer-difference')).toHaveText('US$ 5.00 less than claimed (bank charges)');
 });
 
 test('an empty period disables both exports', async ({ page }) => {
@@ -97,6 +122,9 @@ test('screenshots: ledger desktop, wallet and ledger on a phone', async ({ page,
   await login(page, '/account/ledger');
   await expect(page.getByTestId('ledger-period')).toBeVisible();
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/ledger-desktop.png`, fullPage: true });
+  await page.goto('/account/invoices');
+  await expect(page.getByTestId('awaiting-total')).toBeVisible();
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/invoices-desktop.png`, fullPage: true });
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const m = await ctx.newPage();
   await login(m, '/account/wallet');
@@ -105,5 +133,8 @@ test('screenshots: ledger desktop, wallet and ledger on a phone', async ({ page,
   await m.goto('/account/ledger');
   await expect(m.getByTestId('ledger-period')).toBeVisible();
   if (SHOTS) await m.screenshot({ path: `${SHOTS}/ledger-phone.png`, fullPage: true });
+  await m.goto('/account/invoices');
+  await expect(m.getByTestId('awaiting-total')).toBeVisible();
+  if (SHOTS) await m.screenshot({ path: `${SHOTS}/invoices-phone.png`, fullPage: true });
   await ctx.close();
 });

@@ -93,6 +93,7 @@ export function mapDbError(e: { message?: string } | null | undefined): string {
     INSUFFICIENT_FUNDS: 'Not enough in the wallet. Add funds by bank transfer and try again.',
     SLIP_REQUIRED: 'Attach the transfer slip (PDF, JPG or PNG) before sending.',
     BANK_REF_REQUIRED: 'Enter the bank reference from the statement.',
+    DIFFERENCE_REASON_REQUIRED: 'The amount received differs from the claim: add the reason (e.g. bank charges).',
     REASON_REQUIRED: 'Add a reason.',
     NOTE_REQUIRED: 'Add a note explaining the decision.',
     ALREADY_DECIDED: 'This approval was already decided.',

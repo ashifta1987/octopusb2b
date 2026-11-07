@@ -79,10 +79,13 @@ export async function confirmTransfer(id: string, fd: FormData): Promise<Result>
   if (!(await staff())) return fail('Please sign in again.');
   const received = dollars(fd.get('received'));
   const bankRef = String(fd.get('bank_ref') ?? '').trim();
+  const note = String(fd.get('note') ?? '').trim();
+  const claimed = Number(fd.get('claimed') ?? 0);
   if (received == null || received <= 0) return fail('Enter the amount that actually arrived, in US dollars.');
   if (!bankRef) return fail('Enter the bank reference from the statement.');
+  if (received !== claimed && !note) return fail('The amount received differs from the claim: add the reason (e.g. bank charges). The customer sees it.');
   const sb = await createClient();
-  const { error } = await sb.rpc('confirm_bank_transfer', { p_topup: id, p_amount_received_cents: received, p_bank_ref: bankRef });
+  const { error } = await sb.rpc('confirm_bank_transfer', { p_topup: id, p_amount_received_cents: received, p_bank_ref: bankRef, p_note: note || null });
   if (error) return err(error);
   revalidatePath('/admin/finance/transfers'); revalidatePath('/admin');
   return ok(undefined, 'Confirmed. The wallet is credited and a receipt was issued.');

@@ -5,9 +5,11 @@ import { requireCustomer } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { getSiteContent } from '@/lib/content';
 import { PageHeader, Card, Stat, StatusBadge, EmptyState, Notice, Money } from '@/components/ui';
-import { fmtDate, money, humanize, asCurrency, CURRENCIES, CURRENCY_PREFIX, type Currency } from '@/lib/format';
+import { fmtDate, money, asCurrency, CURRENCIES, CURRENCY_PREFIX, type Currency } from '@/lib/format';
 import { getSettings, latestTermsId, supplierMap } from '@/components/account/data';
-import { getOrgLedger, parseRange, balOf } from '@/components/account/ledger-data';
+import { getOrgLedger, parseRange, balOf, ledgerGroups } from '@/components/account/ledger-data';
+import { getAmountsDue } from '@/lib/core/amounts-due';
+import { LedgerTable } from '@/components/account/ledger-table';
 import { ApproveQuoteButton } from '@/components/account/approve-quote';
 import { approveQuote } from '../rfqs/actions';
 
@@ -32,11 +34,13 @@ async function LedgerContent({ searchParams }: { searchParams: Promise<{ from?: 
   if (!s.org) return <Notice tone="amber">Complete your company profile first.</Notice>;
   const range = parseRange(await searchParams);
   const sb = await createClient();
-  const [ledger, content, { data: payments }, { data: openOrders }, { data: quote }, settings, terms, { data: platform }] = await Promise.all([
+  const [ledger, full, due, content, { data: payments }, { data: quote }, settings, terms, { data: platform }] = await Promise.all([
     getOrgLedger(s.org.id, range),
+    // the summary cards always use every account, whatever the account filter
+    range.account === 'all' ? Promise.resolve(null) : getOrgLedger(s.org.id, { ...range, account: 'all' }),
+    getAmountsDue(s.org.id),
     getSiteContent(),
     sb.from('payments').select('amount_cents, currency, confirmed_at, status').eq('org_id', s.org.id).eq('status', 'confirmed'),
-    sb.from('orders').select('code, status, total_cents, paid_cents, deposit_cents, currency').eq('org_id', s.org.id).not('status', 'in', '(cancelled,closed)'),
     sb.from('quotes').select('id, code, supplier_id, unit_price_cents, quantity, incoterm, lead_time_days, shipping_cents, currency, valid_until, rfqs!inner(code, title, unit, org_id)').in('status', ['sent', 'viewed']).eq('rfqs.org_id', s.org.id).gt('valid_until', new Date().toISOString()).order('unit_price_cents').limit(1).maybeSingle(),
     getSettings(),
     latestTermsId(),
@@ -48,14 +52,11 @@ async function LedgerContent({ searchParams }: { searchParams: Promise<{ from?: 
   const toTs = range.to ? new Date(range.to + 'T23:59:59Z') : null;
   const periodPayments = (payments ?? []).filter((p) => { const t = new Date(p.confirmed_at as string); return (!fromTs || t >= fromTs) && (!toTs || t <= toTs) && curFilter(p.currency as string); });
   const paidPeriod = perCurrency(periodPayments, (p) => p.currency as string, (p) => Number(p.amount_cents));
-  const balanceDue = Object.fromEntries(ledger.currencies.map((c) => [c, balOf(ledger.closing, c).receivable])) as Partial<Record<Currency, number>>;
-  const walletBal = Object.fromEntries(ledger.currencies.map((c) => [c, balOf(ledger.closing, c).wallet])) as Partial<Record<Currency, number>>;
-  const dueNowSum = perCurrency((openOrders ?? []).filter((o) => curFilter(o.currency as string)), (o) => o.currency as string, (o) => {
-    const paid = Number(o.paid_cents);
-    if (['pi_issued', 'deposit_pending'].includes(o.status as string)) return Math.max(0, Number(o.deposit_cents) - paid);
-    if (o.status === 'balance_pending') return Math.max(0, Number(o.total_cents) - paid);
-    return 0;
-  });
+  const all = full ?? ledger;
+  const balanceDue = Object.fromEntries(all.currencies.map((c) => [c, balOf(all.closing, c).receivable])) as Partial<Record<Currency, number>>;
+  const walletBal = Object.fromEntries(all.currencies.map((c) => [c, balOf(all.closing, c).wallet])) as Partial<Record<Currency, number>>;
+  // one definition with the Invoices page "Awaiting payment" total: order deposits/balances due + service proformas awaiting payment
+  const dueNowSum = Object.fromEntries(Object.entries(due.byCurrency).filter(([c]) => curFilter(c))) as Partial<Record<Currency, number>>;
   const anyDue = Object.values(dueNowSum).some((v) => !!v);
   const qSup = quote ? (await supplierMap([quote.supplier_id as string])).get(quote.supplier_id as string) : undefined;
   const qRfq = quote?.rfqs as unknown as { code: string; title: string; unit: string } | undefined;
@@ -65,8 +66,6 @@ async function LedgerContent({ searchParams }: { searchParams: Promise<{ from?: 
   const qs = new URLSearchParams(Object.entries({
     from: range.from, to: range.to, account: range.account === 'all' ? undefined : range.account, currency: range.currency === 'all' ? undefined : range.currency,
   }).filter(([, v]) => v) as [string, string][]).toString();
-  const showWallet = range.account !== 'receivable';
-  const showAr = range.account !== 'wallet';
   const sections = ledger.currencies.length ? ledger.currencies : [range.currency === 'all' ? platformCur : range.currency];
 
   return (
@@ -80,7 +79,7 @@ async function LedgerContent({ searchParams }: { searchParams: Promise<{ from?: 
         <div>
           <label htmlFor="account" className="label">Account</label>
           <select id="account" name="account" className="input" defaultValue={range.account}>
-            <option value="all">All accounts</option><option value="receivable">Orders (receivable)</option><option value="wallet">Wallet</option>
+            <option value="all">All accounts</option><option value="receivable">Orders</option><option value="wallet">Wallet</option><option value="hold">Customer funds on hold</option>
           </select>
         </div>
         <div>
@@ -107,8 +106,8 @@ async function LedgerContent({ searchParams }: { searchParams: Promise<{ from?: 
       </form>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-        <Stat label="Balance due" value={<MultiMoney values={balanceDue} fallback={platformCur} />} hint="Order value not yet paid" />
-        <Stat label="Due now" value={<MultiMoney values={dueNowSum} fallback={platformCur} />} hint="Deposits and issued balance invoices" hintTone={anyDue ? 'warn' : 'ok'} />
+        <div data-testid="balance-due"><Stat label="Balance due" value={<MultiMoney values={balanceDue} fallback={platformCur} />} hint="Invoiced and not yet paid" /></div>
+        <div data-testid="due-now"><Stat label="Due now" value={<MultiMoney values={dueNowSum} fallback={platformCur} />} hint="Deposits, balances and proformas awaiting payment" hintTone={anyDue ? 'warn' : 'ok'} /></div>
         <Stat label="Wallet balance" value={<MultiMoney values={walletBal} fallback={platformCur} />} hint={<Link href="/account/wallet" className="underline">Open wallet</Link>} />
         <Stat label={range.from || range.to ? 'Paid this period' : 'Paid to date'} value={<MultiMoney values={paidPeriod} fallback={platformCur} />} hint={`${periodPayments.length} order payments · wallet top-ups are in the ledger below`} />
       </div>
@@ -131,63 +130,14 @@ async function LedgerContent({ searchParams }: { searchParams: Promise<{ from?: 
         </Card>
       )}
 
-      {sections.map((cur) => {
-        const rows = ledger.rows.filter((r) => r.currency === cur);
-        const opening = balOf(ledger.opening, cur);
-        const closing = balOf(ledger.closing, cur);
-        const totals = ledger.totals[cur] ?? { debit: 0, credit: 0 };
-        return (
-          <Card key={cur} className="mb-6 overflow-hidden" title={`Account ledger · ${cur} (${CURRENCY_PREFIX[cur]})`}
-            action={<span className="text-sm text-muted">Debits increase what you owe on orders; wallet credits are top-ups and refunds.</span>}>
-            {rows.length === 0 && !opening.receivable && !opening.wallet ? (
-              <EmptyState title={`No ${cur} ledger entries for this period`} body="Entries appear when a proforma invoice is issued, a payment is matched or your wallet is used." />
-            ) : (
-              <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable table">
-                <table className="w-full border-collapse">
-                  <caption className="sr-only">Ledger entries in {cur}</caption>
-                  <thead><tr>{['Date', 'Journal', 'Description', 'Account', 'Currency', 'Debit', 'Credit', 'Balance'].map((h, i) => <th key={h} className={`th ${i >= 5 ? 'text-right' : ''}`}>{h}</th>)}</tr></thead>
-                  <tbody>
-                    <tr className="bg-surface">
-                      <td className="td text-sm">{range.from ? fmtDate(range.from) : '—'}</td>
-                      <td className="td font-semibold" colSpan={3}>Opening balance</td>
-                      <td className="td mono text-xs">{cur}</td>
-                      <td className="td" /><td className="td" />
-                      <td className="td text-right mono text-sm font-semibold">
-                        {showAr && <div>Orders {money(opening.receivable, cur)}</div>}
-                        {showWallet && <div className="text-muted">Wallet {money(opening.wallet, cur)}</div>}
-                      </td>
-                    </tr>
-                    {rows.map((r) => (
-                      <tr key={r.id}>
-                        <td className="td text-sm whitespace-nowrap">{fmtDate(r.at)}</td>
-                        <td className="td mono text-xs">{r.journal}</td>
-                        <td className="td text-sm">{r.memo}</td>
-                        <td className="td"><StatusBadge status={r.account} tone={r.account === 'wallet' ? 'blue' : 'gray'} label={r.account === 'wallet' ? 'Wallet' : r.account === 'receivable' ? 'Orders' : humanize(r.accountName)} /></td>
-                        <td className="td mono text-xs">{r.currency}</td>
-                        <td className="td text-right mono text-sm">{r.debit ? money(r.debit, r.currency) : ''}</td>
-                        <td className="td text-right mono text-sm text-ok">{r.credit ? money(r.credit, r.currency) : ''}</td>
-                        <td className="td text-right mono text-sm font-semibold">{money(r.balance, r.currency)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr className="bg-navy text-white">
-                      <td className="px-4 py-3 font-semibold" colSpan={4}>Closing balance</td>
-                      <td className="px-4 py-3 mono text-xs">{cur}</td>
-                      <td className="px-4 py-3 text-right mono text-sm">{money(totals.debit, cur)}</td>
-                      <td className="px-4 py-3 text-right mono text-sm">{money(totals.credit, cur)}</td>
-                      <td className="px-4 py-3 text-right mono text-sm font-semibold">
-                        {showAr && <div>Orders due {money(closing.receivable, cur)}</div>}
-                        {showWallet && <div className="text-white/80">Wallet {money(closing.wallet, cur)}</div>}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            )}
-          </Card>
-        );
-      })}
+      {sections.map((cur) => (
+        <Card key={cur} className="mb-6 overflow-hidden" title={`Account ledger · ${cur} (${CURRENCY_PREFIX[cur]})`}
+          action={<span className="text-sm text-muted">Each account has its own opening, running and closing balance.</span>}>
+          {ledgerGroups(ledger, cur).length === 0 ? (
+            <EmptyState title={`No ${cur} ledger entries for this period`} body="Entries appear when an invoice is issued, a payment or transfer is confirmed, or money is held for work." />
+          ) : <LedgerTable groups={ledgerGroups(ledger, cur)} cur={cur} from={range.from} totals={ledger.totals[cur] ?? { debit: 0, credit: 0 }} />}
+        </Card>
+      ))}
 
     </>
   );
