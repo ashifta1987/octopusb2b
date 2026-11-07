@@ -9,7 +9,7 @@ export const isRequestType = (t: string): t is RequestType => (REQUEST_TYPES as 
 export const SERVICE_CODE: Record<RequestType, string> = { sourcing: 'rfq', '3pl': '3pl', dropship: 'dropship', sample: 'sample', qc: 'qc', certification: 'certification' };
 
 export type Field = {
-  name: string; label: string; kind: 'text' | 'textarea' | 'int' | 'money' | 'select' | 'date' | 'country';
+  name: string; label: string; kind: 'text' | 'textarea' | 'int' | 'money' | 'select' | 'date' | 'country' | 'warehouse';
   required?: boolean; placeholder?: string; options?: string[]; full?: boolean; max?: number; hint?: string;
 };
 export type Section = { title: string; fields: Field[] };
@@ -34,7 +34,9 @@ export const REQUEST_FIELDS: Record<RequestType, Section[]> = {
     title: 'Fulfillment needs',
     fields: [
       { name: 'product', label: 'What will we store?', kind: 'text', required: true, full: true, placeholder: 'Products, SKUs, carton sizes' },
-      { name: 'warehouse_country', label: 'Warehouse country', kind: 'country', required: true },
+      // ADDON-44-F board 25: only real warehouses from settings (radio cards) + "Not listed? Ask us" → country
+      { name: 'warehouse', label: 'Warehouse', kind: 'warehouse', required: true, full: true },
+      { name: 'warehouse_country', label: 'Which country do you need?', kind: 'country' },
       { name: 'monthly_orders', label: 'Orders per month', kind: 'int', placeholder: 'e.g. 1500' },
       { name: 'storage_type', label: 'Storage type', kind: 'select', required: true, options: ['Standard', 'Fragile', 'Hazardous', 'Temperature-controlled'] },
       { name: 'platforms', label: 'Sales channels', kind: 'text', placeholder: 'Shopify, WooCommerce or a sheet' },
@@ -48,7 +50,8 @@ export const REQUEST_FIELDS: Record<RequestType, Section[]> = {
       { name: 'target_markets', label: 'Target markets', kind: 'text', required: true, placeholder: 'e.g. US, Germany, UAE' },
       { name: 'store_platform', label: 'Store platform', kind: 'select', required: true, options: ['Shopify', 'WooCommerce', 'Upload a sheet'] },
       { name: 'monthly_orders', label: 'Expected orders per month', kind: 'int' },
-      { name: 'branding', label: 'Branding', kind: 'select', options: ['Standard packaging', 'White label', 'Custom packaging and inserts'] },
+      // ADDON-44-F: branding moved to the Make My Brand request; dropshipping keeps only the packing slip
+      { name: 'packing_slip', label: 'Your packing slip', kind: 'select', options: ['Your store name and logo', 'Your store name only', 'No packing slip'], hint: 'Want your logo on the product itself? Start a Make My Brand request.' },
       notes,
     ],
   }],
@@ -99,6 +102,8 @@ function fieldSchema(f: Field) {
       return req(z.string().trim()).refine((v) => v === '' || !Number.isNaN(Date.parse(v)), 'Enter a valid date');
     case 'country':
       return req(z.string().trim()).refine((v) => v === '' || v in COUNTRY_NAMES, 'Choose a country');
+    case 'warehouse':
+      return req(z.string().trim()).refine((v) => v === '' || /^[A-Za-z0-9_-]{1,40}$/.test(v), 'Choose a warehouse');
     case 'select':
       return req(z.string().trim()).refine((v) => v === '' || (f.options ?? []).includes(v), 'Choose an option');
     case 'textarea':
@@ -111,6 +116,9 @@ function fieldSchema(f: Field) {
 export function requestSchema(type: RequestType) {
   const shape: Record<string, z.ZodType<string, string>> = {};
   REQUEST_FIELDS[type].forEach((s) => s.fields.forEach((f) => (shape[f.name] = fieldSchema(f))));
-  return z.object(shape);
+  return z.object(shape).superRefine((v, ctx) => {
+    // "Not listed? Ask us" needs the country the customer wants
+    if (v.warehouse === 'other' && !v.warehouse_country) ctx.addIssue({ code: 'custom', path: ['warehouse_country'], message: 'Choose the country you need' });
+  });
 }
 export type RequestValues = Record<string, string>;

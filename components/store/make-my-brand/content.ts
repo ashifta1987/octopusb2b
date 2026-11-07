@@ -11,8 +11,8 @@ import type { IconName, Step } from '@/components/ds';
 
 type Settings = Record<string, unknown>;
 
-/** Where "Start a brand project" goes. The /request/brand wizard comes in ADDON-44-F; until then the account Start page. */
-export const BRAND_START_HREF = '/account/brand';
+/** Where "Start a brand project" goes (ADDON-44-F wizard). */
+export const BRAND_START_HREF = '/request/brand';
 export const BRAND_PAGE_HREF = '/make-my-brand';
 
 export const MMB_STEPS: Step[] = [

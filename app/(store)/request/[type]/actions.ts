@@ -41,6 +41,8 @@ export async function submitRequest(type: string, values: RequestValues, product
   }
 
   const clean = Object.fromEntries(Object.entries(v).filter(([, x]) => x !== ''));
+  // ADDON-44-F: a chosen warehouse makes the (hidden) country field meaningless — keep it only for "Not listed? Ask us"
+  if (clean.warehouse && clean.warehouse !== 'other') delete clean.warehouse_country;
   const { data: svcId, error } = await sb.rpc('request_service', {
     p_service: SERVICE_CODE[type],
     p_details: clean,

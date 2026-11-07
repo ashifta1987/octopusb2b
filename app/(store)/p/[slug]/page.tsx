@@ -5,9 +5,8 @@ import { notFound } from 'next/navigation';
 import { categoryPath, block } from '@/lib/content';
 import { getStoreContent } from '@/components/store/currency';
 import { money, fmtDate, COUNTRY_NAMES } from '@/lib/format';
-import { SupplierCode, StatusBadge } from '@/components/ui';
-import { VerifiedBadge } from '@/components/ds';
-import { getProduct, getRecommendations, getServices } from '@/components/store/data';
+import { VerifiedBadge, ServiceChoiceCard, Icon } from '@/components/ds';
+import { getProduct, getRecommendations, getServices, getMoreFromFactory, type PublicSupplier } from '@/components/store/data';
 import { ProductGrid, GridSkeleton, unitOne, fmtQty } from '@/components/store/product-card';
 import { PriceCalculator } from '@/components/store/price-calculator';
 import { cartonQty } from '@/lib/qty';
@@ -41,7 +40,11 @@ export default function ProductPage({ params }: { params: Params }) {
   );
 }
 
-const SERVICE_ORDER = ['sample', 'qc', 'certification', '3pl', 'dropship'] as const;
+/** "Octopus verified factory · Guangdong" — the public never sees the supplier code or name (ADDON-44 rule 4). */
+function factoryLine(s: PublicSupplier) {
+  const where = s.province || (s.country ? (COUNTRY_NAMES[s.country] ?? s.country) : null);
+  return [s.verified ? 'Octopus verified factory' : 'Factory', where].filter(Boolean).join(' · ');
+}
 const SERVICE_CTA: Record<string, string> = {
   sourcing: 'Request quote', sample: 'Request sample', qc: 'Book QC inspection', certification: 'Request certification', '3pl': 'Request 3PL', dropship: 'Request dropship',
 };
@@ -50,7 +53,8 @@ async function Content({ params }: { params: Params }) {
   const { slug } = await params;
   const p = await getProduct(slug);
   if (!p) notFound();
-  const [{ categories, company, blocks }, services, recs] = await Promise.all([getStoreContent(), getServices(), getRecommendations(p.id, p.category_id)]);
+  const [{ categories, company, blocks }, services, recs, more] = await Promise.all([getStoreContent(), getServices(), getRecommendations(p.id, p.category_id), p.supplier_id ? getMoreFromFactory(p.id, p.supplier_id) : Promise.resolve([])]);
+  const verified = !!p.supplier?.verified;
   const path = categoryPath(categories, p.category_id);
   const crumbs = [
     { name: 'Home', href: '/' },
@@ -63,7 +67,6 @@ async function Content({ params }: { params: Params }) {
   const certTags = p.tags.filter((t) => t.kind === 'certification');
   const origin = p.origin_country ? (COUNTRY_NAMES[p.origin_country] ?? p.origin_country) : null;
   const prices = p.tiers.map((t) => t.unit_price_cents);
-  const steps = parts(blocks, 'product.services.steps', 'Source|Check quality|Store or dropship|Sell');
   const [shipT, shipA, shipB] = parts(blocks, 'product.shipping', 'Shipping and customs|Quotes include Incoterm, port and lead time.|');
   const images = p.media.length ? p.media : p.image_url ? [{ url: p.image_url, alt: p.title }] : [];
 
@@ -120,11 +123,11 @@ async function Content({ params }: { params: Params }) {
           {p.octopus_dropship && <span className="inline-flex rounded-full bg-blue-soft text-[#1E4F9C] text-[12px] font-semibold px-2.5 py-1">Available for dropshipping</span>}
           {p.ready_to_ship && <span className="inline-flex ml-2 rounded-full bg-[#E3F5EA] text-[#156B3A] text-[12px] font-semibold px-2.5 py-1">Ready to ship</span>}
           <h1 className="text-[30px] sm:text-[36px] font-extrabold leading-[1.12]">{p.title}</h1>
+          {/* ADDON-44-F board 24: verified badge + factory line, never the supplier code */}
           {p.supplier && (
-            <div className="flex flex-wrap items-center gap-3">
-              <SupplierCode code={p.supplier.code} country={p.supplier.country} verified={p.supplier.verified} className="!text-[14px] !text-navy font-semibold" />
-              {p.supplier.verified && <StatusBadge status="verified" />}
-              <span className="text-[13px] text-muted">{[p.supplier.supplier_type, p.supplier.country && (COUNTRY_NAMES[p.supplier.country] ?? p.supplier.country)].filter(Boolean).join(' · ')}</span>
+            <div className="space-y-1.5" data-testid="factory-line">
+              <VerifiedBadge verified={p.supplier.verified} explain={p.supplier.verified ? 'Octopus checked this factory: licence, site visit, QC record' : undefined} />
+              <div className="text-[13.5px] text-body-2 flex items-center gap-1.5"><Icon name="warehouse" size={16} className="text-muted" />{factoryLine(p.supplier)}</div>
             </div>
           )}
           {certTags.length > 0 && (
@@ -146,46 +149,53 @@ async function Content({ params }: { params: Params }) {
         </div>
       </div>
 
-      {/* Services row */}
-      <section className="card p-6 sm:p-8 mt-8" aria-labelledby="svc-h">
-        <div className="flex flex-wrap justify-between items-end gap-4">
-          <div>
-            <div className="eyebrow">{block(blocks, 'product.services.eyebrow', 'Services for this product')}</div>
-            <h2 id="svc-h" className="text-2xl font-bold mt-1">{block(blocks, 'product.services.title', 'Check it, certify it, then sell it')}</h2>
-            <p className="text-sm text-muted mt-1">{block(blocks, 'product.services.subtitle')}</p>
-          </div>
-          <ol className="flex flex-wrap items-center gap-2 text-[12px] font-semibold">
-            {steps.map((s, i) => (
-              <li key={s} className="flex items-center gap-2">
-                {i > 0 && <span aria-hidden className="text-muted">→</span>}
-                <span className={`rounded-full px-2.5 py-1 ${i === 0 ? 'bg-navy text-white' : 'bg-blue-soft text-[#1E4F9C]'}`}>{i + 1} {s}</span>
-              </li>
-            ))}
-          </ol>
+      {/* ADDON-44-F board 24: four ways to use this product */}
+      <section className="mt-10" aria-labelledby="ways-h" data-testid="product-ways">
+        <div className="k !text-blue">Four ways to use this product</div>
+        <h2 id="ways-h" className="mt-1.5 text-[25px] sm:text-[30px] font-extrabold leading-[1.15]">What do you want to do with this product?</h2>
+        <p className="mt-1.5 text-[15px] text-body-2 max-w-[640px]">Each choice opens a request with this product already filled in. Every request gets a reference number you can follow in My account.</p>
+        <div className={`mt-5 grid gap-4 sm:grid-cols-2 ${verified ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
+          <ServiceChoiceCard icon="search" title="Buy in bulk" body="Tell us the quantity and your country. We send a quote in US dollars with the price for your order."
+            note={services.rfq?.priceCents ? <span className="text-muted">RFQ fee <b className="text-navy">{money(services.rfq.priceCents, services.rfq.currency)}</b></span> : undefined}
+            cta="Request quote" href={`/request/sourcing?product=${p.id}`} testId="way-bulk" />
+          {verified && (
+            <ServiceChoiceCard icon="tag" title="Put your brand on it" isNew primary body="Your logo on the product and its box, made by this verified factory. We store the stock and ship it where you sell."
+              note={<span className="text-muted">Free to request · quote before you pay</span>} cta="Start a brand project" href={`/request/brand?product=${p.id}`} testId="way-brand" />
+          )}
+          <ServiceChoiceCard icon="truck" title="Dropship it" body="We ship each order to your customer under your packing slip. You hold no stock."
+            note={<span className="text-muted">See costs per country in your dropship catalogue</span>} cta="Dropship this product" href={`/request/dropship?product=${p.id}`} testId="way-dropship" />
+          <ServiceChoiceCard icon="warehouse" title="Store it near your buyers" body="Send your stock to the Octopus warehouse. We pick, pack and ship each order from there."
+            note={<span className="text-muted">Free to request · rates in your quote</span>} cta="Get a 3PL quote" href={`/request/3pl?product=${p.id}`} testId="way-3pl" />
         </div>
-        <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-          {(['sourcing', ...SERVICE_ORDER] as const).map((code) => {
-            const svcCode = code === 'sourcing' ? 'rfq' : code;
-            const s = services[svcCode];
-            const [eyebrow, title, body, unitTxt] = parts(blocks, `product.service.${code}`, `${code}|${s?.name ?? code}|${s?.description ?? ''}|${s?.unit ?? ''}`);
-            const price = s?.priceCents ?? 0;
-            const dark = code === '3pl' || code === 'dropship';
-            return (
-              <li key={code} className="rounded-[12px] border border-line p-4 flex flex-col gap-2">
-                <div className="mono text-[10px] uppercase tracking-wider text-muted">{eyebrow}</div>
-                <h3 className="font-sans font-semibold text-[16px] leading-tight">{title}</h3>
-                <p className="text-[13px] text-muted flex-1">{body}</p>
-                <p className="text-[12px] text-muted">
-                  {price > 0 ? <><span className="mono font-semibold text-navy">{money(price, s?.currency)}</span> {unitTxt}</> : <>Request free · {unitTxt}</>}
-                </p>
-                <Link href={`/request/${code}?product=${p.id}`} className={`btn btn-sm w-full ${dark ? 'btn-dark' : 'btn-ghost'}`}>
-                  {SERVICE_CTA[code]}
-                  <span className="sr-only"> for {p.title}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
+      </section>
+
+      <section className="mt-10 grid gap-5 lg:grid-cols-[1.4fr_1fr] items-start" aria-labelledby="addons-h">
+        <div>
+          <div className="k !text-blue">Add-ons</div>
+          <h2 id="addons-h" className="mt-1.5 text-[22px] font-extrabold">Services for this product</h2>
+          <ul className="mt-4 card divide-y divide-line">
+            {(['sample', 'qc', 'certification'] as const).map((code) => {
+              const sv = services[code];
+              const [, title, body] = parts(blocks, `product.service.${code}`, `${code}|${sv?.name ?? code}|${sv?.description ?? ''}|`);
+              return (
+                <li key={code} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                  <div><div className="font-bold text-navy text-[15px]">{title}</div><p className="text-[13.5px] text-muted mt-0.5">{body}{sv?.priceCents ? <> Fee <b className="text-navy">{money(sv.priceCents, sv.currency)}</b>.</> : null}</p></div>
+                  <Link href={`/request/${code}?product=${p.id}`} className="btn btn-ghost shrink-0">{SERVICE_CTA[code]}<span className="sr-only"> for {p.title}</span></Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+        <aside className="rounded-[14px] bg-blue-soft border border-[#C9DBF7] p-5" aria-labelledby="pay-h" data-testid="how-you-pay">
+          <span className="inline-flex items-center justify-center w-10 h-10 rounded-[10px] bg-white text-blue"><Icon name="doc" /></span>
+          <h2 id="pay-h" className="mt-3 text-[17px] font-bold">How you pay</h2>
+          <p className="mt-1.5 text-[14.5px] text-body-2">Prices in US dollars, paid from your Octopus wallet. Top up by bank transfer — no card payments.</p>
+          <ul className="mt-3 space-y-1.5 text-[14px] text-body-2">
+            <li className="flex gap-2"><Icon name="check" size={16} className="text-ok mt-0.5" />Top up your wallet in My account › Wallet and invoices</li>
+            <li className="flex gap-2"><Icon name="check" size={16} className="text-ok mt-0.5" />Your wallet reference and our bank details are shown there</li>
+          </ul>
+          <Link href="/account/wallet" className="inline-flex items-center min-h-11 mt-1 font-semibold text-blue">Open my wallet <span aria-hidden>→</span></Link>
+        </aside>
       </section>
 
       {/* Specs + side cards */}
@@ -235,17 +245,17 @@ async function Content({ params }: { params: Params }) {
             </p>
           </section>
           {p.supplier && (
-            <section className="card p-5" aria-label="Supplier">
+            <section className="card p-5" aria-label="Factory">
               <div className="flex gap-3 items-center">
-                <span className="w-11 h-11 rounded-full bg-blue-soft flex items-center justify-center mono text-[12px] font-semibold" aria-hidden>{p.supplier.country}</span>
+                <span className="w-11 h-11 rounded-full bg-blue-soft text-blue flex items-center justify-center" aria-hidden><Icon name="warehouse" /></span>
                 <div>
-                  <div className="font-semibold">Supplier <span className="mono">{p.supplier.code}</span></div>
-                  <div className="text-[13px] text-muted">{[p.supplier.country && (COUNTRY_NAMES[p.supplier.country] ?? p.supplier.country), p.supplier.supplier_type].filter(Boolean).join(' · ')}</div>
+                  <div className="font-semibold">{factoryLine(p.supplier)}</div>
+                  <div className="text-[13px] text-muted">{p.supplier.supplier_type ?? 'Factory'}</div>
                   <div className="mt-1.5"><VerifiedBadge verified={p.supplier.verified} /></div>
                 </div>
               </div>
               <p className="text-[13px] text-muted mt-3">All messages and orders go through Octopus B2B.</p>
-              <Link href={`/search?q=${encodeURIComponent(p.supplier.code)}`} className="btn btn-ghost btn-sm w-full mt-3">More from this supplier</Link>
+              {more.length > 0 && <a href="#more-factory" className="btn btn-ghost btn-sm w-full mt-3">More from this factory</a>}
             </section>
           )}
           <section className="card p-5" aria-labelledby="ship-h">
@@ -257,6 +267,33 @@ async function Content({ params }: { params: Params }) {
       </div>
 
       <div className="mt-8"><AdSlot placement="product_side" /></div>
+
+      {more.length > 0 && (
+        <section className="mt-12" id="more-factory" aria-labelledby="more-h" data-testid="more-factory">
+          <div className="k !text-blue">Same {p.supplier?.verified ? 'verified ' : ''}factory</div>
+          <h2 id="more-h" className="mt-1.5 text-[26px] font-extrabold">More from this factory</h2>
+          <ul className="mt-5 grid gap-4 sm:grid-cols-3">
+            {more.map((m) => {
+              const low = m.tiers.length ? Math.min(...m.tiers.map((t) => t.unit_price_cents)) : m.min_price_cents;
+              return (
+                <li key={m.id} className="card overflow-hidden">
+                  <Link href={`/p/${m.slug}`} className="block group">
+                    <div className="relative aspect-[4/3] bg-surface">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      {m.image_url && <img src={m.image_url} alt={m.title} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />}
+                    </div>
+                    <div className="p-4">
+                      {m.supplier?.verified && <VerifiedBadge />}
+                      <div className="mt-2 font-bold text-navy group-hover:text-blue line-clamp-2">{m.title}</div>
+                      <div className="mt-1 text-[13px] text-muted">{low ? <>From {money(low, m.currency)}</> : 'Price on request'} · MOQ {fmtQty(m.moq, m.unit)}</div>
+                    </div>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       {/* Recommended */}
       <section className="mt-12" aria-labelledby="rec-h">

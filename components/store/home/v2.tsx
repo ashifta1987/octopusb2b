@@ -210,7 +210,7 @@ function ReadyCard({ p }: { p: CardProduct }) {
         </div>
         <h3 className="text-[15px] font-semibold leading-snug line-clamp-2 group-hover:text-blue">{p.title}</h3>
         {price != null && <div className="text-[13px] text-[#5B6575]"><span className="mono text-[10.5px] uppercase">From</span> <b className="text-[17px] text-navy font-bold">{money(price, p.currency)}</b> / {unitOne(p.unit)}</div>}
-        <div className="mono text-[10.5px] uppercase tracking-[.04em] text-[#5B6575] mt-auto">MOQ {p.moq.toLocaleString('en-US')} {p.unit}{p.supplier ? ` · Supplier ${p.supplier.code}` : ''}</div>
+        <div className="mono text-[10.5px] uppercase tracking-[.04em] text-[#5B6575] mt-auto">MOQ {p.moq.toLocaleString('en-US')} {p.unit}{p.supplier?.verified ? ' · Verified factory' : ''}</div>
       </div>
     </Link>
   );

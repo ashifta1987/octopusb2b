@@ -1,4 +1,5 @@
 'use server';
+import { onboardingHref } from '@/lib/signup-service';
 import { headers } from 'next/headers';
 import { z } from 'zod';
 import { createAdminClient, createClient, createPublicClient } from '@/lib/supabase/server';
@@ -146,7 +147,7 @@ export async function customerSignUp(input: { email: string; password: string; n
   });
   if (error) return { ok: false, error: error.message };
   await audit(data.user?.id ?? null, 'auth.sign_up', meta, { method: 'password', provider: 'email' });
-  if (data.session) return { ok: true, redirect: '/onboarding' };
+  if (data.session) return { ok: true, redirect: onboardingHref(next) };
   return { ok: true, verify: true };
 }
 

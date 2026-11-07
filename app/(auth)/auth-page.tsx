@@ -1,3 +1,4 @@
+import { SERVICE_TARGET } from '@/lib/signup-service';
 import Link from 'next/link';
 import { Logo } from '@/components/ui';
 import { AuthForm } from './auth-form';
@@ -38,13 +39,14 @@ export function AuthShell({ children, title = 'Create a free account', sub = 'An
   );
 }
 
-export default async function AuthPage({ searchParams, mode }: { searchParams: Promise<{ next?: string; error?: string; reset?: string }>; mode: 'signup' | 'login' }) {
+export default async function AuthPage({ searchParams, mode }: { searchParams: Promise<{ next?: string; error?: string; reset?: string; service?: string }>; mode: 'signup' | 'login' }) {
   const [sp, social] = await Promise.all([searchParams, getCustomerSocialProviders()]);
+  const next = sp.next ?? (sp.service ? SERVICE_TARGET[sp.service] : undefined) ?? '/account';
   return (
     <AuthShell title={mode === 'login' ? 'Log in to Octopus B2B' : 'Create a free account'}
       sub={mode === 'login' ? 'Welcome back. Your requests, quotes, orders and wallet are waiting in your account.' : 'An account is needed to request quotes, see your tier prices, place orders and track shipments.'}>
       {sp.reset === '1' && <p role="status" className="mb-5 rounded-[10px] border border-line bg-blue-soft px-3.5 py-3 text-[13px] text-[#1E4F9C]">Your password was changed. Log in with the new password.</p>}
-      <AuthForm initialMode={mode} next={sp.next ?? '/account'} initialError={sp.error} google={social.google} />
+      <AuthForm initialMode={mode} next={next} initialError={sp.error} google={social.google} />
     </AuthShell>
   );
 }
