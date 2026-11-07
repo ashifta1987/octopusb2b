@@ -8,7 +8,8 @@
   --blue-dark: #1e58b0;
   --blue-soft: #e6effc;
   --ink: #1a1d2e;
-  --muted: #5b6175;
+  --muted: #5a6475;
+  --body-2: #3b4556;
   --line: #e2e5ea;
   --line-2: #c5ccd6;
   --surface: #f5f6f8;
@@ -19,16 +20,26 @@
      buttons and borders, where #1f9d55 (3.5:1), #d98a00 (2.8:1) and #d64545 (4.4:1) fail on white. These are the
      same hues darkened just enough to pass on white and on --surface. --blue-text is the brand blue one step darker
      (#2a6fd6 is 4.47:1 on --surface). */
-  --green-ink: #157a44;
-  --amber-ink: #9a6200;
-  --red-ink: #c03434;
-  --blue-text: #2a6ed4;
+  --green-ink: #15803d;
+  --amber-ink: #92400e;
+  --red-ink: #991b1b;
+  /* ADDON-44 PART 1: ANY blue text or link on white uses #1E58B0 (6.3:1); #2A6FD6 is for fills with white text only. */
+  --blue-text: #1e58b0;
+  /* ADDON-44 status pairs (text on fill) */
+  --ok-bg: #dcfce7;
+  --warn-bg: #fef3c7;
+  --needs: #9a3412;
+  --needs-bg: #ffedd5;
+  --bad-bg: #fee2e2;
+  --new-bg: #f59e0b;
 }
 
 @theme inline {
   --color-navy: var(--navy);
   --color-navy-2: var(--navy-2);
   --color-blue: var(--blue-text);
+  --color-blue-fill: var(--blue);
+  --color-body-2: var(--body-2);
   --color-blue-dark: var(--blue-dark);
   --color-blue-soft: var(--blue-soft);
   --color-ink: var(--ink);
@@ -39,6 +50,12 @@
   --color-ok: var(--green-ink);
   --color-warn: var(--amber-ink);
   --color-bad: var(--red-ink);
+  --color-ok-bg: var(--ok-bg);
+  --color-warn-bg: var(--warn-bg);
+  --color-needs: var(--needs);
+  --color-needs-bg: var(--needs-bg);
+  --color-bad-bg: var(--bad-bg);
+  --color-new-bg: var(--new-bg);
   --font-sans: var(--font-inter), system-ui, sans-serif;
   --font-display: var(--font-lexend), sans-serif;
   --font-mono: var(--font-plex-mono), ui-monospace, monospace;
@@ -47,24 +64,29 @@
 html { -webkit-text-size-adjust: 100%; }
 body { background: var(--surface); color: var(--navy); font-family: var(--font-sans); }
 h1, h2, h3, h4 { font-family: var(--font-display); color: var(--navy); letter-spacing: -0.01em; }
-/* Nov 2026 home design (Home-desktop-full.png) uses Inter for headings */
-.home-v2 :is(h1, h2, h3, h4) { font-family: var(--font-sans); }
 :focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
 
 @layer components {
-  .btn { @apply inline-flex items-center justify-center gap-2 min-h-11 px-[18px] rounded-[8px] font-semibold text-[15px] leading-none border border-transparent cursor-pointer whitespace-nowrap transition-colors disabled:opacity-50 disabled:cursor-not-allowed; }
-  .btn-sm { @apply min-h-9 px-3 text-sm; }
-  .btn-primary { @apply bg-blue text-white hover:bg-blue-dark; }
+  .btn { @apply inline-flex items-center justify-center gap-2 min-h-11 px-[18px] rounded-[10px] font-semibold text-[15px] leading-none border border-transparent cursor-pointer whitespace-nowrap transition-colors disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-sm { @apply min-h-[38px] px-3 text-sm; }
+  /* ADDON-44 sizes: public pages 48 px, hero 52 px (account pages keep the 44 px default) */
+  .btn-pub { @apply min-h-12; }
+  .btn-hero { @apply min-h-13 px-6; }
+  .btn-primary { @apply bg-blue-fill text-white hover:bg-blue-dark; }
   .btn-dark { @apply bg-navy text-white hover:bg-navy-2; }
   .btn-ghost { @apply bg-white text-navy border-line-2 hover:border-navy; }
   .btn-light { @apply bg-white text-navy hover:bg-blue-soft; }
   .btn-danger { @apply bg-bad text-white hover:opacity-90; }
-  .card { @apply bg-white border border-line rounded-[12px]; }
+  .card { @apply bg-white border border-line rounded-[14px]; }
   .input { @apply w-full min-h-11 px-3 rounded-[8px] border border-line-2 bg-white text-[15px] text-navy focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/20; }
   .label { @apply block text-sm font-semibold text-navy mb-1.5; }
   .ph { background: repeating-linear-gradient(135deg, #edeff3 0 10px, #e5e8ed 10px 20px); @apply flex items-center justify-center text-muted font-mono text-xs text-center; }
   .eyebrow { @apply font-mono text-xs font-semibold uppercase tracking-[0.12em] text-blue; }
   .mono { font-family: var(--font-mono); }
+  /* ADDON-44 pill + label ("k") */
+  .pill { @apply inline-flex items-center gap-1 font-mono text-[11px] font-semibold uppercase tracking-[.06em] leading-none px-2.5 py-[5px] rounded-full whitespace-nowrap; }
+  .k { @apply font-mono text-[11px] font-semibold uppercase tracking-[.06em] text-muted; }
+  .wrap { @apply max-w-[1280px] mx-auto px-4 min-[760px]:px-8; }
   .th { @apply text-left text-xs font-semibold uppercase tracking-wider text-muted px-4 py-3 border-b border-line whitespace-nowrap; }
   .td { @apply px-4 py-3.5 border-b border-line text-[15px] align-middle; }
   /* QA §19 (360 px): scroll containers must also contain absolutely-positioned descendants (e.g. .sr-only table

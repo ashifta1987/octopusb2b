@@ -7,7 +7,7 @@ import type { AccountTeam } from '@/lib/assistant/types';
 /** "Your account team" (Assistant.png right rail + Customer.png dashboard strip). Server components. */
 
 const OctoSquare = ({ size = 44 }: { size?: number }) => (
-  <span aria-hidden className="flex-none rounded-[12px] bg-blue text-white flex items-center justify-center font-display font-bold text-[16px]" style={{ width: size, height: size }}>O</span>
+  <span aria-hidden className="flex-none rounded-[12px] bg-blue-fill text-white flex items-center justify-center font-display font-bold text-[16px]" style={{ width: size, height: size }}>O</span>
 );
 const ManagerCircle = ({ initials, size = 44 }: { initials: string; size?: number }) => (
   <span aria-hidden className="flex-none rounded-full bg-navy text-white flex items-center justify-center font-display font-bold text-[15px]" style={{ width: size, height: size }}>{initials}</span>

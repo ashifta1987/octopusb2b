@@ -154,7 +154,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
                 {[...gmvByMonth.entries()].map(([k, v], i, arr) => (
                   <div key={k} className="flex-1 flex flex-col items-center justify-end h-full">
                     <div className="text-xs font-semibold mono mb-1">{money(v, ctx.currency, { compact: true })}</div>
-                    <div className={`w-full max-w-[56px] rounded-t-md ${i === arr.length - 1 ? 'bg-blue' : 'bg-navy'}`} style={{ height: `${Math.max(2, (v / maxMonth) * 190)}px` }} />
+                    <div className={`w-full max-w-[56px] rounded-t-md ${i === arr.length - 1 ? 'bg-blue-fill' : 'bg-navy'}`} style={{ height: `${Math.max(2, (v / maxMonth) * 190)}px` }} />
                   </div>
                 ))}
               </div>

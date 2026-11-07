@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Mini fan MINI1</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6F8}
+*{box-sizing:border-box}
+img{max-width:100%}
+a{color:#11133C;text-decoration:none}a:hover{color:#2A6FD6}
+.wrap{max-width:1280px;margin:0 auto;padding-left:32px;padding-right:32px}
+.sec{padding-top:64px;padding-bottom:64px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:10px;font:600 15px/1 Inter,system-ui,sans-serif;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+.btn-primary{background:#2A6FD6;color:#FFFFFF}.btn-primary:hover{background:#1E58B0;color:#FFFFFF}
+.btn-dark{background:#11133C;color:#FFFFFF}.btn-dark:hover{background:#262A6B;color:#FFFFFF}
+.btn-ghost{background:#FFFFFF;color:#11133C;border-color:#C5CCD6}.btn-ghost:hover{border-color:#11133C}
+.btn-light{background:#FFFFFF;color:#11133C}.btn-light:hover{background:#E6EFFC;color:#11133C}
+.btn-outline-w{background:transparent;color:#FFFFFF;border-color:rgba(255,255,255,.45)}.btn-outline-w:hover{border-color:#FFFFFF;color:#FFFFFF}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid #1D4ED8;outline-offset:2px}
+input,select{font:400 15px Inter,system-ui,sans-serif;color:#11133C}
+.k{font:600 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#5A6475;text-transform:uppercase}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.pill-live{background:#DCFCE7;color:#15803D}.pill-soft{background:#E6EFFC;color:#1E58B0}.pill-dark{background:rgba(255,255,255,.1);color:#DDE3F5;border:1px solid rgba(255,255,255,.18)}
+.card{background:#FFFFFF;border:1px solid #E2E5EA;border-radius:14px;overflow:hidden}
+.eyebrow{display:flex;align-items:center;gap:10px}
+.num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:#11133C;color:#FFFFFF;font:700 13px Lexend,sans-serif;flex:none}
+.num-b{background:#2A6FD6}
+.h2{margin:10px 0 0;font:800 34px/1.12 Lexend,sans-serif;letter-spacing:-.02em}
+.lead{margin:12px 0 0;color:#3B4556;font-size:16.5px;line-height:1.6;max-width:620px}
+.sec-h{display:flex;justify-content:space-between;align-items:flex-end;gap:16px 24px;margin-bottom:24px;flex-wrap:wrap}
+.lnk{color:#2A6FD6;font-weight:600;font-size:14.5px;white-space:nowrap}
+.rail a{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:999px;color:#3B4556;font-weight:500;font-size:14px;white-space:nowrap;flex:none}
+.rail a:hover{background:#F0F2F6}
+.rail a.on{background:#11133C;color:#FFFFFF;font-weight:600}
+.step{display:flex;flex-direction:column;gap:8px;padding:20px}
+.step h3{margin:4px 0 0;font:700 16.5px/1.3 Lexend,sans-serif}
+.step p{margin:0;color:#5A6475;font-size:14px;line-height:1.55}
+.chk{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.chk li{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.45;color:#3B4556}
+.chk li::before{content:"✓";flex:none;width:20px;height:20px;margin-top:1px;border-radius:999px;background:#DCFCE7;color:#15803D;font:700 12px/20px Inter,sans-serif;text-align:center}
+.art{display:block;width:100%;height:100%;object-fit:cover}
+.bar{height:8px;background:#E5E8ED;border-radius:999px;overflow:hidden}.bar > i{display:block;height:100%;background:linear-gradient(90deg,#2A6FD6,#60A5FA)}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;background:#FFFFFF;border:1px solid #E2E5EA;font:600 15px Inter,sans-serif}
+details{background:#FFFFFF;border:1px solid #E2E5EA;border-radius:14px;padding:0 18px}
+summary{cursor:pointer;min-height:54px;display:flex;align-items:center;font:600 15.5px Inter,sans-serif}
+details p{margin:0 0 16px;color:#3B4556;font-size:14.5px;line-height:1.6}
+.crumb{font-size:13.5px;color:#5A6475}
+@media (max-width:1100px){.hero-grid,.split{grid-template-columns:1fr !important}.steps4{grid-template-columns:repeat(2,1fr) !important}.cols4{grid-template-columns:repeat(2,1fr) !important}.cols3{grid-template-columns:1fr !important}}
+@media (max-width:760px){.wrap{padding-left:16px !important;padding-right:16px !important}.sec{padding-top:40px !important;padding-bottom:40px !important}.h1{font-size:32px !important;line-height:1.1 !important}.h2{font-size:25px !important}.steps4,.cols4{grid-template-columns:1fr !important}.hdr form{order:3;flex-basis:100% !important}.acct-label{display:none}.float-card{position:static !important;margin-top:12px;width:auto !important}.cta-row .btn{flex:1 1 100%}.foot-grid{grid-template-columns:1fr 1fr !important}}
+.ann{background:#11133C;color:#FFFFFF;font-size:13.5px}
+.ann a{color:#9CC2FF;font-weight:600}
+.new{display:inline-flex;align-items:center;padding:2px 7px;border-radius:99px;background:#F59E0B;color:#11133C;font:700 10px/1.4 'IBM Plex Mono',monospace;letter-spacing:.04em;margin-left:4px}
+.lnk{color:#1E58B0}
+.pill-ex{background:#FEF3C7;color:#92400E}
+.ver{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:#DCFCE7;color:#14532D;font:600 13.5px Inter,sans-serif}
+.tbl{width:100%;border-collapse:collapse;font-size:14.5px}
+.tbl th,.tbl td{text-align:left;padding:12px 16px;border-bottom:1px solid #EEF0F4;vertical-align:top}
+.tbl thead th{font:600 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;background:#F8F9FB}
+.tbl tbody th{font-weight:600;color:#3B4556;width:38%}
+.tbl tr:last-child th,.tbl tr:last-child td{border-bottom:0}
+.thumb{display:block;width:100%;aspect-ratio:1/1;padding:0;border-radius:10px;overflow:hidden;background:#F2F2F0;cursor:pointer;min-height:44px}
+.svc{display:flex;flex-direction:column;gap:10px;padding:22px}
+.svc h3{margin:0;font:700 19px/1.25 Lexend,sans-serif}
+.svc p{margin:0;color:#3B4556;font-size:14.5px;line-height:1.55}
+.svc .btn{width:100%;white-space:normal;text-align:center;line-height:1.25;margin-top:auto}
+.ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none;background:#E6EFFC;color:#1E58B0}
+.fee-line{font-size:13.5px;color:#3B4556;padding:10px 12px;border-radius:10px;background:#F5F6F8}
+.row-svc{display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:18px 20px;border-top:1px solid #EEF0F4}
+.row-svc:first-child{border-top:0}
+@media (max-width:1100px){.gal-grid{grid-template-columns:1fr !important}.gal-grid > div:first-child{flex-direction:row !important;order:2}.gal-grid .thumb{width:72px;flex:none}}
+</style>
+</helmet>
+<div style="font-family:Inter,system-ui,sans-serif;color:#11133C;background:#F5F6F8;min-height:100vh;">
+
+<div class="ann"><div class="wrap" style="padding-top:9px;padding-bottom:9px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;text-align:center;"><span class="new" style="margin:0;">NEW</span><span>Make My Brand: your logo on verified products, stocked in our warehouse, shipped worldwide.</span><a href="MakeMyBrand.dc.html">See how it works →</a></div></div>
+<header style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;">
+<div class="wrap hdr" style="padding-top:12px;padding-bottom:12px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;">
+<a href="HomeMMB.dc.html" aria-label="Octopus B2B home" style="display:inline-flex;align-items:center;flex:none;"><img src="assets/octopus-logo.png" alt="Octopus B2B" style="height:42px;width:auto;display:block;"></a>
+<form role="search" style="flex:1 1 420px;display:flex;min-width:0;border:1.5px solid #11133C;border-radius:10px;overflow:hidden;background:#FFFFFF;">
+<label for="q" class="sr">Search products, HS codes or turnkey projects</label>
+<input id="q" type="search" placeholder="Search products, HS codes or turnkey projects" style="flex:1;min-width:0;border:0;padding:0 14px;min-height:46px;font-size:15px;">
+<button type="submit" class="btn btn-dark" style="border-radius:0;min-height:46px;padding:0 18px;" aria-label="Search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></button>
+</form>
+<a href="Main.dc.html" class="btn btn-ghost" style="min-height:46px;padding:0 14px;margin-left:auto;" aria-label="My account"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span class="acct-label">My account</span></a>
+</div>
+</header>
+<nav class="rail" aria-label="Services" style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;">
+<div class="wrap" style="padding-top:8px;padding-bottom:8px;display:flex;gap:4px;overflow-x:auto;align-items:center;">
+<a href="HomeMMB.dc.html">Product sourcing</a>
+<a href="MakeMyBrand.dc.html">Make My Brand <span class="new">NEW</span></a>
+<a href="HomeMMB.dc.html">Dropshipping</a>
+<a href="HomeMMB.dc.html">MOQ pools</a>
+<a href="Request3PL.dc.html">3PL warehousing</a>
+<a href="HomeMMB.dc.html">Turnkey Projects</a>
+<span style="width:1px;height:20px;background:#E2E5EA;flex:none;margin:0 6px;"></span>
+<a class="on" href="PublicProduct.dc.html" aria-current="page">All categories</a>
+</div>
+</nav>
+
+<main>
+<section aria-labelledby="p-h" style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;">
+<div class="wrap" style="padding-top:24px;padding-bottom:48px;">
+<nav class="crumb" aria-label="Breadcrumb" style="margin-bottom:22px;"><a href="HomeMMB.dc.html" style="color:#5A6475;">Home</a> / <a href="PublicProduct.dc.html" style="color:#5A6475;">All categories</a> / <a href="PublicProduct.dc.html" style="color:#5A6475;">Personal fans</a> / <span aria-current="page" style="color:#11133C;">Mini fan MINI1</span></nav>
+<div class="hero-grid" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:44px;align-items:start;">
+
+<div class="gal-grid" style="display:grid;grid-template-columns:88px minmax(0,1fr);gap:14px;">
+<div role="group" aria-label="Product photos" style="display:flex;flex-direction:column;gap:10px;">
+<sc-for list="{{thumbs}}" as="t" hint-placeholder-count="4"><button type="button" class="thumb" style="{{t.style}}" aria-pressed="{{t.pressed}}" aria-label="{{t.aria}}" onClick="{{t.pick}}"><img src="{{t.src}}" alt="" style="{{t.imgStyle}}"></button></sc-for>
+</div>
+<div>
+<div class="card" style="aspect-ratio:1/1;background:#F2F2F0;border-radius:18px;"><img src="{{mainSrc}}" alt="{{mainAlt}}" style="{{mainStyle}}"></div>
+<p style="margin:10px 0 0;font-size:13px;color:#5A6475;" aria-live="polite">{{viewText}}</p>
+</div>
+</div>
+
+<div>
+<div style="display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;">
+<span class="ver"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.4 8.2-8 9-4.6-.8-8-4-8-9V6z"></path><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg>Verified by Octopus</span>
+<span style="font-size:13px;color:#3B4556;">Octopus checked this factory: licence, site visit, QC record</span>
+</div>
+<h1 id="p-h" class="h1" style="margin:16px 0 0;font:800 40px/1.1 Lexend,sans-serif;letter-spacing:-.025em;">Mini fan MINI1, USB rechargeable</h1>
+<div style="display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px;font-size:14px;color:#3B4556;align-items:center;">
+<span style="display:inline-flex;gap:8px;align-items:center;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V11l5 3v-3l5 3v-3l5 3V5h3v16z"></path><path d="M3 21h18"></path></svg>Octopus verified factory · Guangdong</span>
+<span>Model MINI1</span>
+</div>
+
+<div class="card" style="margin-top:22px;border-radius:14px;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid #EEF0F4;flex-wrap:wrap;"><span class="k">Price per piece · [price basis, e.g. EXW Shenzhen]</span><span class="pill pill-ex">Prices to come</span></div>
+<div style="overflow-x:auto;position:relative;">
+<table class="tbl">
+<caption class="sr">Price per piece by order quantity</caption>
+<thead><tr><th scope="col">Quantity</th><th scope="col">Price per piece</th></tr></thead>
+<tbody>
+<tr><th scope="row">100+ pcs</th><td style="font:700 17px Lexend,sans-serif;">US$ [price]</td></tr>
+<tr><th scope="row">500+ pcs</th><td style="font:700 17px Lexend,sans-serif;">US$ [price]</td></tr>
+<tr><th scope="row">1,000+ pcs</th><td style="font:700 17px Lexend,sans-serif;">US$ [price]</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+<dl style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:16px 0 0;">
+<div style="background:#F5F6F8;border-radius:12px;padding:12px 14px;"><dt class="k">MOQ</dt><dd style="margin:6px 0 0;font:700 16px Lexend,sans-serif;">100 pcs</dd></div>
+<div style="background:#F5F6F8;border-radius:12px;padding:12px 14px;"><dt class="k">Sample</dt><dd style="margin:6px 0 0;font:700 16px Lexend,sans-serif;">US$ [sample price]</dd></div>
+<div style="background:#F5F6F8;border-radius:12px;padding:12px 14px;"><dt class="k">Production time</dt><dd style="margin:6px 0 0;font:700 16px Lexend,sans-serif;">[N] working days</dd></div>
+</dl>
+
+<div class="cta-row" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;">
+<a href="#do" class="btn btn-primary" style="min-height:52px;padding:0 24px;font-size:16px;">See what you can do with it</a>
+<a href="#svc" class="btn btn-ghost" style="min-height:52px;">Request sample</a>
+</div>
+<p style="margin:14px 0 0;font-size:13.5px;color:#3B4556;display:flex;gap:8px;align-items:center;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"></rect><path d="M16 12h2"></path><path d="M3 10h18"></path></svg>Paid from your Octopus wallet. <a href="#pay" class="lnk" style="font-size:13.5px;">How payment works</a></p>
+</div>
+</div>
+</div>
+</section>
+
+<section id="do" aria-labelledby="do-h" style="background:#F5F6F8;">
+<div class="wrap sec">
+<div class="sec-h"><div><span class="k" style="color:#1E58B0;">Four ways to use this product</span><h2 id="do-h" class="h2">What do you want to do with this product?</h2><p class="lead">Each choice opens a request with this product already filled in. Every request gets a reference number you can follow in My account.</p></div></div>
+<div class="cols4" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;align-items:stretch;">
+
+<div class="card svc">
+<span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5z"></path><path d="m3 8 9 5 9-5"></path><path d="M12 13v8"></path></svg></span>
+<span class="k">Product sourcing</span>
+<h3>Buy in bulk</h3>
+<p>Tell us the quantity and your country. We send a quote in US dollars with the price for your order.</p>
+<div class="fee-line">RFQ fee <strong>US$ 5.00</strong></div>
+<a href="PublicProduct.dc.html" class="btn btn-ghost">Request quote</a>
+</div>
+
+<div class="card svc" style="border:2px solid #2A6FD6;">
+<span class="ico" style="background:#FEF3C7;color:#92400E;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"></path><circle cx="7.5" cy="7.5" r="1.5"></circle></svg></span>
+<span style="display:flex;align-items:center;gap:4px;"><span class="k" style="color:#1E58B0;">Make My Brand</span><span class="new">NEW</span></span>
+<h3>Put your brand on it</h3>
+<p>Your logo on the product and its box, made by this verified factory. We store the stock and ship it where you sell.</p>
+<div class="fee-line">Free to request · quote before you pay</div>
+<a href="RequestBrand.dc.html" class="btn btn-primary">Start a brand project</a>
+</div>
+
+<div class="card svc">
+<span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v9H3z"></path><path d="M14 10h4l3 3v3h-7"></path><circle cx="7" cy="18" r="2"></circle><circle cx="17" cy="18" r="2"></circle></svg></span>
+<span class="k">Dropshipping</span>
+<h3>Dropship it</h3>
+<p>We ship each order to your customer under your packing slip. You hold no stock.</p>
+<div class="fee-line">Needs a Dropshipping plan</div>
+<a href="DropshipCatalog.dc.html" class="btn btn-ghost">Add to my dropship catalogue</a>
+</div>
+
+<div class="card svc">
+<span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12"></path><path d="M7 21v-8h10v8"></path><path d="M7 17h10"></path></svg></span>
+<span class="k">3PL warehousing</span>
+<h3>Store it near your buyers</h3>
+<p>Send your stock to the Octopus warehouse. We pick, pack and ship each order from there.</p>
+<div class="fee-line">Free to request · rates in your quote</div>
+<a href="Request3PL.dc.html" class="btn btn-ghost">Request 3PL</a>
+</div>
+
+</div>
+</div>
+</section>
+
+<section id="svc" aria-labelledby="svc-h" style="background:#FFFFFF;border-top:1px solid #E2E5EA;">
+<div class="wrap sec">
+<div class="split" style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:32px;align-items:start;">
+<div>
+<span class="k" style="color:#1E58B0;">Add-ons</span>
+<h2 id="svc-h" class="h2" style="font-size:28px;">Services for this product</h2>
+<div class="card" style="margin-top:20px;">
+<div class="row-svc"><div style="flex:1 1 260px;"><div style="font:700 16.5px Lexend,sans-serif;">Sample</div><p style="margin:4px 0 0;color:#3B4556;font-size:14.5px;line-height:1.5;">One piece to check before you order. US$ [sample price] plus shipping to you.</p></div><a href="PublicProduct.dc.html" class="btn btn-ghost">Request sample</a></div>
+<div class="row-svc"><div style="flex:1 1 260px;"><div style="font:700 16.5px Lexend,sans-serif;">QC inspection</div><p style="margin:4px 0 0;color:#3B4556;font-size:14.5px;line-height:1.5;">We check your goods at the factory before they ship. Fee US$ [fee].</p></div><a href="PublicProduct.dc.html" class="btn btn-ghost">Book inspection</a></div>
+<div class="row-svc"><div style="flex:1 1 260px;"><div style="font:700 16.5px Lexend,sans-serif;">Certification</div><p style="margin:4px 0 0;color:#3B4556;font-size:14.5px;line-height:1.5;">Ask which certificates this product has for your market. Fee [fee].</p></div><a href="PublicProduct.dc.html" class="btn btn-ghost">Request certification</a></div>
+</div>
+</div>
+<div id="pay" class="card" style="padding:24px;background:#F2F7FE;border-color:#CFE0F7;">
+<span class="ico" style="background:#FFFFFF;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"></rect><path d="M3 10h18"></path><path d="M16 14.5h2"></path></svg></span>
+<h2 style="margin:14px 0 0;font:700 19px/1.3 Lexend,sans-serif;">How you pay</h2>
+<p style="margin:8px 0 0;font-size:15.5px;line-height:1.6;color:#11133C;">Prices in US dollars, paid from your Octopus wallet. Top up by bank transfer — no card payments.</p>
+<ul class="chk" style="margin-top:14px;">
+<li>Top up your wallet in My account › Wallet and invoices</li>
+<li>Bank details: [bank account details for top-ups]</li>
+</ul>
+<a href="Main.dc.html" class="lnk" style="display:inline-flex;align-items:center;min-height:44px;margin-top:6px;">Open my wallet →</a>
+</div>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="sp-h" style="background:#F5F6F8;border-top:1px solid #E2E5EA;">
+<div class="wrap sec">
+<div class="sec-h"><div><span class="k" style="color:#1E58B0;">Details</span><h2 id="sp-h" class="h2" style="font-size:28px;">Specifications</h2></div><span class="pill pill-ex">Values to come from the factory</span></div>
+<div class="card" style="overflow-x:auto;position:relative;">
+<table class="tbl" style="min-width:560px;">
+<caption class="sr">Mini fan MINI1 specifications</caption>
+<tbody>
+<tr><th scope="row">Model</th><td>MINI1</td></tr>
+<tr><th scope="row">Power</th><td>USB rechargeable</td></tr>
+<tr><th scope="row">Battery</th><td>[capacity in mAh]</td></tr>
+<tr><th scope="row">Run time per charge</th><td>[hours, by speed]</td></tr>
+<tr><th scope="row">Charging port and time</th><td>[port type] · [hours]</td></tr>
+<tr><th scope="row">Speeds</th><td>[N]</td></tr>
+<tr><th scope="row">Material</th><td>[material]</td></tr>
+<tr><th scope="row">Colours</th><td>[colour list]</td></tr>
+<tr><th scope="row">Product size and weight</th><td>[L × W × H mm] · [g]</td></tr>
+<tr><th scope="row">Carton</th><td>[pcs per carton] · [carton size] · [gross weight]</td></tr>
+<tr><th scope="row">HS code</th><td>[HS code]</td></tr>
+<tr><th scope="row">Certificates on file</th><td>[list, or ask with Request certification]</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="more-h" style="background:#FFFFFF;border-top:1px solid #E2E5EA;">
+<div class="wrap sec">
+<div class="sec-h"><div><span class="k" style="color:#1E58B0;">Same verified factory</span><h2 id="more-h" class="h2" style="font-size:28px;">More from this factory</h2></div><a class="lnk" href="PublicProduct.dc.html">See all products →</a></div>
+<div class="cols3" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;">
+<a href="PublicProduct.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="aspect-ratio:4/3;background:#F2F2F0;"><img class="art" src="assets/F8.jpg" alt="Handheld fan F8"></div><div style="padding:16px;display:flex;flex-direction:column;gap:6px;"><span class="ver" style="align-self:flex-start;padding:4px 10px;font-size:12px;">Verified by Octopus</span><div style="font:600 15px/1.35 Inter,sans-serif;">Handheld fan F8</div><div style="font-size:13.5px;color:#3B4556;">From US$ [price] · MOQ [N] pcs</div></div></a>
+<a href="PublicProduct.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="aspect-ratio:4/3;background:#F2F2F0;"><img class="art" src="assets/G1000.jpg" alt="Neck fan G1000"></div><div style="padding:16px;display:flex;flex-direction:column;gap:6px;"><span class="ver" style="align-self:flex-start;padding:4px 10px;font-size:12px;">Verified by Octopus</span><div style="font:600 15px/1.35 Inter,sans-serif;">Neck fan G1000</div><div style="font-size:13.5px;color:#3B4556;">From US$ [price] · MOQ [N] pcs</div></div></a>
+<a href="PublicProduct.dc.html" class="card" style="display:flex;flex-direction:column;"><div style="aspect-ratio:4/3;background:#F2F2F0;"><img class="art" src="assets/S7.jpg" alt="Aroma diffuser S7"></div><div style="padding:16px;display:flex;flex-direction:column;gap:6px;"><span class="ver" style="align-self:flex-start;padding:4px 10px;font-size:12px;">Verified by Octopus</span><div style="font:600 15px/1.35 Inter,sans-serif;">Aroma diffuser S7</div><div style="font-size:13.5px;color:#3B4556;">From US$ [price] · MOQ [N] pcs</div></div></a>
+</div>
+</div>
+</section>
+</main>
+
+<footer style="background:#0C0E30;color:#8B93B5;">
+<div class="wrap" style="padding-top:44px;padding-bottom:28px;">
+<div class="foot-grid" style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:28px;">
+<div><img src="assets/octopus-logo-white.png" alt="Octopus B2B" style="height:40px;width:auto;display:block;"><p style="margin:14px 0 0;font-size:13.5px;line-height:1.55;max-width:280px;">Product sourcing, Make My Brand, dropshipping, group buying, warehousing and turnkey businesses from China, delivered worldwide.</p></div>
+<nav aria-label="Footer services" style="display:flex;flex-direction:column;gap:9px;font-size:13.5px;"><span class="k" style="color:#FFFFFF;">Services</span><a href="HomeMMB.dc.html" style="color:#8B93B5;">Product sourcing</a><a href="MakeMyBrand.dc.html" style="color:#8B93B5;">Make My Brand</a><a href="HomeMMB.dc.html" style="color:#8B93B5;">Dropshipping</a><a href="HomeMMB.dc.html" style="color:#8B93B5;">MOQ pools</a><a href="Request3PL.dc.html" style="color:#8B93B5;">3PL warehousing</a><a href="HomeMMB.dc.html" style="color:#8B93B5;">Turnkey Projects</a></nav>
+<nav aria-label="My account" style="display:flex;flex-direction:column;gap:9px;font-size:13.5px;"><span class="k" style="color:#FFFFFF;">My account</span><a href="Main.dc.html" style="color:#8B93B5;">Home</a><a href="DropshipCatalog.dc.html" style="color:#8B93B5;">Dropshipping</a><a href="Main.dc.html" style="color:#8B93B5;">3PL warehouse</a><a href="Main.dc.html" style="color:#8B93B5;">Make My Brand</a></nav>
+<nav aria-label="Company" style="display:flex;flex-direction:column;gap:9px;font-size:13.5px;"><span class="k" style="color:#FFFFFF;">Company</span><a href="PublicProduct.dc.html" style="color:#8B93B5;">About us</a><a href="mailto:ceooctopusb2b@gmail.com" style="color:#8B93B5;">Contact</a></nav>
+</div>
+<div style="border-top:1px solid #22265A;margin-top:28px;padding-top:18px;font-size:12.5px;">© 2026 Shenzhen Octopus Trading Co., Ltd. · Terms · Privacy</div>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":3800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { g: 0 }; }
+  renderVals() {
+    const IMG = 'assets/MINI1.jpg';
+    const base = 'display:block;width:100%;height:100%;object-fit:cover;';
+    const views = [
+      { label: 'Full view', alt: 'Mini fan MINI1, USB rechargeable, full view', t: 'transform:scale(1);' },
+      { label: 'Close-up, top', alt: 'Mini fan MINI1, close-up of the top of the fan', t: 'transform:scale(1.8);transform-origin:50% 18%;' },
+      { label: 'Close-up, middle', alt: 'Mini fan MINI1, close-up of the middle of the fan', t: 'transform:scale(1.8);transform-origin:50% 55%;' },
+      { label: 'Close-up, base', alt: 'Mini fan MINI1, close-up of the base', t: 'transform:scale(1.9);transform-origin:50% 92%;' }
+    ];
+    const g = this.state.g;
+    const thumbs = views.map((v, i) => ({
+      src: IMG,
+      imgStyle: base + v.t,
+      aria: 'Show photo ' + (i + 1) + ' of 4: ' + v.label,
+      pressed: i === g ? 'true' : 'false',
+      style: 'border:2px solid ' + (i === g ? '#2A6FD6' : '#E2E5EA') + ';',
+      pick: () => this.setState({ g: i })
+    }));
+    return {
+      thumbs: thumbs,
+      mainSrc: IMG,
+      mainAlt: views[g].alt,
+      mainStyle: base + views[g].t + 'transition:transform .25s ease;',
+      viewText: 'Photo ' + (g + 1) + ' of 4 · ' + views[g].label
+    };
+  }
+}
+</script>
+</body>
+</html>

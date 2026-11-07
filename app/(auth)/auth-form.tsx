@@ -83,7 +83,7 @@ export function AuthForm({ initialMode, next, initialError, google = false }: { 
       {mode === 'signup' && (
         <div className="grid grid-cols-3 gap-2 mb-8" aria-label="Progress">
           {steps.map((s, i) => (
-            <div key={s}><div className={cn('h-1 rounded-full', i <= stepIdx ? 'bg-blue' : 'bg-line')} /><div className={cn('mt-2 text-xs', i <= stepIdx ? 'font-semibold text-navy' : 'text-muted')}>{s}</div></div>
+            <div key={s}><div className={cn('h-1 rounded-full', i <= stepIdx ? 'bg-blue-fill' : 'bg-line')} /><div className={cn('mt-2 text-xs', i <= stepIdx ? 'font-semibold text-navy' : 'text-muted')}>{s}</div></div>
           ))}
         </div>
       )}

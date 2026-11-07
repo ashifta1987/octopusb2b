@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dropshipping dashboard</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6F8}
+*{box-sizing:border-box}
+a{color:#11133C;text-decoration:none}a:hover{color:#2A6FD6}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:10px;font:600 14px/1 Inter,system-ui,sans-serif;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+.btn-primary{background:#2A6FD6;color:#FFFFFF}.btn-primary:hover{background:#1E58B0;color:#FFFFFF}
+.btn-dark{background:#11133C;color:#FFFFFF}.btn-dark:hover{background:#262A6B;color:#FFFFFF}
+.btn-ghost{background:#FFFFFF;color:#11133C;border-color:#C5CCD6}.btn-ghost:hover{border-color:#11133C}
+.btn-sm{min-height:38px;padding:0 12px;font-size:13px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid #1D4ED8;outline-offset:2px}
+.k{font:600 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#5A6475;text-transform:uppercase}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.pill-ex{background:#FEF3C7;color:#92400E}.pill-live{background:#DCFCE7;color:#15803D}.pill-soft{background:#E6EFFC;color:#1E58B0}.pill-you{background:#FFEDD5;color:#9A3412}.pill-grey{background:#EEF0F4;color:#3B4556}
+.card{background:#FFFFFF;border:1px solid #E2E5EA;border-radius:14px}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:0 24px}
+.tabs a{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 14px;font:600 14px Inter,sans-serif;color:#3B4556;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs a:hover{color:#11133C}
+.tabs a.on{color:#11133C;border-bottom-color:#2A6FD6}
+.tabs .off{font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;color:#5A6475;background:#EEF0F4;border-radius:99px;padding:3px 7px}
+.side{flex:1 1 236px;max-width:100%;background:#FFFFFF;border-right:1px solid #E2E5EA;padding:18px 12px;display:flex;flex-direction:column;gap:1px}
+.side a{display:flex;align-items:center;min-height:40px;padding:0 12px;border-radius:9px;color:#3B4556;font:500 14px Inter,sans-serif}
+.side a:hover{background:#F0F2F6;color:#11133C}
+.side a.on{background:#11133C;color:#FFFFFF;font-weight:600}
+.side .grp{font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;padding:14px 12px 6px}
+.act{display:flex;gap:14px;align-items:center;padding:16px;border-top:1px solid #EEF0F4}
+.ico{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none}
+.chip{min-height:38px;padding:0 14px;border-radius:999px;font:600 13px Inter,sans-serif;cursor:pointer;border:1px solid #C5CCD6;background:#FFFFFF;color:#11133C}
+.chip[aria-pressed="true"]{background:#11133C;border-color:#11133C;color:#FFFFFF}
+.num{font:800 24px/1.1 Lexend,sans-serif;color:#11133C}
+@media (max-width:760px){.side{flex-direction:row !important;overflow-x:auto;border-right:0 !important;border-bottom:1px solid #E2E5EA}.side .grp{display:none}.side a{flex:none}main{padding:20px 16px !important}.hdr form{order:3;flex-basis:100% !important}.tabs{padding:0 8px}}
+</style>
+</helmet>
+<div style="font-family:Inter,system-ui,sans-serif;color:#11133C;background:#F5F6F8;min-height:100vh;">
+
+<header style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;">
+<div class="hdr" style="padding:12px 24px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;">
+<a href="Main.dc.html" style="display:inline-flex;flex:none;"><img src="assets/octopus-logo.png" alt="Octopus B2B" style="height:38px;width:auto;display:block;"></a>
+<form role="search" style="flex:1 1 360px;display:flex;min-width:0;max-width:560px;border:1.5px solid #11133C;border-radius:10px;overflow:hidden;">
+<label for="q" class="sr">Search orders, products, projects and stock</label>
+<input id="q" type="search" placeholder="Search orders, products, projects, stock" style="flex:1;min-width:0;border:0;padding:0 14px;min-height:44px;font:400 15px Inter,sans-serif;">
+</form>
+<span class="pill pill-ex" title="Numbers on this screen are examples">Prototype · example data</span>
+<span style="margin-left:auto;display:inline-flex;gap:14px;align-items:center;">
+<a href="Main.dc.html" style="display:flex;flex-direction:column;gap:2px;padding:6px 12px;border:1px solid #E2E5EA;border-radius:10px;"><span class="k">Wallet</span><span style="font:700 15px Lexend,sans-serif;">US$ 18.80</span></a>
+<a href="Main.dc.html" aria-label="Notifications, 5 new" style="position:relative;width:44px;height:44px;border-radius:10px;border:1px solid #E2E5EA;display:flex;align-items:center;justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg><span style="position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:99px;background:#C2410C;"></span></a>
+<span style="display:inline-flex;gap:10px;align-items:center;"><span style="width:38px;height:38px;border-radius:99px;background:#11133C;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font:600 14px Inter;">AK</span><span style="display:flex;flex-direction:column;gap:2px;"><span style="font-weight:600;font-size:14px;">[Buyer name]</span><span style="font-size:12px;color:#5A6475;">Nova Breeze · Owner</span></span></span>
+</span>
+</div>
+<nav class="tabs" aria-label="Services">
+<a href="Main.dc.html">Home</a>
+<a href="Main.dc.html">Sourcing</a>
+<a class="on" href="Dropship.dc.html" aria-current="page">Dropshipping</a>
+<a href="Warehouse.dc.html">3PL warehouse</a>
+<a href="Brand.dc.html">Make My Brand</a>
+<a href="Main.dc.html">Wallet and invoices</a>
+</nav>
+</header>
+
+<div style="display:flex;flex-wrap:wrap;">
+<nav class="side" aria-label="Dropshipping">
+<span class="grp">Dropshipping</span>
+<a class="on" href="Dropship.dc.html" aria-current="page">Dashboard</a>
+<a href="Dropship.dc.html">Stores</a>
+<a href="DropshipCatalog.dc.html">Catalogue</a>
+<a href="Dropship.dc.html">Import list</a>
+<a href="DropshipOrders.dc.html">Orders</a>
+<span class="grp">Set-up</span>
+<a href="Dropship.dc.html">Pricing rules</a>
+<a href="Dropship.dc.html">Settings</a>
+</nav>
+
+<main style="flex:999 1 560px;min-width:0;padding:28px 32px 56px;display:flex;flex-direction:column;gap:22px;">
+<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;">
+<div><span class="k" style="color:#1E58B0;">Dropshipping</span><h1 style="margin:2px 0 6px;font:800 30px/1.15 Lexend,sans-serif;">Dashboard</h1><p style="margin:0;font-size:14px;color:#5A6475;">Stock and prices last synced 12 minutes ago.</p></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;"><a href="DropshipOrders.dc.html" class="btn btn-ghost">View orders</a><a href="DropshipCatalog.dc.html" class="btn btn-primary">Browse catalogue</a></div>
+</div>
+
+<section class="card" style="padding:20px;display:flex;flex-wrap:wrap;gap:20px 32px;align-items:center;" aria-labelledby="wal-h">
+<div style="flex:1 1 240px;display:flex;flex-direction:column;gap:6px;">
+<div style="display:flex;gap:10px;align-items:center;"><h2 id="wal-h" class="k" style="margin:0;">Wallet balance</h2><span class="pill pill-ex">Example</span></div>
+<span class="num" style="font-size:30px;">US$ 18.80</span>
+<span style="font-size:13px;font-weight:600;color:#9A3412;">Not enough for #1046 (US$ 46.30). Top up by bank transfer.</span>
+</div>
+<div style="flex:1 1 280px;display:flex;flex-direction:column;gap:8px;font-size:14px;">
+<span class="k">Waiting to be charged</span>
+<span style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;"><strong>US$ 46.30</strong><span>for #1046</span><span class="pill pill-you">Awaiting payment</span></span>
+<span style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;"><strong>US$ 13.80</strong><span>for #1047</span><span class="pill pill-grey">On hold until 10:40</span></span>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;"><a href="Main.dc.html" class="btn btn-ghost">View wallet</a><a href="Main.dc.html" class="btn btn-primary">Add funds</a></div>
+</section>
+
+<section aria-labelledby="l30-h" style="display:flex;flex-direction:column;gap:12px;">
+<h2 id="l30-h" style="margin:0;font:700 18px Lexend,sans-serif;">Last 30 days</h2>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;">
+<article class="card" style="padding:18px;display:flex;flex-direction:column;gap:8px;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><h3 class="k" style="margin:0;">Orders</h3><span class="pill pill-ex">Example</span></div>
+<div class="num">412</div>
+<span style="font-size:13px;font-weight:600;color:#15803D;">+18% vs previous 30 days</span>
+</article>
+<article class="card" style="padding:18px;display:flex;flex-direction:column;gap:8px;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><h3 class="k" style="margin:0;">Your sales</h3><span class="pill pill-ex">Example</span></div>
+<div class="num">US$ 12,480</div>
+<span style="font-size:13px;color:#5A6475;">All connected stores</span>
+</article>
+<article class="card" style="padding:18px;display:flex;flex-direction:column;gap:8px;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><h3 class="k" style="margin:0;">Paid to Octopus</h3><span class="pill pill-ex">Example</span></div>
+<div class="num">US$ 6,912</div>
+<span style="font-size:13px;color:#5A6475;">Products and shipping</span>
+</article>
+<article class="card" style="padding:18px;display:flex;flex-direction:column;gap:8px;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><h3 class="k" style="margin:0;">Gross profit</h3><span class="pill pill-ex">Example</span></div>
+<div class="num">US$ 5,568</div>
+<span style="font-size:13px;color:#5A6475;">44.6%, before channel and payment fees</span>
+</article>
+</div>
+</section>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:22px;align-items:start;">
+<section class="card" style="overflow:hidden;" aria-labelledby="attn-h">
+<div style="padding:16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><h2 id="attn-h" style="margin:0;font:700 18px Lexend,sans-serif;">Needs your attention</h2><span style="display:inline-flex;gap:8px;"><span class="pill pill-you">3 actions</span><span class="pill pill-ex">Example</span></span></div>
+<div class="act">
+<span class="ico" style="background:#FFEDD5;color:#9A3412;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18v10H3zM3 11h18"></path></svg></span>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;"><strong style="font-size:15px;">#1046 is waiting for payment</strong><span style="font-size:13.5px;color:#5A6475;">US$ 46.30 needed. It ships after your wallet covers it.</span></div>
+<a href="Main.dc.html" class="btn btn-dark btn-sm">Add funds</a>
+</div>
+<div class="act">
+<span class="ico" style="background:#FFEDD5;color:#9A3412;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M12 3l9 16H3z"></path></svg></span>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;"><strong style="font-size:15px;">#1039 is running late</strong><span style="font-size:13.5px;color:#5A6475;">Octopus will ship it another way or refund you by Nov 8.</span></div>
+<a href="DropshipOrders.dc.html" class="btn btn-ghost btn-sm">Open order</a>
+</div>
+<div class="act">
+<span class="ico" style="background:#E6EFFC;color:#1E58B0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"></path></svg></span>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;"><strong style="font-size:15px;">Posture Corrector is low in stock</strong><span style="font-size:13.5px;color:#5A6475;">95 left in our warehouse.</span></div>
+<a href="Dropship.dc.html" class="btn btn-ghost btn-sm" aria-label="View Posture Corrector">View</a>
+</div>
+</section>
+
+<section class="card" style="overflow:hidden;" aria-labelledby="ship-h">
+<div style="padding:16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><h2 id="ship-h" style="margin:0;font:700 18px Lexend,sans-serif;">Orders per shipping type, 30 days</h2><span class="pill pill-ex">Example</span></div>
+<div style="display:flex;gap:14px;align-items:center;padding:16px;border-top:1px solid #EEF0F4;font-size:14px;"><span class="pill" style="background:#E6EFFC;color:#1E58B0;min-width:92px;justify-content:center;">Express</span><span style="flex:1;color:#3B4556;">Our warehouse, 5–10 days</span><strong style="font:700 18px Lexend,sans-serif;">226</strong></div>
+<div style="display:flex;gap:14px;align-items:center;padding:16px;border-top:1px solid #EEF0F4;font-size:14px;"><span class="pill" style="background:#DDF3F1;color:#0F5F59;min-width:92px;justify-content:center;">Standard</span><span style="flex:1;color:#3B4556;">Partner warehouses, 7–14 days</span><strong style="font:700 18px Lexend,sans-serif;">104</strong></div>
+<div style="display:flex;gap:14px;align-items:center;padding:16px;border-top:1px solid #EEF0F4;font-size:14px;"><span class="pill" style="background:#F3E8FF;color:#6B21A8;min-width:92px;justify-content:center;">Economy</span><span style="flex:1;color:#3B4556;">Global network, 10–20 days</span><strong style="font:700 18px Lexend,sans-serif;">82</strong></div>
+<p style="margin:0;padding:12px 16px 16px;border-top:1px solid #EEF0F4;font-size:13px;color:#5A6475;line-height:1.5;">An order with two shipping types counts in both rows; each ships its own parcel with its own tracking.</p>
+</section>
+</div>
+
+<section class="card" style="overflow:hidden;" aria-labelledby="st-h">
+<div style="padding:16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;"><h2 id="st-h" style="margin:0;font:700 18px Lexend,sans-serif;">Connected stores</h2><span class="pill pill-ex">Example</span></div><a href="Dropship.dc.html" style="color:#2A6FD6;font-weight:600;font-size:14px;">Manage stores →</a></div>
+<sc-for list="{{stores}}" as="s" hint-placeholder-count="2">
+<div style="display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;padding:14px 16px;border-top:1px solid #EEF0F4;">
+<span aria-hidden="true" style="width:40px;height:40px;border-radius:10px;background:#EEF0F4;color:#11133C;display:flex;align-items:center;justify-content:center;font:700 15px Lexend,sans-serif;flex:none;">{{s.mono}}</span>
+<div style="flex:1 1 220px;min-width:0;display:flex;flex-direction:column;gap:2px;"><strong style="font-size:15px;">{{s.name}}</strong><span style="font-size:13px;color:#5A6475;">{{s.channel}} · {{s.domain}}</span></div>
+<dl style="margin:0;display:flex;flex-wrap:wrap;gap:12px 28px;font-size:14px;">
+<div><dt class="k">Products</dt><dd style="margin:3px 0 0;font-weight:600;">{{s.products}}</dd></div>
+<div><dt class="k">Orders, 30 days</dt><dd style="margin:3px 0 0;font-weight:600;">{{s.orders}}</dd></div>
+<div><dt class="k">Last sync</dt><dd style="margin:3px 0 0;font-weight:600;">{{s.sync}}</dd></div>
+</dl>
+<span class="pill pill-live">{{s.status}}</span>
+<a class="btn btn-ghost btn-sm" href="Dropship.dc.html" aria-label="{{s.manageLabel}}">Manage</a>
+</div>
+</sc-for>
+</section>
+
+<section class="card" style="padding:16px 18px;display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;" aria-labelledby="plan-h">
+<h2 id="plan-h" style="margin:0;font:700 16px Lexend,sans-serif;">Plan: Growth</h2>
+<span class="pill pill-ex">Example</span>
+<span style="font-size:14px;color:#3B4556;">214 of 1,000 products pushed</span>
+<span style="font-size:14px;color:#3B4556;">2 of 3 stores connected · orders paid from wallet automatically</span>
+<a href="Dropship.dc.html" class="btn btn-ghost btn-sm" style="margin-left:auto;" aria-label="Manage plan">Manage</a>
+</section>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1420}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const list = [
+      { mono: 'S', name: 'Nova Breeze', channel: 'Shopify', domain: 'novabreeze.store', products: '214', orders: '268', sync: '12 min ago', status: 'Connected' },
+      { mono: 'W', name: 'Nova Breeze', channel: 'WooCommerce', domain: 'novabreeze.ae', products: '196', orders: '144', sync: '14 min ago', status: 'Connected' }
+    ];
+    const stores = list.map((s) => ({ ...s, manageLabel: 'Manage ' + s.name + ' on ' + s.channel }));
+    return { stores };
+  }
+}
+</script>
+</body>
+</html>

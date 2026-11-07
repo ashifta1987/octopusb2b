@@ -52,7 +52,7 @@ export function StaffShell({ session, nav, counts, moderation, children }: {
             <input id="staff-q" name="q" className="input !rounded-[10px] !border-white" placeholder="Search orders by code or title" />
           </form>
           {isStaging() && <span className="order-2 mono text-[11px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full bg-[#FEF3C7] text-[#92400E]" data-testid="staging-badge" title="Staging environment: test data, not the live site">Staging</span>}
-          <div className="ml-auto flex items-center gap-3 [&_summary]:text-white [&_.btn-ghost]:!text-white [&_.text-muted]:!text-white/70 [&_summary_.bg-navy]:!bg-blue">
+          <div className="ml-auto flex items-center gap-3 [&_summary]:text-white [&_.btn-ghost]:!text-white [&_.text-muted]:!text-white/70 [&_summary_.bg-navy]:!bg-blue-fill">
             <WorkspaceSwitcher session={session} current="Admin" />
             <StaffUserMenu name={name} initials={initials} sub={sub} email={session.email} />
           </div>

@@ -75,7 +75,7 @@ async function Onboarding({ searchParams }: { searchParams: Promise<{ error?: st
       <div className="max-w-[560px] mx-auto">
         <Logo />
         <div className="grid grid-cols-3 gap-2 my-8">
-          {['Email', 'Verify', 'Profile'].map((x) => <div key={x}><div className="h-1 rounded-full bg-blue" /><div className="mt-2 text-xs font-semibold">{x}</div></div>)}
+          {['Email', 'Verify', 'Profile'].map((x) => <div key={x}><div className="h-1 rounded-full bg-blue-fill" /><div className="mt-2 text-xs font-semibold">{x}</div></div>)}
         </div>
         <h1 className="text-[28px] font-semibold">Create your profile</h1>
         <p className="text-muted mt-1">We need a few details before you can request quotes or place orders.</p>

@@ -110,7 +110,7 @@ export default async function SourcingDetail({ params }: { params: Promise<{ ref
             const current = i === step && status !== 'Closed';
             return (
               <li key={t} aria-current={current ? 'step' : undefined} className="flex gap-2.5">
-                <span className={`mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-[12px] font-bold shrink-0 ${done ? 'bg-blue text-white' : 'bg-line text-muted'}`}>{i < step ? '✓' : i + 1}</span>
+                <span className={`mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-[12px] font-bold shrink-0 ${done ? 'bg-blue-fill text-white' : 'bg-line text-muted'}`}>{i < step ? '✓' : i + 1}</span>
                 <span><b className={`block text-[14px] ${current ? 'text-blue' : ''}`}>{t}</b><span className="block text-[12.5px] text-muted leading-snug">{(b ?? '').replace('{currency}', String(req.currency ?? ''))}</span></span>
               </li>
             );

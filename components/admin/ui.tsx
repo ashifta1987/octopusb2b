@@ -26,7 +26,7 @@ export function Bar({ label, value, max, display, tone = 'blue' }: { label: Reac
     <div className="py-2">
       <div className="flex justify-between gap-3 text-[15px]"><span className="font-semibold">{label}</span><span className="mono text-sm">{display}</span></div>
       <div className="mt-1.5 h-2 rounded-full bg-line" aria-hidden>
-        <div className={cn('h-2 rounded-full', tone === 'navy' ? 'bg-navy' : 'bg-blue')} style={{ width: `${value > 0 ? pct : 0}%` }} />
+        <div className={cn('h-2 rounded-full', tone === 'navy' ? 'bg-navy' : 'bg-blue-fill')} style={{ width: `${value > 0 ? pct : 0}%` }} />
       </div>
     </div>
   );

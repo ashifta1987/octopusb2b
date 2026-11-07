@@ -108,7 +108,7 @@ export default async function GeographyPage({ searchParams }: { searchParams: Pr
               </td>
               <td className="td w-[180px]">
                 <span className="flex items-center gap-2">
-                  <span className="h-2 flex-1 rounded-full bg-line" aria-hidden><span className="block h-2 rounded-full bg-blue" style={{ width: `${totalGmv ? (r.gmv / totalGmv) * 100 : 0}%` }} /></span>
+                  <span className="h-2 flex-1 rounded-full bg-line" aria-hidden><span className="block h-2 rounded-full bg-blue-fill" style={{ width: `${totalGmv ? (r.gmv / totalGmv) * 100 : 0}%` }} /></span>
                   <span className="mono text-xs w-12 text-right">{totalGmv ? ((r.gmv / totalGmv) * 100).toFixed(1) : '0.0'}%</span>
                 </span>
               </td>

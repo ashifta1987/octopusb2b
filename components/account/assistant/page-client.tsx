@@ -35,7 +35,7 @@ export function AssistantPageClient({ boot }: { boot: Bootstrap }) {
     <section className="flex-[999_1_520px] min-w-0 flex flex-col gap-4">
       <div className="flex flex-wrap gap-2.5 justify-between items-center">
         <div className="flex gap-3 items-center">
-          <span aria-hidden className="w-12 h-12 rounded-[12px] bg-blue text-white flex items-center justify-center font-display font-bold text-[18px]">O</span>
+          <span aria-hidden className="w-12 h-12 rounded-[12px] bg-blue-fill text-white flex items-center justify-center font-display font-bold text-[18px]">O</span>
           <div className="flex flex-col gap-0.5">
             <h1 className="m-0 font-display font-extrabold text-[24px] leading-[1.2]">Octo · your account assistant</h1>
             <span className="text-[13px] text-muted">AI-powered · answers in seconds · hands off to a human when it matters</span>

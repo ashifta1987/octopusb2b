@@ -29,7 +29,7 @@ export type ConversationProps = {
 type UiMessage = AssistantMessage & { pending?: boolean; failed?: boolean };
 
 const OctoAvatar = ({ size = 36 }: { size?: number }) => (
-  <span aria-hidden className="flex-none rounded-[10px] bg-blue text-white flex items-center justify-center font-display font-bold text-[12px]" style={{ width: size, height: size }}>O</span>
+  <span aria-hidden className="flex-none rounded-[10px] bg-blue-fill text-white flex items-center justify-center font-display font-bold text-[12px]" style={{ width: size, height: size }}>O</span>
 );
 
 function sortMsgs(list: UiMessage[]) {
@@ -181,7 +181,7 @@ export function Conversation(p: ConversationProps) {
               <div key={m.id} className="flex gap-2.5 max-w-[86%] self-end flex-row-reverse">
                 <span aria-hidden className="flex-none w-9 h-9 rounded-[10px] bg-navy text-white flex items-center justify-center font-display font-bold text-[12px]">{me}</span>
                 <div className="flex flex-col items-end gap-1">
-                  <div className={`px-3.5 py-3 rounded-[14px] rounded-tr-[4px] bg-blue text-white text-[14.5px] leading-[1.55] whitespace-pre-wrap break-words ${m.pending ? 'opacity-70' : ''}`}>
+                  <div className={`px-3.5 py-3 rounded-[14px] rounded-tr-[4px] bg-blue-fill text-white text-[14.5px] leading-[1.55] whitespace-pre-wrap break-words ${m.pending ? 'opacity-70' : ''}`}>
                     <span className="sr-only">You: </span>{m.content}
                   </div>
                   {m.failed && <span className="text-[11px] text-bad">Not sent</span>}

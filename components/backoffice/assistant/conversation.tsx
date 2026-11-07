@@ -175,7 +175,7 @@ export function ConversationWorkspace({
               <li key={m.id} className={cn('flex gap-2 items-start', right ? 'flex-row-reverse' : '', m.author === 'system' && 'justify-center')}>
                 {m.author !== 'system' && (
                   <span aria-hidden className={cn('shrink-0 w-8 h-8 rounded-full grid place-items-center text-[11px] font-bold',
-                    m.author === 'bot' ? 'bg-blue text-white' : m.author === 'customer' ? 'bg-navy text-white' : 'bg-ok text-white')}>
+                    m.author === 'bot' ? 'bg-blue-fill text-white' : m.author === 'customer' ? 'bg-navy text-white' : 'bg-ok text-white')}>
                     {m.author === 'bot' ? 'O' : m.author === 'customer' ? 'C' : initials(name)}
                   </span>
                 )}
@@ -231,7 +231,7 @@ export function ConversationWorkspace({
         {identity}
         <section className="card p-5">
           <div className="flex items-center gap-2 mb-1">
-            <span aria-hidden className="w-7 h-7 rounded-full bg-blue text-white grid place-items-center text-xs font-bold">O</span>
+            <span aria-hidden className="w-7 h-7 rounded-full bg-blue-fill text-white grid place-items-center text-xs font-bold">O</span>
             <h3 className="font-semibold">Octo side rail</h3>
           </div>
           <p className="text-xs text-muted mb-3">Facts from this customer&apos;s own data. Click one to insert it into your reply.</p>

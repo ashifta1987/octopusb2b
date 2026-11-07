@@ -99,7 +99,7 @@ export default async function AdsAdminPage() {
                 </td>
                 <td className="td mono">{st.clicks.toLocaleString()}</td>
                 <td className="td mono font-semibold">{money(st.rev, ctx.currency)}</td>
-                <td className="td w-[140px]"><div className="h-2 rounded-full bg-line" role="img" aria-label={`${Math.round((st.rev / maxPlacementRev) * 100)}% of top slot`}><div className="h-2 rounded-full bg-blue" style={{ width: `${(st.rev / maxPlacementRev) * 100}%` }} /></div></td>
+                <td className="td w-[140px]"><div className="h-2 rounded-full bg-line" role="img" aria-label={`${Math.round((st.rev / maxPlacementRev) * 100)}% of top slot`}><div className="h-2 rounded-full bg-blue-fill" style={{ width: `${(st.rev / maxPlacementRev) * 100}%` }} /></div></td>
               </tr>
             );
           })}
@@ -152,7 +152,7 @@ export default async function AdsAdminPage() {
                       <td className="td mono text-sm">{d}</td>
                       <td className="td mono">{v.clicks}</td>
                       <td className="td mono text-muted">{v.invalid}</td>
-                      <td className="td"><span className="flex items-center gap-2"><span className="mono text-sm w-20">{money(v.charged, ctx.currency)}</span><span className="h-2 flex-1 rounded-full bg-line" aria-hidden><span className="block h-2 rounded-full bg-blue" style={{ width: `${(v.charged / maxDay) * 100}%` }} /></span></span></td>
+                      <td className="td"><span className="flex items-center gap-2"><span className="mono text-sm w-20">{money(v.charged, ctx.currency)}</span><span className="h-2 flex-1 rounded-full bg-line" aria-hidden><span className="block h-2 rounded-full bg-blue-fill" style={{ width: `${(v.charged / maxDay) * 100}%` }} /></span></span></td>
                     </tr>
                   );
                 })}

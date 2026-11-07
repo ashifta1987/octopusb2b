@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Make My Brand request</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6F8}
+*{box-sizing:border-box}
+img{max-width:100%}
+a{color:#11133C;text-decoration:none}a:hover{color:#2A6FD6}
+.wrap{max-width:1280px;margin:0 auto;padding-left:32px;padding-right:32px}
+.sec{padding-top:64px;padding-bottom:64px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:10px;font:600 15px/1 Inter,system-ui,sans-serif;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+.btn-primary{background:#2A6FD6;color:#FFFFFF}.btn-primary:hover{background:#1E58B0;color:#FFFFFF}
+.btn-dark{background:#11133C;color:#FFFFFF}.btn-dark:hover{background:#262A6B;color:#FFFFFF}
+.btn-ghost{background:#FFFFFF;color:#11133C;border-color:#C5CCD6}.btn-ghost:hover{border-color:#11133C}
+.btn-light{background:#FFFFFF;color:#11133C}.btn-light:hover{background:#E6EFFC;color:#11133C}
+.btn-outline-w{background:transparent;color:#FFFFFF;border-color:rgba(255,255,255,.45)}.btn-outline-w:hover{border-color:#FFFFFF;color:#FFFFFF}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid #1D4ED8;outline-offset:2px}
+input,select{font:400 15px Inter,system-ui,sans-serif;color:#11133C}
+.k{font:600 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#5A6475;text-transform:uppercase}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.pill-live{background:#DCFCE7;color:#15803D}.pill-soft{background:#E6EFFC;color:#1E58B0}.pill-dark{background:rgba(255,255,255,.1);color:#DDE3F5;border:1px solid rgba(255,255,255,.18)}
+.card{background:#FFFFFF;border:1px solid #E2E5EA;border-radius:14px;overflow:hidden}
+.eyebrow{display:flex;align-items:center;gap:10px}
+.num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:#11133C;color:#FFFFFF;font:700 13px Lexend,sans-serif;flex:none}
+.num-b{background:#2A6FD6}
+.h2{margin:10px 0 0;font:800 34px/1.12 Lexend,sans-serif;letter-spacing:-.02em}
+.lead{margin:12px 0 0;color:#3B4556;font-size:16.5px;line-height:1.6;max-width:620px}
+.sec-h{display:flex;justify-content:space-between;align-items:flex-end;gap:16px 24px;margin-bottom:24px;flex-wrap:wrap}
+.lnk{color:#2A6FD6;font-weight:600;font-size:14.5px;white-space:nowrap}
+.rail a{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:999px;color:#3B4556;font-weight:500;font-size:14px;white-space:nowrap;flex:none}
+.rail a:hover{background:#F0F2F6}
+.rail a.on{background:#11133C;color:#FFFFFF;font-weight:600}
+.step{display:flex;flex-direction:column;gap:8px;padding:20px}
+.step h3{margin:4px 0 0;font:700 16.5px/1.3 Lexend,sans-serif}
+.step p{margin:0;color:#5A6475;font-size:14px;line-height:1.55}
+.chk{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.chk li{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.45;color:#3B4556}
+.chk li::before{content:"✓";flex:none;width:20px;height:20px;margin-top:1px;border-radius:999px;background:#DCFCE7;color:#15803D;font:700 12px/20px Inter,sans-serif;text-align:center}
+.art{display:block;width:100%;height:100%;object-fit:cover}
+.bar{height:8px;background:#E5E8ED;border-radius:999px;overflow:hidden}.bar > i{display:block;height:100%;background:linear-gradient(90deg,#2A6FD6,#60A5FA)}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;background:#FFFFFF;border:1px solid #E2E5EA;font:600 15px Inter,sans-serif}
+details{background:#FFFFFF;border:1px solid #E2E5EA;border-radius:14px;padding:0 18px}
+summary{cursor:pointer;min-height:54px;display:flex;align-items:center;font:600 15.5px Inter,sans-serif}
+details p{margin:0 0 16px;color:#3B4556;font-size:14.5px;line-height:1.6}
+.crumb{font-size:13.5px;color:#5A6475}
+@media (max-width:1100px){.hero-grid,.split{grid-template-columns:1fr !important}.steps4{grid-template-columns:repeat(2,1fr) !important}.cols4{grid-template-columns:repeat(2,1fr) !important}.cols3{grid-template-columns:1fr !important}}
+@media (max-width:760px){.wrap{padding-left:16px !important;padding-right:16px !important}.sec{padding-top:40px !important;padding-bottom:40px !important}.h1{font-size:32px !important;line-height:1.1 !important}.h2{font-size:25px !important}.steps4,.cols4{grid-template-columns:1fr !important}.hdr form{order:3;flex-basis:100% !important}.acct-label{display:none}.float-card{position:static !important;margin-top:12px;width:auto !important}.cta-row .btn{flex:1 1 100%}.foot-grid{grid-template-columns:1fr 1fr !important}}
+.ann{background:#11133C;color:#FFFFFF;font-size:13.5px}
+.ann a{color:#9CC2FF;font-weight:600}
+.new{display:inline-flex;align-items:center;padding:2px 7px;border-radius:99px;background:#F59E0B;color:#11133C;font:700 10px/1.4 'IBM Plex Mono',monospace;letter-spacing:.04em;margin-left:4px}
+.lnk{color:#1E58B0}
+.pill-ex{background:#FEF3C7;color:#92400E}
+.rtabs{display:flex;gap:2px;overflow-x:auto}
+.rtabs a{display:inline-flex;align-items:center;gap:4px;min-height:50px;padding:0 14px;font:600 14px Inter,sans-serif;color:#3B4556;border-bottom:3px solid transparent;white-space:nowrap;flex:none}
+.rtabs a:hover{color:#11133C;background:#F5F6F8}
+.rtabs a.on{color:#11133C;border-bottom-color:#2A6FD6}
+.fs{border:0;margin:0;padding:24px 0 0;min-width:0}
+.fs + .fs{border-top:1px solid #EEF0F4;margin-top:24px}
+.lbl{display:block;padding:0;font:700 16px/1.3 Lexend,sans-serif;color:#11133C}
+.sub{display:block;font:600 14px Inter,sans-serif;color:#11133C;margin-bottom:6px}
+.hint{margin:6px 0 0;font-size:13.5px;line-height:1.5;color:#5A6475}
+.inp{display:block;width:100%;min-height:48px;padding:11px 14px;border:1px solid #C5CCD6;border-radius:10px;background:#FFFFFF;font:400 15px/1.4 Inter,sans-serif;color:#11133C}
+textarea.inp{min-height:100px;resize:vertical;line-height:1.5}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;min-height:44px;padding:16px;border:1.5px solid #C5CCD6;border-radius:12px;background:#FFFFFF;color:#11133C;font:400 14px Inter,sans-serif;cursor:pointer}
+.opt:hover{border-color:#11133C}
+.opt[aria-pressed="true"]{border-color:#2A6FD6;background:#F2F7FE;box-shadow:inset 0 0 0 1px #2A6FD6}
+.dot{flex:none;width:20px;height:20px;border-radius:99px;border:2px solid #8A94A6;margin-top:1px;background:#FFFFFF}
+.dot.sq{border-radius:5px}
+.opt[aria-pressed="true"] .dot{border-color:#2A6FD6;background:#2A6FD6;box-shadow:inset 0 0 0 3px #FFFFFF}
+.opt b{display:block;font:600 15px/1.35 Inter,sans-serif}
+.opt small{display:block;margin-top:4px;color:#3B4556;font-size:13.5px;line-height:1.45}
+.tchip{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid #C5CCD6;background:#FFFFFF;color:#11133C;font:600 14px Inter,sans-serif;cursor:pointer}
+.tchip:hover{border-color:#11133C}
+.tchip[aria-pressed="true"]{background:#11133C;border-color:#11133C;color:#FFFFFF}
+.fee{background:#F2F7FE;border:1px solid #CFE0F7;border-radius:12px;padding:16px 18px}
+.tile{position:relative;display:flex;flex-direction:column;text-align:left;padding:0;border:1.5px solid #E2E5EA;border-radius:12px;background:#FFFFFF;overflow:hidden;cursor:pointer;color:#11133C}
+.tile:hover{border-color:#11133C}
+.tile[aria-pressed="true"]{border-color:#2A6FD6;box-shadow:0 0 0 2px #2A6FD6}
+.tile-img{display:block;aspect-ratio:1/1;background:#F2F2F0}
+.tile-b{display:block;padding:10px 12px 12px}
+.tile-b b{display:block;font:600 14px/1.3 Inter,sans-serif}
+.tile-b small{display:block;margin-top:4px;font-size:12px;color:#15803D;font-weight:600}
+.tick{position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:99px;background:#2A6FD6;color:#FFFFFF;display:none;align-items:center;justify-content:center}
+.tile[aria-pressed="true"] .tick{display:flex}
+.drop{position:relative;display:flex;gap:14px;align-items:center;padding:20px;border:1.5px dashed #8A94A6;border-radius:12px;background:#F8F9FB;cursor:pointer;min-height:44px}
+.drop:hover{border-color:#11133C}
+.drop:focus-within{outline:3px solid #1D4ED8;outline-offset:2px}
+.drop b{display:block;font:600 15px Inter,sans-serif}
+.drop small{display:block;margin-top:4px;font-size:13.5px;color:#3B4556;line-height:1.45}
+.stp{list-style:none;margin:14px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stp button{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:6px 10px;border-radius:10px;border:0;background:transparent;font:600 14px Inter,sans-serif;cursor:pointer;text-align:left}
+.stp button:hover{background:#F5F6F8}
+.sum{margin:0;display:grid;gap:0}
+.sum > div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:center;padding:6px 0;border-top:1px solid #EEF0F4}
+.sum > div:first-child{border-top:0}
+.sum dt{font:600 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475}
+.sum dd{margin:0;display:flex;gap:10px;align-items:center;font-size:14.5px;color:#11133C;line-height:1.45;overflow-wrap:anywhere}
+.ed{min-height:44px;min-width:44px;padding:0 10px;border:0;background:transparent;color:#1E58B0;font:600 13.5px Inter,sans-serif;cursor:pointer;border-radius:8px}
+.ed:hover{background:#E6EFFC}
+.vstep{display:flex;gap:12px;align-items:flex-start}
+.vstep h3{margin:2px 0 0;font:700 15px/1.3 Lexend,sans-serif}
+.vstep p{margin:4px 0 0;color:#5A6475;font-size:13.5px;line-height:1.5}
+@media (max-width:1100px){.form-grid{grid-template-columns:1fr !important}}
+@media (max-width:760px){.cols2,.cols3b{grid-template-columns:1fr !important}.tiles4{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.fcard{padding:20px !important}.stp{grid-template-columns:1fr !important}.sum > div{grid-template-columns:1fr !important;gap:2px !important}}
+</style>
+</helmet>
+<div style="font-family:Inter,system-ui,sans-serif;color:#11133C;background:#F5F6F8;min-height:100vh;">
+
+<div class="ann"><div class="wrap" style="padding-top:9px;padding-bottom:9px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;text-align:center;"><span class="new" style="margin:0;">NEW</span><span>Make My Brand: your logo on verified products, stocked in our warehouse, shipped worldwide.</span><a href="MakeMyBrand.dc.html">See how it works →</a></div></div>
+<header style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;">
+<div class="wrap hdr" style="padding-top:12px;padding-bottom:12px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;">
+<a href="HomeMMB.dc.html" aria-label="Octopus B2B home" style="display:inline-flex;align-items:center;flex:none;"><img src="assets/octopus-logo.png" alt="Octopus B2B" style="height:42px;width:auto;display:block;"></a>
+<form role="search" style="flex:1 1 420px;display:flex;min-width:0;border:1.5px solid #11133C;border-radius:10px;overflow:hidden;background:#FFFFFF;">
+<label for="q" class="sr">Search products, HS codes or turnkey projects</label>
+<input id="q" type="search" placeholder="Search products, HS codes or turnkey projects" style="flex:1;min-width:0;border:0;padding:0 14px;min-height:46px;font-size:15px;">
+<button type="submit" class="btn btn-dark" style="border-radius:0;min-height:46px;padding:0 18px;" aria-label="Search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></button>
+</form>
+<a href="Main.dc.html" class="btn btn-ghost" style="min-height:46px;padding:0 14px;margin-left:auto;" aria-label="My account"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span class="acct-label">My account</span></a>
+</div>
+</header>
+<nav class="rail" aria-label="Services" style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;">
+<div class="wrap" style="padding-top:8px;padding-bottom:8px;display:flex;gap:4px;overflow-x:auto;align-items:center;">
+<a href="HomeMMB.dc.html">Product sourcing</a>
+<a class="on" href="MakeMyBrand.dc.html" aria-current="page">Make My Brand <span class="new">NEW</span></a>
+<a href="HomeMMB.dc.html">Dropshipping</a>
+<a href="HomeMMB.dc.html">MOQ pools</a>
+<a href="Request3PL.dc.html">3PL warehousing</a>
+<a href="HomeMMB.dc.html">Turnkey Projects</a>
+<span style="width:1px;height:20px;background:#E2E5EA;flex:none;margin:0 6px;"></span>
+<a href="PublicProduct.dc.html">All categories</a>
+</div>
+</nav>
+
+<main>
+<section aria-labelledby="rc-h" style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;">
+<div class="wrap" style="padding-top:24px;">
+<nav class="crumb" aria-label="Breadcrumb"><a href="HomeMMB.dc.html" style="color:#5A6475;">Home</a> / <a href="RequestBrand.dc.html" style="color:#5A6475;">Request Center</a> / <span aria-current="page" style="color:#11133C;">Make My Brand</span></nav>
+<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-top:16px;">
+<div><h1 id="rc-h" class="h1" style="margin:0;font:800 38px/1.1 Lexend,sans-serif;letter-spacing:-.025em;">Request Center</h1><p class="lead" style="margin-top:8px;">Ask for any Octopus service from one place. Each request gets a reference number and its own section in My account.</p></div>
+<a href="Main.dc.html" class="btn btn-ghost">My requests</a>
+</div>
+<nav class="rtabs" aria-label="Request type" style="margin-top:18px;">
+<a href="RequestBrand.dc.html">Product sourcing</a>
+<a class="on" href="RequestBrand.dc.html" aria-current="page">Make My Brand <span class="new">NEW</span></a>
+<a href="RequestBrand.dc.html">Dropshipping</a>
+<a href="Request3PL.dc.html">3PL service</a>
+<a href="RequestBrand.dc.html">Sample request</a>
+<a href="RequestBrand.dc.html">QC inspection</a>
+<a href="RequestBrand.dc.html">Certification</a>
+</nav>
+</div>
+</section>
+
+<section aria-labelledby="f-h">
+<div class="wrap" style="padding-top:36px;padding-bottom:56px;">
+<div class="form-grid" style="display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px;align-items:start;">
+
+<form class="card fcard" style="padding:28px 32px 32px;" aria-labelledby="f-h">
+<div style="display:flex;align-items:center;gap:6px;"><span class="k" style="color:#1E58B0;">Make My Brand</span><span class="new">NEW</span></div>
+<h2 id="f-h" style="margin:8px 0 0;font:800 26px/1.2 Lexend,sans-serif;">Start a brand project</h2>
+<p class="hint" style="font-size:15px;color:#3B4556;max-width:640px;">Your logo on a verified product and its box. Tell us the product, how you want it branded and where the stock goes. It takes three short steps.</p>
+
+<div style="margin-top:22px;">
+<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;"><span class="k" style="color:#11133C;" aria-live="polite">Step {{stepNum}} of 3 · {{stepName}}</span><span class="k">{{pctText}}</span></div>
+<div class="bar" role="progressbar" aria-label="Request progress" aria-valuemin="1" aria-valuemax="3" aria-valuenow="{{stepNum}}" style="margin-top:8px;"><i style="{{barStyle}}"></i></div>
+<ol class="stp">
+<sc-for list="{{steps}}" as="p" hint-placeholder-count="3"><li><button type="button" style="{{p.style}}" aria-current="{{p.cur}}" onClick="{{p.go}}"><span style="{{p.numStyle}}">{{p.n}}</span>{{p.label}}</button></li></sc-for>
+</ol>
+</div>
+
+<sc-if value="{{isS1}}" hint-placeholder-val="{{true}}">
+<fieldset class="fs">
+<legend class="lbl" id="pp-l">Pick a verified product</legend>
+<p class="hint">Products Octopus lists directly. Each factory was checked by Octopus: licence, site visit, QC record.</p>
+<div role="group" aria-labelledby="pp-l" class="tiles4" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:12px;">
+<sc-for list="{{prods}}" as="p" hint-placeholder-count="4"><button type="button" class="tile" aria-pressed="{{p.pressed}}" onClick="{{p.pick}}"><span class="tile-img"><img class="art" src="{{p.img}}" alt=""></span><span class="tile-b"><b>{{p.name}}</b><small>Verified by Octopus</small></span><span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5 9-10"></path></svg></span></button></sc-for>
+</div>
+<div style="margin-top:18px;"><label for="b-link" class="sub">Or: I have a product link</label><input id="b-link" class="inp" type="url" value="{{link}}" onChange="{{onLink}}" placeholder="Paste a link to the product you want branded" aria-describedby="b-link-h"><p class="hint" id="b-link-h">A link replaces the product picked above.</p></div>
+</fieldset>
+<div class="fs" style="border-top:1px solid #EEF0F4;margin-top:24px;">
+<label for="b-qty" class="lbl">Quantity</label>
+<p class="hint" id="b-qty-h">Branding minimum for this product: [MOQ] pcs. Your quote shows the price for this quantity.</p>
+<div style="display:flex;align-items:center;gap:10px;margin-top:10px;max-width:260px;"><input id="b-qty" class="inp" type="number" min="1" inputmode="numeric" value="{{qty}}" onChange="{{onQty}}" aria-describedby="b-qty-h"><span style="font-weight:600;">pcs</span></div>
+</div>
+<fieldset class="fs" style="border-top:1px solid #EEF0F4;margin-top:24px;">
+<legend class="lbl" id="mk-l">Target markets</legend>
+<p class="hint">Where will you sell? This decides labels, certificates and duties in your quote.</p>
+<div role="group" aria-labelledby="mk-l" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
+<sc-for list="{{mkChips}}" as="c" hint-placeholder-count="8"><button type="button" class="tchip" aria-pressed="{{c.pressed}}" onClick="{{c.pick}}">{{c.label}}</button></sc-for>
+</div>
+</fieldset>
+</sc-if>
+
+<sc-if value="{{isS2}}" hint-placeholder-val="{{false}}">
+<fieldset class="fs">
+<legend class="lbl" id="bm-l">Branding method</legend>
+<p class="hint">Not sure? Pick the closest one. Your account manager confirms what works on this product.</p>
+<div role="group" aria-labelledby="bm-l" class="cols3b" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px;">
+<sc-for list="{{methods}}" as="m" hint-placeholder-count="3"><button type="button" class="opt" aria-pressed="{{m.pressed}}" onClick="{{m.pick}}"><span class="dot" aria-hidden="true"></span><span><b>{{m.title}}</b><small>{{m.desc}}</small></span></button></sc-for>
+</div>
+</fieldset>
+<fieldset class="fs">
+<legend class="lbl" id="pk-l">Packaging</legend>
+<div role="group" aria-labelledby="pk-l" class="cols3b" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px;">
+<sc-for list="{{boxes}}" as="b" hint-placeholder-count="2"><button type="button" class="opt" aria-pressed="{{b.pressed}}" onClick="{{b.pick}}"><span class="dot" aria-hidden="true"></span><span><b>{{b.title}}</b><small>{{b.desc}}</small></span></button></sc-for>
+<button type="button" class="opt" aria-pressed="{{insPressed}}" onClick="{{toggleIns}}"><span class="dot sq" aria-hidden="true"></span><span><b>Add inserts</b><small>Thank-you card, manual or sticker with your brand. Goes with either box.</small></span></button>
+</div>
+</fieldset>
+<div class="fs" style="border-top:1px solid #EEF0F4;margin-top:24px;">
+<span class="lbl" id="lg-l">Your logo</span>
+<label for="b-logo" class="drop" style="margin-top:12px;">
+<span style="width:48px;height:48px;border-radius:12px;background:#E6EFFC;color:#1E58B0;display:flex;align-items:center;justify-content:center;flex:none;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"></path><path d="m7 9 5-5 5 5"></path><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"></path></svg></span>
+<span><b>{{logoTitle}}</b><small>Vector files work best: AI, PDF or SVG. PNG is fine for a first look. Maximum size [MB].</small></span>
+<input id="b-logo" class="sr" type="file" accept=".ai,.pdf,.svg,.png,.jpg,.jpeg" aria-describedby="lg-priv" onChange="{{onLogo}}">
+</label>
+<p class="hint" id="lg-priv" style="display:flex;gap:8px;align-items:flex-start;color:#3B4556;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:2px;"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>Your files are private: only you, your account manager and the approved proof go to the factory</p>
+</div>
+<fieldset class="fs" style="border-top:1px solid #EEF0F4;margin-top:24px;">
+<legend class="lbl">Brand colours</legend>
+<p class="hint">Pantone code or hex value. Leave empty if your logo file already has them.</p>
+<div class="cols2" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:12px;">
+<div><label for="b-c1" class="sub">Main colour</label><input id="b-c1" class="inp" type="text" value="{{c1}}" onChange="{{onC1}}" placeholder="e.g. Pantone 2935 C or #1E58B0"></div>
+<div><label for="b-c2" class="sub">Second colour <span style="font-weight:400;color:#5A6475;">(optional)</span></label><input id="b-c2" class="inp" type="text" value="{{c2}}" onChange="{{onC2}}" placeholder="e.g. #11133C"></div>
+</div>
+</fieldset>
+</sc-if>
+
+<sc-if value="{{isS3}}" hint-placeholder-val="{{false}}">
+<fieldset class="fs">
+<legend class="lbl" id="ds-l">Where the stock goes</legend>
+<div role="group" aria-labelledby="ds-l" class="cols2" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;">
+<sc-for list="{{dests}}" as="d" hint-placeholder-count="2"><button type="button" class="opt" aria-pressed="{{d.pressed}}" onClick="{{d.pick}}"><span class="dot" aria-hidden="true"></span><span><b>{{d.title}}</b><small>{{d.desc}}</small></span></button></sc-for>
+</div>
+<sc-if value="{{isBulk}}" hint-placeholder-val="{{false}}">
+<div style="margin-top:12px;max-width:420px;"><label for="b-country" class="sub">Country and city</label><input id="b-country" class="inp" type="text" value="{{country}}" onChange="{{onCountry}}" placeholder="e.g. Dubai, United Arab Emirates"></div>
+</sc-if>
+</fieldset>
+<fieldset class="fs">
+<legend class="lbl" id="st-l">Stores to connect</legend>
+<p class="hint">Connected stores send orders to us. You connect them in My account after the quote.</p>
+<div role="group" aria-labelledby="st-l" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
+<sc-for list="{{storeChips}}" as="c" hint-placeholder-count="3"><button type="button" class="tchip" aria-pressed="{{c.pressed}}" onClick="{{c.pick}}">{{c.label}}</button></sc-for>
+</div>
+</fieldset>
+<div class="fs" style="border-top:1px solid #EEF0F4;margin-top:24px;">
+<label for="b-note" class="lbl">Note for your account manager</label>
+<textarea id="b-note" class="inp" style="margin-top:10px;" onChange="{{onNote}}" placeholder="Deadline, colours of the product itself, a brand you like, anything else" value="{{note}}"></textarea>
+</div>
+<div class="fs" style="border-top:1px solid #EEF0F4;margin-top:24px;">
+<h3 class="lbl" style="margin:0 0 6px;">Your request</h3>
+<dl class="sum">
+<sc-for list="{{summary}}" as="r" hint-placeholder-count="9"><div><dt>{{r.k}}</dt><dd><span style="flex:1;min-width:0;">{{r.v}}</span><button type="button" class="ed" aria-label="{{r.aria}}" onClick="{{r.edit}}">Edit</button></dd></div></sc-for>
+</dl>
+</div>
+<div class="fee" style="margin-top:20px;">
+<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline;"><strong style="font:700 16px Lexend,sans-serif;">Make My Brand request</strong><strong style="font:700 16px Lexend,sans-serif;color:#15803D;">Free</strong></div>
+<p style="margin:8px 0 0;font-size:14px;line-height:1.55;color:#3B4556;">Your account manager sends a quote with the final price, delivery date, duties and shipping before you pay anything.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{showWarn}}" hint-placeholder-val="{{false}}">
+<p role="alert" style="margin:18px 0 0;padding:12px 14px;border-radius:10px;background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412;font-size:14px;">Pick a product or paste a product link to continue.</p>
+</sc-if>
+
+<sc-if value="{{sent}}" hint-placeholder-val="{{false}}">
+<div role="status" style="margin-top:20px;border:1px solid #BBF7D0;background:#F0FDF4;border-radius:12px;padding:16px 18px;display:flex;gap:12px;align-items:flex-start;">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:1px;"><circle cx="12" cy="12" r="9"></circle><path d="m8 12 3 3 5-6"></path></svg>
+<div><strong style="font:700 16px Lexend,sans-serif;color:#14532D;">Request sent · reference [MB reference number]</strong><p style="margin:6px 0 0;font-size:14px;color:#14532D;line-height:1.5;">Your account manager replies within [N] working hours. Follow it in My account › Make My Brand.</p><a href="Main.dc.html" class="btn btn-ghost" style="margin-top:12px;">Open My account › Make My Brand</a></div>
+</div>
+</sc-if>
+
+<sc-if value="{{notSent}}" hint-placeholder-val="{{true}}">
+<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:26px;padding-top:20px;border-top:1px solid #EEF0F4;">
+<sc-if value="{{canBack}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-ghost" onClick="{{back}}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>Back</button></sc-if>
+<span style="flex:1 1 auto;"></span>
+<sc-if value="{{notLast}}" hint-placeholder-val="{{true}}"><button type="button" class="btn btn-primary" style="padding:0 26px;" onClick="{{next}}">{{nextLabel}}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg></button></sc-if>
+<sc-if value="{{isS3}}" hint-placeholder-val="{{false}}"><button type="button" class="btn btn-primary" style="min-height:52px;padding:0 28px;font-size:16px;" onClick="{{send}}">Send request</button></sc-if>
+</div>
+<sc-if value="{{isS3}}" hint-placeholder-val="{{false}}"><p style="margin:12px 0 0;font-size:14px;color:#3B4556;text-align:right;">Follow it in <a href="Main.dc.html" class="lnk" style="font-size:14px;">My account › Make My Brand</a></p></sc-if>
+</sc-if>
+</form>
+
+<aside style="display:flex;flex-direction:column;gap:16px;" aria-label="Help with your request">
+<div class="card" style="padding:22px;">
+<span class="k">Your account manager</span>
+<div style="display:flex;gap:14px;align-items:center;margin-top:14px;">
+<span style="width:52px;height:52px;border-radius:99px;background:#11133C;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font:700 16px Lexend,sans-serif;flex:none;" aria-hidden="true">[M]</span>
+<div><div style="font:700 17px/1.3 Lexend,sans-serif;">[Manager name]</div><div style="font-size:13.5px;color:#3B4556;margin-top:3px;">Octopus · replies within [N] working hours</div></div>
+</div>
+<p class="hint" style="font-size:14px;color:#3B4556;margin-top:14px;">Checks your request with the factory, sends your quote and artwork proof, and follows the order to the warehouse.</p>
+<a href="mailto:ceooctopusb2b@gmail.com" class="btn btn-ghost" style="width:100%;margin-top:14px;">Ask a question first</a>
+</div>
+<div class="card" style="padding:22px;">
+<span class="k" style="color:#1E58B0;">How it works</span>
+<h2 style="margin:8px 0 16px;font:700 19px/1.3 Lexend,sans-serif;">From request to stock</h2>
+<ol style="list-style:none;margin:0;padding:0;display:grid;gap:16px;">
+<li class="vstep"><span class="num num-b">1</span><div><h3>Send this request</h3><p>Free. You get a reference number right away.</p></div></li>
+<li class="vstep"><span class="num num-b">2</span><div><h3>Get your quote</h3><p>Final price, delivery date, duties and shipping. You decide before you pay anything.</p></div></li>
+<li class="vstep"><span class="num num-b">3</span><div><h3>Approve the artwork proof</h3><p>See your logo on the product and approve it in My account.</p></div></li>
+<li class="vstep"><span class="num num-b">4</span><div><h3>Check a sample</h3><p>A branded sample before production [if you order one].</p></div></li>
+<li class="vstep"><span class="num num-b">5</span><div><h3>Production and QC</h3><p>The factory makes your order and it is checked before it leaves.</p></div></li>
+<li class="vstep"><span class="num">6</span><div><h3>Stock ready</h3><p>In the Octopus warehouse for order-by-order shipping, or sent in bulk to your country.</p></div></li>
+</ol>
+</div>
+</aside>
+</div>
+</div>
+</section>
+</main>
+
+<footer style="background:#0C0E30;color:#8B93B5;">
+<div class="wrap" style="padding-top:44px;padding-bottom:28px;">
+<div class="foot-grid" style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:28px;">
+<div><img src="assets/octopus-logo-white.png" alt="Octopus B2B" style="height:40px;width:auto;display:block;"><p style="margin:14px 0 0;font-size:13.5px;line-height:1.55;max-width:280px;">Product sourcing, Make My Brand, dropshipping, group buying, warehousing and turnkey businesses from China, delivered worldwide.</p></div>
+<nav aria-label="Footer services" style="display:flex;flex-direction:column;gap:9px;font-size:13.5px;"><span class="k" style="color:#FFFFFF;">Services</span><a href="HomeMMB.dc.html" style="color:#8B93B5;">Product sourcing</a><a href="MakeMyBrand.dc.html" style="color:#8B93B5;">Make My Brand</a><a href="HomeMMB.dc.html" style="color:#8B93B5;">Dropshipping</a><a href="HomeMMB.dc.html" style="color:#8B93B5;">MOQ pools</a><a href="Request3PL.dc.html" style="color:#8B93B5;">3PL warehousing</a><a href="HomeMMB.dc.html" style="color:#8B93B5;">Turnkey Projects</a></nav>
+<nav aria-label="My account" style="display:flex;flex-direction:column;gap:9px;font-size:13.5px;"><span class="k" style="color:#FFFFFF;">My account</span><a href="Main.dc.html" style="color:#8B93B5;">Home</a><a href="DropshipCatalog.dc.html" style="color:#8B93B5;">Dropshipping</a><a href="Main.dc.html" style="color:#8B93B5;">3PL warehouse</a><a href="Main.dc.html" style="color:#8B93B5;">Make My Brand</a></nav>
+<nav aria-label="Company" style="display:flex;flex-direction:column;gap:9px;font-size:13.5px;"><span class="k" style="color:#FFFFFF;">Company</span><a href="RequestBrand.dc.html" style="color:#8B93B5;">About us</a><a href="mailto:ceooctopusb2b@gmail.com" style="color:#8B93B5;">Contact</a></nav>
+</div>
+<div style="border-top:1px solid #22265A;margin-top:28px;padding-top:18px;font-size:12.5px;">© 2026 Shenzhen Octopus Trading Co., Ltd. · Terms · Privacy</div>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { step: 1, prod: 'mini1', link: '', qty: '1000', mk: { ae: true }, method: 'laser', box: 'colour', inserts: false, logo: '', c1: '', c2: '', dest: 'wh', country: '', stores: {}, note: '', sent: false, warn: false };
+  }
+  renderVals() {
+    const s = this.state;
+    const set = (o) => this.setState(o);
+    const val = (e) => (e && e.target ? e.target.value : '');
+    const P = [
+      { id: 'f8', name: 'Handheld fan F8', img: 'assets/F8.jpg' },
+      { id: 'g1000', name: 'Neck fan G1000', img: 'assets/G1000.jpg' },
+      { id: 'mini1', name: 'Mini fan MINI1', img: 'assets/MINI1.jpg' },
+      { id: 's7', name: 'Aroma diffuser S7', img: 'assets/S7.jpg' }
+    ];
+    const MK = [['us', 'United States'], ['uk', 'United Kingdom'], ['eu', 'European Union'], ['ae', 'UAE'], ['sa', 'Saudi Arabia'], ['au', 'Australia'], ['ca', 'Canada'], ['other', 'Other']];
+    const METH = [
+      { id: 'pad', title: 'Pad or silk print', desc: 'Ink printed on the body. Suits one or two solid colours.' },
+      { id: 'laser', title: 'Laser engraving', desc: 'Marked into the surface in one tone.' },
+      { id: 'uv', title: 'UV print', desc: 'Full-colour print for detailed logos.' }
+    ];
+    const BOX = [
+      { id: 'std', title: 'Standard box', desc: 'The factory box, no print of yours.' },
+      { id: 'colour', title: 'Branded colour box', desc: 'Printed with your logo and colours.' }
+    ];
+    const DEST = [
+      { id: 'wh', title: 'Octopus warehouse · Shenzhen', desc: 'We keep your stock and ship order by order to your customers.' },
+      { id: 'bulk', title: 'Bulk to a country', desc: 'All units in one shipment to your address or warehouse.' }
+    ];
+    const ST = [['shopify', 'Shopify'], ['woo', 'WooCommerce'], ['none', 'None yet']];
+    const NAMES = ['Product', 'Brand', 'Delivery and stores'];
+    const noProduct = !s.prod && !s.link;
+
+    const steps = NAMES.map((n, i) => {
+      const k = i + 1;
+      const cur = k === s.step;
+      const done = k < s.step;
+      return {
+        n: String(k),
+        label: n,
+        cur: cur ? 'step' : 'false',
+        style: 'color:' + (cur ? '#11133C' : done ? '#14532D' : '#5A6475') + ';' + (cur ? 'background:#F2F7FE;' : ''),
+        numStyle: 'display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;flex:none;font:700 12.5px Lexend,sans-serif;' + (cur ? 'background:#2A6FD6;color:#FFFFFF;' : done ? 'background:#DCFCE7;color:#15803D;' : 'background:#EEF0F4;color:#3B4556;'),
+        go: () => { if (k > 1 && noProduct) { set({ step: 1, warn: true }); } else { set({ step: k, warn: false }); } }
+      };
+    });
+
+    const prods = P.map((p) => ({ name: p.name, img: p.img, pressed: s.prod === p.id ? 'true' : 'false', pick: () => set({ prod: p.id, link: '', warn: false }) }));
+    const mkChips = MK.map((m) => ({
+      label: m[1], pressed: s.mk[m[0]] ? 'true' : 'false',
+      pick: () => { const n = Object.assign({}, s.mk); n[m[0]] = !n[m[0]]; set({ mk: n }); }
+    }));
+    const methods = METH.map((m) => ({ title: m.title, desc: m.desc, pressed: s.method === m.id ? 'true' : 'false', pick: () => set({ method: m.id }) }));
+    const boxes = BOX.map((b) => ({ title: b.title, desc: b.desc, pressed: s.box === b.id ? 'true' : 'false', pick: () => set({ box: b.id }) }));
+    const dests = DEST.map((d) => ({ title: d.title, desc: d.desc, pressed: s.dest === d.id ? 'true' : 'false', pick: () => set({ dest: d.id }) }));
+    const storeChips = ST.map((t) => ({
+      label: t[1], pressed: s.stores[t[0]] ? 'true' : 'false',
+      pick: () => {
+        let n;
+        if (t[0] === 'none') { n = s.stores.none ? {} : { none: true }; }
+        else { n = Object.assign({}, s.stores); delete n.none; n[t[0]] = !n[t[0]]; }
+        set({ stores: n });
+      }
+    }));
+
+    const pick = (arr, id) => arr.filter((x) => x.id === id)[0];
+    const prodObj = pick(P, s.prod);
+    const prodText = prodObj ? prodObj.name + ' · Verified by Octopus' : (s.link ? 'Your link: ' + s.link : 'Not chosen yet');
+    const mkText = MK.filter((m) => s.mk[m[0]]).map((m) => m[1]).join(', ') || 'None picked yet';
+    const methObj = pick(METH, s.method);
+    const boxObj = pick(BOX, s.box);
+    const colours = [s.c1, s.c2].filter((c) => c).join(' · ') || 'Not given';
+    const destText = s.dest === 'wh' ? 'Octopus warehouse · Shenzhen, shipped order by order' : 'Bulk to ' + (s.country || '[country and city]');
+    const storesText = s.stores.none ? 'None yet' : (ST.filter((t) => t[0] !== 'none' && s.stores[t[0]]).map((t) => t[1]).join(', ') || 'None picked yet');
+    const rows = [
+      ['Product', prodText, 1], ['Quantity', (s.qty ? s.qty : '[quantity]') + ' pcs', 1], ['Target markets', mkText, 1],
+      ['Branding', methObj ? methObj.title : 'Not chosen', 2], ['Packaging', (boxObj ? boxObj.title : 'Not chosen') + (s.inserts ? ' + inserts' : ''), 2],
+      ['Logo', s.logo ? s.logo : 'Not uploaded yet', 2], ['Brand colours', colours, 2],
+      ['Stock goes to', destText, 3], ['Stores', storesText, 3]
+    ];
+    const summary = rows.map((r) => ({ k: r[0], v: r[1], aria: 'Edit ' + r[0].toLowerCase(), edit: () => set({ step: r[2], warn: false }) }));
+
+    return {
+      stepNum: String(s.step),
+      stepName: NAMES[s.step - 1],
+      pctText: s.sent ? 'Sent' : (s.step === 3 ? 'Last step' : (3 - s.step) + ' more after this'),
+      barStyle: 'width:' + Math.round((s.step / 3) * 100) + '%;transition:width .25s ease;',
+      steps: steps,
+      isS1: s.step === 1, isS2: s.step === 2, isS3: s.step === 3,
+      prods: prods,
+      link: s.link,
+      onLink: (e) => { const v = val(e); set({ link: v, prod: v ? '' : s.prod, warn: false }); },
+      qty: s.qty,
+      onQty: (e) => set({ qty: val(e) }),
+      mkChips: mkChips,
+      methods: methods,
+      boxes: boxes,
+      insPressed: s.inserts ? 'true' : 'false',
+      toggleIns: () => set({ inserts: !s.inserts }),
+      logoTitle: s.logo ? 'Added: ' + s.logo + ' · choose another file' : 'Add your logo file',
+      onLogo: (e) => { const f = e && e.target && e.target.files && e.target.files[0]; set({ logo: f ? f.name : '' }); },
+      c1: s.c1, c2: s.c2,
+      onC1: (e) => set({ c1: val(e) }),
+      onC2: (e) => set({ c2: val(e) }),
+      dests: dests,
+      isBulk: s.dest === 'bulk',
+      country: s.country,
+      onCountry: (e) => set({ country: val(e) }),
+      storeChips: storeChips,
+      note: s.note,
+      onNote: (e) => set({ note: val(e) }),
+      summary: summary,
+      showWarn: s.warn && !s.sent,
+      sent: s.sent,
+      notSent: !s.sent,
+      canBack: s.step > 1,
+      notLast: s.step < 3,
+      nextLabel: s.step === 1 ? 'Next: Brand' : 'Next: Delivery and stores',
+      back: () => set({ step: Math.max(1, s.step - 1), warn: false }),
+      next: () => { if (s.step === 1 && noProduct) { set({ warn: true }); return; } set({ step: Math.min(3, s.step + 1), warn: false }); },
+      send: () => { if (noProduct) { set({ step: 1, warn: true }); return; } set({ sent: true, warn: false }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -474,7 +474,7 @@ export function ProductForm({
         <div className="card p-4">
           <div className="flex justify-between text-sm font-semibold"><span>Listing completeness</span><span className="mono">{pct}%</span></div>
           <div className="h-2 bg-line rounded-full mt-2" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Listing completeness">
-            <div className="h-2 bg-blue rounded-full" style={{ width: `${pct}%` }} />
+            <div className="h-2 bg-blue-fill rounded-full" style={{ width: `${pct}%` }} />
           </div>
           <ul className="mt-3 space-y-1 text-xs">
             {checks.map((c) => <li key={c.label} className={c.ok ? 'text-ok' : 'text-muted'}>{c.ok ? '✓' : '○'} {c.label}</li>)}

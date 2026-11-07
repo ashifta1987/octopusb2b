@@ -91,7 +91,7 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
       <section className="bg-[linear-gradient(135deg,#11133C_0%,#262A6B_100%)] text-white">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-12 sm:py-16 flex flex-wrap gap-10 items-center justify-between">
           <div className="flex-[1_1_520px] min-w-0 max-w-[680px]">
-            <span className="inline-flex rounded-full bg-blue text-white text-[11px] font-semibold px-2.5 py-1 uppercase tracking-wide">Group buying · {stats.open} open {stats.open === 1 ? 'pool' : 'pools'}</span>
+            <span className="inline-flex rounded-full bg-blue-fill text-white text-[11px] font-semibold px-2.5 py-1 uppercase tracking-wide">Group buying · {stats.open} open {stats.open === 1 ? 'pool' : 'pools'}</span>
             <h1 className="!text-white text-[34px] sm:text-[46px] font-extrabold leading-[1.1] mt-4">Share the MOQ. Pay only when the pool fills.</h1>
             <p className="text-[16px] text-[#C9D0DC] leading-relaxed mt-4">
               Buy fewer pieces at the factory tier price by pooling with other buyers. Pay a {rules.depositPct}% deposit now, pay the rest only if the pool fills

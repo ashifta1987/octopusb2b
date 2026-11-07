@@ -73,7 +73,7 @@ function StepCards({ steps }: { steps: string[][] }) {
     <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {steps.map(([t, b], i) => (
         <li key={t} className="card rounded-[14px] p-5 sm:p-6">
-          <span className="inline-flex items-center justify-center w-7 h-7 rounded-[7px] bg-blue text-white text-[13px] font-bold">{i + 1}</span>
+          <span className="inline-flex items-center justify-center w-7 h-7 rounded-[7px] bg-blue-fill text-white text-[13px] font-bold">{i + 1}</span>
           <h3 className="text-[17px] font-semibold mt-4">{t}</h3>
           <p className="text-[14.5px] text-[#5B6575] mt-2 leading-relaxed">{b}</p>
         </li>
@@ -154,7 +154,7 @@ export function ServiceCards({ blocks, poolsOn, turnkeyOn }: { blocks: Blocks; p
           return (
             <li key={c.k}>
               <Link href={c.href} className={`group h-full rounded-[14px] p-5 flex flex-col gap-1.5 border ${first ? 'bg-navy border-navy text-white hover:text-white' : 'bg-white border-line hover:border-blue'}`}>
-                <span className={`inline-flex items-center justify-center w-7 h-7 rounded-[7px] text-[13px] font-bold ${first ? 'bg-blue text-white' : 'bg-navy text-white'}`}>{i + 1}</span>
+                <span className={`inline-flex items-center justify-center w-7 h-7 rounded-[7px] text-[13px] font-bold ${first ? 'bg-blue-fill text-white' : 'bg-navy text-white'}`}>{i + 1}</span>
                 <span className={`mt-2 text-[17px] font-semibold flex items-center gap-2 ${first ? 'text-white' : 'text-navy'}`}>{t}{'isNew' in c && c.isNew && <span className="mono text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-[#F59E0B] text-[#3B2500]">New</span>}</span>
                 <span className={`text-[14px] leading-snug ${first ? 'text-[#C9D0E8]' : 'text-[#5B6575]'}`}>{b}</span>
                 <span className={`mt-auto pt-1 text-[14px] font-semibold ${first ? 'text-[#8FB6FF]' : 'text-blue'}`}>{cta} <Arrow /></span>

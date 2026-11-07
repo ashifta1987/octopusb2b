@@ -50,7 +50,7 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
       <ol className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6" aria-label="Progress">
         {steps.map((t, i) => (
           <li key={t} aria-current={i + 1 === step ? 'step' : undefined}>
-            <div className={cn('h-1 rounded-full', i + 1 <= step ? 'bg-blue' : 'bg-line')} />
+            <div className={cn('h-1 rounded-full', i + 1 <= step ? 'bg-blue-fill' : 'bg-line')} />
             <div className={cn('mt-2 text-sm', i + 1 <= step ? 'font-semibold text-navy' : 'text-muted')}>{i + 1} · {t}</div>
           </li>
         ))}
