@@ -3,6 +3,7 @@ import { PasswordInput } from '@/components/password/password-input';
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { onboardingHref } from '@/lib/signup-service';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/cn';
 import { checkCustomerSignupEmail, staffRedirectAfterCustomerSignIn } from '@/lib/staff/customer-guard';
@@ -26,7 +27,7 @@ export function AuthForm({ initialMode, next, initialError, google = false }: { 
   // Google (customers only, owner decision 5 Nov 2026) — Supabase OAuth; /auth/callback blocks staff emails
   async function signInWithGoogle() {
     setErr(null); setBusy(true);
-    const redirectTo = `${window.location.origin}/auth/callback?via=google&next=${encodeURIComponent(mode === 'signup' ? '/onboarding' : next)}`;
+    const redirectTo = `${window.location.origin}/auth/callback?via=google&next=${encodeURIComponent(mode === 'signup' ? onboardingHref(next) : next)}`;
     const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo, queryParams: { prompt: 'select_account' } } });
     if (error) { setBusy(false); setErr(/not enabled/i.test(error.message) ? 'Google sign-in is not available right now. Use your email instead.' : error.message); }
   }
@@ -73,7 +74,7 @@ export function AuthForm({ initialMode, next, initialError, google = false }: { 
     setBusy(false);
     if (error) return setErr(error.message);
     const staffTarget = mode === 'login' ? await staffRedirectAfterCustomerSignIn() : null;
-    router.push(staffTarget ?? (mode === 'signup' ? '/onboarding' : next)); router.refresh();
+    router.push(staffTarget ?? (mode === 'signup' ? onboardingHref(next) : next)); router.refresh();
   }
 
   const steps = ['Email', 'Verify', 'Profile'];

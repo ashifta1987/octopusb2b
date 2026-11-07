@@ -14,6 +14,9 @@ import { RequestForm } from '@/components/store/request-form';
 import { AdSlot } from '@/components/store/ad-slot';
 import { parts } from '@/components/store/seo';
 import { submitRequest } from './actions';
+import { RequestTabs } from '@/components/store/request-tabs';
+import { ExamplePill, Icon, TBC } from '@/components/ds';
+import type { Warehouse } from '@/components/store/request-form';
 
 type Params = Promise<{ type: string }>;
 type SP = Promise<{ product?: string; qty?: string; title?: string; country?: string; city?: string; category?: string }>;
@@ -109,6 +112,13 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
       ? THREEPL_STEPS.map((f, i) => parts(blocks, `request.next.3pl.${i + 1}`, f)).filter((x) => x[0])
       : [1, 2, 3, 4, 5, 6].map((n) => parts(blocks, `request.next.${n}`)).filter((x) => x[0]);
   const [h1, intro] = parts(blocks, `request.h1.${type}`, HEAD[type]);
+  // ADDON-44-F board 25: warehouses, rates and cut-off come from settings only (nothing invented)
+  const warehouses: Warehouse[] = Array.isArray(settings.warehouses)
+    ? (settings.warehouses as Warehouse[]).filter((w) => w && typeof w.code === 'string' && typeof w.city === 'string' && typeof w.country === 'string')
+    : [];
+  const rates = typeof settings['3pl.rates_text'] === 'string' && (settings['3pl.rates_text'] as string).trim() ? (settings['3pl.rates_text'] as string) : null;
+  const cutoff = typeof settings['3pl.cutoff'] === 'string' && (settings['3pl.cutoff'] as string).trim() ? (settings['3pl.cutoff'] as string) : null;
+  const demo = settings['demo.addon44'] === true;
 
   return (
     <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-10 sm:py-12">
@@ -116,23 +126,7 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
       <h1 className="text-[34px] sm:text-[44px] font-extrabold leading-[1.1] mt-3 max-w-[780px]">{h1}</h1>
       <p className="text-[17px] text-[#3B4556] mt-4 max-w-[760px] leading-relaxed">{intro}</p>
 
-      <nav aria-label="Request type" className="mt-8">
-        <ul className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
-          {REQUEST_TYPES.map((t) => {
-            const [title, sub] = parts(blocks, `request.type.${t}`, FALLBACK[t]);
-            const on = t === type;
-            return (
-              <li key={t}>
-                <Link href={`/request/${t}${productQs}`} aria-current={on ? 'page' : undefined}
-                  className={`block h-full rounded-[14px] border px-5 py-4 ${on ? 'bg-navy border-navy text-white' : 'bg-white border-line hover:border-navy'}`}>
-                  <span className="block font-semibold">{title}</span>
-                  <span className={`block text-[13px] mt-1 ${on ? 'text-[#C9CFDB]' : 'text-muted'}`}>{sub}</span>
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
+      <RequestTabs blocks={blocks} active={type} qs={productQs} />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_300px] items-start">
         <section className="card p-6 sm:p-8 space-y-6 min-w-0" aria-label="Request form">
@@ -166,7 +160,14 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
             feeCents={fee} serviceName={svc?.name ?? 'Service fee'}
             feeLabel={fee > 0 ? `${type === 'sourcing' ? 'RFQ fee' : svc?.name ?? 'Fee'} ${money(fee, svcCurrency)}, charged ${walletEnabled ? 'from your wallet' : 'on your next invoice'} when you submit.` : type === 'dropship' ? 'Dropship setup is free. You pay per order from your wallet once orders flow.' : 'Free to submit.'}
             balanceCents={balance} creditCents={credit} walletEnabled={walletEnabled} currency={svcCurrency} mode={mode} loginHref={loginHref}
+            warehouses={warehouses} demo={demo}
           />
+          {type === '3pl' && (
+            <div className="rounded-[12px] border border-line bg-surface p-4 text-[14px]" data-testid="3pl-rates">
+              <div className="flex items-center gap-2 font-semibold text-navy">3PL rates{demo && rates && <ExamplePill />}</div>
+              <p className="mt-1 text-body-2">{rates ?? `${TBC}. Octopus sends storage, pick-and-pack and shipping rates for your goods after you submit.`}</p>
+            </div>
+          )}
         </section>
 
         <aside className="space-y-4 min-w-0" aria-label="About your request">
@@ -183,6 +184,18 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
                   </li>
                 ))}
               </ol>
+            </section>
+          )}
+          {type === '3pl' && (
+            <section className="card p-6" aria-labelledby="before-h" data-testid="before-you-ship">
+              <h2 id="before-h" className="text-base font-semibold">Before you ship to us</h2>
+              <ul className="mt-3 space-y-2 text-[13.5px] text-body-2">
+                {['Label every carton with the SKU and your reference', 'Create an inbound notice in My account › 3PL warehouse before the goods leave',
+                  'Check accepted and refused goods with your account manager (batteries, liquids, hazardous goods)',
+                  cutoff ? `Same-day dispatch for orders received before ${cutoff}` : `Same-day cut-off time: ${TBC.toLowerCase()}`].map((t) => (
+                  <li key={t} className="flex gap-2"><Icon name="check" size={16} className="text-ok mt-0.5" />{t}</li>
+                ))}
+              </ul>
             </section>
           )}
           <AdSlot placement="product_side" layout="card" />

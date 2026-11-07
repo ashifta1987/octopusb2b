@@ -19,7 +19,9 @@
     "db:seed": "node scripts/db-migrate.mjs --seed",
     "db:backup": "node scripts/db-backup.mjs",
     "db:wipe-demo": "node scripts/wipe-demo.mjs",
-    "import:bulk": "node scripts/import-bulk.ts"
+    "import:bulk": "node scripts/import-bulk.ts",
+    "demo:seed": "node scripts/demo-addon44.mjs seed",
+    "demo:purge": "node scripts/demo-addon44.mjs purge"
   },
   "dependencies": {
     "@hookform/resolvers": "^6.0.2",

@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { SupplierCode } from '@/components/ui';
 import { money, CURRENCY_PREFIX, asCurrency } from '@/lib/format';
 import type { CardProduct, Tier, TagRef } from './data';
 
@@ -77,7 +76,14 @@ export function ProductCard({ p, categoryName, variant = 'grid', cta = 'quote' }
         <div className="text-[13px] text-muted">MOQ {fmtQty(p.moq, p.unit)}</div>
         {variant === 'grid' && <ProductTags tags={p.tags} dropship={p.octopus_dropship} ready={p.ready_to_ship} />}
         <div className="mt-auto pt-2 space-y-3">
-          {p.supplier && <SupplierCode code={p.supplier.code} country={p.supplier.country} verified={p.supplier.verified} />}
+          {/* ADDON-44 rule 4: public cards never show the supplier code */}
+          {p.supplier && (
+            <span className="inline-flex items-center gap-1.5 text-[13px] text-muted" data-testid="card-factory">
+              {p.supplier.country && <span className="mono text-[10px] font-semibold bg-surface border border-line rounded px-1 py-px text-navy">{p.supplier.country}</span>}
+              <span>{p.supplier.verified ? 'Verified factory' : 'Factory'}</span>
+              {p.supplier.verified && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15803D" strokeWidth="2.2" aria-hidden><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>}
+            </span>
+          )}
           {variant !== 'featured' && (cta === 'pool' ? (
             <Link href={`/pools/start?product=${p.id}`} className="btn btn-dark btn-sm w-full min-h-11">
               Start pool<span className="sr-only"> on {p.title}</span>

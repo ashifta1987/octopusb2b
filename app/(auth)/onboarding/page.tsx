@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
+import { safeAccountNext } from '@/lib/signup-service';
 import { Logo } from '@/components/ui';
 import { getSession } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -32,7 +33,7 @@ async function save(formData: FormData) {
     p_full_name: d.full_name, p_company: d.company, p_country: d.country, p_phone: d.phone, p_business_type: d.business_type, p_city: d.city ?? null,
   });
   if (error) redirect('/onboarding?error=' + encodeURIComponent(mapDbError(error)));
-  redirect('/account');
+  redirect(safeAccountNext(formData.get('next')));
 }
 
 /** Staff (role or staff email domain) never get a customer profile/org (SPEC §17.3). */
@@ -45,14 +46,15 @@ async function refuseStaff(userId: string, email: string | null) {
 }
 
 /** Create profile — required before anything else (SPEC §4.1 step 2). */
-export default function OnboardingPage(props: { searchParams: Promise<{ error?: string }> }) {
+export default function OnboardingPage(props: { searchParams: Promise<{ error?: string; next?: string }> }) {
   return <Suspense fallback={<main className="min-h-screen bg-surface" />}><Onboarding {...props} /></Suspense>;
 }
 
-async function Onboarding({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+async function Onboarding({ searchParams }: { searchParams: Promise<{ error?: string; next?: string }> }) {
   const s = await getSession();
-  if (!s) redirect('/login?next=/onboarding');
-  if (s.profile && s.org) redirect('/account');
+  const next = safeAccountNext((await searchParams).next);
+  if (!s) redirect(`/login?next=${encodeURIComponent(next === '/account' ? '/onboarding' : `/onboarding?next=${next}`)}`);
+  if (s.profile && s.org) redirect(next);
   if (s.isStaff || (await refuseStaff(s.userId, s.email))) {
     return (
       <main className="min-h-screen bg-surface px-6 py-10">
@@ -80,6 +82,7 @@ async function Onboarding({ searchParams }: { searchParams: Promise<{ error?: st
         <h1 className="text-[28px] font-semibold">Create your profile</h1>
         <p className="text-muted mt-1">We need a few details before you can request quotes or place orders.</p>
         <form action={save} className="card p-6 mt-6 grid gap-5 sm:grid-cols-2">
+          <input type="hidden" name="next" value={next} />
           <div className="sm:col-span-2"><label className="label" htmlFor="full_name">Full name</label><input id="full_name" name="full_name" required className="input" defaultValue={s.profile?.full_name ?? ''} /></div>
           <div className="sm:col-span-2"><label className="label" htmlFor="company">Company</label><input id="company" name="company" required className="input" /></div>
           <div>

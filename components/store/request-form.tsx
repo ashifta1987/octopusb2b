@@ -14,13 +14,16 @@ type Props = {
   /** Platform currency: the fee (service_price_info) and the wallet balance (my_wallet_balance(p_currency)) are both in it. */
   balanceCents: number | null; creditCents?: number; walletEnabled: boolean; currency: string;
   mode: 'ready' | 'guest' | 'no-org'; loginHref: string;
+  /** ADDON-44-F board 25: real warehouses from settings (`warehouses`); empty → only "Not listed? Ask us". */
+  warehouses?: Warehouse[]; demo?: boolean;
 };
+export type Warehouse = { code: string; city: string; country: string; handles?: string };
 
 /** Request.png form: React Hook Form + the shared zod schema; submit goes through <ConfirmCharge/> (fee + wallet balance). */
 /** ADDON-44-C (audit 05): each form names its own My account section. */
 const FOLLOW: Partial<Record<RequestType, string>> = { sourcing: 'Sourcing', sample: 'Sourcing', qc: 'Sourcing', certification: 'Sourcing', dropship: 'Dropshipping', '3pl': '3PL warehouse' };
 
-export function RequestForm({ type, action, defaults, productId, feeCents, feeLabel, serviceName, balanceCents, creditCents = 0, walletEnabled, currency, mode, loginHref }: Props) {
+export function RequestForm({ type, action, defaults, productId, feeCents, feeLabel, serviceName, balanceCents, creditCents = 0, walletEnabled, currency, mode, loginHref, warehouses = [], demo = false }: Props) {
   const router = useRouter();
   const sections = REQUEST_FIELDS[type];
   const schema = useMemo(() => requestSchema(type), [type]);
@@ -29,7 +32,7 @@ export function RequestForm({ type, action, defaults, productId, feeCents, feeLa
     sections.forEach((s) => s.fields.forEach((f) => (v[f.name] = defaults[f.name] ?? '')));
     return v;
   }, [sections, defaults]);
-  const { register, trigger, getValues, reset, formState: { errors } } = useForm<RequestValues>({ resolver: zodResolver(schema), defaultValues: initial, mode: 'onTouched' });
+  const { register, trigger, getValues, reset, watch, formState: { errors } } = useForm<RequestValues>({ resolver: zodResolver(schema), defaultValues: initial, mode: 'onTouched' });
   // ADDON-36 (H5): what a signed-out visitor typed survives sign-in / sign-up (sessionStorage, this tab only)
   const draftKey = `octopus:request:${type}`;
   useEffect(() => {
@@ -74,7 +77,11 @@ export function RequestForm({ type, action, defaults, productId, feeCents, feeLa
           <div key={s.title}>
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-4">{s.title}<span className="flex-1 h-px bg-line" aria-hidden /></h2>
             <div className="grid gap-x-5 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-              {s.fields.map((f) => <FieldInput key={f.name} f={{ ...f, label: withCurrency(f.label, currency) }} reg={register(f.name)} error={errors[f.name]?.message as string | undefined} />)}
+              {s.fields.map((f) => {
+                if (f.name === 'warehouse_country' && type === '3pl' && watch('warehouse') !== 'other') return null;
+                if (f.kind === 'warehouse') return <WarehouseInput key={f.name} f={f} reg={register(f.name)} error={errors[f.name]?.message as string | undefined} warehouses={warehouses} demo={demo} />;
+                return <FieldInput key={f.name} f={{ ...f, label: withCurrency(f.label, currency) }} reg={register(f.name)} error={errors[f.name]?.message as string | undefined} />;
+              })}
             </div>
           </div>
         ))}
@@ -104,6 +111,26 @@ export function RequestForm({ type, action, defaults, productId, feeCents, feeLa
         </div>
       </div>
     </form>
+  );
+}
+
+/** Radio cards: one per real warehouse (city, country, what it handles) + "Not listed? Ask us". */
+function WarehouseInput({ f, reg, error, warehouses, demo }: { f: Field; reg: UseFormRegisterReturn; error?: string; warehouses: Warehouse[]; demo: boolean }) {
+  const id = `rq-${f.name}`;
+  const opts = [...warehouses.map((w) => ({ value: w.code, title: `${w.city}, ${w.country}`, body: w.handles ?? '' })), { value: 'other', title: 'Not listed? Ask us', body: 'Tell us the country you need and we check partner warehouses there.' }];
+  return (
+    <fieldset className="sm:col-span-2 lg:col-span-3" aria-describedby={error ? `${id}-err` : undefined} data-testid="warehouse-cards">
+      <legend className="label flex items-center gap-2">{f.label}{f.required && <span className="text-bad" aria-hidden> *</span>}{demo && warehouses.length > 0 && <span className="pill bg-warn-bg text-warn">Example</span>}</legend>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {opts.map((o) => (
+          <label key={o.value} className="relative flex gap-3 rounded-[12px] border border-line-2 bg-white p-4 cursor-pointer min-h-11 has-[:checked]:border-navy has-[:checked]:bg-blue-soft has-[:checked]:shadow-[inset_0_0_0_1px_#11133C]">
+            <input type="radio" value={o.value} {...reg} className="mt-1 w-4 h-4 accent-[#11133C]" />
+            <span><span className="block font-semibold text-navy text-[15px]">{o.title}</span>{o.body && <span className="block text-[13px] text-muted mt-0.5">{o.body}</span>}</span>
+          </label>
+        ))}
+      </div>
+      {error && <p id={`${id}-err`} className="text-[13px] text-bad mt-1.5" role="alert">{error}</p>}
+    </fieldset>
   );
 }
 

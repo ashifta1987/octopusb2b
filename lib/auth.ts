@@ -58,7 +58,7 @@ export async function requireCustomer(next = '/account') {
   if (!s) redirect(`/login?next=${encodeURIComponent(next)}`);
   // ADDON-41 rule 3: staff accounts never act as customers — they use Admin / Back office
   if (s.isStaff) redirect('/admin?notice=staff-not-customer');
-  if (!s.profile || !s.org) redirect('/onboarding');
+  if (!s.profile || !s.org) redirect(next === '/account' ? '/onboarding' : `/onboarding?next=${encodeURIComponent(next)}`);
   return s;
 }
 

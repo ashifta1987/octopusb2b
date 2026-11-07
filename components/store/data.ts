@@ -19,7 +19,7 @@ import { priceAt, type PoolTier } from '@/components/store/pools/shared';
  * with the same approved rate + rounding, so the bounds a buyer types in the platform currency match the cards.
  */
 
-export type PublicSupplier = { id: string; code: string; country: string | null; verified: boolean; supplier_type: string | null };
+export type PublicSupplier = { id: string; code: string; country: string | null; verified: boolean; supplier_type: string | null; province?: string | null };
 /** A price tier converted to the platform currency (`source_currency` = the currency the supplier entered). */
 export type Tier = { min_qty: number; unit_price_cents: number; source_currency?: Currency };
 export type TagRef = { name: string; slug: string; kind: string };
@@ -66,7 +66,7 @@ async function supplierMap(ids: string[]) {
   const map = new Map<string, PublicSupplier>();
   const uniq = [...new Set(ids)].filter(Boolean);
   if (!uniq.length) return map;
-  const { data } = await createPublicClient().from('public_suppliers').select('id, code, country, verified, supplier_type').in('id', uniq);
+  const { data } = await createPublicClient().from('public_suppliers').select('id, code, country, verified, supplier_type, province').in('id', uniq);
   (data ?? []).forEach((s) => map.set(s.id as string, s as PublicSupplier));
   return map;
 }
@@ -258,11 +258,21 @@ export async function getRecommendations(productId: string, categoryId: string |
   return toCards(picked);
 }
 
+/** ADDON-44-F board 24 — other live products from the same factory (shown without the supplier code). */
+export async function getMoreFromFactory(productId: string, supplierId: string, limit = 3): Promise<CardProduct[]> {
+  'use cache';
+  cacheLife({ revalidate: 300 });
+  cacheTag('products', 'currency');
+  const { data } = await createPublicClient().from('products').select(CARD_COLS).eq('supplier_id', supplierId).eq('status', 'live').is('archived_at', null)
+    .neq('id', productId).not('image_url', 'is', null).order('featured', { ascending: false }).order('created_at', { ascending: false }).limit(limit);
+  return toCards((data ?? []) as unknown as RawCard[]);
+}
+
 export async function getVerifiedSuppliers(limit = 4): Promise<PublicSupplier[]> {
   'use cache';
   cacheLife({ revalidate: 300 });
   cacheTag('suppliers');
-  const { data } = await createPublicClient().from('public_suppliers').select('id, code, country, verified, supplier_type').eq('verified', true).order('code').limit(limit + 10);
+  const { data } = await createPublicClient().from('public_suppliers').select('id, code, country, verified, supplier_type, province').eq('verified', true).order('code').limit(limit + 10);
   // ADDON-32: a supplier whose legal identity is still under review (e.g. several name variants) is never shown as "verified"
   let blocked = new Set<string>();
   try {

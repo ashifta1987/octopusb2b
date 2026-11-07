@@ -9,7 +9,7 @@ import { getTurnkeyCatalogue } from '@/lib/turnkey/data';
 import { HomeCta } from './sections';
 import { getHomeLiveData } from './live-data';
 import { OctoCard } from './top';
-import { SourcingHero, ServiceCards, SourcingSteps, Dropshipping, Pools, Warehousing, ShippingBand, Turnkey, StatsAndServices, Suppliers, type ShippingStats } from './v2';
+import { SourcingHero, ServiceCards, SourcingSteps, MakeMyBrand, Dropshipping, Pools, Warehousing, ShippingBand, Turnkey, StatsAndServices, Suppliers, type ShippingStats } from './v2';
 
 /** Storefront home — Nov 2026 design (Home-desktop-full.png): five numbered services (sourcing hero with quote form,
  *  dropshipping, MOQ pools, 3PL, Turnkey), how-it-works steps, ready-to-order products, open pools, shipping band,
@@ -43,6 +43,7 @@ export async function HomeView() {
       <SourcingHero blocks={blocks} defaultCountry={defaultCountry} fee={services.rfq ? { cents: services.rfq.priceCents ?? 0, currency: services.rfq.currency } : null} />
       <ServiceCards blocks={blocks} poolsOn={rules.enabled} turnkeyOn={turnkeyOn} />
       <SourcingSteps blocks={blocks} products={ready} />
+      <MakeMyBrand blocks={blocks} />
       <Dropshipping blocks={blocks} countries={stats.countries} />
       {rules.enabled && <Pools blocks={blocks} pools={pools.items} depositPct={rules.depositPct} />}
       <Warehousing blocks={blocks} />

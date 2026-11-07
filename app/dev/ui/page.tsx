@@ -110,10 +110,10 @@ export default function DevUiPage() {
           </div>
         </Block>
 
-        <Block name="StudioPreviewLabel" note={`Mandatory on every branded mock-up, with the caption "${STUDIO_CAPTION}" Images below are demo images (public/demo).`}>
+        <Block name="StudioPreviewLabel" note={`Mandatory on every branded mock-up, with the caption "${STUDIO_CAPTION}" Images are kit artwork (public/mmb).`}>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 items-start">
-            <StudioPreviewCard src="/demo/F8.jpg" alt="Handheld fan with a sample logo" brand="Nova Breeze" title="Handheld fan F8 · pad print logo" />
-            <StudioPreviewCard src="/demo/S7.jpg" alt="Aroma diffuser with a sample logo" brand="Nova Breeze" title="Aroma diffuser S7 · laser engraving" />
+            <StudioPreviewCard src="/mmb/F8.jpg" alt="Handheld fan with a sample logo" brand="Nova Breeze" title="Handheld fan F8 · pad print logo" />
+            <StudioPreviewCard src="/mmb/S7.jpg" alt="Aroma diffuser with a sample logo" brand="Nova Breeze" title="Aroma diffuser S7 · laser engraving" />
             <div className="card p-4"><StudioPreviewLabel /><p className="text-[13px] text-muted mt-2">Label alone</p></div>
           </div>
         </Block>
