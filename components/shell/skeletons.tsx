@@ -31,7 +31,7 @@ export function PageSkeleton({ cards = 2, table = true }: { cards?: number; tabl
 
 export function AccountShellSkeleton() {
   return (
-    <div className="min-h-screen bg-[#F5F6F8]" aria-busy="true" aria-label="Loading your account">
+    <div className="min-h-screen bg-pearl" aria-busy="true" aria-label="Loading your account">
       <div className="bg-white">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-3 flex items-center gap-5">
           <Bar w={150} h={44} />

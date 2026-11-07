@@ -1,13 +1,19 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { cn } from '@/lib/cn';
 import { humanize, money, fmtDate } from '@/lib/format';
 
 /* ───────── Logo ───────── */
-export function Logo({ white = false, className }: { white?: boolean; className?: string }) {
+/**
+ * Brand logo — full lockup only, never recoloured, stretched or rotated (brand guide).
+ * Colour version on light backgrounds, white version on Ink or black. Header 42 px (phone 36), footer `size="footer"` 48 px.
+ */
+export function Logo({ white = false, className, size = 'header' }: { white?: boolean; className?: string; size?: 'header' | 'footer' }) {
   return (
     <Link href="/" className={cn('inline-flex items-center shrink-0', className)} aria-label="Octopus B2B home">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={white ? '/logo-white.png' : '/logo.png'} alt="Octopus B2B" className="h-[44px] w-auto block" />
+      <Image src={white ? '/brand/octopus-b2b-logo-white.png' : '/brand/octopus-b2b-logo.png'} alt="Octopus B2B" width={800} height={208}
+        sizes={size === 'footer' ? '185px' : '162px'} priority={size === 'header'}
+        className={cn('block w-auto', size === 'footer' ? 'h-12' : 'h-9 sm:h-[42px]')} />
     </Link>
   );
 }

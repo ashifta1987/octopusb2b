@@ -41,7 +41,7 @@ export function StaffShell({ session, nav, counts, moderation, children }: {
   const rest = nav.map((s) => ({ ...s, items: s.items.filter((i) => !i.area || can(session, i.area, i.action ?? 'view')) })).filter((s) => s.items.length);
 
   return (
-    <div className="min-h-screen bg-[#F5F6F8]">
+    <div className="min-h-screen bg-pearl">
       <MaintenanceNotice />
       <header className="bg-navy text-white">
         <div className="px-4 sm:px-6 py-3 flex flex-wrap items-center gap-x-5 gap-y-3">

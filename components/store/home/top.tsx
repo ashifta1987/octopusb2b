@@ -21,7 +21,7 @@ function AnnouncementLine({ raw }: { raw: string[] }) {
     <div className="max-w-[1360px] mx-auto px-4 sm:px-8 py-2 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-center" data-testid="announcement">
       {rest.length > 0 && <span className="mono text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-[#F59E0B] text-navy">{pill}</span>}
       <span>{rest.length ? rest.join(' · ') : text}</span>
-      {linkText && href && /^(\/|https:\/\/)/.test(href) && <Link href={href} className="inline-flex items-center min-h-6 font-semibold text-[#9CC2FF] hover:text-white underline-offset-2 hover:underline">{linkText}</Link>}
+      {linkText && href && /^(\/|https:\/\/)/.test(href) && <Link href={href} className="inline-flex items-center min-h-6 font-semibold text-on-ink-link hover:text-white underline-offset-2 hover:underline">{linkText}</Link>}
     </div>
   );
 }

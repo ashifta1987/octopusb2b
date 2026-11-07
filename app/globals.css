@@ -52,7 +52,17 @@
   --color-blue-soft-2: var(--blue-soft-2);
   --color-surface: var(--surface);
   --color-cream: var(--cream);
-  --color-ink: var(--ink);
+  /* brand names (compact kit): ink · ink-2 · coral · coral-text · pearl · black · muted · line · line-strong · fill · tint · ill-bg · on-ink */
+  --color-ink: var(--navy);
+  --color-ink-2: var(--navy-2);
+  --color-coral: var(--blue);
+  --color-coral-text: var(--blue-text);
+  --color-pearl: var(--surface);
+  --color-black: var(--ink);
+  --color-line-strong: var(--line-2);
+  --color-fill: var(--line-3);
+  --color-tint: var(--blue-soft);
+  --color-ill-bg: var(--cream);
   --color-body-2: var(--body-2);
   --color-muted: var(--muted);
   --color-line: var(--line);
@@ -88,8 +98,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); color: var(--navy); letter-sp
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
 @layer components {
-  .btn { @apply inline-flex items-center justify-center gap-2 min-h-11 px-[18px] rounded-[10px] font-semibold text-[15px] leading-none border border-transparent cursor-pointer whitespace-nowrap transition-colors disabled:opacity-50 disabled:cursor-not-allowed; }
-  .btn-sm { @apply min-h-[38px] px-3 text-sm; }
+  .btn { @apply inline-flex items-center justify-center gap-2 min-h-12 px-[18px] rounded-[10px] font-semibold text-[15px] leading-none border border-transparent cursor-pointer whitespace-nowrap transition-colors disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn-sm { @apply min-h-11 px-3 text-sm; }
   /* ADDON-44 sizes: public pages 48 px, hero 52 px (account pages keep the 44 px default) */
   .btn-pub { @apply min-h-12; }
   .btn-hero { @apply min-h-13 px-6; }
@@ -99,7 +109,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); color: var(--navy); letter-sp
   .btn-light { @apply bg-white text-navy hover:bg-blue-soft; }
   .btn-danger { @apply bg-bad text-white hover:opacity-90; }
   .card { @apply bg-white border border-line rounded-[14px]; }
-  .input { @apply w-full min-h-11 px-3 rounded-[8px] border border-line-2 bg-white text-[15px] text-navy focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/20; }
+  .input { @apply w-full min-h-11 px-3 rounded-[8px] border border-line-2 bg-white text-[15px] text-black focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/20; }
   .label { @apply block text-sm font-semibold text-navy mb-1.5; }
   .ph { background: repeating-linear-gradient(135deg, #edeff3 0 10px, #e5e8ed 10px 20px); @apply flex items-center justify-center text-muted font-mono text-xs text-center; }
   .eyebrow { @apply font-mono text-xs font-semibold uppercase tracking-[0.12em] text-blue; }

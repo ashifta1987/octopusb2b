@@ -50,7 +50,7 @@ export function AccountShell({ session, ctx, newQuotes, mobileBar, children }: {
   const role = session.org ? `${session.org.name}` : 'Customer';
 
   return (
-    <div className="min-h-screen bg-[#F5F6F8]">
+    <div className="min-h-screen bg-pearl">
       <MaintenanceNotice />
       <header className="bg-white">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center gap-x-5 gap-y-3">

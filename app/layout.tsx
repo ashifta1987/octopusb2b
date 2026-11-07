@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Figtree, Jost } from 'next/font/google';
 import { block, getSiteContent } from '@/lib/content';
 import { getCurrencyContext } from '@/lib/currency';
@@ -26,8 +26,14 @@ export async function generateMetadata(): Promise<Metadata> {
     // Link previews (WhatsApp, LinkedIn): pages without their own Open Graph tags inherit these.
     openGraph: { type: 'website', siteName: brand || undefined, title, description, images: [{ url: '/home/sourcing.png', alt: brand }] },
     twitter: { card: 'summary_large_image', title, description, images: ['/home/sourcing.png'] },
+    // brand kit: favicon / apple-touch / manifest icons from public/brand
+    icons: { icon: [{ url: '/brand/favicon-32.png', sizes: '32x32', type: 'image/png' }], apple: [{ url: '/brand/apple-touch-icon-180.png', sizes: '180x180' }] },
+    manifest: '/manifest.webmanifest',
   };
 }
+
+/** Browser UI colour = Octopus Ink (brand kit). */
+export const viewport: Viewport = { themeColor: '#1A174A' };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // ADDON-25: how long a revealed password stays visible (site_settings auth.password_reveal_timeout_s, cached)

@@ -38,7 +38,7 @@ export function breadcrumbLd(items: { name: string; href?: string }[]) {
 /** Plain-text CMS body → paragraphs (no HTML injection). */
 export function Prose({ text }: { text: string }) {
   return (
-    <div className="space-y-4 text-[16px] leading-7 text-ink">
+    <div className="space-y-4 text-[16px] leading-7 text-black">
       {text.split(/\n{2,}/).map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}
     </div>
   );

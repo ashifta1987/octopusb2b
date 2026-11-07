@@ -86,7 +86,7 @@ export function AnnouncementBar({ text, linkText, href, isNew = true }: { text: 
       <p className="wrap py-2.5 text-center leading-snug">
         {isNew && <NewBadge className="mr-2 align-[1px]" />}
         <span>{text}</span>
-        {href && linkText && <> <Link href={href} className="inline-flex items-center min-h-6 font-semibold text-[#9CC2FF] hover:text-white hover:underline">{linkText}</Link></>}
+        {href && linkText && <> <Link href={href} className="inline-flex items-center min-h-6 font-semibold text-on-ink-link hover:text-white hover:underline">{linkText}</Link></>}
       </p>
     </div>
   );

@@ -28,7 +28,9 @@ export async function StoreHeader() {
   const pill = 'inline-flex items-center gap-[7px] px-3 py-2 rounded-full text-[14px] font-medium whitespace-nowrap shrink-0 hover:bg-surface hover:text-navy';
   return (
     <>
-      <header className="bg-white border-b border-line sticky top-0 z-20">
+      {/* brand kit: header + service rail stay together at the top while scrolling */}
+      <div className="sticky top-0 z-20">
+      <header className="bg-white border-b border-line">
         <div className="max-w-[1360px] mx-auto px-4 sm:px-8 py-3.5 flex flex-wrap gap-x-5 gap-y-3.5 items-center">
           <Logo />
           <form action="/search" role="search" className="order-3 sm:order-2 basis-full sm:basis-[440px] sm:flex-1 flex min-w-0 border-[1.5px] border-navy rounded-[10px] overflow-hidden bg-white focus-within:ring-2 focus-within:ring-[#1D4ED8] focus-within:ring-offset-2">
@@ -52,14 +54,15 @@ export async function StoreHeader() {
           <ServiceLinks poolsOn={settings.pool_enabled !== false} turnkeyOn={settings['turnkey.enabled'] !== false} pill={pill} />
           {settings.supplier_portal_enabled === true && <li className="shrink-0"><Link href="/suppliers" className={`${pill} text-navy`}>Sell on Octopus B2B</Link></li>}
           <li className="shrink-0 w-px h-5 bg-line mx-1.5" aria-hidden />
-          <li className="shrink-0"><Link href="/products" className={`${pill} text-[#3B4556]`}>All categories</Link></li>
+          <li className="shrink-0"><Link href="/products" className={`${pill} text-black`}>All categories</Link></li>
           {top.map((c) => (
             <li key={c.id} className="shrink-0">
-              <Link href={`/c/${c.slug}`} className={`${pill} text-[#3B4556]`}>{c.name}</Link>
+              <Link href={`/c/${c.slug}`} className={`${pill} text-black`}>{c.name}</Link>
             </li>
           ))}
         </ul>
       </nav>
+      </div>
       <Suspense fallback={null}>
         <SwitchBanner />
       </Suspense>
@@ -117,10 +120,10 @@ export async function StoreFooter() {
   const turnkeyOn = settings['turnkey.enabled'] !== false;
   const domain = (company?.website ?? 'octopusb2b.com').replace(/^https?:\/\//, '').replace(/\/$/, '');
   return (
-    <footer className="bg-[#0B1033] text-[#AEB6D0] mt-16">
+    <footer className="bg-ink text-on-ink mt-16">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-8 pt-10 pb-6 grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
         <div className="text-sm space-y-4">
-          <Logo white />
+          <Logo white size="footer" />
           <p className="max-w-[280px] leading-relaxed">{block(blocks, 'footer.about2', 'Product sourcing, brand projects, dropshipping, group buying, warehousing and turnkey businesses from China, delivered worldwide.')}</p>
           {(company?.email || company?.phone) && (
             <div className="text-[13px] space-y-0.5">
@@ -129,10 +132,10 @@ export async function StoreFooter() {
             </div>
           )}
         </div>
-        <FooterCol title="Services" links={[['/request/sourcing', 'Product sourcing'], ['/make-my-brand', 'Make My Brand'], ['/#dropshipping', 'Dropshipping'], ...(settings.pool_enabled !== false ? [['/pools', 'MOQ pools'] as [string, string]] : []), ['/#warehousing', '3PL warehousing'], ...(turnkeyOn ? [['/turnkey', 'Turnkey Projects'] as [string, string]] : [])]} />
-        <FooterCol title="Marketplace" links={[['/products', 'All products'], ...topCats.map((c) => [`/c/${c.slug}`, c.name] as [string, string]), ['/request/sourcing', 'Request a quote'], ...(turnkeyOn ? [['/turnkey/atlas', 'Project Atlas'] as [string, string]] : [])]} />
+        <FooterCol title="Services" links={[['/#dropshipping', 'Dropshipping'], ['/make-my-brand', 'Make My Brand'], ['/#sourcing', 'Product sourcing'], ...(settings.pool_enabled !== false ? [['/pools', 'MOQ pools'] as [string, string]] : []), ...(turnkeyOn ? [['/turnkey', 'Turnkey Projects'] as [string, string]] : []), ['/#warehousing', '3PL & shipping']]} />
+        <FooterCol title="My account" links={[['/login', 'Sign in'], ['/signup', 'Create account'], ['/account', 'My account'], ['/products', 'All products'], ...topCats.slice(0, 2).map((c) => [`/c/${c.slug}`, c.name] as [string, string])]} />
         <FooterCol title="Suppliers" links={[['/suppliers', 'Sell on Octopus B2B'], ['/suppliers#apply', 'Become a supplier'], ['/staff/login', 'Supplier and staff sign-in']]} />
-        <FooterCol title="Company" links={[['/about', 'About us'], ['/contact', 'Contact']]} />
+        <FooterCol title="Company" links={[['/about', 'About us'], ['/contact', 'Contact'], ['/legal/terms', 'Terms'], ['/legal/privacy', 'Privacy']]} />
       </div>
       <div className="max-w-[1280px] mx-auto px-4 sm:px-8">
         <div className="border-t border-white/10 py-5 text-[13px] flex flex-wrap justify-between gap-3">
@@ -147,8 +150,8 @@ export async function StoreFooter() {
 function FooterCol({ title, links }: { title: string; links: [string, string][] }) {
   return (
     <div>
-      <div className="mono text-[11px] font-bold uppercase tracking-[.08em] text-white mb-3">{title}</div>
-      <ul className="space-y-2 text-[14px]">{links.map(([h, l]) => <li key={l}><Link href={h} className="hover:text-white">{l}</Link></li>)}</ul>
+      <div className="label-caps text-white mb-3">{title}</div>
+      <ul className="space-y-0.5 text-[14px]">{links.map(([h, l]) => <li key={l}><Link href={h} className="inline-flex items-center min-h-11 hover:text-white">{l}</Link></li>)}</ul>
     </div>
   );
 }
