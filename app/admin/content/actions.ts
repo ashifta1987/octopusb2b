@@ -3,7 +3,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 import { can } from '@/lib/auth';
 import { slugify } from '@/lib/format';
-import { guard, fail, ok, str, bool, type Result } from '@/components/admin/server';
+import { guard, fail, failAt, ok, str, bool, type Result } from '@/components/admin/server';
 
 type Sb = Awaited<ReturnType<typeof import('@/lib/supabase/server').createClient>>;
 
@@ -250,4 +250,42 @@ export async function deleteBranch(id: string): Promise<Result> {
   if (!data?.length) return fail('FORBIDDEN');
   refresh(['/contact', '/about']);
   return ok('Branch deleted');
+}
+
+/* ───────── Company bank accounts (migration 174) ───────── */
+const BankInput = z.object({
+  id: z.string().uuid().optional().or(z.literal('')),
+  currency: z.string().trim().toUpperCase().regex(/^[A-Z]{3}$/, 'Currency: three letters, e.g. USD'),
+  bank_name: z.string().trim().min(2, 'Bank name is required').max(160),
+  account_holder: z.string().trim().min(2, 'Account holder is required').max(200),
+  account_number: z.string().trim().min(4, 'Account number / IBAN is required').max(64),
+  swift: z.string().trim().toUpperCase().regex(/^([A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?)?$/, 'SWIFT / BIC must be 8 or 11 characters').optional(),
+  routing_code: z.string().trim().max(40).optional(),
+  bank_address: z.string().trim().max(400).optional(),
+  intermediary: z.string().trim().max(400).optional(),
+  notes: z.string().trim().max(400).optional(),
+});
+
+/** Admin only + fresh 2FA code (save_company_bank_account checks both and writes the audit log). */
+export async function saveBankAccount(_prev: Result | null, fd: FormData): Promise<Result> {
+  const g = await guard('content', 'edit');
+  if ('error' in g) return g.error;
+  if (!g.s.isAdmin) return fail('Only an Admin can change the company bank accounts.');
+  const p = BankInput.safeParse(Object.fromEntries(['id', 'currency', 'bank_name', 'account_holder', 'account_number', 'swift', 'routing_code', 'bank_address', 'intermediary', 'notes'].map((k) => [k, str(fd, k)])));
+  if (!p.success) return fail(p.error.issues[0]?.message ?? 'Check the form');
+  const { error } = await g.sb.rpc('save_company_bank_account', { p: { ...p.data, active: bool(fd, 'active') } });
+  if (error) return failAt(error, '/admin/content?tab=company');
+  refresh(['/account/wallet', '/account/orders']);
+  revalidatePath('/admin/content');
+  return ok(`${p.data.currency} bank account saved`);
+}
+
+export async function deleteBankAccount(id: string): Promise<Result> {
+  const g = await guard('content', 'edit');
+  if ('error' in g) return g.error;
+  if (!g.s.isAdmin) return fail('Only an Admin can change the company bank accounts.');
+  const { error } = await g.sb.rpc('delete_company_bank_account', { p_id: id });
+  if (error) return failAt(error, '/admin/content?tab=company');
+  revalidatePath('/admin/content');
+  return ok('Bank account deleted');
 }

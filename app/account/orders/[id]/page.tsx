@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { getCompanyBankAccount } from '@/components/account/bank-data';
+import { bankLines } from '@/lib/bank-accounts';
 import { notFound } from 'next/navigation';
 import { requireCustomer } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -49,6 +51,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
   const ship = shipments?.[0];
   const lastTrack = tracking?.[0];
   const reference = pi?.number ?? o.code;
+  const acct = await getCompanyBankAccount(cur);   // principal company account in the order currency
   const bank = content.blocks['payment.bank_details'] ?? content.blocks['bank.details'] ?? null;
   const company = content.company;
 
@@ -124,10 +127,15 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
                   <div className="rounded-[10px] border border-line p-4">
                     <div className="font-semibold">Bank transfer</div>
                     <dl className="mt-2 text-sm space-y-1">
-                      <div className="flex justify-between gap-3"><dt className="text-muted">Account name</dt><dd className="font-semibold text-right">{company?.legal_name ?? '—'}</dd></div>
-                      <div className="flex justify-between gap-3"><dt className="text-muted">Bank details</dt><dd className="text-right whitespace-pre-line">{bank ?? '[Bank details from CMS]'}</dd></div>
+                      {acct ? bankLines(acct).map(([k, v]) => (
+                        <div key={k} className="flex justify-between gap-3"><dt className="text-muted">{k}</dt><dd className={`font-semibold text-right ${/number|SWIFT|code/i.test(k) ? 'mono' : ''}`}>{v}</dd></div>
+                      )) : <>
+                        <div className="flex justify-between gap-3"><dt className="text-muted">Account name</dt><dd className="font-semibold text-right">{company?.legal_name ?? '—'}</dd></div>
+                        <div className="flex justify-between gap-3"><dt className="text-muted">Bank details</dt><dd className="text-right whitespace-pre-line">{bank ?? `Bank transfer in ${cur} is not set up yet — pay from your wallet or contact us.`}</dd></div>
+                      </>}
                       <div className="flex justify-between gap-3"><dt className="text-muted">Reference</dt><dd className="mono font-semibold">{reference}</dd></div>
                     </dl>
+                    {acct?.notes && <p className="text-sm mt-2">{acct.notes}</p>}
                     <p className="text-xs text-muted mt-2">Finance matches your transfer, usually within one business day. Bank charges at both ends are paid by the buyer.</p>
                   </div>
                 </div>

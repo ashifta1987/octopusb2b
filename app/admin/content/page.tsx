@@ -9,8 +9,9 @@ import { fmtDate, COUNTRY_NAMES } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import {
   saveBlock, createBlock, savePage, applyProposal, createPage, newTermsDraft, saveTermsSection, setTermsStatus, publishTerms,
-  saveCompany, saveBranch, deleteBranch,
+  saveCompany, saveBranch, deleteBranch, saveBankAccount, deleteBankAccount,
 } from './actions';
+import { BANK_COLS, type BankAccount } from '@/lib/bank-accounts';
 import { nowMs } from '@/components/admin/server';
 
 export const metadata = { title: 'Site content' };
@@ -44,7 +45,7 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
       {tab === 'terms' && <TermsTab isAdmin={sess.isAdmin} editable={editable} sectionNo={Number(sp.s) || 1} viewId={sp.v} />}
       {tab === 'pages' && <PagesTab isAdmin={sess.isAdmin} editable={editable} canCreate={can(sess, 'content', 'create')} slug={sp.page} />}
       {tab === 'blocks' && <BlocksTab editable={editable} canCreate={can(sess, 'content', 'create')} />}
-      {tab === 'company' && <CompanyTab editable={editable} />}
+      {tab === 'company' && <CompanyTab editable={editable} isAdmin={sess.isAdmin} />}
       {tab === 'home' && <HomeTab editable={editable} isAdmin={sess.isAdmin} />}
     </>
   );
@@ -316,7 +317,7 @@ async function BlocksTab({ editable, canCreate }: { editable: boolean; canCreate
 }
 
 /* ───────── Company & branches ───────── */
-async function CompanyTab({ editable }: { editable: boolean }) {
+async function CompanyTab({ editable, isAdmin }: { editable: boolean; isAdmin: boolean }) {
   const sb = await createClient();
   const [{ data: company }, { data: branches }] = await Promise.all([
     sb.from('company_profile').select('*').eq('id', 1).maybeSingle(),
@@ -341,6 +342,8 @@ async function CompanyTab({ editable }: { editable: boolean }) {
           ))}
         </ActionForm>
       </Card>
+
+      <BankAccounts isAdmin={isAdmin} legalName={c.legal_name ?? ''} />
 
       <Card title="Branches">
         <Table head={['Branch', 'Details', '']} empty={<EmptyState title="No branches yet" />}>
@@ -413,6 +416,61 @@ function BranchFields({ b, editable, countries, prefix }: { b: Record<string, un
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="is_hq" defaultChecked={b.is_hq === true} disabled={!editable} /> Headquarters</label>
         </div>
       </details>
+    </>
+  );
+}
+
+/** Principal company bank accounts (migration 174): one active account per currency, Admin only, fresh 2FA code, audited. */
+async function BankAccounts({ isAdmin, legalName }: { isAdmin: boolean; legalName: string }) {
+  const sb = await createClient();
+  const { data } = await sb.from('company_bank_accounts').select(BANK_COLS).order('currency').order('active', { ascending: false });
+  const list = (data ?? []) as BankAccount[];
+  return (
+    <Card title="Bank accounts" action={<span className="text-sm text-muted">Buyers pay into these · one active account per currency</span>}>
+      <div className="px-6 pb-6 space-y-5" data-testid="bank-accounts">
+        <Notice tone="amber">Shown on the wallet top-up and order payment pages and on proforma / commercial invoices, matched to the payment currency. Only an Admin can change them; each save asks for a fresh authenticator code and is written to the audit log.</Notice>
+        {list.length === 0 && <p className="text-sm text-muted">No bank account yet — buyers can only pay from their wallet or by card until one is added.</p>}
+        {list.map((a) => (
+          <div key={a.id} className="rounded-[12px] border border-line p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="font-semibold"><span className="mono">{a.currency}</span> · {a.bank_name}</div>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${a.active ? 'bg-[#DCFCE7] text-[#15803D]' : 'bg-surface text-muted'}`}>{a.active ? 'Active' : 'Inactive'}</span>
+            </div>
+            <ActionForm action={saveBankAccount} className="grid gap-3 sm:grid-cols-2" submitLabel="Save account" submitClass="btn btn-ghost btn-sm" hideSubmit={!isAdmin}
+              confirm={`Save the ${a.currency} bank account? Buyers will pay into the account shown here.`}>
+              <BankFields a={a} prefix={a.id} isAdmin={isAdmin} legalName={legalName} />
+            </ActionForm>
+            {isAdmin && <div className="mt-2 text-right"><RunButton className="btn btn-ghost btn-sm text-bad" confirm={`Delete the ${a.currency} account at ${a.bank_name}? Buyers will no longer see it.`} action={deleteBankAccount.bind(null, a.id)}>Delete</RunButton></div>}
+          </div>
+        ))}
+        {isAdmin ? (
+          <div className="rounded-[12px] border border-dashed border-line-2 p-4">
+            <h3 className="font-semibold mb-3">Add bank account</h3>
+            <ActionForm action={saveBankAccount} className="grid gap-3 sm:grid-cols-2" submitLabel="Add bank account" resetOnSuccess
+              confirm="Add this bank account? Buyers paying in this currency will see it.">
+              <BankFields prefix="new-bank" isAdmin={isAdmin} legalName={legalName} />
+            </ActionForm>
+          </div>
+        ) : <p className="text-sm text-muted">Only an Admin can add or change bank accounts.</p>}
+      </div>
+    </Card>
+  );
+}
+
+function BankFields({ a, prefix, isAdmin, legalName }: { a?: BankAccount; prefix: string; isAdmin: boolean; legalName: string }) {
+  return (
+    <>
+      {a && <input type="hidden" name="id" value={a.id} />}
+      <Field label="Currency *" htmlFor={`${prefix}-cur`}><input id={`${prefix}-cur`} name="currency" className="input mono uppercase" defaultValue={a?.currency ?? 'USD'} maxLength={3} required disabled={!isAdmin} /></Field>
+      <Field label="Bank name *" htmlFor={`${prefix}-bank`}><input id={`${prefix}-bank`} name="bank_name" className="input" defaultValue={a?.bank_name ?? ''} required disabled={!isAdmin} /></Field>
+      <Field label="Account holder *" htmlFor={`${prefix}-holder`}><input id={`${prefix}-holder`} name="account_holder" className="input" defaultValue={a?.account_holder ?? legalName} required disabled={!isAdmin} /></Field>
+      <Field label="Account number / IBAN *" htmlFor={`${prefix}-acc`}><input id={`${prefix}-acc`} name="account_number" className="input mono" defaultValue={a?.account_number ?? ''} required disabled={!isAdmin} autoComplete="off" /></Field>
+      <Field label="SWIFT / BIC" htmlFor={`${prefix}-swift`}><input id={`${prefix}-swift`} name="swift" className="input mono uppercase" defaultValue={a?.swift ?? ''} maxLength={11} disabled={!isAdmin} /></Field>
+      <Field label="Routing / sort code (ABA, CNAPS…)" htmlFor={`${prefix}-routing`}><input id={`${prefix}-routing`} name="routing_code" className="input mono" defaultValue={a?.routing_code ?? ''} disabled={!isAdmin} /></Field>
+      <Field label="Bank address" htmlFor={`${prefix}-addr`} className="sm:col-span-2"><input id={`${prefix}-addr`} name="bank_address" className="input" defaultValue={a?.bank_address ?? ''} disabled={!isAdmin} /></Field>
+      <Field label="Intermediary / correspondent bank" htmlFor={`${prefix}-inter`}><input id={`${prefix}-inter`} name="intermediary" className="input" defaultValue={a?.intermediary ?? ''} placeholder="Name, SWIFT, account at intermediary" disabled={!isAdmin} /></Field>
+      <Field label="Note to buyers" htmlFor={`${prefix}-notes`}><input id={`${prefix}-notes`} name="notes" className="input" defaultValue={a?.notes ?? ''} placeholder="e.g. Put the invoice number in the transfer reference" disabled={!isAdmin} /></Field>
+      <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="active" defaultChecked={a ? a.active : true} disabled={!isAdmin} /> Active — buyers paying in this currency see this account (replaces the current active one)</label>
     </>
   );
 }

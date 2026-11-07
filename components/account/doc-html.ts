@@ -1,4 +1,5 @@
 import 'server-only';
+import { BANK_COLS, accountFor, bankLines, type BankAccount } from '@/lib/bank-accounts';
 import { createClient } from '@/lib/supabase/server';
 import { COUNTRY_NAMES, humanize, asCurrency, CURRENCY_PREFIX, type Currency } from '@/lib/format';
 
@@ -50,6 +51,8 @@ export type DocBundle = {
   quote: Row | null;
   supplier: { code: string; country: string | null } | null;
   hsCode: string | null;
+  /** principal company account in the document currency (company_bank_accounts) */
+  bank: BankAccount | null;
   settings: { deposit_pct: number; claim_visible_days: number; claim_hidden_days: number; quote_validity_days: number };
 };
 
@@ -97,6 +100,7 @@ export async function loadDocument(id: string): Promise<DocBundle | null> {
     company: (companyR.data as Row | null) ?? null,
     kyc: (kycR.data as Row | null) ?? null,
     rfq, quote, supplier, hsCode,
+    bank: accountFor(((await sb.from('company_bank_accounts').select(BANK_COLS).eq('active', true)).data ?? []) as BankAccount[], (doc.currency as string | null) ?? (order?.currency as string | undefined)),
     settings: {
       deposit_pct: num(s.deposit_pct) ?? 30,
       claim_visible_days: num(s.claim_visible_days) ?? 7,
@@ -224,7 +228,7 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
   const payBox = schedule
     ? `<div class="box pay">${schedule}
         <div class="lbl" style="margin-top:14px">Pay to</div>
-        <div class="kv">${legal}</div>
+        ${b.bank ? bankLines(b.bank).map(([k, v]) => `<div class="kv"><b>${esc(k)}:</b> <span${/number|SWIFT|code/i.test(k) ? ' class="mono"' : ''}>${esc(v)}</span></div>`).join('') + (b.bank.notes ? `<div class="kv">${esc(b.bank.notes)}</div>` : '') : `<div class="kv">${legal}</div>`}
         <div class="kv">Reference: <b class="mono">${esc(doc.number)}</b> · or pay from your Octopus wallet</div>
       </div>`
     : '<div></div>';

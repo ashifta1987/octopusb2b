@@ -40,3 +40,4 @@ describe('sourcing notifications', () => {
     expect(wantsEmail({ event_type: 'request.message', payload: { from_staff: false } })).toBe(false);
   });
 });
+

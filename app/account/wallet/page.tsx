@@ -3,6 +3,8 @@ import { requireCustomer } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { getSiteContent } from '@/lib/content';
 import { ManualBankAdapter } from '@/lib/adapters';
+import { getCompanyBankAccount } from '@/components/account/bank-data';
+import { bankLines } from '@/lib/bank-accounts';
 import { PageHeader, Card, Table, StatusBadge, EmptyState, Notice, Money } from '@/components/ui';
 import { fmtDate, money, asCurrency, CURRENCIES, CURRENCY_PREFIX, type Currency } from '@/lib/format';
 import { getCurrencyContext } from '@/lib/currency';
@@ -49,7 +51,11 @@ export default async function WalletPage({ searchParams }: { searchParams: Promi
   const spentOf = (c: Currency) => ledger.rows.filter((r) => r.currency === c && new Date(r.at) >= monthStart).reduce((a, r) => a + r.debit, 0);
   const walletId = 'OCT-W-' + s.org.id.replace(/-/g, '').slice(0, 6).toUpperCase();
   const va = await new ManualBankAdapter().createVirtualAccount(s.org.id);
-  const bankDetails = content.blocks['payment.bank_details'] ?? content.blocks['bank.details'] ?? '[Bank / payment partner — set in Admin › Site content]';
+  // principal company bank account for the active wallet currency (Admin › Site content › Company › Bank accounts)
+  const acct = await getCompanyBankAccount(active);
+  const bankDetails = acct
+    ? [...bankLines(acct).filter(([k]) => k !== 'Account name').map(([k, v]) => `${k}: ${v}`), ...(acct.notes ? [acct.notes] : [])].join('\n')
+    : content.blocks['payment.bank_details'] ?? content.blocks['bank.details'] ?? `Bank transfer in ${active} is not set up yet — pay by card or contact us.`;
   const virtualAccount = content.blocks['payment.virtual_account'] ?? va.iban;
   const tx = [...ledger.rows].reverse().slice(0, 25);
 
@@ -128,7 +134,7 @@ export default async function WalletPage({ searchParams }: { searchParams: Promi
         <Card className="p-6" >
           <h2 id="topup" className="text-lg font-semibold mb-4 scroll-mt-6">Top up your {active} wallet</h2>
           <TopupForm disabled={!settings.wallet_enabled} currency={active}
-            bank={{ accountName: content.company?.legal_name ?? 'Octopus B2B', bankDetails, virtualAccount, reference: va.reference }}
+            bank={{ accountName: acct?.account_holder ?? content.company?.legal_name ?? 'Octopus B2B', bankDetails, virtualAccount, reference: va.reference }}
             defaultReference={va.reference} bankAction={requestBankTopup} cardAction={startCardTopup} />
         </Card>
         <div className="space-y-6">
