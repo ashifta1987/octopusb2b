@@ -1,37 +1,45 @@
 @import "tailwindcss";
 
-/* Design tokens — SPEC §8.1 and docs/design/html */
+/*
+ * Octopus B2B brand tokens (ADDON-46 brand system, values from ADDON-48 Part 1) — the ONE source of truth.
+ * Components use the Tailwind names below (bg-navy = Octopus Ink, bg-blue-fill = Coral Blue, text-blue = Coral text,
+ * bg-surface = Aqua Pearl …); no hex in components. Coral Blue #4977BC is for fills with white text only (white on it
+ * is 4.52:1) — never small text on Pearl (4.42:1); text and links use Coral text #3C66A8.
+ */
 :root {
-  --navy: #11133c;
-  --navy-2: #262a6b;
-  --blue: #2a6fd6;
-  --blue-dark: #1e58b0;
-  --blue-soft: #e6effc;
-  --ink: #1a1d2e;
+  /* brand */
+  --navy: #1a174a;        /* Octopus Ink: headings, header bars, footer, dark buttons, active menu */
+  --navy-2: #2c2870;      /* Ink 2: hover on Ink */
+  --blue: #4977bc;        /* Coral Blue: filled primary buttons (white text), step numbers, icons */
+  --blue-text: #3c66a8;   /* Coral text: links and coral text on light backgrounds, focus ring */
+  --blue-dark: #3c66a8;   /* hover on Coral Blue fills */
+  --blue-soft: #e4ebf6;   /* coral tint */
+  --blue-soft-2: #eef2f9; /* coral tint, lighter */
+  --surface: #fffdef;     /* Aqua Pearl: page background everywhere */
+  --cream: #fdf7ea;       /* behind 3D illustrations (matches the image edges) */
+  --ink: #231f20;         /* Trench Black: body text */
+  --body-2: #231f20;      /* long body text (was #3B4556) */
   --muted: #5a6475;
-  --body-2: #3b4556;
-  --line: #e2e5ea;
-  --line-2: #c5ccd6;
-  --surface: #f5f6f8;
+  --line: #e5e2d4;        /* card borders */
+  --line-2: #cdc9b6;      /* ghost buttons, inputs */
+  --line-3: #efede2;      /* dividers */
+  --on-ink-link: #a9c1e8; /* on Ink: links */
+  --on-ink-text: #c9cfe0; /* on Ink: text */
+  --on-ink-muted: #dce4f2;/* on Ink: secondary lines on photos */
+  /* status (unchanged) — darkened hues that pass 4.5:1 as text */
   --green: #1f9d55;
   --amber: #d98a00;
   --red: #d64545;
-  /* QA §19 / SPEC §12 (WCAG 2.2 AA, contrast >= 4.5:1): the status tokens above are used for text, white-on-fill
-     buttons and borders, where #1f9d55 (3.5:1), #d98a00 (2.8:1) and #d64545 (4.4:1) fail on white. These are the
-     same hues darkened just enough to pass on white and on --surface. --blue-text is the brand blue one step darker
-     (#2a6fd6 is 4.47:1 on --surface). */
   --green-ink: #15803d;
   --amber-ink: #92400e;
   --red-ink: #991b1b;
-  /* ADDON-44 PART 1: ANY blue text or link on white uses #1E58B0 (6.3:1); #2A6FD6 is for fills with white text only. */
-  --blue-text: #1e58b0;
-  /* ADDON-44 status pairs (text on fill) */
   --ok-bg: #dcfce7;
   --warn-bg: #fef3c7;
   --needs: #9a3412;
   --needs-bg: #ffedd5;
   --bad-bg: #fee2e2;
   --new-bg: #f59e0b;
+  --focus: #3c66a8;
 }
 
 @theme inline {
@@ -39,14 +47,20 @@
   --color-navy-2: var(--navy-2);
   --color-blue: var(--blue-text);
   --color-blue-fill: var(--blue);
-  --color-body-2: var(--body-2);
   --color-blue-dark: var(--blue-dark);
   --color-blue-soft: var(--blue-soft);
+  --color-blue-soft-2: var(--blue-soft-2);
+  --color-surface: var(--surface);
+  --color-cream: var(--cream);
   --color-ink: var(--ink);
+  --color-body-2: var(--body-2);
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-line-2: var(--line-2);
-  --color-surface: var(--surface);
+  --color-line-3: var(--line-3);
+  --color-on-ink-link: var(--on-ink-link);
+  --color-on-ink: var(--on-ink-text);
+  --color-on-ink-muted: var(--on-ink-muted);
   --color-ok: var(--green-ink);
   --color-warn: var(--amber-ink);
   --color-bad: var(--red-ink);
@@ -56,15 +70,22 @@
   --color-needs-bg: var(--needs-bg);
   --color-bad-bg: var(--bad-bg);
   --color-new-bg: var(--new-bg);
-  --font-sans: var(--font-inter), system-ui, sans-serif;
-  --font-display: var(--font-lexend), sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
+  /* Degular (text) / Degular Display (headings) / Futura (labels); Figtree / Jost until the licences arrive */
+  --font-sans: var(--font-text), system-ui, sans-serif;
+  --font-display: var(--font-text), sans-serif; /* Degular Display when licensed */
+  --font-mono: var(--font-label), system-ui, sans-serif;
 }
 
 html { -webkit-text-size-adjust: 100%; }
-body { background: var(--surface); color: var(--navy); font-family: var(--font-sans); }
-h1, h2, h3, h4 { font-family: var(--font-display); color: var(--navy); letter-spacing: -0.01em; }
-:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; }
+body { background: var(--surface); color: var(--ink); font-family: var(--font-sans); font-size: 16px; line-height: 1.6; }
+h1, h2, h3, h4 { font-family: var(--font-display); color: var(--navy); letter-spacing: -0.01em; line-height: 1.12; }
+@layer base {
+  /* ADDON-46 type scale defaults (page utilities still win): H1 50/1.05 (phone 34), H2 34/1.12 (phone 25) */
+  h1 { font-size: 34px; line-height: 1.05; font-weight: 800; }
+  h2 { font-size: 25px; font-weight: 800; }
+  @media (min-width: 761px) { h1 { font-size: 50px; } h2 { font-size: 34px; } }
+}
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
 @layer components {
   .btn { @apply inline-flex items-center justify-center gap-2 min-h-11 px-[18px] rounded-[10px] font-semibold text-[15px] leading-none border border-transparent cursor-pointer whitespace-nowrap transition-colors disabled:opacity-50 disabled:cursor-not-allowed; }
@@ -86,6 +107,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); color: var(--navy); letter-sp
   /* ADDON-44 pill + label ("k") */
   .pill { @apply inline-flex items-center gap-1 font-mono text-[11px] font-semibold uppercase tracking-[.06em] leading-none px-2.5 py-[5px] rounded-full whitespace-nowrap; }
   .k { @apply font-mono text-[11px] font-semibold uppercase tracking-[.06em] text-muted; }
+  /* labels (Futura → Jost): 11 px uppercase +0.06em */
+  .label-caps { @apply font-mono text-[11px] font-semibold uppercase tracking-[.06em]; }
   .wrap { @apply max-w-[1280px] mx-auto px-4 min-[760px]:px-8; }
   .th { @apply text-left text-xs font-semibold uppercase tracking-wider text-muted px-4 py-3 border-b border-line whitespace-nowrap; }
   .td { @apply px-4 py-3.5 border-b border-line text-[15px] align-middle; }

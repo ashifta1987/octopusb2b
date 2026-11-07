@@ -1,0 +1,840 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Octopus B2B home</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&amp;family=Jost:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFDEF}
+*{box-sizing:border-box}
+img{max-width:100%}
+a{color:#1A174A;text-decoration:none}a:hover{color:#3C66A8}
+.wrap{max-width:1280px;margin:0 auto;padding-left:32px;padding-right:32px}
+.sec{padding-top:64px;padding-bottom:64px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:10px;font:600 15px/1 Degular,Figtree,system-ui,sans-serif;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+.btn-primary{background:#4977BC;color:#FFFFFF}.btn-primary:hover{background:#3C66A8;color:#FFFFFF}
+.btn-dark{background:#1A174A;color:#FFFFFF}.btn-dark:hover{background:#2C2870;color:#FFFFFF}
+.btn-ghost{background:#FFFFFF;color:#1A174A;border-color:#CDC9B6}.btn-ghost:hover{border-color:#1A174A}
+.btn-light{background:#FFFFFF;color:#1A174A}.btn-light:hover{background:#E4EBF6;color:#1A174A}
+.btn-outline-w{background:transparent;color:#FFFFFF;border-color:rgba(255,255,255,.45)}.btn-outline-w:hover{border-color:#FFFFFF;color:#FFFFFF}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid #3C66A8;outline-offset:2px}
+input,select{font:400 15px Degular,Figtree,system-ui,sans-serif;color:#1A174A}
+.k{font:600 11px/1.2 Futura PT,Jost,sans-serif;letter-spacing:.06em;color:#5A6475;text-transform:uppercase}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font:600 11px/1 Futura PT,Jost,sans-serif;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.pill-live{background:#DCFCE7;color:#15803D}.pill-soft{background:#E4EBF6;color:#3C66A8}.pill-dark{background:rgba(255,255,255,.1);color:#DCE4F2;border:1px solid rgba(255,255,255,.18)}
+.card{background:#FFFFFF;border:1px solid #E5E2D4;border-radius:14px;overflow:hidden}
+.eyebrow{display:flex;align-items:center;gap:10px}
+.num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:#1A174A;color:#FFFFFF;font:700 13px Degular Display,Figtree,sans-serif;flex:none}
+.num-b{background:#4977BC}
+.h2{margin:10px 0 0;font:800 34px/1.12 Degular Display,Figtree,sans-serif;letter-spacing:-.02em}
+.lead{margin:12px 0 0;color:#231F20;font-size:16.5px;line-height:1.6;max-width:620px}
+.sec-h{display:flex;justify-content:space-between;align-items:flex-end;gap:16px 24px;margin-bottom:24px;flex-wrap:wrap}
+.lnk{color:#3C66A8;font-weight:600;font-size:14.5px;white-space:nowrap}
+.rail a{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:999px;color:#231F20;font-weight:500;font-size:14px;white-space:nowrap;flex:none}
+.rail a:hover{background:#F6F3E4}
+.rail a.on{background:#1A174A;color:#FFFFFF;font-weight:600}
+.step{display:flex;flex-direction:column;gap:8px;padding:20px}
+.step h3{margin:4px 0 0;font:700 16.5px/1.3 Degular Display,Figtree,sans-serif}
+.step p{margin:0;color:#5A6475;font-size:14px;line-height:1.55}
+.chk{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.chk li{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.45;color:#231F20}
+.chk li::before{content:"✓";flex:none;width:20px;height:20px;margin-top:1px;border-radius:999px;background:#DCFCE7;color:#15803D;font:700 12px/20px Degular,Figtree,sans-serif;text-align:center}
+.art{display:block;width:100%;height:100%;object-fit:cover}
+.bar{height:8px;background:#E5E2D4;border-radius:999px;overflow:hidden}.bar > i{display:block;height:100%;background:linear-gradient(90deg,#4977BC,#A9C1E8)}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;background:#FFFFFF;border:1px solid #E5E2D4;font:600 15px Degular,Figtree,sans-serif}
+details{background:#FFFFFF;border:1px solid #E5E2D4;border-radius:14px;padding:0 18px}
+summary{cursor:pointer;min-height:54px;display:flex;align-items:center;font:600 15.5px Degular,Figtree,sans-serif}
+details p{margin:0 0 16px;color:#231F20;font-size:14.5px;line-height:1.6}
+@media (max-width:1100px){.hero-grid,.split{grid-template-columns:1fr !important}.steps4{grid-template-columns:repeat(2,1fr) !important}.cols4{grid-template-columns:repeat(2,1fr) !important}.cols3{grid-template-columns:1fr !important}}
+@media (max-width:760px){.wrap{padding-left:16px !important;padding-right:16px !important}.sec{padding-top:40px !important;padding-bottom:40px !important}.h1{font-size:32px !important;line-height:1.1 !important}.h2{font-size:25px !important}.steps4,.cols4{grid-template-columns:1fr !important}.hdr form{order:3;flex-basis:100% !important}.acct-label{display:none}.cta-row .btn{flex:1 1 100%}.foot-grid{grid-template-columns:1fr 1fr !important}}
+.ann{background:#1A174A;color:#FFFFFF;font-size:13.5px}
+.ann a{color:#A9C1E8;font-weight:600}
+.new{display:inline-flex;align-items:center;padding:2px 7px;border-radius:99px;background:#F59E0B;color:#1A174A;font:700 10px/1.4 Futura PT,Jost,sans-serif;letter-spacing:.04em;margin-left:4px}
+.lnk{color:#3C66A8}
+.rail{position:sticky;top:0;z-index:30}
+.rail a{min-height:44px}
+.ann a{display:inline-flex;align-items:center;min-height:44px}
+footer nav a{display:inline-flex;align-items:center;min-height:44px}
+.sp-label{position:absolute;top:12px;left:12px;display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:#1A174A;color:#FFFFFF;font:600 10.5px/1 Futura PT,Jost,sans-serif;letter-spacing:.05em;text-transform:uppercase}
+.brandmark{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);padding:4px 10px;border:1.5px dashed #4977BC;border-radius:6px;background:rgba(255,255,255,.88);color:#1A174A;font:700 12px/1.2 Degular Display,Figtree,sans-serif;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
+.span2{grid-column:span 2}
+/* HomeRedesign additions */
+.sec-k{color:#3C66A8}
+.pill-ex{background:#FEF3C7;color:#92400E}
+.pill-grey{background:#EFEDE2;color:#231F20}
+.ticks{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:10px 22px}
+.ticks li{display:flex;gap:8px;align-items:center;font-size:14.5px;font-weight:500;color:#231F20}
+.ticks li::before{content:"✓";flex:none;width:20px;height:20px;border-radius:999px;background:#DCFCE7;color:#15803D;font:700 12px/20px Degular,Figtree,sans-serif;text-align:center}
+.tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:7px;min-height:84px;padding:12px 5px 10px;border-radius:12px;border:1px solid #E5E2D4;background:#FFFDEF;color:#231F20;font:600 12.5px/1.25 Degular,Figtree,system-ui,sans-serif;text-align:center;cursor:pointer}
+.tab:hover{border-color:#1A174A;color:#1A174A}
+.tab[aria-pressed="true"]{background:#1A174A;border-color:#1A174A;color:#FFFFFF}
+.fld{display:flex;flex-direction:column;gap:6px;min-width:0}
+.fld label{font:600 13px Degular,Figtree,sans-serif;color:#231F20}
+.fld input,.fld select{min-height:46px;width:100%;padding:0 12px;border:1px solid #CDC9B6;border-radius:10px;background:#FFFFFF}
+.ostep{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.ostep li{display:flex;gap:12px;align-items:flex-start;font-size:14.5px;line-height:1.45;color:#231F20}
+.ostep .num{width:24px;height:24px;font-size:12px;border-radius:7px}
+.journey{display:flex;align-items:stretch;gap:0}
+.stage{flex:1 1 0;min-width:0;display:flex;flex-direction:column;gap:10px;padding:20px}
+.stage-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.stage h3{margin:0;font:800 20px/1.2 Degular Display,Figtree,sans-serif}
+.stage p{margin:0;font-size:14px;line-height:1.5;color:#5A6475}
+.stage-chips{margin-top:auto;padding-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+.conn{flex:none;width:34px;display:flex;align-items:center;justify-content:center;color:#8B93A5}
+.ico{flex:none;width:44px;height:44px;border-radius:12px;background:#E4EBF6;color:#3C66A8;display:inline-flex;align-items:center;justify-content:center}
+.ico-n{background:#1A174A;color:#A9C1E8}
+.svc{display:inline-flex;align-items:center;padding:5px 9px;border-radius:8px;background:#FFFDEF;border:1px solid #E5E2D4;font:600 12.5px/1.3 Degular,Figtree,sans-serif;color:#1A174A}
+.panel{background:#1A174A;color:#FFFFFF;border-radius:14px;padding:28px}
+.tile{border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);border-radius:12px;padding:14px;display:flex;gap:12px;align-items:center}
+.row-kv{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:#5A6475}
+.row-kv strong{color:#1A174A;font-weight:600}
+.pt{display:flex;gap:14px;align-items:flex-start}
+.pt h3{margin:0;font:700 16px/1.3 Degular Display,Figtree,sans-serif}
+.pt p{margin:4px 0 0;font-size:14px;line-height:1.55;color:#5A6475}
+.mini{min-height:44px;padding:0 16px;font-size:14px}
+.acard{padding:20px;display:flex;flex-direction:column;gap:8px}
+.acard h3{margin:0;font:700 16.5px Degular Display,Figtree,sans-serif}
+.acard p{margin:0;font-size:14px;line-height:1.5;color:#5A6475}
+.pstep{display:flex;flex-direction:column;gap:10px;padding:22px}
+.pstep h3{margin:0;font:700 16.5px/1.3 Degular Display,Figtree,sans-serif}
+.pstep p{margin:0;font-size:14px;line-height:1.55;color:#5A6475}
+.vis-first > .vis{order:-1}
+.qstep{display:flex;flex-direction:column;gap:6px;padding:14px}
+.qstep h3{margin:2px 0 0;font:700 14.5px/1.3 Degular Display,Figtree,sans-serif}
+.qstep .num{width:24px;height:24px;font-size:12px;border-radius:7px}
+.pcard{background:#FFFFFF;color:#1A174A;border-radius:12px;padding:14px;display:flex;gap:14px;align-items:flex-start}
+.pthumb{flex:none;width:76px;height:76px;aspect-ratio:1/1;border-radius:10px;overflow:hidden;background:#F3F1E6;display:flex;align-items:center;justify-content:center;color:#5A6475}
+.biz{padding:18px;display:flex;flex-direction:column;gap:10px}
+.biz h3{margin:0;font:700 16px/1.3 Degular Display,Figtree,sans-serif}
+.biz p{margin:0;font-size:14px;line-height:1.5;color:#5A6475}
+.srow{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid rgba(255,255,255,.14)}
+.srow:first-child{border-top:0}
+.totop{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 6px}
+@media (max-width:1100px){.hero-grid,.split,.split-r{grid-template-columns:minmax(0,1fr) !important}.split-r > .vis,.vis-first > .vis{order:2}.qsteps,.bizg{grid-template-columns:repeat(2,minmax(0,1fr)) !important}}
+@media (max-width:900px){.journey{flex-direction:column}.stage{flex:none}.conn{width:auto;height:34px}.conn svg{transform:rotate(90deg)}}
+@media (max-width:760px){
+.g2,.cat3,.cols2{grid-template-columns:minmax(0,1fr) !important}
+.span2{grid-column:auto}
+.tabs{display:flex !important;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x mandatory}.tab{flex:0 0 120px;scroll-snap-align:start}
+.sec .btn{width:100%}.sec .srch .btn{width:auto}
+.h1{font-size:34px !important}
+.foot-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.foot-brand{grid-column:1 / -1}
+.am-row,.srow,.pcard{flex-wrap:wrap}
+.split,.split-r{gap:28px !important}
+.strip-m{display:flex !important;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px !important;padding-bottom:8px}
+.strip-m > *{flex:0 0 260px;min-width:0;scroll-snap-align:start}
+.strip-m .pimg{aspect-ratio:4/3 !important}
+.hide-m{display:none !important}
+.svc-sec .chk li:nth-child(n+4){display:none}
+.pt p{display:none}
+.journey{gap:8px}
+.conn,.stage-chips,.stage-top .k{display:none !important}
+.stage{display:grid;grid-template-columns:44px minmax(0,1fr);column-gap:14px;row-gap:2px;padding:14px;align-items:start}
+.stage-top{grid-column:1;grid-row:1 / span 2}
+.stage h3{grid-column:2;font-size:17px}.stage p{grid-column:2}
+.also-grid{grid-template-columns:repeat(2,minmax(0,1fr)) !important;gap:10px !important}
+.also-grid p,.also-grid .ad{display:none}
+.also-grid .acard{padding:16px}
+.also-grid .span2{grid-column:1 / -1}
+}
+
+/* Image layer (ADDON-48) */
+.bizg5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.octo-fab{position:fixed;right:24px;bottom:24px;z-index:40;display:inline-flex;align-items:center;gap:10px;padding:6px 18px 6px 6px;min-height:56px;border-radius:999px;background:#1A174A;color:#FFFFFF;font:600 15px Degular,Figtree,sans-serif;box-shadow:0 14px 32px rgba(26,23,74,.28)}
+.octo-fab:hover{color:#FFFFFF;background:#2C2870}
+.octo-fab img{width:44px;height:44px;border-radius:999px;background:#FFFDEF;display:block}
+.octo-fab .dot{width:9px;height:9px;border-radius:99px;background:#22C55E;box-shadow:0 0 0 3px rgba(34,197,94,.25)}
+@media (max-width:1100px){.bizg5{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.pay-steps{grid-template-columns:repeat(2,minmax(0,1fr)) !important}}
+@media (max-width:760px){.octo-fab{right:16px;bottom:16px;padding:4px;min-height:52px}.octo-fab .fab-t,.octo-fab .dot{display:none}.pay-ill{display:none}}
+.photo{position:relative;border-radius:20px;overflow:hidden;background:#F3F1E6;box-shadow:0 18px 40px rgba(26,23,74,.10)}
+.photo img{display:block;width:100%;height:100%;object-fit:cover}
+.ill{position:relative;border-radius:24px;overflow:hidden;background:#FDF7EA}
+.ill img{display:block;width:100%;height:100%;object-fit:cover}
+.feather img{-webkit-mask-image:radial-gradient(ellipse 68% 68% at 50% 52%,#000 50%,transparent 98%);mask-image:radial-gradient(ellipse 68% 68% at 50% 52%,#000 50%,transparent 98%)}
+.cap-chip{position:absolute;left:16px;bottom:16px;display:inline-flex;align-items:center;gap:8px;max-width:calc(100% - 32px);padding:9px 14px;border-radius:999px;background:rgba(255,255,255,.94);color:#1A174A;font:600 13.5px/1.25 Degular,Figtree,sans-serif;box-shadow:0 6px 16px rgba(26,23,74,.12)}
+.cap-chip .dot{flex:none;width:8px;height:8px;border-radius:99px;background:#4977BC}
+.shade{position:absolute;left:0;right:0;bottom:0;padding:48px 20px 18px;background:linear-gradient(180deg,rgba(26,23,74,0) 0%,rgba(26,23,74,.86) 100%);color:#FFFFFF}
+.shade b{display:block;font:700 17px/1.3 Degular Display,Figtree,sans-serif}
+.shade span{display:block;margin-top:3px;font-size:13.5px;color:#DCE4F2}
+.float-card{position:absolute;background:#FFFFFF;border:1px solid #E5E2D4;border-radius:16px;box-shadow:0 16px 36px rgba(26,23,74,.16);padding:14px 16px;display:flex;gap:12px;align-items:center}
+.inset{position:absolute;left:-28px;bottom:-28px;width:46%;border:6px solid #FFFDEF;border-radius:18px;overflow:hidden;box-shadow:0 16px 36px rgba(26,23,74,.18);aspect-ratio:4/3}
+.inset img{display:block;width:100%;height:100%;object-fit:cover}
+.picker{background:#1A174A;color:#FFFFFF;border-radius:22px;padding:24px 26px;box-shadow:0 24px 48px rgba(26,23,74,.22)}
+.picker .tab{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.16);color:#DCE4F2;flex-direction:row;justify-content:center;min-height:56px;font-size:14px;gap:9px;padding:10px 12px}
+.picker .tab:hover{border-color:#A9C1E8;color:#FFFFFF}
+.picker .tab[aria-pressed="true"]{background:#FFFFFF;border-color:#FFFFFF;color:#1A174A}
+.picker .ostep li{color:#DCE4F2}
+.picker .fld label{color:#DCE4F2}
+.pick-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:28px;align-items:end;margin-top:20px}
+.pstrip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.pstrip figure{margin:0}
+.pstrip .photo{aspect-ratio:4/3;box-shadow:none}
+.pstrip figcaption{display:flex;gap:10px;align-items:flex-start;margin-top:12px}
+.pstrip figcaption b{display:block;font:700 16px/1.3 Degular Display,Figtree,sans-serif;color:#1A174A}
+.pstrip figcaption span.t{display:block;font-size:14px;line-height:1.5;color:#5A6475;margin-top:2px}
+.office{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;background:#FFFFFF;border:1px solid #E5E2D4;font:600 13.5px Degular,Figtree,sans-serif;color:#1A174A}
+.office svg{color:#3C66A8}
+@media (max-width:1100px){.pstrip{grid-template-columns:repeat(2,minmax(0,1fr))}.pick-grid{grid-template-columns:minmax(0,1fr)}.inset{left:12px;bottom:-20px}.pools3{grid-template-columns:minmax(0,1fr) !important}}
+@media (max-width:760px){
+.hero-ill{display:none !important}
+.picker{padding:18px 16px;border-radius:18px}
+.picker .tab{flex:0 0 150px;min-height:52px}
+.pstrip{display:flex !important;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px}
+.pstrip > figure{flex:0 0 260px;scroll-snap-align:start}
+.pstrip figcaption span.t{display:none}
+.inset{display:none}
+.float-card{left:12px !important;right:12px !important;bottom:12px !important;top:auto !important;padding:10px 12px}
+.float-card .fc-sub{display:none}
+.photo{border-radius:16px}
+.faq-aside{display:none}
+.cta-ill{display:none}
+.r2{grid-template-columns:minmax(0,1fr) !important}
+.r2 .photo{aspect-ratio:4/3}
+}
+</style>
+</helmet>
+<div style="font-family:Degular,Figtree,system-ui,sans-serif;color:#1A174A;background:#FFFDEF;min-height:100vh;overflow-x:clip;">
+
+<!-- 1 Announcement bar -->
+<div id="top" class="ann"><div class="wrap" style="padding-top:4px;padding-bottom:4px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;text-align:center;"><span class="new" style="margin:0;">NEW</span><span>Make My Brand: your logo on verified products, stocked in our warehouse, shipped worldwide.</span><a href="MakeMyBrand.dc.html">See how it works →</a></div></div>
+
+<!-- 2 Header + sticky service rail -->
+<header style="background:#FFFFFF;border-bottom:1px solid #E5E2D4;">
+<div class="wrap hdr" style="padding-top:12px;padding-bottom:12px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;">
+<a href="HomeRedesign.dc.html" aria-label="Octopus B2B home" style="display:inline-flex;align-items:center;flex:none;min-height:44px;"><img src="assets/octopus-b2b-logo.png" alt="Octopus B2B" width="162" height="42" decoding="async" fetchpriority="high" style="height:42px;width:auto;display:block;"></a>
+<form role="search" style="flex:1 1 420px;display:flex;min-width:0;border:1.5px solid #1A174A;border-radius:10px;overflow:hidden;background:#FFFFFF;">
+<label for="q" class="sr">Search products, HS codes or turnkey projects</label>
+<input id="q" type="search" placeholder="Search products, HS codes or turnkey projects" style="flex:1;min-width:0;border:0;padding:0 14px;min-height:46px;font-size:15px;">
+<button type="submit" class="btn btn-dark" style="border-radius:0;min-height:46px;padding:0 18px;" aria-label="Search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></button>
+</form>
+<a href="Main.dc.html" class="btn btn-ghost" style="min-height:46px;padding:0 14px;margin-left:auto;" aria-label="My account"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span class="acct-label">My account</span></a>
+</div>
+</header>
+<nav class="rail" aria-label="Services" style="background:#FFFFFF;border-bottom:1px solid #E5E2D4;">
+<div class="wrap" style="padding-top:6px;padding-bottom:6px;display:flex;gap:4px;overflow-x:auto;align-items:center;">
+<a href="DropshipCatalog.dc.html">Dropshipping</a>
+<a href="MakeMyBrand.dc.html">Make My Brand <span class="new">NEW</span></a>
+<a href="HomeRedesign.dc.html">Product sourcing</a>
+<a href="HomeRedesign.dc.html">MOQ pools</a>
+<a href="HomeRedesign.dc.html">Turnkey Projects</a>
+<a href="Request3PL.dc.html">3PL &amp; shipping</a>
+<span style="width:1px;height:20px;background:#E5E2D4;flex:none;margin:0 6px;"></span>
+<a href="HomeRedesign.dc.html">All categories</a>
+</div>
+</nav>
+
+<!-- 3 Hero -->
+<section aria-labelledby="hero-h" style="background:#FFFDEF;">
+<div class="wrap sec" style="padding-top:36px;padding-bottom:48px;">
+<div class="hero-grid" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,560px);gap:40px;align-items:center;">
+<div>
+<span class="k sec-k">Dropshipping · Branding · Sourcing · Warehousing</span>
+<h1 id="hero-h" class="h1" style="margin:14px 0 0;font:800 50px/1.05 Degular Display,Figtree,sans-serif;letter-spacing:-.03em;max-width:700px;">From the factory to your customer. <span style="color:#3C66A8;">One account.</span></h1>
+<p class="lead" style="font-size:17px;max-width:600px;">Sell without holding stock, put your brand on verified products, source from factories in China and ship worldwide, with one US dollar wallet and one account manager.</p>
+<form role="search" class="srch" style="display:flex;margin-top:24px;max-width:640px;border:1.5px solid #1A174A;border-radius:12px;overflow:hidden;background:#FFFFFF;box-shadow:0 6px 18px rgba(26,23,74,.06);">
+<label for="hq" class="sr">Search products, HS codes or suppliers</label>
+<span style="display:flex;align-items:center;padding-left:16px;color:#5A6475;flex:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></span>
+<input id="hq" type="search" placeholder="Search products, HS codes or suppliers" style="flex:1;min-width:0;border:0;padding:0 12px;min-height:56px;font-size:16px;">
+<button type="submit" class="btn btn-dark" style="border-radius:0;min-height:56px;padding:0 24px;font-size:15.5px;">Search</button>
+</form>
+<ul class="ticks" aria-label="Why Octopus B2B" style="margin-top:20px;">
+<li>Verified factories</li>
+<li>Quotes in 24 h</li>
+<li>One account manager</li>
+<li>Escrow wallet</li>
+</ul>
+</div>
+
+<figure class="hero-ill feather" style="margin:0;aspect-ratio:3/2;">
+<img src="assets/svc/3d-3pl-logistics.jpg" alt="The Octopus mascot storing, packing and loading parcels onto a delivery truck" width="1200" height="800" fetchpriority="high" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover;">
+</figure>
+</div>
+
+<div class="picker" style="margin-top:28px;">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+<h2 style="margin:0;font:800 22px/1.25 Degular Display,Figtree,sans-serif;color:#FFFFFF;">What do you want to do?</h2>
+<span style="font-size:13.5px;color:#C9CFE0;">Pick one. You can use every service from the same account.</span>
+</div>
+<div class="tabs" role="group" aria-label="Choose a service" style="margin-top:16px;">
+<button type="button" class="tab" aria-pressed="{{tabDrop.pressed}}" onClick="{{tabDrop.pick}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h16l-1.5-5h-13Z"></path><path d="M5 9v11h14V9"></path><path d="M10 20v-5h4v5"></path></svg><span>Dropship</span></button>
+<button type="button" class="tab" aria-pressed="{{tabBrand.pressed}}" onClick="{{tabBrand.pick}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12 12 20 3 11V3h8Z"></path><circle cx="7.5" cy="7.5" r="1.5"></circle></svg><span>Put my brand on it</span></button>
+<button type="button" class="tab" aria-pressed="{{tabSource.pressed}}" onClick="{{tabSource.pick}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg><span>Source a product</span></button>
+<button type="button" class="tab" aria-pressed="{{tabPool.pressed}}" onClick="{{tabPool.pick}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"></circle><circle cx="17" cy="9" r="2.5"></circle><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"></path><path d="M15.5 14.6c3 .1 5.5 1.9 5.5 5.4"></path></svg><span>Share a factory order</span></button>
+<button type="button" class="tab" aria-pressed="{{tabStore.pressed}}" onClick="{{tabStore.pick}}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9 12 4l9 5v11H3Z"></path><path d="M7 20v-7h10v7"></path><path d="M7 16.5h10"></path></svg><span>Store and ship</span></button>
+</div>
+
+<div class="pick-grid" aria-live="polite">
+<div>
+<span class="k" style="color:#A9C1E8;">{{panel.service}}</span>
+<p style="margin:6px 0 0;color:#FFFFFF;font:700 19px/1.4 Degular Display,Figtree,sans-serif;">{{panel.promise}}</p>
+<ol class="ostep" style="margin-top:12px;">
+<sc-for list="{{panel.steps}}" as="s" hint-placeholder-count="3"><li><span class="num num-b">{{s.n}}</span><span>{{s.text}}</span></li></sc-for>
+</ol>
+
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;">
+<sc-if value="{{isSource}}" hint-placeholder-val="{{false}}">
+<div style="display:grid;gap:12px;margin-top:0;padding-top:0;border-top:0;">
+<div class="fld"><label for="rfq-p">Product</label><input id="rfq-p" type="text" placeholder="For example: handheld fan with your logo"></div>
+<div class="cols2" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;">
+<div class="fld"><label for="rfq-q">Quantity</label><input id="rfq-q" type="number" min="1" inputmode="numeric" placeholder="Pieces"></div>
+<div class="fld"><label for="rfq-c">Destination country</label><select id="rfq-c"><option>United States</option><option>United Kingdom</option><option>United Arab Emirates</option><option>Saudi Arabia</option><option>Germany</option><option>Australia</option><option>Other country</option></select></div>
+</div>
+</div>
+</sc-if>
+
+<div style="display:flex;align-items:center;gap:8px;padding:11px 14px;border-radius:10px;background:rgba(255,255,255,.08);color:#DCE4F2;font:600 13.5px/1.35 Degular,Figtree,sans-serif;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A9C1E8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8 12 3 3 5-6"></path></svg><span>{{panel.fact}}</span></div>
+<a href="{{panel.href}}" class="btn btn-primary" style="width:100%;min-height:54px;font-size:16px;">{{panel.cta}}</a>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 4 One account, the whole route -->
+<section aria-labelledby="route-h" style="background:#FFFFFF;border-top:1px solid #E5E2D4;">
+<div class="wrap sec">
+<div class="sec-h"><div><span class="k sec-k">How it fits together</span><h2 id="route-h" class="h2">One account, the whole route</h2><p class="lead hide-m">Five stages from a factory in China to your customer. Each one is a service in the same account.</p></div></div>
+<ol class="journey" aria-label="The route from factory to customer" style="list-style:none;margin:0;padding:0;">
+<li class="card stage">
+<div class="stage-top"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></span><span class="k">Stage 1</span></div>
+<h3>Find</h3>
+<p>Get quotes from verified factories, or share a factory minimum.</p>
+<div class="stage-chips"><span class="svc">Product sourcing</span><span class="svc">MOQ pools</span></div>
+</li>
+<li class="conn" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg></li>
+<li class="card stage">
+<div class="stage-top"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12 12 20 3 11V3h8Z"></path><circle cx="7.5" cy="7.5" r="1.5"></circle></svg></span><span class="k">Stage 2</span></div>
+<h3>Brand</h3>
+<p>Put your logo on the product and the box.</p>
+<div class="stage-chips"><span class="svc">Make My Brand</span></div>
+</li>
+<li class="conn" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg></li>
+<li class="card stage">
+<div class="stage-top"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9 12 4l9 5v11H3Z"></path><path d="M7 20v-7h10v7"></path><path d="M7 16.5h10"></path></svg></span><span class="k">Stage 3</span></div>
+<h3>Stock</h3>
+<p>Keep your goods in our Shenzhen warehouse, by SKU.</p>
+<div class="stage-chips"><span class="svc">3PL warehousing</span></div>
+</li>
+<li class="conn" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg></li>
+<li class="card stage">
+<div class="stage-top"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h16l-1.5-5h-13Z"></path><path d="M5 9v11h14V9"></path><path d="M10 20v-5h4v5"></path></svg></span><span class="k">Stage 4</span></div>
+<h3>Sell</h3>
+<p>List products in your own store. We fulfil each order.</p>
+<div class="stage-chips"><span class="svc">Dropshipping</span><span class="svc">Your store</span></div>
+</li>
+<li class="conn" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m13 6 6 6-6 6"></path></svg></li>
+<li class="card stage">
+<div class="stage-top"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18"></path><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18Z"></path></svg></span><span class="k">Stage 5</span></div>
+<h3>Ship</h3>
+<p>Delivered with tracking in 220+ countries.</p>
+<div class="stage-chips"><span class="svc">Worldwide shipping · YunExpress network</span></div>
+</li>
+</ol>
+<p style="margin:24px 0 0;text-align:center;font-size:15.5px;line-height:1.55;color:#231F20;">Use one service or all of them. Your wallet, your account manager and your orders stay in one place.</p>
+</div>
+</section>
+
+<!-- 5.1 Dropshipping (visual right) -->
+<section id="dropshipping" class="svc-sec" aria-labelledby="ds-h" style="background:#FFFDEF;">
+<div class="wrap sec">
+<div class="split" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:center;">
+<div>
+<div class="eyebrow"><span class="num">1</span><span class="k sec-k">Dropshipping</span></div>
+<h2 id="ds-h" class="h2">You sell. We ship to your customer.</h2>
+<p class="lead">List verified products in your store. We pack each order under your brand and ship it with tracking. You see the full cost first.</p>
+<ul class="chk" style="margin-top:22px;">
+<li>No stock, no minimum</li>
+<li>Your packing slip, never our prices</li>
+<li>Tracking to the door</li>
+</ul>
+<div class="cta-row" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;">
+<a href="DropshipCatalog.dc.html" class="btn btn-primary" style="min-height:52px;padding:0 24px;font-size:16px;">Start dropshipping →</a>
+<a href="DropshipCatalog.dc.html" class="btn btn-ghost" style="min-height:52px;">See the catalogue</a>
+</div>
+</div>
+<figure class="ill vis" style="margin:0;aspect-ratio:3/2;">
+<img src="assets/svc/3d-dropshipping.jpg" alt="The Octopus mascot taking an order from a phone and delivering the parcel to a customer's door" width="1200" height="800" loading="lazy" decoding="async">
+<span class="cap-chip"><span class="dot"></span>Your store → our warehouse → your customer's door</span>
+</figure>
+</div>
+<div class="r2" style="display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:16px;margin-top:36px;align-items:stretch;">
+<div class="card" style="padding:20px;min-width:0;">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;"><div style="display:flex;align-items:center;gap:8px;"><span style="font:700 16px Degular Display,Figtree,sans-serif;">Catalogue preview</span><span class="pill pill-ex">Example</span></div><span style="font-size:12.5px;color:#5A6475;">Prices shown are examples</span></div>
+<div class="cat3 strip-m" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px;">
+<div class="card" style="display:flex;flex-direction:column;">
+<div class="pimg" style="position:relative;aspect-ratio:1/1;background:#F3F1E6;"><img class="art" src="assets/F8.jpg" alt="Handheld fan F8" width="600" height="600" loading="lazy" decoding="async"><span class="pill pill-ex" style="position:absolute;top:8px;left:8px;">Example</span></div>
+<div style="padding:12px;display:flex;flex-direction:column;gap:7px;">
+<div style="font:600 14px/1.3 Degular,Figtree,sans-serif;">Handheld fan F8</div>
+<div class="row-kv"><span>Your cost</span><strong>US$ 6.40</strong></div>
+<div class="row-kv"><span>Suggested price</span><strong>US$ 19.90</strong></div>
+<div class="row-kv"><span>Profit</span><strong style="color:#15803D;">US$ 13.50</strong></div>
+<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px;"><span class="pill pill-soft">Express</span><span style="font-size:12px;color:#5A6475;">[N–N] days</span></div>
+</div>
+</div>
+<div class="card" style="display:flex;flex-direction:column;">
+<div class="pimg" style="position:relative;aspect-ratio:1/1;background:#F3F1E6;"><img class="art" src="assets/G1000.jpg" alt="Neck fan G1000" width="600" height="600" loading="lazy" decoding="async"><span class="pill pill-ex" style="position:absolute;top:8px;left:8px;">Example</span></div>
+<div style="padding:12px;display:flex;flex-direction:column;gap:7px;">
+<div style="font:600 14px/1.3 Degular,Figtree,sans-serif;">Neck fan G1000</div>
+<div class="row-kv"><span>Your cost</span><strong>US$ 9.80</strong></div>
+<div class="row-kv"><span>Suggested price</span><strong>US$ 29.90</strong></div>
+<div class="row-kv"><span>Profit</span><strong style="color:#15803D;">US$ 20.10</strong></div>
+<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px;"><span class="pill pill-soft">Standard</span><span style="font-size:12px;color:#5A6475;">[N–N] days</span></div>
+</div>
+</div>
+<div class="card" style="display:flex;flex-direction:column;">
+<div class="pimg" style="position:relative;aspect-ratio:1/1;background:#F3F1E6;"><img class="art" src="assets/MINI1.jpg" alt="Mini fan MINI1" width="600" height="600" loading="lazy" decoding="async"><span class="pill pill-ex" style="position:absolute;top:8px;left:8px;">Example</span></div>
+<div style="padding:12px;display:flex;flex-direction:column;gap:7px;">
+<div style="font:600 14px/1.3 Degular,Figtree,sans-serif;">Mini fan MINI1</div>
+<div class="row-kv"><span>Your cost</span><strong>US$ 4.20</strong></div>
+<div class="row-kv"><span>Suggested price</span><strong>US$ 14.90</strong></div>
+<div class="row-kv"><span>Profit</span><strong style="color:#15803D;">US$ 10.70</strong></div>
+<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px;"><span class="pill pill-grey">Economy</span><span style="font-size:12px;color:#5A6475;">[N–N] days</span></div>
+</div>
+</div>
+</div>
+</div>
+<figure class="photo hide-m" style="margin:0;min-height:100%;box-shadow:none;border:1px solid #E5E2D4;">
+<img src="assets/svc/dropshipping.jpg" alt="An Octopus packer placing a product in a box at the Shenzhen warehouse" width="1200" height="800" loading="lazy" decoding="async" style="position:absolute;inset:0;">
+<div class="shade"><b>Packed with your packing slip</b><span>Your brand on the parcel, never our prices.</span></div>
+</figure>
+</div>
+<ol class="steps4 strip-m" aria-label="How dropshipping works" style="list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+<li class="card step"><span class="num num-b">1</span><h3>Choose products</h3><p>Pick from products made by verified factories.</p></li>
+<li class="card step"><span class="num num-b">2</span><h3>Connect your shop</h3><p>Shopify, WooCommerce, or upload a sheet.</p></li>
+<li class="card step"><span class="num num-b">3</span><h3>Pay per order</h3><p>Product, shipping and fulfilment fee come out of your wallet.</p></li>
+<li class="card step"><span class="num num-b">4</span><h3>We pack and deliver</h3><p>Packed under your brand and delivered with tracking.</p></li>
+</ol>
+</div>
+</section>
+
+<!-- 5.2 Make My Brand (visual left) -->
+<section id="make-my-brand" class="svc-sec" aria-labelledby="mmb-h" style="background:#FFFFFF;border-top:1px solid #E5E2D4;">
+<div class="wrap sec">
+<div class="split-r" style="display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:48px;align-items:center;">
+<figure class="vis" style="margin:0;position:relative;">
+<div class="ill" style="aspect-ratio:3/2;"><img src="assets/svc/make-my-brand-3d.jpg" alt="The Octopus mascot stamping a logo onto a product box, with colour swatches and packaging" width="1200" height="800" loading="lazy" decoding="async"></div>
+<div class="float-card" style="right:-22px;bottom:-26px;max-width:330px;">
+<span style="flex:none;position:relative;width:64px;height:64px;border-radius:12px;overflow:hidden;background:#F3F1E6;"><img src="assets/F8.jpg" alt="" width="128" height="128" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;display:block;"></span>
+<div style="min-width:0;"><span class="pill" style="background:#1A174A;color:#FFFFFF;">Studio preview</span><div style="font:700 14.5px/1.3 Degular Display,Figtree,sans-serif;margin-top:6px;">Handheld fan F8 · your logo</div><div class="fc-sub" style="font-size:12px;color:#5A6475;margin-top:2px;">Illustrative preview. Not approved artwork.</div></div>
+</div>
+</figure>
+<div>
+<div class="eyebrow"><span class="num">2</span><span class="k sec-k">Make My Brand</span><span class="new" style="margin:0;">NEW</span></div>
+<h2 id="mmb-h" class="h2">Your brand on proven products.</h2>
+<p class="lead">Your logo on products from verified suppliers. We produce, check, stock and ship it, in bulk or order by order from your store.</p>
+<ul style="list-style:none;margin:24px 0 0;padding:0;display:grid;gap:16px;">
+<li class="pt"><span class="ico" style="width:40px;height:40px;border-radius:10px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6Z"></path><path d="m9 12 2 2 4-4"></path></svg></span><div><h3>Verified suppliers only</h3><p>Only products Octopus lists directly.</p></div></li>
+<li class="pt"><span class="ico" style="width:40px;height:40px;border-radius:10px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></svg></span><div><h3>One account manager</h3><p>One person for artwork, proof, sample and approvals.</p></div></li>
+<li class="pt"><span class="ico" style="width:40px;height:40px;border-radius:10px;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6M9 16h3"></path></svg></span><div><h3>Price confirmed before you pay</h3><p>Price, delivery date, duties and shipping in your quote.</p></div></li>
+</ul>
+<div class="cta-row" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;">
+<a href="RequestBrand.dc.html" class="btn btn-primary" style="min-height:52px;padding:0 24px;font-size:16px;">Start a brand project →</a>
+<a href="MakeMyBrand.dc.html" class="btn btn-ghost" style="min-height:52px;">See how it works</a>
+</div>
+</div>
+</div>
+<ol class="steps4 strip-m" aria-label="How Make My Brand works" style="list-style:none;margin:36px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+<li class="card step"><span class="num num-b">1</span><h3>Pick a verified product</h3><p>Only products Octopus lists directly.</p></li>
+<li class="card step"><span class="num num-b">2</span><h3>Add your brand</h3><p>Logo print, engraving or a branded box.</p></li>
+<li class="card step"><span class="num num-b">3</span><h3>Approve proof and sample</h3><p>Nothing is made until you approve both.</p></li>
+<li class="card step"><span class="num num-b">4</span><h3>We make, check and stock it</h3><p>Then ship it in bulk or order by order.</p></li>
+</ol>
+</div>
+</section>
+
+<!-- 5.3 Product sourcing (visual right) -->
+<section id="sourcing" class="svc-sec" aria-labelledby="src-h" style="background:#FFFDEF;">
+<div class="wrap sec">
+<div class="split" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:center;">
+<div>
+<div class="eyebrow"><span class="num">3</span><span class="k sec-k">Product sourcing</span></div>
+<h2 id="src-h" class="h2">Tell us the product. We find the factory.</h2>
+<p class="lead">Our team in four China hubs gets you competing quotes from verified factories within 24 hours, inspects the goods and ships them to your door.</p>
+<div class="cta-row" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;">
+<a href="HomeRedesign.dc.html" class="btn btn-primary" style="min-height:52px;padding:0 24px;font-size:16px;">Request quotes →</a>
+<a href="PublicProduct.dc.html" class="btn btn-ghost" style="min-height:52px;">Browse ready-to-order products</a>
+</div>
+<p style="margin:14px 0 0;font-size:13.5px;color:#5A6475;">RFQ fee US$ 5.00 · one contract, one invoice, paid through escrow.</p>
+<div class="hide-m" style="margin-top:22px;"><span class="k">Our sourcing offices in China</span><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"><span class="office"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>Shenzhen · HQ</span><span class="office"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>Foshan</span><span class="office"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>Yiwu</span><span class="office"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg>Ningbo</span></div></div>
+</div>
+<figure class="vis" style="margin:0 0 0 28px;position:relative;">
+<div class="ill" style="aspect-ratio:3/2;"><img src="assets/svc/product-sourcing-3d.jpg" alt="The Octopus mascot comparing three factory quotes with a magnifying glass" width="1200" height="800" loading="lazy" decoding="async"></div>
+<div class="inset"><img src="assets/svc/factory-quality-control.jpg" alt="Quality inspection of products at the factory" width="600" height="400" loading="lazy" decoding="async"></div>
+<span class="cap-chip" style="left:auto;right:16px;"><span class="dot" style="background:#15803D;"></span>Real factory checks before you pay</span>
+</figure>
+</div>
+<ol class="steps4 strip-m" aria-label="How product sourcing works" style="list-style:none;margin:56px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+<li class="card step"><span class="num num-b">1</span><h3>Request</h3><p>Tell us the product, quantity and destination country.</p></li>
+<li class="card step"><span class="num num-b">2</span><h3>Matched quotes</h3><p>Competing quotes from verified factories within 24 hours.</p></li>
+<li class="card step"><span class="num num-b">3</span><h3>Sample and order</h3><p>Order a sample first, then confirm.</p></li>
+<li class="card step"><span class="num num-b">4</span><h3>Inspect and deliver</h3><p>We inspect the goods and ship them to your door.</p></li>
+</ol>
+</div>
+</section>
+
+<!-- 5.4 MOQ pools (visual left) -->
+<section id="moq-pools" class="svc-sec" aria-labelledby="moq-h" style="background:#FFFFFF;border-top:1px solid #E5E2D4;">
+<div class="wrap sec">
+<div class="split vis-first" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:center;">
+<figure class="ill vis" style="margin:0;aspect-ratio:3/2;">
+<img src="assets/svc/3d-moq-pooling.jpg" alt="The Octopus mascot gathering boxes from several buyers onto one shared pallet" width="1200" height="800" loading="lazy" decoding="async">
+<span class="cap-chip"><span class="dot"></span>Many buyers, one factory order</span>
+</figure>
+<div>
+<div class="eyebrow"><span class="num">4</span><span class="k sec-k">MOQ pools</span></div>
+<h2 id="moq-h" class="h2">Factory minimum too big? Share it.</h2>
+<p class="lead">Factories often start at 500 or 1,000 pieces. Share one order with other buyers; money waits in escrow until the pool reaches the minimum.</p>
+<ol class="qsteps strip-m" aria-label="How MOQ pools work" style="list-style:none;margin:26px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;">
+<li class="card qstep"><span class="num num-b">1</span><h3>Pick a pool</h3></li>
+<li class="card qstep"><span class="num num-b">2</span><h3>Commit your quantity</h3></li>
+<li class="card qstep"><span class="num num-b">3</span><h3>Pool fills and is ordered</h3></li>
+<li class="card qstep"><span class="num num-b">4</span><h3>Checked and shipped to each buyer</h3></li>
+</ol>
+<ul class="chk" style="margin-top:22px;">
+<li>Pay only for your share</li>
+<li>Escrow until the order is placed</li>
+<li>Refunded if the pool doesn't fill [by the deadline]</li>
+</ul>
+<div class="cta-row" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;">
+<a href="HomeRedesign.dc.html" class="btn btn-primary" style="min-height:52px;padding:0 24px;font-size:16px;">See open pools →</a>
+<a href="HomeRedesign.dc.html" class="btn btn-ghost" style="min-height:52px;">Start a pool for a product</a>
+</div>
+</div>
+</div>
+<div class="panel" style="padding:22px;min-width:0;margin-top:36px;">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;"><span style="font:700 18px Degular Display,Figtree,sans-serif;">Open pools closest to filling</span><span class="pill pill-ex">Example progress</span></div>
+<ul class="strip-m pools3" style="list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;" aria-label="Open pools">
+<li class="pcard">
+<span class="pthumb" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v4M10 3v4"></path><rect x="5.5" y="7" width="6" height="5" rx="1"></rect><path d="M8.5 12v3a4 4 0 0 0 4 4h2a3 3 0 0 0 3-3V9"></path><rect x="15" y="5" width="5" height="4" rx="1"></rect></svg></span>
+<div style="flex:1;min-width:0;">
+<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;"><span style="font:600 15px/1.3 Degular,Figtree,sans-serif;">4-in-1 braided cable</span><span style="font-size:12.5px;color:#5A6475;">Factory minimum [MOQ] pcs</span></div>
+<div class="bar" style="margin-top:10px;"><i style="width:72%"></i></div>
+<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:7px;font-size:12.5px;color:#5A6475;"><span>[N] of [MOQ] pcs committed</span><span>Closes [date]</span></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;"><span style="font-size:13.5px;color:#231F20;">Your price <strong style="color:#1A174A;">US$ [price]</strong> / pc</span><a href="HomeRedesign.dc.html" class="btn btn-dark mini">Join pool</a></div>
+</div>
+</li>
+<li class="pcard">
+<span class="pthumb"><img class="art" src="assets/S7.jpg" alt="Smart aroma diffuser S7" width="152" height="152" loading="lazy" decoding="async"></span>
+<div style="flex:1;min-width:0;">
+<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;"><span style="font:600 15px/1.3 Degular,Figtree,sans-serif;">Smart aroma diffuser S7</span><span style="font-size:12.5px;color:#5A6475;">Factory minimum [MOQ] pcs</span></div>
+<div class="bar" style="margin-top:10px;"><i style="width:46%"></i></div>
+<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:7px;font-size:12.5px;color:#5A6475;"><span>[N] of [MOQ] pcs committed</span><span>Closes [date]</span></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;"><span style="font-size:13.5px;color:#231F20;">Your price <strong style="color:#1A174A;">US$ [price]</strong> / pc</span><a href="HomeRedesign.dc.html" class="btn btn-dark mini">Join pool</a></div>
+</div>
+</li>
+<li class="pcard">
+<span class="pthumb" aria-hidden="true"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21h12"></path><path d="M7 21v-6a5 5 0 0 1 10 0v6"></path><path d="M12 10V7"></path><path d="M9.5 5.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5"></path></svg></span>
+<div style="flex:1;min-width:0;">
+<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;"><span style="font:600 15px/1.3 Degular,Figtree,sans-serif;">Waterless aroma diffuser</span><span style="font-size:12.5px;color:#5A6475;">Factory minimum [MOQ] pcs</span></div>
+<div class="bar" style="margin-top:10px;"><i style="width:28%"></i></div>
+<div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:7px;font-size:12.5px;color:#5A6475;"><span>[N] of [MOQ] pcs committed</span><span>Closes [date]</span></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;"><span style="font-size:13.5px;color:#231F20;">Your price <strong style="color:#1A174A;">US$ [price]</strong> / pc</span><a href="HomeRedesign.dc.html" class="btn btn-dark mini">Join pool</a></div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</section>
+
+<!-- 5.5 Turnkey Projects (visual right) -->
+<section id="turnkey" class="svc-sec" aria-labelledby="tk-h" style="background:#FFFDEF;">
+<div class="wrap sec">
+<div class="split" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:center;">
+<div>
+<div class="eyebrow"><span class="num">5</span><span class="k sec-k">Turnkey Projects</span></div>
+<h2 id="tk-h" class="h2">Open a complete business, delivered in one container.</h2>
+<p class="lead">A ready business set-up: we source every machine, fit-out and spare from verified factories, ship it in one container and help you open.</p>
+<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;" aria-label="Categories">
+<span class="svc" style="background:#FFFFFF;">Self-service</span><span class="svc" style="background:#FFFFFF;">Food</span><span class="svc" style="background:#FFFFFF;">Leisure</span><span class="svc" style="background:#FFFFFF;">Small factory</span><span class="svc" style="background:#FFFFFF;">Infrastructure</span><span class="svc" style="background:#FFFFFF;">Fit-out</span>
+</div>
+<div class="cta-row" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;">
+<a href="HomeRedesign.dc.html" class="btn btn-primary" style="min-height:52px;padding:0 24px;font-size:16px;">See all 25 businesses →</a>
+<a href="HomeRedesign.dc.html" class="btn btn-ghost" style="min-height:52px;">Talk to us about a project</a>
+</div>
+</div>
+<figure class="ill vis" style="margin:0;aspect-ratio:3/2;">
+<img src="assets/svc/turnkey-projects-3d.jpg" alt="The Octopus mascot loading a gym machine, a vending machine and a coffee kiosk into a shipping container" width="1200" height="800" loading="lazy" decoding="async">
+<span class="cap-chip"><span class="dot"></span>Machines, fit-out and spares in one container</span>
+</figure>
+</div>
+<ul class="bizg5 strip-m" style="list-style:none;margin:36px 0 0;padding:0;" aria-label="Example businesses">
+<li class="card biz"><span class="ico ico-n"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"></path></svg></span><h3>Gym fit-out</h3><p>Machines, flooring and fit-out for a complete gym.</p></li>
+<li class="card biz"><span class="ico ico-n"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><circle cx="12" cy="13" r="4"></circle><path d="M8 6.5h2"></path></svg></span><h3>Coin and app laundry</h3><p>Washers and dryers for a self-service laundry.</p></li>
+<li class="card biz"><span class="ico ico-n"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="1.5"></rect><path d="M8 7h5M8 11h5M16 7v4M8 17h8"></path></svg></span><h3>Vending network</h3><p>Vending machines for a network of sites.</p></li>
+<li class="card biz"><span class="ico ico-n"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9h11v5a5 5 0 0 1-5 5h-1a5 5 0 0 1-5-5Z"></path><path d="M16 11h2a2 2 0 0 1 0 4h-2"></path><path d="M9 3v3M12 3v3"></path></svg></span><h3>Robotic café kiosk</h3><p>A self-serve coffee kiosk, ready to place.</p></li>
+<li class="card biz"><span class="ico ico-n"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3h4v3l2 3v12H8V9l2-3Z"></path><path d="M8 13h8"></path></svg></span><h3>Water-bottling plant</h3><p>A small bottling line for your own water brand.</p></li>
+</ul>
+</div>
+</section>
+
+<!-- 5.6 3PL in China & worldwide shipping (visual left), last service section -->
+<section id="warehousing" class="svc-sec" aria-labelledby="tpl-h" style="background:#FFFFFF;border-top:1px solid #E5E2D4;">
+<div class="wrap sec">
+<div class="eyebrow"><span class="num">6</span><span class="k sec-k">3PL &amp; shipping</span></div>
+<h2 id="tpl-h" class="h2">Stored in China. Delivered worldwide.</h2>
+<p class="lead">Stock in our Shenzhen warehouse, dispatched the same or next working day and delivered worldwide through the YunExpress network.</p>
+<div class="pstrip" style="margin-top:32px;" role="list" aria-label="How your stock moves">
+<figure role="listitem"><div class="photo"><img src="assets/svc/logistics.jpg" alt="Stock arriving and being stored on warehouse shelves" width="1200" height="800" loading="lazy" decoding="async"></div><figcaption><span class="num num-b">1</span><div><b>Received and stored</b><span class="t">We count your bulk order and shelve it by SKU.</span></div></figcaption></figure>
+<figure role="listitem"><div class="photo"><img src="assets/svc/3pl-service.jpg" alt="A warehouse team member scanning a parcel before packing" width="1200" height="800" loading="lazy" decoding="async"></div><figcaption><span class="num num-b">2</span><div><b>Picked, scanned, packed</b><span class="t">Every order is scanned, so your stock count stays live.</span></div></figcaption></figure>
+<figure role="listitem"><div class="photo"><img src="assets/svc/logistics-vehicle.jpg" alt="Parcels being loaded into a van for dispatch" width="1200" height="800" loading="lazy" decoding="async"></div><figcaption><span class="num num-b">3</span><div><b>Dispatched worldwide</b><span class="t">Same or next working day, with tracking to the door.</span></div></figcaption></figure>
+<figure role="listitem"><div class="photo"><img src="assets/svc/returns-dropship-shirt.jpg" alt="A warehouse team member checking a returned product and noting its condition" width="1200" height="800" loading="lazy" decoding="async"></div><figcaption><span class="num num-b">4</span><div><b>Returns checked</b><span class="t">We inspect each return and restock it or report it to you.</span></div></figcaption></figure>
+</div>
+<div class="split vis-first" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:stretch;margin-top:32px;">
+<div style="display:flex;flex-direction:column;gap:12px;min-width:0;">
+<div class="card" style="padding:22px;">
+<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+<span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9 12 4l9 5v11H3Z"></path><path d="M7 20v-7h10v7"></path><path d="M7 16.5h10"></path></svg></span>
+<div style="flex:1;min-width:0;"><div class="k">Warehouse</div><div style="font:700 19px Degular Display,Figtree,sans-serif;margin-top:4px;">China · Shenzhen</div></div>
+<span class="pill pill-live">Octopus warehouse</span>
+</div>
+<ul class="chk" style="margin-top:18px;">
+<li>Receive and count your bulk order</li>
+<li>Store by SKU, with live stock in your account</li>
+<li>Pick and pack the same or next working day</li>
+<li>Returns handled</li>
+</ul>
+</div>
+<div class="card" style="padding:18px 22px;display:flex;gap:14px;align-items:center;">
+<span class="ico" style="background:#EFEDE2;color:#231F20;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6-7-11a7 7 0 0 1 14 0c0 5-7 11-7 11Z"></path><circle cx="12" cy="10" r="2.5"></circle></svg></span>
+<div style="flex:1;min-width:0;"><div style="font:700 17px Degular Display,Figtree,sans-serif;">[UAE · Dubai — to be confirmed]</div><div class="hide-m" style="font-size:13.5px;color:#5A6475;margin-top:3px;">Second location, not yet confirmed</div></div>
+</div>
+</div>
+<div class="panel vis" style="display:flex;flex-direction:column;min-width:0;">
+<div style="display:flex;align-items:center;gap:12px;"><span style="flex:none;width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.1);display:inline-flex;align-items:center;justify-content:center;color:#A9C1E8;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18"></path><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18Z"></path></svg></span><span class="k" style="color:#C6D3EA;">Worldwide shipping · YunExpress network</span></div>
+<ul style="list-style:none;margin:16px 0 0;padding:0;">
+<li class="srow"><span class="pill pill-dark" style="min-width:96px;justify-content:center;">Express</span><span style="flex:1;min-width:0;font-size:14.5px;color:#DCE4F2;">[N–N] days</span><span style="font-size:14.5px;color:#FFFFFF;">from <strong>US$ [rate]</strong></span></li>
+<li class="srow"><span class="pill pill-dark" style="min-width:96px;justify-content:center;">Standard</span><span style="flex:1;min-width:0;font-size:14.5px;color:#DCE4F2;">[N–N] days</span><span style="font-size:14.5px;color:#FFFFFF;">from <strong>US$ [rate]</strong></span></li>
+<li class="srow"><span class="pill pill-dark" style="min-width:96px;justify-content:center;">Economy</span><span style="flex:1;min-width:0;font-size:14.5px;color:#DCE4F2;">[N–N] days</span><span style="font-size:14.5px;color:#FFFFFF;">from <strong>US$ [rate]</strong></span></li>
+</ul>
+<p style="margin:auto 0 0;padding-top:16px;border-top:1px solid rgba(255,255,255,.14);font-size:13.5px;line-height:1.55;color:#C6D3EA;">Tracking to the door · duties and customs paperwork handled · 220+ countries</p>
+</div>
+</div>
+<div class="cta-row" style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:26px;">
+<a href="Request3PL.dc.html" class="btn btn-primary" style="min-height:52px;padding:0 24px;font-size:16px;">Get a 3PL quote →</a>
+<a href="Request3PL.dc.html" class="btn btn-ghost" style="min-height:52px;">Check shipping to my country</a>
+<span style="font-size:13.5px;color:#5A6475;margin-left:6px;">Rates: [to be confirmed]</span>
+</div>
+</div>
+</section>
+
+<!-- 6 Ready to order -->
+<section aria-labelledby="rto-h" style="background:#FFFDEF;">
+<div class="wrap sec">
+<div class="sec-h"><div><span class="k sec-k">Ready to order</span><h2 id="rto-h" class="h2">Ready to order from verified factories</h2><p class="lead hide-m">Products Octopus lists directly. Dropship them, put your brand on them or order in bulk.</p></div><a href="PublicProduct.dc.html" class="btn btn-primary">View all products →</a></div>
+<div class="cols4 strip-m" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+<a href="PublicProduct.dc.html" class="card" style="display:flex;flex-direction:column;"><div class="pimg" style="aspect-ratio:1/1;background:#F3F1E6;"><img class="art" src="assets/F8.jpg" alt="Handheld fan F8" width="600" height="600" loading="lazy" decoding="async"></div><div style="padding:16px;display:flex;flex-direction:column;gap:8px;"><span class="pill pill-live" style="align-self:flex-start;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6Z"></path><path d="m9 12 2 2 4-4"></path></svg>Verified by Octopus</span><div style="font:600 15.5px/1.35 Degular,Figtree,sans-serif;">Handheld fan F8</div><div style="font-size:14px;color:#231F20;">100+ pcs from <strong style="color:#1A174A;">US$ [price]</strong></div></div></a>
+<a href="PublicProduct.dc.html" class="card" style="display:flex;flex-direction:column;"><div class="pimg" style="aspect-ratio:1/1;background:#F3F1E6;"><img class="art" src="assets/G1000.jpg" alt="Neck fan G1000" width="600" height="600" loading="lazy" decoding="async"></div><div style="padding:16px;display:flex;flex-direction:column;gap:8px;"><span class="pill pill-live" style="align-self:flex-start;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6Z"></path><path d="m9 12 2 2 4-4"></path></svg>Verified by Octopus</span><div style="font:600 15.5px/1.35 Degular,Figtree,sans-serif;">Neck fan G1000</div><div style="font-size:14px;color:#231F20;">100+ pcs from <strong style="color:#1A174A;">US$ [price]</strong></div></div></a>
+<a href="PublicProduct.dc.html" class="card" style="display:flex;flex-direction:column;"><div class="pimg" style="aspect-ratio:1/1;background:#F3F1E6;"><img class="art" src="assets/MINI1.jpg" alt="Mini fan MINI1" width="600" height="600" loading="lazy" decoding="async"></div><div style="padding:16px;display:flex;flex-direction:column;gap:8px;"><span class="pill pill-live" style="align-self:flex-start;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6Z"></path><path d="m9 12 2 2 4-4"></path></svg>Verified by Octopus</span><div style="font:600 15.5px/1.35 Degular,Figtree,sans-serif;">Mini fan MINI1</div><div style="font-size:14px;color:#231F20;">100+ pcs from <strong style="color:#1A174A;">US$ [price]</strong></div></div></a>
+<a href="PublicProduct.dc.html" class="card" style="display:flex;flex-direction:column;"><div class="pimg" style="aspect-ratio:1/1;background:#F3F1E6;"><img class="art" src="assets/S7.jpg" alt="Aroma diffuser S7" width="600" height="600" loading="lazy" decoding="async"></div><div style="padding:16px;display:flex;flex-direction:column;gap:8px;"><span class="pill pill-live" style="align-self:flex-start;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6Z"></path><path d="m9 12 2 2 4-4"></path></svg>Verified by Octopus</span><div style="font:600 15.5px/1.35 Degular,Figtree,sans-serif;">Aroma diffuser S7</div><div style="font-size:14px;color:#231F20;">100+ pcs from <strong style="color:#1A174A;">US$ [price]</strong></div></div></a>
+</div>
+</div>
+</section>
+
+<!-- 8 How you pay -->
+<section aria-labelledby="pay-h" style="background:#FFFFFF;border-top:1px solid #E5E2D4;">
+<div class="wrap sec">
+<div class="split" style="display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:48px;align-items:center;">
+<figure class="ill pay-ill" style="margin:0;aspect-ratio:3/2;">
+<img src="assets/svc/wallet-escrow-3d.jpg" alt="The Octopus mascot guarding a safe with a wallet, coins and a shield" width="1200" height="800" loading="lazy" decoding="async">
+<span class="cap-chip"><span class="dot" style="background:#15803D;"></span>Your money waits in escrow until QC and shipping</span>
+</figure>
+<div>
+<span class="k sec-k">Payment</span><h2 id="pay-h" class="h2">How you pay</h2><p class="lead">One US dollar wallet for every service. Your money for an order is protected until the goods are on their way.</p>
+<ol class="pay-steps strip-m" aria-label="Payment steps" style="list-style:none;margin:24px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;">
+<li class="card pstep"><div style="display:flex;align-items:center;justify-content:space-between;"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10 12 4l9 6"></path><path d="M5 10v8M10 10v8M14 10v8M19 10v8"></path><path d="M3 20h18"></path></svg></span><span class="num">1</span></div><h3>Top up your wallet</h3><p>By bank transfer to our company's Hong Kong account.</p></li>
+<li class="card pstep"><div style="display:flex;align-items:center;justify-content:space-between;"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M9 8h6M9 12h6"></path><path d="m9 16 2 2 4-4"></path></svg></span><span class="num">2</span></div><h3>Approve your quote</h3><p>The price is confirmed before you pay.</p></li>
+<li class="card pstep"><div style="display:flex;align-items:center;justify-content:space-between;"><span class="ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg></span><span class="num">3</span></div><h3>Money held in escrow</h3><p>The money for your order stays in escrow, not with the factory.</p></li>
+<li class="card pstep"><div style="display:flex;align-items:center;justify-content:space-between;"><span class="ico" style="background:#DCFCE7;color:#15803D;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m8 12 3 3 5-6"></path></svg></span><span class="num">4</span></div><h3>Released after QC and shipping</h3><p>Paid out only when the goods pass QC and ship.</p></li>
+</ol>
+<p style="margin:18px 0 0;font-size:14.5px;color:#231F20;">No card payments. Invoices from Shenzhen Octopus Trading Co., Ltd.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- 9 Account manager -->
+<section aria-labelledby="am-h" style="background:#FFFDEF;">
+<div class="wrap sec">
+<div class="split" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:56px;align-items:center;">
+<div>
+<span class="k sec-k">Your account manager</span>
+<h2 id="am-h" class="h2">Your own account manager</h2>
+<p class="lead">One person at Octopus looks after all your services, so you never explain your business twice.</p>
+<ul class="chk" style="margin-top:22px;">
+<li>Checks every quote before it reaches you</li>
+<li>Approves changes within the limits you set</li>
+<li>Replies within [N] working hours</li>
+</ul>
+<div class="cta-row" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;">
+<a href="Main.dc.html" class="btn btn-primary" style="min-height:52px;padding:0 24px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg>Message your manager</a>
+<a href="Main.dc.html" class="btn btn-ghost" style="min-height:52px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M3 10h18M8 3v4M16 3v4"></path></svg>Book a call</a>
+</div>
+</div>
+<figure style="margin:0;position:relative;">
+<div class="photo" style="aspect-ratio:4/3;"><img src="assets/svc/customer-care-phone.jpg" alt="An Octopus account manager on a call with a customer" width="1200" height="800" loading="lazy" decoding="async"></div>
+<div class="float-card" style="left:-24px;bottom:-24px;min-width:300px;">
+<span aria-hidden="true" style="flex:none;width:48px;height:48px;border-radius:999px;background:#1A174A;color:#FFFFFF;display:inline-flex;align-items:center;justify-content:center;font:700 16px Degular Display,Figtree,sans-serif;">MN</span>
+<div style="flex:1;min-width:0;"><div style="font:700 16px Degular Display,Figtree,sans-serif;">[Manager name]</div><div class="fc-sub" style="font-size:13px;color:#5A6475;margin-top:2px;">Your account manager · Shenzhen office</div></div>
+<span class="pill pill-live">Your contact</span>
+</div>
+</figure>
+</div>
+</div>
+</section>
+
+<!-- 10 Also on Octopus B2B -->
+<section aria-labelledby="also-h" style="background:#FFFFFF;border-top:1px solid #E5E2D4;">
+<div class="wrap sec">
+<div class="sec-h"><div><span class="k sec-k">More services</span><h2 id="also-h" class="h2">Also on Octopus B2B</h2></div></div>
+<div class="cols4 also-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+<a href="HomeRedesign.dc.html" class="card acard"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3C66A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"></path><path d="m3 8 9 5 9-5M12 13v8"></path></svg><h3>Samples</h3><p>Order a sample before you commit.</p></a>
+<a href="HomeRedesign.dc.html" class="card acard"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3C66A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5M8 11l2 2 4-4"></path></svg><h3>QC inspection</h3><p>Photos and video of your goods before they ship.</p></a>
+<a href="HomeRedesign.dc.html" class="card acard"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3C66A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"></circle><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"></path></svg><h3>Certification</h3><p>CE, RoHS, SASO and more.</p></a>
+<a href="HomeRedesign.dc.html" class="card acard"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3C66A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"></rect><path d="M3 10h18M16 15h2"></path></svg><h3>Wallet and escrow</h3><p>One US dollar wallet. Order money waits in escrow until QC and shipping.</p></a>
+<a href="HomeRedesign.dc.html" class="card acard"><img src="assets/svc/octo-face-256.png" alt="" width="44" height="44" loading="lazy" decoding="async" style="width:44px;height:44px;border-radius:999px;background:#FFFDEF;display:block;"><h3>Octo assistant</h3><p>Answers 24/7, and a human when you need one.</p></a>
+<a href="HomeRedesign.dc.html" class="card acard"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3C66A8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 8-4 4 4 4M16 8l4 4-4 4M13.5 5l-3 14"></path></svg><h3>API and integrations</h3><p>Connect your own systems to orders and stock.</p></a>
+<a href="HomeRedesign.dc.html" class="card acard span2" style="background:#1A174A;border-color:#1A174A;color:#FFFFFF;flex-direction:row;align-items:center;gap:18px;">
+<span style="flex:none;width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.1);color:#A9C1E8;display:inline-flex;align-items:center;justify-content:center;"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"></path><path d="M4 21V11l5 3v-3l5 3V7h6v14"></path></svg></span>
+<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;"><h3 style="color:#FFFFFF;">Sell on Octopus B2B</h3><span class="ad" style="font-size:14px;line-height:1.5;color:#C6D3EA;">Are you a factory? Become a verified supplier and list your products.</span><span class="ad" style="font-size:14px;font-weight:600;color:#A9C1E8;">Become a supplier →</span></div>
+</a>
+</div>
+</div>
+</section>
+
+<!-- 11 FAQ -->
+<section aria-labelledby="faq-h" style="background:#FFFDEF;">
+<div class="wrap sec">
+<div class="split" style="display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:48px;align-items:start;">
+<div>
+<span class="k sec-k">FAQ</span>
+<h2 id="faq-h" class="h2" style="margin-bottom:22px;">Questions</h2>
+<div style="display:flex;flex-direction:column;gap:10px;">
+<details open><summary>What does Octopus do?</summary><p>Octopus B2B gives you one account for buying from China: dropshipping, Make My Brand, product sourcing, MOQ pools, Turnkey Projects, and 3PL warehousing with worldwide shipping. One US dollar wallet and one account manager cover all of them.</p></details>
+<details><summary>Are the factories verified?</summary><p>Yes. Dropshipping and Make My Brand use only products Octopus lists directly, from verified suppliers, and our sourcing team matches you only with verified factories.</p></details>
+<details><summary>Can I use only one service?</summary><p>Yes. Use one service or all of them. Your wallet, your account manager and your orders stay in one place either way.</p></details>
+<details><summary>How do MOQ pools work?</summary><p>A pool lets several buyers share one factory order: each commits the quantity they need, and the money waits in escrow. The order is placed when the pool reaches the factory minimum, and you are refunded if the pool doesn't fill [by the deadline].</p></details>
+<details><summary>Where are your warehouses?</summary><p>Our warehouse is in Shenzhen, China. A second location in Dubai, UAE is [to be confirmed]. We deliver worldwide through the YunExpress network, with tracking to the door.</p></details>
+<details><summary>How do I pay?</summary><p>Top up your US dollar wallet by bank transfer to our company's Hong Kong account. The money for an order stays in escrow until the goods pass QC and ship. We do not take card payments.</p></details>
+<details><summary>How do I talk to someone?</summary><p>Message us on WhatsApp at +86 188 2652 7644. Once you have an account, your account manager is your direct contact, and the Octo assistant answers 24/7 and passes you to a human when needed.</p></details>
+</div>
+</div>
+<aside class="card faq-aside" style="border-radius:20px;position:sticky;top:76px;" aria-label="Talk to a person">
+<div style="aspect-ratio:3/2;"><img class="art" src="assets/svc/back-office.jpg" alt="An Octopus support team member answering a customer call" width="1200" height="800" loading="lazy" decoding="async"></div>
+<div style="padding:22px;">
+<div style="font:800 21px/1.25 Degular Display,Figtree,sans-serif;">Still have a question?</div>
+<p style="margin:8px 0 0;font-size:15px;line-height:1.55;color:#231F20;">Talk to a person in our Shenzhen office on WhatsApp, or ask the Octo assistant any time.</p>
+<a href="HomeRedesign.dc.html" class="btn btn-dark" style="width:100%;margin-top:16px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg>Chat on WhatsApp</a>
+<a href="HomeRedesign.dc.html" style="display:flex;align-items:center;gap:12px;margin-top:14px;min-height:44px;"><img src="assets/svc/octo-face-256.png" alt="" width="40" height="40" loading="lazy" decoding="async" style="width:40px;height:40px;border-radius:999px;background:#FFFDEF;flex:none;"><span style="font-size:14.5px;color:#231F20;">Or <b style="color:#3C66A8;">ask Octo</b>, our assistant, any time</span></a>
+</div>
+</aside>
+</div>
+</div>
+</section>
+
+<!-- 12 Final CTA + back to top -->
+<section aria-labelledby="cta-h" style="background:#FFFFFF;border-top:1px solid #E5E2D4;">
+<div class="wrap" style="padding-top:56px;padding-bottom:16px;">
+<div style="background:#1A174A;color:#FFFFFF;border-radius:22px;padding:40px;display:flex;flex-wrap:wrap;gap:28px;align-items:center;justify-content:space-between;">
+<div style="flex:1 1 420px;min-width:0;"><div style="max-width:600px;"><h2 id="cta-h" style="margin:0;font:800 30px/1.2 Degular Display,Figtree,sans-serif;letter-spacing:-.02em;">Tell us what you need.</h2><p style="margin:10px 0 0;color:#C6D3EA;font-size:15.5px;line-height:1.55;">Create a free account, or message us on WhatsApp at +86 188 2652 7644.</p></div>
+<div class="cta-row" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:22px;"><a href="HomeRedesign.dc.html" class="btn btn-light" style="min-height:52px;padding:0 24px;">Create a free account</a><a href="HomeRedesign.dc.html" class="btn btn-outline-w" style="min-height:52px;padding:0 22px;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"></path></svg>Chat on WhatsApp</a></div></div>
+<figure class="ill cta-ill" style="margin:0;flex:0 0 330px;aspect-ratio:3/2;border-radius:16px;"><img src="assets/svc/3d-transportation.jpg" alt="The Octopus mascot loading parcels into a van with a route to the customer" width="1200" height="800" loading="lazy" decoding="async"></figure>
+</div>
+<div style="display:flex;justify-content:flex-end;margin-top:12px;"><a href="HomeRedesign.dc.html#top" class="lnk totop"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"></path><path d="m6 11 6-6 6 6"></path></svg>Back to top</a></div>
+</div>
+</section>
+
+<a href="HomeRedesign.dc.html" class="octo-fab" aria-label="Ask Octo, the Octopus assistant"><img src="assets/svc/octo-face-256.png" alt="" width="44" height="44" decoding="async"><span class="fab-t">Ask Octo</span><span class="dot" aria-hidden="true"></span></a>
+
+<!-- 13 Footer -->
+<footer style="background:#120F38;color:#8B93B5;">
+<div class="wrap" style="padding-top:44px;padding-bottom:28px;">
+<div class="foot-grid" style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1.1fr;gap:24px 28px;">
+<div class="foot-brand"><img src="assets/octopus-b2b-logo-white.png" alt="Octopus B2B" width="154" height="40" loading="lazy" decoding="async" style="height:40px;width:auto;display:block;"><p style="margin:14px 0 0;font-size:13.5px;line-height:1.55;max-width:280px;">One account for dropshipping, branding, sourcing and warehousing from China.</p></div>
+<nav aria-label="Services" style="display:flex;flex-direction:column;font-size:13.5px;"><span class="k" style="color:#FFFFFF;margin-bottom:4px;">Services</span><a href="DropshipCatalog.dc.html" style="color:#8B93B5;">Dropshipping</a><a href="MakeMyBrand.dc.html" style="color:#8B93B5;">Make My Brand</a><a href="HomeRedesign.dc.html" style="color:#8B93B5;">Product sourcing</a><a href="HomeRedesign.dc.html" style="color:#8B93B5;">MOQ pools</a><a href="HomeRedesign.dc.html" style="color:#8B93B5;">Turnkey Projects</a><a href="Request3PL.dc.html" style="color:#8B93B5;">3PL &amp; shipping</a></nav>
+<nav aria-label="Account" style="display:flex;flex-direction:column;font-size:13.5px;"><span class="k" style="color:#FFFFFF;margin-bottom:4px;">Account</span><a href="HomeRedesign.dc.html" style="color:#8B93B5;">Sign in</a><a href="HomeRedesign.dc.html" style="color:#8B93B5;">Create account</a><a href="Main.dc.html" style="color:#8B93B5;">My account</a></nav>
+<nav aria-label="Company" style="display:flex;flex-direction:column;font-size:13.5px;"><span class="k" style="color:#FFFFFF;margin-bottom:4px;">Company</span><a href="HomeRedesign.dc.html" style="color:#8B93B5;">About us</a><a href="HomeRedesign.dc.html" style="color:#8B93B5;">Contact</a><a href="HomeRedesign.dc.html" style="color:#8B93B5;">Become a supplier</a><a href="HomeRedesign.dc.html" style="color:#8B93B5;">Supplier and staff sign-in</a></nav>
+<div style="display:flex;flex-direction:column;font-size:13.5px;"><span class="k" style="color:#FFFFFF;margin-bottom:8px;">Talk to us</span><span style="color:#C6D3EA;">WhatsApp</span><a href="HomeRedesign.dc.html" style="color:#FFFFFF;font:600 15px Degular,Figtree,sans-serif;display:inline-flex;align-items:center;min-height:44px;">+86 188 2652 7644</a><span style="line-height:1.5;">The Octo assistant answers 24/7.</span></div>
+</div>
+<div style="border-top:1px solid #221E5C;margin-top:28px;padding-top:18px;font-size:12.5px;">© 2026 Shenzhen Octopus Trading Co. Ltd. · Terms · Privacy</div>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":12200}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { tab: 'drop' }; }
+  renderVals() {
+    const st = this.state;
+    const mk = (k) => ({ pressed: st.tab === k ? 'true' : 'false', pick: () => this.setState({ tab: k }) });
+    const P = {
+      drop: {
+        service: 'Dropshipping',
+        promise: 'List verified products in your store. We ship each order to your customer.',
+        steps: ['Pick products and set your price', 'Your customer orders, the order lands here', 'We pack with your slip and ship with tracking'],
+        fact: 'No stock, no minimum',
+        cta: 'Start dropshipping →',
+        href: 'DropshipCatalog.dc.html'
+      },
+      brand: {
+        service: 'Make My Brand',
+        promise: 'Your logo on a verified product, made, checked and stocked for you.',
+        steps: ['Pick a product from our verified suppliers', 'Add your logo print, engraving or branded box', 'Approve proof and sample, then we produce and check'],
+        fact: 'Price confirmed before you pay',
+        cta: 'Start a brand project →',
+        href: 'RequestBrand.dc.html'
+      },
+      source: {
+        service: 'Product sourcing',
+        promise: 'Tell us the product. We find the verified factory and get you competing quotes.',
+        steps: ['Send your request with product, quantity and destination', 'Compare quotes from verified factories within 24 hours', 'We inspect the goods and ship them to your door'],
+        fact: 'RFQ fee US$ 5.00 · quotes in 24 h',
+        cta: 'Request quotes →',
+        href: 'HomeRedesign.dc.html'
+      },
+      pool: {
+        service: 'MOQ pools',
+        promise: 'Factory minimum too big? Join other buyers on one factory order and each take the quantity you need.',
+        steps: ['Join an open pool or start one for a product', 'Commit your quantity; money waits in escrow', 'When the pool reaches the factory minimum, it is ordered, checked and shipped'],
+        fact: 'Pay only for your share · refunded if the pool doesn\'t fill [by the deadline]',
+        cta: 'See open pools →',
+        href: 'HomeRedesign.dc.html'
+      },
+      store: {
+        service: '3PL & shipping',
+        promise: 'Keep your stock in Shenzhen. We ship every order worldwide.',
+        steps: ['Send your bulk order into our Shenzhen warehouse', 'We count it and store it by SKU, live in your account', 'We pick, pack and ship each order worldwide with tracking'],
+        fact: 'Same or next working day dispatch',
+        cta: 'Get a 3PL quote →',
+        href: 'Request3PL.dc.html'
+      }
+    };
+    const p = P[st.tab] || P.drop;
+    return {
+      tabDrop: mk('drop'),
+      tabBrand: mk('brand'),
+      tabSource: mk('source'),
+      tabPool: mk('pool'),
+      tabStore: mk('store'),
+      isSource: st.tab === 'source',
+      panel: {
+        service: p.service,
+        promise: p.promise,
+        steps: p.steps.map((t, i) => ({ n: String(i + 1), text: t })),
+        fact: p.fact,
+        cta: p.cta,
+        href: p.href
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>
