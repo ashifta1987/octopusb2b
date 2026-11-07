@@ -33,7 +33,7 @@ async function resolveAddress(sb: Awaited<ReturnType<typeof createClient>>, orgI
   return { id: addressId && addressId !== 'new' ? addressId : null };
 }
 
-/** Join a pool: pledge + deposit (wallet → paid now; card / bank transfer → pending until finance confirms). */
+/** Join a pool: pledge + deposit (wallet → paid now; bank transfer → pending until finance confirms). */
 export async function joinPool(input: JoinInput & { code: string }): Promise<PoolResult<{ pledgeId: string; status: string }>> {
   const c = await customer(`/pool/${input.code}`);
   if ('error' in c) return c.error!;
@@ -47,7 +47,7 @@ export async function joinPool(input: JoinInput & { code: string }): Promise<Poo
   const { data, error } = await c.sb.rpc('join_pool', { p_pool: v.poolId, p_qty: v.qty, p_address: addr.id, p_pay_source: v.paySource, p_terms: v.termsId ?? null });
   if (error) return { ok: false, error: poolError(error.message) };
   refresh(pool.code as string);
-  return { ok: true, data: { pledgeId: data as string, status: v.paySource === 'wallet' ? 'paid' : 'pending' }, message: v.paySource === 'wallet' ? 'You joined the pool — deposit paid from your wallet.' : 'Pledge reserved — pay the deposit by card / bank transfer.' };
+  return { ok: true, data: { pledgeId: data as string, status: v.paySource === 'wallet' ? 'paid' : 'pending' }, message: v.paySource === 'wallet' ? 'You joined the pool — deposit paid from your wallet.' : 'Pledge reserved — pay the deposit by bank transfer.' };
 }
 
 /** Withdraw before the pool fills — deposit refunded to the wallet. */

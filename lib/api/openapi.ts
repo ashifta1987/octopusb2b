@@ -61,7 +61,7 @@ export const OPERATIONS: Op[] = [
       { name: 'page', description: 'Page (1-based)', schema: { type: 'integer', minimum: 1, default: 1 } },
       { name: 'per_page', description: 'Page size (max 100)', schema: { type: 'integer', minimum: 1, maximum: 100, default: 24 } },
       { name: 'ready_to_ship', description: 'true/false', schema: { type: 'string', enum: ['true', 'false'] } },
-      { name: 'dropship', description: 'Octopus Dropship tag: true/false', schema: { type: 'string', enum: ['true', 'false'] } },
+      { name: 'dropship', description: 'Available for dropshipping: true/false', schema: { type: 'string', enum: ['true', 'false'] } },
     ],
   },
   { method: 'get', path: '/products/{id}', summary: 'Product detail with price tiers and specs', tag: 'Catalog', scopes: ['catalog:read'], response: 'ProductDetail', pathParams: [{ name: 'id', description: 'Product id or slug' }] },

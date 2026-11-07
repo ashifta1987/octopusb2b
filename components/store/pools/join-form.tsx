@@ -152,10 +152,10 @@ export function JoinPoolForm({ pool, addresses, walletEnabled, walletBalance, wa
           </label>
           <label className={`flex items-center gap-3 rounded-[10px] border-2 px-4 py-3 cursor-pointer ${paySource === 'card' ? 'border-blue bg-blue-soft/40' : 'border-line'}`}>
             <input type="radio" name="pay" value="card" checked={paySource === 'card'} onChange={() => setPay('card')} className="accent-[#2A6FD6]" />
-            <span className="font-semibold">Card / bank transfer</span>
+            <span className="font-semibold">Bank transfer</span>
           </label>
         </div>
-        {paySource === 'wallet' && insufficient && <p className="text-[12px] text-bad mt-1.5">{walletCredit > 0 ? 'Your wallet balance plus credit limit is below the deposit.' : 'Your wallet balance is below the deposit.'} <Link href="/account/wallet" className="underline">Top up</Link> or pay by card / bank transfer.</p>}
+        {paySource === 'wallet' && insufficient && <p className="text-[12px] text-bad mt-1.5">{walletCredit > 0 ? 'Your wallet balance plus credit limit is below the deposit.' : 'Your wallet balance is below the deposit.'} <Link href="/account/wallet" className="underline">Top up</Link> or pay by bank transfer.</p>}
         {paySource === 'card' && <p className="text-[12px] text-muted mt-1.5">Your pledge is reserved now; Octopus confirms the deposit when your payment arrives. Unpaid pledges lapse when the pool fills.</p>}
       </fieldset>
 
@@ -183,7 +183,7 @@ export function JoinPoolForm({ pool, addresses, walletEnabled, walletBalance, wa
                 <h2 id="card-title" className="text-xl font-semibold">Reserve your pledge in {pool.code}</h2>
                 <dl className="mt-4 space-y-2 text-[15px]">
                   {row('Pledge', `${fmt(qty)} ${pool.unit}`)}
-                  {row('Deposit to pay by card / bank transfer', money(m.deposit, pool.currency))}
+                  {row('Deposit to pay by bank transfer', money(m.deposit, pool.currency))}
                 </dl>
                 <p className="text-sm text-muted mt-3">Nothing is taken from your wallet. Pay the deposit using the details in your account; your pledge counts as paid once Octopus confirms it.</p>
                 {err && <p className="mt-3 text-sm text-bad" role="alert">{err}</p>}

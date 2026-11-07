@@ -116,7 +116,7 @@ export function HowPoolsWork({ depositPct, minPledge, balanceHours, id = 'how' }
     ['Join or start a pool', `Pick an open pool, pledge your quantity (minimum ${n(minPledge)} pcs by default), and pay a ${depositPct}% deposit from your wallet or card.`],
     ['Pool fills', 'As more buyers join, the per-piece price drops. Share the pool link with partners to fill faster.'],
     ['Pay the balance', `If the pool fills before the deadline, you get a proforma invoice for the balance at the final pool price. Pay within ${balanceHours} hours.`],
-    ['One PO, separate shipments', 'Octopus places one order with the supplier, runs a shared QC inspection, then ships each buyer separately with YunExpress tracking. If the pool does not fill, every deposit is refunded.'],
+    ['One PO, separate shipments', 'Octopus places one order with the supplier, runs a shared QC inspection, then ships each buyer separately with its own tracking. If the pool does not fill, every deposit is refunded.'],
   ];
   return (
     <section id={id} className="card p-6 sm:p-8 scroll-mt-6" aria-labelledby={`${id}-h`}>

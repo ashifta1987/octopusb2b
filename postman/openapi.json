@@ -217,7 +217,7 @@
             "name": "dropship",
             "in": "query",
             "required": false,
-            "description": "Octopus Dropship tag: true/false",
+            "description": "Available for dropshipping: true/false",
             "schema": {
               "type": "string",
               "enum": [

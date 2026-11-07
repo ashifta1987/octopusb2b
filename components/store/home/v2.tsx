@@ -244,7 +244,7 @@ export function Dropshipping({ blocks, countries }: { blocks: Blocks; countries?
             body={block(blocks, 'home2.how_drop.body', 'Four steps from first listing to a delivered parcel. You see the full cost before you confirm each order.')} href="/request/dropship" link={block(blocks, 'home2.how_drop.link', 'Open a dropship account')} />
           <StepCards steps={steps(blocks, 'home2.how_drop.step', [
             'Choose products|Pick from verified factories. Order a sample first if you want to check quality.',
-            'Connect your shop|Shopify, WooCommerce or our API send orders here automatically. You can also upload a sheet.',
+            'Send us your orders|Upload your orders as a sheet. Shopify and WooCommerce store connection is coming soon.',
             'Pay per order|Product, shipping and fulfilment fee come out of your wallet. You keep the difference from your price.',
             'We pack and deliver|QC check, your packing slip and labels, then tracked delivery. Our prices never appear on the parcel.',
           ])} />
@@ -341,7 +341,7 @@ export function ShippingBand({ blocks, stats }: { blocks: Blocks; stats: Shippin
     <section id="global-shipping" aria-labelledby="home-ship-h" className="bg-navy text-white">
       <div className={`${W} py-12 grid gap-8 lg:grid-cols-[1fr_auto] items-center`}>
         <div>
-          <span className="mono text-[11px] font-semibold uppercase tracking-[.08em] px-3 py-1 rounded-full border border-white/25 text-[#C9D0E8]">{block(blocks, 'home2.ship.eyebrow', 'Global shipping · YunExpress network')}</span>
+          <span className="mono text-[11px] font-semibold uppercase tracking-[.08em] px-3 py-1 rounded-full border border-white/25 text-[#C9D0E8]">{block(blocks, 'home2.ship.eyebrow', 'Global shipping')}</span>
           <h2 id="home-ship-h" className="!text-white mt-4 text-[26px] sm:text-[32px] font-extrabold leading-[1.15]">
             {stats.countries
               ? <>Delivered to <span className="text-[#5B9BFF]">{stats.countries} countries</span>, with customs paperwork done for you.</>

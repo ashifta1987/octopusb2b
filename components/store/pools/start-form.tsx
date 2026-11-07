@@ -128,10 +128,10 @@ export function StartPoolForm({ product: pr, rules, addresses, walletEnabled, wa
             </label>
             <label className={`flex items-center gap-3 rounded-[10px] border-2 px-4 py-3 cursor-pointer ${paySource === 'card' ? 'border-blue bg-blue-soft/40' : 'border-line'}`}>
               <input type="radio" name="spay" checked={paySource === 'card'} onChange={() => setPay('card')} className="accent-[#2A6FD6]" />
-              <b>Card / bank transfer</b>
+              <b>Bank transfer</b>
             </label>
           </div>
-          {paySource === 'wallet' && walletBalance + walletCredit < m.deposit && <p className="text-[12px] text-bad mt-1.5">Wallet balance is below the deposit. <Link href="/account/wallet" className="underline">Top up</Link> or pay by card / bank transfer.</p>}
+          {paySource === 'wallet' && walletBalance + walletCredit < m.deposit && <p className="text-[12px] text-bad mt-1.5">Wallet balance is below the deposit. <Link href="/account/wallet" className="underline">Top up</Link> or pay by bank transfer.</p>}
         </fieldset>
         <div>
           <label className="flex items-start gap-2.5 text-[13px] cursor-pointer">
@@ -148,7 +148,7 @@ export function StartPoolForm({ product: pr, rules, addresses, walletEnabled, wa
             balanceCents={walletBalance} creditCents={walletCredit} walletEnabled currency={pr.currency} buttonClass="btn btn-primary w-full" onConfirm={submit} />
         ) : (
           <button type="button" className="btn btn-primary w-full" disabled={pending} onClick={() => {
-            if (!window.confirm(`Open the pool and reserve your ${fmt(q)} ${pr.unit} pledge? Pay the ${money(m.deposit, pr.currency)} deposit by card / bank transfer; your pledge counts once Octopus confirms it.`)) return;
+            if (!window.confirm(`Open the pool and reserve your ${fmt(q)} ${pr.unit} pledge? Pay the ${money(m.deposit, pr.currency)} deposit by bank transfer; your pledge counts once Octopus confirms it.`)) return;
             setErr(null); start(async () => { await submit(); });
           }}>{pending ? 'Opening…' : `Open pool · reserve ${money(m.deposit, pr.currency)} deposit`}</button>
         )}

@@ -71,7 +71,7 @@ export async function AboutView() {
   const eyebrowText = t('about.hero.eyebrow', 'About · {legal_name}');
   const [bRfq, bOffices, bWa] = copy(blocks, 'about.hero.buttons', 'Send us an RFQ|See our offices|WhatsApp sales');
 
-  const labels = copy(blocks, 'about.stats.labels', 'Sourcing offices in China|Verified suppliers|Products listed|Markets served via YunExpress|Markets with orders');
+  const labels = copy(blocks, 'about.stats.labels', 'Sourcing offices in China|Verified suppliers|Products listed|Markets we ship to|Markets with orders');
   const stats = [
     { v: offices.length ? n(offices.length) : '', l: labels[0] },
     { v: live.verifiedSuppliers ? n(live.verifiedSuppliers) : '', l: labels[1] },

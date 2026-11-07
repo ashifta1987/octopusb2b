@@ -17,6 +17,9 @@ type Props = {
 };
 
 /** Request.png form: React Hook Form + the shared zod schema; submit goes through <ConfirmCharge/> (fee + wallet balance). */
+/** ADDON-44-C (audit 05): each form names its own My account section. */
+const FOLLOW: Partial<Record<RequestType, string>> = { sourcing: 'Sourcing', sample: 'Sourcing', qc: 'Sourcing', certification: 'Sourcing', dropship: 'Dropshipping', '3pl': '3PL warehouse' };
+
 export function RequestForm({ type, action, defaults, productId, feeCents, feeLabel, serviceName, balanceCents, creditCents = 0, walletEnabled, currency, mode, loginHref }: Props) {
   const router = useRouter();
   const sections = REQUEST_FIELDS[type];
@@ -90,7 +93,7 @@ export function RequestForm({ type, action, defaults, productId, feeCents, feeLa
         </div>
         <div className="flex flex-wrap justify-between items-center gap-4">
           <p className="text-[13px] text-muted max-w-sm">
-            You get a reference number right away and can follow the request in My account › Product sourcing.
+            You get a reference number right away and can follow the request in My account › {FOLLOW[type] ?? 'Sourcing'}.
           </p>
           {mode === 'ready' && (
             <ConfirmChargeCurrency label={submitLabel} title={`Confirm ${serviceName.toLowerCase()}`} priceCents={feeCents} balanceCents={balanceCents} creditCents={creditCents} currency={currency}

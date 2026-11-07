@@ -13,14 +13,14 @@ export default function DevelopersExplainer() {
     <ExplainerPage e={{
       name: 'API and integrations',
       h1: 'Connect your shop or ERP to Octopus B2B',
-      intro: 'Send orders automatically from your store, pull product data and get webhooks when quotes arrive or shipments move. Create API keys in your account.',
+      intro: 'Send orders from your systems, pull product data and get webhooks when quotes arrive or shipments move. Create API keys in your account.',
       next: '/account/developer',
       points: [
         ['REST API', 'Products, categories, RFQs, quotes, orders, service requests, shipments and wallet under /api/v1.'],
         ['Webhooks', 'Get notified when a quote arrives, an order changes status or a shipment is updated.'],
         ['OAuth and API keys', 'Use a key for your own systems or OAuth to connect an app on behalf of your team.'],
         ['Test keys first', 'Build against test keys; live keys unlock after your company is verified.'],
-        ['Shop connectors', 'Shopify and WooCommerce orders can be sent here automatically, or upload a sheet.'],
+        ['Shop connectors', 'Store connection: coming soon — upload orders as a sheet meanwhile. Shopify and WooCommerce first.'],
       ],
       extra: (
         <div className="mt-8 flex flex-wrap gap-3">

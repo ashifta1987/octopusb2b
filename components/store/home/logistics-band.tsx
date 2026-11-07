@@ -11,7 +11,7 @@ export type Destinations = { items?: { flag?: string; name: string }[]; more?: n
 
 const CARDS = [
   { key: 'yun', href: '/request/3pl', Icon: Globe, blob: 'bg-[#E6EFFC]', icon: 'bg-navy', eyebrow: 'text-blue', btn: 'btn btn-primary',
-    fallback: 'YunExpress integration|Global shipping to {countries} countries||See shipping options' },
+    fallback: 'Global shipping|Global shipping to {countries} countries||See shipping options' },
   { key: '3pl', href: '/request/3pl', Icon: Warehouse, blob: 'bg-[#DBEAFE]', icon: 'bg-[#1E40AF]', eyebrow: 'text-[#1E40AF]', btn: 'btn btn-dark',
     fallback: '3PL fulfilment|Warehouses near your buyers||Request a 3PL quote' },
   { key: 'dropship', href: '/request/dropship', Icon: Truck, blob: 'bg-[#F3E8FF]', icon: 'bg-[#6B21A8]', eyebrow: 'text-[#6B21A8]', btn: 'btn bg-[#6B21A8] text-white hover:bg-[#581C87]',
