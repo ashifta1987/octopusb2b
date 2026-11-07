@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Admin work queue</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6F8}
+*{box-sizing:border-box}
+a{color:#11133C;text-decoration:none}a:hover{color:#2A6FD6}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:10px;font:600 14px/1 Inter,system-ui,sans-serif;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+.btn-primary{background:#2A6FD6;color:#FFFFFF}.btn-primary:hover{background:#1E58B0;color:#FFFFFF}
+.btn-dark{background:#11133C;color:#FFFFFF}.btn-dark:hover{background:#262A6B;color:#FFFFFF}
+.btn-ghost{background:#FFFFFF;color:#11133C;border-color:#C5CCD6}.btn-ghost:hover{border-color:#11133C}
+.btn-sm{min-height:38px;padding:0 12px;font-size:13px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid #1D4ED8;outline-offset:2px}
+.k{font:600 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#5A6475;text-transform:uppercase}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.pill-ex{background:#FEF3C7;color:#92400E}.pill-live{background:#DCFCE7;color:#15803D}.pill-soft{background:#E6EFFC;color:#1E58B0}.pill-you{background:#FFEDD5;color:#9A3412}.pill-grey{background:#EEF0F4;color:#3B4556}
+.card{background:#FFFFFF;border:1px solid #E2E5EA;border-radius:14px}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:0 24px}
+.tabs a{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 14px;font:600 14px Inter,sans-serif;color:#3B4556;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs a:hover{color:#11133C}
+.tabs a.on{color:#11133C;border-bottom-color:#2A6FD6}
+.tabs .off{font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;color:#5A6475;background:#EEF0F4;border-radius:99px;padding:3px 7px}
+.side{flex:1 1 236px;max-width:100%;background:#FFFFFF;border-right:1px solid #E2E5EA;padding:18px 12px;display:flex;flex-direction:column;gap:1px}
+.side a{display:flex;align-items:center;min-height:40px;padding:0 12px;border-radius:9px;color:#3B4556;font:500 14px Inter,sans-serif}
+.side a:hover{background:#F0F2F6;color:#11133C}
+.side a.on{background:#11133C;color:#FFFFFF;font-weight:600}
+.side .grp{font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;padding:14px 12px 6px}
+.act{display:flex;gap:14px;align-items:center;padding:16px;border-top:1px solid #EEF0F4}
+.ico{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none}
+.chip{min-height:38px;padding:0 14px;border-radius:999px;font:600 13px Inter,sans-serif;cursor:pointer;border:1px solid #C5CCD6;background:#FFFFFF;color:#11133C}
+.chip[aria-pressed="true"]{background:#11133C;border-color:#11133C;color:#FFFFFF}
+.num{font:800 24px/1.1 Lexend,sans-serif;color:#11133C}
+@media (max-width:760px){.side{flex-direction:row !important;overflow-x:auto;border-right:0 !important;border-bottom:1px solid #E2E5EA}.side .grp{display:none}.side a{flex:none}main{padding:20px 16px !important}.hdr form{order:3;flex-basis:100% !important}.tabs{padding:0 8px}}
+.atabs{display:flex;gap:4px;overflow-x:auto;padding:0 24px;background:#FFFFFF;border-bottom:1px solid #E2E5EA}
+.atabs a{display:inline-flex;align-items:center;min-height:48px;padding:0 14px;font:600 14px Inter,sans-serif;color:#3B4556;border-bottom:3px solid transparent;white-space:nowrap}
+.atabs a:hover{color:#11133C}.atabs a.on{color:#11133C;border-bottom-color:#2A6FD6}
+.chip{min-height:44px}
+.side a{min-height:44px;justify-content:space-between}
+.side b{font:700 11px Inter,sans-serif;background:#2A6FD6;color:#FFFFFF;border-radius:999px;padding:2px 7px}
+.side a.on b{background:#FFFFFF;color:#11133C}
+.wq{width:100%;border-collapse:collapse;min-width:900px}
+.wq th{text-align:left;padding:12px 14px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;background:#FAFBFC;border-bottom:1px solid #EEF0F4}
+.wq td{text-align:left;padding:13px 14px;border-bottom:1px solid #EEF0F4;font-size:14px;vertical-align:middle}
+.hl{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid #EEF0F4;font-size:14px}
+</style>
+</helmet>
+<div style="font-family:Inter,system-ui,sans-serif;color:#11133C;background:#F5F6F8;min-height:100vh;">
+
+<header style="background:#11133C;">
+<div class="hdr" style="padding:12px 24px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;">
+<a href="AdminHome.dc.html" style="display:inline-flex;flex:none;"><img src="assets/octopus-logo-white.png" alt="Octopus B2B" style="height:38px;width:auto;display:block;"></a>
+<span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#11133C;background:#FFFFFF;border-radius:99px;padding:5px 10px;">Admin · staff only</span>
+<form role="search" style="flex:1 1 320px;display:flex;min-width:0;max-width:520px;border-radius:10px;overflow:hidden;background:#FFFFFF;">
+<label for="aq" class="sr">Search customers, orders, requests, SKUs</label>
+<input id="aq" type="search" placeholder="Customer, order, request, SKU or bin" style="flex:1;min-width:0;border:0;padding:0 14px;min-height:44px;font:400 15px Inter,sans-serif;">
+</form>
+<span class="pill pill-ex">Prototype · example data</span>
+<span style="margin-left:auto;display:inline-flex;gap:10px;align-items:center;"><span style="width:38px;height:38px;border-radius:99px;background:#2A6FD6;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font:600 14px Inter;">LM</span><span style="display:flex;flex-direction:column;gap:2px;"><span style="font-weight:600;font-size:14px;color:#FFFFFF;">[Manager name]</span><span style="font-size:12px;color:#C9CFE0;">Account manager · Shenzhen</span></span></span>
+</div>
+</header>
+<nav class="atabs" aria-label="Admin sections">
+<a class="on" href="AdminHome.dc.html" aria-current="page">Work queue</a>
+<a href="AdminHome.dc.html">Customers</a>
+<a href="AdminPurchase.dc.html">Purchase desk</a>
+<a href="AdminHome.dc.html">Dropship operations</a>
+<a href="AdminWarehouse.dc.html">Warehouse</a>
+<a href="AdminHome.dc.html">Make My Brand desk</a>
+<a href="AdminHome.dc.html">Integrations and audit</a>
+</nav>
+
+<div style="display:flex;flex-wrap:wrap;">
+<nav class="side" aria-label="Admin">
+<span class="grp">Me</span>
+<a class="on" href="AdminHome.dc.html" aria-current="page">Work queue <b>{{total}}</b></a>
+<a href="AdminHome.dc.html">Approvals <b>{{nOwner}}</b></a>
+<a href="AdminHome.dc.html">Messages</a>
+<span class="grp">Customers</span>
+<a href="AdminHome.dc.html">All customers</a>
+<a href="AdminHome.dc.html">Account managers</a>
+<a href="AdminHome.dc.html">Approval limits</a>
+<span class="grp">Records</span>
+<a href="AdminHome.dc.html">Activity log</a>
+<a href="AdminHome.dc.html">Integrations</a>
+</nav>
+
+<main style="flex:999 1 560px;min-width:0;padding:28px 32px 56px;display:flex;flex-direction:column;gap:22px;">
+<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;">
+<div><span class="k" style="color:#1E58B0;">Admin · Me</span><h1 style="margin:2px 0 6px;font:800 30px/1.15 Lexend,sans-serif;">Work queue</h1><p style="margin:0;font-size:14px;color:#5A6475;">Everything your customers need from you, across Sourcing, Dropshipping, 3PL warehouse and Make My Brand. Late and blocked items first.</p></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;"><a href="AdminHome.dc.html" class="btn btn-ghost">Messages</a><a href="AdminPurchase.dc.html" class="btn btn-dark">Purchase desk</a></div>
+</div>
+
+<section class="card" style="padding:18px;display:flex;flex-direction:column;gap:14px;" aria-labelledby="sum-h">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;"><h2 id="sum-h" style="margin:0;font:700 16px Lexend,sans-serif;">Today</h2><span class="pill pill-ex">Example</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;">
+<div><div class="k">Open items</div><div class="num">{{total}}</div></div>
+<div><div class="k">Need owner approval</div><div class="num">{{nOwner}}</div></div>
+<div><div class="k">Waiting for customer</div><div class="num">{{nWait}}</div></div>
+<div><div class="k">Due today or late</div><div class="num" style="color:#9A3412;">{{nLate}}</div></div>
+</div>
+</section>
+
+<div style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start;">
+<section class="card" style="flex:1 1 100%;min-width:0;overflow:hidden;" aria-labelledby="wq-h">
+<div style="padding:16px 16px 14px;display:flex;flex-direction:column;gap:12px;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><h2 id="wq-h" style="margin:0;font:700 18px Lexend,sans-serif;">My queue</h2><span class="k">{{shownText}}</span></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
+<div role="group" aria-label="Filter by service" style="display:flex;gap:8px;flex-wrap:wrap;">
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="5"><button type="button" class="chip" aria-pressed="{{f.pressed}}" onClick="{{f.pick}}">{{f.label}}</button></sc-for>
+</div>
+<button type="button" role="switch" aria-checked="{{ownerChecked}}" onClick="{{toggleOwner}}" style="display:inline-flex;align-items:center;gap:10px;min-height:44px;padding:0 14px 0 8px;border-radius:999px;border:1px solid #C5CCD6;background:#FFFFFF;color:#11133C;font:600 13px Inter,sans-serif;cursor:pointer;"><span style="{{trackStyle}}"><span style="{{knobStyle}}"></span></span>Needs owner approval<span class="pill pill-you">{{nOwner}}</span></button>
+</div>
+</div>
+<div style="overflow-x:auto;">
+<table class="wq">
+<thead><tr><th scope="col">Customer</th><th scope="col">Service</th><th scope="col">Item</th><th scope="col">What is needed</th><th scope="col">Due · age</th><th scope="col"><span class="sr">Action</span></th></tr></thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+<tr>
+<td style="font-weight:600;white-space:nowrap;">{{r.c}}</td>
+<td><span class="{{r.svcCls}}">{{r.svc}}</span></td>
+<td><span style="font:600 13px 'IBM Plex Mono',monospace;">{{r.id}}</span><div style="font-size:13.5px;color:#3B4556;margin-top:3px;">{{r.item}}</div></td>
+<td style="max-width:320px;line-height:1.45;">{{r.need}}</td>
+<td style="white-space:nowrap;"><div style="{{r.dueStyle}}">{{r.due}}</div><div style="font-size:12.5px;color:#5A6475;margin-top:3px;">{{r.age}}</div></td>
+<td style="text-align:right;white-space:nowrap;">
+<sc-if value="{{r.isLink}}" hint-placeholder-val="{{true}}"><a href="{{r.href}}" class="{{r.btn}}">{{r.action}}</a></sc-if>
+<sc-if value="{{r.isBtn}}" hint-placeholder-val="{{false}}"><button type="button" class="{{r.btn}}" onClick="{{r.act}}">{{r.action}}</button></sc-if>
+<sc-if value="{{r.isDone}}" hint-placeholder-val="{{false}}"><span class="pill pill-live">{{r.doneText}}</span></sc-if>
+</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<sc-if value="{{empty}}" hint-placeholder-val="{{false}}">
+<div style="padding:28px 16px;text-align:center;font-size:14px;color:#5A6475;">Nothing in this view. Change the service filter or switch off "Needs owner approval".</div>
+</sc-if>
+<p style="margin:0;padding:12px 16px 16px;font-size:12.5px;color:#5A6475;border-top:1px solid #EEF0F4;">Items above your amount limit or below the minimum margin go to the owner. The customer sees a price only after it is approved.</p>
+</section>
+
+<aside style="flex:1 1 100%;min-width:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;align-items:start;">
+<section class="card" style="padding:18px;display:flex;flex-direction:column;gap:4px;" aria-labelledby="cu-h">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;"><h2 id="cu-h" style="margin:0;font:700 16px Lexend,sans-serif;">My customers</h2><span class="k">{{nCust}} companies</span></div>
+<sc-for list="{{customers}}" as="cu" hint-placeholder-count="3">
+<a href="AdminHome.dc.html" style="display:flex;flex-direction:column;gap:8px;padding:12px 0;border-top:1px solid #EEF0F4;">
+<span style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><strong style="font-size:15px;">{{cu.name}}</strong><span style="font-size:13px;color:#5A6475;">{{cu.open}}</span></span>
+<span style="display:flex;gap:6px;flex-wrap:wrap;"><sc-for list="{{cu.svcs}}" as="sv" hint-placeholder-count="3"><span class="pill pill-soft">{{sv}}</span></sc-for></span>
+</a>
+</sc-for>
+</section>
+
+<section class="card" style="padding:18px;display:flex;flex-direction:column;gap:12px;border:2px solid #11133C;" aria-labelledby="lim-h">
+<h2 id="lim-h" style="margin:0;font:700 16px Lexend,sans-serif;">My approval limits</h2>
+<dl style="margin:0;display:grid;grid-template-columns:1fr auto;gap:10px 12px;font-size:14px;">
+<dt style="color:#5A6475;">Amount limit</dt><dd style="margin:0;font-weight:700;">[US$ limit]</dd>
+<dt style="color:#5A6475;">Minimum margin</dt><dd style="margin:0;font-weight:700;">[N]%</dd>
+<dt style="color:#5A6475;">Approver above limit</dt><dd style="margin:0;font-weight:700;">Owner</dd>
+</dl>
+<p style="margin:0;font-size:13px;color:#3B4556;line-height:1.5;">Within these limits you approve and release. Above the amount limit or below the minimum margin, you prepare it and the owner approves.</p>
+<a href="AdminHome.dc.html" style="color:#2A6FD6;font-weight:600;font-size:14px;">See approval limits →</a>
+</section>
+
+<section class="card" style="padding:18px;display:flex;flex-direction:column;gap:2px;" aria-labelledby="ih-h">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;"><h2 id="ih-h" style="margin:0;font:700 16px Lexend,sans-serif;">Integrations health</h2><span class="k">Checked [time]</span></div>
+<div class="hl"><span style="flex:1;">Store sync</span><span class="pill pill-grey">[status]</span></div>
+<div class="hl"><span style="flex:1;">Carrier tracking</span><span class="pill pill-grey">[status]</span></div>
+<div class="hl" style="border-bottom:0;"><span style="flex:1;">Bank transfers to confirm</span><span class="pill pill-grey">[count]</span></div>
+<a href="AdminHome.dc.html" style="color:#2A6FD6;font-weight:600;font-size:14px;margin-top:6px;">Open integrations →</a>
+</section>
+</aside>
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1450}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { f: 'all', owner: false, done: {} }; }
+  renderVals() {
+    const SVC = { src: 'Sourcing', drop: 'Dropshipping', wh: '3PL warehouse', brand: 'Make My Brand' };
+    const all = [
+      { key: 'r1', c: 'Nova Breeze', s: 'brand', id: 'MB-0051', item: 'Neck fan G1000, black · quote', need: 'Quote US$ 21,476.26 is over your limit of [US$ limit]. Prepare it and send it to the owner.', due: 'Today', age: 'Waiting 26 h', late: true, owner: true, kind: 'btn', action: 'Send to owner for approval', primary: true, doneText: 'Sent to owner' },
+      { key: 'r5', c: 'Nova Breeze', s: 'drop', id: '#1039', item: 'Dropship order · running late', need: 'No tracking update for [N] days. Ship it another way or refund the customer.', due: 'Nov 8', age: 'Open 3 d', late: true, kind: 'link', href: 'AdminHome.dc.html', action: 'Open order', primary: true },
+      { key: 'r4', c: 'Nova Breeze', s: 'src', id: 'SR-0118', item: 'Bamboo cutlery set, 5,000 pcs', need: 'Three supplier quotes are in. Check them and set the customer price before release.', due: 'Today', age: 'Quotes in 1 d', late: true, kind: 'link', href: 'AdminPurchase.dc.html', action: 'Check quotes', primary: true },
+      { key: 'r7', c: '[Customer C]', s: 'brand', id: 'MB-0049', item: 'Mini fan MINI1 · laser · 5,000 pcs', need: 'Quote margin is below your minimum of [N]%. Prepare it and send it to the owner.', due: 'Nov 9', age: 'Waiting 4 h', owner: true, kind: 'btn', action: 'Send to owner for approval', primary: true, doneText: 'Sent to owner' },
+      { key: 'r6', c: '[Customer B]', s: 'drop', id: 'Store link', item: 'Store connection lost', need: 'The store stopped sending orders because access was removed. Ask the customer to reconnect.', due: 'Today', age: 'Since 2 h', kind: 'btn', action: 'Send reconnect link', doneText: 'Link sent' },
+      { key: 'r3', c: 'Nova Breeze', s: 'wh', id: 'IN-0231', item: 'Inbound · 6,040 of 6,000 units', need: '40 extra units received. Customer to confirm: keep as stock or return.', due: 'Customer to reply', age: 'Asked 16 h ago', wait: true, kind: 'link', href: 'AdminWarehouse.dc.html', action: 'Open inbound' },
+      { key: 'r2', c: 'Nova Breeze', s: 'brand', id: 'Proof v2', item: 'Artwork proof · Handheld fan F8', need: 'Proof v2 is with the customer for approval. Remind them if it waits too long.', due: 'Customer to reply', age: 'Sent 5 h ago', wait: true, kind: 'btn', action: 'Send reminder', doneText: 'Reminder sent' },
+      { key: 'r8', c: '[Customer C]', s: 'src', id: 'SR-0124', item: 'New sourcing request', need: 'Assign a sourcing office and start finding suppliers.', due: 'Nov 10', age: 'New 4 h', kind: 'link', href: 'AdminPurchase.dc.html', action: 'Open request' }
+    ];
+    const f = this.state.f, ownerOn = this.state.owner, done = this.state.done;
+    const shown = all.filter((r) => (f === 'all' || r.s === f) && (!ownerOn || r.owner));
+    const rows = shown.map((r) => {
+      const isDone = !!done[r.key];
+      return {
+        c: r.c, svc: SVC[r.s], svcCls: r.s === 'brand' ? 'pill pill-you' : r.s === 'src' ? 'pill pill-soft' : r.s === 'wh' ? 'pill pill-live' : 'pill pill-grey',
+        id: r.id, item: r.item, need: r.need, due: r.due, age: r.age,
+        dueStyle: r.late ? 'font-weight:700;color:#9A3412;' : 'font-weight:600;color:#11133C;',
+        isLink: r.kind === 'link', isBtn: r.kind === 'btn' && !isDone, isDone: r.kind === 'btn' && isDone,
+        href: r.href || 'AdminHome.dc.html', action: r.action, doneText: r.doneText || 'Done',
+        btn: r.primary ? 'btn btn-primary' : 'btn btn-ghost',
+        act: () => this.setState({ done: Object.assign({}, done, { [r.key]: true }) })
+      };
+    });
+    const defs = [['all', 'All'], ['src', 'Sourcing'], ['drop', 'Dropshipping'], ['wh', '3PL warehouse'], ['brand', 'Make My Brand']];
+    const filters = defs.map((d) => {
+      const n = all.filter((r) => d[0] === 'all' || r.s === d[0]).length;
+      return { label: d[1] + ' · ' + n, pressed: d[0] === f ? 'true' : 'false', pick: () => this.setState({ f: d[0] }) };
+    });
+    const custDefs = [
+      { name: 'Nova Breeze', svcs: ['Sourcing', 'Dropshipping', '3PL warehouse', 'Make My Brand'] },
+      { name: '[Customer B]', svcs: ['Sourcing', 'Dropshipping'] },
+      { name: '[Customer C]', svcs: ['Sourcing', '3PL warehouse', 'Make My Brand'] }
+    ];
+    const customers = custDefs.map((c) => {
+      const n = all.filter((r) => r.c === c.name).length;
+      return { name: c.name, svcs: c.svcs, open: n + (n === 1 ? ' open item' : ' open items') };
+    });
+    return {
+      rows, filters, customers,
+      empty: rows.length === 0,
+      total: String(all.length),
+      nOwner: String(all.filter((r) => r.owner).length),
+      nWait: String(all.filter((r) => r.wait).length),
+      nLate: String(all.filter((r) => r.late).length),
+      nCust: String(custDefs.length),
+      shownText: rows.length + ' of ' + all.length + ' items',
+      ownerChecked: ownerOn ? 'true' : 'false',
+      toggleOwner: () => this.setState({ owner: !ownerOn }),
+      trackStyle: 'position:relative;display:inline-block;width:40px;height:24px;border-radius:999px;flex:none;background:' + (ownerOn ? '#2A6FD6' : '#8792A2') + ';',
+      knobStyle: 'position:absolute;top:3px;left:' + (ownerOn ? '19px' : '3px') + ';width:18px;height:18px;border-radius:999px;background:#FFFFFF;'
+    };
+  }
+}
+</script>
+</body>
+</html>

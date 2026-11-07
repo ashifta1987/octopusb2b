@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>My stock</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6F8}
+*{box-sizing:border-box}
+a{color:#11133C;text-decoration:none}a:hover{color:#2A6FD6}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:10px;font:600 14px/1 Inter,system-ui,sans-serif;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+.btn-primary{background:#2A6FD6;color:#FFFFFF}.btn-primary:hover{background:#1E58B0;color:#FFFFFF}
+.btn-dark{background:#11133C;color:#FFFFFF}.btn-dark:hover{background:#262A6B;color:#FFFFFF}
+.btn-ghost{background:#FFFFFF;color:#11133C;border-color:#C5CCD6}.btn-ghost:hover{border-color:#11133C}
+.btn-sm{min-height:38px;padding:0 12px;font-size:13px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid #1D4ED8;outline-offset:2px}
+.k{font:600 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#5A6475;text-transform:uppercase}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.pill-ex{background:#FEF3C7;color:#92400E}.pill-live{background:#DCFCE7;color:#15803D}.pill-soft{background:#E6EFFC;color:#1E58B0}.pill-you{background:#FFEDD5;color:#9A3412}.pill-grey{background:#EEF0F4;color:#3B4556}
+.card{background:#FFFFFF;border:1px solid #E2E5EA;border-radius:14px}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:0 24px}
+.tabs a{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 14px;font:600 14px Inter,sans-serif;color:#3B4556;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs a:hover{color:#11133C}
+.tabs a.on{color:#11133C;border-bottom-color:#2A6FD6}
+.tabs .off{font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;color:#5A6475;background:#EEF0F4;border-radius:99px;padding:3px 7px}
+.side{flex:1 1 236px;max-width:100%;background:#FFFFFF;border-right:1px solid #E2E5EA;padding:18px 12px;display:flex;flex-direction:column;gap:1px}
+.side a{display:flex;align-items:center;min-height:40px;padding:0 12px;border-radius:9px;color:#3B4556;font:500 14px Inter,sans-serif}
+.side a:hover{background:#F0F2F6;color:#11133C}
+.side a.on{background:#11133C;color:#FFFFFF;font-weight:600}
+.side .grp{font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;padding:14px 12px 6px}
+.act{display:flex;gap:14px;align-items:center;padding:16px;border-top:1px solid #EEF0F4}
+.ico{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none}
+.chip{min-height:38px;padding:0 14px;border-radius:999px;font:600 13px Inter,sans-serif;cursor:pointer;border:1px solid #C5CCD6;background:#FFFFFF;color:#11133C}
+.chip[aria-pressed="true"]{background:#11133C;border-color:#11133C;color:#FFFFFF}
+.num{font:800 24px/1.1 Lexend,sans-serif;color:#11133C}
+@media (max-width:760px){.side{flex-direction:row !important;overflow-x:auto;border-right:0 !important;border-bottom:1px solid #E2E5EA}.side .grp{display:none}.side a{flex:none}main{padding:20px 16px !important}.hdr form{order:3;flex-basis:100% !important}.tabs{padding:0 8px}}
+.seg{display:flex;gap:4px;border-bottom:1px solid #E2E5EA;overflow-x:auto}
+.seg button{display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 14px;background:none;border:0;border-bottom:3px solid transparent;font:600 14px Inter,sans-serif;color:#3B4556;cursor:pointer;white-space:nowrap}
+.seg button:hover{color:#11133C}
+.seg button[aria-selected="true"]{color:#11133C;border-bottom-color:#2A6FD6}
+.seg .cnt{font:600 11px 'IBM Plex Mono',monospace;background:#EEF0F4;color:#3B4556;border-radius:99px;padding:3px 7px}
+.gh{display:grid;gap:12px;padding:12px 16px;background:#FAFBFC;border-bottom:1px solid #EEF0F4;font:600 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;align-items:center}
+.gr{display:grid;gap:12px;padding:12px 16px;border-bottom:1px solid #EEF0F4;font-size:14px;align-items:center}
+.mono{font-family:'IBM Plex Mono',monospace}
+.r{text-align:right;font-variant-numeric:tabular-nums}
+.fld{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600}
+.fld input,.fld select{min-height:44px;border:1px solid #C5CCD6;border-radius:10px;padding:0 12px;font:400 14px Inter,sans-serif;color:#11133C;background:#FFFFFF}
+</style>
+</helmet>
+<div style="font-family:Inter,system-ui,sans-serif;color:#11133C;background:#F5F6F8;min-height:100vh;">
+
+<header style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;">
+<div class="hdr" style="padding:12px 24px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;">
+<a href="Main.dc.html" style="display:inline-flex;flex:none;"><img src="assets/octopus-logo.png" alt="Octopus B2B" style="height:38px;width:auto;display:block;"></a>
+<form role="search" style="flex:1 1 360px;display:flex;min-width:0;max-width:560px;border:1.5px solid #11133C;border-radius:10px;overflow:hidden;">
+<label for="q" class="sr">Search orders, products, projects and stock</label>
+<input id="q" type="search" placeholder="Search orders, products, projects, stock" style="flex:1;min-width:0;border:0;padding:0 14px;min-height:44px;font:400 15px Inter,sans-serif;">
+</form>
+<span class="pill pill-ex" title="Numbers on this screen are examples">Prototype · example data</span>
+<span style="margin-left:auto;display:inline-flex;gap:14px;align-items:center;">
+<a href="Main.dc.html" style="display:flex;flex-direction:column;gap:2px;padding:6px 12px;border:1px solid #E2E5EA;border-radius:10px;"><span class="k">Wallet</span><span style="font:700 15px Lexend,sans-serif;">US$ 18.80</span></a>
+<a href="Main.dc.html" aria-label="Notifications, 5 new" style="position:relative;width:44px;height:44px;border-radius:10px;border:1px solid #E2E5EA;display:flex;align-items:center;justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg><span style="position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:99px;background:#C2410C;"></span></a>
+<span style="display:inline-flex;gap:10px;align-items:center;"><span style="width:38px;height:38px;border-radius:99px;background:#11133C;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font:600 14px Inter;">AK</span><span style="display:flex;flex-direction:column;gap:2px;"><span style="font-weight:600;font-size:14px;">[Buyer name]</span><span style="font-size:12px;color:#5A6475;">Nova Breeze · Owner</span></span></span>
+</span>
+</div>
+<nav class="tabs" aria-label="Services">
+<a href="Main.dc.html">Home</a>
+<a href="Main.dc.html">Sourcing</a>
+<a href="Dropship.dc.html">Dropshipping</a>
+<a class="on" href="Warehouse.dc.html" aria-current="page">3PL warehouse</a>
+<a href="Brand.dc.html">Make My Brand</a>
+<a href="Main.dc.html">Wallet and invoices</a>
+</nav>
+</header>
+
+<div style="display:flex;flex-wrap:wrap;">
+<nav class="side" aria-label="3PL warehouse">
+<span class="grp">3PL warehouse</span>
+<a class="on" href="Warehouse.dc.html" aria-current="page">My stock</a>
+<a href="Warehouse.dc.html">Inbound notices</a>
+<a href="Warehouse.dc.html">Outbound orders</a>
+<a href="Warehouse.dc.html">Returns</a>
+<a href="Warehouse.dc.html">Bills and rates</a>
+<a href="Warehouse.dc.html">Integrations</a>
+</nav>
+
+<main style="flex:999 1 560px;min-width:0;padding:28px 32px 56px;display:flex;flex-direction:column;gap:22px;">
+<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;">
+<div><span class="k" style="color:#1E58B0;">3PL warehouse</span><h1 style="margin:2px 0 6px;font:800 30px/1.15 Lexend,sans-serif;">My stock</h1><p style="margin:0;font-size:14px;color:#5A6475;">Nova Breeze stock stored at the Octopus warehouse in [Warehouse city]. Counts update when the warehouse team scans.</p></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;"><button type="button" class="btn btn-primary" onClick="{{openForm}}">Create inbound notice</button><a href="Main.dc.html" class="btn btn-ghost">Message [Manager name]</a></div>
+</div>
+
+<section aria-label="Stock at a glance" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;">
+<sc-for list="{{kpis}}" as="m" hint-placeholder-count="4">
+<div class="card" style="padding:16px 18px;display:flex;flex-direction:column;gap:8px;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><span class="k">{{m.label}}</span><span class="pill pill-ex">Example</span></div>
+<span class="num">{{m.value}}</span>
+<span style="font-size:13px;color:#5A6475;">{{m.note}}</span>
+</div>
+</sc-for>
+</section>
+
+<section class="card" style="overflow:hidden;" aria-label="3PL warehouse sections">
+<div class="seg" role="tablist" aria-label="3PL warehouse" style="padding:0 12px;">
+<sc-for list="{{tabs}}" as="t" hint-placeholder-count="4"><button type="button" role="tab" aria-selected="{{t.selected}}" onClick="{{t.pick}}">{{t.label}}<span class="cnt">{{t.count}}</span></button></sc-for>
+</div>
+
+<sc-if value="{{isStock}}" hint-placeholder-val="{{true}}">
+<div role="tabpanel" aria-label="Stock">
+<sc-if value="{{extraOpen}}" hint-placeholder-val="{{true}}">
+<div style="margin:16px 16px 0;padding:12px 14px;border-radius:10px;background:#FFEDD5;display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9A3412" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M12 3l9 16H3z"></path></svg>
+<span style="flex:1 1 300px;font-size:14px;color:#7C2D12;">40 extra Mini fan MINI1 units from <span class="mono">IN-0231</span> are held apart and not in "Available" until you decide.</span>
+<button type="button" class="btn btn-dark btn-sm" onClick="{{goInbound}}">Decide now</button>
+</div>
+</sc-if>
+<div style="padding:16px 16px 0;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+<h2 style="margin:0;font:700 18px Lexend,sans-serif;">Stock by SKU</h2>
+<span style="font-size:13px;color:#5A6475;">Reserved = held for orders not yet shipped</span>
+</div>
+<div style="overflow-x:auto;margin-top:12px;">
+<div role="table" aria-label="Stock by SKU" style="min-width:880px;">
+<div role="row" class="gh" style="grid-template-columns:96px minmax(0,1.6fr) 100px 90px 90px 130px 100px;"><span role="columnheader">SKU</span><span role="columnheader">Product</span><span role="columnheader" class="r">Available</span><span role="columnheader" class="r">Reserved</span><span role="columnheader" class="r">Inbound</span><span role="columnheader">Bin zone</span><span role="columnheader">Last count</span></div>
+<sc-for list="{{skus}}" as="s" hint-placeholder-count="5">
+<div role="row" class="gr" style="grid-template-columns:96px minmax(0,1.6fr) 100px 90px 90px 130px 100px;">
+<span role="cell" class="mono" style="font-size:13px;font-weight:600;">{{s.sku}}</span>
+<span role="cell" style="display:flex;gap:10px;align-items:center;min-width:0;"><img src="{{s.img}}" alt="" style="width:40px;height:40px;border-radius:8px;object-fit:cover;background:#EEF0F4;flex:none;"><span style="font-weight:600;">{{s.name}}</span></span>
+<span role="cell" class="r" style="font-weight:700;">{{s.avail}}</span>
+<span role="cell" class="r">{{s.res}}</span>
+<span role="cell" class="r">{{s.inb}}</span>
+<span role="cell" class="mono" style="font-size:13px;">{{s.bin}}</span>
+<span role="cell" style="color:#5A6475;">{{s.count}}</span>
+</div>
+</sc-for>
+<div role="row" class="gr" style="grid-template-columns:96px minmax(0,1.6fr) 100px 90px 90px 130px 100px;background:#FAFBFC;border-bottom:0;font-weight:700;">
+<span role="cell" class="k" style="color:#11133C;">Total</span>
+<span role="cell">{{totals.label}}</span>
+<span role="cell" class="r">{{totals.avail}}</span>
+<span role="cell" class="r">{{totals.res}}</span>
+<span role="cell" class="r">{{totals.inb}}</span>
+<span role="cell" style="font-weight:500;color:#5A6475;">Zone C</span>
+<span role="cell"></span>
+</div>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{isInbound}}" hint-placeholder-val="{{false}}">
+<div role="tabpanel" aria-label="Inbound" style="padding:16px;display:flex;flex-direction:column;gap:16px;">
+<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+<div><h2 style="margin:0 0 4px;font:700 18px Lexend,sans-serif;">Inbound notices</h2><p style="margin:0;font-size:13.5px;color:#5A6475;">Tell the warehouse what is coming so it can be counted and shelved on arrival.</p></div>
+<button type="button" class="btn btn-primary" onClick="{{toggleForm}}">Create inbound notice</button>
+</div>
+
+<sc-if value="{{showForm}}" hint-placeholder-val="{{false}}">
+<form class="card" style="padding:16px;display:flex;flex-direction:column;gap:14px;border:2px solid #2A6FD6;" aria-label="New inbound notice">
+<strong style="font:700 16px Lexend,sans-serif;">New inbound notice</strong>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;">
+<label class="fld" for="nf-sku">Product
+<select id="nf-sku"><option>MINI1 · Mini fan MINI1</option><option>F8 · Handheld fan F8</option><option>F8-PK · Handheld fan F8, pink</option><option>G1000 · Neck fan G1000</option><option>S7 · Aroma diffuser S7</option></select>
+</label>
+<label class="fld" for="nf-qty">Units<input id="nf-qty" type="number" min="1" placeholder="e.g. 1,000"></label>
+<label class="fld" for="nf-ctn">Cartons<input id="nf-ctn" type="number" min="1" placeholder="e.g. 20"></label>
+<label class="fld" for="nf-date">Expected arrival<input id="nf-date" type="date"></label>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="btn btn-primary btn-sm" onClick="{{saveDraft}}">Save as draft</button><button type="button" class="btn btn-ghost btn-sm" onClick="{{toggleForm}}">Cancel</button></div>
+</form>
+</sc-if>
+<sc-if value="{{saved}}" hint-placeholder-val="{{false}}">
+<p role="status" style="margin:0;padding:10px 14px;border-radius:10px;background:#DCFCE7;color:#14532D;font-size:14px;">Draft saved. It is listed as <span class="mono">IN-0241</span> once the items are added.</p>
+</sc-if>
+
+<article class="card" style="overflow:hidden;" aria-labelledby="in31-h">
+<div style="padding:14px 16px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+<div style="display:flex;flex-direction:column;gap:3px;"><h3 id="in31-h" class="mono" style="margin:0;font-size:16px;font-weight:600;">IN-0231</h3><span style="font-size:13px;color:#5A6475;">Received Nov 6, 18:40 · 151 cartons · 6,040 of 6,000 units</span></div>
+<span class="{{in31.pillClass}}">{{in31.pill}}</span>
+</div>
+<div style="overflow-x:auto;">
+<div role="table" aria-label="IN-0231 lines" style="min-width:620px;">
+<div role="row" class="gh" style="grid-template-columns:96px minmax(0,1fr) 100px 100px 100px;"><span role="columnheader">SKU</span><span role="columnheader">Product</span><span role="columnheader" class="r">Expected</span><span role="columnheader" class="r">Received</span><span role="columnheader" class="r">Difference</span></div>
+<div role="row" class="gr" style="grid-template-columns:96px minmax(0,1fr) 100px 100px 100px;"><span role="cell" class="mono" style="font-size:13px;font-weight:600;">MINI1</span><span role="cell">Mini fan MINI1</span><span role="cell" class="r">2,000</span><span role="cell" class="r">2,040</span><span role="cell" class="r" style="color:#9A3412;font-weight:700;">+40</span></div>
+<div role="row" class="gr" style="grid-template-columns:96px minmax(0,1fr) 100px 100px 100px;"><span role="cell" class="mono" style="font-size:13px;font-weight:600;">F8</span><span role="cell">Handheld fan F8</span><span role="cell" class="r">2,000</span><span role="cell" class="r">2,000</span><span role="cell" class="r" style="color:#15803D;">0</span></div>
+<div role="row" class="gr" style="grid-template-columns:96px minmax(0,1fr) 100px 100px 100px;"><span role="cell" class="mono" style="font-size:13px;font-weight:600;">G1000</span><span role="cell">Neck fan G1000</span><span role="cell" class="r">2,000</span><span role="cell" class="r">2,000</span><span role="cell" class="r" style="color:#15803D;">0</span></div>
+<div role="row" class="gr" style="grid-template-columns:96px minmax(0,1fr) 100px 100px 100px;background:#FAFBFC;font-weight:700;"><span role="cell" class="k" style="color:#11133C;">Total</span><span role="cell"></span><span role="cell" class="r">6,000</span><span role="cell" class="r">6,040</span><span role="cell" class="r" style="color:#9A3412;">+40</span></div>
+</div>
+</div>
+<sc-if value="{{extraOpen}}" hint-placeholder-val="{{true}}">
+<div style="padding:16px;display:flex;flex-direction:column;gap:12px;background:#FFF7ED;">
+<strong style="font-size:15px;">What should we do with the 40 extra Mini fan MINI1 units?</strong>
+<p style="margin:0;font-size:13.5px;color:#3B4556;line-height:1.5;">They are counted and held apart. Choose one. [Manager name] sees your choice straight away.</p>
+<div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="btn btn-primary" onClick="{{keepExtra}}">Keep as stock</button><button type="button" class="btn btn-ghost" onClick="{{returnExtra}}">Return the extra 40</button></div>
+</div>
+</sc-if>
+<sc-if value="{{extraKept}}" hint-placeholder-val="{{false}}">
+<div role="status" style="padding:14px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:#F0FDF4;">
+<span style="flex:1 1 300px;font-size:14px;color:#14532D;">You chose to keep them. 40 units were added to Mini fan MINI1 available stock.</span>
+<button type="button" class="btn btn-ghost btn-sm" onClick="{{undoExtra}}">Change choice</button>
+</div>
+</sc-if>
+<sc-if value="{{extraReturned}}" hint-placeholder-val="{{false}}">
+<div role="status" style="padding:14px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:#EFF6FF;">
+<span style="flex:1 1 300px;font-size:14px;color:#1E3A8A;">Return requested for 40 units. [Manager name] will confirm the return address and the cost, [Amount], with you before anything ships.</span>
+<button type="button" class="btn btn-ghost btn-sm" onClick="{{undoExtra}}">Change choice</button>
+</div>
+</sc-if>
+</article>
+
+<article class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:12px;" aria-labelledby="in36-h">
+<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+<div style="display:flex;flex-direction:column;gap:3px;"><h3 id="in36-h" class="mono" style="margin:0;font-size:16px;font-weight:600;">IN-0236</h3><span style="font-size:13px;color:#5A6475;">Expected Nov 12 · 40 cartons · 2,000 units · tracking [Tracking number]</span></div>
+<span class="pill pill-soft">In transit</span>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:14px;">
+<span style="display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border:1px solid #E2E5EA;border-radius:10px;"><span class="mono" style="font-weight:600;">G1000</span>Neck fan G1000 · 800</span>
+<span style="display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border:1px solid #E2E5EA;border-radius:10px;"><span class="mono" style="font-weight:600;">S7</span>Aroma diffuser S7 · 1,200</span>
+</div>
+</article>
+
+<article class="card" style="padding:14px 16px;display:flex;flex-direction:column;gap:12px;" aria-labelledby="in40-h">
+<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+<div style="display:flex;flex-direction:column;gap:3px;"><h3 id="in40-h" class="mono" style="margin:0;font-size:16px;font-weight:600;">IN-0240</h3><span style="font-size:13px;color:#5A6475;">Expected [Date] · [N] cartons · 1,500 units</span></div>
+<span class="{{in40.pillClass}}">{{in40.pill}}</span>
+</div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
+<span style="display:inline-flex;gap:8px;align-items:center;padding:8px 12px;border:1px solid #E2E5EA;border-radius:10px;font-size:14px;"><span class="mono" style="font-weight:600;">MINI1</span>Mini fan MINI1 · 1,500</span>
+<sc-if value="{{in40.draft}}" hint-placeholder-val="{{true}}">
+<span style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="btn btn-ghost btn-sm" onClick="{{toggleForm}}">Edit draft</button><button type="button" class="btn btn-dark btn-sm" onClick="{{sendDraft}}">Send to warehouse</button></span>
+</sc-if>
+</div>
+</article>
+</div>
+</sc-if>
+
+<sc-if value="{{isOutbound}}" hint-placeholder-val="{{false}}">
+<div role="tabpanel" aria-label="Outbound orders">
+<div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;"><h2 style="margin:0;font:700 18px Lexend,sans-serif;">Orders shipped from your stock</h2><span class="pill pill-ex">Example</span></div>
+<div role="group" aria-label="Filter by shipping service" style="display:flex;gap:8px;flex-wrap:wrap;">
+<sc-for list="{{svcChips}}" as="c" hint-placeholder-count="5"><button type="button" class="chip" aria-pressed="{{c.pressed}}" onClick="{{c.pick}}">{{c.label}}</button></sc-for>
+</div>
+</div>
+<div style="overflow-x:auto;">
+<div role="table" aria-label="Outbound orders" style="min-width:860px;">
+<div role="row" class="gh" style="grid-template-columns:110px 100px minmax(0,1fr) minmax(0,1.3fr) 100px 110px 150px;"><span role="columnheader">Order</span><span role="columnheader">Date</span><span role="columnheader">Ship to</span><span role="columnheader">Items</span><span role="columnheader">Service</span><span role="columnheader">Status</span><span role="columnheader">Tracking</span></div>
+<sc-for list="{{orders}}" as="o" hint-placeholder-count="6">
+<div role="row" class="gr" style="grid-template-columns:110px 100px minmax(0,1fr) minmax(0,1.3fr) 100px 110px 150px;">
+<span role="cell" class="mono" style="font-size:13px;font-weight:600;">{{o.id}}</span>
+<span role="cell" style="color:#5A6475;">{{o.date}}</span>
+<span role="cell">{{o.to}}</span>
+<span role="cell">{{o.items}}</span>
+<span role="cell" style="font-weight:600;">{{o.svc}}</span>
+<span role="cell"><span class="{{o.pillClass}}">{{o.status}}</span></span>
+<span role="cell" class="mono" style="font-size:12.5px;color:#3B4556;">{{o.track}}</span>
+</div>
+</sc-for>
+</div>
+</div>
+<p style="margin:0;padding:14px 16px;font-size:13px;color:#5A6475;">{{orderNote}}</p>
+</div>
+</sc-if>
+
+<sc-if value="{{isBills}}" hint-placeholder-val="{{false}}">
+<div role="tabpanel" aria-label="Bills" style="padding:16px;display:flex;flex-direction:column;gap:14px;">
+<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
+<div><span class="k">Bill · October 2026</span><h2 style="margin:2px 0 0;font:700 18px Lexend,sans-serif;">Storage and handling</h2></div>
+<span style="display:flex;gap:8px;flex-wrap:wrap;"><span class="pill pill-grey">Draft · prices not agreed yet</span><span class="pill pill-ex">Example</span></span>
+</div>
+<div class="card" style="overflow:hidden;">
+<div style="overflow-x:auto;">
+<div role="table" aria-label="October bill lines" style="min-width:720px;">
+<div role="row" class="gh" style="grid-template-columns:minmax(0,1.5fr) minmax(0,1.3fr) 110px 90px 100px;"><span role="columnheader">Line</span><span role="columnheader">Charged per</span><span role="columnheader" class="r">Quantity</span><span role="columnheader" class="r">Rate</span><span role="columnheader" class="r">Amount</span></div>
+<sc-for list="{{bill}}" as="b" hint-placeholder-count="7">
+<div role="row" class="gr" style="grid-template-columns:minmax(0,1.5fr) minmax(0,1.3fr) 110px 90px 100px;">
+<span role="cell" style="font-weight:600;">{{b.name}}</span>
+<span role="cell" style="color:#5A6475;">{{b.unit}}</span>
+<span role="cell" class="r">{{b.qty}}</span>
+<span role="cell" class="r mono" style="font-size:13px;color:#92400E;">[Rate]</span>
+<span role="cell" class="r mono" style="font-size:13px;">[Amount]</span>
+</div>
+</sc-for>
+<div role="row" class="gr" style="grid-template-columns:minmax(0,1.5fr) minmax(0,1.3fr) 110px 90px 100px;background:#FAFBFC;border-bottom:0;font-weight:700;">
+<span role="cell">Total for October</span><span role="cell"></span><span role="cell"></span><span role="cell"></span><span role="cell" class="r mono" style="font-size:13px;">[Amount]</span>
+</div>
+</div>
+</div>
+</div>
+<div style="display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:10px;background:#E6EFFC;">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E58B0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:1px;"><path d="M12 8h.01M11 12h1v5h1"></path><circle cx="12" cy="12" r="9"></circle></svg>
+<p style="margin:0;font-size:13.5px;color:#1E3A8A;line-height:1.5;">Invoices come from Shenzhen Octopus Trading's Hong Kong company and are paid from your wallet. Rates and amounts show once your rate card is agreed with [Manager name].</p>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;"><a href="Main.dc.html" class="btn btn-primary btn-sm">Open wallet</a><a href="Warehouse.dc.html" class="btn btn-ghost btn-sm">See rate card</a><a href="Main.dc.html" class="btn btn-ghost btn-sm">Invoices and receipts</a></div>
+</div>
+</sc-if>
+</section>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1250}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { tab: 'stock', extra: 'open', showForm: false, saved: false, sent: false, svc: 'all' }; }
+  renderVals() {
+    const st = this.state;
+    const n = (v) => v.toLocaleString('en-US');
+    const IMG = {
+      mini: 'assets/MINI1.jpg',
+      f8: 'assets/F8.jpg',
+      g: 'assets/G1000.jpg',
+      s7: 'assets/S7.jpg'
+    };
+    const kept = st.extra === 'keep';
+    const raw = [
+      { sku: 'MINI1', name: 'Mini fan MINI1', img: IMG.mini, a: 910 + (kept ? 40 : 0), r: 44, i: 0, bin: 'C · C-04-02', count: 'Nov 3' },
+      { sku: 'F8', name: 'Handheld fan F8', img: IMG.f8, a: 2180, r: 60, i: 0, bin: 'C · C-04-05', count: 'Nov 3' },
+      { sku: 'F8-PK', name: 'Handheld fan F8, pink', img: IMG.f8, a: 580, r: 20, i: 0, bin: 'C · C-04-09', count: 'Oct 30' },
+      { sku: 'G1000', name: 'Neck fan G1000', img: IMG.g, a: 1420, r: 26, i: 800, bin: 'C · C-06-01', count: 'Oct 28' },
+      { sku: 'S7', name: 'Aroma diffuser S7', img: IMG.s7, a: 1560, r: 40, i: 1200, bin: 'C · C-07-03', count: 'Oct 28' }
+    ];
+    const sum = (k) => raw.reduce((t, x) => t + x[k], 0);
+    const skus = raw.map((x) => ({ sku: x.sku, name: x.name, img: x.img, avail: n(x.a), res: n(x.r), inb: x.i ? n(x.i) : '—', bin: x.bin, count: x.count }));
+    const totals = { label: raw.length + ' SKUs', avail: n(sum('a')), res: n(sum('r')), inb: n(sum('i')) };
+
+    const allOrders = [
+      { id: 'OB-58231', date: 'Nov 7', to: 'Riyadh, Saudi Arabia', items: 'MINI1 × 2, F8 × 1', svc: 'DDP Gulf', status: 'Packing', p: 'pill pill-soft', track: '[Tracking number]' },
+      { id: 'OB-58226', date: 'Nov 7', to: 'Dubai, UAE', items: 'G1000 × 1', svc: 'Express', status: 'Shipped', p: 'pill pill-live', track: '[Tracking number]' },
+      { id: 'OB-58219', date: 'Nov 6', to: 'Kuwait City, Kuwait', items: 'S7 × 2', svc: 'DDP Gulf', status: 'Shipped', p: 'pill pill-live', track: '[Tracking number]' },
+      { id: 'OB-58207', date: 'Nov 6', to: 'Manchester, UK', items: 'F8-PK × 1, MINI1 × 1', svc: 'Standard', status: 'Shipped', p: 'pill pill-live', track: '[Tracking number]' },
+      { id: 'OB-58198', date: 'Nov 5', to: 'Doha, Qatar', items: 'MINI1 × 4', svc: 'Economy', status: 'Delivered', p: 'pill pill-grey', track: '[Tracking number]' },
+      { id: 'OB-58180', date: 'Nov 4', to: 'Muscat, Oman', items: 'G1000 × 2, S7 × 1', svc: 'Standard', status: 'Delivered', p: 'pill pill-grey', track: '[Tracking number]' }
+    ];
+    const svcDefs = ['All', 'Express', 'Standard', 'Economy', 'DDP Gulf'];
+    const orders = allOrders.filter((o) => st.svc === 'all' || o.svc === st.svc).map((o) => ({ ...o, pillClass: o.p }));
+    const svcChips = svcDefs.map((s) => { const key = s === 'All' ? 'all' : s; return { label: s, pressed: st.svc === key ? 'true' : 'false', pick: () => this.setState({ svc: key }) }; });
+
+    const bill = [
+      { name: 'Receiving · IN-0228, IN-0231', unit: 'Carton, includes count and label check', qty: '214 cartons' },
+      { name: 'Shelf storage', unit: 'Cubic metre per month', qty: '18.4 m³' },
+      { name: 'Pick and pack', unit: 'Order, first item', qty: '486 orders' },
+      { name: 'Additional items', unit: 'Extra unit in the same order', qty: '138 units' },
+      { name: 'Packaging', unit: 'Mailer or carton, by size', qty: '486' },
+      { name: 'Returns processing', unit: 'Returned parcel', qty: '9 parcels' },
+      { name: 'Cycle counts', unit: 'Bin counted on request', qty: '[N] bins' }
+    ];
+
+    const defs = [['stock', 'Stock', '5'], ['inbound', 'Inbound', '3'], ['outbound', 'Outbound orders', '6'], ['bills', 'Bills', '1']];
+    const tabs = defs.map((d) => ({ label: d[1], count: d[2], selected: st.tab === d[0] ? 'true' : 'false', pick: () => this.setState({ tab: d[0] }) }));
+
+    const in31 = st.extra === 'open' ? { pill: 'Waiting for you', pillClass: 'pill pill-you' } : (kept ? { pill: 'Received · closed', pillClass: 'pill pill-live' } : { pill: 'Return requested', pillClass: 'pill pill-soft' });
+    const in40 = st.sent ? { pill: 'Sent · waiting for arrival', pillClass: 'pill pill-soft', draft: false } : { pill: 'Draft', pillClass: 'pill pill-grey', draft: true };
+
+    return {
+      kpis: [
+        { label: 'Available units', value: totals.avail, note: '5 SKUs ready to ship' },
+        { label: 'Reserved', value: totals.res, note: 'Held for open orders' },
+        { label: 'Inbound', value: totals.inb, note: 'IN-0236 in transit' },
+        { label: 'Orders shipped, Nov', value: '128', note: 'From your stock this month' }
+      ],
+      tabs, skus, totals, orders, svcChips, bill, in31, in40,
+      orderNote: orders.length ? 'Showing ' + orders.length + ' of ' + allOrders.length + ' recent orders. Services are shown by name only.' : 'No recent orders on this service.',
+      isStock: st.tab === 'stock', isInbound: st.tab === 'inbound', isOutbound: st.tab === 'outbound', isBills: st.tab === 'bills',
+      extraOpen: st.extra === 'open', extraKept: kept, extraReturned: st.extra === 'return',
+      showForm: st.showForm, saved: st.saved,
+      goInbound: () => this.setState({ tab: 'inbound' }),
+      openForm: () => this.setState({ tab: 'inbound', showForm: true, saved: false }),
+      toggleForm: () => this.setState({ showForm: !st.showForm, saved: false }),
+      saveDraft: () => this.setState({ showForm: false, saved: true }),
+      sendDraft: () => this.setState({ sent: true }),
+      keepExtra: () => this.setState({ extra: 'keep' }),
+      returnExtra: () => this.setState({ extra: 'return' }),
+      undoExtra: () => this.setState({ extra: 'open' })
+    };
+  }
+}
+</script>
+</body>
+</html>

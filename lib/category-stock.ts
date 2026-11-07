@@ -32,3 +32,4 @@ export function stockedCategories(categories: Category[], counts: Record<string,
 export function isStocked(categories: Category[], counts: Record<string, number>, id: string): boolean {
   return (stockTotals(categories, counts).get(id) ?? 0) > 0;
 }
+

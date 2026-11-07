@@ -1,7 +1,9 @@
 // Applies forward-only SQL migrations in supabase/migrations, then (optionally) seed.sql.
 // Usage: node scripts/db-migrate.mjs [--seed]
-import 'dotenv/config';
 import { config } from 'dotenv';
+// --staging: migrate the staging project (.env.staging) instead of the one in .env.local
+if (process.argv.includes('--staging')) config({ path: '.env.staging', quiet: true, override: true });
+else await import('dotenv/config');
 import pg from 'pg';
 import fs from 'node:fs';
 import path from 'node:path';

@@ -44,3 +44,4 @@ describe('ADDON-36 C5 supplier application schema', () => {
   });
   it('accepts store URLs without scheme', () => expect(supplierApplySchema.safeParse({ ...ok, store_url: 'shop123.1688.com' }).success).toBe(true));
 });
+

@@ -14,6 +14,8 @@
     "test:e2e": "playwright test",
     "typecheck": "tsc --noEmit -p .",
     "db:migrate": "node scripts/db-migrate.mjs",
+    "db:migrate:staging": "node scripts/db-migrate.mjs --staging",
+    "staging:sync": "node scripts/staging-sync.mjs",
     "db:seed": "node scripts/db-migrate.mjs --seed",
     "db:backup": "node scripts/db-backup.mjs",
     "db:wipe-demo": "node scripts/wipe-demo.mjs",

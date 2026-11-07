@@ -12,7 +12,9 @@ begin
   select id into v_tron from categories where parent_id is null and slug = 'electronics';
   select id into v_cables from categories where parent_id = v_elec and slug = 'cables-wires';
   if v_elec is null or v_tron is null or v_cables is null then
-    raise exception 'RECAT_MISSING_CATEGORY';
+    -- fresh database (staging/local) without the live catalogue: nothing to move
+    raise notice 'recategorise skipped: Electrical/Electronics categories not present';
+    return;
   end if;
 
   insert into categories(parent_id, name, slug, level, sort, active)
@@ -51,3 +53,4 @@ begin
   get diagnostics n = row_count;
   raise notice 'recategorised % products', n;
 end $m$;
+

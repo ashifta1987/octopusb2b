@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Admin purchase desk</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6F8}
+*{box-sizing:border-box}
+a{color:#11133C;text-decoration:none}a:hover{color:#2A6FD6}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:10px;font:600 14px/1 Inter,system-ui,sans-serif;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+.btn-primary{background:#2A6FD6;color:#FFFFFF}.btn-primary:hover{background:#1E58B0;color:#FFFFFF}
+.btn-dark{background:#11133C;color:#FFFFFF}.btn-dark:hover{background:#262A6B;color:#FFFFFF}
+.btn-ghost{background:#FFFFFF;color:#11133C;border-color:#C5CCD6}.btn-ghost:hover{border-color:#11133C}
+.btn-sm{min-height:38px;padding:0 12px;font-size:13px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid #1D4ED8;outline-offset:2px}
+.k{font:600 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#5A6475;text-transform:uppercase}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.pill-ex{background:#FEF3C7;color:#92400E}.pill-live{background:#DCFCE7;color:#15803D}.pill-soft{background:#E6EFFC;color:#1E58B0}.pill-you{background:#FFEDD5;color:#9A3412}.pill-grey{background:#EEF0F4;color:#3B4556}
+.card{background:#FFFFFF;border:1px solid #E2E5EA;border-radius:14px}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:0 24px}
+.tabs a{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 14px;font:600 14px Inter,sans-serif;color:#3B4556;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs a:hover{color:#11133C}
+.tabs a.on{color:#11133C;border-bottom-color:#2A6FD6}
+.tabs .off{font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;color:#5A6475;background:#EEF0F4;border-radius:99px;padding:3px 7px}
+.side{flex:1 1 236px;max-width:100%;background:#FFFFFF;border-right:1px solid #E2E5EA;padding:18px 12px;display:flex;flex-direction:column;gap:1px}
+.side a{display:flex;align-items:center;min-height:40px;padding:0 12px;border-radius:9px;color:#3B4556;font:500 14px Inter,sans-serif}
+.side a:hover{background:#F0F2F6;color:#11133C}
+.side a.on{background:#11133C;color:#FFFFFF;font-weight:600}
+.side .grp{font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;padding:14px 12px 6px}
+.act{display:flex;gap:14px;align-items:center;padding:16px;border-top:1px solid #EEF0F4}
+.ico{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none}
+.chip{min-height:38px;padding:0 14px;border-radius:999px;font:600 13px Inter,sans-serif;cursor:pointer;border:1px solid #C5CCD6;background:#FFFFFF;color:#11133C}
+.chip[aria-pressed="true"]{background:#11133C;border-color:#11133C;color:#FFFFFF}
+.num{font:800 24px/1.1 Lexend,sans-serif;color:#11133C}
+@media (max-width:760px){.side{flex-direction:row !important;overflow-x:auto;border-right:0 !important;border-bottom:1px solid #E2E5EA}.side .grp{display:none}.side a{flex:none}main{padding:20px 16px !important}.hdr form{order:3;flex-basis:100% !important}.tabs{padding:0 8px}}
+.atabs{display:flex;gap:4px;overflow-x:auto;padding:0 24px;background:#FFFFFF;border-bottom:1px solid #E2E5EA}
+.atabs a{display:inline-flex;align-items:center;min-height:48px;padding:0 14px;font:600 14px Inter,sans-serif;color:#3B4556;border-bottom:3px solid transparent;white-space:nowrap}
+.atabs a:hover{color:#11133C}.atabs a.on{color:#11133C;border-bottom-color:#2A6FD6}
+.chip{min-height:44px}
+.side a{min-height:44px;justify-content:space-between}
+.side b{font:700 11px Inter,sans-serif;background:#2A6FD6;color:#FFFFFF;border-radius:999px;padding:2px 7px}
+.side a.on b{background:#FFFFFF;color:#11133C}
+.qt{width:100%;border-collapse:collapse;min-width:760px}
+.qt th{text-align:left;padding:11px 12px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;background:#FAFBFC;border-bottom:1px solid #EEF0F4}
+.qt td{text-align:left;padding:12px;border-bottom:1px solid #EEF0F4;font-size:14px;vertical-align:middle}
+.qt .r{text-align:right}
+.staff{background:#FFF8EC;border:1px dashed #B7791F;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.step{width:44px;height:44px;border-radius:10px;border:1px solid #C5CCD6;background:#FFFFFF;font:700 18px Inter,sans-serif;cursor:pointer;color:#11133C}
+.use{min-height:44px;padding:0 14px;border-radius:10px;border:1px solid #C5CCD6;background:#FFFFFF;font:600 13.5px Inter,sans-serif;cursor:pointer;color:#11133C}
+.use[aria-pressed="true"]{border:2px solid #2A6FD6;background:#F2F7FE;color:#1E58B0}
+.fx{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px 18px;margin:0}
+.fx dt{font:600 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#5A6475;text-transform:uppercase;margin-bottom:4px}
+.fx dd{margin:0;font-size:14.5px;font-weight:600}
+</style>
+</helmet>
+<div style="font-family:Inter,system-ui,sans-serif;color:#11133C;background:#F5F6F8;min-height:100vh;">
+
+<header style="background:#11133C;">
+<div class="hdr" style="padding:12px 24px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;">
+<a href="AdminHome.dc.html" style="display:inline-flex;flex:none;"><img src="assets/octopus-logo-white.png" alt="Octopus B2B" style="height:38px;width:auto;display:block;"></a>
+<span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#11133C;background:#FFFFFF;border-radius:99px;padding:5px 10px;">Admin · staff only</span>
+<form role="search" style="flex:1 1 320px;display:flex;min-width:0;max-width:520px;border-radius:10px;overflow:hidden;background:#FFFFFF;">
+<label for="aq" class="sr">Search customers, orders, requests, SKUs</label>
+<input id="aq" type="search" placeholder="Customer, order, request, SKU or bin" style="flex:1;min-width:0;border:0;padding:0 14px;min-height:44px;font:400 15px Inter,sans-serif;">
+</form>
+<span class="pill pill-ex">Prototype · example data</span>
+<span style="margin-left:auto;display:inline-flex;gap:10px;align-items:center;"><span style="width:38px;height:38px;border-radius:99px;background:#2A6FD6;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font:600 14px Inter;">LM</span><span style="display:flex;flex-direction:column;gap:2px;"><span style="font-weight:600;font-size:14px;color:#FFFFFF;">[Manager name]</span><span style="font-size:12px;color:#C9CFE0;">Account manager · Shenzhen</span></span></span>
+</div>
+</header>
+<nav class="atabs" aria-label="Admin sections">
+<a href="AdminHome.dc.html">Work queue</a>
+<a href="AdminHome.dc.html">Customers</a>
+<a class="on" href="AdminPurchase.dc.html" aria-current="page">Purchase desk</a>
+<a href="AdminHome.dc.html">Dropship operations</a>
+<a href="AdminWarehouse.dc.html">Warehouse</a>
+<a href="AdminHome.dc.html">Make My Brand desk</a>
+<a href="AdminHome.dc.html">Integrations and audit</a>
+</nav>
+
+<div style="display:flex;flex-wrap:wrap;">
+<nav class="side" aria-label="Purchase desk">
+<span class="grp">Purchase desk</span>
+<a class="on" href="AdminPurchase.dc.html" aria-current="page">Inbox <b>{{total}}</b></a>
+<a href="AdminPurchase.dc.html">Suppliers</a>
+<a href="AdminPurchase.dc.html">Purchase orders</a>
+<a href="AdminPurchase.dc.html">Quality checks</a>
+<a href="AdminPurchase.dc.html">Samples</a>
+</nav>
+
+<main style="flex:999 1 560px;min-width:0;padding:28px 32px 56px;display:flex;flex-direction:column;gap:22px;">
+<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;">
+<div><span class="k" style="color:#1E58B0;">Admin · Purchase desk</span><h1 style="margin:2px 0 6px;font:800 30px/1.15 Lexend,sans-serif;">Request inbox</h1><p style="margin:0;font-size:14px;color:#5A6475;">Sourcing offices in Shenzhen, Foshan, Dongguan and Ningbo. Check supplier quotes, set the customer price, then release it or ask for approval.</p></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;"><a href="AdminPurchase.dc.html" class="btn btn-ghost">Suppliers</a><a href="AdminHome.dc.html" class="btn btn-dark">Back to work queue</a></div>
+</div>
+
+<div role="group" aria-label="Filter by status" style="display:flex;gap:8px;flex-wrap:wrap;">
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="6"><button type="button" class="chip" aria-pressed="{{f.pressed}}" onClick="{{f.pick}}">{{f.label}}</button></sc-for>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start;">
+
+<section class="card" style="flex:1 1 320px;min-width:0;padding:14px;display:flex;flex-direction:column;gap:10px;" aria-labelledby="in-h">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 2px 4px;"><h2 id="in-h" style="margin:0;font:700 17px Lexend,sans-serif;">Requests</h2><span class="pill pill-ex">Example</span></div>
+<sc-for list="{{list}}" as="r" hint-placeholder-count="5">
+<button type="button" aria-pressed="{{r.pressed}}" onClick="{{r.pick}}" style="{{r.style}}">
+<span style="display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;"><span style="font:600 13px 'IBM Plex Mono',monospace;color:#11133C;">{{r.id}}</span><span class="{{r.pillCls}}">{{r.status}}</span></span>
+<span style="font:600 15px Inter,sans-serif;color:#11133C;">{{r.title}}</span>
+<span style="font-size:13px;color:#5A6475;">{{r.meta}}</span>
+</button>
+</sc-for>
+<sc-if value="{{listEmpty}}" hint-placeholder-val="{{false}}">
+<p style="margin:0;padding:20px 8px;text-align:center;font-size:14px;color:#5A6475;">No requests with this status.</p>
+</sc-if>
+</section>
+
+<div style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:18px;">
+<section class="card" style="padding:18px;display:flex;flex-direction:column;gap:16px;" aria-labelledby="d-h">
+<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+<sc-if value="{{hasImg}}" hint-placeholder-val="{{true}}"><img src="{{img}}" alt="{{imgAlt}}" style="width:64px;height:64px;border-radius:12px;object-fit:cover;border:1px solid #E2E5EA;flex:none;"></sc-if>
+<sc-if value="{{noImg}}" hint-placeholder-val="{{false}}"><span style="width:64px;height:64px;border-radius:12px;background:#E6EFFC;color:#1E58B0;display:flex;align-items:center;justify-content:center;flex:none;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l9-4 9 4-9 4-9-4zM3 7v10l9 4 9-4V7"></path></svg></span></sc-if>
+<div style="flex:1;min-width:240px;"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;"><span style="font:600 13px 'IBM Plex Mono',monospace;">{{selId}}</span><span class="{{selPill}}">{{selStatus}}</span><sc-if value="{{withOwner}}" hint-placeholder-val="{{false}}"><span class="pill pill-you">With owner</span></sc-if></div><h2 id="d-h" style="margin:4px 0 0;font:800 24px/1.2 Lexend,sans-serif;">{{selTitle}}</h2><p style="margin:4px 0 0;font-size:14px;color:#3B4556;">{{selSub}}</p></div>
+</div>
+<dl class="fx">
+<div><dt>Customer</dt><dd>{{selCustomer}}</dd></div>
+<div><dt>Service</dt><dd>{{selSvc}}</dd></div>
+<div><dt>Quantity</dt><dd>{{selQty}}</dd></div>
+<div><dt>Sourcing office</dt><dd>{{selOffice}}</dd></div>
+<div><dt>Asked on</dt><dd>{{selAsked}}</dd></div>
+<div><dt>Needed by</dt><dd>[Date]</dd></div>
+<div><dt>Target price</dt><dd>[US$ target]</dd></div>
+<div><dt>Ship to</dt><dd>[Market]</dd></div>
+</dl>
+<p style="margin:0;font-size:14px;color:#3B4556;line-height:1.5;border-top:1px solid #EEF0F4;padding-top:14px;"><strong>Customer note:</strong> {{selNote}}</p>
+</section>
+
+<section class="card" style="overflow:hidden;" aria-labelledby="sq-h">
+<div style="padding:16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><h2 id="sq-h" style="margin:0;font:700 17px Lexend,sans-serif;">Supplier quotes</h2><span style="display:flex;gap:8px;align-items:center;"><span class="pill pill-grey">Staff only</span><span class="pill pill-ex">Example</span></span></div>
+<sc-if value="{{hasQuotes}}" hint-placeholder-val="{{true}}">
+<div style="overflow-x:auto;">
+<table class="qt">
+<thead><tr><th scope="col">Supplier</th><th scope="col">Checked</th><th scope="col" class="r">Unit cost</th><th scope="col" class="r">MOQ</th><th scope="col">Lead time</th><th scope="col" class="r">Sample cost</th><th scope="col"><span class="sr">Choose quote</span></th></tr></thead>
+<tbody>
+<sc-for list="{{quotes}}" as="q" hint-placeholder-count="3">
+<tr>
+<td style="font-weight:600;white-space:nowrap;">{{q.name}}</td>
+<td><span class="{{q.vCls}}">{{q.vText}}</span></td>
+<td class="r" style="font-weight:600;white-space:nowrap;">{{q.cost}}</td>
+<td class="r" style="white-space:nowrap;"><span style="{{q.moqStyle}}">{{q.moq}}</span><div style="font-size:12px;color:#9A3412;">{{q.moqNote}}</div></td>
+<td style="white-space:nowrap;">{{q.lead}}</td>
+<td class="r" style="white-space:nowrap;">{{q.sample}}</td>
+<td style="text-align:right;"><button type="button" class="use" aria-pressed="{{q.on}}" onClick="{{q.pick}}">{{q.useText}}</button></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<p style="margin:0;padding:12px 16px 16px;font-size:13px;color:#5A6475;">{{quoteNote}}</p>
+</sc-if>
+<sc-if value="{{noQuotes}}" hint-placeholder-val="{{false}}">
+<div style="padding:4px 16px 20px;display:flex;flex-direction:column;gap:12px;align-items:flex-start;">
+<p style="margin:0;font-size:14px;color:#3B4556;line-height:1.5;">{{emptyText}}</p>
+<sc-if value="{{canStart}}" hint-placeholder-val="{{true}}"><button type="button" class="btn btn-primary" onClick="{{startFinding}}">Start finding suppliers</button></sc-if>
+</div>
+</sc-if>
+</section>
+
+<sc-if value="{{hasQuotes}}" hint-placeholder-val="{{true}}">
+<section class="card" style="padding:18px;display:flex;flex-direction:column;gap:14px;" aria-labelledby="cp-h">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><h2 id="cp-h" style="margin:0;font:700 17px Lexend,sans-serif;">Customer price</h2><span class="pill pill-ex">Example</span></div>
+<div class="staff">
+<span class="k" style="color:#7C2D12;">Staff only: cost and margin never shown to the customer</span>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;align-items:end;">
+<div><div class="k" style="color:#5C4A1E;">Supplier cost</div><div style="font:700 18px Lexend,sans-serif;margin-top:4px;">{{costCny}}</div><div style="font-size:13px;color:#5C4A1E;margin-top:2px;">{{costUsd}} at example rate 1 US$ = 7.10 CNY</div></div>
+<div><div class="k" style="color:#5C4A1E;" id="m-l">Margin</div><div style="display:flex;gap:8px;align-items:center;margin-top:4px;" role="group" aria-labelledby="m-l"><button type="button" class="step" onClick="{{dec}}" aria-label="Lower margin by 1 point">−</button><strong style="min-width:52px;text-align:center;font:800 20px Lexend,sans-serif;" aria-live="polite">{{marginText}}</strong><button type="button" class="step" onClick="{{inc}}" aria-label="Raise margin by 1 point">+</button></div></div>
+<div><div class="k" style="color:#5C4A1E;">Margin amount</div><div style="font:700 18px Lexend,sans-serif;margin-top:4px;">{{marginAmt}}</div><div style="font-size:13px;color:#5C4A1E;margin-top:2px;">on {{selQty}}</div></div>
+</div>
+<div style="font-size:13px;color:#5C4A1E;">Quote used: <strong>{{quoteName}}</strong> · minimum margin [N]%, 15% used in this example · amount limit [US$ limit], US$ 20,000 used in this example</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;">
+<div><div class="k">Customer unit price</div><div class="num">{{unitUsd}}</div></div>
+<div><div class="k">Quantity</div><div class="num">{{selQtyNum}}</div></div>
+<div><div class="k">Customer total</div><div class="num">{{totalUsd}}</div></div>
+</div>
+<p style="margin:0;font-size:13px;color:#5A6475;">The customer sees only the unit price and the total.</p>
+<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;border-top:1px solid #EEF0F4;padding-top:14px;">
+<span class="{{ruleCls}}">{{ruleText}}</span>
+<sc-if value="{{canAct}}" hint-placeholder-val="{{true}}">
+<div style="display:flex;gap:10px;flex-wrap:wrap;"><button type="button" class="btn btn-ghost">Save draft</button><button type="button" class="btn btn-primary" onClick="{{doAct}}">{{actLabel}}</button></div>
+</sc-if>
+</div>
+<sc-if value="{{showDoneNote}}" hint-placeholder-val="{{false}}">
+<div style="display:flex;gap:10px;align-items:flex-start;background:#F2F7FE;border:1px solid #BFD4F5;border-radius:12px;padding:12px;font-size:14px;color:#11133C;line-height:1.5;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:#1E58B0;"><path d="M12 8v4M12 16h.01M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z"></path></svg><span>{{doneNote}}</span></div>
+</sc-if>
+</section>
+</sc-if>
+</div>
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1750}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { sel: 'SR-0118', st: 'All', pick: {}, m: {}, act: {} }; }
+  renderVals() {
+    const FX = 7.10, MIN = 15, LIMIT = 20000;
+    const fmt = (n) => 'US$ ' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const reqs = [
+      { id: 'SR-0118', title: 'Bamboo cutlery set', qty: 5000, c: 'Nova Breeze', svc: 'Sourcing', office: 'Shenzhen', age: 'Quotes in 1 d', asked: 'Nov 4', status: 'Quotes in', img: '', note: 'Fork, knife and spoon in a kraft sleeve. Logo on the sleeve later.', m: 25, pick: 0,
+        quotes: [
+          { name: 'Supplier A · Yangjiang', v: true, cny: 6.80, moq: 3000, lead: '25 days', sample: 'CNY 80.00' },
+          { name: 'Supplier B · Ningbo', v: true, cny: 7.40, moq: 5000, lead: '20 days', sample: 'CNY 50.00' },
+          { name: 'Supplier C · Dongguan', v: false, cny: 6.20, moq: 10000, lead: '35 days', sample: 'CNY 120.00' }
+        ], quoteNote: 'Three quotes in. Supplier C is not checked by Octopus yet.' },
+      { id: 'SR-0121', title: 'Neck fan G1000, black', qty: 1000, c: 'Nova Breeze', svc: 'Make My Brand · MB-0051', office: 'Shenzhen', age: 'Open 2 d', asked: 'Nov 5', status: 'Finding suppliers', img: 'assets/G1000.jpg', note: 'Pad print, 1 colour, on the band. Keep as stock in the Octopus warehouse.', m: 12, pick: 0,
+        quotes: [
+          { name: 'Supplier D · Shenzhen', v: true, cny: 39.87, moq: 3000, lead: '[N] days', sample: 'CNY 90.00' }
+        ], quoteNote: 'One quote in, two more suppliers asked. MOQ with branding is above the 1,000 pcs asked.' },
+      { id: 'SR-0122', title: 'Aroma diffuser S7', qty: 2000, c: '[Customer B]', svc: 'Sourcing', office: 'Foshan', age: 'Sent 1 d', asked: 'Nov 3', status: 'Sent to customer', lock: 'sent', img: 'assets/S7.jpg', note: 'White and wood colours, 1,000 each.', m: 22, pick: 0,
+        quotes: [
+          { name: 'Supplier E · Foshan', v: true, cny: 24.50, moq: 1000, lead: '18 days', sample: 'CNY 60.00' },
+          { name: 'Supplier F · Foshan', v: true, cny: 26.00, moq: 500, lead: '15 days', sample: 'CNY 60.00' }
+        ], quoteNote: 'Two quotes in. Price released on Nov 6.' },
+      { id: 'SR-0124', title: 'Silicone food storage bags', qty: 10000, c: '[Customer C]', svc: 'Sourcing', office: 'Ningbo', age: 'New 4 h', asked: 'Nov 7', status: 'New', img: '', note: 'Three sizes, food-safe, sold in sets of 4.', m: 25, pick: 0, quotes: [] },
+      { id: 'SR-0115', title: 'Mini fan MINI1', qty: 3000, c: '[Customer C]', svc: 'Sourcing', office: 'Dongguan', age: 'Ordered 4 d', asked: 'Oct 27', status: 'Ordered', lock: 'ordered', img: 'assets/MINI1.jpg', note: 'Pink and mint, 1,500 each.', m: 20, pick: 0,
+        quotes: [
+          { name: 'Supplier G · Dongguan', v: true, cny: 18.20, moq: 1000, lead: '20 days', sample: 'CNY 40.00' }
+        ], quoteNote: 'Customer accepted. Purchase order [PO number] placed.' }
+    ];
+    const s = this.state;
+    const PILL = { 'New': 'pill pill-soft', 'Finding suppliers': 'pill pill-grey', 'Quotes in': 'pill pill-you', 'Sent to customer': 'pill pill-grey', 'Ordered': 'pill pill-live' };
+    const statusOf = (r) => s.act[r.id] === 'released' ? 'Sent to customer' : s.act[r.id] === 'finding' ? 'Finding suppliers' : r.status;
+    const statuses = ['All', 'New', 'Finding suppliers', 'Quotes in', 'Sent to customer', 'Ordered'];
+    const filters = statuses.map((x) => {
+      const n = reqs.filter((r) => x === 'All' || statusOf(r) === x).length;
+      return { label: x + ' · ' + n, pressed: s.st === x ? 'true' : 'false', pick: () => this.setState({ st: x }) };
+    });
+    const list = reqs.filter((r) => s.st === 'All' || statusOf(r) === s.st).map((r) => {
+      const on = r.id === s.sel;
+      return {
+        id: r.id, title: r.title + ', ' + r.qty.toLocaleString('en-US') + ' pcs', status: statusOf(r), pillCls: PILL[statusOf(r)],
+        meta: r.c + ' · ' + r.office + ' · ' + r.age, pressed: on ? 'true' : 'false',
+        pick: () => this.setState({ sel: r.id }),
+        style: 'display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;text-align:left;cursor:pointer;font:inherit;border-radius:12px;min-height:44px;' + (on ? 'border:2px solid #2A6FD6;background:#F2F7FE;padding:11px 13px;' : 'border:1px solid #E2E5EA;background:#FFFFFF;padding:12px 14px;')
+      };
+    });
+    const sel = reqs.find((r) => r.id === s.sel) || reqs[0];
+    const qi = s.pick[sel.id] !== undefined ? s.pick[sel.id] : sel.pick;
+    const m = s.m[sel.id] !== undefined ? s.m[sel.id] : sel.m;
+    const act = s.act[sel.id];
+    const hasQuotes = sel.quotes.length > 0;
+    const quotes = sel.quotes.map((q, i) => ({
+      name: q.name, vCls: q.v ? 'pill pill-live' : 'pill pill-grey', vText: q.v ? 'Verified' : 'Not verified',
+      cost: 'CNY ' + q.cny.toFixed(2), moq: q.moq.toLocaleString('en-US'),
+      moqStyle: q.moq > sel.qty ? 'font-weight:700;color:#9A3412;' : 'font-weight:600;',
+      moqNote: q.moq > sel.qty ? 'above request' : '',
+      lead: q.lead, sample: q.sample, on: i === qi ? 'true' : 'false', useText: i === qi ? 'Selected' : 'Use',
+      pick: () => this.setState({ pick: Object.assign({}, s.pick, { [sel.id]: i }) })
+    }));
+    const q = hasQuotes ? sel.quotes[qi] : { name: '', cny: 0 };
+    const costU = q.cny / FX;
+    const unit = Math.round(costU * (1 + m / 100) * 100) / 100;
+    const total = unit * sel.qty;
+    const below = m < MIN, over = total > LIMIT, needs = below || over;
+    const locked = sel.lock || act === 'released' || act === 'asked';
+    const setM = (v) => this.setState({ m: Object.assign({}, s.m, { [sel.id]: Math.max(0, Math.min(60, v)) }) });
+    let doneNote = '';
+    if (sel.lock === 'sent') doneNote = 'Quote released to the customer on Nov 6. Waiting for their reply.';
+    if (sel.lock === 'ordered') doneNote = 'Ordered. Purchase order [PO number] with ' + q.name + '. Quality check before it ships.';
+    if (act === 'released') doneNote = 'Quote released. The customer now sees ' + fmt(unit) + ' per unit, ' + fmt(total) + ' in total.';
+    if (act === 'asked') doneNote = 'Sent to the owner for approval. You can release it once it is approved.';
+    const ruleText = over ? 'Total is over the amount limit: owner approves' : below ? 'Margin is below the minimum: owner approves' : 'Within your limits: you can release';
+    const ownStatus = statusOf(sel);
+    return {
+      total: String(reqs.length), filters, list, listEmpty: list.length === 0,
+      hasImg: !!sel.img, noImg: !sel.img, img: sel.img || 'assets/octopus-logo.png', imgAlt: sel.title,
+      selId: sel.id, selStatus: ownStatus, selPill: PILL[ownStatus], withOwner: act === 'asked',
+      selTitle: sel.title + ', ' + sel.qty.toLocaleString('en-US') + ' pcs', selSub: sel.c + ' · ' + sel.svc + ' · ' + sel.age,
+      selCustomer: sel.c, selSvc: sel.svc, selQty: sel.qty.toLocaleString('en-US') + ' pcs', selQtyNum: sel.qty.toLocaleString('en-US'),
+      selOffice: sel.office, selAsked: sel.asked, selNote: sel.note,
+      hasQuotes, noQuotes: !hasQuotes, quotes, quoteNote: sel.quoteNote || '',
+      emptyText: act === 'finding' ? 'Suppliers asked from the ' + sel.office + ' office. Quotes appear here as they come in.' : 'No supplier quotes yet. Start finding suppliers from the ' + sel.office + ' office.',
+      canStart: !hasQuotes && act !== 'finding',
+      startFinding: () => this.setState({ act: Object.assign({}, s.act, { [sel.id]: 'finding' }) }),
+      quoteName: q.name, costCny: 'CNY ' + q.cny.toFixed(2) + ' per unit', costUsd: fmt(costU),
+      marginText: m + '%', marginAmt: fmt(total - costU * sel.qty),
+      inc: () => setM(m + 1), dec: () => setM(m - 1),
+      unitUsd: fmt(unit), totalUsd: fmt(total),
+      ruleCls: needs ? 'pill pill-you' : 'pill pill-live', ruleText,
+      canAct: !locked, actLabel: needs ? 'Ask for approval' : 'Release quote to customer',
+      doAct: () => this.setState({ act: Object.assign({}, s.act, { [sel.id]: needs ? 'asked' : 'released' }) }),
+      showDoneNote: !!doneNote, doneNote
+    };
+  }
+}
+</script>
+</body>
+</html>

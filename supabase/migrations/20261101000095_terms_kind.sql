@@ -25,6 +25,12 @@ begin
 end $$;
 
 -- repair: orders created since the Group Buy terms were published that point at them (non-pool orders) → general terms
-update orders o set terms_version_id = (select id from terms_versions where kind = 'general' and status = 'published' order by published_at desc limit 1)
-where o.pool_id is null and o.terms_version_id in (select id from terms_versions where kind = 'group_buy');
+-- (replay fix 7 Nov 2026: orders.pool_id is added in migration 100; on a fresh database there is nothing to repair)
+do $repair$
+begin
+  if exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'orders' and column_name = 'pool_id') then
+    execute $q$update orders o set terms_version_id = (select id from terms_versions where kind = 'general' and status = 'published' order by published_at desc limit 1)
+      where o.pool_id is null and o.terms_version_id in (select id from terms_versions where kind = 'group_buy')$q$;
+  end if;
+end $repair$;
 

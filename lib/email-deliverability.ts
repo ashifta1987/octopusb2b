@@ -50,3 +50,4 @@ export async function getMailDeliverability(): Promise<MailCheck[]> {
   add(process.env.EMAIL_FROM ?? 'support@octopusb2b.com', 'Outgoing email “from” / reply-to');
   return Promise.all([...uses.entries()].map(async ([domain, by]) => ({ domain, ...(await checkMx(domain)), usedBy: [...by] })));
 }
+

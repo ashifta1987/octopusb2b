@@ -23,3 +23,4 @@ export const supplierApplySchema = z.object({
   notes: opt(z.string().trim().max(4000)),
 });
 export type SupplierApplyValues = z.input<typeof supplierApplySchema>;
+

@@ -98,3 +98,4 @@ drop policy if exists pool_alert_signups_staff on pool_alert_signups;
 create policy pool_alert_signups_staff on pool_alert_signups for select to authenticated using (can('products','view'));
 revoke all on pool_alert_signups from anon;
 grant select on pool_alert_signups to authenticated;
+

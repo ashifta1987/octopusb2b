@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Warehouse control tower</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6F8}
+*{box-sizing:border-box}
+a{color:#11133C;text-decoration:none}a:hover{color:#2A6FD6}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:10px;font:600 14px/1 Inter,system-ui,sans-serif;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+.btn-primary{background:#2A6FD6;color:#FFFFFF}.btn-primary:hover{background:#1E58B0;color:#FFFFFF}
+.btn-dark{background:#11133C;color:#FFFFFF}.btn-dark:hover{background:#262A6B;color:#FFFFFF}
+.btn-ghost{background:#FFFFFF;color:#11133C;border-color:#C5CCD6}.btn-ghost:hover{border-color:#11133C}
+.btn-sm{min-height:38px;padding:0 12px;font-size:13px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid #1D4ED8;outline-offset:2px}
+.k{font:600 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#5A6475;text-transform:uppercase}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.pill-ex{background:#FEF3C7;color:#92400E}.pill-live{background:#DCFCE7;color:#15803D}.pill-soft{background:#E6EFFC;color:#1E58B0}.pill-you{background:#FFEDD5;color:#9A3412}.pill-grey{background:#EEF0F4;color:#3B4556}
+.card{background:#FFFFFF;border:1px solid #E2E5EA;border-radius:14px}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:0 24px}
+.tabs a{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 14px;font:600 14px Inter,sans-serif;color:#3B4556;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs a:hover{color:#11133C}
+.tabs a.on{color:#11133C;border-bottom-color:#2A6FD6}
+.tabs .off{font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;color:#5A6475;background:#EEF0F4;border-radius:99px;padding:3px 7px}
+.side{flex:1 1 236px;max-width:100%;background:#FFFFFF;border-right:1px solid #E2E5EA;padding:18px 12px;display:flex;flex-direction:column;gap:1px}
+.side a{display:flex;align-items:center;min-height:40px;padding:0 12px;border-radius:9px;color:#3B4556;font:500 14px Inter,sans-serif}
+.side a:hover{background:#F0F2F6;color:#11133C}
+.side a.on{background:#11133C;color:#FFFFFF;font-weight:600}
+.side .grp{font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;padding:14px 12px 6px}
+.act{display:flex;gap:14px;align-items:center;padding:16px;border-top:1px solid #EEF0F4}
+.ico{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none}
+.chip{min-height:38px;padding:0 14px;border-radius:999px;font:600 13px Inter,sans-serif;cursor:pointer;border:1px solid #C5CCD6;background:#FFFFFF;color:#11133C}
+.chip[aria-pressed="true"]{background:#11133C;border-color:#11133C;color:#FFFFFF}
+.num{font:800 24px/1.1 Lexend,sans-serif;color:#11133C}
+@media (max-width:760px){.side{flex-direction:row !important;overflow-x:auto;border-right:0 !important;border-bottom:1px solid #E2E5EA}.side .grp{display:none}.side a{flex:none}main{padding:20px 16px !important}.hdr form{order:3;flex-basis:100% !important}.tabs{padding:0 8px}}
+.atabs{display:flex;gap:4px;overflow-x:auto;padding:0 24px;background:#FFFFFF;border-bottom:1px solid #E2E5EA}
+.atabs a{display:inline-flex;align-items:center;min-height:48px;padding:0 14px;font:600 14px Inter,sans-serif;color:#3B4556;border-bottom:3px solid transparent;white-space:nowrap}
+.atabs a:hover{color:#11133C}.atabs a.on{color:#11133C;border-bottom-color:#2A6FD6}
+.side a svg{margin-right:10px;flex:none}
+.gh{display:grid;gap:12px;padding:12px 18px;background:#FAFBFC;border-bottom:1px solid #EEF0F4;font:600 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;align-items:center}
+.gr{display:grid;gap:12px;padding:12px 18px;border-bottom:1px solid #EEF0F4;font-size:14px;align-items:center}
+.mono{font-family:'IBM Plex Mono',monospace}
+.bar{height:8px;border-radius:4px;background:#EEF0F4;overflow:hidden}
+@media (max-width:760px){.side-foot{display:none !important}}
+</style>
+</helmet>
+<div style="font-family:Inter,system-ui,sans-serif;color:#11133C;background:#F5F6F8;min-height:100vh;">
+
+<header style="background:#11133C;">
+<div class="hdr" style="padding:12px 24px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;">
+<a href="AdminHome.dc.html" style="display:inline-flex;flex:none;"><img src="assets/octopus-logo-white.png" alt="Octopus B2B" style="height:38px;width:auto;display:block;"></a>
+<span style="font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#11133C;background:#FFFFFF;border-radius:99px;padding:5px 10px;">Admin · staff only</span>
+<form role="search" style="flex:1 1 320px;display:flex;min-width:0;max-width:520px;border-radius:10px;overflow:hidden;background:#FFFFFF;">
+<label for="aq" class="sr">Search customers, orders, requests, SKUs</label>
+<input id="aq" type="search" placeholder="Customer, order, request, SKU or bin" style="flex:1;min-width:0;border:0;padding:0 14px;min-height:44px;font:400 15px Inter,sans-serif;">
+</form>
+<span class="pill pill-ex">Prototype · example data</span>
+<span style="margin-left:auto;display:inline-flex;gap:10px;align-items:center;"><span style="width:38px;height:38px;border-radius:99px;background:#2A6FD6;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font:600 14px Inter;">LM</span><span style="display:flex;flex-direction:column;gap:2px;"><span style="font-weight:600;font-size:14px;color:#FFFFFF;">[Manager name]</span><span style="font-size:12px;color:#C9CFE0;">Account manager · Shenzhen</span></span></span>
+</div>
+</header>
+<nav class="atabs" aria-label="Admin sections">
+<a href="AdminHome.dc.html">Work queue</a>
+<a href="AdminHome.dc.html">Customers</a>
+<a href="AdminPurchase.dc.html">Purchase desk</a>
+<a href="AdminHome.dc.html">Dropship operations</a>
+<a class="on" href="AdminWarehouse.dc.html" aria-current="page">Warehouse</a>
+<a href="AdminHome.dc.html">Make My Brand desk</a>
+<a href="AdminHome.dc.html">Integrations and audit</a>
+</nav>
+
+<div style="display:flex;flex-wrap:wrap;">
+<nav class="side" aria-label="Warehouse">
+<span class="grp">Warehouse · WH-CN01</span>
+<a class="on" href="AdminWarehouse.dc.html" aria-current="page"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>Control tower</a>
+<a href="AdminWarehouse.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M12 3v11M7 9l5 5 5-5"></path><path d="M4 16v4h16v-4"></path></svg>Inbound and receiving</a>
+<a href="AdminWarehouse.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3 7l9-4 9 4-9 4-9-4z"></path><path d="M3 7v10l9 4 9-4V7"></path><path d="M12 11v10"></path></svg>Inventory</a>
+<a href="AdminWarehouse.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M2 6h12v10H2z"></path><path d="M14 10h4l3 3v3h-7"></path><circle cx="6" cy="18" r="2"></circle><circle cx="17" cy="18" r="2"></circle></svg>Fulfilment and packing</a>
+<a href="Scanner.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6v12M7.5 6v12M10.5 6v12M14 6v12M17 6v12M20 6v12"></path></svg>Scanner</a>
+<span class="grp">Business</span>
+<a href="AdminWarehouse.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"></path><path d="M9 8h6M9 12h6"></path></svg>Clients and billing</a>
+<a href="AdminWarehouse.dc.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M9 7H7a5 5 0 0 0 0 10h2"></path><path d="M15 7h2a5 5 0 0 1 0 10h-2"></path><path d="M8 12h8"></path></svg>Integrations</a>
+<div class="side-foot" style="margin-top:auto;padding:18px 12px 4px;display:flex;flex-direction:column;gap:8px;font-size:13px;color:#3B4556;">
+<span class="k">Connected sections</span>
+<span style="display:flex;align-items:center;gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:#15803D;"></span>Dropshipping · live</span>
+<span style="display:flex;align-items:center;gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:#15803D;"></span>Make My Brand · live</span>
+<span style="display:flex;align-items:center;gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:#15803D;"></span>Sourcing (bulk orders) · live</span>
+<span style="display:flex;align-items:center;gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:#15803D;"></span>14 3PL clients</span>
+</div>
+</nav>
+
+<main style="flex:999 1 560px;min-width:0;padding:28px 32px 56px;display:flex;flex-direction:column;gap:22px;">
+<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;">
+<div><span class="k" style="color:#1E58B0;">Warehouse · WH-CN01</span><h1 style="margin:2px 0 6px;font:800 30px/1.15 Lexend,sans-serif;">Control tower</h1><p style="margin:0;font-size:14px;color:#5A6475;">Saturday 7 Nov · Shift B · 20:03 China time</p></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap;"><a href="AdminWarehouse.dc.html" class="btn btn-ghost">Create inbound notice</a><button type="button" class="btn btn-primary" onClick="{{release}}">{{releaseLabel}}</button></div>
+</div>
+
+<section aria-label="Today at a glance" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;">
+<sc-for list="{{kpis}}" as="m" hint-placeholder-count="6">
+<div class="card" style="padding:16px 18px;display:flex;flex-direction:column;gap:8px;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><span class="k">{{m.label}}</span><span class="pill pill-ex">Example</span></div>
+<span class="num" style="font-variant-numeric:tabular-nums;">{{m.value}}</span>
+<span style="{{m.noteStyle}}">{{m.note}}</span>
+</div>
+</sc-for>
+</section>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:22px;">
+<section class="card" style="padding:18px 20px;display:flex;flex-direction:column;gap:16px;" aria-labelledby="ch-h">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;"><h2 id="ch-h" style="margin:0;font:700 18px Lexend,sans-serif;">Outbound by section</h2><span style="font-size:13px;color:#5A6475;">Orders due today · shipped so far</span></div>
+<sc-for list="{{channels}}" as="c" hint-placeholder-count="4">
+<div style="display:flex;flex-direction:column;gap:8px;">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+<div style="display:flex;gap:10px;align-items:flex-start;">
+<span style="{{c.dot}}"></span>
+<div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:15px;font-weight:600;">{{c.name}}</span><span style="font-size:13px;color:#5A6475;">{{c.sub}}</span></div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:none;"><span style="font:700 18px Lexend,sans-serif;font-variant-numeric:tabular-nums;">{{c.orders}}</span><span style="font-size:13px;color:#5A6475;">{{c.shipped}} shipped</span></div>
+</div>
+<div class="bar" role="img" aria-label="{{c.aria}}"><div style="{{c.fill}}"></div></div>
+</div>
+</sc-for>
+</section>
+
+<section class="card" style="padding:18px 20px 8px;display:flex;flex-direction:column;gap:4px;" aria-labelledby="co-h">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;padding-bottom:8px;"><h2 id="co-h" style="margin:0;font:700 18px Lexend,sans-serif;">Carrier cut-offs</h2><span style="font-size:13px;color:#5A6475;">Parcels ready / booked</span></div>
+<sc-for list="{{cutoffs}}" as="t" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:minmax(0,1.4fr) 84px minmax(0,1fr) 140px;gap:12px;align-items:center;padding:11px 0;border-top:1px solid #EEF0F4;">
+<span style="font-size:14px;font-weight:600;">{{t.carrier}}</span>
+<span class="mono" style="font-size:14px;">{{t.time}}</span>
+<span style="font-size:13px;color:#5A6475;font-variant-numeric:tabular-nums;">{{t.ready}}</span>
+<span class="{{t.pillClass}}" style="justify-self:end;">{{t.left}}</span>
+</div>
+</sc-for>
+</section>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:22px;align-items:start;">
+<section class="card" style="overflow:hidden;min-width:0;grid-column:1/-1;" aria-labelledby="ex-h">
+<div style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+<h2 id="ex-h" style="margin:0;font:700 18px Lexend,sans-serif;display:flex;gap:10px;align-items:center;">Exceptions <span class="pill pill-you">{{openCount}} open</span></h2>
+<a href="AdminWarehouse.dc.html" style="color:#1E58B0;font-weight:600;font-size:14px;">View all →</a>
+</div>
+<div style="overflow-x:auto;">
+<div role="table" aria-label="Exceptions" style="min-width:700px;">
+<div role="row" class="gh" style="grid-template-columns:112px 150px minmax(0,1fr) 56px 112px;"><span role="columnheader">Reference</span><span role="columnheader">Section</span><span role="columnheader">Issue</span><span role="columnheader">Age</span><span role="columnheader"><span class="sr">Action</span></span></div>
+<sc-for list="{{exceptions}}" as="e" hint-placeholder-count="6">
+<div role="row" class="gr" style="grid-template-columns:112px 150px minmax(0,1fr) 56px 112px;">
+<span role="cell" class="mono" style="font-size:13px;font-weight:600;">{{e.ref}}</span>
+<span role="cell"><span class="pill pill-grey"><span style="{{e.dot}}"></span>{{e.channel}}</span></span>
+<span role="cell">{{e.issue}}</span>
+<span role="cell" style="color:#5A6475;font-variant-numeric:tabular-nums;">{{e.age}}</span>
+<span role="cell" style="justify-self:end;">
+<sc-if value="{{e.open}}" hint-placeholder-val="{{true}}"><button type="button" class="btn btn-ghost btn-sm" style="min-height:44px;" onClick="{{e.take}}">{{e.action}}</button></sc-if>
+<sc-if value="{{e.closed}}" hint-placeholder-val="{{false}}"><span class="pill pill-live">Assigned</span></sc-if>
+</span>
+</div>
+</sc-for>
+</div>
+</div>
+</section>
+
+<section class="card" style="padding:18px 20px;display:flex;flex-direction:column;gap:16px;" aria-labelledby="zn-h">
+<h2 id="zn-h" style="margin:0;font:700 18px Lexend,sans-serif;">Zones and docks</h2>
+<div style="display:flex;flex-direction:column;gap:12px;">
+<sc-for list="{{zones}}" as="z" hint-placeholder-count="4">
+<div style="display:flex;flex-direction:column;gap:6px;">
+<div style="display:flex;justify-content:space-between;gap:10px;font-size:14px;"><span>{{z.name}}</span><span style="font-variant-numeric:tabular-nums;color:#5A6475;">{{z.pct}} full</span></div>
+<div class="bar" role="img" aria-label="{{z.aria}}"><div style="{{z.fill}}"></div></div>
+</div>
+</sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
+<sc-for list="{{docks}}" as="d" hint-placeholder-count="6">
+<div style="{{d.box}}">
+<span style="font-size:13px;font-weight:700;">{{d.name}}</span>
+<span style="{{d.textStyle}}">{{d.status}}</span>
+</div>
+</sc-for>
+</div>
+</section>
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1620}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { taken: {}, waves: 6 }; }
+  renderVals() {
+    const st = this.state;
+    const COL = { drop: '#2A6FD6', brand: '#9A3412', tpl: '#15803D', src: '#11133C', inb: '#5A6475' };
+    const NAME = { drop: 'Dropshipping', brand: 'Make My Brand', tpl: '3PL clients', src: 'Sourcing (bulk orders)', inb: 'Inbound' };
+    const dot = (c) => 'width:8px;height:8px;border-radius:50%;flex:none;background:' + c;
+    const fill = (pct, c) => 'height:8px;border-radius:4px;width:' + pct + ';background:' + c;
+    const note = (c) => 'font-size:13px;color:' + c;
+
+    const ch = (k, sub, orders, shipped) => ({ name: NAME[k], sub, orders, shipped, dot: 'width:10px;height:10px;border-radius:3px;margin-top:6px;flex:none;background:' + COL[k], fill: fill(shipped, COL[k]), aria: NAME[k] + ': ' + shipped + ' of ' + orders + ' orders shipped' });
+    const co = (carrier, time, ready, left, p) => ({ carrier, time, ready, left, pillClass: 'pill ' + p });
+
+    const rawEx = [
+      ['DS-104882', 'drop', 'Short pick: bin A-12-03 shows 0, system says 6', '42m', 'Recount'],
+      ['LH-55120', 'tpl', 'Address not verified (Riyadh), carrier rejected label', '1h 05m', 'Fix address'],
+      ['SR-2291', 'src', 'Carton marks missing for 4 of 18 cartons', '1h 20m', 'Print marks'],
+      ['DS-104901', 'drop', 'Weight 0.42 kg vs expected 0.31 kg at pack station 3', '18m', 'Re-weigh'],
+      ['MB-0038', 'brand', 'Branded inserts not found for 120 units before packing', '50m', 'Check stock'],
+      ['IN-0231', 'inb', 'Over-receipt +40 units on MINI1 (Nova Breeze), customer asked to choose', '35m', 'Review']
+    ];
+    const exceptions = rawEx.map((e) => {
+      const done = !!st.taken[e[0]];
+      return { ref: e[0], channel: NAME[e[1]].replace(' (bulk orders)', ''), dot: dot(COL[e[1]]), issue: e[2], age: e[3], action: e[4], open: !done, closed: done, take: () => this.setState({ taken: { ...st.taken, [e[0]]: true } }) };
+    });
+    const openCount = 17 - Object.keys(st.taken).length;
+
+    const zone = (name, pct, c) => ({ name, pct, fill: fill(pct, c), aria: name + ', ' + pct + ' full' });
+    const TONE = {
+      busy: { box: 'background:#FFF7ED;border:1px solid #FED7AA', text: 'color:#9A3412' },
+      load: { box: 'background:#E6EFFC;border:1px solid #BFD3F5', text: 'color:#1E58B0' },
+      free: { box: 'background:#FFFFFF;border:1px solid #E2E5EA', text: 'color:#15803D' }
+    };
+    const dock = (name, status, t) => ({ name, status, box: 'border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:4px;' + TONE[t].box, textStyle: 'font-size:13px;' + TONE[t].text });
+
+    return {
+      kpis: [
+        { label: 'Orders due today', value: '1,284', note: 'All sections', noteStyle: note('#5A6475') },
+        { label: 'Shipped', value: '812', note: '63% · on pace', noteStyle: note('#15803D') },
+        { label: 'Picking now', value: '214', note: st.waves + ' waves · 18 pickers', noteStyle: note('#5A6475') },
+        { label: 'Inbound notices', value: '9', note: '3 at dock now', noteStyle: note('#5A6475') },
+        { label: 'Units on hand', value: '486,210', note: '4,102 SKUs · 15 owners', noteStyle: note('#5A6475') },
+        { label: 'Exceptions', value: String(openCount), note: '5 older than 1 h', noteStyle: note('#B42318') }
+      ],
+      channels: [
+        ch('drop', 'Customer stores connected to Dropshipping · single parcels', '742', '61%'),
+        ch('tpl', '14 client brands storing and shipping from WH-CN01', '504', '70%'),
+        ch('src', 'Bulk and project orders from Sourcing · cartons and pallets', '26', '45%'),
+        ch('brand', 'Make My Brand production lots · cartons to customer stock', '12', '33%')
+      ],
+      cutoffs: [
+        co('YunExpress', '21:00', '212 / 260 ready', '57 min left', 'pill-you'),
+        co('4PX', '22:30', '148 / 190 ready', '2 h 27 min', 'pill-grey'),
+        co('Cainiao', '23:00', '96 / 151 ready', '2 h 57 min', 'pill-grey'),
+        co('DHL eCommerce', '18:00', '84 / 84 ready', 'Collected', 'pill-live'),
+        co('Sea LCL · Sourcing', 'Mon 10:00', '22 / 38 pallets', 'Container booked', 'pill-soft')
+      ],
+      exceptions, openCount: String(openCount),
+      zones: [
+        zone('A · Fast movers (Dropshipping)', '82%', COL.drop),
+        zone('B · Bulk and pallets (Sourcing, Make My Brand)', '64%', COL.src),
+        zone('C · 3PL client stock', '71%', COL.tpl),
+        zone('D · Returns and QC', '38%', COL.inb)
+      ],
+      docks: [
+        dock('Dock 1', 'Unloading · IN-0237', 'busy'),
+        dock('Dock 2', 'Unloading · IN-0239', 'busy'),
+        dock('Dock 3', 'Free', 'free'),
+        dock('Dock 4', 'Loading · YunExpress', 'load'),
+        dock('Dock 5', 'Loading · Sourcing pallets', 'load'),
+        dock('Dock 6', 'Free', 'free')
+      ],
+      releaseLabel: 'Release next wave',
+      release: () => this.setState({ waves: st.waves + 1 })
+    };
+  }
+}
+</script>
+</body>
+</html>

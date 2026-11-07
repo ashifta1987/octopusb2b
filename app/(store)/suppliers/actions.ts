@@ -88,3 +88,4 @@ async function sendEmails(r: { id: string; reference: string }, v: ReturnType<ty
     }, { template: 'supplier_application.staff' });
   }
 }
+

@@ -90,3 +90,4 @@ export function ApplyForm({ categories }: { categories: string[] }) {
     </form>
   );
 }
+

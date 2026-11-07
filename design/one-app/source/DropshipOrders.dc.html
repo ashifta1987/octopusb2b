@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dropshipping orders</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6F8}
+*{box-sizing:border-box}
+a{color:#11133C;text-decoration:none}a:hover{color:#2A6FD6}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:10px;font:600 14px/1 Inter,system-ui,sans-serif;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+.btn-primary{background:#2A6FD6;color:#FFFFFF}.btn-primary:hover{background:#1E58B0;color:#FFFFFF}
+.btn-dark{background:#11133C;color:#FFFFFF}.btn-dark:hover{background:#262A6B;color:#FFFFFF}
+.btn-ghost{background:#FFFFFF;color:#11133C;border-color:#C5CCD6}.btn-ghost:hover{border-color:#11133C}
+.btn-sm{min-height:38px;padding:0 12px;font-size:13px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid #1D4ED8;outline-offset:2px}
+.k{font:600 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#5A6475;text-transform:uppercase}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.pill-ex{background:#FEF3C7;color:#92400E}.pill-live{background:#DCFCE7;color:#15803D}.pill-soft{background:#E6EFFC;color:#1E58B0}.pill-you{background:#FFEDD5;color:#9A3412}.pill-grey{background:#EEF0F4;color:#3B4556}
+.card{background:#FFFFFF;border:1px solid #E2E5EA;border-radius:14px}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:0 24px}
+.tabs a{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 14px;font:600 14px Inter,sans-serif;color:#3B4556;border-bottom:3px solid transparent;white-space:nowrap}
+.tabs a:hover{color:#11133C}
+.tabs a.on{color:#11133C;border-bottom-color:#2A6FD6}
+.tabs .off{font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;color:#5A6475;background:#EEF0F4;border-radius:99px;padding:3px 7px}
+.side{flex:1 1 236px;max-width:100%;background:#FFFFFF;border-right:1px solid #E2E5EA;padding:18px 12px;display:flex;flex-direction:column;gap:1px}
+.side a{display:flex;align-items:center;min-height:40px;padding:0 12px;border-radius:9px;color:#3B4556;font:500 14px Inter,sans-serif}
+.side a:hover{background:#F0F2F6;color:#11133C}
+.side a.on{background:#11133C;color:#FFFFFF;font-weight:600}
+.side .grp{font:600 10.5px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;padding:14px 12px 6px}
+.act{display:flex;gap:14px;align-items:center;padding:16px;border-top:1px solid #EEF0F4}
+.ico{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex:none}
+.chip{min-height:38px;padding:0 14px;border-radius:999px;font:600 13px Inter,sans-serif;cursor:pointer;border:1px solid #C5CCD6;background:#FFFFFF;color:#11133C}
+.chip[aria-pressed="true"]{background:#11133C;border-color:#11133C;color:#FFFFFF}
+.num{font:800 24px/1.1 Lexend,sans-serif;color:#11133C}
+@media (max-width:760px){.side{flex-direction:row !important;overflow-x:auto;border-right:0 !important;border-bottom:1px solid #E2E5EA}.side .grp{display:none}.side a{flex:none}main{padding:20px 16px !important}.hdr form{order:3;flex-basis:100% !important}.tabs{padding:0 8px}}
+</style>
+</helmet>
+<div style="font-family:Inter,system-ui,sans-serif;color:#11133C;background:#F5F6F8;min-height:100vh;">
+
+<header style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;">
+<div class="hdr" style="padding:12px 24px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;">
+<a href="Main.dc.html" style="display:inline-flex;flex:none;"><img src="assets/octopus-logo.png" alt="Octopus B2B" style="height:38px;width:auto;display:block;"></a>
+<form role="search" style="flex:1 1 360px;display:flex;min-width:0;max-width:560px;border:1.5px solid #11133C;border-radius:10px;overflow:hidden;">
+<label for="q" class="sr">Search orders, products, projects and stock</label>
+<input id="q" type="search" placeholder="Search orders, products, projects, stock" style="flex:1;min-width:0;border:0;padding:0 14px;min-height:44px;font:400 15px Inter,sans-serif;">
+</form>
+<span class="pill pill-ex" title="Numbers on this screen are examples">Prototype · example data</span>
+<span style="margin-left:auto;display:inline-flex;gap:14px;align-items:center;">
+<a href="Main.dc.html" style="display:flex;flex-direction:column;gap:2px;padding:6px 12px;border:1px solid #E2E5EA;border-radius:10px;"><span class="k">Wallet</span><span style="font:700 15px Lexend,sans-serif;">US$ 18.80</span></a>
+<a href="Main.dc.html" aria-label="Notifications, 5 new" style="position:relative;width:44px;height:44px;border-radius:10px;border:1px solid #E2E5EA;display:flex;align-items:center;justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"></path></svg><span style="position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:99px;background:#C2410C;"></span></a>
+<span style="display:inline-flex;gap:10px;align-items:center;"><span style="width:38px;height:38px;border-radius:99px;background:#11133C;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font:600 14px Inter;">AK</span><span style="display:flex;flex-direction:column;gap:2px;"><span style="font-weight:600;font-size:14px;">[Buyer name]</span><span style="font-size:12px;color:#5A6475;">Nova Breeze · Owner</span></span></span>
+</span>
+</div>
+<nav class="tabs" aria-label="Services">
+<a href="Main.dc.html">Home</a>
+<a href="Main.dc.html">Sourcing</a>
+<a class="on" href="Dropship.dc.html" aria-current="page">Dropshipping</a>
+<a href="Warehouse.dc.html">3PL warehouse</a>
+<a href="Brand.dc.html">Make My Brand</a>
+<a href="Main.dc.html">Wallet and invoices</a>
+</nav>
+</header>
+
+<div style="display:flex;flex-wrap:wrap;">
+<nav class="side" aria-label="Dropshipping">
+<span class="grp">Dropshipping</span>
+<a href="Dropship.dc.html">Dashboard</a>
+<a href="Dropship.dc.html">Stores</a>
+<a href="DropshipOrders.dc.html">Catalogue</a>
+<a href="DropshipOrders.dc.html">Import list</a>
+<a class="on" href="DropshipOrders.dc.html" aria-current="page">Orders</a>
+<span class="grp">Set-up</span>
+<a href="DropshipOrders.dc.html">Pricing rules</a>
+<a href="DropshipOrders.dc.html">Settings</a>
+</nav>
+
+<main style="flex:999 1 560px;min-width:0;padding:28px 32px 56px;display:flex;flex-direction:column;gap:22px;">
+<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between;">
+<div><span class="k" style="color:#1E58B0;">Dropshipping</span><h1 style="margin:2px 0 6px;font:800 30px/1.15 Lexend,sans-serif;">Orders</h1><p style="margin:0;font-size:14px;color:#5A6475;">Charged to your wallet after a 60-minute hold. Each shipping type ships its part separately.</p></div>
+<a href="DropshipOrders.dc.html" class="btn btn-ghost">Order settings</a>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start;">
+<section class="card" style="flex:3 1 560px;min-width:0;overflow:hidden;" aria-labelledby="list-h">
+<div style="padding:16px 16px 12px;display:flex;flex-direction:column;gap:12px;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;"><h2 id="list-h" style="margin:0;font:700 18px Lexend,sans-serif;">Order list</h2><span class="pill pill-ex">Example</span></div>
+<div role="group" aria-label="Filter orders" style="display:flex;gap:8px;flex-wrap:wrap;">
+<sc-for list="{{filters}}" as="f" hint-placeholder-count="5"><button type="button" class="chip" aria-pressed="{{f.pressed}}" onClick="{{f.pick}}">{{f.label}}</button></sc-for>
+</div>
+</div>
+<div style="overflow-x:auto;">
+<table style="width:100%;border-collapse:collapse;min-width:680px;">
+<thead><tr>
+<th scope="col" style="text-align:left;padding:12px 14px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;background:#FAFBFC;border-top:1px solid #EEF0F4;border-bottom:1px solid #EEF0F4;white-space:nowrap;">Order</th>
+<th scope="col" style="text-align:left;padding:12px 14px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;background:#FAFBFC;border-top:1px solid #EEF0F4;border-bottom:1px solid #EEF0F4;white-space:nowrap;">Date</th>
+<th scope="col" style="text-align:left;padding:12px 14px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;background:#FAFBFC;border-top:1px solid #EEF0F4;border-bottom:1px solid #EEF0F4;white-space:nowrap;">Store</th>
+<th scope="col" style="text-align:left;padding:12px 14px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;background:#FAFBFC;border-top:1px solid #EEF0F4;border-bottom:1px solid #EEF0F4;white-space:nowrap;">Shipping</th>
+<th scope="col" style="text-align:right;padding:12px 14px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;background:#FAFBFC;border-top:1px solid #EEF0F4;border-bottom:1px solid #EEF0F4;white-space:nowrap;">Your cost</th>
+<th scope="col" style="text-align:right;padding:12px 14px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;background:#FAFBFC;border-top:1px solid #EEF0F4;border-bottom:1px solid #EEF0F4;white-space:nowrap;">Profit</th>
+<th scope="col" style="text-align:left;padding:12px 14px;font:600 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;background:#FAFBFC;border-top:1px solid #EEF0F4;border-bottom:1px solid #EEF0F4;white-space:nowrap;">Status</th>
+</tr></thead>
+<tbody>
+<sc-for list="{{orders}}" as="o" hint-placeholder-count="7">
+<tr style="{{o.rowStyle}}" onClick="{{o.pick}}">
+<td style="padding:0 14px;height:52px;border-bottom:1px solid #EEF0F4;white-space:nowrap;"><button type="button" onClick="{{o.pick}}" aria-pressed="{{o.pressed}}" aria-label="{{o.aria}}" style="background:none;border:0;padding:0;cursor:pointer;min-height:44px;display:inline-flex;align-items:center;font:700 14px Inter,sans-serif;color:#1E58B0;">{{o.id}}</button></td>
+<td style="padding:0 14px;height:52px;border-bottom:1px solid #EEF0F4;font-size:14px;white-space:nowrap;color:#3B4556;">{{o.date}}</td>
+<td style="padding:0 14px;height:52px;border-bottom:1px solid #EEF0F4;font-size:14px;white-space:nowrap;">{{o.store}}</td>
+<td style="padding:0 14px;height:52px;border-bottom:1px solid #EEF0F4;font-size:14px;white-space:nowrap;">{{o.srcText}}</td>
+<td style="padding:0 14px;height:52px;border-bottom:1px solid #EEF0F4;font-size:14px;white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums;">{{o.cost}}</td>
+<td style="padding:0 14px;height:52px;border-bottom:1px solid #EEF0F4;font-size:14px;white-space:nowrap;text-align:right;font-weight:600;color:#15803D;font-variant-numeric:tabular-nums;">{{o.profit}}</td>
+<td style="padding:0 14px;height:52px;border-bottom:1px solid #EEF0F4;white-space:nowrap;"><span class="{{o.badge}}">{{o.status}}</span></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<sc-if value="{{empty}}" hint-placeholder-val="{{false}}"><p style="margin:0;padding:28px 16px;text-align:center;font-size:14px;color:#5A6475;">{{emptyText}}</p></sc-if>
+</section>
+
+<aside class="card" style="flex:2 1 360px;min-width:0;padding:20px;display:flex;flex-direction:column;gap:16px;" aria-labelledby="det-h" aria-live="polite">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+<div><span class="k">Order detail</span><h2 id="det-h" style="margin:2px 0 0;font:800 22px Lexend,sans-serif;">Order {{d.id}}</h2></div>
+<span style="display:inline-flex;gap:8px;flex-wrap:wrap;"><span class="{{d.badge}}">{{d.status}}</span><span class="pill pill-ex">Example</span></span>
+</div>
+<dl style="margin:0;display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font-size:14px;">
+<dt style="color:#5A6475;">Store</dt><dd style="margin:0;">{{d.store}}</dd>
+<dt style="color:#5A6475;">Placed</dt><dd style="margin:0;">{{d.date}}</dd>
+<dt style="color:#5A6475;">Ship to</dt><dd style="margin:0;">{{d.shipTo}}</dd>
+<dt style="color:#5A6475;">Customer paid</dt><dd style="margin:0;font-weight:600;">{{d.paid}}</dd>
+<dt style="color:#5A6475;">Your cost</dt><dd style="margin:0;font-weight:600;">{{d.cost}}</dd>
+</dl>
+<div style="{{d.payStyle}}">
+<span class="k" style="color:#11133C;">Payment</span>
+<span style="font-size:14px;line-height:1.5;color:#11133C;">{{d.payment}}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;">
+<h3 style="margin:0;font:700 15px Lexend,sans-serif;">Shipments</h3>
+<sc-for list="{{d.shipments}}" as="s" hint-placeholder-count="2">
+<div style="border:1px solid #E2E5EA;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><span class="pill" style="{{s.srcStyle}}">{{s.src}}</span><span class="{{s.badge}}">{{s.status}}</span></div>
+<strong style="font-size:14px;">{{s.items}}</strong>
+<span style="font-size:13px;color:#5A6475;line-height:1.5;">{{s.note}}</span>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px;">
+<sc-for list="{{d.actions}}" as="a" hint-placeholder-count="2">
+<a class="{{a.cls}}" href="{{a.href}}">{{a.label}}</a>
+</sc-for>
+</div>
+</aside>
+</div>
+</main>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { sel: '#1045', f: 'all' };
+  }
+  renderVals() {
+    const B = {
+      'Awaiting payment': 'pill pill-you', 'On hold': 'pill pill-grey', 'Processing': 'pill pill-soft', 'Needs attention': 'pill pill-you',
+      'Partially shipped': 'pill pill-soft', 'Shipped': 'pill pill-soft', 'Delivered': 'pill pill-live',
+      'Waiting for payment': 'pill pill-you', 'Not started': 'pill pill-grey', 'Packed': 'pill pill-soft', 'Being prepared': 'pill pill-soft', 'Running late': 'pill pill-you'
+    };
+    const SRC = {
+      wh: ['Express', 'background:#E6EFFC;color:#1E58B0'],
+      sp: ['Standard', 'background:#DDF3F1;color:#0F5F59'],
+      gl: ['Economy', 'background:#F3E8FF;color:#6B21A8']
+    };
+    const box = 'display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:12px;';
+    const okPay = box + 'background:#F0FDF4;border:1px solid #BBF7D0';
+    const warnPay = box + 'background:#FFF7ED;border:1px solid #FED7AA';
+    const neuPay = box + 'background:#F5F6F8;border:1px solid #E2E5EA';
+    const WALLET = 'Main.dc.html';
+    const SELF = 'DropshipOrders.dc.html';
+    const data = [
+      { id: '#1047', store: 'WooCommerce', date: 'Nov 7, 09:40', srcs: ['wh'], cost: 'US$ 13.80', profit: 'US$ 21.19', status: 'On hold', shipTo: 'Dubai, UAE', paid: 'US$ 34.99',
+        payment: 'US$ 13.80 will be charged from your wallet at 10:40, unless you cancel or edit the order in your store.', payStyle: neuPay,
+        shipments: [['wh', 'On hold', 'LED Desk Lamp ×1', 'Picked in the next wave after payment.']],
+        actions: [['Pay now', 'primary', WALLET], ['Change address', 'ghost', SELF], ['Cancel order', 'ghost', SELF]] },
+      { id: '#1046', store: 'Shopify', date: 'Nov 7, 09:05', srcs: ['gl'], cost: 'US$ 46.30', profit: 'US$ 25.69', status: 'Awaiting payment', shipTo: 'Abu Dhabi, UAE', paid: 'US$ 71.99',
+        payment: 'Not charged. Your wallet has US$ 18.80 and this order needs US$ 46.30.', payStyle: warnPay,
+        shipments: [['gl', 'Waiting for payment', 'Mini Projector ×1', 'Ordered as soon as it is paid. 10–20 days delivery.']],
+        actions: [['Add funds by bank transfer', 'primary', WALLET], ['Upload transfer slip', 'ghost', WALLET]] },
+      { id: '#1045', store: 'WooCommerce', date: 'Nov 7, 08:05', srcs: ['wh', 'sp'], cost: 'US$ 29.20', profit: 'US$ 37.77', status: 'Processing', shipTo: 'Sharjah, UAE', paid: 'US$ 66.97',
+        payment: 'Paid US$ 29.20 from wallet on Nov 7 at 09:06.', payStyle: okPay,
+        shipments: [['wh', 'Being prepared', 'Magnetic Car Phone Mount ×2', 'Packed. Leaves our warehouse today.'], ['sp', 'Being prepared', 'Silicone Kitchen Utensil Set ×1', 'Ships by Nov 8 with your packing slip. Tracking appears here and in your store.']],
+        actions: [['Request a change', 'ghost', SELF]] },
+      { id: '#1043', store: 'Shopify', date: 'Nov 6, 19:12', srcs: ['wh', 'gl'], cost: 'US$ 26.90', profit: 'US$ 33.08', status: 'Partially shipped', shipTo: 'Ajman, UAE', paid: 'US$ 59.98',
+        payment: 'Paid US$ 26.90 from wallet on Nov 6 at 20:13.', payStyle: okPay,
+        shipments: [['wh', 'Shipped', 'Posture Corrector ×1', 'Tracking sent to Shopify with your tracking page link. Customer notified.'], ['gl', 'Being prepared', 'Portable Blender ×1', 'On its way to our warehouse for checking and repacking. Ships about Nov 10.']],
+        actions: [['Track parcel', 'ghost', SELF], ['Report a problem', 'ghost', SELF]] },
+      { id: '#1040', store: 'WooCommerce', date: 'Nov 6, 08:05', srcs: ['sp'], cost: 'US$ 15.30', profit: 'US$ 23.67', status: 'Shipped', shipTo: 'Dubai, UAE', paid: 'US$ 38.97',
+        payment: 'Paid US$ 15.30 from wallet on Nov 6 at 09:06.', payStyle: okPay,
+        shipments: [['sp', 'Shipped', 'Pet Hair Remover Roller ×3', 'Tracking sent to your WooCommerce store with your tracking page link.']],
+        actions: [['Track parcel', 'ghost', SELF], ['Report a problem', 'ghost', SELF]] },
+      { id: '#1039', store: 'Shopify', date: 'Nov 5, 21:30', srcs: ['sp'], cost: 'US$ 15.40', profit: 'US$ 15.59', status: 'Needs attention', shipTo: 'Al Ain, UAE', paid: 'US$ 30.99',
+        payment: 'Paid US$ 15.40 from wallet on Nov 5 at 22:31.', payStyle: okPay,
+        shipments: [['sp', 'Running late', 'Silicone Kitchen Utensil Set ×1', 'This parcel is running late. Octopus will ship it another way or refund your wallet by Nov 8.']],
+        actions: [['Contact support', 'ghost', SELF], ['Cancel and refund', 'ghost', SELF]] },
+      { id: '#1036', store: 'Shopify', date: 'Oct 21, 10:40', srcs: ['gl'], cost: 'US$ 14.60', profit: 'US$ 22.39', status: 'Delivered', shipTo: 'Dubai, UAE', paid: 'US$ 36.99',
+        payment: 'Paid US$ 14.60 from wallet on Oct 21 at 11:41.', payStyle: okPay,
+        shipments: [['gl', 'Delivered', 'Handheld Garment Steamer ×1', 'Delivered Nov 4.']],
+        actions: [['Report a problem', 'ghost', SELF], ['Start a return', 'ghost', SELF]] }
+    ];
+    const GROUPS = {
+      all: null,
+      pay: ['Awaiting payment', 'On hold'],
+      prog: ['Processing', 'Partially shipped', 'Needs attention'],
+      ship: ['Shipped', 'Delivered'],
+      ret: []
+    };
+    const defs = [['all', 'All'], ['pay', 'To pay'], ['prog', 'In progress'], ['ship', 'Shipped'], ['ret', 'Returns and claims']];
+    const inGroup = (o, k) => GROUPS[k] === null || GROUPS[k].indexOf(o.status) !== -1;
+    const f = this.state.f;
+    const sel = this.state.sel;
+    const filters = defs.map((x) => ({
+      label: x[1] + ' (' + data.filter((o) => inGroup(o, x[0])).length + ')',
+      pressed: x[0] === f ? 'true' : 'false',
+      pick: () => this.setState({ f: x[0] })
+    }));
+    const orders = data.filter((o) => inGroup(o, f)).map((o) => ({
+      ...o,
+      srcText: o.srcs.map((s) => SRC[s][0]).join(' + '),
+      badge: B[o.status],
+      pressed: o.id === sel ? 'true' : 'false',
+      aria: 'Show details of order ' + o.id,
+      rowStyle: o.id === sel ? 'cursor:pointer;background:#EEF4FD;box-shadow:inset 3px 0 0 #2A6FD6' : 'cursor:pointer',
+      pick: () => this.setState({ sel: o.id })
+    }));
+    const s = data.find((o) => o.id === sel) || data[0];
+    const d = {
+      ...s,
+      badge: B[s.status],
+      shipments: s.shipments.map((x) => ({ src: SRC[x[0]][0], srcStyle: SRC[x[0]][1], status: x[1], badge: B[x[1]] || 'pill pill-live', items: x[2], note: x[3] })),
+      actions: s.actions.map((x) => ({ label: x[0], cls: x[1] === 'primary' ? 'btn btn-primary btn-sm' : 'btn btn-ghost btn-sm', href: x[2] }))
+    };
+    const empty = orders.length === 0;
+    return { orders, filters, d, empty, emptyText: 'No returns or claims right now.' };
+  }
+}
+</script>
+</body>
+</html>

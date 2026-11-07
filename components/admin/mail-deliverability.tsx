@@ -24,3 +24,4 @@ export async function MailDeliverabilityAlert({ showOk = false }: { showOk?: boo
     </section>
   );
 }
+

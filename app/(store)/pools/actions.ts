@@ -22,3 +22,4 @@ export async function subscribePoolAlerts(email: string): Promise<{ ok: true; me
   }
   return { ok: true, message: 'Done. We will email you when the next pool opens.' };
 }
+
