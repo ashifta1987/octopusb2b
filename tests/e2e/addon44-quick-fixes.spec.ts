@@ -25,3 +25,4 @@ test('dropship form: one platform list and its own follow-up section', async ({ 
   const opts = await page.locator('select[name="store_platform"] option').allTextContents();
   expect(opts.filter((o) => !/select/i.test(o))).toEqual(['Shopify', 'WooCommerce', 'Upload a sheet']);
 });
+
