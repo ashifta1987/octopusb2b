@@ -79,3 +79,44 @@ export async function setMyOutOfOffice(value: boolean): Promise<Result> {
   revalidatePath('/office/assistant');
   return { ok: true, message: value ? 'Out of office is on.' : 'Out of office is off.' };
 }
+
+/* ───────── 2FA devices: add another authenticator / remove one (8 Nov 2026) ───────── */
+
+/** Before adding a phone: the session must be 2FA-verified in the last 10 minutes (step-up). */
+export async function prepareAddAuthenticator(): Promise<{ ok: true } | { ok: false; error: string; stepUp?: boolean }> {
+  const c = await currentClaims();
+  if (!c) redirect('/staff/login?next=/staff/account');
+  if (c.aal !== 'aal2' || !(await mfaFresh())) return { ok: false, stepUp: true, error: 'For your security, confirm your 6-digit code first.' };
+  return { ok: true };
+}
+
+/** Called after the new phone's code was verified in the browser: checks the factor really is verified, then audits it. */
+export async function authenticatorAdded(factorId: string): Promise<Result> {
+  const c = await currentClaims();
+  if (!c) redirect('/staff/login?next=/staff/account');
+  const sb = await createClient();
+  const { data } = await sb.auth.mfa.listFactors();
+  const f = (data?.totp ?? []).find((x) => x.id === factorId && x.status === 'verified');
+  if (!f) return { ok: false, error: 'The new authenticator was not confirmed. Try again.' };
+  await staffAudit(c.uid, 'auth.mfa_device_added', { factor_id: factorId, name: f.friendly_name ?? null, devices: (data?.totp ?? []).filter((x) => x.status === 'verified').length });
+  revalidatePath('/staff/account');
+  return { ok: true, message: `${f.friendly_name || 'Authenticator'} added.` };
+}
+
+/** Remove one authenticator. Step-up required; the last one can never be removed (2FA is mandatory for staff). */
+export async function removeAuthenticator(factorId: string): Promise<Result> {
+  const c = await currentClaims();
+  if (!c) redirect('/staff/login?next=/staff/account');
+  if (c.aal !== 'aal2' || !(await mfaFresh())) return { ok: false, stepUp: true, error: 'For your security, confirm your 6-digit code first.' };
+  const sb = await createClient();
+  const { data } = await sb.auth.mfa.listFactors();
+  const verified = (data?.totp ?? []).filter((x) => x.status === 'verified');
+  const f = verified.find((x) => x.id === factorId);
+  if (!f) return { ok: false, error: 'That authenticator was not found.' };
+  if (verified.length < 2) return { ok: false, error: 'You need at least one authenticator. Add another phone first, then remove this one.' };
+  const { error } = await sb.auth.mfa.unenroll({ factorId });
+  if (error) return { ok: false, error: error.message };
+  await staffAudit(c.uid, 'auth.mfa_device_removed', { factor_id: factorId, name: f.friendly_name ?? null, devices: verified.length - 1 });
+  revalidatePath('/staff/account');
+  return { ok: true, message: `${f.friendly_name || 'Authenticator'} removed.` };
+}

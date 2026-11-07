@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { stepUpRedirect } from '@/lib/staff/step-up';
 import { PASSWORD_MIN } from '@/lib/staff/password';
 import { BackupCodesPanel } from '../_components/backup-codes';
-import { changeStaffPassword, regenerateBackupCodes, signOutEverywhere, updateStaffProfile, type Result } from './actions';
+import { changeStaffPassword, regenerateBackupCodes, signOutEverywhere, updateStaffProfile, prepareAddAuthenticator, authenticatorAdded, removeAuthenticator, type Result } from './actions';
+import { createClient } from '@/lib/supabase/client';
 
 function Msg({ r }: { r: Result | null }) {
   if (!r) return null;
@@ -90,5 +91,113 @@ export function SignOutEverywhere() {
       <button type="button" className="btn btn-danger" onClick={run} disabled={busy}>{busy ? 'Signing out…' : 'Sign out everywhere'}</button>
       {err && <p role="alert" className="text-sm text-bad m-0 w-full">{err}</p>}
     </>
+  );
+}
+
+/* ───────── 2FA devices (8 Nov 2026): list, add another phone, remove one ───────── */
+type Device = { id: string; name: string; added: string };
+
+export function AuthenticatorDevices({ devices }: { devices: Device[] }) {
+  const router = useRouter();
+  const [step, setStep] = useState<'idle' | 'name' | 'scan'>('idle');
+  const [name, setName] = useState(`Phone ${devices.length + 1}`);
+  const [enr, setEnr] = useState<{ factorId: string; qr: string; secret: string } | null>(null);
+  const [code, setCode] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  async function begin() {
+    setErr(null); setMsg(null); setBusy(true);
+    const r = await prepareAddAuthenticator();
+    setBusy(false);
+    if (!r.ok) { if (r.stepUp) return router.push(stepUpRedirect('/staff/account#2fa')); return setErr(r.error); }
+    setStep('name');
+  }
+
+  async function startEnroll(e: React.FormEvent) {
+    e.preventDefault();
+    const n = name.trim();
+    if (n.length < 2) return setErr('Give the phone a name, e.g. "Work phone".');
+    if (devices.some((d) => d.name.toLowerCase() === n.toLowerCase())) return setErr('You already have an authenticator with that name.');
+    setBusy(true); setErr(null);
+    const sb = createClient();
+    // drop half-finished enrolments from earlier attempts
+    const { data: list } = await sb.auth.mfa.listFactors();
+    for (const f of list?.all ?? []) if (f.factor_type === 'totp' && f.status !== 'verified') await sb.auth.mfa.unenroll({ factorId: f.id });
+    const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: n, issuer: 'Octopus B2B' });
+    setBusy(false);
+    if (error || !data) return setErr(error?.message ?? 'Could not start. Try again.');
+    setEnr({ factorId: data.id, qr: data.totp.qr_code, secret: data.totp.secret });
+    setStep('scan');
+  }
+
+  async function confirm(e: React.FormEvent) {
+    e.preventDefault();
+    if (!enr || !/^\d{6}$/.test(code)) return setErr('Enter the 6-digit code shown on the NEW phone.');
+    setBusy(true); setErr(null);
+    const { error } = await createClient().auth.mfa.challengeAndVerify({ factorId: enr.factorId, code });
+    if (error) { setBusy(false); setCode(''); return setErr('That code did not match. Wait for a new code on the new phone and try again.'); }
+    const r = await authenticatorAdded(enr.factorId);
+    setBusy(false);
+    if (!r.ok) return setErr(r.error);
+    setMsg(r.message ?? 'Added.'); setStep('idle'); setEnr(null); setCode('');
+    router.refresh();
+  }
+
+  async function cancel() {
+    if (enr) await createClient().auth.mfa.unenroll({ factorId: enr.factorId }).catch(() => {});
+    setStep('idle'); setEnr(null); setCode(''); setErr(null);
+  }
+
+  async function remove(d: Device) {
+    if (!window.confirm(`Remove "${d.name}"? Codes from that phone will stop working.`)) return;
+    setBusy(true); setErr(null); setMsg(null);
+    const r = await removeAuthenticator(d.id);
+    setBusy(false);
+    if (!r.ok) { if (r.stepUp) return router.push(stepUpRedirect('/staff/account#2fa')); return setErr(r.error); }
+    setMsg(r.message ?? 'Removed.');
+    router.refresh();
+  }
+
+  return (
+    <div className="grid gap-3" data-testid="mfa-devices">
+      {devices.length > 0 && (
+        <ul className="divide-y divide-line border border-line rounded-[10px]">
+          {devices.map((d) => (
+            <li key={d.id} className="px-4 py-3 flex items-center justify-between gap-3 text-sm">
+              <span><span className="font-semibold block">{d.name}</span><span className="text-muted text-[13px]">Added {d.added}</span></span>
+              <span className="flex items-center gap-3">
+                <span className="text-[13px] font-semibold text-ok">✓ Active</span>
+                {devices.length > 1 && <button type="button" className="btn btn-ghost btn-sm text-bad min-h-11" onClick={() => remove(d)} disabled={busy}>Remove</button>}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {step === 'idle' && devices.length > 0 && devices.length < 5 && (
+        <div><button type="button" className="btn btn-ghost min-h-11" onClick={begin} disabled={busy} data-testid="add-authenticator">{busy ? 'Checking…' : '+ Add another phone'}</button></div>
+      )}
+      {step === 'name' && (
+        <form onSubmit={startEnroll} className="rounded-[10px] border border-line p-4 grid gap-3">
+          <label htmlFor="mfa-name" className="label">Name for the new phone</label>
+          <input id="mfa-name" className="input" value={name} onChange={(e) => setName(e.target.value)} maxLength={40} />
+          <div className="flex gap-2"><button type="submit" className="btn btn-primary min-h-11" disabled={busy}>{busy ? 'Starting…' : 'Show QR code'}</button><button type="button" className="btn btn-ghost min-h-11" onClick={cancel}>Cancel</button></div>
+        </form>
+      )}
+      {step === 'scan' && enr && (
+        <form onSubmit={confirm} className="rounded-[10px] border border-line p-4 grid gap-3" data-testid="mfa-enroll">
+          <p className="text-sm">On the <b>new phone</b>, open Google Authenticator → <b>+</b> → <b>Scan a QR code</b>.</p>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={enr.qr} alt="QR code for the new authenticator" width={180} height={180} className="bg-white p-2 border border-line rounded-[8px]" />
+          <details className="text-[13px]"><summary className="cursor-pointer text-blue">Can&apos;t scan? Enter the key instead</summary><code className="mono break-all block mt-1" data-testid="mfa-secret">{enr.secret}</code></details>
+          <label htmlFor="mfa-code" className="label">6-digit code from the new phone</label>
+          <input id="mfa-code" className="input mono tracking-[.3em] max-w-[180px]" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} />
+          <div className="flex gap-2"><button type="submit" className="btn btn-primary min-h-11" disabled={busy}>{busy ? 'Checking…' : 'Confirm and add'}</button><button type="button" className="btn btn-ghost min-h-11" onClick={cancel}>Cancel</button></div>
+        </form>
+      )}
+      {msg && <p role="status" className="text-sm text-ok m-0">✓ {msg}</p>}
+      {err && <p role="alert" className="text-sm text-bad m-0">{err}</p>}
+    </div>
   );
 }

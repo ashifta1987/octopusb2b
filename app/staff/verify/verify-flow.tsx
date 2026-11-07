@@ -11,6 +11,8 @@ import { completeVerification, finishEnrolment, recordTotpFailure, redeemBackupC
 type Props = {
   mode: 'challenge' | 'enrol';
   factorId: string | null;
+  /** every verified authenticator (staff may link several phones; a code from any of them is accepted) */
+  factorIds?: string[];
   next: string;
   self: string;
   stepUp: boolean;
@@ -76,8 +78,14 @@ function Challenge(p: Props & { onBackup: () => void }) {
     if (!/^\d{6}$/.test(code) || !p.factorId) return setErr('Enter the 6-digit code from your authenticator app.');
     setBusy(true); setErr(null);
     const sb = createClient();
-    const { data: ch, error: chErr } = await sb.auth.mfa.challenge({ factorId: p.factorId });
-    const { error } = chErr ? { error: chErr } : await sb.auth.mfa.verify({ factorId: p.factorId, challengeId: ch!.id, code });
+    // try each linked phone in turn; one failed attempt is recorded only if no phone's code matched
+    let error: { message: string } | null = { message: 'no factor' };
+    for (const factorId of p.factorIds?.length ? p.factorIds : [p.factorId]) {
+      const { data: ch, error: chErr } = await sb.auth.mfa.challenge({ factorId });
+      const res = chErr ? { error: chErr } : await sb.auth.mfa.verify({ factorId, challengeId: ch!.id, code });
+      error = res.error;
+      if (!error) break;
+    }
     if (error) {
       const f = await recordTotpFailure();
       setBusy(false); setCode('');

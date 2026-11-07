@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/ui';
 import { fmtDate, humanize } from '@/lib/format';
 import { staffSignOut } from '@/lib/staff/actions';
 import { ToggleSetting } from '@/components/admin/client';
-import { ProfileForm, PasswordForm, BackupCodesButton, SignOutEverywhere } from './account-forms';
+import { ProfileForm, PasswordForm, BackupCodesButton, SignOutEverywhere, AuthenticatorDevices } from './account-forms';
 import { setMyOutOfOffice } from './actions';
 
 export const metadata = { title: 'My account · Staff' };
@@ -56,21 +56,14 @@ async function AccountBody() {
 
         <section className="card p-6 scroll-mt-6" id="2fa">
           <h2 className="text-lg font-semibold mb-1">Two-step verification</h2>
-          <p className="text-[13px] text-muted mb-4">Required for every staff sign-in. Lost your phone? Use a backup code or ask an Admin to reset it.</p>
+          <p className="text-[13px] text-muted mb-4">Required for every staff sign-in. You can link more than one phone. Lost your phone? Use a backup code or ask an Admin to reset it.</p>
           {totp.length === 0 ? (
-            <p className="text-sm">No authenticator set up yet. You will be asked to set one up at your next sign-in.</p>
+            <p className="text-sm mb-4">No authenticator set up yet. You will be asked to set one up at your next sign-in.</p>
           ) : (
-            <ul className="divide-y divide-line border border-line rounded-[10px] mb-4">
-              {totp.map((f) => (
-                <li key={f.id} className="px-4 py-3 flex items-center justify-between gap-3 text-sm">
-                  <span>
-                    <span className="font-semibold block">{f.friendly_name || 'Authenticator app'}</span>
-                    <span className="text-muted text-[13px]">Added {fmtDate(f.created_at)}</span>
-                  </span>
-                  <span className="text-[13px] font-semibold text-ok">✓ Active</span>
-                </li>
-              ))}
-            </ul>
+            <div className="mb-4">
+              <AuthenticatorDevices devices={totp.map((f) => ({ id: f.id, name: f.friendly_name || 'Authenticator app', added: fmtDate(f.created_at) }))} />
+              <p className="text-[12.5px] text-muted mt-2">Each phone gets its own entry, so you can remove a lost phone without touching the others. Up to 5 phones.</p>
+            </div>
           )}
           <p className="text-sm mb-3">Backup codes left: <strong>{unused ?? 0}</strong> of 10</p>
           <BackupCodesButton email={s.email ?? ''} disabled={totp.length === 0} />

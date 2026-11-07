@@ -39,6 +39,7 @@ async function VerifyBody({ searchParams }: { searchParams: Promise<SP> }) {
       key={verified.length ? 'challenge' : 'enrol'}
       mode={verified.length ? 'challenge' : 'enrol'}
       factorId={verified[0]?.id ?? null}
+      factorIds={verified.map((f) => f.id)}
       next={next}
       self={self}
       stepUp={stepUp}
