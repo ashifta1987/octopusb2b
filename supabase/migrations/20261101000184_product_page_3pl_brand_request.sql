@@ -94,3 +94,4 @@ begin
 end $$;
 revoke all on function create_brand_project(jsonb) from public, anon;
 grant execute on function create_brand_project(jsonb) to authenticated;
+

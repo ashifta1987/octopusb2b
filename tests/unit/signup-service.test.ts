@@ -19,3 +19,4 @@ describe('ADDON-44-F /signup?service=', () => {
     expect(onboardingHref('https://evil.example')).toBe('/onboarding');
   });
 });
+
