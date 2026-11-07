@@ -13,6 +13,8 @@ const QuoteInput = z.object({
   lead_days: z.coerce.number().int().nonnegative(),
   shipping: z.string().optional(),
   notes: z.string().max(2000).optional(),
+  moq: z.union([z.literal(''), z.coerce.number().int().positive('MOQ must be > 0')]).optional(),
+  sample_price: z.string().optional(),
 });
 
 /** Quote on an RFQ for a supplier (distributor: assigned suppliers only — enforced in send_quote). */
@@ -25,10 +27,13 @@ export async function sendQuote(rfqId: string, fd: FormData): Promise<Result> {
   const ship = p.data.shipping ? toCents(p.data.shipping) : 0;
   if (!Number.isFinite(price) || price <= 0) return fail('Unit price must be greater than 0.');
   if (!Number.isFinite(ship) || ship < 0) return fail('Shipping must be 0 or more.');
+  const sample = p.data.sample_price ? toCents(p.data.sample_price) : null;
+  if (sample != null && (!Number.isFinite(sample) || sample < 0)) return fail('Sample price must be 0 or more.');
   const sb = await createClient();
   const { error } = await sb.rpc('send_quote', {
     p_rfq: rfqId, p_supplier: p.data.supplier_id, p_unit_price_cents: price, p_quantity: p.data.quantity,
     p_incoterm: p.data.incoterm, p_lead_days: p.data.lead_days, p_shipping_cents: ship, p_notes: p.data.notes || null,
+    p_moq: p.data.moq === '' || p.data.moq == null ? null : p.data.moq, p_sample_price_cents: sample,
   });
   if (error) return fail(error.message.startsWith('FORBIDDEN_SUPPLIER') ? 'This supplier is not assigned to you.' : error);
   revalidatePath('/distributor/rfqs');

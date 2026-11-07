@@ -17,7 +17,7 @@ export async function approveQuote(input: { quoteId: string }): Promise<ActionRe
   const { data, error } = await sb.rpc('approve_quote', { p_quote: parsed.data.quoteId, p_terms_version: terms?.id ?? null });
   if (error) return { ok: false, error: mapDbError(error) };
   revalidatePath('/account');
-  revalidatePath('/account/rfqs');
+  revalidatePath('/account/sourcing');
   revalidatePath('/account/orders');
   return { ok: true, data: data as { order_id: string; order_code: string; pi_number: string } };
 }

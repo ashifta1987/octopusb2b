@@ -93,7 +93,7 @@ export async function executeTool(sb: SupabaseClient, name: string, rawArgs: unk
       case 'list_quotes': {
         const f = await getQuoteFacts(sb, (v.args as ToolArgs<'list_quotes'>).rfq_id_or_code);
         const rid = (f.data as { rfq_id?: string } | null)?.rfq_id;
-        r = { output: f.text, link: rid ? { href: `/account/rfqs/${rid}`, label: 'Compare quotes →' } : null };
+        r = { output: f.text, link: rid ? { href: `/account/sourcing/${rid}`, label: 'Compare quotes →' } : null };
         break;
       }
       case 'list_pools':

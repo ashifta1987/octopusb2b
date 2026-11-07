@@ -57,7 +57,7 @@ export function AssistantBubble() {
       {!open && (
         <button ref={btnRef} type="button" aria-haspopup="dialog" aria-expanded={open}
           onClick={() => { setOpen(true); load(window.location.pathname); }}
-          className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-navy text-white pl-1.5 pr-4 py-1.5 shadow-lg hover:bg-[#262A6B] focus-visible:outline-3">
+          className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] md:bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-navy text-white pl-1.5 pr-4 py-1.5 shadow-lg hover:bg-[#262A6B] focus-visible:outline-3">
           <span aria-hidden className="w-9 h-9 rounded-full bg-blue flex items-center justify-center font-display font-bold">O</span>
           <span className="text-sm font-semibold">Ask Octo</span>
         </button>

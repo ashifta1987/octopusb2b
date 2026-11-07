@@ -2,22 +2,31 @@
 export type NavItem = { href: string; label: string; area?: string; action?: string; role?: string };
 export type NavSection = { title?: string; items: NavItem[] };
 
-export const CUSTOMER_NAV: NavSection[] = [{
-  items: [
-    { href: '/account', label: 'Dashboard' },
-    { href: '/account/assistant', label: 'AI assistant' },
-    { href: '/account/rfqs', label: 'RFQs' },
-    { href: '/account/services', label: 'Service requests' },
-    { href: '/account/orders', label: 'Orders' },
-    { href: '/account/pools', label: 'Group buys' },
-    { href: '/account/turnkey', label: 'My turnkey projects' },
-    { href: '/account/wallet', label: 'Wallet' },
-    { href: '/account/ledger', label: 'Ledger & invoices' },
-    { href: '/account/kyc', label: 'Company & KYC' },
-    { href: '/account/developer', label: 'API & integrations' },
-    { href: '/account/support', label: 'Help & complaints' },
-  ],
-}];
+/** Customer account menu, ordered by service priority (7 Nov 2026): Product sourcing comes first after the dashboard. */
+export const CUSTOMER_NAV: NavSection[] = [
+  {
+    items: [
+      { href: '/account', label: 'Dashboard' },
+      { href: '/account/sourcing', label: 'Product sourcing' },
+      { href: '/account/sourcing?type=dropship', label: 'Dropshipping' },
+      { href: '/account/pools', label: 'MOQ pools' },
+      { href: '/account/sourcing?type=3pl', label: '3PL' },
+      { href: '/account/turnkey', label: 'Turnkey projects' },
+      { href: '/account/orders', label: 'Orders' },
+      { href: '/account/wallet', label: 'Wallet' },
+      { href: '/account/assistant', label: 'Assistant' },
+      { href: '/account/developer', label: 'API' },
+      { href: '/account/kyc', label: 'Settings' },
+    ],
+  },
+  {
+    title: 'More',
+    items: [
+      { href: '/account/ledger', label: 'Ledger & invoices' },
+      { href: '/account/support', label: 'Help & complaints' },
+    ],
+  },
+];
 
 export const DISTRIBUTOR_NAV: NavSection[] = [{
   items: [

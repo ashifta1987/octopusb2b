@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { listSourcing } from '@/components/account/sourcing-data';
+import { STATUS_TONE } from '@/lib/sourcing';
 import { requireCustomer } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { Card, Stat, StatusBadge, EmptyState, Notice, Money, OrderProgress, Table } from '@/components/ui';
@@ -103,10 +105,11 @@ export default async function AccountDashboard({ searchParams }: { searchParams:
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <RealtimeRefresh channel="dashboard" subs={[{ table: 'order_events', filter: `org_id=eq.${org.id}` }, { table: 'quotes', event: 'INSERT' }, { table: 'notifications', event: 'INSERT', filter: `org_id=eq.${org.id}` }]} />
-          <Link href="/account/services" className="btn btn-ghost">New service request</Link>
-          <Link href="/request/sourcing" className="btn btn-primary">New RFQ</Link>
+          <Link href="/request/sourcing" className="btn btn-primary">New sourcing request</Link>
         </div>
       </div>
+
+      <SourcingCard orgId={org.id} waiting={qList.length} />
 
       {org.kyc_status !== 'verified' && (
         <div className="mb-6"><Notice tone="amber">Your company is not verified yet (KYC: {humanize(org.kyc_status)}). Browsing and RFQs work now; live API keys and wallet withdrawals unlock after <Link href="/account/kyc" className="underline font-semibold">verification</Link>.</Notice></div>
@@ -136,7 +139,7 @@ export default async function AccountDashboard({ searchParams }: { searchParams:
         </div>
       )}
 
-      <Card className="mb-6" title="Quotes waiting for you" action={<Link href="/account/rfqs" className="text-sm font-semibold text-blue">All RFQs →</Link>}>
+      <Card className="mb-6" title="Quotes waiting for you" action={<Link href="/account/sourcing" className="text-sm font-semibold text-blue">All sourcing requests →</Link>}>
         <Table head={['RFQ', 'Product', 'Supplier code', 'Unit price', 'Incoterm', 'Lead time', 'Valid until', '']}
           empty={<EmptyState title="No quotes waiting" body="When suppliers reply to your RFQs, their quotes appear here." action={<Link href="/request/sourcing" className="btn btn-primary btn-sm">New RFQ</Link>} />}>
           {qList.slice(0, 8).map((q) => {
@@ -152,7 +155,7 @@ export default async function AccountDashboard({ searchParams }: { searchParams:
                 <td className="td">{fmtDate(q.valid_until as string)}</td>
                 <td className="td">
                   <div className="flex justify-end gap-2">
-                    <Link href={`/account/rfqs/${q.rfq_id}`} className="btn btn-ghost btn-sm">Compare</Link>
+                    <Link href={`/account/sourcing/${q.rfq_id}`} className="btn btn-ghost btn-sm">Compare</Link>
                     <ApproveQuoteButton quoteId={q.id as string} quoteCode={q.code as string} totalCents={q.total} currency={q.currency as string} depositPct={settings.deposit_pct} termsVersion={terms?.version} action={approveQuote} />
                   </div>
                 </td>
@@ -188,11 +191,11 @@ export default async function AccountDashboard({ searchParams }: { searchParams:
               </div>
             </>
           ) : (
-            <EmptyState title="No orders yet" body="Approve a quote to create your first order." action={<Link href="/account/rfqs" className="btn btn-primary btn-sm">View RFQs</Link>} />
+            <EmptyState title="No orders yet" body="Approve a quote to create your first order." action={<Link href="/account/sourcing" className="btn btn-primary btn-sm">View RFQs</Link>} />
           )}
         </Card>
 
-        <Card title="Service requests" action={<Link href="/account/services" className="text-sm font-semibold text-blue">View all →</Link>}>
+        <Card title="Service requests" action={<Link href="/account/sourcing" className="text-sm font-semibold text-blue">View all →</Link>}>
           <div className="px-6 pb-6 space-y-3">
             {(srs ?? []).length === 0 ? <EmptyState title="No service requests" body="Samples, QC, certification, 3PL and dropshipping requests appear here." /> : (srs ?? []).map((r) => {
               const d = (r.details ?? {}) as Record<string, unknown>;
@@ -227,5 +230,40 @@ export default async function AccountDashboard({ searchParams }: { searchParams:
         )}
       </Card>
     </>
+  );
+}
+
+/** Dashboard "Sourcing" card (7 Nov 2026): open requests, quotes waiting for a decision, the 3 latest requests. */
+async function SourcingCard({ orgId, waiting }: { orgId: string; waiting: number }) {
+  const rows = await listSourcing(orgId);
+  const open = rows.filter((r) => r.status === 'Submitted' || r.status === 'Under review' || r.status === 'Quoted').length;
+  return (
+    <section className="card p-5 mb-6" aria-labelledby="dash-sourcing-h" data-testid="dashboard-sourcing">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="dash-sourcing-h" className="text-lg font-semibold">Sourcing</h2>
+        <div className="flex gap-2">
+          <Link href="/account/sourcing" className="btn btn-ghost btn-sm">All requests</Link>
+          <Link href="/request/sourcing" className="btn btn-primary btn-sm">+ New request</Link>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3 mt-4 max-w-md">
+        <div className="rounded-[10px] bg-surface px-4 py-3"><div className="text-[24px] font-bold" data-testid="dash-open">{open}</div><div className="text-[12.5px] text-muted">Open requests</div></div>
+        <div className="rounded-[10px] bg-surface px-4 py-3"><div className={`text-[24px] font-bold ${waiting ? 'text-blue' : ''}`} data-testid="dash-waiting">{waiting}</div><div className="text-[12.5px] text-muted">Quotes waiting for you</div></div>
+      </div>
+      {rows.length === 0 ? (
+        <p className="text-sm text-muted mt-4">No sourcing requests yet. Tell us the product and we find the factory.</p>
+      ) : (
+        <ul className="mt-4 divide-y divide-line">
+          {rows.slice(0, 3).map((r) => (
+            <li key={r.id}>
+              <Link href={`/account/sourcing/${encodeURIComponent(r.ref)}`} className="flex flex-wrap items-center justify-between gap-2 py-2.5 hover:text-blue">
+                <span className="min-w-0"><span className="mono text-[12.5px] text-muted mr-2">{r.ref}</span><span className="font-semibold">{r.title}</span></span>
+                <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[12px] font-semibold ${STATUS_TONE[r.status]}`}>{r.status}{r.newQuotes ? ` · ${r.newQuotes} new` : ''}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }

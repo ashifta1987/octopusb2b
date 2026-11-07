@@ -28,7 +28,7 @@ export async function confirmAssistantDraft(messageId: string, toolIndex: number
   if (!draft) return { ok: false, error: 'Draft not found.' };
   const idem = `octo:${messageId}:${toolIndex}`;
 
-  let href = '/account/services';
+  let href = '/account/sourcing';
   let label = 'View service requests →';
   let entityId: string | null = null;
   if (draft.kind === 'rfq') {
@@ -42,7 +42,7 @@ export async function confirmAssistantDraft(messageId: string, toolIndex: number
     });
     if (error) return { ok: false, error: mapDbError(error) };
     entityId = data as string;
-    href = `/account/rfqs/${entityId}`;
+    href = `/account/sourcing/${entityId}`;
     label = 'Open your RFQ →';
   } else {
     const v = toolSchemas.draft_service_request.safeParse(draft);

@@ -9,8 +9,10 @@ import { workspacesFor } from '@/lib/staff/workspaces';
 import { staffSignOut, switchWorkspace } from '@/lib/staff/actions';
 
 /** Portal layout: left sidebar (role-filtered) that becomes a horizontal tab bar under 760px (SPEC §8.2). */
-export function PortalShell({ session, nav, children, searchPlaceholder = 'Search orders, RFQs, invoices', roleLabel, moderation = null }: {
+export function PortalShell({ session, nav, children, searchPlaceholder = 'Search orders, RFQs, invoices', roleLabel, moderation = null, badges, mobileBar }: {
   session: Session; nav: NavSection[]; children: React.ReactNode; searchPlaceholder?: string; roleLabel?: string; moderation?: number | null;
+  /** href → count shown as a red badge in the menu */ badges?: Record<string, number>;
+  /** replaces the menu on phones (customer account bottom bar) */ mobileBar?: React.ReactNode;
 }) {
   const sections = nav
     .map((s) => ({ ...s, items: s.items.filter((i) => !i.area || can(session, i.area, i.action ?? 'view')) }))
@@ -47,11 +49,12 @@ export function PortalShell({ session, nav, children, searchPlaceholder = 'Searc
         </div>
       </header>
       <div className="flex flex-col md:flex-row">
-        <SideNav sections={sections} moderation={moderation} />
-        <main className="flex-1 min-w-0 px-4 sm:px-8 py-8">
+        <SideNav sections={sections} moderation={moderation} badges={badges} mobileHidden={!!mobileBar} />
+        <main className={`flex-1 min-w-0 px-4 sm:px-8 py-8 ${mobileBar ? 'pb-[calc(96px+env(safe-area-inset-bottom))] md:pb-8' : ''}`}>
           <div className="max-w-[1280px] mx-auto">{children}</div>
         </main>
       </div>
+      {mobileBar}
     </div>
   );
 }

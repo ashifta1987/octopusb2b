@@ -46,6 +46,14 @@ export function QuoteForm({ action, suppliers, defaultQty, defaultIncoterm, unit
           <label htmlFor={id('ship')} className="label">Shipping ({cur})</label>
           <input id={id('ship')} name="shipping" type="number" step="0.01" min="0" defaultValue="0" className="input mono" />
         </div>
+        <div>
+          <label htmlFor={id('moq')} className="label">MOQ{unit ? ` (${unit})` : ''}</label>
+          <input id={id('moq')} name="moq" type="number" min={1} className="input mono" placeholder="Optional" />
+        </div>
+        <div>
+          <label htmlFor={id('sample')} className="label">Sample price ({cur})</label>
+          <input id={id('sample')} name="sample_price" type="number" step="0.01" min="0" className="input mono" placeholder="Optional" />
+        </div>
         <div className="sm:col-span-3">
           <label htmlFor={id('notes')} className="label">Notes to buyer</label>
           <textarea id={id('notes')} name="notes" className="input min-h-16 py-2" placeholder="Packaging, certificates, payment terms…" />

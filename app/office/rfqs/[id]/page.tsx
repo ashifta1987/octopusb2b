@@ -8,6 +8,7 @@ import { QuoteForm } from '@/components/backoffice/quote-form';
 import { sendQuote } from '@/components/backoffice/quote-actions';
 import { fmtDate, money, COUNTRY_NAMES } from '@/lib/format';
 import { getCurrencyContext } from '@/lib/currency';
+import { MessageForm } from '@/components/account/sourcing-forms';
 
 export const metadata = { title: 'RFQ' };
 
@@ -87,6 +88,7 @@ export default async function OfficeRfq({ params }: { params: Promise<{ id: stri
               })}
             </Table>
           </Card>
+          <RequestThread rfqId={r.id} code={r.code} canReply={can(s, 'requests', 'edit')} />
         </div>
         <Card title="Add a quote">
           <div className="px-6 pb-6">
@@ -98,5 +100,30 @@ export default async function OfficeRfq({ params }: { params: Promise<{ id: stri
         </Card>
       </div>
     </>
+  );
+}
+
+/** Messages + files with the customer on this request (7 Nov 2026). Staff replies notify the customer (in-app + email). */
+async function RequestThread({ rfqId, code, canReply }: { rfqId: string; code: string; canReply: boolean }) {
+  const sb = await createClient();
+  const [{ data: msgs }, { data: files }] = await Promise.all([
+    sb.from('request_messages').select('id, from_staff, body, created_at').eq('rfq_id', rfqId).order('created_at'),
+    sb.from('request_files').select('id, file_name, file_kind, from_staff').eq('rfq_id', rfqId).order('created_at'),
+  ]);
+  return (
+    <Card title={`Messages with the customer · ${(msgs ?? []).length}`}>
+      <div className="px-6 pb-6 space-y-3">
+        {(msgs ?? []).map((m) => (
+          <div key={m.id as string} className={`rounded-[10px] px-3 py-2 text-sm ${m.from_staff ? 'bg-surface border border-line' : 'bg-[#E6EFFC]'}`}>
+            <div className="text-xs text-muted">{m.from_staff ? 'Octopus team' : 'Customer'} · {fmtDate(m.created_at as string, true)}</div>
+            <p className="whitespace-pre-line mt-0.5">{m.body as string}</p>
+          </div>
+        ))}
+        {(files ?? []).length > 0 && (
+          <ul className="text-sm space-y-1">{(files ?? []).map((f) => <li key={f.id as string}><a href={`/api/request-files/${f.id}`} className="text-blue font-semibold">{f.file_name as string}</a> <span className="text-xs text-muted">{f.file_kind as string}{f.from_staff ? ' · team' : ' · customer'}</span></li>)}</ul>
+        )}
+        {canReply ? <MessageForm kind="rfq" id={rfqId} refCode={code} label="Reply to the customer" /> : <p className="text-sm text-muted">You can read the thread; replying needs requests edit permission.</p>}
+      </div>
+    </Card>
   );
 }

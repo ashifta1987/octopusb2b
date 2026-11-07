@@ -37,16 +37,16 @@ export async function submitRequest(type: string, values: RequestValues, product
       p_idem: key ? `rfq:${key}` : null,
     });
     if (error) return { ok: false, error: mapDbError(error) };
-    return { ok: true, redirect: `/account/rfqs/${data}` };
+    return { ok: true, redirect: `/account/sourcing/${data}` };
   }
 
   const clean = Object.fromEntries(Object.entries(v).filter(([, x]) => x !== ''));
-  const { error } = await sb.rpc('request_service', {
+  const { data: svcId, error } = await sb.rpc('request_service', {
     p_service: SERVICE_CODE[type],
     p_details: clean,
     p_product: product,
     p_idem: key ? `svc:${key}` : null,
   });
   if (error) return { ok: false, error: mapDbError(error) };
-  return { ok: true, redirect: '/account/services' };
+  return { ok: true, redirect: svcId ? `/account/sourcing/${svcId}` : '/account/sourcing' };
 }

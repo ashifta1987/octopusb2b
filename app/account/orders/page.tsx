@@ -49,7 +49,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
       </nav>
       <Card>
         <Table head={['Order', 'Product', 'Total', 'Paid', 'Status', 'Created', '']}
-          empty={<EmptyState title="No orders here" body="Approve a quote on one of your RFQs to create an order." action={<Link href="/account/rfqs" className="btn btn-primary btn-sm">View RFQs</Link>} />}>
+          empty={<EmptyState title="No orders here" body="Approve a quote on one of your RFQs to create an order." action={<Link href="/account/sourcing" className="btn btn-primary btn-sm">View RFQs</Link>} />}>
           {(orders ?? []).map((o) => (
             <tr key={o.id}>
               <td className="td mono text-sm">{o.code}</td>

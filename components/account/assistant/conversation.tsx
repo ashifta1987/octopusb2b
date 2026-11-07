@@ -320,7 +320,7 @@ function DraftCard({ messageId, index, draft }: { messageId: string; index: numb
       ) : (
         <div className="mt-2.5 flex flex-wrap gap-2">
           <button type="button" className="btn btn-primary btn-sm" onClick={() => setStep('confirm')}>Confirm</button>
-          <Link href={draft.kind === 'rfq' ? '/request/sourcing' : '/account/services'} className="btn btn-ghost btn-sm">Edit in the form</Link>
+          <Link href={draft.kind === 'rfq' ? '/request/sourcing' : '/account/sourcing'} className="btn btn-ghost btn-sm">Edit in the form</Link>
         </div>
       )}
       {err && <div role="alert" className="mt-1.5 text-[12.5px] text-bad">{err}</div>}

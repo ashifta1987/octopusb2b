@@ -7,7 +7,7 @@ export type OrderListItem = { id: string; code: string; title: string; quantity:
 
 /** Left-column order list (CustomerOrders.png). */
 export function OrderList({ orders, activeId }: { orders: OrderListItem[]; activeId?: string }) {
-  if (!orders.length) return <div className="card"><EmptyState title="No orders yet" body="Approve a quote on one of your RFQs to create your first order." action={<Link href="/account/rfqs" className="btn btn-primary btn-sm">View RFQs</Link>} /></div>;
+  if (!orders.length) return <div className="card"><EmptyState title="No orders yet" body="Approve a quote on one of your RFQs to create your first order." action={<Link href="/account/sourcing" className="btn btn-primary btn-sm">View RFQs</Link>} /></div>;
   return (
     <ul className="card overflow-hidden divide-y divide-line">
       {orders.map((o) => (
@@ -27,8 +27,8 @@ export function OrderList({ orders, activeId }: { orders: OrderListItem[]; activ
 export function OrdersTabs({ active, counts }: { active: 'orders' | 'rfqs' | 'services'; counts: { orders: number; rfqs: number; services: number } }) {
   const tabs = [
     { k: 'orders', href: '/account/orders', l: 'Orders', n: counts.orders },
-    { k: 'rfqs', href: '/account/rfqs', l: 'RFQs', n: counts.rfqs },
-    { k: 'services', href: '/account/services', l: 'Samples & services', n: counts.services },
+    { k: 'rfqs', href: '/account/sourcing?type=sourcing', l: 'RFQs', n: counts.rfqs },
+    { k: 'services', href: '/account/sourcing', l: 'Samples & services', n: counts.services },
   ] as const;
   return (
     <nav aria-label="Orders, RFQs and services" className="flex flex-wrap gap-2 mb-6">

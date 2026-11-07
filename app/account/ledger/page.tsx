@@ -112,7 +112,7 @@ export default async function LedgerPage({ searchParams }: { searchParams: Promi
             </div>
             <div className="text-right"><div className="text-xs text-muted">Total</div><Money cents={qTotal} currency={qCur} className="text-xl" /><div className="text-xs text-muted">{settings.deposit_pct}% deposit {money(Math.round(qTotal * settings.deposit_pct / 100), qCur)}</div></div>
             <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-              <Link href="/account/rfqs" className="btn btn-ghost">View quotations</Link>
+              <Link href="/account/sourcing" className="btn btn-ghost">View quotations</Link>
               <ApproveQuoteButton quoteId={quote.id as string} quoteCode={quote.code as string} totalCents={qTotal} currency={qCur} depositPct={settings.deposit_pct} termsVersion={terms?.version} action={approveQuote} label="Approve quote and create proforma invoice" className="btn btn-primary whitespace-normal text-left leading-snug py-2.5 max-w-full" />
             </div>
           </div>
