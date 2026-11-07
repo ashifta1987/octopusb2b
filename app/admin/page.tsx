@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import Link from 'next/link';
 import { requireStaffOrManager, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -16,7 +15,7 @@ const SVC: Record<QueueItem['service'], [string, string]> = {
 const NOTICES: Record<string, string> = { 'staff-not-customer': 'Staff accounts cannot use My account. Customers sign in with their own accounts.' };
 
 /** ADDON-41 board 06 — work queue: everything customers need from this staff member, late and blocked items first. */
-async function WorkQueueContent({ searchParams }: { searchParams: Promise<{ s?: string; owner?: string; notice?: string }> }) {
+export default async function WorkQueue({ searchParams }: { searchParams: Promise<{ s?: string; owner?: string; notice?: string }> }) {
   const s = await requireStaffOrManager('/admin', ['dashboard', 'view'], ['approvals', 'view'], ['wallet', 'approve']);
   const sp = await searchParams;
   const sb = await createClient();
@@ -133,7 +132,7 @@ async function WorkQueueContent({ searchParams }: { searchParams: Promise<{ s?: 
             <Link href="/admin/approvals#limits" className="inline-block mt-4 text-blue font-semibold text-[15px]">See approval limits →</Link>
           </section>
         )}
-        {(can(s, 'integrations', 'view') || can(s, 'wallet', 'approve')) && <section className="card p-5" aria-labelledby="ih-h">
+        <section className="card p-5" aria-labelledby="ih-h">
           <h2 id="ih-h" className="text-[17px] font-bold">Integrations health</h2>
           <dl className="mt-3 divide-y divide-line text-[15px]">
             {(integrations.data ?? []).map((i) => (
@@ -142,17 +141,8 @@ async function WorkQueueContent({ searchParams }: { searchParams: Promise<{ s?: 
             {can(s, 'wallet', 'approve') && <div className="py-2.5 flex justify-between gap-3"><dt>Bank transfers to confirm</dt><dd className="mono font-bold">{transfers}</dd></div>}
           </dl>
           {can(s, 'integrations', 'view') && <Link href="/admin/integrations" className="inline-block mt-3 text-blue font-semibold text-[15px]">Open integrations →</Link>}
-        </section>}
+        </section>
       </div>
     </>
-  );
-}
-
-/** Request-time content streams inside Suspense (cacheComponents: instant navigation). */
-export default function WorkQueue({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
-  return (
-    <Suspense fallback={<div className="min-h-[60vh]" aria-busy="true" aria-label="Loading" />}>
-      <WorkQueueContent searchParams={searchParams as never} />
-    </Suspense>
   );
 }

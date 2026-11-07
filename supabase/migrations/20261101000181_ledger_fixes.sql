@@ -112,3 +112,4 @@ begin
 end $$;
 revoke execute on function confirm_bank_transfer(uuid, bigint, text, text) from public, anon;
 grant execute on function confirm_bank_transfer(uuid, bigint, text, text) to authenticated, service_role;
+
