@@ -47,7 +47,8 @@ test('a customer submits a sourcing request and sees it in Product sourcing', as
 test('a quote added by staff appears with a badge, and accepting it creates the order', async ({ page }) => {
   // staff sends a quote (as the admin, through the same RPC the back-office form uses)
   const db = pgClient(); await db.connect();
-  const admin = (await db.query(`select id from auth.users where email = 'admin@demo.octopusb2b.com'`)).rows[0].id;
+  const admin = (await db.query(`select u.id from auth.users u where u.email = 'admin@demo.octopusb2b.com'
+    union all select user_id from user_roles where role_code = 'admin' limit 1`)).rows[0].id; // staging has no demo admin
   const sup = (await db.query(`select id from suppliers where archived_at is null and identity_status = 'ok' order by code limit 1`)).rows[0].id;
   await db.query('begin');
   await db.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify({ sub: admin, role: 'authenticated', aal: 'aal2' })]);
@@ -58,8 +59,8 @@ test('a quote added by staff appears with a badge, and accepting it creates the 
 
   await customerLogin(page, A!, '/account/sourcing');
   await page.goto('/account/sourcing');
-  const nav = page.getByRole('navigation', { name: 'Portal' });
-  await expect(nav.getByRole('link', { name: /Product sourcing/ }).getByTestId('nav-badge')).toHaveText('1');
+  const nav = page.getByRole('navigation', { name: 'Section' }); // ADDON-41 shell: Sourcing tab → side menu "Requests"
+  await expect(nav.getByRole('link', { name: /Requests/ }).getByTestId('nav-badge')).toHaveText('1');
   await expect(page.getByTestId('row-new-quotes')).toHaveText('1 new');
   await page.goto(`/account/sourcing/${ref}`);
   const quotes = page.getByTestId('quotes');
@@ -93,8 +94,8 @@ test('the menu shows Product sourcing first — desktop sidebar', async ({ page 
   await page.setViewportSize({ width: 1440, height: 900 });
   await customerLogin(page, A!, '/account');
   await page.goto('/account');
-  const items = (await page.getByRole('navigation', { name: 'Portal' }).locator('a').allInnerTexts()).map((t) => t.replace(/\d+$/, '').trim());
-  expect(items.slice(0, 11)).toEqual(['Dashboard', 'Product sourcing', 'Dropshipping', 'MOQ pools', '3PL', 'Turnkey projects', 'Orders', 'Wallet', 'Assistant', 'API', 'Settings']);
+  // ADDON-41 shell: service tabs, Sourcing first after Home
+  await expect(page.getByTestId('account-tabs').getByRole('link')).toHaveText(['Home', 'Sourcing', 'Dropshipping', '3PL warehouse', 'Make My Brand', 'Wallet and invoices']);
   await expect(page.getByTestId('dashboard-sourcing')).toBeVisible();
   await expect(page.getByTestId('account-bottom-bar')).toBeHidden();
 });
@@ -105,7 +106,7 @@ test('the menu shows Product sourcing first — mobile bottom bar and More sheet
   await page.goto('/account');
   const bar = page.getByTestId('account-bottom-bar');
   await expect(bar).toBeVisible();
-  await expect(page.getByRole('navigation', { name: 'Portal' })).toBeHidden();
+  await expect(page.getByTestId('section-menu')).toBeHidden();
   const links = bar.getByRole('link');
   await expect(links.nth(0)).toHaveText(/Dashboard/);
   await expect(links.nth(1)).toHaveAttribute('aria-label', 'Product sourcing');
@@ -113,7 +114,7 @@ test('the menu shows Product sourcing first — mobile bottom bar and More sheet
   await bar.getByRole('button', { name: 'More' }).click();
   const sheet = page.getByTestId('more-sheet');
   await expect(sheet).toBeVisible();
-  for (const l of ['Dropshipping', 'MOQ pools', '3PL', 'Turnkey projects', 'Assistant', 'API', 'Settings', 'Log out']) await expect(sheet.getByText(l, { exact: true })).toBeVisible();
+  for (const l of ['Dropshipping', 'MOQ pools', '3PL warehouse', 'Make My Brand', 'Turnkey projects', 'Assistant', 'API', 'Settings', 'Log out']) await expect(sheet.getByText(l, { exact: true })).toBeVisible();
   await sheet.getByRole('link', { name: 'Settings' }).click();
   await expect(page).toHaveURL(/\/account\/kyc/);
   await expect(sheet).toBeHidden();

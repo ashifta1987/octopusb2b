@@ -207,7 +207,7 @@ export function KycForm({
             {field('line1', 'Address line 1', { required: true, autoComplete: 'address-line1', className: 'sm:col-span-2 lg:col-span-3' })}
             {field('line2', 'Address line 2', { autoComplete: 'address-line2', className: 'sm:col-span-2 lg:col-span-3' })}
           </div>
-          <p className="mt-4 text-sm text-muted">Shipping addresses can be different. Add them under <Link href="/account/addresses" className="underline">Addresses</Link>.</p>
+          <p className="mt-4 text-sm text-muted">Delivery addresses can be different: give the delivery city and country on each request or order.</p>
         </section>
 
         <section className="card p-6" aria-labelledby="kyc-s3">

@@ -48,8 +48,8 @@ export function StaffShell({ session, nav, counts, moderation, children }: {
           <Logo white />
           <span className="mono text-[11px] font-bold uppercase tracking-[.08em] px-3 py-1 rounded-full bg-white text-navy" data-testid="staff-only">Admin · staff only</span>
           <form action="/office/orders" role="search" className="order-3 lg:order-none basis-full lg:basis-auto lg:flex-1 lg:max-w-[520px]">
-            <label htmlFor="staff-q" className="sr-only">Customer, order, request, SKU or bin</label>
-            <input id="staff-q" name="q" className="input !rounded-[10px] !border-white" placeholder="Customer, order, request, SKU or bin" />
+            <label htmlFor="staff-q" className="sr-only">Search orders by code or title</label>
+            <input id="staff-q" name="q" className="input !rounded-[10px] !border-white" placeholder="Search orders by code or title" />
           </form>
           {isStaging() && <span className="order-2 mono text-[11px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full bg-[#FEF3C7] text-[#92400E]" data-testid="staging-badge" title="Staging environment: test data, not the live site">Staging</span>}
           <div className="ml-auto flex items-center gap-3 [&_summary]:text-white [&_.btn-ghost]:!text-white [&_.text-muted]:!text-white/70 [&_summary_.bg-navy]:!bg-blue">
