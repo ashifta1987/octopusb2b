@@ -6,6 +6,7 @@ import { unitOne } from '@/components/store/product-card';
 import { CATEGORY_PILL, CATEGORY_PILL_CLASS, TURNKEY_CATEGORIES, kUsd, type TurnkeyPackage, type TurnkeyProject } from '@/lib/turnkey/format';
 import { TkImage } from '@/components/store/turnkey/ui';
 import { copy } from './shared';
+import { TimeLeft } from './time-left';
 
 /**
  * Storefront home, Nov 2026 design (Home-desktop-full.png): five numbered services — 1 Product sourcing (hero + quote form),
@@ -282,21 +283,14 @@ export function Pools({ blocks, pools, depositPct }: { blocks: Blocks; pools: Po
   );
 }
 
-/** "2d 14h left" (server render time; the pools page has the live countdown) */
-function timeLeft(deadline: string) {
-  const ms = Math.max(0, new Date(deadline).getTime() - Date.now());
-  return `${Math.floor(ms / 86_400_000)}d ${String(Math.floor((ms % 86_400_000) / 3_600_000)).padStart(2, '0')}h left`;
-}
-
 function MiniPool({ p }: { p: PoolCard }) {
   const pct = p.target_qty ? Math.min(100, Math.round((p.filled_qty / p.target_qty) * 100)) : 0;
-  const left = timeLeft(p.deadline_at);
   const price = p.pool_price_minor ?? p.base_price_minor;
   return (
     <Link href={`/pool/${p.code}`} className="card rounded-[14px] p-4 block hover:border-blue">
       <div className="text-[15.5px] font-semibold line-clamp-1">{p.product.title}</div>
       <div className="flex justify-between items-baseline mt-2 text-[12.5px]">
-        <span className="mono uppercase tracking-[.06em] text-[#5B6575]">{left}</span>
+        <span className="mono uppercase tracking-[.06em] text-[#5B6575]"><TimeLeft deadline={p.deadline_at} /></span>
         <span className="text-[#3B4556]">{pct} % filled</span>
       </div>
       <div className="h-1.5 rounded-full bg-line mt-1.5 overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Filled">
