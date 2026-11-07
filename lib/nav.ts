@@ -22,7 +22,7 @@ export const CUSTOMER_NAV: NavSection[] = [
   {
     title: 'More',
     items: [
-      { href: '/account/ledger', label: 'Ledger & invoices' },
+      { href: '/account/ledger', label: 'Ledger and statements' },
       { href: '/account/support', label: 'Help & complaints' },
     ],
   },
@@ -57,10 +57,11 @@ export const OFFICE_NAV: NavSection[] = [
   {
     title: 'Admin',
     items: [
-      { href: '/admin', label: 'Overview', area: 'dashboard' },
+      { href: '/admin/reports', label: 'Reports', area: 'dashboard' },
       { href: '/admin/customers', label: 'Customers', area: 'customers' },
       { href: '/admin/finance', label: 'Finance', area: 'finance' },
       { href: '/admin/wallet', label: 'Wallets & payments', area: 'wallet' },
+      { href: '/admin/settings/payment', label: 'Payment settings', area: 'finance', action: 'edit' },
       { href: '/admin/currency', label: 'Currency', area: 'finance' },
       { href: '/admin/services', label: 'Services & charges', area: 'services' },
       { href: '/admin/pools', label: 'Group buying', area: 'orders' },

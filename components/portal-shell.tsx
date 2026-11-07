@@ -75,7 +75,7 @@ function PortalSwitcher({ session }: { session: Session }) {
 
 
 /* ───────── Staff top bar (SPEC §17.2): workspace switcher + user menu. Native <details> menus: no client JS. ───────── */
-function WorkspaceSwitcher({ session, current }: { session: Session; current?: string }) {
+export function WorkspaceSwitcher({ session, current }: { session: Session; current?: string }) {
   const list = workspacesFor(session);
   if (list.length < 2) return null;
   return (
@@ -105,7 +105,7 @@ function WorkspaceSwitcher({ session, current }: { session: Session; current?: s
   );
 }
 
-function StaffUserMenu({ name, initials, sub, email }: { name: string; initials: string; sub: string; email: string | null }) {
+export function StaffUserMenu({ name, initials, sub, email }: { name: string; initials: string; sub: string; email: string | null }) {
   const item = 'block w-full text-left px-3 py-2 rounded-md text-sm font-semibold text-navy hover:bg-surface';
   return (
     <details className="relative">

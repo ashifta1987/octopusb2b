@@ -3881,7 +3881,7 @@
               }
             ]
           },
-          "carrier_code": {
+          "service": {
             "type": "string"
           },
           "service_code": {

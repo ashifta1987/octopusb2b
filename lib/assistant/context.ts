@@ -1,7 +1,7 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { fmtDate, humanize, money } from '@/lib/format';
-import { carrierName } from './facts';
+import { serviceName } from '@/lib/service-names';
 import { redactText } from './redact';
 import type { ContextCounts } from './types';
 
@@ -34,7 +34,7 @@ export async function buildContext(sb: SupabaseClient, orgId: string): Promise<{
     sb.from('service_requests').select('code, service_code, status, fee_minor, currency, created_at, services(name)').eq('org_id', orgId).order('created_at', { ascending: false }).limit(8),
     sb.from('wallets').select('currency, account_id, balance_minor').eq('org_id', orgId),
     sb.from('pool_pledge_mine_view').select('pool_code, product_title, qty, status, pool_status, deadline_at, deposit_minor, balance_minor, currency, balance_due_at').eq('org_id', orgId).order('joined_at', { ascending: false }).limit(6),
-    sb.from('shipments').select('id, code, order_id, carrier_code, tracking_no, status, eta').eq('org_id', orgId).order('created_at', { ascending: false }).limit(5),
+    sb.from('shipments').select('id, code, order_id, service_code, tracking_no, status, eta').eq('org_id', orgId).order('created_at', { ascending: false }).limit(5),
     getContextCounts(sb, orgId),
   ]);
 
@@ -79,7 +79,7 @@ export async function buildContext(sb: SupabaseClient, orgId: string): Promise<{
   for (const sh of shipRows) {
     const ev = evRows.find((e) => e.shipment_id === sh.id);
     const oc = orderRows.find((x) => x.id === sh.order_id);
-    lines.push(`- ${s(sh.code)}${oc ? ` (order ${s(oc.code)})` : ''} · ${carrierName(s(sh.carrier_code))} · tracking ${s(sh.tracking_no) || '—'} · ${humanize(s(sh.status))}${sh.eta ? ` · ETA ${fmtDate(s(sh.eta))}` : ''}` +
+    lines.push(`- ${s(sh.code)}${oc ? ` (order ${s(oc.code)})` : ''} · ${serviceName(s(sh.service_code))} · tracking ${s(sh.tracking_no) || '—'} · ${humanize(s(sh.status))}${sh.eta ? ` · ETA ${fmtDate(s(sh.eta))}` : ''}` +
       (ev ? ` · last scan: ${s(ev.description) || humanize(s(ev.status))}${ev.location ? `, ${s(ev.location)}` : ''} ${fmtDate(s(ev.occurred_at), true)}` : ''));
   }
 

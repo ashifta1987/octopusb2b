@@ -10,14 +10,16 @@ import { usePathname } from 'next/navigation';
  */
 type Item = { href: string; label: string; key?: string };
 const MORE: Item[] = [
-  { href: '/account/sourcing?type=dropship', label: 'Dropshipping', key: 'dropship' },
+  { href: '/account/dropship', label: 'Dropshipping', key: 'dropship' },
   { href: '/account/pools', label: 'MOQ pools', key: 'pools' },
-  { href: '/account/sourcing?type=3pl', label: '3PL', key: '3pl' },
+  { href: '/account/warehouse', label: '3PL warehouse', key: '3pl' },
+  { href: '/account/brand', label: 'Make My Brand', key: 'brand' },
+  { href: '/account/invoices', label: 'Invoices and receipts' },
   { href: '/account/turnkey', label: 'Turnkey projects', key: 'turnkey' },
   { href: '/account/assistant', label: 'Assistant' },
   { href: '/account/developer', label: 'API' },
   { href: '/account/kyc', label: 'Settings' },
-  { href: '/account/ledger', label: 'Ledger & invoices' },
+  { href: '/account/ledger', label: 'Ledger and statements' },
   { href: '/account/support', label: 'Help & complaints' },
 ];
 
@@ -50,7 +52,7 @@ export function AccountBottomBar({ newQuotes, used }: { newQuotes: number; used:
         <ul className="grid grid-cols-5">
           {main.map((m) => (
             <li key={m.href}>
-              <Link href={m.href} aria-current={m.on ? 'page' : undefined} aria-label={m.href === '/account/sourcing' ? 'Product sourcing' : undefined}
+              <Link href={m.href} prefetch={false} aria-current={m.on ? 'page' : undefined} aria-label={m.href === '/account/sourcing' ? 'Product sourcing' : undefined}
                 className={`relative flex flex-col items-center justify-center gap-0.5 min-h-[56px] text-[11.5px] font-semibold ${m.on ? 'text-blue' : 'text-[#4B5565]'}`}>
                 <Icon d={ICONS[m.icon]} />
                 {m.label}

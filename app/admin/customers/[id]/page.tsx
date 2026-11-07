@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { can, requireStaff } from '@/lib/auth';
+import { can, requireStaffOrManager } from '@/lib/auth';
+import { CustomerOneApp } from '@/components/admin/customer-one-app';
 import { createClient } from '@/lib/supabase/server';
 import { Card, EmptyState, PageHeader, Stat, StatusBadge } from '@/components/ui';
 import { ToggleSetting } from '@/components/admin/client';
@@ -14,7 +15,7 @@ export const metadata = { title: 'Customer' };
 /** Customer detail with the dedicated account-manager card (reassign with reason) and the VIP flag (SPEC §20.3). */
 export default async function CustomerDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const s = await requireStaff('customers', 'view', `/admin/customers/${id}`);
+  const s = await requireStaffOrManager(`/admin/customers/${id}`, ['customers', 'view']); // managers: RLS shows only their own customers
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const sb = await createClient();
   const { data: org } = await sb.from('organizations').select('id, name, buyer_code, country, city, business_type, registration_no, website, kyc_status, created_at').eq('id', id).maybeSingle();
@@ -149,6 +150,7 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
           </Card>
         </div>
       </div>
+      <CustomerOneApp orgId={id} session={s} />
     </>
   );
 }

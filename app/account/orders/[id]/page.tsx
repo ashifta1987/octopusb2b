@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { serviceName } from '@/lib/service-names';
 import { getCompanyBankAccount } from '@/components/account/bank-data';
 import { bankLines } from '@/lib/bank-accounts';
 import { notFound } from 'next/navigation';
@@ -28,7 +29,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
   const [{ data: docs }, { data: events }, { data: shipments }, { data: list }, { data: pi }, settings, funds, content] = await Promise.all([
     sb.from('documents').select('id, doc_type, number, amount_cents, currency, status, created_at').eq('order_id', id).order('created_at'),
     sb.from('order_events').select('id, kind, title, body, created_at').eq('order_id', id).order('created_at', { ascending: false }),
-    sb.from('shipments').select('id, code, carrier_code, service_code, tracking_no, status, weight_kg, parcels, eta, last_event_at, created_at').eq('order_id', id).order('created_at', { ascending: false }),
+    sb.from('shipments').select('id, code, service_code, tracking_no, status, weight_kg, parcels, eta, last_event_at, created_at').eq('order_id', id).order('created_at', { ascending: false }),
     sb.from('orders').select('id, code, title, quantity, status, updated_at').eq('org_id', o.org_id).order('updated_at', { ascending: false }).limit(12),
     sb.from('proforma_invoices').select('number').eq('order_id', id).maybeSingle(),
     getSettings(),
@@ -148,7 +149,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
           {ship && (
             <Card className="p-6">
               <div className="flex flex-wrap justify-between gap-3">
-                <h2 className="text-lg font-semibold flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-ok" aria-hidden />Live tracking · {ship.carrier_code === 'yunexpress' ? 'YunExpress' : ship.carrier_code}</h2>
+                <h2 className="text-lg font-semibold flex items-center gap-2"><span className="w-2.5 h-2.5 rounded-full bg-ok" aria-hidden />Live tracking · {serviceName(ship.service_code)}</h2>
                 <span className="text-sm text-muted">Updated {relTime(ship.last_event_at ?? lastTrack?.occurred_at ?? ship.created_at)}</span>
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-3">

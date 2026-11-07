@@ -178,7 +178,7 @@ export function AdsCampaignForm({ placements, countries, disabled, walletCents, 
             <div className="flex justify-between"><dt className="text-muted">Max spend per month</dt><dd className="mono font-semibold">{fmt(budgetUsd * 100 * 30)}</dd></div>
             <div className="flex justify-between border-t border-line pt-2"><dt className="text-muted">Wallet balance</dt><dd className="mono">{fmt(walletCents)}</dd></div>
           </dl>
-          <p className="text-xs text-muted mt-3">Paid from your wallet per valid click. Repeated, bot and own clicks are not charged. Monthly invoice in Ledger &amp; invoices.</p>
+          <p className="text-xs text-muted mt-3">Paid from your wallet per valid click. Repeated, bot and own clicks are not charged. Monthly invoice in Invoices and receipts.</p>
           {walletCents < bid && <p className="text-xs text-bad mt-2">Your wallet balance is below one click. <a href="/account/wallet" className="underline">Top up</a> so the ad can run once approved.</p>}
           {err && <p className="text-sm text-bad mt-3" role="alert">{err}</p>}
           {done && <p className="text-sm text-ok mt-3" role="status">Submitted for approval. We’ll notify you when it goes live.</p>}

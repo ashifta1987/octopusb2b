@@ -88,7 +88,7 @@ export async function AdsCampaignManager() {
         </div>
       )}
       {!settings.wallet_enabled && (
-        <div className="mb-6"><Notice tone="blue">The wallet is switched off — valid clicks will be added to your monthly invoice in Ledger &amp; invoices.</Notice></div>
+        <div className="mb-6"><Notice tone="blue">The wallet is switched off — valid clicks will be added to your monthly invoice in Invoices and receipts.</Notice></div>
       )}
 
       <AdsCampaignForm placements={placements} countries={COUNTRY_NAMES} disabled={!settings.ads_enabled} walletCents={wallet} currency={ctx.currency} />

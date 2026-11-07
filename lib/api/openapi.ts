@@ -199,7 +199,7 @@ const SCHEMAS: Record<string, unknown> = {
   ),
   Tracking: obj(
     {
-      id: str, code: str, order_id: nullable(str), order_code: nullable(str), carrier_code: str, service_code: nullable(str), tracking_no: nullable(str),
+      id: str, code: str, order_id: nullable(str), order_code: nullable(str), service: str, service_code: nullable(str), tracking_no: nullable(str),
       status: { enum: ['draft', 'priced', 'created', 'label_ready', 'picked_up', 'in_transit', 'out_for_delivery', 'delivered', 'exception', 'returned'] }, eta: nullable(str),
       events: { type: 'array', items: obj({ status: str, description: nullable(str), location: nullable(str), occurred_at: ts }) },
     },
