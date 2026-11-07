@@ -70,3 +70,4 @@ try {
 }
 console.log(failed ? `\nbank accounts: ${failed} check(s) failed` : '\nbank accounts: all passed');
 process.exitCode = failed ? 1 : 0;
+

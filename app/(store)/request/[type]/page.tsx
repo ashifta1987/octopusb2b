@@ -6,7 +6,7 @@ import { block } from '@/lib/content';
 import { getStoreContent } from '@/components/store/currency';
 import { getSession } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { COUNTRY_NAMES } from '@/lib/format';
+import { COUNTRY_NAMES, money } from '@/lib/format';
 import { Notice } from '@/components/ui';
 import { getServices, getProductById } from '@/components/store/data';
 import { REQUEST_TYPES, isRequestType, SERVICE_CODE, type RequestType } from '@/components/store/request-schema';
@@ -16,7 +16,19 @@ import { parts } from '@/components/store/seo';
 import { submitRequest } from './actions';
 
 type Params = Promise<{ type: string }>;
-type SP = Promise<{ product?: string; qty?: string; title?: string; country?: string }>;
+type SP = Promise<{ product?: string; qty?: string; title?: string; country?: string; city?: string; category?: string }>;
+
+/** ADDON-36 (M1): every request type has its own heading + one-line intro (CMS override: request.h1.<type> = "Title|Intro"). */
+const HEAD: Record<RequestType, string> = {
+  sourcing: "Tell us the product. We'll find the factory.|Matched, verified factories quote within 24 hours. You compare and choose; we inspect and ship.",
+  dropship: 'Start dropshipping with Octopus B2B|Sell our verified products in your store. We pack each order under your brand and ship it to your customer.',
+  '3pl': 'Store your stock near your buyers|Ship your bulk order once. We receive it, store it by SKU and send out each order as it comes in.',
+  sample: 'Order a sample before you buy in bulk|Check quality, packaging and finish in your hands before you commit to a bulk order.',
+  qc: 'Book a quality inspection|Our inspectors check the goods at the factory, with photos and video, before anything ships.',
+  certification: 'Get your product certified for your market|CE, FCC, RoHS, SASO and more, arranged with accredited labs.',
+};
+/** ADDON-36 (H2): dropshipping is an onboarding, not a quote request. */
+const DROPSHIP_STEPS = 'Create your account|Free, takes two minutes.;Choose products|Pick from the dropship catalogue of verified factories.;Connect your store|Shopify, WooCommerce or Wix — or upload orders as a sheet.;Top up your wallet|Product, shipping and fulfilment come out of it per order.;Orders ship automatically|Packed under your brand, tracked to your customer.';
 
 const FALLBACK: Record<RequestType, string> = {
   sourcing: 'Product sourcing|Find a product we don’t list yet', '3pl': '3PL service|Warehousing and fulfillment', dropship: 'Dropshipping|Ship straight to your customers',
@@ -59,8 +71,8 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
     balance = data == null ? 0 : Number(data.balance_minor);
     credit = data == null ? 0 : Number(data.credit_limit_minor);
   }
-  const prefill = !product ? new URLSearchParams(Object.entries({ title: sp.title, qty: sp.qty, country: sp.country }).filter(([, v]) => typeof v === 'string' && v) as [string, string][]).toString() : '';
-  const productQs = product ? `?product=${product.id}` : prefill ? `?${prefill}` : '';
+  const prefill = new URLSearchParams(Object.entries({ title: product ? undefined : sp.title, qty: sp.qty, country: sp.country, city: sp.city, category: sp.category }).filter(([, v]) => typeof v === 'string' && v) as [string, string][]).toString();
+  const productQs = product ? `?product=${product.id}${prefill ? `&${prefill}` : ''}` : prefill ? `?${prefill}` : '';
   const loginHref = `/login?next=${encodeURIComponent(`/request/${type}${productQs}`)}`;
   const mode = !session ? 'guest' : !session.org ? 'no-org' : 'ready';
   const orgCountry = session?.org?.country && session.org.country in COUNTRY_NAMES ? session.org.country : '';
@@ -73,24 +85,32 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
   }
   if (orgCountry) { defaults.destination_country = orgCountry; defaults.warehouse_country = orgCountry; defaults.target_market = orgCountry; }
   // home "Get quotes in 24 h" form: ?title=&qty=&country= prefill the sourcing request (validated, never trusted)
-  if (!product && type === 'sourcing') {
+  // ADDON-36 (C2, C3): every request type reads title / qty / country / city from the query string (validated, unknown keys ignored)
+  {
     const t = typeof sp.title === 'string' ? sp.title.trim().slice(0, 200) : '';
-    if (t) { defaults.title = t; defaults.product = t; }
+    if (t && !product) { defaults.title = t; defaults.product = t; }
     if (typeof sp.qty === 'string' && /^\d{1,9}$/.test(sp.qty)) defaults.quantity = sp.qty;
     const c = typeof sp.country === 'string' ? sp.country.toUpperCase() : '';
-    if (c in COUNTRY_NAMES) defaults.destination_country = c;
+    if (c in COUNTRY_NAMES) { defaults.destination_country = c; defaults.warehouse_country = c; defaults.target_market = c; }
+    const city = typeof sp.city === 'string' ? sp.city.trim().slice(0, 120) : '';
+    if (city) defaults.destination_city = city;
+    const cat = typeof sp.category === 'string' && /^[a-z0-9-]{2,80}$/.test(sp.category) ? sp.category : '';
+    if (cat && type === 'sourcing' && !defaults.details) defaults.details = `Category: ${cat.replace(/-/g, ' ')}\n`;
   }
 
   const [talkT, talkB] = parts(blocks, 'request.talk', 'Prefer to talk it through?|Message our sourcing team and share photos directly.');
   const [loginT, loginB] = parts(blocks, 'request.login', 'Sign in to submit|An account is needed to submit requests.');
   const wa = company?.whatsapp ? `https://wa.me/${company.whatsapp.replace(/\D/g, '')}` : null;
-  const next = [1, 2, 3, 4, 5, 6].map((n) => parts(blocks, `request.next.${n}`)).filter((x) => x[0]);
+  const next = type === 'dropship'
+    ? block(blocks, 'request.dropship.steps', DROPSHIP_STEPS).split(';').map((x) => x.split('|') as [string, string])
+    : [1, 2, 3, 4, 5, 6].map((n) => parts(blocks, `request.next.${n}`)).filter((x) => x[0]);
+  const [h1, intro] = parts(blocks, `request.h1.${type}`, HEAD[type]);
 
   return (
     <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-10 sm:py-12">
       <div className="eyebrow">{block(blocks, 'request.eyebrow', 'Request Center')}</div>
-      <h1 className="text-[34px] sm:text-[44px] font-extrabold leading-[1.1] mt-3 max-w-[780px]">{block(blocks, 'request.title')}</h1>
-      <p className="text-[17px] text-[#3B4556] mt-4 max-w-[760px] leading-relaxed">{block(blocks, 'request.subtitle')}</p>
+      <h1 className="text-[34px] sm:text-[44px] font-extrabold leading-[1.1] mt-3 max-w-[780px]">{h1}</h1>
+      <p className="text-[17px] text-[#3B4556] mt-4 max-w-[760px] leading-relaxed">{intro}</p>
 
       <nav aria-label="Request type" className="mt-8">
         <ul className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
@@ -140,7 +160,7 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
             key={type}
             type={type} action={submitRequest} defaults={defaults} productId={product?.id ?? null}
             feeCents={fee} serviceName={svc?.name ?? 'Service fee'}
-            feeLabel={fee > 0 ? `Charged once ${svc?.unit ?? 'per request'} when you submit it.` : 'No fee to submit — you will receive a quote.'}
+            feeLabel={fee > 0 ? `${type === 'sourcing' ? 'RFQ fee' : svc?.name ?? 'Fee'} ${money(fee, svcCurrency)}, charged ${walletEnabled ? 'from your wallet' : 'on your next invoice'} when you submit.` : type === 'dropship' ? 'Dropship setup is free. You pay per order from your wallet once orders flow.' : 'Free to submit.'}
             balanceCents={balance} creditCents={credit} walletEnabled={walletEnabled} currency={svcCurrency} mode={mode} loginHref={loginHref}
           />
         </section>
@@ -148,14 +168,14 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
         <aside className="space-y-4 min-w-0" aria-label="About your request">
           {next.length > 0 && (
             <section className="rounded-[14px] bg-navy text-white p-7" aria-labelledby="next-h">
-              <h2 id="next-h" className="!text-white text-xl font-semibold">What happens next</h2>
+              <h2 id="next-h" className="!text-white text-xl font-semibold">{type === 'dropship' ? 'How dropship setup works' : 'What happens next'}</h2>
               <ol className="mt-5 relative">
                 {next.map(([t, b], i) => (
                   <li key={i} className="relative pl-10 pb-5 last:pb-0">
                     {i < next.length - 1 && <span className="absolute left-[13px] top-7 bottom-0 w-px bg-blue/60" aria-hidden />}
                     <span className="absolute left-0 top-0 w-7 h-7 rounded-full border-2 border-[#5B9BF0] flex items-center justify-center text-[11px] font-semibold" aria-hidden>{i + 1}</span>
                     <div className="font-semibold">{t}</div>
-                    <div className="text-[13px] text-[#C9CFDB] mt-0.5">{b}</div>
+                    <div className="text-[13px] text-[#C9CFDB] mt-0.5">{(b ?? '').replace('{currency}', svcCurrency)}</div>
                   </li>
                 ))}
               </ol>

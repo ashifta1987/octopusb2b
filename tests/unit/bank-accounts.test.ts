@@ -15,3 +15,4 @@ describe('company bank accounts', () => {
     expect(accountFor(list, null)).toBeNull();
   });
 });
+

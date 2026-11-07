@@ -24,3 +24,4 @@ export function accountFor(list: BankAccount[], currency: string | null | undefi
   const c = (currency ?? '').toUpperCase();
   return list.find((a) => a.active && a.currency === c) ?? null;
 }
+

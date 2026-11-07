@@ -42,9 +42,9 @@ export const REQUEST_FIELDS: Record<RequestType, Section[]> = {
     ],
   }],
   dropship: [{
-    title: 'Dropshipping setup',
+    title: 'Dropship setup',
     fields: [
-      { name: 'product', label: 'Products to sell', kind: 'text', required: true, full: true, placeholder: 'Product names or links' },
+      { name: 'product', label: 'Products you plan to sell (optional)', kind: 'text', full: true, placeholder: 'Product names or links — you can also pick them later from the dropship catalogue' },
       { name: 'target_markets', label: 'Target markets', kind: 'text', required: true, placeholder: 'e.g. US, Germany, UAE' },
       { name: 'store_platform', label: 'Store platform', kind: 'select', required: true, options: ['Shopify', 'WooCommerce', 'Wix', 'Amazon', 'Other'] },
       { name: 'monthly_orders', label: 'Expected orders per month', kind: 'int' },

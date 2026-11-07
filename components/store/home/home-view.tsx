@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { getStoreContent } from '@/components/store/currency';
-import { getFeatured, getVerifiedSuppliers, listOpenPools, getSupplierCategories, listProducts } from '@/components/store/data';
+import { getFeatured, getVerifiedSuppliers, listOpenPools, getSupplierCategories, listProducts, getServices } from '@/components/store/data';
 import { GridSkeleton } from '@/components/store/product-card';
 import { AdSlot } from '@/components/store/ad-slot';
 import { JsonLd, SITE_URL } from '@/components/store/seo';
@@ -15,8 +15,8 @@ import { SourcingHero, ServiceCards, SourcingSteps, Dropshipping, Pools, Warehou
  *  dropshipping, MOQ pools, 3PL, Turnkey), how-it-works steps, ready-to-order products, open pools, shipping band,
  *  stats, other services, verified suppliers, CTA. Only REAL data is rendered; sections without data are hidden. */
 export async function HomeView() {
-  const [{ blocks, settings, company, branches }, featured, suppliers, pools, live, turnkey] = await Promise.all([
-    getStoreContent(), getFeatured(4), getVerifiedSuppliers(3), listOpenPools({ sort: 'filled', limit: 3 }), getHomeLiveData(), getTurnkeyCatalogue(),
+  const [{ blocks, settings, company, branches }, featured, suppliers, pools, live, turnkey, services] = await Promise.all([
+    getStoreContent(), getFeatured(4), getVerifiedSuppliers(3), listOpenPools({ sort: 'filled', limit: 3 }), getHomeLiveData(), getTurnkeyCatalogue(), getServices(),
   ]);
   const supplierCats = await getSupplierCategories(suppliers.map((s) => s.id));
   // "Ready to order": featured products, else the newest live products that have a photo (real listings only)
@@ -40,7 +40,7 @@ export async function HomeView() {
   return (
     <div className="home-v2">
       {orgLd && <JsonLd data={orgLd} />}
-      <SourcingHero blocks={blocks} defaultCountry={defaultCountry} />
+      <SourcingHero blocks={blocks} defaultCountry={defaultCountry} fee={services.rfq ? { cents: services.rfq.priceCents ?? 0, currency: services.rfq.currency } : null} />
       <ServiceCards blocks={blocks} poolsOn={rules.enabled} turnkeyOn={turnkeyOn} />
       <SourcingSteps blocks={blocks} products={ready} />
       <Dropshipping blocks={blocks} countries={stats.countries} />

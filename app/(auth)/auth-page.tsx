@@ -7,13 +7,13 @@ export const metadata = { title: 'Sign up or log in' };
 
 /** Auth.png — sign up & log in (email + password with 6-digit OTP, plus "Continue with Google" for customers when enabled in Supabase — 5 Nov 2026). */
 /** Two-column Auth.png frame (navy benefits panel + form column), shared by login, sign-up and password reset. */
-export function AuthShell({ children }: { children: React.ReactNode }) {
+export function AuthShell({ children, title = 'Create a free account', sub = 'An account is needed to request quotes, see your tier prices, place orders and track shipments.' }: { children: React.ReactNode; title?: string; sub?: string }) {
   return (
     <div className="min-h-screen grid md:grid-cols-[637fr_803fr]">
       <aside className="bg-navy text-white px-8 sm:px-12 py-12 flex flex-col">
         <Logo white />
-        <h1 className="!text-white text-[34px] sm:text-[38px] font-bold leading-[1.15] mt-12 max-w-[460px]">Create a free account to start sourcing.</h1>
-        <p className="text-[#C9CFDB] mt-4 text-lg max-w-[440px]">An account is needed to request quotes, see your tier prices, place orders and track shipments.</p>
+        <h1 className="!text-white text-[34px] sm:text-[38px] font-bold leading-[1.15] mt-12 max-w-[460px]">{title}</h1>
+        <p className="text-[#C9CFDB] mt-4 text-lg max-w-[440px]">{sub}</p>
         <ul className="mt-8 space-y-4 text-[16px]">
           {['Send one RFQ to several verified suppliers', 'Ship worldwide with YunExpress tracking', 'Request 3PL fulfillment or dropshipping'].map((t) => (
             <li key={t} className="flex gap-3 items-center">
@@ -41,7 +41,8 @@ export function AuthShell({ children }: { children: React.ReactNode }) {
 export default async function AuthPage({ searchParams, mode }: { searchParams: Promise<{ next?: string; error?: string; reset?: string }>; mode: 'signup' | 'login' }) {
   const [sp, social] = await Promise.all([searchParams, getCustomerSocialProviders()]);
   return (
-    <AuthShell>
+    <AuthShell title={mode === 'login' ? 'Log in to Octopus B2B' : 'Create a free account'}
+      sub={mode === 'login' ? 'Welcome back. Your requests, quotes, orders and wallet are waiting in your account.' : 'An account is needed to request quotes, see your tier prices, place orders and track shipments.'}>
       {sp.reset === '1' && <p role="status" className="mb-5 rounded-[10px] border border-line bg-blue-soft px-3.5 py-3 text-[13px] text-[#1E4F9C]">Your password was changed. Log in with the new password.</p>}
       <AuthForm initialMode={mode} next={sp.next ?? '/account'} initialError={sp.error} google={social.google} />
     </AuthShell>

@@ -88,7 +88,7 @@ function Illustration({ src, alt, w, h, className = '' }: { src: string; alt: st
 const steps = (blocks: Blocks, key: string, fallback: string[]) => fallback.map((f, i) => copy(blocks, `${key}.${i + 1}`, f));
 
 /* ───────── 1 · Product sourcing (hero) ───────── */
-export function SourcingHero({ blocks, defaultCountry }: { blocks: Blocks; defaultCountry: string }) {
+export function SourcingHero({ blocks, defaultCountry, fee }: { blocks: Blocks; defaultCountry: string; fee: { cents: number; currency: string } | null }) {
   const countries = Object.entries(COUNTRY_NAMES).sort((a, b) => a[1].localeCompare(b[1]));
   return (
     <section id="sourcing" aria-labelledby="home-hero-h" className="bg-gradient-to-b from-white to-[#F3F6FB] border-b border-line">
@@ -112,7 +112,10 @@ export function SourcingHero({ blocks, defaultCountry }: { blocks: Blocks; defau
           <form action="/request/sourcing" method="get" className="relative -mt-[76px] mx-4 sm:mx-5 bg-white rounded-[14px] border border-line shadow-[0_12px_32px_rgba(20,26,56,.12)] p-5" aria-labelledby="home-quote-h">
             <div className="flex items-center justify-between">
               <h2 id="home-quote-h" className="text-[17px] font-semibold">{block(blocks, 'home2.quote.title', 'Get quotes in 24 h')}</h2>
-              <span className="mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D]">{block(blocks, 'home2.quote.badge', 'Free')}</span>
+              {/* ADDON-36 (H1): the real RFQ fee from the fee settings — "Free" only when it is 0 */}
+              {fee && fee.cents > 0
+                ? <span className="text-[12.5px] font-semibold text-[#3B4556]" data-testid="quote-fee">RFQ fee {money(fee.cents, fee.currency)}</span>
+                : <span className="mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D]" data-testid="quote-fee">Free</span>}
             </div>
             <label className="sr-only" htmlFor="hq-title">Product</label>
             <input id="hq-title" name="title" required maxLength={200} className="input mt-3" placeholder={block(blocks, 'home2.quote.placeholder', 'Product, e.g. handheld fan 4000mAh')} />

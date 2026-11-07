@@ -32,7 +32,7 @@ export default function ProjectPage({ params }: { params: Params }) {
 
 async function Content({ params }: { params: Params }) {
   const { slug } = await params;
-  const [d, { settings }] = await Promise.all([getTurnkeyProject(slug), getSiteContent()]);
+  const [d, { settings, company }] = await Promise.all([getTurnkeyProject(slug), getSiteContent()]);
   if (!d || settings['turnkey.enabled'] === false) notFound();
   const { project: p, packages, sources } = d;
   const live = p.status === 'live';
@@ -64,7 +64,7 @@ async function Content({ params }: { params: Params }) {
         </div>
       </section>
 
-      <ProjectPackages project={p} packages={packages} live={live} threshold={threshold} />
+      <ProjectPackages project={p} packages={packages} live={live} threshold={threshold} whatsapp={company?.whatsapp ?? null} />
 
       {sources.length > 0 && (
         <section className="max-w-[1280px] mx-auto px-4 sm:px-8 pb-12 lg:pr-[420px]">

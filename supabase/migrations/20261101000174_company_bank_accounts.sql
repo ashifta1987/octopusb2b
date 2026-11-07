@@ -72,3 +72,4 @@ revoke all on function save_company_bank_account(jsonb) from public, anon;
 revoke all on function delete_company_bank_account(uuid) from public, anon;
 grant execute on function save_company_bank_account(jsonb) to authenticated;
 grant execute on function delete_company_bank_account(uuid) to authenticated;
+

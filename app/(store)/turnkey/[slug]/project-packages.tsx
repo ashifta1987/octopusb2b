@@ -8,7 +8,7 @@ import { COVERED } from '@/components/store/turnkey/ui';
 const QUICK_COUNTRIES = ['AE', 'SA', 'NG', 'KE', 'PK'];
 
 /** Package tabs (Starter · Standard · Pro / capacity options) + equipment + earnings + right rail / sticky mobile bar. */
-export function ProjectPackages({ project: p, packages, live, threshold }: { project: TurnkeyProject; packages: TurnkeyPackage[]; live: boolean; threshold: number }) {
+export function ProjectPackages({ project: p, packages, live, threshold, whatsapp = null }: { project: TurnkeyProject; packages: TurnkeyPackage[]; live: boolean; threshold: number; whatsapp?: string | null }) {
   const initial = packages.find((k) => k.tier_rank === 2) ?? packages[0];
   const [sel, setSel] = useState<string | undefined>(initial?.package_id);
   const k = packages.find((x) => x.package_id === sel) ?? initial;
@@ -99,7 +99,12 @@ export function ProjectPackages({ project: p, packages, live, threshold }: { pro
           <div className="text-[13px] text-muted">{live ? 'All-in estimate · consolidated shipping · QC included' : `Rough planning figure. Packages ship the moment ${threshold} interest signals are logged. No commitment.`}</div>
         </div>
         <Link href={formHref()} className="btn btn-primary w-full" data-testid="rail-cta">{cta}</Link>
-        <Link href={`/turnkey/${p.project_id}/${live ? 'request' : 'interest'}?package=${k?.package_id ?? ''}&talk=1`} className="block text-center text-blue font-semibold text-[14px]">Talk to a sourcing lead</Link>
+        {/* ADDON-36 (M6): WhatsApp with the project and tier named; the form stays as the fallback */}
+        {whatsapp ? (
+          <a href={`https://wa.me/${whatsapp.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello Octopus B2B, I'd like to talk to a sourcing lead about the ${p.title} turnkey project${k ? ` (${k.tier_name} package)` : ''}.`)}`}
+            target="_blank" rel="noopener noreferrer" className="block text-center text-[#156B3A] font-semibold text-[14px]" data-testid="talk-whatsapp">Talk to a sourcing lead on WhatsApp</a>
+        ) : null}
+        <Link href={`/turnkey/${p.project_id}/${live ? 'request' : 'interest'}?package=${k?.package_id ?? ''}&talk=1`} className={`block text-center font-semibold ${whatsapp ? 'text-muted text-[13px]' : 'text-blue text-[14px]'}`}>{whatsapp ? 'or send the request form' : 'Talk to a sourcing lead'}</Link>
         <form action={`/turnkey/${p.project_id}/${live ? 'request' : 'interest'}`} method="get" className="border-t border-line pt-4 space-y-2.5">
           <div className="mono text-[10.5px] uppercase tracking-[.06em] text-muted">Quick quote</div>
           <input type="hidden" name="package" value={k?.package_id ?? ''} />

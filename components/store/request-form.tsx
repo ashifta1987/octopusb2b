@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm, type UseFormRegisterReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -26,10 +26,35 @@ export function RequestForm({ type, action, defaults, productId, feeCents, feeLa
     sections.forEach((s) => s.fields.forEach((f) => (v[f.name] = defaults[f.name] ?? '')));
     return v;
   }, [sections, defaults]);
-  const { register, trigger, getValues, formState: { errors } } = useForm<RequestValues>({ resolver: zodResolver(schema), defaultValues: initial, mode: 'onTouched' });
+  const { register, trigger, getValues, reset, formState: { errors } } = useForm<RequestValues>({ resolver: zodResolver(schema), defaultValues: initial, mode: 'onTouched' });
+  // ADDON-36 (H5): what a signed-out visitor typed survives sign-in / sign-up (sessionStorage, this tab only)
+  const draftKey = `octopus:request:${type}`;
+  useEffect(() => {
+    if (mode !== 'ready') return;
+    try {
+      const raw = sessionStorage.getItem(draftKey);
+      if (!raw) return;
+      sessionStorage.removeItem(draftKey);
+      const saved = JSON.parse(raw) as RequestValues;
+      const merged: RequestValues = { ...initial };
+      Object.keys(merged).forEach((k) => { if (typeof saved[k] === 'string' && saved[k]) merged[k] = saved[k]; });
+      reset(merged);
+    } catch { /* storage unavailable: nothing to restore */ }
+  }, [mode, draftKey, initial, reset]);
+  const saveDraft = () => { try { sessionStorage.setItem(draftKey, JSON.stringify(getValues())); } catch { /* ignore */ } };
+  // any sign-in / sign-up link on the page (top notice, header) keeps the draft too
+  useEffect(() => {
+    if (mode !== 'guest') return;
+    const onClick = (e: MouseEvent) => {
+      const a = (e.target as HTMLElement | null)?.closest('a[href^="/login"], a[href^="/signup"]');
+      if (a) { try { sessionStorage.setItem(draftKey, JSON.stringify(getValues())); } catch { /* ignore */ } }
+    };
+    document.addEventListener('click', onClick, true);
+    return () => document.removeEventListener('click', onClick, true);
+  }, [mode, draftKey, getValues]);
   const [idem] = useState(() => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`));
   const disabled = mode !== 'ready';
-  const submitLabel = type === 'sourcing' ? (feeCents > 0 ? 'Pay and submit RFQ' : 'Submit RFQ') : (feeCents > 0 ? `Pay and submit request` : 'Submit request');
+  const submitLabel = type === 'sourcing' ? (feeCents > 0 ? 'Pay and submit RFQ' : 'Submit RFQ') : type === 'dropship' ? 'Start dropship setup' : (feeCents > 0 ? `Pay and submit request` : 'Submit request');
 
   const onConfirm = async () => {
     const valid = await trigger();
@@ -41,7 +66,7 @@ export function RequestForm({ type, action, defaults, productId, feeCents, feeLa
 
   return (
     <form noValidate onSubmit={(e) => e.preventDefault()} className="space-y-8" aria-describedby={disabled ? 'req-locked' : undefined}>
-      <fieldset disabled={disabled} className="space-y-8 disabled:opacity-70">
+      <fieldset disabled={mode === 'no-org'} className="space-y-8 disabled:opacity-70">
         {sections.map((s) => (
           <div key={s.title}>
             <h2 className="text-xl font-semibold mb-4 flex items-center gap-4">{s.title}<span className="flex-1 h-px bg-line" aria-hidden /></h2>
@@ -55,21 +80,23 @@ export function RequestForm({ type, action, defaults, productId, feeCents, feeLa
       <div className="border-t border-line pt-6 space-y-5">
         <div className="rounded-[12px] bg-surface p-5">
           <h3 className="font-sans font-semibold text-[16px]">Fees for this request</h3>
-          <div className="flex justify-between mt-2 text-[14px]"><span className="text-muted">{serviceName}</span><span className="mono font-semibold">{feeCents > 0 ? money(feeCents, currency) : 'Free'}</span></div>
-          <div className="flex justify-between items-baseline border-t border-line mt-3 pt-3">
-            <span className="font-semibold">Pay now</span><span className="font-display text-2xl font-bold">{money(feeCents, currency)}</span>
-          </div>
-          <p className="text-[13px] text-muted mt-1">{feeLabel}</p>
+          <div className="flex justify-between mt-2 text-[14px]" data-testid="fee-row"><span className="text-muted">{serviceName}</span><span className="mono font-semibold">{feeCents > 0 ? money(feeCents, currency) : 'Free'}</span></div>
+          {feeCents > 0 && (
+            <div className="flex justify-between items-baseline border-t border-line mt-3 pt-3">
+              <span className="font-semibold">Pay now</span><span className="font-display text-2xl font-bold">{money(feeCents, currency)}</span>
+            </div>
+          )}
+          <p className="text-[13px] text-muted mt-1" data-testid="fee-text">{feeLabel}</p>
         </div>
         <div className="flex flex-wrap justify-between items-center gap-4">
           <p className="text-[13px] text-muted max-w-sm">
-            {walletEnabled ? 'Charged from your wallet when you submit. You get a reference number right away.' : 'The wallet is off — the fee is added to your next invoice. You get a reference number right away.'}
+            You get a reference number right away and can follow the request in My account › Product sourcing.
           </p>
           {mode === 'ready' && (
             <ConfirmChargeCurrency label={submitLabel} title={`Confirm ${serviceName.toLowerCase()}`} priceCents={feeCents} balanceCents={balanceCents} creditCents={creditCents} currency={currency}
               walletEnabled={walletEnabled && feeCents > 0} onConfirm={onConfirm} />
           )}
-          {mode === 'guest' && <Link href={loginHref} className="btn btn-primary">Sign in to submit</Link>}
+          {mode === 'guest' && <Link href={loginHref} onClick={saveDraft} className="btn btn-primary" data-testid="signin-to-submit">Sign in to submit</Link>}
           {mode === 'no-org' && <Link href="/onboarding" className="btn btn-primary">Complete company profile</Link>}
         </div>
       </div>
