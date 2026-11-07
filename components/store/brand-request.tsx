@@ -245,3 +245,4 @@ export function BrandRequestWizard({ products, methods, initialProduct, orgId, m
     </div>
   );
 }
+

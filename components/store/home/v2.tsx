@@ -66,7 +66,7 @@ function SectionTitle({ id, eyebrow, title, body, href, link }: { id: string; ey
         <h2 id={id} className="text-[28px] sm:text-[34px] font-extrabold leading-[1.12] tracking-[-0.02em] mt-2">{title}</h2>
         {body && <p className="text-[16.5px] text-[#3B4556] mt-3 leading-relaxed">{body}</p>}
       </div>
-      {href && link && <Link href={href} className="font-semibold text-blue text-[15px]">{link} <Arrow /></Link>}
+      {href && link && <Link href={href} className="inline-flex items-center gap-1 min-h-11 font-semibold text-blue text-[15px]">{link} <Arrow /></Link>}
     </div>
   );
 }
@@ -279,7 +279,7 @@ export function Pools({ blocks, pools, depositPct }: { blocks: Blocks; pools: Po
           <div className="mt-12" data-testid="home-open-pools">
             <div className="flex flex-wrap justify-between items-end gap-4 mb-4">
               <h3 className="text-[22px] font-semibold">{block(blocks, 'home2.pools.open', 'Open pools')}</h3>
-              <Link href="/pools" className="font-semibold text-blue text-[15px]">{block(blocks, 'home2.pools.link', 'See all open pools')} <Arrow /></Link>
+              <Link href="/pools" className="inline-flex items-center gap-1 min-h-11 font-semibold text-blue text-[15px]">{block(blocks, 'home2.pools.link', 'See all open pools')} <Arrow /></Link>
             </div>
             <ul className="grid gap-4 md:grid-cols-3">{pools.map((p) => <li key={p.id}><MiniPool p={p} /></li>)}</ul>
           </div>
@@ -410,7 +410,7 @@ export function Turnkey({ blocks, projects, packages }: { blocks: Blocks; projec
             <h3 className="text-[22px] font-semibold">{block(blocks, 'home2.tk.five', `Start with these ${five.length === 5 ? 'five' : five.length}`)}</h3>
             <p className="text-[14.5px] text-[#5B6575] mt-1">{block(blocks, 'home2.tk.five_sub', 'The most requested projects, with live pricing')}</p>
           </div>
-          <Link href="/turnkey/atlas" className="font-semibold text-blue text-[15px]">See all {projects.length} businesses <Arrow /></Link>
+          <Link href="/turnkey/atlas" className="inline-flex items-center gap-1 min-h-11 font-semibold text-blue text-[15px]">See all {projects.length} businesses <Arrow /></Link>
         </div>
         <ul className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {five.map((p) => { const f = from(p); const pb = payback(p); return (
@@ -434,7 +434,7 @@ export function Turnkey({ blocks, projects, packages }: { blocks: Blocks; projec
         {counts.length > 0 && (
           <div className="mt-5 flex flex-wrap items-center gap-2">
             <span className="mono text-[11px] uppercase tracking-[.08em] text-[#5B6575] mr-1">Browse by type</span>
-            {counts.map(({ c, n }) => <Link key={c} href={`/turnkey/atlas?category=${c}`} className={`mono text-[10.5px] font-bold uppercase px-2.5 py-1 rounded-full ${CATEGORY_PILL_CLASS[c]}`}>{CATEGORY_PILL[c]} · {n}</Link>)}
+            {counts.map(({ c, n }) => <Link key={c} href={`/turnkey/atlas?category=${c}`} className={`inline-flex items-center min-h-11 mono text-[10.5px] font-bold uppercase px-3 rounded-full ${CATEGORY_PILL_CLASS[c]}`}>{CATEGORY_PILL[c]} · {n}</Link>)}
           </div>
         )}
       </div>
@@ -549,8 +549,8 @@ export function Suppliers({ blocks, suppliers, categories, sponsored }: { blocks
                 {s.country && <span className="mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-surface border border-line text-[#4B5565]">{s.country}</span>}
                 {s.verified && <span className="mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D]">Verified</span>}
               </div>
-              <div className="text-[16px] font-semibold mt-2.5">Supplier {s.code}</div>
-              {s.country && <div className="text-[14px] text-[#5B6575]">{COUNTRY_NAMES[s.country] ?? s.country}</div>}
+              <div className="text-[16px] font-semibold mt-2.5">{s.verified ? 'Octopus verified factory' : 'Factory'}</div>
+              {(s.province || s.country) && <div className="text-[14px] text-[#5B6575]">{[s.province, s.country && (COUNTRY_NAMES[s.country] ?? s.country)].filter(Boolean).join(', ')}</div>}
               <div className="mono text-[10.5px] uppercase tracking-[.04em] text-[#5B6575] mt-1.5">{[s.supplier_type, ...(categories[s.id] ?? []).slice(0, 2)].filter(Boolean).join(' · ')}</div>
             </li>
           ))}

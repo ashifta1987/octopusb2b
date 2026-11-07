@@ -272,7 +272,7 @@ export async function getVerifiedSuppliers(limit = 4): Promise<PublicSupplier[]>
   'use cache';
   cacheLife({ revalidate: 300 });
   cacheTag('suppliers');
-  const { data } = await createPublicClient().from('public_suppliers').select('id, code, country, verified, supplier_type').eq('verified', true).order('code').limit(limit + 10);
+  const { data } = await createPublicClient().from('public_suppliers').select('id, code, country, verified, supplier_type, province').eq('verified', true).order('code').limit(limit + 10);
   // ADDON-32: a supplier whose legal identity is still under review (e.g. several name variants) is never shown as "verified"
   let blocked = new Set<string>();
   try {

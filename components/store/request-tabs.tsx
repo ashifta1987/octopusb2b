@@ -32,3 +32,4 @@ export function RequestTabs({ blocks, active, qs = '' }: { blocks: Record<string
     </nav>
   );
 }
+
