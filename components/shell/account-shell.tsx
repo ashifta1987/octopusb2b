@@ -37,7 +37,10 @@ export function AccountShell({ session, ctx, newQuotes, mobileBar, children }: {
       { href: '/account/sourcing', label: 'Requests', badge: newQuotes }, { href: '/account/sourcing?status=Quoted', label: 'Quotes ready' },
       { href: '/account/orders', label: 'Orders' }, { href: '/account/pools', label: 'MOQ pools' }, { href: '/account/turnkey', label: 'Turnkey projects' },
     ] }],
-    dropship: svcMenu('dropship', 'Dropshipping'),
+    // ADDON-44-E: catalogue (verified products that ship to your markets) and the import list
+    dropship: [{ title: 'Dropshipping', items: [
+      { href: '/account/dropship', label: 'Overview' }, { href: '/account/dropship/catalogue', label: 'Catalogue' }, { href: '/account/dropship/catalogue?list=1', label: 'Import list' },
+    ] }],
     warehouse: svcMenu('warehouse', '3PL warehouse'),
     brand: svcMenu('brand', 'Make My Brand'),
     wallet: [{ title: 'Wallet and invoices', items: [

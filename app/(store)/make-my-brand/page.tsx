@@ -267,3 +267,4 @@ function MmbSkeleton() {
 export default function MakeMyBrandPage() {
   return <Suspense fallback={<MmbSkeleton />}><MakeMyBrandView /></Suspense>;
 }
+

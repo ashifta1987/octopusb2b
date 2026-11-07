@@ -33,3 +33,4 @@ test('/make-my-brand: sections, labelled examples, SEO tags, no brackets', async
   expect(text).not.toMatch(/\[[^\]]+\]|\{\{/);
   expect(text).not.toMatch(/yunexpress|by card/i);
 });
+

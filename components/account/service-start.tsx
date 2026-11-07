@@ -7,8 +7,8 @@ import { getAccountContext, serviceOn, type ServiceKey } from '@/lib/core/accoun
 const COPY: Record<Exclude<ServiceKey, 'sourcing'>, { title: string; lead: string; points: string[] }> = {
   dropship: {
     title: 'Dropshipping',
-    lead: 'Connect your Shopify or WooCommerce store. Each order is paid from your wallet, packed in China and shipped to your customer under your store name.',
-    points: ['Pick products from the Octopus catalogue', 'Orders come in from your store automatically', 'Express, Standard or Economy shipping; tracking goes back to your store'],
+    lead: 'Sell products from verified suppliers in your own store. Each order is paid from your wallet, packed and shipped to your customer under your store name.',
+    points: ['Pick products from the Octopus catalogue of verified suppliers', 'Store connection: coming soon — upload orders as a sheet meanwhile', 'Express, Standard or Economy shipping, with tracking for your customer'],
   },
   warehouse: {
     title: '3PL warehouse',
@@ -41,11 +41,15 @@ async function ServiceStartContent({ service }: { service: Exclude<ServiceKey, '
         <p className="text-[16px]">{c.lead}</p>
         <ul className="mt-4 space-y-2">{c.points.map((p) => <li key={p} className="flex gap-2.5 text-[15px]"><span aria-hidden className="text-ok font-bold">✓</span>{p}</li>)}</ul>
         {on ? (
-          <p className="mt-5 text-[15px] text-[#5A6475]">Your account manager is setting this up for your company{st.plan ? ` (plan: ${st.plan})` : ''}. You will see it here as soon as it is running.</p>
+          <>
+            <p className="mt-5 text-[15px] text-[#5A6475]">Your account manager is setting this up for your company{st.plan ? ` (plan: ${st.plan})` : ''}. You will see it here as soon as it is running.</p>
+            {service === 'dropship' && <Link href="/account/dropship/catalogue" className="btn btn-primary min-h-11 mt-4" data-testid="browse-catalogue">Browse catalogue</Link>}
+          </>
         ) : (
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link href={`/account/support?topic=${service}`} className="btn btn-primary min-h-11">Start {c.title}</Link>
             <span className="text-[14px] text-[#5A6475]">{ctx.manager ? `${ctx.manager.name}, your account manager,` : 'Your account manager'} switches it on and explains the prices.</span>
+            {service === 'dropship' && <Link href="/account/dropship/catalogue" className="btn btn-ghost min-h-11" data-testid="browse-catalogue">Browse catalogue</Link>}
           </div>
         )}
       </section>
