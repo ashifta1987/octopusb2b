@@ -101,9 +101,15 @@ export async function getCategoryCounts(): Promise<Record<string, number>> {
   'use cache';
   cacheLife({ revalidate: 300 });
   cacheTag('products');
-  const { data } = await createPublicClient().from('products').select('category_id').eq('status', 'live').is('archived_at', null);
+  const sb = createPublicClient();
   const out: Record<string, number> = {};
-  (data ?? []).forEach((r) => { if (r.category_id) out[r.category_id] = (out[r.category_id] ?? 0) + 1; });
+  // page through (PostgREST caps a response at 1000 rows) so counts stay right as the catalogue grows
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await sb.from('products').select('category_id').eq('status', 'live').is('archived_at', null).order('id').range(from, from + 999);
+    if (error) throw new Error(`Category counts failed: ${error.message}`);
+    (data ?? []).forEach((r) => { if (r.category_id) out[r.category_id] = (out[r.category_id] ?? 0) + 1; });
+    if (!data || data.length < 1000) break;
+  }
   return out;
 }
 

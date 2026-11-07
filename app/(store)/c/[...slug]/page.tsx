@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getSiteContent, type Category } from '@/lib/content';
 import { CatalogView, CatalogSkeleton, type SP } from '@/components/store/catalog-view';
+import { getCategoryCounts } from '@/components/store/data';
+import { isStocked } from '@/lib/category-stock';
 
 type Params = Promise<{ slug: string[] }>;
 
@@ -20,10 +22,12 @@ function resolve(categories: Category[], slugs: string[]): Category | null {
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
-  const { categories } = await getSiteContent();
+  const [{ categories }, counts] = await Promise.all([getSiteContent(), getCategoryCounts()]);
   const cat = resolve(categories, slug);
   if (!cat) return { title: 'Category not found', robots: { index: false } };
   return {
+    // ADDON-36 C4: a category with no live products is not indexed (it shows a "we'll source it" page)
+    ...(isStocked(categories, counts, cat.id) ? {} : { robots: { index: false, follow: true } }),
     title: `${cat.name} — wholesale${cat.hs_code ? ` (HS ${cat.hs_code})` : ''}`,
     description: `Buy ${cat.name.toLowerCase()} wholesale from verified suppliers. Tiered pricing, MOQ and lead times on every listing.`,
     alternates: { canonical: `/c/${slug.join('/')}` },

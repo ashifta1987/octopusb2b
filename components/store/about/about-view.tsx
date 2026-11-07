@@ -226,7 +226,7 @@ export async function AboutView() {
               )}
               <div className="flex flex-wrap gap-2.5 mt-3">
                 <Link href="/request/sourcing" className="btn btn-primary">{cRfq}</Link>
-                <Link href="/contact" className="btn btn-ghost">{cSupplier}</Link>
+                <Link href="/suppliers" className="btn btn-ghost">{cSupplier}</Link>
               </div>
             </div>
           </div>

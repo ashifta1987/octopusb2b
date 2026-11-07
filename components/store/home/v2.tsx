@@ -446,9 +446,9 @@ export function StatsAndServices({ blocks, tiles }: { blocks: Blocks; tiles: { l
     ['sample', '/request/sample', 'Samples|Order a sample before you commit to a bulk order.'],
     ['qc', '/request/qc', 'QC inspection|Photos and video before anything ships.'],
     ['cert', '/request/certification', 'Certification|CE, RoHS, SASO and more, arranged for you.'],
-    ['wallet', '/account/wallet', 'Wallet and escrow|Pay safely, release on delivery.'],
-    ['octo', '/account/assistant', 'Octo assistant|24/7 answers, a human when it matters.'],
-    ['api', '/account/developer', 'API and integrations|Connect your shop or ERP.'],
+    ['wallet', '/wallet', 'Wallet and escrow|Pay safely, release on delivery.'],
+    ['octo', '/assistant', 'Octo assistant|24/7 answers, a human when it matters.'],
+    ['api', '/developers', 'API and integrations|Connect your shop or ERP.'],
   ] as const;
   return (
     <section aria-labelledby="home-also-h" className="bg-surface border-y border-line">
@@ -479,7 +479,7 @@ export function Suppliers({ blocks, suppliers, categories, sponsored }: { blocks
   return (
     <section aria-labelledby="home-suppliers-h" className="bg-white">
       <div className={`${W} py-14`}>
-        <SectionTitle id="home-suppliers-h" eyebrow={block(blocks, 'home2.suppliers.eyebrow', 'Trust')} title={block(blocks, 'home.suppliers.title', 'Verified suppliers')} href="/contact" link={block(blocks, 'home.suppliers.link', 'Become a supplier')} />
+        <SectionTitle id="home-suppliers-h" eyebrow={block(blocks, 'home2.suppliers.eyebrow', 'Trust')} title={block(blocks, 'home.suppliers.title', 'Verified suppliers')} href="/suppliers" link={block(blocks, 'home.suppliers.link', 'Become a supplier')} />
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {suppliers.map((s) => (
             <li key={s.id} className="card rounded-[14px] p-4">

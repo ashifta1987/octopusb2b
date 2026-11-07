@@ -8,6 +8,7 @@ import { money, humanize, fmtDate, COUNTRY_NAMES } from '@/lib/format';
 import { getCurrencyContext, toPlatform } from '@/lib/currency';
 import { CurrencyTotals, sumByCurrency, rateLabel } from '@/components/admin/currency';
 import { setSetting } from './actions';
+import { MailDeliverabilityAlert } from '@/components/admin/mail-deliverability';
 
 export const metadata = { title: 'Overview' };
 
@@ -111,6 +112,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
 
   return (
     <>
+      <MailDeliverabilityAlert />
       {showFirstSupplier && (
         <section className="mb-6 rounded-[14px] border border-blue/30 bg-blue-soft px-5 py-4 flex flex-wrap items-center justify-between gap-4" aria-label="Get started">
           <p className="text-[15px] text-[#1E4F9C]">

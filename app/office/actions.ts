@@ -18,6 +18,18 @@ export async function reviewKyc(submissionId: string, to: 'in_review' | 'verifie
   return ok(undefined, 'KYC updated');
 }
 
+/* ───────── Supplier applications (ADDON-36 C5) ───────── */
+export async function reviewSupplierApplication(id: string, to: 'in_review' | 'approved' | 'rejected', note: string): Promise<Result> {
+  const g = await actionSession('suppliers', 'approve');
+  if ('error' in g) return fail(g.error);
+  if (to === 'rejected' && !note.trim()) return fail('Add a reason for the rejection.');
+  const sb = await createClient();
+  const { error } = await sb.rpc('review_supplier_application', { p_id: id, p_status: to, p_note: note.trim() || null });
+  if (error) return fail(/FORBIDDEN/.test(error.message) ? 'You do not have permission to review supplier applications.' : error);
+  revalidatePath('/office/kyc'); revalidatePath(`/office/kyc/supplier/${id}`);
+  return ok(undefined, to === 'approved' ? 'Application approved. Create the supplier in Admin → Suppliers.' : to === 'rejected' ? 'Application rejected' : 'Review started');
+}
+
 /* ───────── Products ───────── */
 export async function moderateProduct(productId: string, to: 'in_review' | 'live' | 'rejected', reason: string): Promise<Result> {
   const g = await actionSession('products', 'approve');

@@ -10,6 +10,8 @@ import { CurrencySwitchBanner } from '@/components/store/currency-banner';
 import { getHomeLiveData } from '@/components/store/home/live-data';
 import { AnnouncementBar } from '@/components/store/home/top';
 import { getTurnkeyCatalogue } from '@/lib/turnkey/data';
+import { getCategoryCounts } from '@/components/store/data';
+import { stockedCategories } from '@/lib/category-stock';
 
 /**
  * Storefront layout header + category bar (Main.png, Nov 2026 redesign). All copy from CMS.
@@ -17,8 +19,9 @@ import { getTurnkeyCatalogue } from '@/lib/turnkey/data';
  * only the session-dependent "My account" target and the time-based currency banner stream in (fixed-size fallbacks).
  */
 export async function StoreHeader() {
-  const [{ categories, settings }, live] = await Promise.all([getSiteContent(), getHomeLiveData()]);
-  const top = categories.filter((c) => c.level === 1);
+  const [{ categories, settings }, live, counts] = await Promise.all([getSiteContent(), getHomeLiveData(), getCategoryCounts()]);
+  // ADDON-36 C4: only categories with live products, most stocked first
+  const top = stockedCategories(categories, counts).filter((c) => c.level === 1);
   // real number of live products (no marketing figure)
   const products = live.products ? new Intl.NumberFormat('en-US').format(live.products) : null;
   const pill = 'inline-flex items-center gap-[7px] px-3 py-2 rounded-full text-[14px] font-medium whitespace-nowrap shrink-0 hover:bg-surface hover:text-navy';
@@ -58,7 +61,7 @@ export async function StoreHeader() {
               </Link>
             </li>
           )}
-          {settings.supplier_portal_enabled === true && <li className="shrink-0"><Link href="/supplier" className={`${pill} text-navy`}>Sell on Octopus B2B</Link></li>}
+          {settings.supplier_portal_enabled === true && <li className="shrink-0"><Link href="/suppliers" className={`${pill} text-navy`}>Sell on Octopus B2B</Link></li>}
           <li className="shrink-0 w-px h-5 bg-line mx-1.5" aria-hidden />
           <li className="shrink-0"><Link href="/products" className={`${pill} text-[#3B4556]`}>All categories</Link></li>
           {top.map((c) => (
@@ -121,7 +124,8 @@ async function SwitchBanner() {
 }
 
 export async function StoreFooter() {
-  const { blocks, company, settings } = await getSiteContent();
+  const [{ blocks, company, settings, categories }, counts] = await Promise.all([getSiteContent(), getCategoryCounts()]);
+  const topCats = stockedCategories(categories, counts).filter((c) => c.level === 1).slice(0, 4);
   const turnkeyOn = settings['turnkey.enabled'] !== false;
   const domain = (company?.website ?? 'octopusb2b.com').replace(/^https?:\/\//, '').replace(/\/$/, '');
   return (
@@ -138,13 +142,13 @@ export async function StoreFooter() {
           )}
         </div>
         <FooterCol title="Services" links={[['/request/sourcing', 'Product sourcing'], ['/#dropshipping', 'Dropshipping'], ...(settings.pool_enabled !== false ? [['/pools', 'MOQ pools'] as [string, string]] : []), ['/#warehousing', '3PL warehousing'], ...(turnkeyOn ? [['/turnkey', 'Turnkey Projects'] as [string, string]] : [])]} />
-        <FooterCol title="Marketplace" links={[['/products', 'Products'], ['/request/sourcing', 'Request a quote'], ...(turnkeyOn ? [['/turnkey/atlas', 'Project Atlas'] as [string, string]] : [])]} />
-        <FooterCol title="Suppliers" links={[['/contact', 'Sell on Octopus B2B'], ['/login', 'Supplier login']]} />
+        <FooterCol title="Marketplace" links={[['/products', 'All products'], ...topCats.map((c) => [`/c/${c.slug}`, c.name] as [string, string]), ['/request/sourcing', 'Request a quote'], ...(turnkeyOn ? [['/turnkey/atlas', 'Project Atlas'] as [string, string]] : [])]} />
+        <FooterCol title="Suppliers" links={[['/suppliers', 'Sell on Octopus B2B'], ['/suppliers#apply', 'Become a supplier'], ['/staff/login', 'Supplier and staff sign-in']]} />
         <FooterCol title="Company" links={[['/about', 'About us'], ['/contact', 'Contact']]} />
       </div>
       <div className="max-w-[1280px] mx-auto px-4 sm:px-8">
         <div className="border-t border-white/10 py-5 text-[13px] flex flex-wrap justify-between gap-3">
-          <div>© 2026 {company?.legal_name ?? company?.brand ?? 'Octopus B2B'} · <Link href="/legal/terms" className="hover:text-white">Terms</Link> · <Link href="/legal/privacy" className="hover:text-white">Privacy</Link> · <Link href="/staff/login" className="hover:text-white">Staff login</Link></div>
+          <div>© 2026 {company?.legal_name ?? company?.brand ?? 'Octopus B2B'} · <Link href="/legal/terms" className="hover:text-white">Terms</Link> · <Link href="/legal/privacy" className="hover:text-white">Privacy</Link></div>
           <div>{domain.charAt(0).toUpperCase() + domain.slice(1)}</div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { requireStaff } from '@/lib/auth';
+import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { Card, PageHeader, StatusBadge, Table, EmptyState } from '@/components/ui';
 import { one } from '@/components/backoffice/server-utils';
@@ -8,10 +8,12 @@ import { fmtDate, COUNTRY_NAMES } from '@/lib/format';
 export const metadata = { title: 'KYC review' };
 
 const FILTERS = { open: ['submitted', 'in_review', 'more_info'], verified: ['verified'], rejected: ['rejected'] } as const;
+const TABS: [string, string][] = [['open', 'To review'], ['verified', 'Verified'], ['rejected', 'Rejected'], ['suppliers', 'Supplier applications']];
 
 export default async function KycList({ searchParams }: { searchParams: Promise<{ f?: string }> }) {
-  await requireStaff('customers', 'view', '/office/kyc');
+  const s = await requireStaff('customers', 'view', '/office/kyc');
   const { f = 'open' } = await searchParams;
+  if (f === 'suppliers') return <SupplierApplications canView={can(s, 'suppliers', 'view')} />;
   const statuses = FILTERS[f as keyof typeof FILTERS] ?? FILTERS.open;
   const sb = await createClient();
   const { data } = await sb.from('kyc_submissions')
@@ -21,7 +23,7 @@ export default async function KycList({ searchParams }: { searchParams: Promise<
     <>
       <PageHeader title="KYC review" subtitle="Customer company verification. Open each submission to view documents (links expire after 60 seconds; every view is logged)." />
       <nav className="flex gap-2 mb-4" aria-label="Filter">
-        {Object.keys(FILTERS).map((k) => <Link key={k} href={`/office/kyc?f=${k}`} aria-current={f === k ? 'page' : undefined} className={`btn btn-sm ${f === k ? 'btn-dark' : 'btn-ghost'}`}>{k === 'open' ? 'To review' : k[0].toUpperCase() + k.slice(1)}</Link>)}
+        <Tabs f={f} />
       </nav>
       <Card>
         <Table head={['Company', 'Country', 'Registration', 'Documents', 'Submitted', 'Status', '']} empty={<EmptyState title="Nothing to review" body="New KYC submissions appear here." />}>
@@ -40,6 +42,44 @@ export default async function KycList({ searchParams }: { searchParams: Promise<
             );
           })}
         </Table>
+      </Card>
+    </>
+  );
+}
+
+function Tabs({ f }: { f: string }) {
+  return <>{TABS.map(([k, l]) => <Link key={k} href={`/office/kyc?f=${k}`} aria-current={f === k ? 'page' : undefined} className={`btn btn-sm ${f === k ? 'btn-dark' : 'btn-ghost'}`}>{l}</Link>)}</>;
+}
+
+/** ADDON-36 C5 — applications from the public /suppliers page. */
+async function SupplierApplications({ canView }: { canView: boolean }) {
+  const sb = await createClient();
+  const { data, error } = canView
+    ? await sb.from('supplier_applications').select('id, reference, company_name, city, province, categories, contact_email, status, created_at')
+      .order('status', { ascending: true }).order('created_at', { ascending: false }).limit(200)
+    : { data: [], error: null };
+  return (
+    <>
+      <PageHeader title="KYC review" subtitle="Supplier applications from the public “Sell on Octopus B2B” page. Approve, then create the supplier in Admin → Suppliers." />
+      <nav className="flex gap-2 mb-4 flex-wrap" aria-label="Filter"><Tabs f="suppliers" /></nav>
+      <Card>
+        {!canView ? <div className="p-6 text-sm text-muted">You need the Suppliers · view permission to see applications.</div>
+          : error ? <div className="p-6 text-sm text-bad" role="alert">Could not load applications: {error.message}</div>
+          : (
+            <Table head={['Reference', 'Company', 'City', 'Categories', 'Submitted', 'Status', '']} empty={<EmptyState title="No applications yet" body="Applications from /suppliers appear here." />}>
+              {(data ?? []).map((a) => (
+                <tr key={a.id}>
+                  <td className="td mono text-sm">{a.reference}</td>
+                  <td className="td"><div className="font-semibold">{a.company_name}</div><div className="text-xs text-muted">{a.contact_email}</div></td>
+                  <td className="td text-sm">{[a.city, a.province].filter(Boolean).join(', ')}</td>
+                  <td className="td text-sm">{(a.categories as string[]).join(', ')}</td>
+                  <td className="td text-sm">{fmtDate(a.created_at, true)}</td>
+                  <td className="td"><StatusBadge status={a.status} /></td>
+                  <td className="td text-right"><Link className="btn btn-ghost btn-sm" href={`/office/kyc/supplier/${a.id}`}>Review</Link></td>
+                </tr>
+              ))}
+            </Table>
+          )}
       </Card>
     </>
   );

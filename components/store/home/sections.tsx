@@ -12,7 +12,7 @@ export function VerifiedSuppliers({ blocks, suppliers, categories, showPlacehold
   if (!suppliers.length && !showPlaceholders) return null;
   return (
     <section aria-labelledby="home-suppliers-h" className="max-w-[1280px] mx-auto px-4 sm:px-8 pt-[72px]">
-      <SectionHead id="home-suppliers-h" title={block(blocks, 'home.suppliers.title', 'Verified suppliers')} href="/contact" link={block(blocks, 'home.suppliers.link', 'Become a supplier')} />
+      <SectionHead id="home-suppliers-h" title={block(blocks, 'home.suppliers.title', 'Verified suppliers')} href="/suppliers" link={block(blocks, 'home.suppliers.link', 'Become a supplier')} />
       {suppliers.length ? (
         <ul className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(100%,270px),1fr))]">
           {suppliers.map((s) => {

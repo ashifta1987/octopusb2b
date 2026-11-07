@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { MailDeliverabilityAlert } from '@/components/admin/mail-deliverability';
 import { HomeTab } from './home-tab';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -332,6 +333,7 @@ async function CompanyTab({ editable, isAdmin }: { editable: boolean; isAdmin: b
   const countries = Object.entries(COUNTRY_NAMES).sort((a, b) => a[1].localeCompare(b[1]));
   return (
     <div className="grid gap-6">
+      <div><MailDeliverabilityAlert showOk /></div>
       <Card title="Company details" action={<span className="text-sm text-muted">Shown in the footer, About and Contact pages and every document</span>}>
         <ActionForm action={saveCompany} className="px-6 pb-6 grid gap-4 sm:grid-cols-2" submitLabel="Save company details" hideSubmit={!editable}>
           {fields.map(([k, label, wide]) => (

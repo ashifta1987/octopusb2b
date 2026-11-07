@@ -52,7 +52,7 @@ export function ProductImage({ src, alt, className = 'aspect-[4/3]', label = 'Pr
 }
 
 /** Products.png card: tier price range, MOQ, tags and <SupplierCode/>. `featured` variant = Main.png card. */
-export function ProductCard({ p, categoryName, variant = 'grid' }: { p: CardProduct; categoryName?: string; variant?: 'grid' | 'featured' | 'compact' }) {
+export function ProductCard({ p, categoryName, variant = 'grid', cta = 'quote' }: { p: CardProduct; categoryName?: string; variant?: 'grid' | 'featured' | 'compact'; cta?: 'quote' | 'pool' }) {
   const u = unitOne(p.unit);
   const base = p.tiers[0];
   const best = p.tiers[p.tiers.length - 1];
@@ -78,24 +78,28 @@ export function ProductCard({ p, categoryName, variant = 'grid' }: { p: CardProd
         {variant === 'grid' && <ProductTags tags={p.tags} dropship={p.octopus_dropship} ready={p.ready_to_ship} />}
         <div className="mt-auto pt-2 space-y-3">
           {p.supplier && <SupplierCode code={p.supplier.code} country={p.supplier.country} verified={p.supplier.verified} />}
-          {variant !== 'featured' && (
+          {variant !== 'featured' && (cta === 'pool' ? (
+            <Link href={`/pools/start?product=${p.id}`} className="btn btn-dark btn-sm w-full min-h-11">
+              Start pool<span className="sr-only"> on {p.title}</span>
+            </Link>
+          ) : (
             <Link href={`/request/sourcing?product=${p.id}`} className="btn btn-ghost btn-sm w-full">
               Request quote<span className="sr-only"> for {p.title}</span>
             </Link>
-          )}
+          ))}
         </div>
       </div>
     </article>
   );
 }
 
-export function ProductGrid({ products, categoryNames, variant, cols = 'lg:grid-cols-4' }: {
-  products: CardProduct[]; categoryNames?: Record<string, string>; variant?: 'grid' | 'featured' | 'compact'; cols?: string;
+export function ProductGrid({ products, categoryNames, variant, cols = 'lg:grid-cols-4', cta }: {
+  products: CardProduct[]; categoryNames?: Record<string, string>; variant?: 'grid' | 'featured' | 'compact'; cols?: string; cta?: 'quote' | 'pool';
 }) {
   return (
     <ul className={`grid grid-cols-2 md:grid-cols-3 ${cols} gap-4`}>
       {products.map((p) => (
-        <li key={p.id}><ProductCard p={p} variant={variant} categoryName={p.category_id ? categoryNames?.[p.category_id] : undefined} /></li>
+        <li key={p.id}><ProductCard p={p} variant={variant} cta={cta} categoryName={p.category_id ? categoryNames?.[p.category_id] : undefined} /></li>
       ))}
     </ul>
   );

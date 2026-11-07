@@ -8,6 +8,7 @@ import { ProductGrid } from './product-card';
 import { FilterForm, SortSelect } from './filter-form';
 import { AdSlot, type AdPlacement } from './ad-slot';
 import { Breadcrumbs, JsonLd, breadcrumbLd, parts } from './seo';
+import { stockTotals } from '@/lib/category-stock';
 
 export type SP = Record<string, string | string[] | undefined>;
 
@@ -17,7 +18,7 @@ const num = (v: string) => { const n = Number(v); return v !== '' && Number.isFi
 
 const SORTS: [string, string][] = [['best', 'Best match'], ['price_asc', 'Price: low to high'], ['price_desc', 'Price: high to low'], ['moq_asc', 'Lowest MOQ'], ['newest', 'Newest']];
 const MOQS = [10, 50, 100, 500, 1000, 5000];
-const FILTER_KEYS = ['q', 'c', 'min', 'max', 'moq', 'cert', 'ds', 'rts', 'verified', 'sort'];
+const FILTER_KEYS = ['q', 'c', 'min', 'max', 'moq', 'cert', 'ds', 'rts', 'verified', 'sort', 'pool'];
 
 function qs(sp: SP, patch: Record<string, string | null>) {
   const u = new URLSearchParams();
@@ -51,17 +52,25 @@ export async function CatalogView({ basePath, category, sp, placement, title }: 
   const { items, total } = await listProducts(filters);
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const catName = Object.fromEntries(categories.map((c) => [c.id, c.name]));
-  const countOf = (id: string) => descendantIds(categories, id).reduce((s, x) => s + (counts[x] ?? 0), 0);
+  // ADDON-36 C4: only categories with live products are linked; siblings ordered by count (the open path stays visible)
+  const totals = stockTotals(categories, counts);
+  const countOf = (id: string) => totals.get(id) ?? 0;
 
   const path = category ? categoryPath(categories, category.id) : [];
   const catHref = (c: Category) => `/c/${categoryPath(categories, c.id).map((x) => x.slug).join('/')}`;
   const crumbs: { name: string; href?: string }[] = [{ name: 'Home', href: '/' }, { name: 'All categories', href: '/products' }, ...path.map((c) => ({ name: c.name, href: catHref(c) }))];
   if (basePath === '/search') crumbs.push({ name: q ? `Search: “${q}”` : 'Search' });
   const heading = title ?? category?.name ?? (q ? `Results for “${q}”` : 'All categories');
-  const chips = category ? categories.filter((c) => c.parent_id === category.id) : categories.filter((c) => c.level === 1);
+  const openPath = new Set(path.map((c) => c.id));
+  const linked = categories
+    .filter((c) => countOf(c.id) > 0 || openPath.has(c.id))
+    .sort((a, b) => countOf(b.id) - countOf(a.id) || a.sort - b.sort);
+  const chips = category ? linked.filter((c) => c.parent_id === category.id) : linked.filter((c) => c.level === 1);
+  const emptyCategory = !!category && countOf(category.id) === 0;
   const certTags = tags.filter((t) => t.kind === 'certification');
   const keep = (k: string) => (basePath === '/search' ? one(sp[k]) : '');
   const [ctaTitle, ctaBody, ctaBtn] = parts(blocks, 'products.cta', "Didn't find the right product?|Send one request and get quotes from several verified suppliers.|Request a product");
+  const poolMode = one(sp.pool) === '1'; // ADDON-36 H3: /products?pool=1 → every card offers "Start pool"
   const active = !!(q || min != null || max != null || moq != null || certs.length || filters.dropship || filters.ready || filters.verified);
 
   return (
@@ -71,6 +80,7 @@ export async function CatalogView({ basePath, category, sp, placement, title }: 
       <div className="flex flex-wrap justify-between items-end gap-4 mt-3">
         <div>
           <h1 className="text-[28px] sm:text-[32px] font-extrabold leading-tight">{heading}</h1>
+          {poolMode && <p className="text-[14px] font-semibold text-blue mt-1" data-testid="pool-mode">Choose a product to start a group-buying pool</p>}
           <p className="text-sm text-muted mt-1" aria-live="polite">{total.toLocaleString('en-US')} {total === 1 ? 'product' : 'products'} · Prices in {ctx.currency} per unit</p>
         </div>
         <div className="flex items-center gap-2">
@@ -102,6 +112,7 @@ export async function CatalogView({ basePath, category, sp, placement, title }: 
               <h2 className="text-base font-bold">Filters</h2>
               {active && <Link href={basePath === '/search' ? `/search${qs({}, { q: keep('q') || null, c: keep('c') || null })}` : basePath} className="text-[13px] font-semibold text-blue">Clear all</Link>}
             </div>
+            {poolMode && <input type="hidden" name="pool" value="1" />}
             {basePath === '/search' && (
               <>
                 <input type="hidden" name="q" value={q} />
@@ -110,7 +121,7 @@ export async function CatalogView({ basePath, category, sp, placement, title }: 
             )}
             <fieldset>
               <legend className="text-sm font-semibold mb-2">Category</legend>
-              <CategoryTree categories={categories} activePath={path.map((c) => c.id)} hrefFor={(c) => `${catHref(c)}${qs(sp, { q: null, c: null, page: null })}`} countOf={countOf} />
+              <CategoryTree categories={linked} activePath={path.map((c) => c.id)} hrefFor={(c) => `${catHref(c)}${qs(sp, { q: null, c: null, page: null })}`} countOf={countOf} />
             </fieldset>
             <fieldset className="space-y-2">
               <legend className="text-sm font-semibold mb-2">Supplier</legend>
@@ -151,8 +162,17 @@ export async function CatalogView({ basePath, category, sp, placement, title }: 
         <div className="min-w-0 space-y-5">
           <AdSlot placement={placement} />
           {items.length ? (
-            <ProductGrid products={items} categoryNames={catName} />
+            <ProductGrid products={items} categoryNames={catName} cta={poolMode ? 'pool' : 'quote'} />
           ) : (
+            emptyCategory && !active ? (
+              <div className="card" data-testid="empty-category">
+                <EmptyState
+                  title={`We don't list ${category!.name} yet`}
+                  body="Tell us what you need and we'll source it from verified factories in China."
+                  action={<Link href={`/request/sourcing?category=${encodeURIComponent(category!.slug)}`} className="btn btn-primary btn-sm">Request {category!.name.toLowerCase()}</Link>}
+                />
+              </div>
+            ) : (
             <div className="card">
               <EmptyState
                 title={active ? 'No products match these filters' : 'No products here yet'}
@@ -160,6 +180,7 @@ export async function CatalogView({ basePath, category, sp, placement, title }: 
                 action={<div className="flex gap-3 justify-center flex-wrap">{active && <Link href={basePath} className="btn btn-ghost btn-sm">Clear filters</Link>}<Link href="/request/sourcing" className="btn btn-primary btn-sm">Request a product</Link></div>}
               />
             </div>
+            )
           )}
           {pages > 1 && <Pagination page={page} pages={pages} href={(p) => `${basePath}${qs(sp, { page: p > 1 ? String(p) : null })}`} />}
           <div className="rounded-[14px] bg-navy text-white px-6 sm:px-8 py-7 flex flex-wrap justify-between items-center gap-4">

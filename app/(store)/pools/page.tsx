@@ -10,6 +10,7 @@ import { FilterForm, SortSelect } from '@/components/store/filter-form';
 import { JsonLd, Breadcrumbs, breadcrumbLd, SITE_URL } from '@/components/store/seo';
 import { PoolGrid, HowPoolsWork } from '@/components/store/pools/pool-card';
 import { poolSettings } from '@/components/store/pools/shared';
+import { PoolNotifyForm } from '@/components/store/pools/notify-form';
 
 export const metadata: Metadata = {
   title: 'Group buying pools — share the MOQ',
@@ -97,7 +98,7 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
               before the deadline. Octopus holds every deposit in escrow and ships each buyer separately.
             </p>
             <div className="flex flex-wrap gap-3 mt-6">
-              <Link href="/products" className="btn btn-primary">Start a pool on any product</Link>
+              <Link href="/products?pool=1" className="btn btn-primary">Start a pool on any product</Link>
               <a href="#how" className="btn bg-transparent border border-white/40 !text-white hover:border-white">How it works</a>
             </div>
           </div>
@@ -115,6 +116,7 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
       <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-8">
         <Breadcrumbs items={crumbs} />
         {!rules.enabled && <div className="mt-4"><Notice tone="amber">Group buying is paused right now. Existing pools are shown for reference; new pledges are not accepted.</Notice></div>}
+        {stats.open === 0 ? <NoPools /> : (
         <div className="grid gap-6 lg:grid-cols-[240px_1fr] mt-5 items-start">
           {/* Filters */}
           <aside className="space-y-4" aria-label="Filter pools">
@@ -172,7 +174,7 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
             <div className="card p-4 bg-blue-soft/40 border-blue/30">
               <div className="font-semibold text-[14px]">Don&apos;t see your product?</div>
               <p className="text-[13px] text-muted mt-1">Open a pool on any product and share the link with partners.</p>
-              <Link href="/products" className="btn btn-dark btn-sm w-full mt-3">Browse products</Link>
+              <Link href="/products?pool=1" className="btn btn-dark btn-sm w-full mt-3">Browse products</Link>
             </div>
           </aside>
 
@@ -208,11 +210,42 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
             )}
           </div>
         </div>
+        )}
         <div className="mt-12">
           <HowPoolsWork depositPct={rules.depositPct} minPledge={rules.minPledgeDefault} balanceHours={rules.balanceHours} />
         </div>
       </div>
     </>
+  );
+}
+
+/** ADDON-36 H3 — no pool is open at all: explain, offer to start one, capture an email. No filter chips. */
+function NoPools() {
+  const steps: [string, string][] = [
+    ['Pick a product', 'Choose any listed product and set how many pieces you want.'],
+    ['Others join', 'Share the link. Buyers pledge pieces until the pool reaches the factory MOQ.'],
+    ['Pool fills, we ship', 'Pay the balance only when the pool fills. Each buyer gets their own shipment.'],
+  ];
+  return (
+    <section className="card p-6 sm:p-8 mt-5" data-testid="no-pools" aria-labelledby="no-pools-h">
+      <h2 id="no-pools-h" className="text-[22px] font-extrabold">No pools are open right now</h2>
+      <ol className="mt-5 grid gap-4 sm:grid-cols-3">
+        {steps.map(([t, b], i) => (
+          <li key={t} className="flex gap-3">
+            <span className="mono shrink-0 w-8 h-8 rounded-full bg-surface border border-line flex items-center justify-center text-[13px] font-bold">{i + 1}</span>
+            <div><div className="font-bold">{t}</div><p className="text-[14px] text-muted">{b}</p></div>
+          </li>
+        ))}
+      </ol>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Link href="/products?pool=1" className="btn btn-primary min-h-11">Start a pool on a product</Link>
+      </div>
+      <div className="mt-8 border-t border-line pt-6 max-w-[560px]">
+        <h3 className="text-[16px] font-bold">Get notified when a pool opens</h3>
+        <p className="text-[14px] text-muted mt-1 mb-3">One email when the next pool opens. No newsletter.</p>
+        <PoolNotifyForm />
+      </div>
+    </section>
   );
 }
 
