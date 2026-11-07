@@ -51,7 +51,7 @@ export function StaffShell({ session, nav, counts, moderation, children }: {
             <label htmlFor="staff-q" className="sr-only">Customer, order, request, SKU or bin</label>
             <input id="staff-q" name="q" className="input !rounded-[10px] !border-white" placeholder="Customer, order, request, SKU or bin" />
           </form>
-          {isStaging() && <span className="mono text-[11px] font-bold uppercase tracking-[.06em] px-2.5 py-1 rounded-full bg-[#FEF3C7] text-[#92400E]">Prototype · example data</span>}
+          {isStaging() && <span className="order-2 mono text-[11px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full bg-[#FEF3C7] text-[#92400E]" data-testid="staging-badge" title="Staging environment: test data, not the live site">Staging</span>}
           <div className="ml-auto flex items-center gap-3 [&_summary]:text-white [&_.btn-ghost]:!text-white [&_.text-muted]:!text-white/70 [&_summary_.bg-navy]:!bg-blue">
             <WorkspaceSwitcher session={session} current="Admin" />
             <StaffUserMenu name={name} initials={initials} sub={sub} email={session.email} />

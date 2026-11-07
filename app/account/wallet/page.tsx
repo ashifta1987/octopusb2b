@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import Link from 'next/link';
 import { requireCustomer } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -18,7 +17,7 @@ const TRANSFER_STATUS: Record<string, [string, 'amber' | 'green' | 'red' | 'gray
 };
 
 /** ADDON-41 — US dollar wallet: bank details + wallet reference, transfer slip upload, holds, transfers and ledger. No card payments. */
-async function WalletPageContent() {
+export default async function WalletPage() {
   const s = await requireCustomer('/account/wallet');
   const org = s.org!;
   const sb = await createClient();
@@ -126,14 +125,5 @@ async function WalletPageContent() {
         </Table>
       </Card>
     </div>
-  );
-}
-
-/** Request-time content streams inside Suspense (cacheComponents: instant navigation). */
-export default function WalletPage() {
-  return (
-    <Suspense fallback={<div className="min-h-[60vh]" aria-busy="true" aria-label="Loading" />}>
-      <WalletPageContent />
-    </Suspense>
   );
 }

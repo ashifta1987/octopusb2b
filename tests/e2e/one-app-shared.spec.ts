@@ -30,7 +30,7 @@ test('My account home: service tabs, waiting for you, account manager, wallet wi
   await customerLogin(page, A!, '/account');
   await expect(page.locator('h1:visible')).toHaveText(/E2E Buyer 41a LLC/);
   await expect(page.getByTestId('account-tabs').getByRole('link')).toHaveText(['Home', 'Sourcing', 'Dropshipping', '3PL warehouse', 'Make My Brand', 'Wallet and invoices']);
-  await expect(page.getByTestId('staging-badge')).toHaveText(/Prototype · example data/i);
+  await expect(page.getByTestId('staging-badge')).toHaveText(/^staging$/i);
   await expect(page.getByTestId('waiting')).toContainText('Nothing needs you right now');
   await expect(page.getByTestId('wallet-card')).toContainText(/W-\d{5}/);
   await expect(page.getByTestId('service-sourcing')).toContainText('On');

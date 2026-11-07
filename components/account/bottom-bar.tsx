@@ -19,7 +19,7 @@ const MORE: Item[] = [
   { href: '/account/assistant', label: 'Assistant' },
   { href: '/account/developer', label: 'API' },
   { href: '/account/kyc', label: 'Settings' },
-  { href: '/account/ledger', label: 'Ledger & invoices' },
+  { href: '/account/ledger', label: 'Ledger and statements' },
   { href: '/account/support', label: 'Help & complaints' },
 ];
 
@@ -52,7 +52,7 @@ export function AccountBottomBar({ newQuotes, used }: { newQuotes: number; used:
         <ul className="grid grid-cols-5">
           {main.map((m) => (
             <li key={m.href}>
-              <Link href={m.href} aria-current={m.on ? 'page' : undefined} aria-label={m.href === '/account/sourcing' ? 'Product sourcing' : undefined}
+              <Link href={m.href} prefetch={false} aria-current={m.on ? 'page' : undefined} aria-label={m.href === '/account/sourcing' ? 'Product sourcing' : undefined}
                 className={`relative flex flex-col items-center justify-center gap-0.5 min-h-[56px] text-[11.5px] font-semibold ${m.on ? 'text-blue' : 'text-[#4B5565]'}`}>
                 <Icon d={ICONS[m.icon]} />
                 {m.label}

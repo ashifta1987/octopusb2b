@@ -55,7 +55,7 @@ export function AccountShell({ session, ctx, newQuotes, mobileBar, children }: {
             <label htmlFor="acct-q" className="sr-only">Search orders, products, projects, stock</label>
             <input id="acct-q" name="q" className="input !rounded-[10px]" placeholder="Search orders, products, projects, stock" />
           </form>
-          {isStaging() && <span className="order-2 mono text-[11px] font-bold uppercase tracking-[.06em] px-2.5 py-1 rounded-full bg-[#FEF3C7] text-[#92400E]" data-testid="staging-badge">Prototype · example data</span>}
+          {isStaging() && <span className="order-2 mono text-[11px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full bg-[#FEF3C7] text-[#92400E]" data-testid="staging-badge" title="Staging environment: test data, not the live site">Staging</span>}
           <div className="order-2 lg:order-3 ml-auto flex items-center gap-3">
             {ctx?.wallet && (
               <Link href="/account/wallet" className="hidden sm:block rounded-[10px] border border-line px-3.5 py-1.5 leading-tight hover:border-navy" data-testid="header-wallet">

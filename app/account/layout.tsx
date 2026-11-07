@@ -5,6 +5,7 @@ import { AssistantBubble } from '@/components/account/assistant/bubble';
 import { AccountBottomBar } from '@/components/account/bottom-bar';
 import { newQuoteCount, usedServices } from '@/components/account/sourcing-data';
 import { getAccountContext } from '@/lib/core/account';
+import { AccountShellSkeleton } from '@/components/shell/skeletons';
 
 export const metadata = { title: { default: 'My account', template: '%s · Octopus B2B' } };
 
@@ -24,7 +25,7 @@ async function Shell({ children }: { children: React.ReactNode }) {
 /** Customer portal. Session reads happen at request time, so the shell streams behind a Suspense boundary (cacheComponents). */
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-surface p-8 text-muted" role="status">Loading your account…</div>}>
+    <Suspense fallback={<AccountShellSkeleton />}>
       <Shell>{children}</Shell>
     </Suspense>
   );

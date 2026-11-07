@@ -1,16 +1,17 @@
+import { Suspense } from 'react';
+import { PageSkeleton } from '@/components/shell/skeletons';
 import Link from 'next/link';
 import { requireCustomer } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { getSiteContent } from '@/lib/content';
 import { PageHeader, Card, Stat, StatusBadge, EmptyState, Notice, Money } from '@/components/ui';
-import { DocumentButton } from '@/components/client';
 import { fmtDate, money, humanize, asCurrency, CURRENCIES, CURRENCY_PREFIX, type Currency } from '@/lib/format';
-import { DOC_LABEL, getSettings, latestTermsId, supplierMap } from '@/components/account/data';
+import { getSettings, latestTermsId, supplierMap } from '@/components/account/data';
 import { getOrgLedger, parseRange, balOf } from '@/components/account/ledger-data';
 import { ApproveQuoteButton } from '@/components/account/approve-quote';
 import { approveQuote } from '../rfqs/actions';
 
-export const metadata = { title: 'Ledger & invoices' };
+export const metadata = { title: 'Ledger and statements' };
 
 /** Sum amounts per currency (SPEC §15.1: never add different currencies together). */
 function perCurrency<T>(rows: T[], cur: (r: T) => string | null | undefined, amt: (r: T) => number) {
@@ -26,15 +27,14 @@ function MultiMoney({ values, fallback }: { values: Partial<Record<Currency, num
   return <>{list.map((c) => <div key={c} className={list.length > 1 ? 'text-[22px]' : undefined}>{money(values[c]!, c)}</div>)}</>;
 }
 
-export default async function LedgerPage({ searchParams }: { searchParams: Promise<{ from?: string; to?: string; account?: string; currency?: string }> }) {
+async function LedgerContent({ searchParams }: { searchParams: Promise<{ from?: string; to?: string; account?: string; currency?: string }> }) {
   const s = await requireCustomer('/account/ledger');
   if (!s.org) return <Notice tone="amber">Complete your company profile first.</Notice>;
   const range = parseRange(await searchParams);
   const sb = await createClient();
-  const [ledger, content, { data: docs }, { data: payments }, { data: openOrders }, { data: quote }, settings, terms, { data: platform }] = await Promise.all([
+  const [ledger, content, { data: payments }, { data: openOrders }, { data: quote }, settings, terms, { data: platform }] = await Promise.all([
     getOrgLedger(s.org.id, range),
     getSiteContent(),
-    sb.from('documents').select('id, doc_type, number, amount_cents, currency, status, created_at, orders(code)').eq('org_id', s.org.id).order('created_at', { ascending: false }).limit(30),
     sb.from('payments').select('amount_cents, currency, confirmed_at, status').eq('org_id', s.org.id).eq('status', 'confirmed'),
     sb.from('orders').select('code, status, total_cents, paid_cents, deposit_cents, currency').eq('org_id', s.org.id).not('status', 'in', '(cancelled,closed)'),
     sb.from('quotes').select('id, code, supplier_id, unit_price_cents, quantity, incoterm, lead_time_days, shipping_cents, currency, valid_until, rfqs!inner(code, title, unit, org_id)').in('status', ['sent', 'viewed']).eq('rfqs.org_id', s.org.id).gt('valid_until', new Date().toISOString()).order('unit_price_cents').limit(1).maybeSingle(),
@@ -61,6 +61,7 @@ export default async function LedgerPage({ searchParams }: { searchParams: Promi
   const qRfq = quote?.rfqs as unknown as { code: string; title: string; unit: string } | undefined;
   const qTotal = quote ? Number(quote.unit_price_cents) * Number(quote.quantity) + Number(quote.shipping_cents) : 0;
   const qCur = asCurrency(quote?.currency as string | undefined);
+  const hasRows = ledger.rows.length > 0;
   const qs = new URLSearchParams(Object.entries({
     from: range.from, to: range.to, account: range.account === 'all' ? undefined : range.account, currency: range.currency === 'all' ? undefined : range.currency,
   }).filter(([, v]) => v) as [string, string][]).toString();
@@ -70,8 +71,8 @@ export default async function LedgerPage({ searchParams }: { searchParams: Promi
 
   return (
     <>
-      <PageHeader title="Ledger & invoices"
-        subtitle={`Your account with ${content.company?.legal_name ?? 'Octopus B2B'}: every invoice, payment and credit, with a running balance per currency. Each amount stays in the currency it was issued in.`} />
+      <PageHeader title={<>Ledger and statements <span className="block sm:inline text-[18px] sm:text-[20px] font-semibold text-[#5A6475]" data-testid="ledger-period">· {fmtDate(range.from)} – {fmtDate(range.to)}</span></>}
+        subtitle={<>Your account with {content.company?.legal_name ?? 'Octopus B2B'}: every charge, payment and credit, with a running balance per currency. Invoices and receipts are on <Link href="/account/invoices" className="text-blue font-semibold">Invoices and receipts</Link>.</>} />
 
       <form method="get" className="flex flex-wrap items-end gap-3 mb-6" aria-label="Filter ledger">
         <div><label htmlFor="from" className="label">From</label><input id="from" name="from" type="date" className="input" defaultValue={range.from} /></div>
@@ -86,19 +87,30 @@ export default async function LedgerPage({ searchParams }: { searchParams: Promi
           <label htmlFor="currency" className="label">Currency</label>
           <select id="currency" name="currency" className="input" defaultValue={range.currency}>
             <option value="all">All currencies</option>
-            {CURRENCIES.map((c) => <option key={c} value={c}>{c} ({CURRENCY_PREFIX[c]})</option>)}
+            {/* only currencies this company actually has entries in (e.g. CNY appears only after a CNY entry) */}
+            {(ledger.available.length ? ledger.available : [platformCur]).map((c) => <option key={c} value={c}>{c} ({CURRENCY_PREFIX[c]})</option>)}
           </select>
         </div>
         <button className="btn btn-dark" type="submit">Apply</button>
-        <a className="btn btn-ghost" href={`/account/ledger/statement/print${qs ? `?${qs}` : ''}`} target="_blank" rel="noopener">Statement PDF</a>
-        <a className="btn btn-ghost" href={`/account/ledger/statement${qs ? `?${qs}` : ''}`}>Download CSV</a>
+        {hasRows ? (
+          <>
+            <a className="btn btn-ghost" href={`/account/ledger/statement/print${qs ? `?${qs}` : ''}`} target="_blank" rel="noopener" data-testid="export-pdf">Statement PDF</a>
+            <a className="btn btn-ghost" href={`/account/ledger/statement${qs ? `?${qs}` : ''}`} data-testid="export-csv">Download CSV</a>
+          </>
+        ) : (
+          <>
+            <span className="btn btn-ghost opacity-50 cursor-not-allowed" aria-disabled="true" title="No entries in this period" data-testid="export-pdf">Statement PDF</span>
+            <span className="btn btn-ghost opacity-50 cursor-not-allowed" aria-disabled="true" title="No entries in this period" data-testid="export-csv">Download CSV</span>
+            <span className="text-[13px] text-[#5A6475] self-center">No entries in this period to export.</span>
+          </>
+        )}
       </form>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         <Stat label="Balance due" value={<MultiMoney values={balanceDue} fallback={platformCur} />} hint="Order value not yet paid" />
         <Stat label="Due now" value={<MultiMoney values={dueNowSum} fallback={platformCur} />} hint="Deposits and issued balance invoices" hintTone={anyDue ? 'warn' : 'ok'} />
         <Stat label="Wallet balance" value={<MultiMoney values={walletBal} fallback={platformCur} />} hint={<Link href="/account/wallet" className="underline">Open wallet</Link>} />
-        <Stat label={range.from || range.to ? 'Paid this period' : 'Paid to date'} value={<MultiMoney values={paidPeriod} fallback={platformCur} />} hint={`${periodPayments.length} payments`} />
+        <Stat label={range.from || range.to ? 'Paid this period' : 'Paid to date'} value={<MultiMoney values={paidPeriod} fallback={platformCur} />} hint={`${periodPayments.length} order payments · wallet top-ups are in the ledger below`} />
       </div>
 
       {quote && qRfq && (
@@ -177,21 +189,11 @@ export default async function LedgerPage({ searchParams }: { searchParams: Promi
         );
       })}
 
-      <Card title="Invoices & documents">
-        {(docs ?? []).length === 0 ? <EmptyState title="No documents yet" body="Proforma invoices, commercial invoices, receipts and credit notes appear here." /> : (
-          <ul className="px-6 pb-4">
-            {(docs ?? []).map((d) => (
-              <li key={d.id} className="flex flex-wrap items-center gap-x-6 gap-y-2 py-3 border-t border-line text-sm">
-                <span className="mono flex-[1_1_140px]">{d.number}</span>
-                <span className="flex-[2_1_220px] text-muted">{DOC_LABEL[d.doc_type as string] ?? humanize(d.doc_type as string)}{(d.orders as unknown as { code: string } | null)?.code ? ` · ${(d.orders as unknown as { code: string }).code}` : ''} · {fmtDate(d.created_at as string)}</span>
-                <span className="flex-[1_1_100px]">{d.amount_cents != null ? <Money cents={Number(d.amount_cents)} currency={d.currency as string} /> : '—'}</span>
-                <StatusBadge status={(d.status as string) ?? 'issued'} />
-                <DocumentButton docId={d.id as string} compact />
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
     </>
   );
+}
+
+/** Request-time content streams inside Suspense; the placeholder has the shape of the page. */
+export default function LedgerPage({ searchParams }: { searchParams: Promise<{ from?: string; to?: string; account?: string; currency?: string }> }) {
+  return <Suspense fallback={<PageSkeleton cards={4} />}><LedgerContent searchParams={searchParams} /></Suspense>;
 }

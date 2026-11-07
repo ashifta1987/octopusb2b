@@ -13,6 +13,7 @@ export type ServiceState = { status: 'off' | 'trial' | 'on' | 'paused'; plan: st
 export type Manager = { name: string; office: string | null; title: string | null; email: string | null } | null;
 export type WalletSummary = { reference: string; available_cents: number; on_hold_cents: number; pending_transfers_cents: number };
 
+/** APP_ENVIRONMENT (Vercel env setting): 'staging' on preview deployments; unset/'production' on live → no badge. */
 export const isStaging = () => process.env.APP_ENVIRONMENT === 'staging';
 
 export async function getAccountContext(orgId: string) {

@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { PageSkeleton } from '@/components/shell/skeletons';
 import Link from 'next/link';
 import { requireCustomer } from '@/lib/auth';
 import { getAccountContext, serviceOn, type ServiceKey } from '@/lib/core/account';
@@ -23,7 +24,7 @@ const COPY: Record<Exclude<ServiceKey, 'sourcing'>, { title: string; lead: strin
 
 /** ADDON-41 — a service tab: Start card while the service is off, or a "being set up" card until its section ships. */
 export function ServiceStart({ service }: { service: Exclude<ServiceKey, 'sourcing'> }) {
-  return <Suspense fallback={<div className="min-h-[60vh]" aria-busy="true" />}><ServiceStartContent service={service} /></Suspense>;
+  return <Suspense fallback={<PageSkeleton cards={1} table={false} />}><ServiceStartContent service={service} /></Suspense>;
 }
 
 async function ServiceStartContent({ service }: { service: Exclude<ServiceKey, 'sourcing'> }) {

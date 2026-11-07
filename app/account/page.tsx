@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { PageSkeleton } from '@/components/shell/skeletons';
 import Link from 'next/link';
 import { requireCustomer } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -226,7 +227,7 @@ async function AccountHomeContent({ searchParams }: { searchParams: Promise<{ no
 /** Request-time content streams inside Suspense (cacheComponents: instant navigation). */
 export default function AccountHome({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   return (
-    <Suspense fallback={<div className="min-h-[60vh]" aria-busy="true" aria-label="Loading" />}>
+    <Suspense fallback={<PageSkeleton />}>
       <AccountHomeContent searchParams={searchParams as never} />
     </Suspense>
   );

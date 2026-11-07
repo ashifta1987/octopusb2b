@@ -22,7 +22,7 @@ export const CUSTOMER_NAV: NavSection[] = [
   {
     title: 'More',
     items: [
-      { href: '/account/ledger', label: 'Ledger & invoices' },
+      { href: '/account/ledger', label: 'Ledger and statements' },
       { href: '/account/support', label: 'Help & complaints' },
     ],
   },

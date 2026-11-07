@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { PageSkeleton } from '@/components/shell/skeletons';
 import Link from 'next/link';
 import { requireCustomer } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -41,7 +42,7 @@ async function NotificationsPageContent() {
 /** Request-time content streams inside Suspense (cacheComponents: instant navigation). */
 export default function NotificationsPage() {
   return (
-    <Suspense fallback={<div className="min-h-[60vh]" aria-busy="true" aria-label="Loading" />}>
+    <Suspense fallback={<PageSkeleton />}>
       <NotificationsPageContent />
     </Suspense>
   );

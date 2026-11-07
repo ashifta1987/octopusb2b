@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
   if (!s) return NextResponse.redirect(new URL('/login?next=/account/ledger', req.url));
   if (!s.org) return new NextResponse('No organisation', { status: 403 });
   const sp = req.nextUrl.searchParams;
-  const range = parseRange({ from: sp.get('from') ?? undefined, to: sp.get('to') ?? undefined, account: sp.get('account') ?? undefined });
+  const range = parseRange({ from: sp.get('from') ?? undefined, to: sp.get('to') ?? undefined, account: sp.get('account') ?? undefined, currency: sp.get('currency') ?? undefined });
   const { rows, currencies, opening, closing, totals } = await getOrgLedger(s.org.id, range);
   const lines: string[] = [];
   const acctLabel = (k: string, name: string) => (k === 'wallet' ? 'Wallet' : k === 'receivable' ? 'Orders (receivable)' : name);
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     if (range.account !== 'receivable') lines.push(['', '', 'Closing balance', 'Wallet', cur, '', '', money(c.wallet)].map(csvCell).join(','));
   }
   if (!currencies.length) lines.push(['', '', 'No entries for this period', '', '', '', '', ''].map(csvCell).join(','));
-  const name = `octopus-statement-${range.currency === 'all' ? '' : `${range.currency.toLowerCase()}-`}${range.from ?? 'all'}-${range.to ?? new Date().toISOString().slice(0, 10)}.csv`;
+  const name = `octopus-statement-${range.currency === 'all' ? '' : `${range.currency.toLowerCase()}-`}${range.from}-${range.to}.csv`;
   return new NextResponse('\uFEFF' + lines.join('\r\n') + '\r\n', {
     headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="${name}"`, 'Cache-Control': 'private, no-store' },
   });

@@ -43,7 +43,7 @@ export function SectionMenu({ tabs, menus }: { tabs: Tab[]; menus: Record<string
               const on = i.href.split('#')[0] === active && !i.href.includes('#');
               return (
                 <li key={i.href}>
-                  <Link href={i.href} aria-current={on ? 'page' : undefined}
+                  <Link href={i.href} prefetch={false} aria-current={on ? 'page' : undefined}
                     className={`flex items-center justify-between min-h-[44px] px-3 rounded-[10px] text-[15px] ${on ? 'bg-navy text-white font-semibold' : 'text-[#2B3445] hover:bg-surface'}`}>
                     {i.label}
                     {!!i.badge && i.badge > 0 && <span className="min-w-[22px] h-[22px] px-1.5 rounded-full bg-blue text-white text-[12px] font-bold leading-[22px] text-center">{i.badge}</span>}

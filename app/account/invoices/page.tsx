@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { PageSkeleton } from '@/components/shell/skeletons';
 import { requireCustomer } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Card, Table, EmptyState, StatusBadge } from '@/components/ui';
@@ -39,7 +40,7 @@ async function InvoicesPageContent() {
 /** Request-time content streams inside Suspense (cacheComponents: instant navigation). */
 export default function InvoicesPage() {
   return (
-    <Suspense fallback={<div className="min-h-[60vh]" aria-busy="true" aria-label="Loading" />}>
+    <Suspense fallback={<PageSkeleton />}>
       <InvoicesPageContent />
     </Suspense>
   );

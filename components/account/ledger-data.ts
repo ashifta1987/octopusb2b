@@ -44,12 +44,14 @@ export async function getOrgLedger(orgId: string, opts: { from?: string; to?: st
   const closing: Partial<Record<Currency, KindBalances>> = {};
   const totals: Partial<Record<Currency, { debit: number; credit: number }>> = {};
   const seen = new Set<Currency>();
+  const any = new Set<Currency>(); // every currency this company has entries in (drives the currency filter options)
   const rows: LedgerRow[] = [];
   for (const e of data ?? []) {
     const acct = e.ledger_accounts as unknown as { code: string; name: string; currency: string | null } | null;
     const j = e.journals as unknown as { number: string; memo: string; ref_type: string | null } | null;
     const kind = kindOf(acct?.code ?? '');
     const cur = asCurrency((e.currency as string | null) ?? acct?.currency);
+    any.add(cur);
     if (opts.currency && opts.currency !== 'all' && opts.currency !== cur) continue;
     seen.add(cur);
     const run = (running[cur] ??= zero());
@@ -70,14 +72,25 @@ export async function getOrgLedger(orgId: string, opts: { from?: string; to?: st
     });
   }
   const currencies = CURRENCIES.filter((c) => seen.has(c));
-  return { rows, currencies, opening, closing, totals };
+  const available = CURRENCIES.filter((c) => any.has(c));
+  return { rows, currencies, available, opening, closing, totals };
 }
 
+export const DEFAULT_PERIOD_DAYS = 90;
+
+/**
+ * Ledger filters shared by the page, the CSV and the printable statement, so all three always show the same rows.
+ * No dates given → the last 90 days (both dates filled in).
+ */
 export function parseRange(sp: { from?: string; to?: string; account?: string; currency?: string }) {
   const iso = /^\d{4}-\d{2}-\d{2}$/;
+  const today = new Date();
+  const day = (d: Date) => d.toISOString().slice(0, 10);
+  const to = sp.to && iso.test(sp.to) ? sp.to : day(today);
+  const from = sp.from && iso.test(sp.from) ? sp.from : day(new Date(Date.parse(to + 'T00:00:00Z') - (DEFAULT_PERIOD_DAYS - 1) * 864e5));
   return {
-    from: sp.from && iso.test(sp.from) ? sp.from : undefined,
-    to: sp.to && iso.test(sp.to) ? sp.to : undefined,
+    from: from <= to ? from : to,
+    to,
     account: (['wallet', 'receivable', 'all'].includes(sp.account ?? '') ? sp.account : 'all') as LedgerKind | 'all',
     currency: ((CURRENCIES as string[]).includes(sp.currency ?? '') ? sp.currency : 'all') as Currency | 'all',
   };
