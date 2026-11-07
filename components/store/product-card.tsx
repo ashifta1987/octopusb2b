@@ -26,7 +26,7 @@ export function ProductTags({ tags, dropship, ready, max = 4 }: { tags: TagRef[]
   const certs = tags.filter((t) => t.kind === 'certification');
   const items: { key: string; label: string; cls: string; check?: boolean }[] = [];
   if (ready) items.push({ key: 'rts', label: 'Ready to ship', cls: 'bg-[#E3F5EA] text-[#156B3A]' });
-  if (dropship) items.push({ key: 'ds', label: 'Octopus Dropship', cls: 'bg-blue-soft text-[#1E4F9C]' });
+  if (dropship) items.push({ key: 'ds', label: 'Dropshipping', cls: 'bg-blue-soft text-[#1E4F9C]' });
   certs.forEach((c) => items.push({ key: c.slug, label: c.name, cls: 'bg-white border border-line text-navy', check: true }));
   if (!items.length) return null;
   return (

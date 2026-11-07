@@ -28,7 +28,9 @@ const HEAD: Record<RequestType, string> = {
   certification: 'Get your product certified for your market|CE, FCC, RoHS, SASO and more, arranged with accredited labs.',
 };
 /** ADDON-36 (H2): dropshipping is an onboarding, not a quote request. */
-const DROPSHIP_STEPS = 'Create your account|Free, takes two minutes.;Choose products|Pick from the dropship catalogue of verified factories.;Connect your store|Shopify, WooCommerce or Wix — or upload orders as a sheet.;Top up your wallet|Product, shipping and fulfilment come out of it per order.;Orders ship automatically|Packed under your brand, tracked to your customer.';
+/** ADDON-44-C (audit 11): 3PL has its own steps — Octopus quotes warehousing, not suppliers. */
+const THREEPL_STEPS = ['Submitted|You get a reference number right away.', 'Rates sent|Octopus sends storage, pick-and-pack and shipping rates for your goods.', 'Accepted|You accept the rates in My account › 3PL warehouse.', 'Send your first inbound notice|Tell us what is coming: cartons, SKUs and arrival date.', 'Goods received and counted|We check and count every carton and put it on your stock list.', 'Live|Orders ship from your stock and you follow everything in your account.'];
+const DROPSHIP_STEPS = 'Create your account|Free, takes two minutes.;Choose products|Pick from the dropship catalogue of verified factories.;Connect your store|Shopify or WooCommerce — store connection coming soon; upload orders as a sheet meanwhile.;Top up your wallet|Product, shipping and fulfilment are paid from it per order. Top up by bank transfer.;We pack and ship|Packed under your brand, tracked to your customer.';
 
 const FALLBACK: Record<RequestType, string> = {
   sourcing: 'Product sourcing|Find a product we don’t list yet', '3pl': '3PL service|Warehousing and fulfillment', dropship: 'Dropshipping|Ship straight to your customers',
@@ -103,7 +105,9 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
   const wa = company?.whatsapp ? `https://wa.me/${company.whatsapp.replace(/\D/g, '')}` : null;
   const next = type === 'dropship'
     ? block(blocks, 'request.dropship.steps', DROPSHIP_STEPS).split(';').map((x) => x.split('|') as [string, string])
-    : [1, 2, 3, 4, 5, 6].map((n) => parts(blocks, `request.next.${n}`)).filter((x) => x[0]);
+    : type === '3pl'
+      ? THREEPL_STEPS.map((f, i) => parts(blocks, `request.next.3pl.${i + 1}`, f)).filter((x) => x[0])
+      : [1, 2, 3, 4, 5, 6].map((n) => parts(blocks, `request.next.${n}`)).filter((x) => x[0]);
   const [h1, intro] = parts(blocks, `request.h1.${type}`, HEAD[type]);
 
   return (

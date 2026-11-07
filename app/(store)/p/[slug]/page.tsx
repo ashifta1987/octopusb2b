@@ -6,6 +6,7 @@ import { categoryPath, block } from '@/lib/content';
 import { getStoreContent } from '@/components/store/currency';
 import { money, fmtDate, COUNTRY_NAMES } from '@/lib/format';
 import { SupplierCode, StatusBadge } from '@/components/ui';
+import { VerifiedBadge } from '@/components/ds';
 import { getProduct, getRecommendations, getServices } from '@/components/store/data';
 import { ProductGrid, GridSkeleton, unitOne, fmtQty } from '@/components/store/product-card';
 import { PriceCalculator } from '@/components/store/price-calculator';
@@ -116,7 +117,7 @@ async function Content({ params }: { params: Params }) {
             {p.origin_country && <span>Origin: {p.origin_country}</span>}
             {p.lead_time_days && <span>Lead time: {p.lead_time_days} days</span>}
           </div>
-          {p.octopus_dropship && <span className="inline-flex rounded-full bg-blue-soft text-[#1E4F9C] text-[12px] font-semibold px-2.5 py-1">Available on Octopus Dropship</span>}
+          {p.octopus_dropship && <span className="inline-flex rounded-full bg-blue-soft text-[#1E4F9C] text-[12px] font-semibold px-2.5 py-1">Available for dropshipping</span>}
           {p.ready_to_ship && <span className="inline-flex ml-2 rounded-full bg-[#E3F5EA] text-[#156B3A] text-[12px] font-semibold px-2.5 py-1">Ready to ship</span>}
           <h1 className="text-[30px] sm:text-[36px] font-extrabold leading-[1.12]">{p.title}</h1>
           {p.supplier && (
@@ -239,7 +240,8 @@ async function Content({ params }: { params: Params }) {
                 <span className="w-11 h-11 rounded-full bg-blue-soft flex items-center justify-center mono text-[12px] font-semibold" aria-hidden>{p.supplier.country}</span>
                 <div>
                   <div className="font-semibold">Supplier <span className="mono">{p.supplier.code}</span></div>
-                  <div className="text-[13px] text-muted">{[p.supplier.country && (COUNTRY_NAMES[p.supplier.country] ?? p.supplier.country), p.supplier.supplier_type, p.supplier.verified ? 'Verified' : 'Not yet verified'].filter(Boolean).join(' · ')}</div>
+                  <div className="text-[13px] text-muted">{[p.supplier.country && (COUNTRY_NAMES[p.supplier.country] ?? p.supplier.country), p.supplier.supplier_type].filter(Boolean).join(' · ')}</div>
+                  <div className="mt-1.5"><VerifiedBadge verified={p.supplier.verified} /></div>
                 </div>
               </div>
               <p className="text-[13px] text-muted mt-3">All messages and orders go through Octopus B2B.</p>

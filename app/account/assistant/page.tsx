@@ -71,7 +71,7 @@ export default async function AssistantPage({ searchParams }: { searchParams: Pr
             <li>Orders, RFQs, quotes, service requests</li>
             <li>Wallet balance and ledger (last 90 days)</li>
             <li>Saved products and group-buy pledges</li>
-            <li>Shipment tracking from YunExpress</li>
+            <li>Shipment tracking</li>
             <li>Current site T&amp;C and policy versions</li>
           </ul>
           <p className="m-0 text-[12px] text-muted">Contacts, addresses and other customers&apos; data are never sent to the AI.</p>

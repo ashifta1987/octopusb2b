@@ -130,7 +130,7 @@ export async function CatalogView({ basePath, category, sp, placement, title }: 
             <fieldset className="space-y-2">
               <legend className="text-sm font-semibold mb-2">Services</legend>
               <Check name="rts" label="Ready to ship" checked={filters.ready!} />
-              <Check name="ds" label="Available on Octopus Dropship" checked={filters.dropship!} />
+              <Check name="ds" label="Available for dropshipping" checked={filters.dropship!} />
             </fieldset>
             {certTags.length > 0 && (
               <fieldset className="space-y-2">

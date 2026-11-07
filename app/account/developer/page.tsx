@@ -24,7 +24,7 @@ export default async function DeveloperPage({ searchParams }: { searchParams: Pr
   if (!s.org) {
     return (
       <>
-        <PageHeader title="API & integrations" subtitle="Connect your Shopify, Wix or other store to Octopus B2B." />
+        <PageHeader title="API & integrations" subtitle="Connect your Shopify or WooCommerce store to Octopus B2B (coming soon — upload orders as a sheet meanwhile)." />
         <Notice tone="amber">Complete your company profile first. <Link href="/account/kyc" className="underline font-semibold">Set up your company</Link></Notice>
       </>
     );
@@ -67,7 +67,7 @@ export default async function DeveloperPage({ searchParams }: { searchParams: Pr
     <>
       <PageHeader
         title="API & integrations"
-        subtitle="Connect your Shopify, Wix or other store to Octopus B2B. Use these credentials in your app, a plugin, or Postman."
+        subtitle="Connect your Shopify or WooCommerce store to Octopus B2B (coming soon — upload orders as a sheet meanwhile). Use these credentials in your app, a plugin, or Postman."
         actions={
           <div className="flex flex-col items-end gap-1.5">
             <div role="tablist" aria-label="Environment" className="inline-flex p-1 rounded-[10px] bg-[#E9ECF1] border border-line">
@@ -272,9 +272,9 @@ export default async function DeveloperPage({ searchParams }: { searchParams: Pr
       <Card title="Connected stores" className="mt-6" action={<a href="#add-webhook" className="btn btn-ghost btn-sm">Add webhook</a>}>
         <div className="px-6 pb-6 grid gap-4 md:grid-cols-3">
           {[
-            { name: 'Shopify', body: 'Install the Octopus app in your Shopify store to import products and send orders automatically.', status: 'soon' },
-            { name: 'Wix', body: 'Install the Octopus app on your Wix store for product import and order sync.', status: 'soon' },
-            { name: 'Any other platform', body: 'WooCommerce, your own website or ERP: connect with the REST API and webhooks above.', status: 'available' },
+            { name: 'Shopify', body: 'Store connection: coming soon. Upload orders as a sheet meanwhile.', status: 'soon' },
+            { name: 'WooCommerce', body: 'Store connection: coming soon. Upload orders as a sheet meanwhile.', status: 'soon' },
+            { name: 'Your own website or ERP', body: 'Connect with the REST API and webhooks above.', status: 'available' },
           ].map((c) => (
             <div key={c.name} className="border border-line rounded-[12px] p-4">
               <div className="font-semibold text-[17px]">{c.name}</div>

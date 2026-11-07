@@ -48,7 +48,7 @@ async function Hub() {
               <Link href="/turnkey/atlas" className="btn border border-white/40 text-white hover:bg-white/10 hover:text-white">See the Atlas →</Link>
             </div>
             <ul className="flex flex-wrap gap-x-5 gap-y-1 text-[13px] text-[#A9B2D0]">
-              <li>✓ Offices in China</li><li>✓ Inspection before shipping</li><li>✓ Door-to-door via YunExpress</li>
+              <li>✓ Offices in China</li><li>✓ Inspection before shipping</li><li>✓ Door-to-door delivery</li>
             </ul>
           </div>
           <div className="space-y-3">
@@ -131,7 +131,7 @@ async function Hub() {
             ['Offices in China', 'Our team walks the factory for you — specification, sampling and follow-up in person.'],
             ['Pre-shipment QC', 'Mandatory inspection on every turnkey order. AQL 2.5, photos and video.'],
             ['CE · FCC · RoHS', 'Certifications validated per line item. Electrical ratings and marks on file.'],
-            ['YunExpress forwarding', 'Door-to-door to 220+ countries. We book, pay, track and clear for you.'],
+            ['Global shipping', 'Door-to-door to 220+ countries. We book, pay, track and clear for you.'],
           ].map(([t, d]) => (
             <div key={t} className="bg-white border border-line rounded-[14px] p-5">
               <div className="font-semibold text-navy">{t}</div>

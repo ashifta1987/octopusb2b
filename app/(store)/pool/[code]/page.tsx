@@ -159,10 +159,10 @@ async function Content({ params }: { params: Params }) {
           <section className="card p-6" aria-labelledby="how-h">
             <h2 id="how-h" className="text-[20px] font-bold">How a MOQ pool works</h2>
             <ol className="list-decimal pl-5 space-y-3 mt-4 text-[15px] leading-relaxed text-[#3B4556]">
-              <li><b className="text-navy">Pledge your quantity</b> and pay a {p.deposit_pct}% deposit from your wallet or by card. Your deposit is held in escrow by Octopus.</li>
+              <li><b className="text-navy">Pledge your quantity</b> and pay a {p.deposit_pct}% deposit from your wallet or by bank transfer. Your deposit is held in escrow by Octopus.</li>
               <li><b className="text-navy">Wait for the pool to fill.</b> Share the pool link with partners if you want. New buyers&apos; pledges push the price down for everyone.</li>
               <li><b className="text-navy">If the pool fills before the deadline:</b> every buyer gets a proforma invoice for the balance ({100 - p.deposit_pct}%) at the pool price. Pay within {rules.balanceHours} hours.</li>
-              <li><b className="text-navy">Octopus places one order</b> with the supplier. QC inspection is shared. Each buyer gets a separate shipment to their address with YunExpress tracking.</li>
+              <li><b className="text-navy">Octopus places one order</b> with the supplier. QC inspection is shared. Each buyer gets a separate shipment to their address with its own tracking.</li>
               <li><b className="text-navy">If the pool does not fill:</b> all deposits are refunded to each buyer&apos;s wallet. No one is charged.</li>
             </ol>
             <ul className="flex flex-wrap gap-x-5 gap-y-1 text-[12px] text-muted mt-5 border-t border-line pt-3">
@@ -315,7 +315,7 @@ function MyPledgeCard({ pledge: m, pool: p }: { pledge: MyPledge; pool: PoolDeta
           <div className="flex justify-between"><dt className="text-muted">Balance when pool fills (est.)</dt><dd className="mono font-semibold">{money(Math.max(0, est * m.qty - m.deposit_minor), m.currency)}</dd></div>
         )}
       </dl>
-      {m.status === 'pending' && <Notice tone="amber">Pay the {money(m.deposit_minor, m.currency)} deposit by card / bank transfer — your pledge lapses if it is unpaid when the pool fills.</Notice>}
+      {m.status === 'pending' && <Notice tone="amber">Pay the {money(m.deposit_minor, m.currency)} deposit by bank transfer — your pledge lapses if it is unpaid when the pool fills.</Notice>}
       {m.order_id && unpaid != null && unpaid > 0 && (
         <div className="rounded-[10px] bg-[#FFF3D6] text-[#8A5A00] px-4 py-3">
           <div className="font-semibold">The pool filled — pay your balance{m.balance_due_at && <> within <Countdown to={m.balance_due_at} withMinutes /></>}.</div>

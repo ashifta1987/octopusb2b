@@ -37,7 +37,7 @@ export const REQUEST_FIELDS: Record<RequestType, Section[]> = {
       { name: 'warehouse_country', label: 'Warehouse country', kind: 'country', required: true },
       { name: 'monthly_orders', label: 'Orders per month', kind: 'int', placeholder: 'e.g. 1500' },
       { name: 'storage_type', label: 'Storage type', kind: 'select', required: true, options: ['Standard', 'Fragile', 'Hazardous', 'Temperature-controlled'] },
-      { name: 'platforms', label: 'Sales channels', kind: 'text', placeholder: 'Shopify, Amazon, WooCommerce' },
+      { name: 'platforms', label: 'Sales channels', kind: 'text', placeholder: 'Shopify, WooCommerce or a sheet' },
       notes,
     ],
   }],
@@ -46,7 +46,7 @@ export const REQUEST_FIELDS: Record<RequestType, Section[]> = {
     fields: [
       { name: 'product', label: 'Products you plan to sell (optional)', kind: 'text', full: true, placeholder: 'Product names or links — you can also pick them later from the dropship catalogue' },
       { name: 'target_markets', label: 'Target markets', kind: 'text', required: true, placeholder: 'e.g. US, Germany, UAE' },
-      { name: 'store_platform', label: 'Store platform', kind: 'select', required: true, options: ['Shopify', 'WooCommerce', 'Wix', 'Amazon', 'Other'] },
+      { name: 'store_platform', label: 'Store platform', kind: 'select', required: true, options: ['Shopify', 'WooCommerce', 'Upload a sheet'] },
       { name: 'monthly_orders', label: 'Expected orders per month', kind: 'int' },
       { name: 'branding', label: 'Branding', kind: 'select', options: ['Standard packaging', 'White label', 'Custom packaging and inserts'] },
       notes,

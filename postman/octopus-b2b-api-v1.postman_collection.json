@@ -426,7 +426,7 @@
                 {
                   "key": "dropship",
                   "value": "",
-                  "description": "Octopus Dropship tag: true/false",
+                  "description": "Available for dropshipping: true/false",
                   "disabled": true
                 }
               ]
@@ -521,7 +521,7 @@
                     {
                       "key": "dropship",
                       "value": "",
-                      "description": "Octopus Dropship tag: true/false",
+                      "description": "Available for dropshipping: true/false",
                       "disabled": true
                     }
                   ]
