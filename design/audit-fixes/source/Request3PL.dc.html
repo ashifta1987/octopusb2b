@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>3PL request</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6F8}
+*{box-sizing:border-box}
+img{max-width:100%}
+a{color:#11133C;text-decoration:none}a:hover{color:#2A6FD6}
+.wrap{max-width:1280px;margin:0 auto;padding-left:32px;padding-right:32px}
+.sec{padding-top:64px;padding-bottom:64px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:10px;font:600 15px/1 Inter,system-ui,sans-serif;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+.btn-primary{background:#2A6FD6;color:#FFFFFF}.btn-primary:hover{background:#1E58B0;color:#FFFFFF}
+.btn-dark{background:#11133C;color:#FFFFFF}.btn-dark:hover{background:#262A6B;color:#FFFFFF}
+.btn-ghost{background:#FFFFFF;color:#11133C;border-color:#C5CCD6}.btn-ghost:hover{border-color:#11133C}
+.btn-light{background:#FFFFFF;color:#11133C}.btn-light:hover{background:#E6EFFC;color:#11133C}
+.btn-outline-w{background:transparent;color:#FFFFFF;border-color:rgba(255,255,255,.45)}.btn-outline-w:hover{border-color:#FFFFFF;color:#FFFFFF}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid #1D4ED8;outline-offset:2px}
+input,select{font:400 15px Inter,system-ui,sans-serif;color:#11133C}
+.k{font:600 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#5A6475;text-transform:uppercase}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.pill-live{background:#DCFCE7;color:#15803D}.pill-soft{background:#E6EFFC;color:#1E58B0}.pill-dark{background:rgba(255,255,255,.1);color:#DDE3F5;border:1px solid rgba(255,255,255,.18)}
+.card{background:#FFFFFF;border:1px solid #E2E5EA;border-radius:14px;overflow:hidden}
+.eyebrow{display:flex;align-items:center;gap:10px}
+.num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:#11133C;color:#FFFFFF;font:700 13px Lexend,sans-serif;flex:none}
+.num-b{background:#2A6FD6}
+.h2{margin:10px 0 0;font:800 34px/1.12 Lexend,sans-serif;letter-spacing:-.02em}
+.lead{margin:12px 0 0;color:#3B4556;font-size:16.5px;line-height:1.6;max-width:620px}
+.sec-h{display:flex;justify-content:space-between;align-items:flex-end;gap:16px 24px;margin-bottom:24px;flex-wrap:wrap}
+.lnk{color:#2A6FD6;font-weight:600;font-size:14.5px;white-space:nowrap}
+.rail a{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:999px;color:#3B4556;font-weight:500;font-size:14px;white-space:nowrap;flex:none}
+.rail a:hover{background:#F0F2F6}
+.rail a.on{background:#11133C;color:#FFFFFF;font-weight:600}
+.step{display:flex;flex-direction:column;gap:8px;padding:20px}
+.step h3{margin:4px 0 0;font:700 16.5px/1.3 Lexend,sans-serif}
+.step p{margin:0;color:#5A6475;font-size:14px;line-height:1.55}
+.chk{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.chk li{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.45;color:#3B4556}
+.chk li::before{content:"✓";flex:none;width:20px;height:20px;margin-top:1px;border-radius:999px;background:#DCFCE7;color:#15803D;font:700 12px/20px Inter,sans-serif;text-align:center}
+.art{display:block;width:100%;height:100%;object-fit:cover}
+.bar{height:8px;background:#E5E8ED;border-radius:999px;overflow:hidden}.bar > i{display:block;height:100%;background:linear-gradient(90deg,#2A6FD6,#60A5FA)}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;background:#FFFFFF;border:1px solid #E2E5EA;font:600 15px Inter,sans-serif}
+details{background:#FFFFFF;border:1px solid #E2E5EA;border-radius:14px;padding:0 18px}
+summary{cursor:pointer;min-height:54px;display:flex;align-items:center;font:600 15.5px Inter,sans-serif}
+details p{margin:0 0 16px;color:#3B4556;font-size:14.5px;line-height:1.6}
+.crumb{font-size:13.5px;color:#5A6475}
+@media (max-width:1100px){.hero-grid,.split{grid-template-columns:1fr !important}.steps4{grid-template-columns:repeat(2,1fr) !important}.cols4{grid-template-columns:repeat(2,1fr) !important}.cols3{grid-template-columns:1fr !important}}
+@media (max-width:760px){.wrap{padding-left:16px !important;padding-right:16px !important}.sec{padding-top:40px !important;padding-bottom:40px !important}.h1{font-size:32px !important;line-height:1.1 !important}.h2{font-size:25px !important}.steps4,.cols4{grid-template-columns:1fr !important}.hdr form{order:3;flex-basis:100% !important}.acct-label{display:none}.float-card{position:static !important;margin-top:12px;width:auto !important}.cta-row .btn{flex:1 1 100%}.foot-grid{grid-template-columns:1fr 1fr !important}}
+.ann{background:#11133C;color:#FFFFFF;font-size:13.5px}
+.ann a{color:#9CC2FF;font-weight:600}
+.new{display:inline-flex;align-items:center;padding:2px 7px;border-radius:99px;background:#F59E0B;color:#11133C;font:700 10px/1.4 'IBM Plex Mono',monospace;letter-spacing:.04em;margin-left:4px}
+.lnk{color:#1E58B0}
+.pill-ex{background:#FEF3C7;color:#92400E}
+.rtabs{display:flex;gap:2px;overflow-x:auto}
+.rtabs a{display:inline-flex;align-items:center;gap:4px;min-height:50px;padding:0 14px;font:600 14px Inter,sans-serif;color:#3B4556;border-bottom:3px solid transparent;white-space:nowrap;flex:none}
+.rtabs a:hover{color:#11133C;background:#F5F6F8}
+.rtabs a.on{color:#11133C;border-bottom-color:#2A6FD6}
+.fs{border:0;margin:0;padding:24px 0 0;min-width:0}
+.fs + .fs{border-top:1px solid #EEF0F4;margin-top:24px}
+.lbl{display:block;padding:0;font:700 16px/1.3 Lexend,sans-serif;color:#11133C}
+.sub{display:block;font:600 14px Inter,sans-serif;color:#11133C;margin-bottom:6px}
+.hint{margin:6px 0 0;font-size:13.5px;line-height:1.5;color:#5A6475}
+.inp{display:block;width:100%;min-height:48px;padding:11px 14px;border:1px solid #C5CCD6;border-radius:10px;background:#FFFFFF;font:400 15px/1.4 Inter,sans-serif;color:#11133C}
+textarea.inp{min-height:110px;resize:vertical;line-height:1.5}
+.opt{display:flex;gap:12px;align-items:flex-start;text-align:left;width:100%;min-height:44px;padding:16px;border:1.5px solid #C5CCD6;border-radius:12px;background:#FFFFFF;color:#11133C;font:400 14px Inter,sans-serif;cursor:pointer}
+.opt:hover{border-color:#11133C}
+.opt[aria-pressed="true"]{border-color:#2A6FD6;background:#F2F7FE;box-shadow:inset 0 0 0 1px #2A6FD6}
+.dot{flex:none;width:20px;height:20px;border-radius:99px;border:2px solid #8A94A6;margin-top:1px;background:#FFFFFF}
+.opt[aria-pressed="true"] .dot{border-color:#2A6FD6;background:#2A6FD6;box-shadow:inset 0 0 0 3px #FFFFFF}
+.opt b{display:block;font:600 15px/1.35 Inter,sans-serif}
+.opt small{display:block;margin-top:4px;color:#3B4556;font-size:13.5px;line-height:1.45}
+.tchip{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid #C5CCD6;background:#FFFFFF;color:#11133C;font:600 14px Inter,sans-serif;cursor:pointer}
+.tchip:hover{border-color:#11133C}
+.tchip[aria-pressed="true"]{background:#11133C;border-color:#11133C;color:#FFFFFF}
+.fee{background:#F2F7FE;border:1px solid #CFE0F7;border-radius:12px;padding:16px 18px}
+.vstep{display:flex;gap:12px;align-items:flex-start}
+.vstep h3{margin:2px 0 0;font:700 15.5px/1.3 Lexend,sans-serif}
+.vstep p{margin:4px 0 0;color:#5A6475;font-size:13.5px;line-height:1.5}
+.cols6{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+@media (max-width:1100px){.form-grid{grid-template-columns:1fr !important}.cols6{grid-template-columns:repeat(3,minmax(0,1fr)) !important}}
+@media (max-width:760px){.cols6,.cols2{grid-template-columns:1fr !important}.fcard{padding:20px !important}}
+</style>
+</helmet>
+<div style="font-family:Inter,system-ui,sans-serif;color:#11133C;background:#F5F6F8;min-height:100vh;">
+
+<div class="ann"><div class="wrap" style="padding-top:9px;padding-bottom:9px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;text-align:center;"><span class="new" style="margin:0;">NEW</span><span>Make My Brand: your logo on verified products, stocked in our warehouse, shipped worldwide.</span><a href="MakeMyBrand.dc.html">See how it works →</a></div></div>
+<header style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;">
+<div class="wrap hdr" style="padding-top:12px;padding-bottom:12px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;">
+<a href="HomeMMB.dc.html" aria-label="Octopus B2B home" style="display:inline-flex;align-items:center;flex:none;"><img src="assets/octopus-logo.png" alt="Octopus B2B" style="height:42px;width:auto;display:block;"></a>
+<form role="search" style="flex:1 1 420px;display:flex;min-width:0;border:1.5px solid #11133C;border-radius:10px;overflow:hidden;background:#FFFFFF;">
+<label for="q" class="sr">Search products, HS codes or turnkey projects</label>
+<input id="q" type="search" placeholder="Search products, HS codes or turnkey projects" style="flex:1;min-width:0;border:0;padding:0 14px;min-height:46px;font-size:15px;">
+<button type="submit" class="btn btn-dark" style="border-radius:0;min-height:46px;padding:0 18px;" aria-label="Search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></button>
+</form>
+<a href="Main.dc.html" class="btn btn-ghost" style="min-height:46px;padding:0 14px;margin-left:auto;" aria-label="My account"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span class="acct-label">My account</span></a>
+</div>
+</header>
+<nav class="rail" aria-label="Services" style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;">
+<div class="wrap" style="padding-top:8px;padding-bottom:8px;display:flex;gap:4px;overflow-x:auto;align-items:center;">
+<a href="HomeMMB.dc.html">Product sourcing</a>
+<a href="MakeMyBrand.dc.html">Make My Brand <span class="new">NEW</span></a>
+<a href="HomeMMB.dc.html">Dropshipping</a>
+<a href="HomeMMB.dc.html">MOQ pools</a>
+<a class="on" href="Request3PL.dc.html" aria-current="page">3PL warehousing</a>
+<a href="HomeMMB.dc.html">Turnkey Projects</a>
+<span style="width:1px;height:20px;background:#E2E5EA;flex:none;margin:0 6px;"></span>
+<a href="PublicProduct.dc.html">All categories</a>
+</div>
+</nav>
+
+<main>
+<section aria-labelledby="rc-h" style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;">
+<div class="wrap" style="padding-top:24px;">
+<nav class="crumb" aria-label="Breadcrumb"><a href="HomeMMB.dc.html" style="color:#5A6475;">Home</a> / <a href="Request3PL.dc.html" style="color:#5A6475;">Request Center</a> / <span aria-current="page" style="color:#11133C;">3PL service</span></nav>
+<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-top:16px;">
+<div><h1 id="rc-h" class="h1" style="margin:0;font:800 38px/1.1 Lexend,sans-serif;letter-spacing:-.025em;">Request Center</h1><p class="lead" style="margin-top:8px;">Ask for any Octopus service from one place. Each request gets a reference number and its own section in My account.</p></div>
+<a href="Main.dc.html" class="btn btn-ghost">My requests</a>
+</div>
+<nav class="rtabs" aria-label="Request type" style="margin-top:18px;">
+<a href="Request3PL.dc.html">Product sourcing</a>
+<a href="RequestBrand.dc.html">Make My Brand <span class="new">NEW</span></a>
+<a href="Request3PL.dc.html">Dropshipping</a>
+<a class="on" href="Request3PL.dc.html" aria-current="page">3PL service</a>
+<a href="Request3PL.dc.html">Sample request</a>
+<a href="Request3PL.dc.html">QC inspection</a>
+<a href="Request3PL.dc.html">Certification</a>
+</nav>
+</div>
+</section>
+
+<section aria-labelledby="f-h">
+<div class="wrap" style="padding-top:36px;padding-bottom:40px;">
+<div class="form-grid" style="display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px;align-items:start;">
+
+<form class="card fcard" style="padding:28px 32px 32px;" aria-labelledby="f-h">
+<span class="k" style="color:#1E58B0;">3PL service</span>
+<h2 id="f-h" style="margin:8px 0 0;font:800 26px/1.2 Lexend,sans-serif;">Ask for 3PL warehousing</h2>
+<p class="hint" style="font-size:15px;color:#3B4556;max-width:620px;">Tell us what you want to store and how many orders you ship. We reply with storage and handling rates for your products.</p>
+
+<fieldset class="fs">
+<legend class="lbl">What will we store?</legend>
+<div class="cols2" style="display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:14px;margin-top:12px;">
+<div><label for="w-prod" class="sub">Products</label><input id="w-prod" class="inp" type="text" placeholder="e.g. Mini fan MINI1, phone cases"></div>
+<div><label for="w-units" class="sub">Units on your first inbound</label><input id="w-units" class="inp" type="number" min="1" inputmode="numeric" placeholder="e.g. 2,000"></div>
+</div>
+<div style="margin-top:14px;"><label for="w-ctn" class="sub">Carton size and weight <span style="font-weight:400;color:#5A6475;">(if you know it)</span></label><input id="w-ctn" class="inp" type="text" placeholder="e.g. 40 × 30 × 25 cm, 8 kg, 50 pcs per carton"></div>
+</fieldset>
+
+<fieldset class="fs">
+<legend class="lbl" id="wh-l">Warehouse</legend>
+<p class="hint">Octopus stores goods in its own warehouse. Pick where your stock should be.</p>
+<div role="group" aria-labelledby="wh-l" style="display:grid;gap:10px;margin-top:12px;">
+<sc-for list="{{whCards}}" as="w" hint-placeholder-count="3"><button type="button" class="opt" aria-pressed="{{w.pressed}}" onClick="{{w.pick}}"><span class="dot" aria-hidden="true"></span><span style="flex:1;min-width:0;"><b>{{w.title}}</b><small>{{w.desc}}</small></span><span class="{{w.tagCls}}">{{w.tag}}</span></button></sc-for>
+</div>
+<sc-if value="{{isOther}}" hint-placeholder-val="{{false}}">
+<div style="margin-top:12px;"><label for="w-other" class="sub">Which country or city?</label><input id="w-other" class="inp" type="text" value="{{other}}" onChange="{{onOther}}" placeholder="e.g. Riyadh, Saudi Arabia"><p class="hint">We check what is possible and answer in your quote.</p></div>
+</sc-if>
+<p class="hint" aria-live="polite" style="color:#11133C;">Selected: <strong>{{whSelected}}</strong></p>
+</fieldset>
+
+<fieldset class="fs">
+<legend class="lbl" id="opm-l">Orders per month</legend>
+<div role="group" aria-labelledby="opm-l" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
+<sc-for list="{{opmChips}}" as="c" hint-placeholder-count="5"><button type="button" class="tchip" aria-pressed="{{c.pressed}}" onClick="{{c.pick}}">{{c.label}}</button></sc-for>
+</div>
+</fieldset>
+
+<fieldset class="fs">
+<legend class="lbl" id="st-l">Storage type</legend>
+<div role="group" aria-labelledby="st-l" class="cols2" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px;">
+<sc-for list="{{stCards}}" as="s" hint-placeholder-count="4"><button type="button" class="opt" aria-pressed="{{s.pressed}}" onClick="{{s.pick}}"><span class="dot" aria-hidden="true"></span><span><b>{{s.title}}</b><small>{{s.desc}}</small></span></button></sc-for>
+</div>
+</fieldset>
+
+<fieldset class="fs">
+<legend class="lbl" id="ch-l">Sales channels</legend>
+<p class="hint">Where do the orders come from? Pick all that apply.</p>
+<div role="group" aria-labelledby="ch-l" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
+<sc-for list="{{chChips}}" as="c" hint-placeholder-count="7"><button type="button" class="tchip" aria-pressed="{{c.pressed}}" onClick="{{c.pick}}">{{c.label}}</button></sc-for>
+</div>
+</fieldset>
+
+<div class="fs" style="border-top:1px solid #EEF0F4;margin-top:24px;">
+<label for="w-more" class="lbl">Anything else</label>
+<p class="hint" id="w-more-h">Batteries, liquids, fragile items, kitting or labelling you need, or a start date.</p>
+<textarea id="w-more" class="inp" aria-describedby="w-more-h" style="margin-top:10px;" placeholder="Write here"></textarea>
+</div>
+
+<div class="fee" style="margin-top:26px;">
+<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline;"><strong style="font:700 16px Lexend,sans-serif;">3PL request</strong><strong style="font:700 16px Lexend,sans-serif;color:#15803D;">Free to submit</strong></div>
+<p style="margin:8px 0 0;font-size:14px;line-height:1.55;color:#3B4556;">Storage and handling rates are sent in your quote: storage [US$ rate per pallet or m³ per month], pick and pack [US$ rate per order].</p>
+</div>
+
+<sc-if value="{{notSent}}" hint-placeholder-val="{{true}}">
+<div style="display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center;margin-top:20px;">
+<button type="button" class="btn btn-primary" style="min-height:52px;padding:0 28px;font-size:16px;" onClick="{{send}}">Send request</button>
+<p style="margin:0;font-size:14px;color:#3B4556;line-height:1.5;flex:1 1 260px;">You get a reference number right away and can follow it in <a href="Main.dc.html" class="lnk" style="font-size:14px;white-space:normal;">My account › 3PL warehouse</a>.</p>
+</div>
+</sc-if>
+<sc-if value="{{sent}}" hint-placeholder-val="{{false}}">
+<div role="status" style="margin-top:20px;border:1px solid #BBF7D0;background:#F0FDF4;border-radius:12px;padding:16px 18px;display:flex;gap:12px;align-items:flex-start;">
+<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:1px;"><circle cx="12" cy="12" r="9"></circle><path d="m8 12 3 3 5-6"></path></svg>
+<div><strong style="font:700 16px Lexend,sans-serif;color:#14532D;">Request sent · reference [3PL reference number]</strong><p style="margin:6px 0 0;font-size:14px;color:#14532D;line-height:1.5;">Follow it in My account › 3PL warehouse. We send your rates there.</p><a href="Main.dc.html" class="btn btn-ghost" style="margin-top:12px;">Open My account › 3PL warehouse</a></div>
+</div>
+</sc-if>
+</form>
+
+<aside style="display:flex;flex-direction:column;gap:16px;" aria-label="Before you ship">
+<div class="card" style="padding:22px;">
+<span class="k" style="color:#1E58B0;">Inbound checklist</span>
+<h2 style="margin:8px 0 14px;font:700 19px/1.3 Lexend,sans-serif;">Before you ship to us</h2>
+<ul class="chk">
+<li>Cartons labelled with SKU and your reference</li>
+<li>An inbound notice (ASN) created in My account › 3PL warehouse</li>
+<li>Accepted and refused goods: [list to be confirmed]</li>
+<li>Cut-off for same-day dispatch: [time]</li>
+</ul>
+<p class="hint" style="margin-top:14px;">Warehouse address for inbound goods: [address, sent with your rates]</p>
+</div>
+<div class="card" style="padding:22px;">
+<h2 style="margin:0;font:700 17px/1.3 Lexend,sans-serif;">Already storing with us?</h2>
+<p class="hint" style="font-size:14px;">See stock, create inbound notices and follow orders in one place.</p>
+<a href="Main.dc.html" class="lnk" style="display:inline-flex;align-items:center;min-height:44px;">Open My account › 3PL warehouse →</a>
+</div>
+<div class="card" style="padding:22px;">
+<h2 style="margin:0;font:700 17px/1.3 Lexend,sans-serif;">Questions first?</h2>
+<p class="hint" style="font-size:14px;">Write to us and say it is about 3PL.</p>
+<a href="mailto:ceooctopusb2b@gmail.com" class="lnk" style="display:inline-flex;align-items:center;min-height:44px;">ceooctopusb2b@gmail.com</a>
+</div>
+</aside>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="nx-h" style="background:#FFFFFF;border-top:1px solid #E2E5EA;">
+<div class="wrap" style="padding-top:44px;padding-bottom:52px;">
+<span class="k" style="color:#1E58B0;">After you send it</span>
+<h2 id="nx-h" class="h2" style="font-size:26px;margin-bottom:22px;">What happens next</h2>
+<ol class="cols6" style="list-style:none;margin:0;padding:0;">
+<li class="card step"><span class="num num-b">1</span><h3>Submitted</h3><p>You get a reference number right away.</p></li>
+<li class="card step"><span class="num num-b">2</span><h3>Rates sent</h3><p>We send storage and pick-and-pack rates for your products.</p></li>
+<li class="card step"><span class="num num-b">3</span><h3>Accepted</h3><p>You accept the rates in My account › 3PL warehouse.</p></li>
+<li class="card step"><span class="num num-b">4</span><h3>Send your first inbound notice</h3><p>Create an ASN with SKUs and carton count before the goods leave.</p></li>
+<li class="card step"><span class="num num-b">5</span><h3>Goods received and counted</h3><p>We count what arrives against your notice and show the result in My account.</p></li>
+<li class="card step"><span class="num">6</span><h3>Live: orders ship from stock</h3><p>Your orders are picked, packed and shipped from your stock.</p></li>
+</ol>
+</div>
+</section>
+</main>
+
+<footer style="background:#0C0E30;color:#8B93B5;">
+<div class="wrap" style="padding-top:44px;padding-bottom:28px;">
+<div class="foot-grid" style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:28px;">
+<div><img src="assets/octopus-logo-white.png" alt="Octopus B2B" style="height:40px;width:auto;display:block;"><p style="margin:14px 0 0;font-size:13.5px;line-height:1.55;max-width:280px;">Product sourcing, Make My Brand, dropshipping, group buying, warehousing and turnkey businesses from China, delivered worldwide.</p></div>
+<nav aria-label="Footer services" style="display:flex;flex-direction:column;gap:9px;font-size:13.5px;"><span class="k" style="color:#FFFFFF;">Services</span><a href="HomeMMB.dc.html" style="color:#8B93B5;">Product sourcing</a><a href="MakeMyBrand.dc.html" style="color:#8B93B5;">Make My Brand</a><a href="HomeMMB.dc.html" style="color:#8B93B5;">Dropshipping</a><a href="HomeMMB.dc.html" style="color:#8B93B5;">MOQ pools</a><a href="Request3PL.dc.html" style="color:#8B93B5;">3PL warehousing</a><a href="HomeMMB.dc.html" style="color:#8B93B5;">Turnkey Projects</a></nav>
+<nav aria-label="My account" style="display:flex;flex-direction:column;gap:9px;font-size:13.5px;"><span class="k" style="color:#FFFFFF;">My account</span><a href="Main.dc.html" style="color:#8B93B5;">Home</a><a href="DropshipCatalog.dc.html" style="color:#8B93B5;">Dropshipping</a><a href="Main.dc.html" style="color:#8B93B5;">3PL warehouse</a><a href="Main.dc.html" style="color:#8B93B5;">Make My Brand</a></nav>
+<nav aria-label="Company" style="display:flex;flex-direction:column;gap:9px;font-size:13.5px;"><span class="k" style="color:#FFFFFF;">Company</span><a href="Request3PL.dc.html" style="color:#8B93B5;">About us</a><a href="mailto:ceooctopusb2b@gmail.com" style="color:#8B93B5;">Contact</a></nav>
+</div>
+<div style="border-top:1px solid #22265A;margin-top:28px;padding-top:18px;font-size:12.5px;">© 2026 Shenzhen Octopus Trading Co., Ltd. · Terms · Privacy</div>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":3100}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { wh: 'szx', other: '', opm: '100-500', st: 'shelf', ch: { shopify: true }, sent: false }; }
+  renderVals() {
+    const s = this.state;
+    const whDefs = [
+      { id: 'szx', title: 'China · Shenzhen (Octopus warehouse)', desc: 'Our own warehouse. Stock is received, stored, picked and packed here and shipped worldwide.', tag: 'Open', tagCls: 'pill pill-live' },
+      { id: 'dxb', title: '[UAE · Dubai — to be confirmed]', desc: '[Opening date and services to be confirmed]', tag: 'To be confirmed', tagCls: 'pill pill-ex' },
+      { id: 'ask', title: 'Not listed? Ask us', desc: 'Tell us the country or city you need. We check and answer in your quote.', tag: 'Ask', tagCls: 'pill pill-soft' }
+    ];
+    const whCards = whDefs.map((w) => ({
+      title: w.title, desc: w.desc, tag: w.tag, tagCls: w.tagCls,
+      pressed: s.wh === w.id ? 'true' : 'false',
+      pick: () => this.setState({ wh: w.id })
+    }));
+    const cur = whDefs.filter((w) => w.id === s.wh)[0];
+    let whSelected = cur ? cur.title : 'None yet';
+    if (s.wh === 'ask') whSelected = s.other ? 'Ask us · ' + s.other : 'Ask us · country not given yet';
+    const opmDefs = [['lt100', 'Under 100'], ['100-500', '100 to 500'], ['500-2000', '500 to 2,000'], ['gt2000', 'Over 2,000'], ['unsure', 'Not sure yet']];
+    const opmChips = opmDefs.map((d) => ({ label: d[1], pressed: s.opm === d[0] ? 'true' : 'false', pick: () => this.setState({ opm: d[0] }) }));
+    const stDefs = [
+      { id: 'shelf', title: 'Shelf or bin', desc: 'Small items and single cartons' },
+      { id: 'pallet', title: 'Pallets', desc: 'Full pallets of the same SKU' },
+      { id: 'both', title: 'Both', desc: 'Some on shelves, some on pallets' },
+      { id: 'unsure', title: 'Not sure yet', desc: 'We suggest one in your quote' }
+    ];
+    const stCards = stDefs.map((d) => ({ title: d.title, desc: d.desc, pressed: s.st === d.id ? 'true' : 'false', pick: () => this.setState({ st: d.id }) }));
+    const chDefs = [['shopify', 'Shopify'], ['woo', 'WooCommerce'], ['amazon', 'Amazon'], ['tiktok', 'TikTok Shop'], ['web', 'Own website'], ['b2b', 'Wholesale to shops'], ['other', 'Other']];
+    const chChips = chDefs.map((d) => ({
+      label: d[1], pressed: s.ch[d[0]] ? 'true' : 'false',
+      pick: () => { const n = Object.assign({}, s.ch); n[d[0]] = !n[d[0]]; this.setState({ ch: n }); }
+    }));
+    return {
+      whCards: whCards,
+      isOther: s.wh === 'ask',
+      other: s.other,
+      onOther: (e) => this.setState({ other: e && e.target ? e.target.value : '' }),
+      whSelected: whSelected,
+      opmChips: opmChips,
+      stCards: stCards,
+      chChips: chChips,
+      sent: s.sent,
+      notSent: !s.sent,
+      send: () => this.setState({ sent: true })
+    };
+  }
+}
+</script>
+</body>
+</html>

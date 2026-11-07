@@ -121,7 +121,7 @@ export function BackupProgress({ initial, githubConfigured }: { initial: Live | 
         <span className="mono text-sm">{pct}%</span>
       </div>
       <div className="mt-2 h-2.5 rounded-full bg-line" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Backup progress">
-        <div className={cn('h-2.5 rounded-full transition-all', failed ? 'bg-bad' : done ? 'bg-ok' : 'bg-blue')} style={{ width: `${pct}%` }} />
+        <div className={cn('h-2.5 rounded-full transition-all', failed ? 'bg-bad' : done ? 'bg-ok' : 'bg-blue-fill')} style={{ width: `${pct}%` }} />
       </div>
       {failed && row.error && <p className="text-sm text-bad mt-2">{row.error}</p>}
       {(notConfigured || (row.status === 'queued' && githubConfigured === false)) && (

@@ -123,7 +123,7 @@ export function Timeline({ items }: { items: { title: string; body?: string | nu
       {items.map((it, i) => (
         <li key={i} className="relative pl-6 pb-5 last:pb-0">
           {i < items.length - 1 && <span className="absolute left-[5px] top-3 bottom-0 w-px bg-line" aria-hidden />}
-          <span className={cn('absolute left-0 top-1.5 w-[11px] h-[11px] rounded-full border-2', it.tone === 'todo' ? 'bg-white border-line-2' : it.tone === 'current' ? 'bg-blue border-blue' : 'bg-ok border-ok')} aria-hidden />
+          <span className={cn('absolute left-0 top-1.5 w-[11px] h-[11px] rounded-full border-2', it.tone === 'todo' ? 'bg-white border-line-2' : it.tone === 'current' ? 'bg-blue-fill border-blue' : 'bg-ok border-ok')} aria-hidden />
           <div className="font-semibold text-[15px]">{it.title}</div>
           {it.body && <div className="text-sm text-muted">{it.body}</div>}
           <div className="text-xs text-muted mono mt-0.5">{fmtDate(it.at, true)}</div>
@@ -145,7 +145,7 @@ export function OrderProgress({ status }: { status: string }) {
     <div className="grid grid-cols-4 gap-2">
       {PROGRESS.map((p, i) => (
         <div key={p}>
-          <div className={cn('h-1 rounded-full', i < rank ? 'bg-blue' : 'bg-line')} />
+          <div className={cn('h-1 rounded-full', i < rank ? 'bg-blue-fill' : 'bg-line')} />
           <div className={cn('mt-2 text-sm', i < rank ? 'font-semibold text-navy' : 'text-muted')}>{p === 'in_production' ? 'Processing' : humanize(p)}</div>
         </div>
       ))}

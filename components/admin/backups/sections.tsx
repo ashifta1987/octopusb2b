@@ -164,7 +164,7 @@ function Steps({ current, done }: { current: number; done: number }) {
         const isCur = n === current && !isDone;
         return (
           <li key={s} aria-current={isCur ? 'step' : undefined}
-            className={cn('rounded-full px-3 py-1.5 text-xs font-semibold', isDone ? 'bg-navy text-white' : isCur ? 'bg-blue text-white' : 'bg-[#EEF0F4] text-[#3D4456]')}>
+            className={cn('rounded-full px-3 py-1.5 text-xs font-semibold', isDone ? 'bg-navy text-white' : isCur ? 'bg-blue-fill text-white' : 'bg-[#EEF0F4] text-[#3D4456]')}>
             {n} {s}{isDone ? ' ✓' : ''}
           </li>
         );

@@ -70,7 +70,7 @@ export default async function WorkQueue({ searchParams }: { searchParams: Promis
           ))}
           {q.stats.needOwner > 0 && (
             <Link href={href({ owner: onlyOwner ? null : '1' })} aria-pressed={onlyOwner} className="ml-auto inline-flex items-center gap-2 min-h-10 px-4 rounded-full border border-line-2 bg-white text-[14px] font-medium">
-              <span className={`w-9 h-5 rounded-full relative ${onlyOwner ? 'bg-blue' : 'bg-[#CBD2DC]'}`} aria-hidden><span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white ${onlyOwner ? 'left-[18px]' : 'left-0.5'}`} /></span>
+              <span className={`w-9 h-5 rounded-full relative ${onlyOwner ? 'bg-blue-fill' : 'bg-[#CBD2DC]'}`} aria-hidden><span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white ${onlyOwner ? 'left-[18px]' : 'left-0.5'}`} /></span>
               Needs owner approval <span className="mono text-[11px] font-bold px-1.5 rounded-full bg-[#FDECD9] text-[#9A4A10]">{q.stats.needOwner}</span>
             </Link>
           )}

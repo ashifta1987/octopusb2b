@@ -129,7 +129,7 @@ export default async function AdminPoolsPage({ searchParams }: { searchParams: S
                 <td className="td text-sm">{p.products?.title ?? '—'}<div className="text-xs text-muted mono">{supCode.get(p.supplier_id) ?? ''}</div></td>
                 <td className="td text-sm">
                   <div className="mono">{p.filled_qty.toLocaleString('en-US')} / {p.target_qty.toLocaleString('en-US')}</div>
-                  <div className="w-28 h-1.5 bg-[#E9ECF1] rounded-full mt-1 overflow-hidden" aria-hidden><div className="h-full bg-blue" style={{ width: `${pct(p.filled_qty, p.target_qty)}%` }} /></div>
+                  <div className="w-28 h-1.5 bg-[#E9ECF1] rounded-full mt-1 overflow-hidden" aria-hidden><div className="h-full bg-blue-fill" style={{ width: `${pct(p.filled_qty, p.target_qty)}%` }} /></div>
                   <div className="text-xs text-muted">{pct(p.filled_qty, p.target_qty)}% · {money(p.final_price_minor ?? p.pool_price_minor, p.currency)}/unit</div>
                 </td>
                 <td className="td text-sm">{active.length} / {p.max_buyers}</td>

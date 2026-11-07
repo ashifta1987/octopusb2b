@@ -172,7 +172,7 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
               <ol className="mt-5 relative">
                 {next.map(([t, b], i) => (
                   <li key={i} className="relative pl-10 pb-5 last:pb-0">
-                    {i < next.length - 1 && <span className="absolute left-[13px] top-7 bottom-0 w-px bg-blue/60" aria-hidden />}
+                    {i < next.length - 1 && <span className="absolute left-[13px] top-7 bottom-0 w-px bg-blue-fill/60" aria-hidden />}
                     <span className="absolute left-0 top-0 w-7 h-7 rounded-full border-2 border-[#5B9BF0] flex items-center justify-center text-[11px] font-semibold" aria-hidden>{i + 1}</span>
                     <div className="font-semibold">{t}</div>
                     <div className="text-[13px] text-[#C9CFDB] mt-0.5">{(b ?? '').replace('{currency}', svcCurrency)}</div>

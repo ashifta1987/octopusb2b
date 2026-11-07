@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Make My Brand</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F6F8}
+*{box-sizing:border-box}
+img{max-width:100%}
+a{color:#11133C;text-decoration:none}a:hover{color:#2A6FD6}
+.wrap{max-width:1280px;margin:0 auto;padding-left:32px;padding-right:32px}
+.sec{padding-top:64px;padding-bottom:64px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:10px;font:600 15px/1 Inter,system-ui,sans-serif;border:1px solid transparent;cursor:pointer;white-space:nowrap}
+.btn-primary{background:#2A6FD6;color:#FFFFFF}.btn-primary:hover{background:#1E58B0;color:#FFFFFF}
+.btn-dark{background:#11133C;color:#FFFFFF}.btn-dark:hover{background:#262A6B;color:#FFFFFF}
+.btn-ghost{background:#FFFFFF;color:#11133C;border-color:#C5CCD6}.btn-ghost:hover{border-color:#11133C}
+.btn-light{background:#FFFFFF;color:#11133C}.btn-light:hover{background:#E6EFFC;color:#11133C}
+.btn-outline-w{background:transparent;color:#FFFFFF;border-color:rgba(255,255,255,.45)}.btn-outline-w:hover{border-color:#FFFFFF;color:#FFFFFF}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid #1D4ED8;outline-offset:2px}
+input,select{font:400 15px Inter,system-ui,sans-serif;color:#11133C}
+.k{font:600 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#5A6475;text-transform:uppercase}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.pill-live{background:#DCFCE7;color:#15803D}.pill-soft{background:#E6EFFC;color:#1E58B0}.pill-dark{background:rgba(255,255,255,.1);color:#DDE3F5;border:1px solid rgba(255,255,255,.18)}
+.card{background:#FFFFFF;border:1px solid #E2E5EA;border-radius:14px;overflow:hidden}
+.eyebrow{display:flex;align-items:center;gap:10px}
+.num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:8px;background:#11133C;color:#FFFFFF;font:700 13px Lexend,sans-serif;flex:none}
+.num-b{background:#2A6FD6}
+.h2{margin:10px 0 0;font:800 34px/1.12 Lexend,sans-serif;letter-spacing:-.02em}
+.lead{margin:12px 0 0;color:#3B4556;font-size:16.5px;line-height:1.6;max-width:620px}
+.sec-h{display:flex;justify-content:space-between;align-items:flex-end;gap:16px 24px;margin-bottom:24px;flex-wrap:wrap}
+.lnk{color:#2A6FD6;font-weight:600;font-size:14.5px;white-space:nowrap}
+.rail a{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:999px;color:#3B4556;font-weight:500;font-size:14px;white-space:nowrap;flex:none}
+.rail a:hover{background:#F0F2F6}
+.rail a.on{background:#11133C;color:#FFFFFF;font-weight:600}
+.step{display:flex;flex-direction:column;gap:8px;padding:20px}
+.step h3{margin:4px 0 0;font:700 16.5px/1.3 Lexend,sans-serif}
+.step p{margin:0;color:#5A6475;font-size:14px;line-height:1.55}
+.chk{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.chk li{display:flex;gap:10px;align-items:flex-start;font-size:15px;line-height:1.45;color:#3B4556}
+.chk li::before{content:"✓";flex:none;width:20px;height:20px;margin-top:1px;border-radius:999px;background:#DCFCE7;color:#15803D;font:700 12px/20px Inter,sans-serif;text-align:center}
+.art{display:block;width:100%;height:100%;object-fit:cover}
+.bar{height:8px;background:#E5E8ED;border-radius:999px;overflow:hidden}.bar > i{display:block;height:100%;background:linear-gradient(90deg,#2A6FD6,#60A5FA)}
+.chip{display:inline-flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;background:#FFFFFF;border:1px solid #E2E5EA;font:600 15px Inter,sans-serif}
+details{background:#FFFFFF;border:1px solid #E2E5EA;border-radius:14px;padding:0 18px}
+summary{cursor:pointer;min-height:54px;display:flex;align-items:center;font:600 15.5px Inter,sans-serif}
+details p{margin:0 0 16px;color:#3B4556;font-size:14.5px;line-height:1.6}
+.crumb{font-size:13.5px;color:#5A6475}
+@media (max-width:1100px){.hero-grid,.split{grid-template-columns:1fr !important}.steps4{grid-template-columns:repeat(2,1fr) !important}.cols4{grid-template-columns:repeat(2,1fr) !important}.cols3{grid-template-columns:1fr !important}}
+@media (max-width:760px){.wrap{padding-left:16px !important;padding-right:16px !important}.sec{padding-top:40px !important;padding-bottom:40px !important}.h1{font-size:32px !important;line-height:1.1 !important}.h2{font-size:25px !important}.steps4,.cols4{grid-template-columns:1fr !important}.hdr form{order:3;flex-basis:100% !important}.acct-label{display:none}.float-card{position:static !important;margin-top:12px;width:auto !important}.cta-row .btn{flex:1 1 100%}.foot-grid{grid-template-columns:1fr 1fr !important}}
+.ann{background:#11133C;color:#FFFFFF;font-size:13.5px}
+.ann a{color:#9CC2FF;font-weight:600}
+.new{display:inline-flex;align-items:center;padding:2px 7px;border-radius:99px;background:#F59E0B;color:#11133C;font:700 10px/1.4 'IBM Plex Mono',monospace;letter-spacing:.04em;margin-left:4px}
+.lnk{color:#1E58B0}
+.rail a{min-height:44px}
+.ann a{display:inline-flex;align-items:center;min-height:44px}
+.crumb a{display:inline-flex;align-items:center;min-height:44px}
+footer nav a{display:inline-flex;align-items:center;min-height:44px}
+.cols5{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.who{display:inline-flex;align-items:center;padding:4px 9px;border-radius:999px;font:600 10.5px/1.2 'IBM Plex Mono',monospace;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.who-you{background:#E6EFFC;color:#1E58B0}
+.who-oct{background:#11133C;color:#FFFFFF}
+.sp-label{position:absolute;top:12px;left:12px;display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:999px;background:#11133C;color:#FFFFFF;font:600 10.5px/1 'IBM Plex Mono',monospace;letter-spacing:.05em;text-transform:uppercase}
+.brandmark{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);padding:4px 10px;border:1.5px dashed #2A6FD6;border-radius:6px;background:rgba(255,255,255,.88);color:#11133C;font:700 12px/1.2 Lexend,sans-serif;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap}
+.meta{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:#5A6475;padding-top:8px;border-top:1px solid #EEF0F3}
+.meta strong{color:#11133C;font-weight:600;font-family:'IBM Plex Mono',monospace;font-size:12.5px}
+.qt{width:100%;min-width:620px;border-collapse:collapse;font-size:14.5px}
+.qt th{text-align:left;padding:12px 16px;background:#F5F6F8;color:#5A6475;font:600 11px/1.2 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid #E2E5EA}
+.qt td{padding:13px 16px;border-bottom:1px solid #EEF0F3;color:#3B4556;vertical-align:top}
+.qt td.amt,.qt th.amt{text-align:right;font-family:'IBM Plex Mono',monospace;color:#11133C;white-space:nowrap}
+.qt tr.tot td{background:#F2F7FE;font-weight:700;color:#11133C;border-bottom:0}
+.svc{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border-radius:10px;background:#F5F6F8;border:1px solid #E2E5EA;font:600 13.5px Inter,sans-serif;color:#11133C}
+@media (max-width:1100px){.cols5{grid-template-columns:repeat(2,1fr) !important}}
+@media (max-width:760px){.cols5{grid-template-columns:1fr !important}}
+</style>
+</helmet>
+<div style="font-family:Inter,system-ui,sans-serif;color:#11133C;background:#F5F6F8;min-height:100vh;">
+
+<div class="ann"><div class="wrap" style="padding-top:9px;padding-bottom:9px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;text-align:center;"><span class="new" style="margin:0;">NEW</span><span>Make My Brand: your logo on verified products, stocked in our warehouse, shipped worldwide.</span><a href="MakeMyBrand.dc.html">See how it works →</a></div></div>
+<header style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;">
+<div class="wrap hdr" style="padding-top:12px;padding-bottom:12px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;">
+<a href="HomeMMB.dc.html" aria-label="Octopus B2B home" style="display:inline-flex;align-items:center;flex:none;"><img src="assets/octopus-logo.png" alt="Octopus B2B" style="height:42px;width:auto;display:block;"></a>
+<form role="search" style="flex:1 1 420px;display:flex;min-width:0;border:1.5px solid #11133C;border-radius:10px;overflow:hidden;background:#FFFFFF;">
+<label for="q" class="sr">Search products, HS codes or turnkey projects</label>
+<input id="q" type="search" placeholder="Search products, HS codes or turnkey projects" style="flex:1;min-width:0;border:0;padding:0 14px;min-height:46px;font-size:15px;">
+<button type="submit" class="btn btn-dark" style="border-radius:0;min-height:46px;padding:0 18px;" aria-label="Search"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg></button>
+</form>
+<a href="Main.dc.html" class="btn btn-ghost" style="min-height:46px;padding:0 14px;margin-left:auto;" aria-label="My account"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></svg><span class="acct-label">My account</span></a>
+</div>
+</header>
+<nav class="rail" aria-label="Services" style="background:#FFFFFF;border-bottom:1px solid #E2E5EA;">
+<div class="wrap" style="padding-top:8px;padding-bottom:8px;display:flex;gap:4px;overflow-x:auto;align-items:center;">
+<a href="HomeMMB.dc.html">Product sourcing</a>
+<a class="on" href="MakeMyBrand.dc.html" aria-current="page">Make My Brand <span class="new">NEW</span></a>
+<a href="HomeMMB.dc.html">Dropshipping</a>
+<a href="HomeMMB.dc.html">MOQ pools</a>
+<a href="Request3PL.dc.html">3PL warehousing</a>
+<a href="HomeMMB.dc.html">Turnkey Projects</a>
+<span style="width:1px;height:20px;background:#E2E5EA;flex:none;margin:0 6px;"></span>
+<a href="PublicProduct.dc.html">All categories</a>
+</div>
+</nav>
+
+<!-- Hero -->
+<section aria-labelledby="hero-h" style="background:linear-gradient(180deg,#FFFFFF 0%,#F2F7FE 100%);">
+<div class="wrap sec" style="padding-top:16px;">
+<nav class="crumb" aria-label="Breadcrumb" style="margin-bottom:16px;"><a href="HomeMMB.dc.html" style="color:#5A6475;">Home</a> / <span aria-current="page">Make My Brand</span></nav>
+<div class="hero-grid" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:48px;align-items:center;">
+<div>
+<div class="eyebrow"><span class="num num-b">2</span><span class="k" style="color:#1E58B0;">Make My Brand</span><span class="new" style="margin:0;">NEW</span></div>
+<h1 id="hero-h" class="h1" style="margin:14px 0 0;font:800 48px/1.06 Lexend,sans-serif;letter-spacing:-.03em;">Put your brand on products made by <span style="color:#1E58B0;">verified factories.</span></h1>
+<p class="lead">Choose a product Octopus lists directly, add your logo and packaging, and approve a proof and a sample. We produce it, check it, keep it as your stock in our warehouse and ship it wherever you sell.</p>
+<div class="cta-row" style="display:flex;flex-wrap:wrap;gap:10px;margin-top:26px;">
+<a href="RequestBrand.dc.html" class="btn btn-primary" style="min-height:52px;padding:0 24px;font-size:16px;">Start a brand project →</a>
+<a href="RequestBrand.dc.html" class="btn btn-ghost" style="min-height:52px;">Talk to an account manager</a>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:18px;color:#3B4556;font-size:13.5px;">
+<span>✓ Verified suppliers only</span><span>✓ One account manager</span><span>✓ Price confirmed in your quote before you pay</span>
+</div>
+</div>
+<div style="position:relative;">
+<div style="border-radius:20px;background:#11133C;padding:28px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+<figure style="margin:0;border-radius:14px;overflow:hidden;background:#FFFFFF;">
+<div style="position:relative;aspect-ratio:1/1;background:#F2F2F0;"><img class="art" src="assets/F8.jpg" alt="Handheld fan F8 with the example brand Nova Breeze"><span class="sp-label">Studio preview</span><span class="brandmark">Nova Breeze</span></div>
+<figcaption style="padding:10px 12px;font-size:12px;color:#5A6475;">Illustrative preview. Not approved artwork.</figcaption>
+</figure>
+<figure style="margin:0;border-radius:14px;overflow:hidden;background:#FFFFFF;">
+<div style="position:relative;aspect-ratio:1/1;background:#F2F2F0;"><img class="art" src="assets/G1000.jpg" alt="Neck fan G1000 with the example brand Nova Breeze"><span class="sp-label">Studio preview</span><span class="brandmark">Nova Breeze</span></div>
+<figcaption style="padding:10px 12px;font-size:12px;color:#5A6475;">Illustrative preview. Not approved artwork.</figcaption>
+</figure>
+</div>
+<div class="card float-card" style="position:absolute;left:-22px;bottom:-26px;padding:14px 16px;width:290px;box-shadow:0 12px 30px rgba(17,19,60,.14);">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;"><span class="k">Your brand project</span><span class="pill pill-soft">Proof sent</span></div>
+<div style="font:700 15px/1.3 Lexend,sans-serif;margin-top:8px;">Waiting for your approval</div>
+<div style="margin-top:6px;font-size:12.5px;color:#5A6475;">Nothing is produced until you approve the proof and the sample.</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+
+<!-- How it works -->
+<section aria-labelledby="how-h" style="background:#FFFFFF;border-top:1px solid #E2E5EA;">
+<div class="wrap sec">
+<div class="sec-h"><div><span class="k" style="color:#1E58B0;">How it works</span><h2 id="how-h" class="h2">Six steps from product to your customer</h2><p class="lead">Each step shows who does the work. Your account manager guides you through every approval.</p></div><a class="lnk" href="RequestBrand.dc.html">Start a brand project →</a></div>
+<ol class="cols3" style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+<li class="card step"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><span class="num num-b">1</span><span class="who who-you">You</span></div><h3>Pick a verified product</h3><p>Choose from products Octopus lists directly, all from suppliers we have verified.</p><a class="lnk" href="PublicProduct.dc.html" style="font-size:14px;min-height:44px;display:inline-flex;align-items:center;">Browse products →</a></li>
+<li class="card step"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><span class="num num-b">2</span><span style="display:flex;gap:6px;"><span class="who who-you">You</span><span class="who who-oct">Octopus</span></span></div><h3>Add your brand</h3><p>You send your logo and pick a branding method. We prepare the artwork proof and your quote.</p></li>
+<li class="card step"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><span class="num num-b">3</span><span class="who who-you">You approve</span></div><h3>Approve proof and sample</h3><p>You approve the proof, then a physical sample, and accept the quote before you pay.</p></li>
+<li class="card step"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><span class="num num-b">4</span><span class="who who-oct">Octopus</span></div><h3>We produce and check</h3><p>The factory produces your order and we inspect it against the approved sample.</p></li>
+<li class="card step"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><span class="num num-b">5</span><span class="who who-oct">Octopus</span></div><h3>Stocked in our warehouse</h3><p>Your branded goods are kept as your stock in the Octopus warehouse.</p></li>
+<li class="card step"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;"><span class="num num-b">6</span><span style="display:flex;gap:6px;"><span class="who who-you">You choose</span><span class="who who-oct">Octopus ships</span></span></div><h3>Shipped worldwide</h3><p>Send stock in bulk to one country, or ship order by order from your online store.</p></li>
+</ol>
+<div style="margin-top:20px;padding:16px 18px;border-radius:12px;background:#F2F7FE;border:1px solid #D6E4F8;display:flex;gap:12px;align-items:flex-start;">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1E58B0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:1px;"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16h.01"></path></svg>
+<p style="margin:0;font-size:14.5px;line-height:1.55;color:#3B4556;">Before any payment, your quote confirms the final price, delivery date, duties and shipping. You pay from your US dollar wallet, topped up by bank transfer.</p>
+</div>
+</div>
+</section>
+
+<!-- What you can brand -->
+<section aria-labelledby="br-h" style="background:#F5F6F8;">
+<div class="wrap sec">
+<div class="sec-h"><div><span class="k" style="color:#1E58B0;">What you can brand</span><h2 id="br-h" class="h2">Branding methods</h2><p class="lead">What is possible depends on the product. Your account manager confirms the method, minimum quantity and time in your quote.</p></div></div>
+<div class="cols5">
+<div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;"><span style="width:40px;height:40px;border-radius:10px;background:#E6EFFC;color:#1E58B0;display:inline-flex;align-items:center;justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"></rect><path d="M8 10V4h8v6M8 15h8"></path></svg></span><h3 style="margin:0;font:700 16.5px/1.3 Lexend,sans-serif;">Pad or silk print</h3><p style="margin:0;font-size:14px;line-height:1.5;color:#5A6475;flex:1;">Your logo printed in one or more colours on the product surface.</p><div class="meta"><span>Minimum quantity</span><strong>[MOQ]</strong></div><div class="meta"><span>Typical extra time</span><strong>[days]</strong></div></div>
+<div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;"><span style="width:40px;height:40px;border-radius:10px;background:#E6EFFC;color:#1E58B0;display:inline-flex;align-items:center;justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v6M9 5l3 3 3-3"></path><path d="m12 8-2 8M12 8l2 8M5 20h14"></path></svg></span><h3 style="margin:0;font:700 16.5px/1.3 Lexend,sans-serif;">Laser engraving</h3><p style="margin:0;font-size:14px;line-height:1.5;color:#5A6475;flex:1;">A permanent mark cut into metal, wood or hard plastic.</p><div class="meta"><span>Minimum quantity</span><strong>[MOQ]</strong></div><div class="meta"><span>Typical extra time</span><strong>[days]</strong></div></div>
+<div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;"><span style="width:40px;height:40px;border-radius:10px;background:#E6EFFC;color:#1E58B0;display:inline-flex;align-items:center;justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"></path></svg></span><h3 style="margin:0;font:700 16.5px/1.3 Lexend,sans-serif;">UV print</h3><p style="margin:0;font-size:14px;line-height:1.5;color:#5A6475;flex:1;">Full-colour artwork printed directly onto the product.</p><div class="meta"><span>Minimum quantity</span><strong>[MOQ]</strong></div><div class="meta"><span>Typical extra time</span><strong>[days]</strong></div></div>
+<div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;"><span style="width:40px;height:40px;border-radius:10px;background:#E6EFFC;color:#1E58B0;display:inline-flex;align-items:center;justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8 12 3 3 8v8l9 5 9-5Z"></path><path d="m3 8 9 5 9-5M12 13v8"></path></svg></span><h3 style="margin:0;font:700 16.5px/1.3 Lexend,sans-serif;">Branded colour box</h3><p style="margin:0;font-size:14px;line-height:1.5;color:#5A6475;flex:1;">Retail packaging printed with your brand, artwork and product details.</p><div class="meta"><span>Minimum quantity</span><strong>[MOQ]</strong></div><div class="meta"><span>Typical extra time</span><strong>[days]</strong></div></div>
+<div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;"><span style="width:40px;height:40px;border-radius:10px;background:#E6EFFC;color:#1E58B0;display:inline-flex;align-items:center;justify-content:center;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6Z"></path><path d="M15 3v4h4M9 12h7M9 16h5"></path></svg></span><h3 style="margin:0;font:700 16.5px/1.3 Lexend,sans-serif;">Inserts and manuals</h3><p style="margin:0;font-size:14px;line-height:1.5;color:#5A6475;flex:1;">Thank-you cards, warranty cards and user manuals in your name.</p><div class="meta"><span>Minimum quantity</span><strong>[MOQ]</strong></div><div class="meta"><span>Typical extra time</span><strong>[days]</strong></div></div>
+</div>
+</div>
+</section>
+
+<!-- Example projects -->
+<section aria-labelledby="ex-h" style="background:#FFFFFF;border-top:1px solid #E2E5EA;">
+<div class="wrap sec">
+<div class="sec-h"><div><span class="k" style="color:#1E58B0;">Example projects</span><h2 id="ex-h" class="h2">What a brand project can look like</h2><p class="lead">These are examples using the invented brand Nova Breeze, not real customer orders.</p></div><a class="lnk" href="PublicProduct.dc.html">Browse verified products →</a></div>
+<div class="cols3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+<article class="card" style="display:flex;flex-direction:column;">
+<div style="position:relative;aspect-ratio:4/3;background:#F2F2F0;"><img class="art" src="assets/F8.jpg" alt="Handheld fan F8 with the example brand Nova Breeze"><span class="sp-label">Studio preview</span><span class="brandmark">Nova Breeze</span></div>
+<div style="padding:16px;display:flex;flex-direction:column;gap:8px;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;"><h3 style="margin:0;font:700 16px/1.3 Lexend,sans-serif;">Handheld fan F8</h3><span class="pill pill-soft">Example</span></div>
+<div class="meta"><span>Branding</span><strong style="font-family:Inter,sans-serif;">Pad print + colour box</strong></div>
+<div class="meta"><span>Quantity</span><strong>[Quantity] units</strong></div>
+<p style="margin:0;font-size:12.5px;color:#5A6475;">Illustrative preview. Not approved artwork.</p>
+</div>
+</article>
+<article class="card" style="display:flex;flex-direction:column;">
+<div style="position:relative;aspect-ratio:4/3;background:#F2F2F0;"><img class="art" src="assets/G1000.jpg" alt="Neck fan G1000 with the example brand Nova Breeze"><span class="sp-label">Studio preview</span><span class="brandmark">Nova Breeze</span></div>
+<div style="padding:16px;display:flex;flex-direction:column;gap:8px;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;"><h3 style="margin:0;font:700 16px/1.3 Lexend,sans-serif;">Neck fan G1000</h3><span class="pill pill-soft">Example</span></div>
+<div class="meta"><span>Branding</span><strong style="font-family:Inter,sans-serif;">UV print</strong></div>
+<div class="meta"><span>Quantity</span><strong>[Quantity] units</strong></div>
+<p style="margin:0;font-size:12.5px;color:#5A6475;">Illustrative preview. Not approved artwork.</p>
+</div>
+</article>
+<article class="card" style="display:flex;flex-direction:column;">
+<div style="position:relative;aspect-ratio:4/3;background:#F2F2F0;"><img class="art" src="assets/S7.jpg" alt="Aroma diffuser S7 with the example brand Nova Breeze"><span class="sp-label">Studio preview</span><span class="brandmark">Nova Breeze</span></div>
+<div style="padding:16px;display:flex;flex-direction:column;gap:8px;">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;"><h3 style="margin:0;font:700 16px/1.3 Lexend,sans-serif;">Aroma diffuser S7</h3><span class="pill pill-soft">Example</span></div>
+<div class="meta"><span>Branding</span><strong style="font-family:Inter,sans-serif;">Laser engraving + inserts</strong></div>
+<div class="meta"><span>Quantity</span><strong>[Quantity] units</strong></div>
+<p style="margin:0;font-size:12.5px;color:#5A6475;">Illustrative preview. Not approved artwork.</p>
+</div>
+</article>
+</div>
+</div>
+</section>
+
+<!-- Account manager -->
+<section aria-labelledby="am-h" style="background:#F5F6F8;">
+<div class="wrap sec">
+<div class="card split" style="padding:32px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:36px;align-items:center;">
+<div>
+<span class="k" style="color:#1E58B0;">Your account manager</span>
+<h2 id="am-h" class="h2" style="font-size:30px;">One person for your whole project</h2>
+<p class="lead">Every customer has one Octopus account manager. You never chase a factory yourself.</p>
+<div style="display:flex;gap:14px;align-items:center;margin-top:22px;">
+<span aria-hidden="true" style="flex:none;width:56px;height:56px;border-radius:999px;background:#11133C;color:#FFFFFF;display:inline-flex;align-items:center;justify-content:center;font:700 16px Lexend,sans-serif;">[MN]</span>
+<div><div style="font:700 16px Lexend,sans-serif;">[Manager name]</div><div style="font-size:13.5px;color:#5A6475;margin-top:3px;">Replies within [N] working hours</div></div>
+</div>
+</div>
+<ul class="chk">
+<li>Checks that your product can carry the branding you want</li>
+<li>Prepares your artwork proof and sends it for your approval</li>
+<li>Arranges your sample and confirms it with you</li>
+<li>Sends your quote with price, delivery date, duties and shipping</li>
+<li>Follows production and the QC inspection for you</li>
+<li>Plans how your stock ships, in bulk or order by order</li>
+</ul>
+</div>
+</div>
+</section>
+
+<!-- What it costs -->
+<section aria-labelledby="cost-h" style="background:#FFFFFF;border-top:1px solid #E2E5EA;">
+<div class="wrap sec">
+<div class="split" style="display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:40px;align-items:start;">
+<div>
+<span class="k" style="color:#1E58B0;">What it costs</span>
+<h2 id="cost-h" class="h2">Every cost on one line before you pay</h2>
+<p class="lead">Your quote lists the product, branding, packaging, sample and inspection separately, so you see exactly what you pay for.</p>
+<ul class="chk" style="margin-top:20px;">
+<li>Final price, delivery date, duties and shipping confirmed in your quote</li>
+<li>Paid from your US dollar wallet, topped up by bank transfer</li>
+<li>No card payments</li>
+</ul>
+</div>
+<div class="card">
+<div style="padding:16px 18px;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;border-bottom:1px solid #E2E5EA;">
+<div style="display:flex;align-items:center;gap:10px;"><span class="pill" style="background:#FEF3C7;color:#92400E;">Example</span><span style="font:700 15.5px Lexend,sans-serif;">Example quote</span></div>
+<span style="font-size:13px;color:#5A6475;">Handheld fan F8 · Nova Breeze</span>
+</div>
+<div style="overflow-x:auto;position:relative;">
+<table class="qt">
+<caption class="sr">Example quote cost breakdown</caption>
+<thead><tr><th scope="col">Item</th><th scope="col">What it covers</th><th scope="col" class="amt">Amount</th></tr></thead>
+<tbody>
+<tr><td style="color:#11133C;font-weight:600;">Product</td><td>Handheld fan F8, [quantity] units</td><td class="amt">US$ 17,310.00</td></tr>
+<tr><td style="color:#11133C;font-weight:600;">Branding</td><td>Pad print logo on each unit</td><td class="amt">US$ 360.00</td></tr>
+<tr><td style="color:#11133C;font-weight:600;">Packaging</td><td>Branded colour box</td><td class="amt">US$ 1,260.00</td></tr>
+<tr><td style="color:#11133C;font-weight:600;">Sample</td><td>Branded sample for your approval</td><td class="amt">US$ 160.00</td></tr>
+<tr><td style="color:#11133C;font-weight:600;">Inspection</td><td>QC inspection before goods leave the factory</td><td class="amt">US$ 45.00</td></tr>
+<tr class="tot"><td>Total</td><td></td><td class="amt">US$ 19,135.00</td></tr>
+</tbody>
+</table>
+</div>
+<div class="cols3" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 18px;border-top:1px solid #E2E5EA;">
+<div style="padding:14px;border-radius:10px;background:#F5F6F8;"><div class="k">Deposit to start</div><div style="font:700 20px 'IBM Plex Mono',monospace;margin-top:6px;">US$ 5,740.50</div></div>
+<div style="padding:14px;border-radius:10px;background:#F5F6F8;"><div class="k">Balance before shipping</div><div style="font:700 20px 'IBM Plex Mono',monospace;margin-top:6px;">US$ 13,394.50</div></div>
+</div>
+<p style="margin:0;padding:0 18px 16px;font-size:13px;line-height:1.55;color:#5A6475;"><strong style="color:#11133C;">Example quote — your price is confirmed in your own quote before you pay.</strong> Shipping and duties for your destination: [confirmed in your quote].</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Where your stock goes -->
+<section aria-labelledby="ship-h" style="background:#F5F6F8;">
+<div class="wrap sec">
+<div class="sec-h"><div><span class="k" style="color:#1E58B0;">Where your stock goes</span><h2 id="ship-h" class="h2">Stocked with us, shipped worldwide</h2><p class="lead">Your finished goods wait in the Octopus warehouse as your stock. You decide how they leave.</p></div><a class="lnk" href="Request3PL.dc.html">About 3PL warehousing →</a></div>
+<div class="cols3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+<div class="card" style="padding:22px;display:flex;flex-direction:column;gap:8px;"><span class="pill pill-soft" style="align-self:flex-start;">Your stock</span><h3 style="margin:6px 0 0;font:700 20px Lexend,sans-serif;">Kept in our warehouse</h3><p style="margin:0;color:#5A6475;font-size:14.5px;line-height:1.55;">Checked goods are stored as your stock. You see units on hand in My account.</p></div>
+<div class="card" style="padding:22px;display:flex;flex-direction:column;gap:8px;"><span class="pill pill-soft" style="align-self:flex-start;">Bulk</span><h3 style="margin:6px 0 0;font:700 20px Lexend,sans-serif;">In bulk to one country</h3><p style="margin:0;color:#5A6475;font-size:14.5px;line-height:1.55;">Send cartons to your own warehouse or distributor, with duties confirmed in your quote.</p></div>
+<div class="card" style="padding:22px;display:flex;flex-direction:column;gap:8px;"><span class="pill pill-soft" style="align-self:flex-start;">Order by order</span><h3 style="margin:6px 0 0;font:700 20px Lexend,sans-serif;">From your online store</h3><p style="margin:0;color:#5A6475;font-size:14.5px;line-height:1.55;">Connect your Shopify or WooCommerce store and we ship each order from your stock.</p></div>
+</div>
+<div class="card" style="margin-top:16px;padding:18px 22px;display:flex;flex-wrap:wrap;gap:12px 18px;align-items:center;">
+<span style="font:700 15px Lexend,sans-serif;">Shipping services</span>
+<div style="display:flex;flex-wrap:wrap;gap:8px;"><span class="svc">Express</span><span class="svc">Standard</span><span class="svc">Economy</span><span class="svc">DDP Gulf</span><span class="svc">DDP US</span><span class="svc">DDP UK</span></div>
+<span style="font-size:13px;color:#5A6475;margin-left:auto;">Price and delivery estimate shown before you confirm.</span>
+</div>
+</div>
+</section>
+
+<!-- FAQ -->
+<section aria-labelledby="faq-h" style="background:#F5F6F8;border-top:1px solid #E2E5EA;">
+<div class="wrap sec" style="max-width:920px;">
+<h2 id="faq-h" class="h2" style="margin-bottom:22px;">Questions</h2>
+<div style="display:flex;flex-direction:column;gap:10px;">
+<details open><summary>What is the minimum order?</summary><p>It depends on the product and the branding method. The minimum quantity is shown on each product and confirmed in your quote: [MOQ per product and method].</p></details>
+<details><summary>How long does a brand project take?</summary><p>It depends on the product, the branding method, the sample and shipping. Your quote confirms the delivery date before you pay. Typical extra time for branding: [days].</p></details>
+<details><summary>Who owns the artwork files?</summary><p>You do. Your logo and artwork files are kept private to your account and are used only for your orders.</p></details>
+<details><summary>Can I see a sample first?</summary><p>Yes. You approve an artwork proof and then a physical sample before production starts. The sample cost is shown in your quote.</p></details>
+<details><summary>How do I pay?</summary><p>From your US dollar wallet in My account, which you top up by bank transfer. We do not take card payments. Your quote shows the deposit to start and the balance before shipping.</p></details>
+</div>
+</div>
+</section>
+
+<!-- Final CTA -->
+<section style="background:#F5F6F8;">
+<div class="wrap" style="padding-bottom:56px;">
+<div style="background:#11133C;color:#FFFFFF;border-radius:18px;padding:32px;display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;">
+<div style="max-width:600px;"><h2 style="margin:0;font:800 26px/1.2 Lexend,sans-serif;">Start a brand project</h2><p style="margin:8px 0 0;color:#C9D0E8;font-size:15px;line-height:1.5;">Tell us the product and your brand. Your account manager sends a proof and a quote before you pay anything.</p></div>
+<div class="cta-row" style="display:flex;flex-wrap:wrap;gap:10px;"><a href="RequestBrand.dc.html" class="btn btn-light">Start a brand project →</a><a href="RequestBrand.dc.html" class="btn btn-outline-w">Talk to an account manager</a></div>
+</div>
+</div>
+</section>
+
+<footer style="background:#0C0E30;color:#8B93B5;">
+<div class="wrap" style="padding-top:44px;padding-bottom:28px;">
+<div class="foot-grid" style="display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:28px;">
+<div><img src="assets/octopus-logo-white.png" alt="Octopus B2B" style="height:40px;width:auto;display:block;"><p style="margin:14px 0 0;font-size:13.5px;line-height:1.55;max-width:280px;">Product sourcing, brand projects, dropshipping, group buying, warehousing and turnkey businesses from China, delivered worldwide.</p></div>
+<nav aria-label="Services" style="display:flex;flex-direction:column;font-size:13.5px;"><span class="k" style="color:#FFFFFF;margin-bottom:4px;">Services</span><a href="HomeMMB.dc.html" style="color:#8B93B5;">Product sourcing</a><a href="MakeMyBrand.dc.html" style="color:#8B93B5;">Make My Brand</a><a href="Main.dc.html" style="color:#8B93B5;">Dropshipping</a><a href="HomeMMB.dc.html" style="color:#8B93B5;">MOQ pools</a><a href="Request3PL.dc.html" style="color:#8B93B5;">3PL warehousing</a><a href="HomeMMB.dc.html" style="color:#8B93B5;">Turnkey Projects</a></nav>
+<nav aria-label="My account" style="display:flex;flex-direction:column;font-size:13.5px;"><span class="k" style="color:#FFFFFF;margin-bottom:4px;">My account</span><a href="MakeMyBrand.dc.html" style="color:#8B93B5;">Sign in</a><a href="MakeMyBrand.dc.html" style="color:#8B93B5;">Create account</a><a href="Main.dc.html" style="color:#8B93B5;">My account</a></nav>
+<nav aria-label="Company" style="display:flex;flex-direction:column;font-size:13.5px;"><span class="k" style="color:#FFFFFF;margin-bottom:4px;">Company</span><a href="MakeMyBrand.dc.html" style="color:#8B93B5;">About us</a><a href="MakeMyBrand.dc.html" style="color:#8B93B5;">Contact</a></nav>
+</div>
+<div style="border-top:1px solid #22265A;margin-top:28px;padding-top:18px;font-size:12.5px;">© 2026 Shenzhen Octopus Trading Co. Ltd. · Terms · Privacy</div>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":5600}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

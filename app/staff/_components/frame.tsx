@@ -20,7 +20,7 @@ export function StaffFrame({ step, children }: { step: 0 | 1 | 2 | null; childre
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo-white.png" alt="Octopus B2B" className="h-16 w-auto block" />
           </Link>
-          <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1.5 rounded-full bg-blue text-white">Staff portal</span>
+          <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1.5 rounded-full bg-blue-fill text-white">Staff portal</span>
         </div>
         <div className="flex flex-col gap-4 max-w-[460px]">
           <h1 className="!text-white m-0 font-display font-extrabold text-[30px] sm:text-[40px] leading-[1.1] tracking-[-0.02em]">Back office sign-in</h1>
@@ -60,7 +60,7 @@ export function StepBar({ step }: { step: 0 | 1 | 2 }) {
     <ol aria-label="Sign-in steps" className="grid grid-cols-3 gap-2 list-none m-0 p-0">
       {STEPS.map((s, i) => (
         <li key={s} aria-current={i === step ? 'step' : undefined} className={cn('flex flex-col gap-2 text-[13px] font-semibold', i <= step ? 'text-navy' : 'text-muted')}>
-          <span className={cn('block h-[5px] rounded', i <= step ? 'bg-blue' : 'bg-line')} aria-hidden />
+          <span className={cn('block h-[5px] rounded', i <= step ? 'bg-blue-fill' : 'bg-line')} aria-hidden />
           {s}
           {i < step && <span className="sr-only">(done)</span>}
         </li>

@@ -29,7 +29,7 @@ export function AnnouncementBar({ blocks, vars }: { blocks: Blocks; vars: Vars }
 }
 
 const THEME: Record<HomeBanner['theme'], string> = {
-  navy: 'bg-navy text-white', blue: 'bg-blue text-white', light: 'bg-[#EEF4FD] text-navy',
+  navy: 'bg-navy text-white', blue: 'bg-blue-fill text-white', light: 'bg-[#EEF4FD] text-navy',
 };
 
 function Container40() {
@@ -98,7 +98,7 @@ export function BannerGrid({ blocks, banners, open, pool, poolsOn, vars }: { blo
         <div className="grid gap-4 min-[761px]:grid-cols-2 min-[1100px]:grid-cols-1">
           {poolsOn && (
             <TrackSlot slot="side-pools" className="h-full">
-              <Link href="/pools" className="group h-full rounded-[18px] bg-blue text-white p-5 flex flex-col gap-2 hover:bg-blue-dark hover:text-white">
+              <Link href="/pools" className="group h-full rounded-[18px] bg-blue-fill text-white p-5 flex flex-col gap-2 hover:bg-blue-dark hover:text-white">
                 <span className="self-start mono text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-white/15">{pEyebrow}</span>
                 <span className="font-display font-extrabold text-[20px] leading-tight">{pTitle}</span>
                 {pBody && <span className="text-[13px] text-white/85">{pBody}</span>}

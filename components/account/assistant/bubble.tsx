@@ -58,14 +58,14 @@ export function AssistantBubble() {
         <button ref={btnRef} type="button" aria-haspopup="dialog" aria-expanded={open}
           onClick={() => { setOpen(true); load(window.location.pathname); }}
           className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] md:bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-navy text-white pl-1.5 pr-4 py-1.5 shadow-lg hover:bg-[#262A6B] focus-visible:outline-3">
-          <span aria-hidden className="w-9 h-9 rounded-full bg-blue flex items-center justify-center font-display font-bold">O</span>
+          <span aria-hidden className="w-9 h-9 rounded-full bg-blue-fill flex items-center justify-center font-display font-bold">O</span>
           <span className="text-sm font-semibold">Ask Octo</span>
         </button>
       )}
       {open && (
         <div role="dialog" aria-label="Octo, your account assistant" className="fixed inset-y-0 right-0 z-50 w-[420px] max-w-full bg-surface border-l border-line shadow-2xl flex flex-col">
           <div className="flex items-center gap-3 px-4 py-3 bg-white border-b border-line">
-            <span aria-hidden className="w-9 h-9 rounded-[10px] bg-blue text-white flex items-center justify-center font-display font-bold">O</span>
+            <span aria-hidden className="w-9 h-9 rounded-[10px] bg-blue-fill text-white flex items-center justify-center font-display font-bold">O</span>
             <div className="flex-1 min-w-0">
               <div className="font-display font-bold text-[15px] leading-tight">Octo · AI assistant</div>
               <div className="text-[12px] text-muted truncate">{boot?.team ? `with ${boot.team.name}, your account manager` : 'answers from your own account data'}</div>

@@ -12,7 +12,7 @@ export function ProgressBar({ filled, target, className = 'h-1.5', label }: { fi
   return (
     <div className={`w-full rounded-full bg-[#E9ECF1] overflow-hidden ${className}`} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={p}
       aria-label={label ?? `${n(filled)} of ${n(target)} pledged (${p}%)`}>
-      <div className="h-full rounded-full bg-blue" style={{ width: `${p}%` }} />
+      <div className="h-full rounded-full bg-blue-fill" style={{ width: `${p}%` }} />
     </div>
   );
 }

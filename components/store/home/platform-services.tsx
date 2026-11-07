@@ -8,7 +8,7 @@ type Blocks = Record<string, string>;
 const CARDS = {
   rfq: { href: '/request/sourcing', Icon: FileText, bg: 'bg-[#E6EFFC]', fg: 'text-[#1E4FA0]', fallback: 'RFQ to many suppliers||Send an RFQ' },
   pool: { href: '/pools', Icon: Users, bg: 'bg-[#FFF4E5]', fg: 'text-[#92400E]', fallback: 'Group buy (MOQ pools)||Browse pools' },
-  turnkey: { href: '/turnkey', Icon: Container, bg: 'bg-blue', fg: 'text-white', fallback: 'Turnkey Projects||Explore projects' },
+  turnkey: { href: '/turnkey', Icon: Container, bg: 'bg-blue-fill', fg: 'text-white', fallback: 'Turnkey Projects||Explore projects' },
   dropship: { href: '/request/dropship', Icon: Truck, bg: 'bg-[#F3E8FF]', fg: 'text-[#6B21A8]', fallback: 'Dropshipping||How it works' },
   '3pl': { href: '/#global-shipping', Icon: Globe, bg: 'bg-[#DBEAFE]', fg: 'text-[#1E40AF]', fallback: '3PL & global shipping||See coverage' },
   qc: { href: '/request/qc', Icon: ShieldCheck, bg: 'bg-[#DCFCE7]', fg: 'text-[#166534]', fallback: 'QC inspection||Book a QC check' },

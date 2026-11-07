@@ -25,7 +25,7 @@ async function NotificationsPageContent() {
             {(data ?? []).map((n) => (
               <li key={n.id} className={`px-5 py-4 border-b border-line last:border-0 ${n.read_at ? '' : 'bg-[#F5F8FF]'}`}>
                 <div className="flex justify-between gap-3">
-                  <div className="font-semibold">{!n.read_at && <span className="inline-block w-2 h-2 rounded-full bg-blue mr-2 align-middle" aria-label="Unread" />}{n.title}</div>
+                  <div className="font-semibold">{!n.read_at && <span className="inline-block w-2 h-2 rounded-full bg-blue-fill mr-2 align-middle" aria-label="Unread" />}{n.title}</div>
                   <div className="text-[13px] text-[#5A6475] whitespace-nowrap">{fmtDate(n.created_at as string, true)}</div>
                 </div>
                 {n.body && <p className="text-[14px] text-[#5A6475] mt-0.5">{n.body}</p>}

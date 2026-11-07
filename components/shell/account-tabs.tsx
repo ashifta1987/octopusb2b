@@ -46,7 +46,7 @@ export function SectionMenu({ tabs, menus }: { tabs: Tab[]; menus: Record<string
                   <Link href={i.href} prefetch={false} aria-current={on ? 'page' : undefined}
                     className={`flex items-center justify-between min-h-[44px] px-3 rounded-[10px] text-[15px] ${on ? 'bg-navy text-white font-semibold' : 'text-[#2B3445] hover:bg-surface'}`}>
                     {i.label}
-                    {!!i.badge && i.badge > 0 && <span data-testid="nav-badge" aria-label={`${i.badge} new`} className="min-w-[22px] h-[22px] px-1.5 rounded-full bg-blue text-white text-[12px] font-bold leading-[22px] text-center">{i.badge}</span>}
+                    {!!i.badge && i.badge > 0 && <span data-testid="nav-badge" aria-label={`${i.badge} new`} className="min-w-[22px] h-[22px] px-1.5 rounded-full bg-blue-fill text-white text-[12px] font-bold leading-[22px] text-center">{i.badge}</span>}
                   </Link>
                 </li>
               );

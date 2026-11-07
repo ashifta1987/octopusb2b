@@ -139,7 +139,7 @@ async function AccountHomeContent({ searchParams }: { searchParams: Promise<{ no
             {ctx.manager ? (
               <>
                 <div className="flex items-center gap-3 mt-3">
-                  <span className="w-12 h-12 rounded-full bg-blue text-white font-bold flex items-center justify-center" aria-hidden>{ctx.manager.name.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase()}</span>
+                  <span className="w-12 h-12 rounded-full bg-blue-fill text-white font-bold flex items-center justify-center" aria-hidden>{ctx.manager.name.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase()}</span>
                   <div className="leading-tight">
                     <div className="font-bold text-[16px]">{ctx.manager.name}</div>
                     <div className="text-[13px] text-[#5A6475]">{['Octopus', ctx.manager.office].filter(Boolean).join(', ')}</div>
