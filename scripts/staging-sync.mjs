@@ -12,10 +12,12 @@ const STAGING_REF = (stg?.NEXT_PUBLIC_SUPABASE_URL ?? '').match(/https:\/\/([a-z
 if (!src || !dst || !STAGING_REF) throw new Error('Missing DATABASE_URL in .env.local or .env.staging');
 if (!dst.includes(STAGING_REF) || src.includes(STAGING_REF)) throw new Error('Refusing: target is not the staging project, or source is staging');
 
+// ADDON-44: demo rows registered in public.demo_rows (pnpm demo:seed) are kept; live values never overwrite them.
+let DEMO_KEYS = new Set();
 // FK-safe order. Tables listed with `mirror: true` are emptied on staging first (config that must match live).
 const TABLES = [
   { t: 'roles', mirror: false }, { t: 'permission_areas' }, { t: 'role_permissions', mirror: true },
-  { t: 'site_settings', mirror: `key <> 'app_environment'`, skip: (r) => r.key === 'app_environment' }, { t: 'content_blocks', mirror: true }, { t: 'company_profile' }, { t: 'branches' },
+  { t: 'site_settings', mirror: `key <> 'app_environment' and (to_regclass('public.demo_rows') is null or key not in (select row_key from public.demo_rows where tbl = 'site_settings'))`, skip: (r) => r.key === 'app_environment' || DEMO_KEYS.has(r.key) }, { t: 'content_blocks', mirror: true }, { t: 'company_profile' }, { t: 'branches' },
   { t: 'pages' }, { t: 'terms_versions' }, { t: 'services' }, { t: 'service_prices' }, { t: 'carriers' }, { t: 'sla_policies' },
   { t: 'ad_placements' }, { t: 'support_macros' }, { t: 'integrations', mirror: true }, { t: 'fx_rates' }, { t: 'email_templates' },
   { t: 'categories', order: 'level' }, { t: 'tags' }, { t: 'hs_product_types', mirror: true },
@@ -36,6 +38,7 @@ if (envRow.rows[0]?.v === 'production') {
   await D.query(`update site_settings set value = '"staging"'::jsonb where key = 'app_environment'`);
 }
 if ((await D.query(`select value #>> '{}' v from site_settings where key = 'app_environment'`)).rows[0]?.v !== 'staging') throw new Error('Target is not marked staging');
+if ((await D.query(`select to_regclass('public.demo_rows') r`)).rows[0].r) DEMO_KEYS = new Set((await D.query(`select row_key from public.demo_rows where tbl = 'site_settings'`)).rows.map((r) => r.row_key));
 
 const exists = async (c, t) => (await c.query(`select to_regclass($1) r`, [`public.${t}`])).rows[0].r !== null;
 const userFkCols = async (t) => (await D.query(

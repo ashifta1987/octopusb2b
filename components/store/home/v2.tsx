@@ -7,10 +7,12 @@ import { CATEGORY_PILL, CATEGORY_PILL_CLASS, TURNKEY_CATEGORIES, kUsd, type Turn
 import { TkImage } from '@/components/store/turnkey/ui';
 import { copy } from './shared';
 import { TimeLeft } from './time-left';
+import { NewBadge, ProofPoint, SectionEyebrow, StepCards as DsStepCards, StudioPreviewCard } from '@/components/ds';
+import { BRAND_PAGE_HREF, BRAND_START_HREF, EXAMPLE_BRAND, MMB_STEPS_SHORT } from '@/components/store/make-my-brand/content';
 
 /**
- * Storefront home, Nov 2026 design (Home-desktop-full.png): five numbered services — 1 Product sourcing (hero + quote form),
- * 2 Dropshipping, 3 MOQ pools, 4 3PL warehousing, 5 Turnkey Projects — with "how it works" steps, ready-to-order products,
+ * Storefront home, Nov 2026 design (Home-desktop-full.png): six numbered services — 1 Product sourcing (hero + quote form),
+ * 2 Make My Brand (ADDON-44-D), 3 Dropshipping, 4 MOQ pools, 5 3PL warehousing, 6 Turnkey Projects — with "how it works" steps, ready-to-order products,
  * open pools, the global shipping band, platform stats, the other services, verified suppliers and the closing CTA.
  * All copy is CMS-overridable (content_blocks `home2.*`, pipe-separated lists). Only REAL data is rendered: products, pools,
  * suppliers, turnkey projects and figures come from the database / verified settings; a block without data is hidden.
@@ -140,6 +142,7 @@ export function SourcingHero({ blocks, defaultCountry, fee }: { blocks: Blocks; 
 export function ServiceCards({ blocks, poolsOn, turnkeyOn }: { blocks: Blocks; poolsOn: boolean; turnkeyOn: boolean }) {
   const cards = [
     { k: 'sourcing', href: '/request/sourcing', f: 'Product sourcing|One request, quotes from verified factories in 24 h.|Request quotes' },
+    { k: 'brand', href: '/make-my-brand', f: 'Make My Brand|Your logo on verified products, stocked and shipped.|See how', isNew: true },
     { k: 'dropshipping', href: '/#dropshipping', f: 'Dropshipping|Sell without stock. We ship each order to your customer.|Start' },
     ...(poolsOn ? [{ k: 'pools', href: '/pools', f: 'MOQ pools|Share a factory minimum and pay the bulk price.|Join a pool' }] : []),
     { k: 'warehousing', href: '/#warehousing', f: '3PL warehousing|Stock near your buyers. We store, pick, pack and ship.|See 3PL' },
@@ -147,7 +150,7 @@ export function ServiceCards({ blocks, poolsOn, turnkeyOn }: { blocks: Blocks; p
   ];
   return (
     <section aria-label="Our services" className="bg-white border-b border-line">
-      <ul className={`${W} py-7 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5`}>
+      <ul className={`${W} py-7 grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6`}>
         {cards.map((c, i) => {
           const [t, b, cta] = copy(blocks, `home2.card.${c.k}`, c.f);
           const first = i === 0;
@@ -221,7 +224,7 @@ export function Dropshipping({ blocks, countries }: { blocks: Blocks; countries?
       <section id="dropshipping" aria-labelledby="home-drop-h" className="bg-white">
         <div className={`${W} py-14 lg:py-16 grid gap-10 lg:grid-cols-[1fr_1.05fr] items-center`}>
           <div className="min-w-0">
-            <Eyebrow n={2}>{block(blocks, 'home2.drop.eyebrow', 'Dropshipping from China')}</Eyebrow>
+            <Eyebrow n={3}>{block(blocks, 'home2.drop.eyebrow', 'Dropshipping from China')}</Eyebrow>
             <h2 id="home-drop-h" className="mt-3 text-[32px] sm:text-[40px] font-extrabold leading-[1.08] tracking-[-0.02em]">
               {block(blocks, 'home2.drop.title_a', 'You sell.')} <span className="text-blue">{block(blocks, 'home2.drop.title_em', 'We ship')}</span> {block(blocks, 'home2.drop.title_b', 'to your customer.')}
             </h2>
@@ -262,7 +265,7 @@ export function Pools({ blocks, pools, depositPct }: { blocks: Blocks; pools: Po
       <div className={`${W} py-14 lg:py-16`}>
         <div className="grid gap-10 lg:grid-cols-[1fr_1fr] items-center">
           <div className="min-w-0">
-            <Eyebrow n={3}>{block(blocks, 'home2.pools.eyebrow', 'MOQ pools · Group buying')}</Eyebrow>
+            <Eyebrow n={4}>{block(blocks, 'home2.pools.eyebrow', 'MOQ pools · Group buying')}</Eyebrow>
             <h2 id="home-pools-h" className="mt-3 text-[32px] sm:text-[38px] font-extrabold leading-[1.08] tracking-[-0.02em]">{block(blocks, 'home2.pools.title', 'Factory minimum too big? Share it.')}</h2>
             <p className="mt-4 text-[17px] text-[#3B4556] leading-relaxed">{block(blocks, 'home2.pools.body', "Join other buyers on the same product until the pool reaches the factory's minimum order. Everyone pays the bulk price, and each buyer's share ships separately.")}</p>
             <ol className="mt-7 pt-5 border-t-2 border-[#D6E2F5] grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -314,7 +317,7 @@ export function Warehousing({ blocks }: { blocks: Blocks }) {
       <div className={`${W} py-14 lg:py-16 grid gap-10 lg:grid-cols-[1fr_1fr] items-center`}>
         <Illustration src="/home/warehousing.png" alt={block(blocks, 'home2.3pl.alt', 'Warehouse shelves with stock stored by SKU')} w={585} h={365} className="order-2 lg:order-1" />
         <div className="min-w-0 order-1 lg:order-2">
-          <Eyebrow n={4}>{block(blocks, 'home2.3pl.eyebrow', '3PL warehousing')}</Eyebrow>
+          <Eyebrow n={5}>{block(blocks, 'home2.3pl.eyebrow', '3PL warehousing')}</Eyebrow>
           <h2 id="home-3pl-h" className="mt-3 text-[32px] sm:text-[38px] font-extrabold leading-[1.08] tracking-[-0.02em]">{block(blocks, 'home2.3pl.title', 'Your stock, stored near your buyers')}</h2>
           <p className="mt-4 text-[17px] text-[#3B4556] leading-relaxed">{block(blocks, 'home2.3pl.body', 'Ship your bulk order into our network once. We receive it, store it by SKU and send out each order as it comes in, so your buyers get delivery in days, not weeks.')}</p>
           <ul className="mt-6 space-y-2.5">
@@ -379,7 +382,7 @@ export function Turnkey({ blocks, projects, packages }: { blocks: Blocks; projec
   return (
     <section id="turnkey" aria-labelledby="home-tk-h" className="bg-white" data-testid="home-turnkey">
       <div className={`${W} py-14 lg:py-16`}>
-        <Eyebrow n={5} badge="New">{block(blocks, 'home2.tk.eyebrow', 'Turnkey Projects')}</Eyebrow>
+        <Eyebrow n={6} badge="New">{block(blocks, 'home2.tk.eyebrow', 'Turnkey Projects')}</Eyebrow>
         <h2 id="home-tk-h" className="mt-3 text-[32px] sm:text-[38px] font-extrabold leading-[1.1] tracking-[-0.02em] max-w-[720px]">{block(blocks, 'home2.tk.title', 'Open a complete business, delivered in one container')}</h2>
         <p className="mt-4 text-[17px] text-[#3B4556] leading-relaxed max-w-[780px]">{block(blocks, 'home2.tk.body', 'A Turnkey Project is everything you need to open a specific business, such as a gym, a laundromat or a water-bottling plant, bought as one package. We source each item from the Chinese cities that specialise in it, inspect it, and ship it together in one container to your door. You get one price, one shipment and one team to talk to.')}</p>
         <div className="mt-8 grid gap-4 lg:grid-cols-3">
@@ -464,10 +467,69 @@ export function StatsAndServices({ blocks, tiles }: { blocks: Blocks; tiles: { l
           </ul>
         )}
         <h2 id="home-also-h" className="text-[22px] font-semibold mb-4">{block(blocks, 'home2.also.title', 'Also on Octopus B2B')}</h2>
-        <ul className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <ul className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <MmbAlsoCard blocks={blocks} />
           {svc.map(([k, href, f]) => { const [t, b] = copy(blocks, `home2.also.${k}`, f); return (
             <li key={k}><Link href={href} className="card rounded-[14px] p-5 block h-full hover:border-blue"><div className="text-[16px] font-semibold">{t}</div><p className="text-[13.5px] text-[#5B6575] mt-1.5 leading-snug">{b}</p></Link></li>); })}
         </ul>
+      </div>
+    </section>
+  );
+}
+
+/** ADDON-44-D board 20 — first "Also on" card: Make My Brand, navy, spans 2 columns, product photo on the right. */
+function MmbAlsoCard({ blocks }: { blocks: Blocks }) {
+  const [t, b, link] = copy(blocks, 'home2.also.brand', 'Make My Brand|Your logo on verified products, stocked in our warehouse and shipped worldwide.|See how it works →');
+  return (
+    <li className="col-span-2" data-testid="also-mmb">
+      <Link href={BRAND_PAGE_HREF} className="group h-full rounded-[14px] bg-navy text-white hover:text-white p-5 flex gap-4 items-center">
+        <div className="flex-1 min-w-0">
+          <div className="text-[17px] font-bold flex items-center gap-2 text-white">{t}<NewBadge /></div>
+          <p className="text-[13.5px] text-[#C9D0E8] mt-1.5 leading-snug">{b}</p>
+          <span className="inline-flex items-center min-h-11 text-[14px] font-semibold text-[#9CC2FF] group-hover:text-white">{link}</span>
+        </div>
+        <div className="relative w-[96px] sm:w-[120px] aspect-square rounded-[10px] overflow-hidden bg-[#EDE6DC] shrink-0">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/mmb/G1000.jpg" alt="" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
+          <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 mono text-[8px] font-bold tracking-[.14em] uppercase px-1.5 py-0.5 bg-white/95 text-navy border border-dashed border-navy/50 rounded-[3px] whitespace-nowrap">{EXAMPLE_BRAND}</span>
+        </div>
+      </Link>
+    </li>
+  );
+}
+
+/* ───────── 2 · Make My Brand (ADDON-44-D board 20) ───────── */
+export function MakeMyBrand({ blocks }: { blocks: Blocks }) {
+  const [p1, p2, p3] = [
+    copy(blocks, 'home2.mmb.proof.1', 'Verified suppliers only|You choose from products Octopus lists directly, made by suppliers we have verified.'),
+    copy(blocks, 'home2.mmb.proof.2', 'One account manager|One person handles your artwork, proof, sample and every approval.'),
+    copy(blocks, 'home2.mmb.proof.3', 'Price confirmed before you pay|Price, delivery date, duties and shipping are set in your quote before any payment.'),
+  ];
+  return (
+    <section id="make-my-brand" aria-labelledby="home-mmb-h" className="bg-white border-y border-line" data-testid="home-mmb">
+      <div className={`${W} py-12 sm:py-16`}>
+        <SectionEyebrow n={2} isNew>{block(blocks, 'home2.mmb.eyebrow', 'Make My Brand')}</SectionEyebrow>
+        <h2 id="home-mmb-h" className="mt-3 text-[25px] sm:text-[34px] font-extrabold leading-[1.12] tracking-[-0.02em]">{block(blocks, 'home2.mmb.title', 'Your brand on proven products.')}</h2>
+        <p className="mt-3 text-[16px] text-body-2 leading-relaxed max-w-[620px]">{block(blocks, 'home2.mmb.lead', 'Pick a product from our verified suppliers and we put your logo on it, on the product and on the box. We produce and check it, keep it as your stock in our warehouse, and ship it worldwide, in bulk to one country or order by order from your online store.')}</p>
+        <div className="mt-8"><DsStepCards steps={MMB_STEPS_SHORT} /></div>
+        <div className="mt-8 grid gap-8 lg:grid-cols-[1.15fr_1fr] items-start">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <StudioPreviewCard src="/mmb/F8.jpg" alt="Handheld fan with the example brand Nova Breeze" brand={EXAMPLE_BRAND} title="Handheld fan F8 · pad print logo" />
+            <StudioPreviewCard src="/mmb/S7.jpg" alt="Aroma diffuser with the example brand Nova Breeze" brand={EXAMPLE_BRAND} title="Aroma diffuser S7 · laser engraving" />
+          </div>
+          <div>
+            <ul className="space-y-5">
+              <ProofPoint icon="shield" title={p1[0]} body={p1[1]} />
+              <ProofPoint icon="user" title={p2[0]} body={p2[1]} />
+              <ProofPoint icon="doc" title={p3[0]} body={p3[1]} />
+            </ul>
+            <div className="mt-7 flex flex-col sm:flex-row gap-3">
+              <Link href={BRAND_START_HREF} className="btn btn-primary btn-pub" data-testid="home-mmb-start">Start a brand project <Arrow /></Link>
+              <Link href={BRAND_PAGE_HREF} className="btn btn-ghost btn-pub">See how it works</Link>
+            </div>
+            <p className="mt-3 text-[13px] text-muted">{block(blocks, 'home2.mmb.pay', 'Paid from your US dollar wallet, topped up by bank transfer.')}</p>
+          </div>
+        </div>
       </div>
     </section>
   );

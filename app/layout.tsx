@@ -15,12 +15,16 @@ const plex = IBM_Plex_Mono({ subsets: ['latin'], variable: '--font-plex-mono', w
 export async function generateMetadata(): Promise<Metadata> {
   const [{ blocks, company }, ctx] = await Promise.all([getSiteContent(), getCurrencyContext()]);
   const brand = company?.brand ?? company?.legal_name ?? '';
-  const subtitle = withCurrency(block(blocks, 'home.subtitle'), ctx.currency);
-  const firstSentence = subtitle.split(/(?<=\.)\s/)[0] ?? subtitle;
+  // ADDON-44-D (audit 19): site description names every service; editable as content block `site.description`.
+  const description = withCurrency(block(blocks, 'site.description', 'Source from verified factories in China, put your brand on proven products, dropship to your customers and store stock near your buyers. Paid from your US dollar wallet.'), ctx.currency).slice(0, 200);
+  const title = [brand, company?.tagline].filter(Boolean).join(' · ');
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
-    title: { default: [brand, company?.tagline].filter(Boolean).join(' · '), template: `%s · ${brand}` },
-    description: firstSentence.slice(0, 160),
+    title: { default: title, template: `%s · ${brand}` },
+    description,
+    // Link previews (WhatsApp, LinkedIn): pages without their own Open Graph tags inherit these.
+    openGraph: { type: 'website', siteName: brand || undefined, title, description, images: [{ url: '/home/sourcing.png', alt: brand }] },
+    twitter: { card: 'summary_large_image', title, description, images: ['/home/sourcing.png'] },
   };
 }
 

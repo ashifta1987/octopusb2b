@@ -12,6 +12,7 @@ import { AnnouncementBar } from '@/components/store/home/top';
 import { getTurnkeyCatalogue } from '@/lib/turnkey/data';
 import { getCategoryCounts } from '@/components/store/data';
 import { stockedCategories } from '@/lib/category-stock';
+import { ServiceLinks } from '@/components/store/service-links';
 
 /**
  * Storefront layout header + category bar (Main.png, Nov 2026 redesign). All copy from CMS.
@@ -47,20 +48,8 @@ export async function StoreHeader() {
       </header>
       <nav aria-label="Shop by category" className="bg-white border-b border-line">
         <ul className="max-w-[1360px] mx-auto px-4 sm:px-8 py-2.5 flex gap-1.5 items-center overflow-x-auto overscroll-x-contain">
-          {/* Nov 2026 design: the five services first (Product sourcing highlighted), then the categories */}
-          <li className="shrink-0">
-            <Link href="/request/sourcing" className="inline-flex items-center px-4 py-2 rounded-full bg-navy text-white text-[14px] font-semibold whitespace-nowrap hover:bg-navy-2 hover:text-white">Product sourcing</Link>
-          </li>
-          <li className="shrink-0"><Link href="/#dropshipping" className={`${pill} text-navy`}>Dropshipping</Link></li>
-          {settings.pool_enabled !== false && <li className="shrink-0"><Link href="/pools" className={`${pill} text-navy`}>MOQ pools</Link></li>}
-          <li className="shrink-0"><Link href="/#warehousing" className={`${pill} text-navy`}>3PL warehousing</Link></li>
-          {settings['turnkey.enabled'] !== false && (
-            <li className="shrink-0">
-              <Link href="/turnkey" className={`${pill} text-navy`}>
-                Turnkey Projects<span className="mono text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-[#F59E0B] text-[#3B2500]">New</span>
-              </Link>
-            </li>
-          )}
+          {/* ADDON-44: the services first (Make My Brand second, active service highlighted), then the categories */}
+          <ServiceLinks poolsOn={settings.pool_enabled !== false} turnkeyOn={settings['turnkey.enabled'] !== false} pill={pill} />
           {settings.supplier_portal_enabled === true && <li className="shrink-0"><Link href="/suppliers" className={`${pill} text-navy`}>Sell on Octopus B2B</Link></li>}
           <li className="shrink-0 w-px h-5 bg-line mx-1.5" aria-hidden />
           <li className="shrink-0"><Link href="/products" className={`${pill} text-[#3B4556]`}>All categories</Link></li>
@@ -83,8 +72,7 @@ export async function StoreAnnouncement() {
   const [{ settings, blocks }, turnkey] = await Promise.all([getSiteContent(), getTurnkeyCatalogue()]);
   if (settings['home.announcement_enabled'] === false) return null;
   const vars = { turnkey: settings['turnkey.enabled'] !== false && turnkey.projects.length ? turnkey.projects.length : null };
-  if (settings['turnkey.enabled'] === false && /turnkey/i.test(blocks['home.announcement'] ?? '')) return null;
-  return <AnnouncementBar blocks={blocks} vars={vars} />;
+  return <AnnouncementBar blocks={blocks} vars={vars} skipTurnkey={settings['turnkey.enabled'] === false} />;
 }
 
 /** Signed-out header actions: Sign in + Register (customer sign-up → /signup → verify → /onboarding). */
@@ -133,7 +121,7 @@ export async function StoreFooter() {
       <div className="max-w-[1280px] mx-auto px-4 sm:px-8 pt-10 pb-6 grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
         <div className="text-sm space-y-4">
           <Logo white />
-          <p className="max-w-[280px] leading-relaxed">{block(blocks, 'footer.about2', 'Product sourcing, dropshipping, group buying, warehousing and turnkey businesses from China, delivered worldwide.')}</p>
+          <p className="max-w-[280px] leading-relaxed">{block(blocks, 'footer.about2', 'Product sourcing, brand projects, dropshipping, group buying, warehousing and turnkey businesses from China, delivered worldwide.')}</p>
           {(company?.email || company?.phone) && (
             <div className="text-[13px] space-y-0.5">
               {company?.phone && <div>{company.phone}</div>}
@@ -141,7 +129,7 @@ export async function StoreFooter() {
             </div>
           )}
         </div>
-        <FooterCol title="Services" links={[['/request/sourcing', 'Product sourcing'], ['/#dropshipping', 'Dropshipping'], ...(settings.pool_enabled !== false ? [['/pools', 'MOQ pools'] as [string, string]] : []), ['/#warehousing', '3PL warehousing'], ...(turnkeyOn ? [['/turnkey', 'Turnkey Projects'] as [string, string]] : [])]} />
+        <FooterCol title="Services" links={[['/request/sourcing', 'Product sourcing'], ['/make-my-brand', 'Make My Brand'], ['/#dropshipping', 'Dropshipping'], ...(settings.pool_enabled !== false ? [['/pools', 'MOQ pools'] as [string, string]] : []), ['/#warehousing', '3PL warehousing'], ...(turnkeyOn ? [['/turnkey', 'Turnkey Projects'] as [string, string]] : [])]} />
         <FooterCol title="Marketplace" links={[['/products', 'All products'], ...topCats.map((c) => [`/c/${c.slug}`, c.name] as [string, string]), ['/request/sourcing', 'Request a quote'], ...(turnkeyOn ? [['/turnkey/atlas', 'Project Atlas'] as [string, string]] : [])]} />
         <FooterCol title="Suppliers" links={[['/suppliers', 'Sell on Octopus B2B'], ['/suppliers#apply', 'Become a supplier'], ['/staff/login', 'Supplier and staff sign-in']]} />
         <FooterCol title="Company" links={[['/about', 'About us'], ['/contact', 'Contact']]} />
