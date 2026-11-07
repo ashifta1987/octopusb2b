@@ -1,4 +1,5 @@
 import 'server-only';
+import { serviceName } from '@/lib/service-names';
 import type { createClient } from '@/lib/supabase/server';
 import { fmtDate, humanize, money } from '@/lib/format';
 
@@ -19,7 +20,7 @@ export async function getShipmentFacts(sb: Sb, trackingOrOrderCode: string): Pro
   let orderStatus: string | null = null;
   const { data: ord } = await sb.from('orders').select('id, code, status').eq('code', ref.toUpperCase()).maybeSingle();
   if (ord) { orderId = ord.id as string; orderCode = ord.code as string; orderStatus = ord.status as string; }
-  let q = sb.from('shipments').select('code, order_id, carrier_code, tracking_no, status, eta, last_event_at, created_at').order('created_at', { ascending: false }).limit(1);
+  let q = sb.from('shipments').select('code, order_id, service_code, tracking_no, status, eta, last_event_at, created_at').order('created_at', { ascending: false }).limit(1);
   q = orderId ? q.eq('order_id', orderId) : q.eq('tracking_no', ref);
   const { data: rows } = await q;
   const sh = rows?.[0];
@@ -32,13 +33,13 @@ export async function getShipmentFacts(sb: Sb, trackingOrOrderCode: string): Pro
     orderCode = (o?.code as string) ?? null;
     orderStatus = (o?.status as string) ?? null;
   }
-  const carrier = sh.carrier_code === 'yunexpress' ? 'YunExpress' : humanize(sh.carrier_code as string);
+  const carrier = serviceName(sh.service_code as string | null); // white-label: replies go to customers
   const parts = [
-    `${orderCode ? `Order ${orderCode}` : `Shipment ${sh.code}`} is ${humanize(sh.status as string).toLowerCase()} with ${carrier}`,
+    `${orderCode ? `Order ${orderCode}` : `Shipment ${sh.code}`} is ${humanize(sh.status as string).toLowerCase()} with ${carrier} shipping`,
     sh.tracking_no ? `tracking ${sh.tracking_no}` : null,
   ].filter(Boolean).join(', ');
   const eta = sh.eta ? ` Carrier ETA: ${fmtDate(sh.eta as string)}.` : '';
-  const last = sh.last_event_at ? ` Last carrier update ${fmtDate(sh.last_event_at as string, true)}.` : '';
+  const last = sh.last_event_at ? ` Last tracking update ${fmtDate(sh.last_event_at as string, true)}.` : '';
   return { title: `Shipment · ${orderCode ?? sh.code}`, text: `${parts}.${eta}${last}`, data: { ...sh, order_code: orderCode, order_status: orderStatus } };
 }
 

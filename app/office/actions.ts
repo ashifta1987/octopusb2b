@@ -118,10 +118,10 @@ export async function createShipment(orderId: string, input: { service: string; 
   if (error) return fail(error);
   await createAdminClient().rpc('system_record_tracking', {
     p_tracking_no: res.trackingNo, p_provider_event: `created-${res.trackingNo}`, p_status: 'created',
-    p_description: `Shipment created with ${input.service}. Label ready.`, p_location: 'Origin', p_occurred_at: new Date().toISOString(),
+    p_description: 'Shipment created. Label ready.', p_location: 'Origin', p_occurred_at: new Date().toISOString(),
   });
   try { await carrier.subscribeTracking(res.trackingNo); } catch { /* cron fallback picks it up */ }
-  const { error: te } = await sb.rpc('transition_order', { p_order: o.id, p_to: 'shipped', p_reason: `${carrier.code} ${res.trackingNo}` });
+  const { error: te } = await sb.rpc('transition_order', { p_order: o.id, p_to: 'shipped', p_reason: `Shipped · tracking ${res.trackingNo}` }); // customer-visible: no carrier name (white-label)
   if (te) return fail(`Shipment created (${res.trackingNo}) but the order could not be marked shipped: ${te.message}`);
   revalidatePath('/office/shipping'); revalidatePath(`/office/orders/${o.id}`);
   return ok({ trackingNo: res.trackingNo, labelUrl: res.labelUrl }, 'Shipment created');

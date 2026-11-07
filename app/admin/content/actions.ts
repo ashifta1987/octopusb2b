@@ -268,24 +268,23 @@ const BankInput = z.object({
 
 /** Admin only + fresh 2FA code (save_company_bank_account checks both and writes the audit log). */
 export async function saveBankAccount(_prev: Result | null, fd: FormData): Promise<Result> {
-  const g = await guard('content', 'edit');
+  // ADDON-41: Admin › Payment settings — finance and owner only
+  const g = await guard('finance', 'edit');
   if ('error' in g) return g.error;
-  if (!g.s.isAdmin) return fail('Only an Admin can change the company bank accounts.');
   const p = BankInput.safeParse(Object.fromEntries(['id', 'currency', 'bank_name', 'account_holder', 'account_number', 'swift', 'routing_code', 'bank_address', 'intermediary', 'notes'].map((k) => [k, str(fd, k)])));
   if (!p.success) return fail(p.error.issues[0]?.message ?? 'Check the form');
   const { error } = await g.sb.rpc('save_company_bank_account', { p: { ...p.data, active: bool(fd, 'active') } });
-  if (error) return failAt(error, '/admin/content?tab=company');
-  refresh(['/account/wallet', '/account/orders']);
-  revalidatePath('/admin/content');
+  if (error) return failAt(error, '/admin/settings/payment');
+  refresh(['/account/wallet', '/account/orders', '/account']);
+  revalidatePath('/admin/settings/payment');
   return ok(`${p.data.currency} bank account saved`);
 }
 
 export async function deleteBankAccount(id: string): Promise<Result> {
-  const g = await guard('content', 'edit');
+  const g = await guard('finance', 'edit');
   if ('error' in g) return g.error;
-  if (!g.s.isAdmin) return fail('Only an Admin can change the company bank accounts.');
   const { error } = await g.sb.rpc('delete_company_bank_account', { p_id: id });
-  if (error) return failAt(error, '/admin/content?tab=company');
-  revalidatePath('/admin/content');
+  if (error) return failAt(error, '/admin/settings/payment');
+  revalidatePath('/admin/settings/payment');
   return ok('Bank account deleted');
 }

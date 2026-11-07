@@ -8,7 +8,7 @@ import {
 /** Customer portals: signed-out visitors go to the customer login. */
 const PORTALS = ['/account', '/supplier', '/onboarding'];
 /** Staff areas (SPEC §17.3): staff login + aal2 + staff session rules. */
-const STAFF_AREAS = ['/office', '/admin', '/distributor', '/staff'];
+const STAFF_AREAS = ['/office', '/admin', '/distributor', '/staff', '/scan'];
 /** Staff sign-in steps that must stay reachable without a full staff session. */
 const STAFF_OPEN = ['/staff/login', '/staff/verify', '/staff/forgot', '/staff/set-password'];
 

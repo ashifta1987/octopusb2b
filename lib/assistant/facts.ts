@@ -1,4 +1,5 @@
 import 'server-only';
+import { serviceName } from '@/lib/service-names';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { fmtDate, humanize, money } from '@/lib/format';
 
@@ -13,12 +14,12 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const CARRIERS: Record<string, string> = { yunexpress: 'YunExpress', dhl: 'DHL', fedex: 'FedEx', ups: 'UPS', manual: 'Manual' };
 export const carrierName = (c: string | null | undefined) => (c ? CARRIERS[c] ?? humanize(c) : 'Carrier');
 
-type ShipmentRow = { id: string; code: string; order_id: string | null; carrier_code: string; tracking_no: string | null; status: string; eta: string | null; last_event_at: string | null; created_at: string };
+type ShipmentRow = { id: string; code: string; order_id: string | null; service_code: string | null; tracking_no: string | null; status: string; eta: string | null; last_event_at: string | null; created_at: string };
 type OrderRow = { id: string; code: string; title: string; quantity: number; status: string; total_cents: number; currency: string };
 
 export async function getShipmentFacts(sb: SupabaseClient, trackingOrOrderCode: string): Promise<Fact> {
   const q = trackingOrOrderCode.trim();
-  const shipCols = 'id, code, order_id, carrier_code, tracking_no, status, eta, last_event_at, created_at';
+  const shipCols = 'id, code, order_id, service_code, tracking_no, status, eta, last_event_at, created_at';
   let order: OrderRow | null = null;
   let shipments: ShipmentRow[] = [];
   const orderCols = 'id, code, title, quantity, status, total_cents, currency';
@@ -57,16 +58,16 @@ export async function getShipmentFacts(sb: SupabaseClient, trackingOrOrderCode: 
   const last = events[0];
   const lines = [
     order ? `Order ${order.code} · ${order.quantity.toLocaleString('en-US')} × ${order.title} (order status: ${humanize(order.status)})` : null,
-    `${carrierName(sh.carrier_code)} shipment ${sh.code}${sh.tracking_no ? ` · tracking ${sh.tracking_no}` : ''} · status ${humanize(sh.status)}`,
-    last ? `Last scan: ${last.description ?? humanize(last.status)}${last.location ? `, ${last.location}` : ''} · ${fmtDate(last.occurred_at, true)}` : 'No carrier scans yet.',
-    sh.eta ? `Carrier ETA: ${fmtDate(sh.eta)}` : 'The carrier has not published an ETA yet.',
+    `${serviceName(sh.service_code)} shipment ${sh.code}${sh.tracking_no ? ` · tracking ${sh.tracking_no}` : ''} · status ${humanize(sh.status)}`,
+    last ? `Last scan: ${last.description ?? humanize(last.status)}${last.location ? `, ${last.location}` : ''} · ${fmtDate(last.occurred_at, true)}` : 'No tracking scans yet.',
+    sh.eta ? `Estimated delivery: ${fmtDate(sh.eta)}` : 'No estimated delivery date yet.',
     events.length > 1 ? `Earlier scans: ${events.slice(1).map((e) => `${e.description ?? humanize(e.status)} (${fmtDate(e.occurred_at)})`).join('; ')}` : null,
   ].filter(Boolean);
   return {
     title: `Shipment ${sh.tracking_no ?? sh.code}`,
     text: lines.join('\n'),
     data: {
-      order_id: order?.id ?? sh.order_id, order_code: order?.code ?? null, shipment_code: sh.code, carrier: carrierName(sh.carrier_code),
+      order_id: order?.id ?? sh.order_id, order_code: order?.code ?? null, shipment_code: sh.code, carrier: serviceName(sh.service_code),
       tracking_no: sh.tracking_no, status: sh.status, eta: sh.eta, events,
     },
   };

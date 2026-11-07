@@ -61,11 +61,11 @@ export async function purgeTestOrgs(orgIds: string[], userIds: string[]) {
     await db.query(`delete from journals where id = any($1)`, [journals]);
     await db.query(`delete from outbox_events where aggregate_id = any($1) or payload->>'org_id' = any($2)`, [all, orgIds]);
     await db.query(`delete from status_history where entity_id = any($1)`, [all]);
-    await db.query(`delete from audit_log where entity_id = any($1)`, [all.map(String)]);
+    // audit_log is append-only (ADDON-41): test audit rows stay, like every other audit row
     // every table with an org_id / order_id / rfq_id link, repeated until nothing is left (FK order resolves itself)
     const tables = (await db.query(`select table_name t, column_name c from information_schema.columns where table_schema = 'public'
       and column_name in ('org_id', 'order_id', 'rfq_id', 'quote_id', 'service_request_id') and table_name in (select table_name from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE')
-      and table_name not in ('organizations', 'ledger_entries')`)).rows as { t: string; c: string }[];
+      and table_name not in ('organizations', 'ledger_entries', 'audit_log')`)).rows as { t: string; c: string }[];
     const ref: Record<string, string[]> = { org_id: orgIds, order_id: orders, rfq_id: rfqs, quote_id: quotes, service_request_id: svcs };
     for (let pass = 0; pass < 6; pass++) {
       let left = 0;

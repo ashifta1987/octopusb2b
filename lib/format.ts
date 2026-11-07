@@ -89,6 +89,21 @@ export function mapDbError(e: { message?: string } | null | undefined): string {
     INVALID_AMOUNT: 'Invalid amount.',
     KYC_INVALID_TRANSITION: 'KYC cannot be changed from its current status.',
     USE_TRANSITION_PRODUCT: 'Publishing must go through moderation.',
+    // ADDON-41 shared parts
+    INSUFFICIENT_FUNDS: 'Not enough in the wallet. Add funds by bank transfer and try again.',
+    SLIP_REQUIRED: 'Attach the transfer slip (PDF, JPG or PNG) before sending.',
+    BANK_REF_REQUIRED: 'Enter the bank reference from the statement.',
+    REASON_REQUIRED: 'Add a reason.',
+    NOTE_REQUIRED: 'Add a note explaining the decision.',
+    ALREADY_DECIDED: 'This approval was already decided.',
+    STEP_UP_REQUIRED: 'Enter your 2FA code again to do this.',
+    MANAGER_LIMITS_NOT_SET: 'Ask the owner to set your own approval limit first.',
+    ABOVE_MANAGER_LIMIT: 'The order limit is above your own amount limit. The owner has to set it.',
+    BELOW_MANAGER_MARGIN: 'The minimum margin is below your own minimum. The owner has to set it.',
+    NOT_A_MANAGER: 'Limits can only be set for account managers.',
+    STAFF_CANNOT_BE_CUSTOMER: 'A staff account cannot belong to a customer company. Use a separate account.',
+    CUSTOMER_CANNOT_BE_STAFF: 'This account belongs to a customer company. Create a separate staff account.',
+    AUDIT_APPEND_ONLY: 'The activity log cannot be changed.',
   };
   // ADDON-27 publish gate: the reason after the code is already plain language
   if (code === 'IMPORT_PUBLISH_BLOCKED') return m.slice(m.indexOf(':') + 1).trim().replace(/^./, (c) => c.toUpperCase()) + '.';

@@ -10,9 +10,11 @@ import { usePathname } from 'next/navigation';
  */
 type Item = { href: string; label: string; key?: string };
 const MORE: Item[] = [
-  { href: '/account/sourcing?type=dropship', label: 'Dropshipping', key: 'dropship' },
+  { href: '/account/dropship', label: 'Dropshipping', key: 'dropship' },
   { href: '/account/pools', label: 'MOQ pools', key: 'pools' },
-  { href: '/account/sourcing?type=3pl', label: '3PL', key: '3pl' },
+  { href: '/account/warehouse', label: '3PL warehouse', key: '3pl' },
+  { href: '/account/brand', label: 'Make My Brand', key: 'brand' },
+  { href: '/account/invoices', label: 'Invoices and receipts' },
   { href: '/account/turnkey', label: 'Turnkey projects', key: 'turnkey' },
   { href: '/account/assistant', label: 'Assistant' },
   { href: '/account/developer', label: 'API' },

@@ -15,7 +15,7 @@ export type Session = {
   aal: string | null;
 };
 
-const STAFF_ROLES = ['admin', 'operations', 'finance', 'support', 'sourcing_agent', 'qc_coordinator', 'content_editor', 'distributor'];
+const STAFF_ROLES = ['admin', 'operations', 'finance', 'support', 'sourcing_agent', 'qc_coordinator', 'content_editor', 'distributor', 'account_manager', 'warehouse'];
 
 /** Loads the current user, profile, roles, permissions and org once per request. */
 export const getSession = cache(async (): Promise<Session | null> => {
@@ -56,7 +56,19 @@ export function can(s: Session | null, area: string, action = 'view') {
 export async function requireCustomer(next = '/account') {
   const s = await getSession();
   if (!s) redirect(`/login?next=${encodeURIComponent(next)}`);
-  if (!s.profile || (!s.org && !s.isStaff)) redirect('/onboarding');
+  // ADDON-41 rule 3: staff accounts never act as customers — they use Admin / Back office
+  if (s.isStaff) redirect('/admin?notice=staff-not-customer');
+  if (!s.profile || !s.org) redirect('/onboarding');
+  return s;
+}
+
+/** Staff pages open to account managers too (ADDON-41): any one of the permissions, or the account_manager role. */
+export async function requireStaffOrManager(next: string, ...checks: [string, string?][]) {
+  const s = await getSession();
+  if (!s) redirect(`/staff/login?next=${encodeURIComponent(next)}`);
+  if (!s.isStaff) redirect('/login');
+  if (s.aal !== 'aal2') redirect(`/staff/verify?next=${encodeURIComponent(next)}`);
+  if (!s.roles.includes('account_manager') && !checks.some(([a, act]) => can(s, a, act ?? 'view'))) redirect('/forbidden');
   return s;
 }
 

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { requireStaff } from '@/lib/auth';
+import { requireStaffOrManager } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { EmptyState, PageHeader, StatusBadge, Table } from '@/components/ui';
 import { CountryTag } from '@/components/admin/ui';
@@ -12,7 +12,7 @@ const KYC = ['all', 'verified', 'in_review', 'submitted', 'more_info', 'rejected
 
 /** Customers (orgs) with buyer code, country, KYC, dedicated account manager and VIP flag (SPEC §20.3). */
 export default async function CustomersPage({ searchParams }: { searchParams: Promise<{ q?: string; kyc?: string; vip?: string }> }) {
-  await requireStaff('customers', 'view', '/admin/customers');
+  await requireStaffOrManager('/admin/customers', ['customers', 'view']); // managers see only their own customers (RLS)
   const { q = '', kyc = 'all', vip } = await searchParams;
   const sb = await createClient();
   let query = sb.from('organizations').select('id, name, buyer_code, country, city, kyc_status, created_at').is('archived_at', null).order('created_at', { ascending: false }).limit(300);
