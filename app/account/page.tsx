@@ -190,10 +190,20 @@ async function AccountHomeContent({ searchParams }: { searchParams: Promise<{ no
                   <span className={`mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full ${on ? 'bg-[#DCFCE7] text-[#166534]' : 'bg-surface text-[#5A6475]'}`}>{on ? `On${st.plan ? ` · ${st.plan}` : ''}` : st.status === 'paused' ? 'Paused' : 'Off'}</span>
                 </div>
                 {svc.key === 'sourcing' && on ? (
-                  <dl className="grid grid-cols-2 gap-3 mt-3">
-                    <div><dt className="mono text-[10.5px] uppercase tracking-[.06em] text-[#5A6475]">Open requests</dt><dd className="text-[24px] font-extrabold">{openReq}</dd></div>
-                    <div><dt className="mono text-[10.5px] uppercase tracking-[.06em] text-[#5A6475]">Quotes ready</dt><dd className="text-[24px] font-extrabold">{byRfq.size}</dd></div>
-                  </dl>
+                  <div data-testid="dashboard-sourcing">
+                    <dl className="grid grid-cols-2 gap-3 mt-3">
+                      <div><dt className="mono text-[10.5px] uppercase tracking-[.06em] text-[#5A6475]">Open requests</dt><dd className="text-[24px] font-extrabold">{openReq}</dd></div>
+                      <div><dt className="mono text-[10.5px] uppercase tracking-[.06em] text-[#5A6475]">Quotes ready</dt><dd className="text-[24px] font-extrabold">{byRfq.size}</dd></div>
+                    </dl>
+                    {/* the 3 latest requests (7 Nov request: dashboard shows the latest sourcing requests) */}
+                    {(rfqs.data ?? []).length > 0 && (
+                      <ul className="mt-3 space-y-1 text-[13.5px]">
+                        {(rfqs.data ?? []).slice(0, 3).map((r) => (
+                          <li key={r.id as string} className="flex justify-between gap-2"><Link href={`/account/sourcing/${r.code}`} className="truncate hover:text-blue"><span className="mono text-[12px]">{r.code}</span> {r.title}</Link></li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 ) : on ? (
                   <p className="text-[14px] text-[#5A6475] mt-3">Your account manager is setting this up. Figures appear here once it is running.</p>
                 ) : (

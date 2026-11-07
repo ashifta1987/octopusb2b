@@ -24,9 +24,18 @@ test('the /products sidebar lists only stocked categories, each with a count abo
 });
 
 test('an empty category says we will source it and is not indexed', async ({ page }) => {
-  await page.goto('/c/electrical/lighting');
-  await expect(page.getByTestId('empty-category')).toContainText("We don't list Lighting yet");
-  await expect(page.getByTestId('empty-category').getByRole('link')).toHaveAttribute('href', '/request/sourcing?category=lighting');
+  // pick a sub-category that currently has no live products (the catalogue changes, so it is looked up)
+  const { adminClient } = await import('./helpers/customer');
+  const sb = adminClient();
+  const { data: cats } = await sb.from('categories').select('id, name, slug, parent_id, level').eq('active', true).eq('level', 2);
+  const { data: live } = await sb.from('products').select('category_id').eq('status', 'live');
+  const used = new Set((live ?? []).map((p) => p.category_id));
+  const empty = (cats ?? []).find((c) => !used.has(c.id));
+  test.skip(!empty, 'every sub-category has products');
+  const { data: parent } = await sb.from('categories').select('slug').eq('id', empty!.parent_id).single();
+  await page.goto(`/c/${parent!.slug}/${empty!.slug}`);
+  await expect(page.getByTestId('empty-category')).toContainText(`We don't list ${empty!.name} yet`);
+  await expect(page.getByTestId('empty-category').getByRole('link')).toHaveAttribute('href', `/request/sourcing?category=${empty!.slug}`);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
 });
 

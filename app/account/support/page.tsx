@@ -19,9 +19,17 @@ function nowMs() {
   return Date.now();
 }
 
-export default async function SupportPage({ searchParams }: { searchParams: Promise<{ order?: string }> }) {
+// "Start …" buttons on the service tabs open a ready-made request to the account manager (audit 8 Nov)
+const TOPICS: Record<string, [string, string]> = {
+  dropship: ['Please switch on Dropshipping', 'We would like to start Dropshipping. Our store platform and the countries we sell to are: '],
+  warehouse: ['Please switch on 3PL warehouse', 'We would like to store stock in your warehouse. Products, monthly volume and destination countries: '],
+  brand: ['Please switch on Make My Brand', 'We would like to put our brand on verified-supplier products. Products and quantities we have in mind: '],
+};
+
+export default async function SupportPage({ searchParams }: { searchParams: Promise<{ order?: string; topic?: string }> }) {
   const s = await requireCustomer('/account/support');
-  const { order: orderParam } = await searchParams;
+  const { order: orderParam, topic } = await searchParams;
+  const preset = topic ? TOPICS[topic] : undefined;
   const [{ company }, settings] = await Promise.all([getSiteContent(), getSettings()]);
 
   const contact = (
@@ -81,7 +89,7 @@ export default async function SupportPage({ searchParams }: { searchParams: Prom
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px] items-start">
         <Card title="New complaint or request">
           <div className="px-6 pb-6">
-            <SupportNewTicket orders={orders} defaultOrderId={defaultOrderId} orgId={s.org.id} now={nowMs()} />
+            <SupportNewTicket orders={orders} defaultOrderId={defaultOrderId} orgId={s.org.id} now={nowMs()} defaultSubject={preset?.[0]} defaultBody={preset?.[1]} />
           </div>
         </Card>
 

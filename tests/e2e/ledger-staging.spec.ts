@@ -43,7 +43,11 @@ test('wallet card = newest running balance; STAGING badge; no duplicate tab pref
   const rsc = new Map<string, number>();
   page.on('request', (r) => {
     const u = new URL(r.url());
-    if (r.headers()['rsc'] === '1' && u.pathname.startsWith('/account') && r.headers()['next-router-prefetch']) rsc.set(u.pathname + u.search.replace(/[?&]_rsc=[^&]*/, ''), (rsc.get(u.pathname) ?? 0) + 1);
+    // one route is fetched as several segments (Partial Prefetching): count path + segment, so only real repeats show
+    if (r.headers()['rsc'] === '1' && u.pathname.startsWith('/account') && r.headers()['next-router-prefetch']) {
+      const k = `${u.pathname} ${r.headers()['next-router-segment-prefetch'] ?? ''}`;
+      rsc.set(k, (rsc.get(k) ?? 0) + 1);
+    }
   });
   await login(page, '/account/wallet');
   await expect(page.getByTestId('staging-badge')).toHaveText(/^staging$/i);

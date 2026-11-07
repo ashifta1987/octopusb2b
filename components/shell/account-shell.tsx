@@ -33,8 +33,9 @@ export function AccountShell({ session, ctx, newQuotes, mobileBar, children }: {
       { title: 'Help', items: [{ href: '/account/assistant', label: 'Octo assistant' }, { href: '/account/support', label: 'Help and complaints' }] },
     ],
     sourcing: [{ title: 'Sourcing', items: [
-      { href: '/account/sourcing', label: 'Requests', badge: newQuotes }, { href: '/account/rfqs', label: 'Quotes' }, { href: '/account/orders', label: 'Orders' },
-      { href: '/account/services', label: 'Samples, QC and certification' }, { href: '/account/pools', label: 'MOQ pools' }, { href: '/account/turnkey', label: 'Turnkey projects' },
+      // (audit 8 Nov: /account/rfqs and /account/services only redirect here, so link the filters directly)
+      { href: '/account/sourcing', label: 'Requests', badge: newQuotes }, { href: '/account/sourcing?status=Quoted', label: 'Quotes ready' },
+      { href: '/account/orders', label: 'Orders' }, { href: '/account/pools', label: 'MOQ pools' }, { href: '/account/turnkey', label: 'Turnkey projects' },
     ] }],
     dropship: svcMenu('dropship', 'Dropshipping'),
     warehouse: svcMenu('warehouse', '3PL warehouse'),
@@ -51,9 +52,10 @@ export function AccountShell({ session, ctx, newQuotes, mobileBar, children }: {
       <header className="bg-white">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center gap-x-5 gap-y-3">
           <Logo />
-          <form action="/search" role="search" className="order-3 lg:order-2 basis-full lg:basis-auto lg:flex-1 lg:max-w-[560px]">
-            <label htmlFor="acct-q" className="sr-only">Search orders, products, projects, stock</label>
-            <input id="acct-q" name="q" className="input !rounded-[10px]" placeholder="Search orders, products, projects, stock" />
+          {/* audit 8 Nov: searched the public catalogue before; now searches the customer's own requests and orders */}
+          <form action="/account/sourcing" role="search" className="order-3 lg:order-2 basis-full lg:basis-auto lg:flex-1 lg:max-w-[560px]">
+            <label htmlFor="acct-q" className="sr-only">Search your requests and orders</label>
+            <input id="acct-q" name="q" className="input !rounded-[10px]" placeholder="Search your requests and orders (reference or product)" />
           </form>
           {isStaging() && <span className="order-2 mono text-[11px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full bg-[#FEF3C7] text-[#92400E]" data-testid="staging-badge" title="Staging environment: test data, not the live site">Staging</span>}
           <div className="order-2 lg:order-3 ml-auto flex items-center gap-3">

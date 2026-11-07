@@ -13,8 +13,9 @@ test.afterAll(async () => {
 
 test('an admin adds and deletes a company bank account (audited)', async ({ page }) => {
   t = await createTempStaff('admin');
-  await staffLogin(page, t, '/admin/content?tab=company');
-  await page.goto('/admin/content?tab=company');
+  // moved to Admin › Payment settings (ADDON-41)
+  await staffLogin(page, t, '/admin/settings/payment');
+  await page.goto('/admin/settings/payment');
   const box = page.getByTestId('bank-accounts');
   await expect(box).toBeVisible();
   page.on('dialog', (d) => d.accept());

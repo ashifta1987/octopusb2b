@@ -31,15 +31,15 @@ function safeFileName(name: string) {
   return ext ? `${base}.${ext}` : base;
 }
 
-export function SupportNewTicket({ orders, defaultOrderId, orgId, now }: { orders: SupportOrderOption[]; defaultOrderId: string | null; orgId: string; now: number }) {
+export function SupportNewTicket({ orders, defaultOrderId, orgId, now, defaultSubject = '', defaultBody = '' }: { orders: SupportOrderOption[]; defaultOrderId: string | null; orgId: string; now: number; defaultSubject?: string; defaultBody?: string }) {
   const router = useRouter();
   const [category, setCategory] = useState<Category>(defaultOrderId ? 'complaint' : 'question');
   const [what, setWhat] = useState(WHAT_HAPPENED[0]);
   const [orderId, setOrderId] = useState<string>(defaultOrderId && orders.some((o) => o.id === defaultOrderId) ? defaultOrderId : '');
-  const [subject, setSubject] = useState('');
+  const [subject, setSubject] = useState(defaultSubject);
   const [qty, setQty] = useState('');
   const [remedy, setRemedy] = useState(REMEDIES[0]);
-  const [body, setBody] = useState('');
+  const [body, setBody] = useState(defaultBody);
   const [files, setFiles] = useState<File[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [progress, setProgress] = useState<string | null>(null);
