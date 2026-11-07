@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { WORKSPACES, workspacesFor, workspaceForPath } from '@/lib/staff/workspaces';
 import { ipAllowed, ipMatches, ipRuleBlocks } from '@/lib/staff/ip';
 import {
-  newStaffCookie, sessionState, signExpiredMarker, signStaffCookie, verifyExpiredMarker, verifyStaffCookie,
+  newStaffCookie, sessionState, staffCookieOptions, DEFAULT_LIMITS, signExpiredMarker, signStaffCookie, verifyExpiredMarker, verifyStaffCookie,
 } from '@/lib/staff/session-cookie';
 import { isStepUpError, stepUpRedirect } from '@/lib/staff/step-up';
 import { hashBackupCode, newBackupCodes, normaliseBackupCode } from '@/lib/staff/backup-codes';
@@ -100,6 +100,20 @@ describe('staff session cookie', () => {
     expect(sessionState(trusted, t0 + 5 * hr)).toBe('ok');
     expect(sessionState(trusted, t0 + 12 * hr + 1)).toBe('max');
     expect(sessionState(plain, t0 + 45 * min, { idleMinutes: 60, maxHours: 12, trustHours: 12 })).toBe('ok');
+  });
+  it('"trust this computer" for 30 days: no idle timeout or 12 h maximum until the signed expiry', () => {
+    const t0 = 1_700_000_000_000; const hr = 3600_000; const day = 24 * hr;
+    const t = newStaffCookie(true, 'u', t0, 720);
+    expect(t.until).toBe(t0 + 30 * day);
+    expect(sessionState(t, t0 + 3 * day)).toBe('ok');                // idle for days, still signed in
+    expect(sessionState(t, t0 + 30 * day - 1)).toBe('ok');
+    expect(sessionState(t, t0 + 30 * day + 1)).toBe('max');
+    expect(newStaffCookie(false, 'u', t0, 720).until).toBeUndefined();   // not trusted → normal limits
+    const raw = signStaffCookie(t, KEY);
+    expect(verifyStaffCookie(raw, KEY)?.until).toBe(t0 + 30 * day);
+    const forged = Buffer.from(JSON.stringify({ ...t, until: t0 + 365 * day })).toString('base64url') + '.' + raw.split('.')[1];
+    expect(verifyStaffCookie(forged, KEY)).toBeNull();               // the expiry cannot be extended by editing the cookie
+    expect(staffCookieOptions(DEFAULT_LIMITS, t.until, t0).maxAge).toBe(30 * 24 * 3600);
   });
   it('expiry marker is signed and short-lived', () => {
     const raw = signExpiredMarker({ uid: 'u', reason: 'idle', at: 10_000 }, KEY);

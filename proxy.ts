@@ -127,7 +127,7 @@ async function route(request: NextRequest) {
     }
     // sliding idle window: bump `last` (at most once a minute to limit cookie writes)
     if (now - staff.last > 60_000) {
-      response.cookies.set(STAFF_COOKIE, signStaffCookie({ ...staff, last: now }), staffCookieOptions(DEFAULT_LIMITS));
+      response.cookies.set(STAFF_COOKIE, signStaffCookie({ ...staff, last: now }), staffCookieOptions(DEFAULT_LIMITS, staff.until, now));
     }
     return response;
   }

@@ -52,8 +52,13 @@ export async function startStaffSession(userId: string, trusted: boolean) {
   const jar = await cookies();
   const prev = await readStaffCookie();
   // keep the original start for step-up re-verification so the 12 h maximum still counts from sign-in
-  const v = prev && prev.uid === userId ? { ...prev, last: Date.now(), trusted: trusted || prev.trusted } : newStaffCookie(trusted, userId);
-  jar.set(STAFF_COOKIE, signStaffCookie(v), staffCookieOptions({ idleMinutes: sec.idle_minutes, maxHours: sec.max_session_hours, trustHours: sec.trust_hours }));
+  const now = Date.now();
+  const fresh = newStaffCookie(trusted, userId, now, sec.trust_hours);
+  // step-up keeps the session; ticking "trust this computer" on a later verification starts the trust period then
+  const v = prev && prev.uid === userId
+    ? { ...prev, last: now, trusted: trusted || prev.trusted, ...(prev.until ? { until: prev.until } : trusted && fresh.until ? { until: fresh.until } : {}) }
+    : fresh;
+  jar.set(STAFF_COOKIE, signStaffCookie(v), staffCookieOptions({ idleMinutes: sec.idle_minutes, maxHours: sec.max_session_hours, trustHours: sec.trust_hours }, v.until, now));
 }
 
 export async function clearStaffSession() {

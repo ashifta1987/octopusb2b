@@ -50,7 +50,7 @@ function TrustBox({ hours, checked, onChange }: { hours: number; checked: boolea
   return (
     <label className="flex items-start gap-2.5 text-sm leading-[1.45] text-[#3B4556] cursor-pointer">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="w-[18px] h-[18px] mt-0.5 accent-blue flex-none" />
-      Trust this computer for {hours} hours
+      Trust this computer for {hours >= 48 && hours % 24 === 0 ? `${hours / 24} days` : `${hours} hours`} — you won&apos;t be asked for the code again on it until then
     </label>
   );
 }
