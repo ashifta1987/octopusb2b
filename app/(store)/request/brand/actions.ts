@@ -1,5 +1,7 @@
 'use server';
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
+import { sendBrandProjectAdminEmail } from '@/lib/brand-projects-email';
 import { getSession } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 
@@ -28,6 +30,9 @@ export async function createBrandProject(p: BrandPayload): Promise<{ ok: true; r
     return { ok: false, error: code ? ERRORS[code] : `Could not send the request: ${error.message}` };
   }
   revalidatePath('/account/brand');
-  return { ok: true, ref: (data as { ref: string }).ref };
+  // bug 2 (8 Nov 2026): one e-mail to the admin address in settings, after the response (sent at most once per project)
+  const created = data as { id: string; ref: string };
+  after(() => sendBrandProjectAdminEmail(created.id));
+  return { ok: true, ref: created.ref };
 }
 

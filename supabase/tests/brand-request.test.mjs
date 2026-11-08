@@ -47,7 +47,7 @@ try {
   ok(/PRODUCT_REQUIRED/.test(String(noProduct)), 'no product and no link → PRODUCT_REQUIRED');
   ok(/^MB-/.test(linkOnly.ref), 'a product link is accepted (checked by the account manager)');
   ok(mine.includes(good.ref) && mine.includes(linkOnly.ref), 'the company sees its own projects');
-  const n = await one(`select count(*)::int n from notifications where user_id = $1 and title like 'New Make My Brand request%'`, [mgr]);
+  const n = await one(`select count(*)::int n from notifications where user_id = $1 and title like 'New brand project%'`, [mgr]); // 8 Nov 2026: alert renamed (bug 2)
   ok(n.n === 2, 'the primary account manager gets one notification per project');
   const audit = await one(`select count(*)::int n from audit_log where action = 'brand_project.created' and org_id = $1`, [o1]);
   ok(audit.n === 2, 'every project is audit-logged');
