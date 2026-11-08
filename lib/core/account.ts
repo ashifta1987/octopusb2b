@@ -22,7 +22,8 @@ export async function getAccountContext(orgId: string) {
     sb.from('company_services').select('service, status, plan, started_at').eq('org_id', orgId),
     sb.rpc('my_wallet_summary'),
     sb.rpc('my_account_team'),
-    sb.from('notifications').select('id', { count: 'exact', head: true }).eq('org_id', orgId).is('read_at', null),
+    // bug 1 (8 Nov 2026): same source as the Notifications list — my_notifications(), unread = read_at empty, every type
+    sb.rpc('my_notifications', undefined, { count: 'exact', head: true }).is('read_at', null),
   ]);
   const state = Object.fromEntries(SERVICES.map((s) => [s.key, { status: 'off', plan: null, started_at: null } as ServiceState])) as Record<ServiceKey, ServiceState>;
   (services.data ?? []).forEach((r) => { if (r.service in state) state[r.service as ServiceKey] = { status: r.status, plan: r.plan, started_at: r.started_at } as ServiceState; });

@@ -3,7 +3,7 @@ import { getEmail } from '@/lib/adapters';
 import { getMaintenance } from '@/lib/backup/maintenance';
 import type { createAdminClient } from '@/lib/supabase/server';
 import { currentTraceId, traceLog, withTrace } from '@/lib/trace';
-import { MAX_ATTEMPTS, notificationFor, retryPlan, wantsEmail, type OutboxEvent } from './outbox-rules';
+import { MAX_ATTEMPTS, notificationFor, notificationKey, retryPlan, wantsEmail, type OutboxEvent } from './outbox-rules';
 import { amt, amt0, cur } from './money';
 import { deliverWebhook, isBroadcastEvent, publicEventFor, type Endpoint } from './webhooks';
 import { BRAND } from '@/lib/brand';
@@ -135,17 +135,43 @@ async function loadEnv(sb: Sb) {
   return { site: (process.env.NEXT_PUBLIC_SITE_URL ?? '').replace(/\/$/, ''), company };
 }
 
+/**
+ * Copy details for the customer's notification / e-mail (8 Nov 2026): the request code + service name of a service
+ * request, the amount + reference of a wallet top-up. Only used for the wording — webhooks keep the original payload.
+ */
+async function withCopyDetails(sb: Sb, ev: OutboxEvent): Promise<OutboxEvent> {
+  try {
+    if (ev.event_type.startsWith('service_request.') && ev.aggregate_id) {
+      const { data } = await sb.from('service_requests').select('code, services(name)').eq('id', ev.aggregate_id).maybeSingle();
+      const svc = data?.services as unknown as { name: string } | { name: string }[] | null;
+      const name = Array.isArray(svc) ? svc[0]?.name : svc?.name;
+      return { ...ev, payload: { ...ev.payload, code: data?.code ?? null, service_name: name ?? null } };
+    }
+    if (ev.event_type === 'wallet.updated' && ev.aggregate_id) {
+      const { data } = await sb.from('wallet_topups').select('reference, amount_cents, amount_received_cents, currency').eq('id', ev.aggregate_id).maybeSingle();
+      const cents = Number(data?.amount_received_cents ?? data?.amount_cents ?? NaN);
+      const label = Number.isFinite(cents) ? `${data?.currency ?? 'USD'} ${(cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : null;
+      return { ...ev, payload: { ...ev.payload, reference: data?.reference ?? null, amount_label: label } };
+    }
+  } catch { /* wording falls back to the generic copy */ }
+  return ev;
+}
+
 async function notify(sb: Sb, ev: OutboxEvent, orgId: string) {
-  const n = notificationFor(ev);
+  const n = notificationFor(await withCopyDetails(sb, ev));
   if (!n) return;
-  const { error } = await sb.from('notifications').insert({ org_id: orgId, title: n.title, body: n.body, link: n.link, trace_id: ev.trace_id ?? currentTraceId() });
+  // one notification per event (dedupe_key unique): a replayed or duplicated event is ignored, never a second row
+  const { error } = await sb.from('notifications').upsert(
+    { org_id: orgId, title: n.title, body: n.body, link: n.link, trace_id: ev.trace_id ?? currentTraceId(), dedupe_key: notificationKey(ev, orgId) },
+    { onConflict: 'dedupe_key', ignoreDuplicates: true },
+  );
   if (error) throw new Error(error.message);
 }
 
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
 async function email(sb: Sb, ev: OutboxEvent, orgId: string, env: Awaited<ReturnType<typeof loadEnv>>) {
-  const n = notificationFor(ev);
+  const n = notificationFor(await withCopyDetails(sb, ev)); // same wording as the in-app notification
   if (!n) return;
   const { data: members } = await sb.from('org_members').select('user_id').eq('org_id', orgId);
   const ids = (members ?? []).map((m) => m.user_id);

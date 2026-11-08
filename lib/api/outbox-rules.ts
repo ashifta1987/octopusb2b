@@ -54,10 +54,17 @@ export function notificationFor(e: Pick<OutboxEvent, 'event_type' | 'aggregate_i
   if (t.startsWith('order.')) return { title: `Order ${titleCase(t.slice(6)).toLowerCase()}`, body: `Your order status changed to ${titleCase(t.slice(6)).toLowerCase()}.`, link: `/account/orders/${id}` };
   if (t === 'shipment.tracking') return { title: `Shipment: ${titleCase(String(p.status ?? 'update')).toLowerCase()}`, body: [p.description, p.location].filter(Boolean).join(' · '), link: `/account/orders/${p.order_id ?? ''}` };
   if (t.startsWith('service_request.')) {
-    const to = String(p.to ?? t.split('.')[1]);
-    return { title: `Service request ${titleCase(to).toLowerCase()}`, body: `Your service request is now ${titleCase(to).toLowerCase()}.`, link: id ? `/account/sourcing/${id}` : '/account/sourcing' };
+    // 8 Nov 2026: name the service and the request ("3PL request SR-1042 paid") so two requests never look like one event
+    const to = titleCase(String(p.to ?? t.split('.')[1])).toLowerCase();
+    const what = typeof p.service_name === 'string' && p.service_name ? p.service_name : 'Service request';
+    const code = typeof p.code === 'string' && p.code ? p.code : null;
+    return { title: `${what}${code ? ` ${code}` : ''} ${to}`, body: `Your ${what.toLowerCase()}${code ? ` ${code}` : ''} is now ${to}.`, link: code || id ? `/account/sourcing/${code ?? id}` : '/account/sourcing' };
   }
-  if (t === 'wallet.updated') return { title: 'Wallet credited', body: 'Your wallet top-up was credited.', link: '/account/wallet' };
+  if (t === 'wallet.updated') {
+    const amount = typeof p.amount_label === 'string' && p.amount_label ? p.amount_label : null;
+    const ref = typeof p.reference === 'string' && p.reference ? p.reference : null;
+    return { title: amount ? `Wallet credited · ${amount}` : 'Wallet credited', body: `Your wallet top-up${ref ? ` ${ref}` : ''} was credited.`, link: '/account/wallet' };
+  }
   if (t === 'ticket.replied' && p.staff === true) return { title: 'Support replied', body: 'There is a new reply on your ticket.', link: `/account/support/${id}` };
   if (t === 'account_manager.assigned') {
     const who = typeof p.manager_name === 'string' && p.manager_name ? p.manager_name : 'A dedicated account manager';
@@ -65,4 +72,17 @@ export function notificationFor(e: Pick<OutboxEvent, 'event_type' | 'aggregate_i
   }
   if (t.startsWith('kyc.') && t !== 'kyc.submitted') return { title: `KYC ${titleCase(t.slice(4)).toLowerCase()}`, body: 'Your company verification status changed.', link: '/account/kyc' };
   return null;
+}
+
+/**
+ * One customer notification per event (bug 1, 8 Nov 2026) — the value for notifications.dedupe_key (unique).
+ * Status events are keyed by WHAT happened (type + record + status), so the same payment or status change fired twice —
+ * even as two outbox events — gives one notification. Everything else (messages, tracking updates…) is keyed by event id.
+ */
+const STATE_EVENTS = /^(rfq\.submitted|rfq\.reviewed|quote\.approved|pi\.created|payment\.confirmed|wallet\.updated|order\.[a-z_]+|kyc\.[a-z_]+)$/;
+export function notificationKey(e: Pick<OutboxEvent, 'id' | 'event_type' | 'aggregate_id' | 'payload'>, orgId: string): string {
+  const t = e.event_type;
+  if (e.aggregate_id && t.startsWith('service_request.')) return `${orgId}:service_request:${e.aggregate_id}:${String(e.payload?.to ?? t.split('.')[1])}`;
+  if (e.aggregate_id && STATE_EVENTS.test(t)) return `${orgId}:${t}:${e.aggregate_id}`;
+  return `${orgId}:event:${e.id}`;
 }
