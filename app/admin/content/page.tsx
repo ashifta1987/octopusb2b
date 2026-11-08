@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { MailDeliverabilityAlert } from '@/components/admin/mail-deliverability';
 import { HomeTab } from './home-tab';
+import { MediaTab } from './media-tab';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { Card, PageHeader, EmptyState, StatusBadge, Notice, Table } from '@/components/ui';
@@ -25,6 +26,7 @@ const TABS = [
   { key: 'blocks', label: 'Content blocks' },
   { key: 'company', label: 'Company & branches' },
   { key: 'home', label: 'Home page' },
+  { key: 'media', label: 'Media' },
 ];
 
 /** Admin → Site content (CMS.png). Content editors draft; Admin publishes legal pages. */
@@ -47,6 +49,7 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
       {tab === 'blocks' && <BlocksTab editable={editable} canCreate={can(sess, 'content', 'create')} />}
       {tab === 'company' && <CompanyTab editable={editable} isAdmin={sess.isAdmin} />}
       {tab === 'home' && <HomeTab editable={editable} isAdmin={sess.isAdmin} />}
+      {tab === 'media' && <MediaTab editable={editable} />}
     </>
   );
 }
