@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { loadDocument, renderDocumentHtml } from '@/components/account/doc-html';
+import { isStaffUser } from '@/lib/staff/server';
 
 
 /** Print-ready HTML for a document the signed-in user can read (RLS). `?print=1` opens the print dialog. */
@@ -13,7 +14,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   if (!bundle) return text(404, 'Document not found.');
 
   const url = new URL(req.url);
-  const html = renderDocumentHtml(bundle, { origin: url.origin, print: url.searchParams.get('print') === '1' });
+  // Supplier codes are internal: staff copies show them, customer copies do not.
+  const showSupplier = await isStaffUser(claims.claims.sub as string).catch(() => false);
+  const html = renderDocumentHtml(bundle, { origin: url.origin, print: url.searchParams.get('print') === '1', showSupplier });
   return new Response(html, {
     status: 200,
     headers: {

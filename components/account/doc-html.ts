@@ -115,7 +115,7 @@ const STATUS_TEXT: Record<string, string> = {
   awaiting_payment: 'Awaiting payment', paid: 'Paid', issued: 'Issued', cancelled: 'Cancelled', void: 'Void',
 };
 
-export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?: boolean }): string {
+export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?: boolean; showSupplier?: boolean }): string {
   const { doc, org, order, company: co, kyc, rfq, quote, supplier, settings } = b;
   const d: Row = doc.data ?? {};
   const type = doc.doc_type;
@@ -175,7 +175,7 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
       <tbody>
         <tr>
           <td class="mono">1</td>
-          <td><b>${esc(itemTitle)}</b>${supplier ? `<div class="sub">Supplier ${esc(supplier.code)}${supplier.country ? ` · ${esc(supplier.country)}` : ''}${rfqCode ? ` · ${esc(rfqCode)}` : ''}</div>` : ''}</td>
+          <td><b>${esc(itemTitle)}</b>${opts.showSupplier && supplier ? `<div class="sub">Supplier ${esc(supplier.code)}${supplier.country ? ` · ${esc(supplier.country)}` : ''}${rfqCode ? ` · ${esc(rfqCode)}` : ''}</div>` : rfqCode ? `<div class="sub">${esc(rfqCode)}</div>` : ''}</td>
           <td class="mono">${esc(b.hsCode ?? '—')}</td>
           <td class="r mono">${qty != null ? esc(new Intl.NumberFormat('en-US').format(qty)) : '—'}<div class="sub">${esc(unit)}</div></td>
           <td class="r mono">${m(unitPrice)}</td>
