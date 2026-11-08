@@ -86,7 +86,7 @@ export function LeadForm({ kind, projectId, packages, defaults }: Props) {
         <p className="text-[12px] text-muted mt-1">PDF, DWG, JPG or PNG, up to 20 MB. On a phone you can photograph a printed plan.</p>
       </div>
       <div className="sm:col-span-2"><label htmlFor="tk-message" className="label">Message</label><textarea {...f('message')} rows={4} className="input py-2.5 min-h-[110px]" placeholder="Site size, power supply, opening plans, questions…" />{errOf('message')}</div>
-      {err && <p role="alert" className="sm:col-span-2 rounded-[10px] bg-[#FEF2F2] text-bad text-[14px] px-4 py-3">{err}</p>}
+      {err && <p role="alert" className="sm:col-span-2 rounded-[10px] bg-bad-bg text-bad text-[14px] px-4 py-3">{err}</p>}
       <div className="sm:col-span-2 flex flex-wrap items-center gap-3">
         <button type="submit" className="btn btn-primary" disabled={!!busy}>{busy ?? (kind === 'quote' ? 'Send to sourcing →' : 'Register interest →')}</button>
         <span className="text-[12.5px] text-muted">We reply within 24 hours. Your details are only used for this request.</span>

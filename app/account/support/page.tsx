@@ -35,7 +35,7 @@ export default async function SupportPage({ searchParams }: { searchParams: Prom
   const contact = (
     <>
       {company?.whatsapp && (
-        <a className="btn btn-ghost text-[#156B3A] border-[#1F9D55]/60" href={whatsappHref(company.whatsapp)} target="_blank" rel="noopener noreferrer">WhatsApp support</a>
+        <a className="btn btn-ghost text-ok border-ok/60" href={whatsappHref(company.whatsapp)} target="_blank" rel="noopener noreferrer">WhatsApp support</a>
       )}
       {company?.email && <a className="btn btn-ghost" href={`mailto:${company.email}`}>Email us</a>}
     </>

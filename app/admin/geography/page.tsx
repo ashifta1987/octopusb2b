@@ -75,11 +75,11 @@ export default async function GeographyPage({ searchParams }: { searchParams: Pr
 
       <Card title="By region" className="mb-6">
         <div className="px-6 pb-6 grid gap-3 grid-cols-2 md:grid-cols-4 xl:grid-cols-7">
-          <Link href={qs({ region: undefined })} aria-current={!sp.region ? 'true' : undefined} className={cn('rounded-[10px] border p-4', !sp.region ? 'bg-navy text-white border-navy' : 'border-line hover:border-navy')}>
+          <Link href={qs({ region: undefined })} aria-current={!sp.region ? 'true' : undefined} className={cn('rounded-[10px] border p-4', !sp.region ? 'bg-ink text-white border-ink' : 'border-line hover:border-ink')}>
             <div className="text-sm opacity-80">All regions</div><div className="font-display text-2xl font-bold">{allRegionCustomers}</div><div className="text-xs opacity-80">{gmv(allRegionGmv)} GMV</div>
           </Link>
           {regionList.map((x) => (
-            <Link key={x.r} href={qs({ region: x.r })} aria-current={sp.region === x.r ? 'true' : undefined} className={cn('rounded-[10px] border p-4', sp.region === x.r ? 'bg-navy text-white border-navy' : 'border-line hover:border-navy')}>
+            <Link key={x.r} href={qs({ region: x.r })} aria-current={sp.region === x.r ? 'true' : undefined} className={cn('rounded-[10px] border p-4', sp.region === x.r ? 'bg-ink text-white border-ink' : 'border-line hover:border-ink')}>
               <div className="text-sm opacity-80">{x.r}</div><div className="font-display text-2xl font-bold">{x.customers}</div><div className="text-xs opacity-80">{gmv(x.gmv)} GMV</div>
             </Link>
           ))}
@@ -93,7 +93,7 @@ export default async function GeographyPage({ searchParams }: { searchParams: Pr
               <td className="td font-semibold"><span className="inline-flex items-center gap-2"><CountryTag code={r.country} />{COUNTRY_NAMES[r.country] ?? r.country}</span></td>
               <td className="td text-sm">{r.region}</td>
               <td className="td">
-                <span className="inline-flex items-center gap-2"><span className="mono w-8">{r.customers}</span><span className="h-1.5 w-20 rounded-full bg-line" aria-hidden><span className="block h-1.5 rounded-full bg-navy" style={{ width: `${(r.customers / maxCustomers) * 100}%` }} /></span></span>
+                <span className="inline-flex items-center gap-2"><span className="mono w-8">{r.customers}</span><span className="h-1.5 w-20 rounded-full bg-line" aria-hidden><span className="block h-1.5 rounded-full bg-ink" style={{ width: `${(r.customers / maxCustomers) * 100}%` }} /></span></span>
               </td>
               <td className="td">{r.verified} ({r.customers ? Math.round((r.verified / r.customers) * 100) : 0}%)</td>
               <td className="td">{r.pending}</td>
@@ -108,7 +108,7 @@ export default async function GeographyPage({ searchParams }: { searchParams: Pr
               </td>
               <td className="td w-[180px]">
                 <span className="flex items-center gap-2">
-                  <span className="h-2 flex-1 rounded-full bg-line" aria-hidden><span className="block h-2 rounded-full bg-blue-fill" style={{ width: `${totalGmv ? (r.gmv / totalGmv) * 100 : 0}%` }} /></span>
+                  <span className="h-2 flex-1 rounded-full bg-line" aria-hidden><span className="block h-2 rounded-full bg-coral" style={{ width: `${totalGmv ? (r.gmv / totalGmv) * 100 : 0}%` }} /></span>
                   <span className="mono text-xs w-12 text-right">{totalGmv ? ((r.gmv / totalGmv) * 100).toFixed(1) : '0.0'}%</span>
                 </span>
               </td>

@@ -21,15 +21,15 @@ export function AtlasMap({ hubs, projects }: { hubs: TurnkeyHub[]; projects: Tur
   const count = (id: string) => projects.filter((p) => p.factory_hub_ids.includes(id)).length;
   const sel = hubs.find((h) => h.hub_id === hub);
   return (
-    <div className="relative h-[360px] sm:h-[440px] rounded-[16px] border border-[#2A2F5E] bg-[#1C204C] overflow-hidden" data-testid="atlas-map">
+    <div className="relative h-[360px] sm:h-[440px] rounded-[16px] border border-ink bg-ink overflow-hidden" data-testid="atlas-map">
       <svg viewBox="0 0 800 500" className="absolute inset-0 w-full h-full opacity-55" aria-hidden preserveAspectRatio="none">
-        <path fill="#262A6B" stroke="#3A3F80" strokeWidth="1.5" d="M120,260 C140,200 180,150 240,130 C290,112 330,105 380,110 C440,116 490,100 540,110 C600,124 650,145 690,180 C720,210 735,240 720,290 C700,340 670,370 620,390 C560,414 510,420 460,410 C390,400 340,425 290,420 C230,412 180,390 150,350 C125,318 108,295 120,260 Z" />
-        <g stroke="#2A2F5E" strokeWidth=".5" opacity=".6">
+        <path fill="currentColor" stroke="currentColor" className="text-ink-2" strokeWidth="1.5" d="M120,260 C140,200 180,150 240,130 C290,112 330,105 380,110 C440,116 490,100 540,110 C600,124 650,145 690,180 C720,210 735,240 720,290 C700,340 670,370 620,390 C560,414 510,420 460,410 C390,400 340,425 290,420 C230,412 180,390 150,350 C125,318 108,295 120,260 Z" />
+        <g stroke="currentColor" className="text-ink" strokeWidth=".5" opacity=".6">
           <line x1="0" y1="125" x2="800" y2="125" /><line x1="0" y1="250" x2="800" y2="250" /><line x1="0" y1="375" x2="800" y2="375" />
           <line x1="200" y1="0" x2="200" y2="500" /><line x1="400" y1="0" x2="400" y2="500" /><line x1="600" y1="0" x2="600" y2="500" />
         </g>
       </svg>
-      <div className="absolute left-4 top-3 mono text-[10.5px] uppercase tracking-[.08em] text-[#8B93B5]">Factory hubs · tap to filter</div>
+      <div className="absolute left-4 top-3 mono text-[10.5px] uppercase tracking-[.08em] text-on-ink">Factory hubs · tap to filter</div>
       {hubs.map((h) => {
         const pos = hubPosition(h); const n = count(h.hub_id); const active = hub === h.hub_id;
         const size = n >= 4 ? 20 : n >= 2 ? 15 : 11;
@@ -39,18 +39,18 @@ export function AtlasMap({ hubs, projects }: { hubs: TurnkeyHub[]; projects: Tur
             aria-pressed={active} aria-label={`${h.name}: ${n} project${n === 1 ? '' : 's'}`}
             className="absolute -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-1 group min-w-11 min-h-11 justify-center"
             style={{ left: `${pos.left}%`, top: `${pos.top}%` }}>
-            <span className={`block rounded-full ring-4 ${active ? 'bg-[#F5B544] ring-[#F5B544]/30' : 'bg-[#3B82F6] ring-[#3B82F6]/25 group-hover:bg-[#60A5FA]'}`} style={{ width: size, height: size }} />
-            <span className={`mono text-[10px] whitespace-nowrap px-1 rounded ${active ? 'bg-[#F5B544] text-navy font-semibold' : 'text-[#C9D0E8]'}`}>{h.name}</span>
+            <span className={`block rounded-full ring-4 ${active ? 'bg-gold ring-gold/30' : 'bg-coral ring-coral/25 group-hover:bg-coral'}`} style={{ width: size, height: size }} />
+            <span className={`mono text-[10px] whitespace-nowrap px-1 rounded ${active ? 'bg-gold text-ink font-semibold' : 'text-on-ink'}`}>{h.name}</span>
           </button>
         );
       })}
       {sel && (
-        <div className="absolute left-3 right-3 bottom-3 rounded-[12px] border border-[#FDE68A]/35 bg-[#F59E0B]/10 backdrop-blur px-4 py-3 flex flex-wrap gap-3 items-center justify-between" role="status" data-testid="hub-panel">
+        <div className="absolute left-3 right-3 bottom-3 rounded-[12px] border border-warn-bg/35 bg-new-bg/10 backdrop-blur px-4 py-3 flex flex-wrap gap-3 items-center justify-between" role="status" data-testid="hub-panel">
           <div>
-            <div className="mono text-[10.5px] uppercase tracking-[.08em] text-[#FDE68A]">Filter · {sel.name}</div>
+            <div className="mono text-[10.5px] uppercase tracking-[.08em] text-warn-bg">Filter · {sel.name}</div>
             <div className="text-white font-display font-bold text-[14.5px] mt-0.5">Known for {sel.known_for?.replace(/^./, (c) => c.toLowerCase())} · {count(sel.hub_id)} project{count(sel.hub_id) === 1 ? '' : 's'}</div>
           </div>
-          <button type="button" onClick={() => setHub(null)} className="mono text-[11px] uppercase text-[#FDE68A] hover:text-white min-h-11 px-2">Clear filter ×</button>
+          <button type="button" onClick={() => setHub(null)} className="mono text-[11px] uppercase text-warn-bg hover:text-white min-h-11 px-2">Clear filter ×</button>
         </div>
       )}
     </div>
@@ -62,7 +62,7 @@ export function AtlasList({ projects, hubs }: { projects: TurnkeyProject[]; hubs
   const list = useMemo(() => filterProjects(projects, { category, hub, sort }), [projects, category, hub, sort]);
   const counts = useMemo(() => Object.fromEntries(TURNKEY_CATEGORIES.map((c) => [c, projects.filter((p) => p.category === c && (!hub || p.factory_hub_ids.includes(hub))).length])), [projects, hub]);
   const hubName = hubs.find((h) => h.hub_id === hub)?.name;
-  const chip = (active: boolean) => `inline-flex items-center gap-2 min-h-10 px-3.5 rounded-full border text-[13.5px] whitespace-nowrap ${active ? 'bg-navy text-white border-navy' : 'bg-white text-navy border-line hover:border-navy'}`;
+  const chip = (active: boolean) => `inline-flex items-center gap-2 min-h-10 px-3.5 rounded-full border text-[13.5px] whitespace-nowrap ${active ? 'bg-ink text-white border-ink' : 'bg-white text-ink border-line hover:border-ink'}`;
   return (
     <>
       <div className="flex flex-wrap gap-3 items-center justify-between mb-5">
@@ -82,7 +82,7 @@ export function AtlasList({ projects, hubs }: { projects: TurnkeyProject[]; hubs
             <option value="lead">Lead time</option>
             <option value="hub">Factory hub</option>
           </select>
-          {(category || hub) && <button type="button" className="text-blue font-semibold" onClick={() => { setCategory(null); setHub(null); }}>Clear filters</button>}
+          {(category || hub) && <button type="button" className="text-coral-text font-semibold" onClick={() => { setCategory(null); setHub(null); }}>Clear filters</button>}
         </div>
       </div>
       <p className="sr-only" aria-live="polite">{list.length} projects{hubName ? ` from ${hubName}` : ''}{category ? ` in ${CATEGORY_LABEL[category as keyof typeof CATEGORY_LABEL]}` : ''}</p>
@@ -91,7 +91,7 @@ export function AtlasList({ projects, hubs }: { projects: TurnkeyProject[]; hubs
           {list.map((p) => <li key={p.project_id} className="flex"><ProjectCard p={p} /></li>)}
         </ul>
       ) : (
-        <p className="text-muted text-[15px] py-10 text-center">No project matches these filters. <button type="button" className="text-blue font-semibold" onClick={() => { setCategory(null); setHub(null); }}>Clear filters</button></p>
+        <p className="text-muted text-[15px] py-10 text-center">No project matches these filters. <button type="button" className="text-coral-text font-semibold" onClick={() => { setCategory(null); setHub(null); }}>Clear filters</button></p>
       )}
     </>
   );

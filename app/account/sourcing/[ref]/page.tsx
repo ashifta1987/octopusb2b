@@ -88,7 +88,7 @@ export default async function SourcingDetail({ params }: { params: Promise<{ ref
   return (
     <>
       {hasNew && <MarkQuotesViewed rfqId={id} />}
-      <div className="mb-2 text-sm"><Link href="/account/sourcing" className="text-blue">← Product sourcing</Link></div>
+      <div className="mb-2 text-sm"><Link href="/account/sourcing" className="text-coral-text">← Product sourcing</Link></div>
       <PageHeader eyebrow={<span className="mono text-xs text-muted">{code} · {TYPE_LABEL[type]}</span>}
         title={(kind === 'rfq' ? req.title : (details.title ?? details.product ?? TYPE_LABEL[type])) as string}
         subtitle={`Sent ${fmtDate(req.created_at as string)}`}
@@ -110,8 +110,8 @@ export default async function SourcingDetail({ params }: { params: Promise<{ ref
             const current = i === step && status !== 'Closed';
             return (
               <li key={t} aria-current={current ? 'step' : undefined} className="flex gap-2.5">
-                <span className={`mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-[12px] font-bold shrink-0 ${done ? 'bg-blue-fill text-white' : 'bg-line text-muted'}`}>{i < step ? '✓' : i + 1}</span>
-                <span><b className={`block text-[14px] ${current ? 'text-blue' : ''}`}>{t}</b><span className="block text-[12.5px] text-muted leading-snug">{(b ?? '').replace('{currency}', String(req.currency ?? ''))}</span></span>
+                <span className={`mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-[12px] font-bold shrink-0 ${done ? 'bg-coral text-white' : 'bg-line text-muted'}`}>{i < step ? '✓' : i + 1}</span>
+                <span><b className={`block text-[14px] ${current ? 'text-coral-text' : ''}`}>{t}</b><span className="block text-[12.5px] text-muted leading-snug">{(b ?? '').replace('{currency}', String(req.currency ?? ''))}</span></span>
               </li>
             );
           })}
@@ -149,7 +149,7 @@ export default async function SourcingDetail({ params }: { params: Promise<{ ref
                       <th className="th w-40" scope="col"><span className="sr-only">Field</span></th>
                       {quotes.map((q) => (
                         <th key={q.id} scope="col" className="th align-top normal-case tracking-normal">
-                          <div className="mono text-xs text-muted">{q.code}{q.status === 'sent' && <span className="ml-1.5 rounded-full bg-[#DC2626] text-white text-[10px] font-bold px-1.5 py-0.5">NEW</span>}</div>
+                          <div className="mono text-xs text-muted">{q.code}{q.status === 'sent' && <span className="ml-1.5 rounded-full bg-bad text-white text-[10px] font-bold px-1.5 py-0.5">NEW</span>}</div>
                           <div className="mt-1"><SupplierCode code={sup.get(q.supplier_id)?.code ?? '—'} country={sup.get(q.supplier_id)?.country} verified={sup.get(q.supplier_id)?.verified} /></div>
                         </th>
                       ))}
@@ -166,7 +166,7 @@ export default async function SourcingDetail({ params }: { params: Promise<{ ref
                               {approvable(q)
                                 ? <ApproveQuoteButton quoteId={q.id} quoteCode={q.code} totalCents={q.total} currency={q.currency} depositPct={settings.deposit_pct} termsVersion={terms?.version} action={approveQuote} label="Accept quote" className="btn btn-primary btn-sm" />
                                 : <span className="text-sm text-muted">{q.status === 'approved' ? 'Accepted' : order ? 'Not selected' : 'Not available'}</span>}
-                              <a href="#ask" className="text-sm font-semibold text-blue">Ask a question</a>
+                              <a href="#ask" className="text-sm font-semibold text-coral-text">Ask a question</a>
                             </div>
                           </td>
                         ))}
@@ -184,7 +184,7 @@ export default async function SourcingDetail({ params }: { params: Promise<{ ref
               {(msgs ?? []).length === 0 ? <p className="text-sm text-muted">No messages yet. Questions about specs, packaging or samples go here.</p> : (
                 <ul className="space-y-3" data-testid="messages">
                   {(msgs ?? []).map((m) => (
-                    <li key={m.id as string} className={`rounded-[12px] px-4 py-3 max-w-[85%] ${m.from_staff ? 'bg-surface border border-line' : 'bg-[#E6EFFC] ml-auto'}`}>
+                    <li key={m.id as string} className={`rounded-[12px] px-4 py-3 max-w-[85%] ${m.from_staff ? 'bg-pearl border border-line' : 'bg-tint ml-auto'}`}>
                       <div className="text-[12px] text-muted">{m.from_staff ? 'Octopus sourcing team' : 'You'} · {fmtDate(m.created_at as string, true)}</div>
                       <p className="text-[14.5px] whitespace-pre-line mt-1">{m.body as string}</p>
                     </li>
@@ -203,13 +203,13 @@ export default async function SourcingDetail({ params }: { params: Promise<{ ref
                 <ul className="space-y-2 text-[14px]" data-testid="files">
                   {(files ?? []).map((f) => (
                     <li key={f.id as string} className="flex justify-between gap-2">
-                      <a href={`/api/request-files/${f.id}`} className="font-semibold text-blue truncate">{f.file_name as string}</a>
+                      <a href={`/api/request-files/${f.id}`} className="font-semibold text-coral-text truncate">{f.file_name as string}</a>
                       <span className="text-[12px] text-muted shrink-0">{humanize(f.file_kind as string)}{f.from_staff ? ' · team' : ''}</span>
                     </li>
                   ))}
                   {docs.map((d) => (
                     <li key={d.id} className="flex justify-between gap-2">
-                      <Link href={`/account/orders/${order!.id}`} className="font-semibold text-blue truncate">{d.number}</Link>
+                      <Link href={`/account/orders/${order!.id}`} className="font-semibold text-coral-text truncate">{d.number}</Link>
                       <span className="text-[12px] text-muted shrink-0">{humanize(d.doc_type)}</span>
                     </li>
                   ))}
@@ -221,7 +221,7 @@ export default async function SourcingDetail({ params }: { params: Promise<{ ref
           <Card title="Wallet charge">
             <div className="px-6 pb-6 text-[14px] space-y-1" data-testid="wallet-charge">
               {Number(req.fee_minor ?? 0) > 0
-                ? <><div className="text-[22px] font-bold">{money(Number(req.fee_minor), req.currency as string)}</div><div className="text-muted">{kind === 'rfq' ? 'Sourcing request fee' : `${TYPE_LABEL[type]} fee`}, charged {fmtDate(req.created_at as string)}{kind === 'service' && req.paid_via ? ` via ${humanize(req.paid_via as string)}` : ' from your wallet'}.</div><Link href="/account/ledger" className="text-blue font-semibold">See it in your ledger →</Link></>
+                ? <><div className="text-[22px] font-bold">{money(Number(req.fee_minor), req.currency as string)}</div><div className="text-muted">{kind === 'rfq' ? 'Sourcing request fee' : `${TYPE_LABEL[type]} fee`}, charged {fmtDate(req.created_at as string)}{kind === 'service' && req.paid_via ? ` via ${humanize(req.paid_via as string)}` : ' from your wallet'}.</div><Link href="/account/ledger" className="text-coral-text font-semibold">See it in your ledger →</Link></>
                 : <div className="text-muted">No fee was charged for this request.</div>}
             </div>
           </Card>
@@ -244,7 +244,7 @@ async function ProductLink({ id }: { id: string }) {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       {p.image_url && <img src={p.image_url as string} alt="" className="w-14 h-14 rounded-md object-cover border border-line" />}
       <div className="min-w-0"><div className="text-[12px] text-muted">Attached product</div>
-        {p.status === 'live' ? <Link href={`/p/${p.slug}`} className="font-semibold hover:text-blue">{p.title as string}</Link> : <span className="font-semibold">{p.title as string}</span>}</div>
+        {p.status === 'live' ? <Link href={`/p/${p.slug}`} className="font-semibold hover:text-coral-text">{p.title as string}</Link> : <span className="font-semibold">{p.title as string}</span>}</div>
     </div>
   );
 }

@@ -80,7 +80,7 @@ export async function CatalogView({ basePath, category, sp, placement, title }: 
       <div className="flex flex-wrap justify-between items-end gap-4 mt-3">
         <div>
           <h1 className="text-[28px] sm:text-[32px] font-extrabold leading-tight">{heading}</h1>
-          {poolMode && <p className="text-[14px] font-semibold text-blue mt-1" data-testid="pool-mode">Choose a product to start a group-buying pool</p>}
+          {poolMode && <p className="text-[14px] font-semibold text-coral-text mt-1" data-testid="pool-mode">Choose a product to start a group-buying pool</p>}
           <p className="text-sm text-muted mt-1" aria-live="polite">{total.toLocaleString('en-US')} {total === 1 ? 'product' : 'products'} · Prices in {ctx.currency} per unit</p>
         </div>
         <div className="flex items-center gap-2">
@@ -92,12 +92,12 @@ export async function CatalogView({ basePath, category, sp, placement, title }: 
       {chips.length > 0 && (
         <nav aria-label="Categories" className="mt-5 flex flex-wrap gap-2">
           {category ? (
-            <Link href={path.length > 1 ? catHref(path[path.length - 2]) : '/products'} className="rounded-full border border-line-2 bg-white px-3.5 py-1.5 text-[13px] font-semibold">← {path.length > 1 ? path[path.length - 2].name : 'All categories'}</Link>
+            <Link href={path.length > 1 ? catHref(path[path.length - 2]) : '/products'} className="rounded-full border border-line-strong bg-white px-3.5 py-1.5 text-[13px] font-semibold">← {path.length > 1 ? path[path.length - 2].name : 'All categories'}</Link>
           ) : (
-            <span className="rounded-full bg-navy text-white px-3.5 py-1.5 text-[13px] font-semibold" aria-current="page">All categories <span className="opacity-70">{total}</span></span>
+            <span className="rounded-full bg-ink text-white px-3.5 py-1.5 text-[13px] font-semibold" aria-current="page">All categories <span className="opacity-70">{total}</span></span>
           )}
           {chips.map((c) => (
-            <Link key={c.id} href={`${catHref(c)}${qs(sp, { q: null, c: null, page: null })}`} className="rounded-full border border-line-2 bg-white px-3.5 py-1.5 text-[13px] font-semibold hover:border-navy">
+            <Link key={c.id} href={`${catHref(c)}${qs(sp, { q: null, c: null, page: null })}`} className="rounded-full border border-line-strong bg-white px-3.5 py-1.5 text-[13px] font-semibold hover:border-ink">
               {c.name} <span className="text-muted font-normal">{countOf(c.id)}</span>
             </Link>
           ))}
@@ -110,7 +110,7 @@ export async function CatalogView({ basePath, category, sp, placement, title }: 
           <FilterForm key={basePath + qs(sp, {})} id="filters" action={basePath} className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-base font-bold">Filters</h2>
-              {active && <Link href={basePath === '/search' ? `/search${qs({}, { q: keep('q') || null, c: keep('c') || null })}` : basePath} className="text-[13px] font-semibold text-blue">Clear all</Link>}
+              {active && <Link href={basePath === '/search' ? `/search${qs({}, { q: keep('q') || null, c: keep('c') || null })}` : basePath} className="text-[13px] font-semibold text-coral-text">Clear all</Link>}
             </div>
             {poolMode && <input type="hidden" name="pool" value="1" />}
             {basePath === '/search' && (
@@ -183,10 +183,10 @@ export async function CatalogView({ basePath, category, sp, placement, title }: 
             )
           )}
           {pages > 1 && <Pagination page={page} pages={pages} href={(p) => `${basePath}${qs(sp, { page: p > 1 ? String(p) : null })}`} />}
-          <div className="rounded-[14px] bg-navy text-white px-6 sm:px-8 py-7 flex flex-wrap justify-between items-center gap-4">
+          <div className="rounded-[14px] bg-ink text-white px-6 sm:px-8 py-7 flex flex-wrap justify-between items-center gap-4">
             <div>
               <h2 className="!text-white text-xl font-bold">{ctaTitle}</h2>
-              <p className="text-[#C9CFDB] text-sm mt-1">{ctaBody}</p>
+              <p className="text-on-ink text-sm mt-1">{ctaBody}</p>
             </div>
             <Link href="/request/sourcing" className="btn btn-primary">{ctaBtn}</Link>
           </div>
@@ -199,10 +199,10 @@ export async function CatalogView({ basePath, category, sp, placement, title }: 
 function Check({ name, label, checked, value = '1' }: { name: string; label: string; checked: boolean; value?: string }) {
   const id = `f-${name}-${value}`;
   return (
-    <div className="flex items-center gap-2.5">
-      <input id={id} type="checkbox" name={name} value={value} defaultChecked={checked} className="w-4 h-4 accent-[#2A6FD6]" />
-      <label htmlFor={id} className="text-sm">{label}</label>
-    </div>
+    <label htmlFor={id} className="flex items-center gap-2.5 min-h-11 text-sm cursor-pointer">
+      <input id={id} type="checkbox" name={name} value={value} defaultChecked={checked} className="w-4 h-4 accent-coral" />
+      {label}
+    </label>
   );
 }
 
@@ -219,7 +219,7 @@ function CategoryTree({ categories, activePath, hrefFor, countOf }: {
           const current = activePath[activePath.length - 1] === c.id;
           return (
             <li key={c.id}>
-              <Link href={hrefFor(c)} aria-current={current ? 'page' : undefined} className={`flex justify-between gap-2 text-sm py-0.5 hover:text-blue ${current ? 'font-bold text-blue' : on ? 'font-semibold' : ''}`}>
+              <Link href={hrefFor(c)} aria-current={current ? 'page' : undefined} className={`flex justify-between gap-2 text-sm py-0.5 hover:text-coral-text ${current ? 'font-bold text-coral-text' : on ? 'font-semibold' : ''}`}>
                 <span>{c.name}</span><span className="text-muted text-xs">{countOf(c.id)}</span>
               </Link>
               {on && render(c.id, depth + 1)}

@@ -57,25 +57,25 @@ export function AssistantBubble() {
       {!open && (
         <button ref={btnRef} type="button" aria-haspopup="dialog" aria-expanded={open}
           onClick={() => { setOpen(true); load(window.location.pathname); }}
-          className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] md:bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-navy text-white pl-1.5 pr-4 py-1.5 shadow-lg hover:bg-[#262A6B] focus-visible:outline-3">
-          <span aria-hidden className="w-9 h-9 rounded-full bg-blue-fill flex items-center justify-center font-display font-bold">O</span>
+          className="fixed bottom-[calc(72px+env(safe-area-inset-bottom))] md:bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-ink text-white pl-1.5 pr-4 py-1.5 shadow-lg hover:bg-ink-2 focus-visible:outline-3">
+          <span aria-hidden className="w-9 h-9 rounded-full bg-coral flex items-center justify-center font-display font-bold">O</span>
           <span className="text-sm font-semibold">Ask Octo</span>
         </button>
       )}
       {open && (
-        <div role="dialog" aria-label="Octo, your account assistant" className="fixed inset-y-0 right-0 z-50 w-[420px] max-w-full bg-surface border-l border-line shadow-2xl flex flex-col">
+        <div role="dialog" aria-label="Octo, your account assistant" className="fixed inset-y-0 right-0 z-50 w-[420px] max-w-full bg-pearl border-l border-line shadow-2xl flex flex-col">
           <div className="flex items-center gap-3 px-4 py-3 bg-white border-b border-line">
-            <span aria-hidden className="w-9 h-9 rounded-[10px] bg-blue-fill text-white flex items-center justify-center font-display font-bold">O</span>
+            <span aria-hidden className="w-9 h-9 rounded-[10px] bg-coral text-white flex items-center justify-center font-display font-bold">O</span>
             <div className="flex-1 min-w-0">
               <div className="font-display font-bold text-[15px] leading-tight">Octo · AI assistant</div>
               <div className="text-[12px] text-muted truncate">{boot?.team ? `with ${boot.team.name}, your account manager` : 'answers from your own account data'}</div>
             </div>
-            <Link href={`/account/assistant${boot?.session ? `?session=${boot.session.id}` : ''}`} className="text-[12px] font-semibold text-blue" onClick={() => setOpen(false)}>Full page</Link>
+            <Link href={`/account/assistant${boot?.session ? `?session=${boot.session.id}` : ''}`} className="text-[12px] font-semibold text-coral-text" onClick={() => setOpen(false)}>Full page</Link>
             <button type="button" aria-label="Close assistant" className="btn btn-ghost btn-sm" onClick={() => { setOpen(false); setTimeout(() => btnRef.current?.focus(), 0); }}>✕</button>
           </div>
           <div className="flex-1 min-h-0 p-3 flex flex-col">
             {loading && !boot && <div role="status" className="p-6 text-sm text-muted">Loading Octo…</div>}
-            {error && <div role="alert" className="m-2 rounded-[10px] border border-bad/40 bg-[#FDE8E8] px-4 py-3 text-sm text-[#A32D2D]">{error}</div>}
+            {error && <div role="alert" className="m-2 rounded-[10px] border border-bad/40 bg-bad-bg px-4 py-3 text-sm text-bad">{error}</div>}
             {boot && (
               <Conversation
                 key={n}
@@ -95,7 +95,7 @@ export function AssistantBubble() {
               />
             )}
             {(boot?.session || created) && (
-              <button type="button" className="mt-2 self-center text-[12px] font-semibold text-blue" onClick={() => { window.localStorage.removeItem(STORE_KEY); load(window.location.pathname); }}>
+              <button type="button" className="mt-2 self-center text-[12px] font-semibold text-coral-text" onClick={() => { window.localStorage.removeItem(STORE_KEY); load(window.location.pathname); }}>
                 New conversation
               </button>
             )}

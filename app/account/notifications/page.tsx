@@ -23,13 +23,13 @@ async function NotificationsPageContent() {
         {(data ?? []).length === 0 ? <EmptyState title="No notifications yet" body="We let you know here when something needs you." /> : (
           <ul>
             {(data ?? []).map((n) => (
-              <li key={n.id} className={`px-5 py-4 border-b border-line last:border-0 ${n.read_at ? '' : 'bg-[#F5F8FF]'}`}>
+              <li key={n.id} className={`px-5 py-4 border-b border-line last:border-0 ${n.read_at ? '' : 'bg-tint-2'}`}>
                 <div className="flex justify-between gap-3">
-                  <div className="font-semibold">{!n.read_at && <span className="inline-block w-2 h-2 rounded-full bg-blue-fill mr-2 align-middle" aria-label="Unread" />}{n.title}</div>
-                  <div className="text-[13px] text-[#5A6475] whitespace-nowrap">{fmtDate(n.created_at as string, true)}</div>
+                  <div className="font-semibold">{!n.read_at && <span className="inline-block w-2 h-2 rounded-full bg-coral mr-2 align-middle" aria-label="Unread" />}{n.title}</div>
+                  <div className="text-[13px] text-muted whitespace-nowrap">{fmtDate(n.created_at as string, true)}</div>
                 </div>
-                {n.body && <p className="text-[14px] text-[#5A6475] mt-0.5">{n.body}</p>}
-                {n.link && <Link href={n.link as string} className="text-[14px] font-semibold text-blue">Open →</Link>}
+                {n.body && <p className="text-[14px] text-muted mt-0.5">{n.body}</p>}
+                {n.link && <Link href={n.link as string} className="text-[14px] font-semibold text-coral-text">Open →</Link>}
               </li>
             ))}
           </ul>

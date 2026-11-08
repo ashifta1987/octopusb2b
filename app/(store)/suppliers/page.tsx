@@ -41,9 +41,9 @@ async function Content() {
   return (
     <div className="max-w-[1180px] mx-auto px-4 sm:px-8 py-8 sm:py-12">
       <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'Sell on Octopus B2B' }]} />
-      <section className="mt-4 rounded-[18px] bg-navy text-white px-6 sm:px-10 py-10">
+      <section className="mt-4 rounded-[18px] bg-ink text-white px-6 sm:px-10 py-10">
         <h1 className="!text-white text-[30px] sm:text-[40px] font-extrabold leading-tight max-w-[720px]">{h1}</h1>
-        <p className="mt-3 text-[#C9CFDB] text-[16px] max-w-[680px]">{intro}</p>
+        <p className="mt-3 text-on-ink text-[16px] max-w-[680px]">{intro}</p>
         <div className="mt-6 flex flex-wrap gap-3">
           <a href="#apply" className="btn btn-primary min-h-11">Apply to sell</a>
           <Link href="/staff/login" className="btn btn-ghost min-h-11 !bg-white/10 !text-white !border-white/30">Supplier and staff sign-in</Link>
@@ -71,7 +71,7 @@ async function Content() {
           <ol className="mt-4 space-y-3">
             {steps.map(([t, b], i) => (
               <li key={t} className="flex gap-3">
-                <span className="mono shrink-0 w-8 h-8 rounded-full bg-surface border border-line flex items-center justify-center text-[13px] font-bold">{i + 1}</span>
+                <span className="mono shrink-0 w-8 h-8 rounded-full bg-pearl border border-line flex items-center justify-center text-[13px] font-bold">{i + 1}</span>
                 <div><div className="font-bold">{t}</div><p className="text-[14px] text-muted">{b}</p></div>
               </li>
             ))}

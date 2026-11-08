@@ -25,7 +25,7 @@ export function ChangeHeading({ typeId, current, preview }: { typeId: string; cu
         <button type="button" className="text-sm text-muted" onClick={() => { setOpen(false); setRows(null); }}>Cancel</button>
       </div>
       {rows && (
-        <div className="text-xs border border-line rounded-[8px] p-2 bg-surface" data-testid="hs-change-preview">
+        <div className="text-xs border border-line rounded-[8px] p-2 bg-pearl" data-testid="hs-change-preview">
           <div className="font-semibold mb-1">{rows.length} product{rows.length === 1 ? '' : 's'} will get {h} (sheet / manual codes are not touched)</div>
           <ul className="max-h-40 overflow-auto space-y-0.5">{rows.map((r) => <li key={r.sku}><span className="mono">{r.sku}</span> {r.current_code ?? '—'} → <b>{h}</b></li>)}</ul>
           <button type="button" className="btn btn-primary btn-sm mt-2" disabled={pending} onClick={() => start(async () => {

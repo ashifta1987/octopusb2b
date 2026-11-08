@@ -45,7 +45,7 @@ export default function PoolsPage({ searchParams }: { searchParams: Promise<SP> 
 function Chip({ href, on, children }: { href: string; on: boolean; children: React.ReactNode }) {
   return (
     <Link href={href} scroll={false} aria-current={on ? 'true' : undefined}
-      className={`inline-flex items-center px-3 py-1.5 rounded-full border text-[13px] font-medium ${on ? 'bg-navy text-white border-navy' : 'bg-white border-line-2 text-[#3B4556] hover:border-navy'}`}>
+      className={`inline-flex items-center px-3 py-1.5 rounded-full border text-[13px] font-medium ${on ? 'bg-ink text-white border-ink' : 'bg-white border-line-strong text-black hover:border-ink'}`}>
       {children}
     </Link>
   );
@@ -91,9 +91,9 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
       <section className="bg-[linear-gradient(135deg,#11133C_0%,#262A6B_100%)] text-white">
         <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-12 sm:py-16 flex flex-wrap gap-10 items-center justify-between">
           <div className="flex-[1_1_520px] min-w-0 max-w-[680px]">
-            <span className="inline-flex rounded-full bg-blue-fill text-white text-[11px] font-semibold px-2.5 py-1 uppercase tracking-wide">Group buying · {stats.open} open {stats.open === 1 ? 'pool' : 'pools'}</span>
+            <span className="inline-flex rounded-full bg-coral text-white text-[11px] font-semibold px-2.5 py-1 uppercase tracking-wide">Group buying · {stats.open} open {stats.open === 1 ? 'pool' : 'pools'}</span>
             <h1 className="!text-white text-[34px] sm:text-[46px] font-extrabold leading-[1.1] mt-4">Share the MOQ. Pay only when the pool fills.</h1>
-            <p className="text-[16px] text-[#C9D0DC] leading-relaxed mt-4">
+            <p className="text-[16px] text-on-ink leading-relaxed mt-4">
               Buy fewer pieces at the factory tier price by pooling with other buyers. Pay a {rules.depositPct}% deposit now, pay the rest only if the pool fills
               before the deadline. Octopus holds every deposit in escrow and ships each buyer separately.
             </p>
@@ -105,7 +105,7 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
           <dl className="grid grid-cols-2 gap-3 flex-[0_1_480px]">
             {([[`${rules.depositPct}%`, 'Deposit now'], [String(rules.maxBuyers), 'Buyers max per pool'], [`${rules.defaultDays}d`, 'Typical deadline'], [stats.maxSaving ? `up to ${stats.maxSaving}%` : '—', 'Saving if filled']] as const).map(([v, l]) => (
               <div key={l} className="rounded-[12px] bg-white/10 border border-white/10 px-4 py-4 flex flex-col-reverse gap-1">
-                <dt className="text-[12px] text-[#C9D0DC]">{l}</dt>
+                <dt className="text-[12px] text-on-ink">{l}</dt>
                 <dd className="font-display font-bold text-[22px] sm:text-[26px] leading-none">{v}</dd>
               </div>
             ))}
@@ -131,7 +131,7 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
                   {top.map((c) => (
                     <li key={c.id} className="flex items-center justify-between gap-2 text-[13px]">
                       <label className="inline-flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" name="cat" value={c.slug} defaultChecked={catSlugs.includes(c.slug)} className="w-4 h-4 accent-[#2A6FD6]" />
+                        <input type="checkbox" name="cat" value={c.slug} defaultChecked={catSlugs.includes(c.slug)} className="w-4 h-4 accent-coral" />
                         {c.name}
                       </label>
                       <span className="mono text-[11px] text-muted">{countOf(c.id)}</span>
@@ -168,10 +168,10 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
                   </select>
                 </div>
                 <noscript><button type="submit" className="btn btn-dark btn-sm w-full">Apply filters</button></noscript>
-                {active && <Link href={view === 'list' ? '/pools?view=list' : '/pools'} className="text-[13px] font-semibold text-blue">Clear all filters</Link>}
+                {active && <Link href={view === 'list' ? '/pools?view=list' : '/pools'} className="text-[13px] font-semibold text-coral-text">Clear all filters</Link>}
               </div>
             </FilterForm>
-            <div className="card p-4 bg-blue-soft/40 border-blue/30">
+            <div className="card p-4 bg-tint/40 border-coral-text/30">
               <div className="font-semibold text-[14px]">Don&apos;t see your product?</div>
               <p className="text-[13px] text-muted mt-1">Open a pool on any product and share the link with partners.</p>
               <Link href="/products?pool=1" className="btn btn-dark btn-sm w-full mt-3">Browse products</Link>
@@ -185,9 +185,9 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
               <div className="flex items-center gap-2">
                 <label htmlFor="sort" className="text-sm text-muted">Sort by</label>
                 <SortSelect key={sort} form="pool-filters" value={sort} options={SORTS} />
-                <div className="inline-flex rounded-[8px] border border-line-2 overflow-hidden" role="group" aria-label="Layout">
-                  <Link href={qs(sp, { view: null })} scroll={false} aria-current={view === 'grid' ? 'true' : undefined} className={`px-3 py-2 text-[13px] font-semibold ${view === 'grid' ? 'bg-navy text-white' : 'bg-white'}`}>Grid</Link>
-                  <Link href={qs(sp, { view: 'list' })} scroll={false} aria-current={view === 'list' ? 'true' : undefined} className={`px-3 py-2 text-[13px] font-semibold ${view === 'list' ? 'bg-navy text-white' : 'bg-white'}`}>List</Link>
+                <div className="inline-flex rounded-[8px] border border-line-strong overflow-hidden" role="group" aria-label="Layout">
+                  <Link href={qs(sp, { view: null })} scroll={false} aria-current={view === 'grid' ? 'true' : undefined} className={`px-3 py-2 text-[13px] font-semibold ${view === 'grid' ? 'bg-ink text-white' : 'bg-white'}`}>Grid</Link>
+                  <Link href={qs(sp, { view: 'list' })} scroll={false} aria-current={view === 'list' ? 'true' : undefined} className={`px-3 py-2 text-[13px] font-semibold ${view === 'list' ? 'bg-ink text-white' : 'bg-white'}`}>List</Link>
                 </div>
               </div>
             </div>
@@ -232,7 +232,7 @@ function NoPools() {
       <ol className="mt-5 grid gap-4 sm:grid-cols-3">
         {steps.map(([t, b], i) => (
           <li key={t} className="flex gap-3">
-            <span className="mono shrink-0 w-8 h-8 rounded-full bg-surface border border-line flex items-center justify-center text-[13px] font-bold">{i + 1}</span>
+            <span className="mono shrink-0 w-8 h-8 rounded-full bg-pearl border border-line flex items-center justify-center text-[13px] font-bold">{i + 1}</span>
             <div><div className="font-bold">{t}</div><p className="text-[14px] text-muted">{b}</p></div>
           </li>
         ))}
@@ -252,7 +252,7 @@ function NoPools() {
 function PoolsSkeleton() {
   return (
     <div aria-busy="true" aria-label="Loading pools">
-      <div className="h-[340px] bg-navy" />
+      <div className="h-[340px] bg-ink" />
       <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-8 grid gap-6 lg:grid-cols-[240px_1fr]">
         <div className="card h-[420px]" />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{Array.from({ length: 6 }, (_, i) => <div key={i} className="card h-[330px]" />)}</div>

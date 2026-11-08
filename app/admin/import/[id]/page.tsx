@@ -40,7 +40,7 @@ export default async function ImportRunPage({ params }: { params: Promise<{ id: 
 
   return (
     <>
-      <PageHeader eyebrow={<Link href="/admin/import" className="text-blue">← Bulk import</Link>} title={run.name}
+      <PageHeader eyebrow={<Link href="/admin/import" className="text-coral-text">← Bulk import</Link>} title={run.name}
         subtitle={`Supplier prices valid ${fmtDate(batch.valid_from)} → ${batch.valid_to ? fmtDate(batch.valid_to) : 'open'} · started ${fmtDate(run.created_at, true)}`}
         actions={<StatusBadge status={run.status} />} />
 
@@ -94,7 +94,7 @@ export default async function ImportRunPage({ params }: { params: Promise<{ id: 
           {changes.some((c) => c.field === 'category') && <div className="px-6 pb-3"><Notice tone="amber"><b>{changes.filter((c) => c.field === 'category').length} product{changes.filter((c) => c.field === 'category').length === 1 ? '' : 's'} will move to another category</b> (highlighted). Check before committing — a blank category cell keeps the current category.</Notice></div>}
           <Table head={['Product Id', 'Field', 'From', 'To']}>
             {changes.map((c, i) => (
-              <tr key={i} data-testid="field-change" data-field={c.field} className={c.field === 'category' ? 'bg-[#FFF7E0]' : undefined}>
+              <tr key={i} data-testid="field-change" data-field={c.field} className={c.field === 'category' ? 'bg-warn-bg' : undefined}>
                 <td className="td mono text-sm">{c.external_id}</td><td className="td text-sm">{humanize(c.field)}</td>
                 <td className="td text-sm text-muted break-all">{c.from ?? '—'}</td><td className="td text-sm font-semibold break-all">{c.to ?? '—'}</td>
               </tr>

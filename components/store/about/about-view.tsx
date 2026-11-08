@@ -17,23 +17,23 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /** Chip colours per office (About.html). */
 const TONES: Record<string, string> = {
-  blue: 'bg-[#DBEAFE] text-[#1E40AF]',
-  rose: 'bg-[#FFE4E6] text-[#9F1239]',
-  cyan: 'bg-[#CFFAFE] text-[#155E75]',
-  pink: 'bg-[#FCE7F3] text-[#9D174D]',
-  amber: 'bg-[#FEF3C7] text-[#92400E]',
-  green: 'bg-[#DCFCE7] text-[#166534]',
-  purple: 'bg-[#F3E8FF] text-[#6B21A8]',
+  blue: 'bg-tint text-coral-text',
+  rose: 'bg-bad-bg text-bad',
+  cyan: 'bg-cyan-bg text-cyan',
+  pink: 'bg-pink-bg text-pink',
+  amber: 'bg-warn-bg text-warn',
+  green: 'bg-ok-bg text-ok',
+  purple: 'bg-violet-bg text-violet',
 };
 const PILLAR_ICONS = [
-  { Icon: ShieldCheck, bg: 'bg-[#DCFCE7]', fg: '#157A44' },
-  { Icon: House, bg: 'bg-[#DBEAFE]', fg: '#1E40AF' },
-  { Icon: Globe, bg: 'bg-[#FFEDD5]', fg: '#C2410C' },
-  { Icon: SquareCheck, bg: 'bg-[#F3E8FF]', fg: '#6B21A8' },
+  { Icon: ShieldCheck, bg: 'bg-ok-bg', fg: 'var(--green-ink)' },
+  { Icon: House, bg: 'bg-tint', fg: 'var(--coral-text)' },
+  { Icon: Globe, bg: 'bg-needs-bg', fg: 'var(--needs)' },
+  { Icon: SquareCheck, bg: 'bg-violet-bg', fg: 'var(--violet)' },
 ];
 
 const pill = 'inline-flex items-center gap-[5px] text-[12px] font-semibold px-2.5 py-[5px] rounded-full whitespace-nowrap';
-const eyebrow = 'mono text-[12px] tracking-[0.08em] uppercase text-blue font-semibold';
+const eyebrow = 'mono text-[12px] tracking-[0.08em] uppercase text-coral-text font-semibold';
 
 /** "a, b, c and d" */
 function list(items: string[]) {
@@ -42,7 +42,7 @@ function list(items: string[]) {
 
 /** Text with *bold* segments. */
 function Bold({ text }: { text: string }) {
-  return <>{text.split(/(\*[^*]+\*)/g).filter(Boolean).map((s, i) => (s.startsWith('*') && s.endsWith('*') ? <strong key={i} className="text-navy">{s.slice(1, -1)}</strong> : <span key={i}>{s}</span>))}</>;
+  return <>{text.split(/(\*[^*]+\*)/g).filter(Boolean).map((s, i) => (s.startsWith('*') && s.endsWith('*') ? <strong key={i} className="text-ink">{s.slice(1, -1)}</strong> : <span key={i}>{s}</span>))}</>;
 }
 
 export async function AboutView() {
@@ -104,15 +104,15 @@ export async function AboutView() {
         <div className="relative max-w-[1360px] mx-auto px-4 sm:px-8 py-12 sm:py-16 grid gap-10 lg:gap-14 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] items-center">
           <div className="min-w-0 flex flex-col gap-[18px]">
             {!hasToken(eyebrowText) && (
-              <span className={`${pill} self-start uppercase whitespace-normal bg-[rgba(42,111,214,0.2)] border border-[rgba(111,168,242,0.4)] text-[#C7DBFA]`}>{eyebrowText}</span>
+              <span className={`${pill} self-start uppercase whitespace-normal bg-[rgba(42,111,214,0.2)] border border-[rgba(111,168,242,0.4)] text-tint`}>{eyebrowText}</span>
             )}
             <h1 id="about-h" className="!text-white text-[34px] sm:text-[46px] xl:text-[56px] font-extrabold leading-[1.08] sm:leading-[1.05] tracking-[-0.025em]">{title}</h1>
-            <p className="text-[16px] sm:text-[17px] leading-[1.6] text-[#C3CBD7] max-w-[640px]">{t('about.hero.subtitle')}</p>
+            <p className="text-[16px] sm:text-[17px] leading-[1.6] text-line-strong max-w-[640px]">{t('about.hero.subtitle')}</p>
             <div className="flex flex-wrap gap-2.5 mt-1">
-              <Link href="/request/sourcing" className="btn bg-white text-navy hover:bg-[#EEF0F3]">{bRfq}</Link>
+              <Link href="/request/sourcing" className="btn bg-white text-ink hover:bg-fill">{bRfq}</Link>
               <a href="#offices" className="btn bg-transparent text-white border border-white/35 hover:bg-white/10">{bOffices}</a>
               {wa && bWa && (
-                <a href={wa} target="_blank" rel="noopener noreferrer" className="btn bg-[rgba(37,211,102,0.15)] text-[#4ADE80] border border-[rgba(74,222,128,0.4)] hover:bg-[rgba(37,211,102,0.25)]">
+                <a href={wa} target="_blank" rel="noopener noreferrer" className="btn bg-[rgba(37,211,102,0.15)] text-ok-bright border border-[rgba(74,222,128,0.4)] hover:bg-[rgba(37,211,102,0.25)]">
                   <MessageCircle size={16} aria-hidden />{bWa}
                 </a>
               )}
@@ -122,7 +122,7 @@ export async function AboutView() {
             <dl className="grid grid-cols-2 gap-3" aria-label="Octopus B2B in numbers">
               {stats.map((s) => (
                 <div key={s.l} className="bg-white/[0.06] border border-white/10 rounded-[14px] p-4 sm:p-5 flex flex-col-reverse">
-                  <dt className="text-[13px] text-[#9AA6B8] mt-1.5">{s.l}</dt>
+                  <dt className="text-[13px] text-muted mt-1.5">{s.l}</dt>
                   <dd className="font-[family-name:var(--font-display)] font-extrabold text-[28px] sm:text-[32px] leading-none text-white">{s.v}</dd>
                 </div>
               ))}
@@ -139,14 +139,14 @@ export async function AboutView() {
             <h2 id="who-h" className="text-[28px] sm:text-[36px] font-extrabold leading-[1.1] tracking-[-0.02em]">{t('about.who.title')}</h2>
           </div>
           <div className="min-w-0 flex flex-col gap-[22px]">
-            {who.map((p, i) => <p key={i} className="text-[16px] sm:text-[17px] leading-[1.65] text-[#3B4556]"><Bold text={p} /></p>)}
+            {who.map((p, i) => <p key={i} className="text-[16px] sm:text-[17px] leading-[1.65] text-black"><Bold text={p} /></p>)}
             {pillars.length > 0 && (
               <ul className="grid gap-3.5 grid-cols-1 sm:grid-cols-[repeat(auto-fit,minmax(220px,1fr))] mt-2.5">
                 {pillars.map(({ h, d, icon: { Icon, bg, fg } }) => (
                   <li key={h} className="card p-[18px] flex flex-col gap-2">
                     <span className={`w-9 h-9 rounded-lg ${bg} flex items-center justify-center`} aria-hidden><Icon size={18} color={fg} /></span>
                     <strong className="font-[family-name:var(--font-display)] font-bold text-[15px] leading-[1.2]">{h}</strong>
-                    <span className="text-[13px] text-[#3B4556] leading-[1.5]">{d}</span>
+                    <span className="text-[13px] text-black leading-[1.5]">{d}</span>
                   </li>
                 ))}
               </ul>
@@ -162,7 +162,7 @@ export async function AboutView() {
           <h2 id="off-h" className="text-[28px] sm:text-[36px] font-extrabold leading-[1.1] tracking-[-0.02em]">
             {hasToken(offTitle) ? t('about.offices.eyebrow', 'Our offices in China') : offTitle}
           </h2>
-          <p className="text-[15px] leading-[1.6] text-[#3B4556]">{t('about.offices.intro')}</p>
+          <p className="text-[15px] leading-[1.6] text-black">{t('about.offices.intro')}</p>
         </div>
         {offices.length ? (
           <div className="grid gap-[18px] grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
@@ -185,7 +185,7 @@ export async function AboutView() {
               {promises.map((p) => (
                 <li key={p.h} className="card p-5 flex flex-col gap-2.5">
                   <strong className="font-[family-name:var(--font-display)] font-bold text-[16px] leading-[1.2]">{p.h}</strong>
-                  <p className="text-[13.5px] text-[#3B4556] leading-[1.55]">{p.d}</p>
+                  <p className="text-[13.5px] text-black leading-[1.55]">{p.d}</p>
                 </li>
               ))}
             </ul>
@@ -196,21 +196,21 @@ export async function AboutView() {
       {/* ───── Company details ───── */}
       {company && (
         <section aria-labelledby="co-h" className="max-w-[1360px] mx-auto px-4 sm:px-8 pt-14 sm:pt-[72px]">
-          <div className="rounded-2xl border border-[#B9D2F5] bg-[linear-gradient(135deg,#FFFFFF_0%,#F4F8FE_100%)] p-6 sm:p-9 flex flex-wrap gap-8 items-center justify-between">
+          <div className="rounded-2xl border border-tint bg-[linear-gradient(135deg,#FFFFFF_0%,#F4F8FE_100%)] p-6 sm:p-9 flex flex-wrap gap-8 items-center justify-between">
             <div className="flex-[1_1_460px] min-w-0 flex flex-col gap-2.5">
               <span className={eyebrow}>{t('about.company.eyebrow', 'Company details')}</span>
               <h2 id="co-h" className="text-[24px] sm:text-[28px] font-extrabold leading-[1.15]">{company.legal_name}</h2>
-              {company.legal_name_cn && <div className="text-[15px] text-[#5A6475]" lang="zh-CN">{company.legal_name_cn}</div>}
-              <dl className="mt-1.5 flex flex-col gap-1.5 text-[14px] text-[#3B4556]">
+              {company.legal_name_cn && <div className="text-[15px] text-muted" lang="zh-CN">{company.legal_name_cn}</div>}
+              <dl className="mt-1.5 flex flex-col gap-1.5 text-[14px] text-black">
                 {([
                   ['Registered:', company.registered_in],
                   ['T&C governed by:', company.governing_law],
                   ['Director:', company.contact_person],
-                  ['General email:', company.email && <a href={`mailto:${company.email}`} className="hover:text-blue">{company.email}</a>],
-                  ['WhatsApp sales:', company.phone && (wa ? <a href={wa} target="_blank" rel="noopener noreferrer" className="mono hover:text-blue">{company.phone}</a> : <span className="mono">{company.phone}</span>)],
+                  ['General email:', company.email && <a href={`mailto:${company.email}`} className="inline-flex items-center min-h-11 hover:text-coral-text">{company.email}</a>],
+                  ['WhatsApp sales:', company.phone && (wa ? <a href={wa} target="_blank" rel="noopener noreferrer" className="mono hover:text-coral-text">{company.phone}</a> : <span className="mono">{company.phone}</span>)],
                 ] as [string, ReactNode][]).filter(([, v]) => v).map(([k, v]) => (
                   <div key={k} className="flex flex-wrap gap-x-2">
-                    <dt className="font-semibold text-navy sm:min-w-[110px]">{k}</dt><dd className="min-w-0 break-words">{v}</dd>
+                    <dt className="font-semibold text-ink sm:min-w-[110px]">{k}</dt><dd className="min-w-0 break-words">{v}</dd>
                   </div>
                 ))}
               </dl>
@@ -220,7 +220,7 @@ export async function AboutView() {
                 <>
                   <strong className="font-[family-name:var(--font-display)] font-bold text-[15px] leading-[1.2]">{t('about.partners.title', 'Partner network')}</strong>
                   <ul className="flex flex-wrap gap-2">
-                    {partners.map((p) => <li key={p} className={`${pill} bg-white border border-line text-navy`}>{p}</li>)}
+                    {partners.map((p) => <li key={p} className={`${pill} bg-white border border-line text-ink`}>{p}</li>)}
                   </ul>
                 </>
               )}
@@ -240,26 +240,26 @@ function OfficeCard({ o }: { o: Branch }) {
   const chip = TONES[o.tone ?? 'blue'] ?? TONES.blue;
   const specs = (o.specialities ?? []).filter(Boolean);
   return (
-    <article className={`card p-6 flex flex-col gap-4 relative ${o.is_hq ? '!border-2 !border-navy' : ''}`} aria-labelledby={`office-${o.id}`}>
-      {o.badge && <span className={`${pill} absolute top-[18px] right-[18px] max-w-[60%] truncate ${o.is_hq ? 'bg-navy text-white' : TONES.amber}`}>{o.badge}</span>}
+    <article className={`card p-6 flex flex-col gap-4 relative ${o.is_hq ? '!border-2 !border-ink' : ''}`} aria-labelledby={`office-${o.id}`}>
+      {o.badge && <span className={`${pill} absolute top-[18px] right-[18px] max-w-[60%] truncate ${o.is_hq ? 'bg-ink text-white' : TONES.amber}`}>{o.badge}</span>}
       <div className="flex flex-col gap-1 min-w-0">
-        {o.province && <span className={`mono text-[11px] tracking-[0.08em] uppercase text-[#5A6475] ${o.badge ? 'pr-36' : ''}`}>{o.province}</span>}
+        {o.province && <span className={`mono text-[11px] tracking-[0.08em] uppercase text-muted ${o.badge ? 'pr-36' : ''}`}>{o.province}</span>}
         <h3 id={`office-${o.id}`} className={`text-[24px] sm:text-[26px] font-extrabold leading-[1.1] ${o.badge && !o.province ? 'pr-36' : ''}`}>
-          {o.city ?? o.name} {o.city_local && <span className="text-[#5A6475] font-semibold text-[20px] whitespace-nowrap" lang="zh-CN">{o.city_local}</span>}
+          {o.city ?? o.name} {o.city_local && <span className="text-muted font-semibold text-[20px] whitespace-nowrap" lang="zh-CN">{o.city_local}</span>}
         </h3>
-        {o.tagline && <span className="text-[13px] text-[#3B4556]">{o.tagline}</span>}
+        {o.tagline && <span className="text-[13px] text-black">{o.tagline}</span>}
       </div>
       {specs.length > 0 && (
         <ul className="flex flex-wrap gap-1.5" aria-label="Specialities">
           {specs.map((s) => <li key={s} className={`${pill} ${chip}`}>{s}</li>)}
         </ul>
       )}
-      {o.description && <p className="text-[13.5px] text-[#3B4556] leading-[1.55]">{o.description}</p>}
-      <address className="not-italic mt-auto border-t border-[#EEF0F3] pt-3.5 flex flex-col gap-1.5 text-[13px] text-[#3B4556]">
-        {o.address && <div className="flex gap-2 items-start"><MapPin size={14} className="mt-0.5 shrink-0 text-blue" aria-hidden /><span>{o.address}</span></div>}
-        {o.phone && <div className="flex gap-2 items-center"><Phone size={14} className="shrink-0" aria-hidden /><a href={`tel:${o.phone.replace(/[^\d+]/g, '')}`} className="mono hover:text-blue">{o.phone}</a></div>}
-        {o.email && <div className="flex gap-2 items-center min-w-0"><Mail size={14} className="shrink-0" aria-hidden /><a href={`mailto:${o.email}`} className="text-navy hover:text-blue break-all">{o.email}</a></div>}
-        {o.hours && <div className="flex gap-2 items-center text-[#5A6475]"><Clock size={14} className="shrink-0" aria-hidden /><span>{o.hours}</span></div>}
+      {o.description && <p className="text-[13.5px] text-black leading-[1.55]">{o.description}</p>}
+      <address className="not-italic mt-auto border-t border-line pt-3.5 flex flex-col gap-1.5 text-[13px] text-black">
+        {o.address && <div className="flex gap-2 items-start"><MapPin size={14} className="mt-0.5 shrink-0 text-coral-text" aria-hidden /><span>{o.address}</span></div>}
+        {o.phone && <div className="flex gap-2 items-center"><Phone size={14} className="shrink-0" aria-hidden /><a href={`tel:${o.phone.replace(/[^\d+]/g, '')}`} className="inline-flex items-center min-h-11 mono hover:text-coral-text">{o.phone}</a></div>}
+        {o.email && <div className="flex gap-2 items-center min-w-0"><Mail size={14} className="shrink-0" aria-hidden /><a href={`mailto:${o.email}`} className="inline-flex items-center min-h-11 text-ink hover:text-coral-text break-all">{o.email}</a></div>}
+        {o.hours && <div className="flex gap-2 items-center text-muted"><Clock size={14} className="shrink-0" aria-hidden /><span>{o.hours}</span></div>}
       </address>
     </article>
   );
@@ -268,7 +268,7 @@ function OfficeCard({ o }: { o: Branch }) {
 export function AboutSkeleton() {
   return (
     <div aria-busy="true" aria-label="Loading">
-      <div className="h-[420px] bg-navy" />
+      <div className="h-[420px] bg-ink" />
       <div className="max-w-[1360px] mx-auto px-4 sm:px-8 pt-16 grid gap-6 lg:grid-cols-4">
         {[0, 1, 2, 3].map((i) => <div key={i} className="card h-[420px]" />)}
       </div>

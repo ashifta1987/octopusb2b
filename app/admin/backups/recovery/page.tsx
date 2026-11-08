@@ -29,7 +29,7 @@ export default async function RecoveryPage({ searchParams }: { searchParams: Pro
   return (
     <>
       <PageHeader
-        eyebrow={<Link href="/admin/backups" className="text-sm text-blue font-semibold">← Backup &amp; restore</Link>}
+        eyebrow={<Link href="/admin/backups" className="text-sm text-coral-text font-semibold">← Backup &amp; restore</Link>}
         title="Partial restore — compare records"
         subtitle="Tables loaded from a backup into the recovery area are compared with the live data. Pick the rows to bring back; every restore is written to the audit log. Money records are never overwritten — corrections go through finance adjustments."
       />
@@ -39,14 +39,14 @@ export default async function RecoveryPage({ searchParams }: { searchParams: Pro
         <Card title="Recovery tables">
           {list.length === 0 ? (
             <div className="px-6 pb-6 text-sm text-muted">
-              Nothing is loaded yet. Create a <b>Restore selected records</b> request on the <Link href="/admin/backups#backups" className="text-blue font-semibold">Backups</Link> page; the restore workflow loads the chosen tables from the backup into the recovery area.
+              Nothing is loaded yet. Create a <b>Restore selected records</b> request on the <Link href="/admin/backups#backups" className="text-coral-text font-semibold">Backups</Link> page; the restore workflow loads the chosen tables from the backup into the recovery area.
             </div>
           ) : (
             <ul className="pb-3">
               {list.map((t) => (
                 <li key={t.table_name}>
                   <Link href={`/admin/backups/recovery?table=${t.table_name}`} aria-current={table?.table_name === t.table_name ? 'page' : undefined}
-                    className={cn('flex justify-between gap-2 px-6 py-2 text-sm hover:bg-surface', table?.table_name === t.table_name && 'bg-blue-soft font-semibold')}>
+                    className={cn('flex justify-between gap-2 px-6 py-2 text-sm hover:bg-pearl', table?.table_name === t.table_name && 'bg-tint font-semibold')}>
                     <span className="mono">{t.table_name}</span>
                     <span className="text-xs text-muted">{t.row_count}{!t.restorable && ' · view only'}</span>
                   </Link>

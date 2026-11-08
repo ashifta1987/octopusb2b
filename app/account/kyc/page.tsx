@@ -135,7 +135,7 @@ export default async function KycPage() {
                 <span>Progress</span><span className="mono font-semibold">{pct}%</span>
               </div>
               <div className="mt-1.5 h-1.5 rounded-full bg-line" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Verification progress">
-                <div className="h-1.5 rounded-full bg-blue-fill" style={{ width: `${pct}%` }} />
+                <div className="h-1.5 rounded-full bg-coral" style={{ width: `${pct}%` }} />
               </div>
               <ol className="mt-4 space-y-3">
                 {STEP_LABELS.map((label, i) => {
@@ -146,7 +146,7 @@ export default async function KycPage() {
                       {done ? (
                         <span className="w-5 h-5 rounded-full bg-ok text-white grid place-items-center text-[11px] font-bold" aria-hidden>✓</span>
                       ) : (
-                        <span className={cn('w-5 h-5 rounded-full grid place-items-center text-[11px] font-bold border', current ? 'bg-blue-fill border-blue text-white' : 'border-line-2 text-muted')} aria-hidden>{i + 1}</span>
+                        <span className={cn('w-5 h-5 rounded-full grid place-items-center text-[11px] font-bold border', current ? 'bg-coral border-coral-text text-white' : 'border-line-strong text-muted')} aria-hidden>{i + 1}</span>
                       )}
                       <span className={cn(current ? 'font-semibold' : done ? '' : 'text-muted')}>{label}</span>
                       <span className="sr-only">{done ? ' — done' : current ? ' — current step' : ' — to do'}</span>
@@ -178,14 +178,14 @@ export default async function KycPage() {
                   {subs.map((sub, i) => (
                     <li key={sub.id} className="relative pl-6 pb-5 last:pb-0">
                       {i < subs.length - 1 && <span className="absolute left-[5px] top-3 bottom-0 w-px bg-line" aria-hidden />}
-                      <span className={cn('absolute left-0 top-1.5 w-[11px] h-[11px] rounded-full border-2', i === 0 ? 'bg-blue-fill border-blue' : 'bg-white border-line-2')} aria-hidden />
+                      <span className={cn('absolute left-0 top-1.5 w-[11px] h-[11px] rounded-full border-2', i === 0 ? 'bg-coral border-coral-text' : 'bg-white border-line-strong')} aria-hidden />
                       <div className="flex flex-wrap items-center gap-2">
                         <StatusBadge status={sub.status} />
                         <span className="text-xs text-muted mono">{fmtDate(sub.submitted_at ?? sub.created_at, true)}</span>
                       </div>
                       {sub.company_name && <div className="mt-1 text-sm">{sub.company_name}</div>}
                       {(sub.status === 'more_info' || sub.status === 'rejected') && sub.review_note && (
-                        <p className="mt-1 text-sm text-muted"><span className="font-semibold text-navy">Review note:</span> {sub.review_note}</p>
+                        <p className="mt-1 text-sm text-muted"><span className="font-semibold text-ink">Review note:</span> {sub.review_note}</p>
                       )}
                       {sub.reviewed_at && <div className="text-xs text-muted mt-0.5">Reviewed {fmtDate(sub.reviewed_at)}</div>}
                     </li>

@@ -109,16 +109,16 @@ export function JoinPoolForm({ pool, addresses, walletEnabled, walletBalance, wa
   };
 
   const err1 = (k: string) => (showErrors && issues[k] ? <p className="text-[12px] text-bad mt-1" role="alert">{issues[k]}</p> : null);
-  const row = (l: React.ReactNode, v: React.ReactNode, cls = '') => <div className={`flex justify-between gap-3 ${cls}`}><dt className="text-[#3B4556]">{l}</dt><dd className="mono font-semibold">{v}</dd></div>;
+  const row = (l: React.ReactNode, v: React.ReactNode, cls = '') => <div className={`flex justify-between gap-3 ${cls}`}><dt className="text-black">{l}</dt><dd className="mono font-semibold">{v}</dd></div>;
 
-  if (done) return <div role="status" className="rounded-[10px] border border-ok/40 bg-[#E3F5EA] text-[#156B3A] px-4 py-3 text-sm font-semibold">✓ {done}</div>;
+  if (done) return <div role="status" className="rounded-[10px] border border-ok/40 bg-ok-bg text-ok px-4 py-3 text-sm font-semibold">✓ {done}</div>;
 
   return (
     <form className="space-y-4" noValidate onSubmit={(e) => e.preventDefault()} aria-label={`Join pool ${pool.code}`}>
       <div>
         <label htmlFor="pledge-qty" className="label">Your pledge ({pool.unit})</label>
-        <div className="flex rounded-[8px] border border-line-2 overflow-hidden focus-within:ring-2 focus-within:ring-blue">
-          <span className="px-3 flex items-center bg-surface border-r border-line-2 mono text-[13px] text-muted" aria-hidden>{pool.unit}</span>
+        <div className="flex rounded-[8px] border border-line-strong overflow-hidden focus-within:ring-2 focus-within:ring-coral-text">
+          <span className="px-3 flex items-center bg-pearl border-r border-line-strong mono text-[13px] text-muted" aria-hidden>{pool.unit}</span>
           <input id="pledge-qty" inputMode="numeric" className="flex-1 min-w-0 px-3 py-2.5 mono text-[15px] outline-none" value={qtyStr}
             aria-invalid={showErrors && !!issues.qty} aria-describedby="pledge-hint" onChange={(e) => setQty(e.target.value.replace(/[^\d]/g, ''))} />
         </div>
@@ -146,12 +146,12 @@ export function JoinPoolForm({ pool, addresses, walletEnabled, walletBalance, wa
       <fieldset>
         <legend className="label">Pay deposit from</legend>
         <div className="space-y-2">
-          <label className={`flex items-center gap-3 rounded-[10px] border-2 px-4 py-3 cursor-pointer ${paySource === 'wallet' ? 'border-blue bg-blue-soft/40' : 'border-line'} ${!walletEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
-            <input type="radio" name="pay" value="wallet" checked={paySource === 'wallet'} disabled={!walletEnabled} onChange={() => setPay('wallet')} className="accent-[#2A6FD6]" />
+          <label className={`flex items-center gap-3 rounded-[10px] border-2 px-4 py-3 cursor-pointer ${paySource === 'wallet' ? 'border-coral-text bg-tint/40' : 'border-line'} ${!walletEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
+            <input type="radio" name="pay" value="wallet" checked={paySource === 'wallet'} disabled={!walletEnabled} onChange={() => setPay('wallet')} className="accent-coral" />
             <span><span className="font-semibold">Wallet</span> · balance <span className="mono">{money(walletBalance, pool.currency)}</span>{walletCredit > 0 && <> · credit <span className="mono">{money(walletCredit, pool.currency)}</span></>}{!walletEnabled && ' (wallet switched off)'}</span>
           </label>
-          <label className={`flex items-center gap-3 rounded-[10px] border-2 px-4 py-3 cursor-pointer ${paySource === 'card' ? 'border-blue bg-blue-soft/40' : 'border-line'}`}>
-            <input type="radio" name="pay" value="card" checked={paySource === 'card'} onChange={() => setPay('card')} className="accent-[#2A6FD6]" />
+          <label className={`flex items-center gap-3 rounded-[10px] border-2 px-4 py-3 cursor-pointer ${paySource === 'card' ? 'border-coral-text bg-tint/40' : 'border-line'}`}>
+            <input type="radio" name="pay" value="card" checked={paySource === 'card'} onChange={() => setPay('card')} className="accent-coral" />
             <span className="font-semibold">Bank transfer</span>
           </label>
         </div>
@@ -161,8 +161,8 @@ export function JoinPoolForm({ pool, addresses, walletEnabled, walletBalance, wa
 
       <div>
         <label className="flex items-start gap-2.5 text-[13px] cursor-pointer">
-          <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-0.5 w-4 h-4 accent-[#2A6FD6]" aria-invalid={showErrors && !!issues.terms} />
-          <span>I agree to the <Link href="/pools/terms" target="_blank" className="text-blue font-semibold underline">Group Buy Terms</Link>. If the pool fills, my pledge becomes a firm order.</span>
+          <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-0.5 w-4 h-4 accent-coral" aria-invalid={showErrors && !!issues.terms} />
+          <span>I agree to the <Link href="/pools/terms" target="_blank" className="text-coral-text font-semibold underline">Group Buy Terms</Link>. If the pool fills, my pledge becomes a firm order.</span>
         </label>
         {err1('terms')}
       </div>
@@ -178,7 +178,7 @@ export function JoinPoolForm({ pool, addresses, walletEnabled, walletBalance, wa
         <>
           <button type="button" className="btn btn-primary w-full min-h-12" onClick={() => { setErr(null); setCardOpen(true); }}>Join pool · reserve {money(m.deposit, pool.currency)} deposit</button>
           {cardOpen && (
-            <div className="fixed inset-0 z-50 bg-navy/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="card-title">
+            <div className="fixed inset-0 z-50 bg-ink/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="card-title">
               <div className="card w-full max-w-md p-6">
                 <h2 id="card-title" className="text-xl font-semibold">Reserve your pledge in {pool.code}</h2>
                 <dl className="mt-4 space-y-2 text-[15px]">

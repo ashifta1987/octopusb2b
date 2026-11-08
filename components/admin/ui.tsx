@@ -10,7 +10,7 @@ export function Tabs({ tabs, active, base, param = 'tab' }: { tabs: { key: strin
           key={t.key}
           href={`${base}?${param}=${t.key}`}
           aria-current={active === t.key ? 'page' : undefined}
-          className={cn('rounded-full border px-4 py-2 text-sm font-semibold', active === t.key ? 'bg-navy text-white border-navy' : 'bg-white text-navy border-line-2 hover:border-navy')}
+          className={cn('rounded-full border px-4 py-2 text-sm font-semibold', active === t.key ? 'bg-ink text-white border-ink' : 'bg-white text-ink border-line-strong hover:border-ink')}
         >
           {t.label}{t.count != null && <span className="ml-1.5 mono text-xs opacity-85">{t.count}</span>}
         </Link>
@@ -26,7 +26,7 @@ export function Bar({ label, value, max, display, tone = 'blue' }: { label: Reac
     <div className="py-2">
       <div className="flex justify-between gap-3 text-[15px]"><span className="font-semibold">{label}</span><span className="mono text-sm">{display}</span></div>
       <div className="mt-1.5 h-2 rounded-full bg-line" aria-hidden>
-        <div className={cn('h-2 rounded-full', tone === 'navy' ? 'bg-navy' : 'bg-blue-fill')} style={{ width: `${value > 0 ? pct : 0}%` }} />
+        <div className={cn('h-2 rounded-full', tone === 'navy' ? 'bg-ink' : 'bg-coral')} style={{ width: `${value > 0 ? pct : 0}%` }} />
       </div>
     </div>
   );
@@ -44,7 +44,7 @@ export function Field({ label, htmlFor, children, hint, className }: { label: st
 
 export function CountryTag({ code }: { code: string | null | undefined }) {
   if (!code) return null;
-  return <span className="mono text-[10px] font-semibold bg-surface border border-line rounded px-1 py-px text-navy">{code}</span>;
+  return <span className="mono text-[10px] font-semibold bg-pearl border border-line rounded px-1 py-px text-ink">{code}</span>;
 }
 
 export function Loading() {

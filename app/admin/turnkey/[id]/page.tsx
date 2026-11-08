@@ -26,7 +26,7 @@ export default async function TurnkeyProjectAdmin({ params }: { params: Promise<
   const packages = ((pkgs ?? []) as (TurnkeyPackage & { turnkey_equipment: TurnkeyEquipment[] })[]).map((k) => ({ ...k, equipment: [...(k.turnkey_equipment ?? [])].sort((a, b) => a.sort_order - b.sort_order) }));
   return (
     <>
-      <PageHeader eyebrow={<Link href="/admin/turnkey?tab=projects" className="text-blue">← Turnkey projects</Link>} title={p?.title ?? 'New turnkey project'}
+      <PageHeader eyebrow={<Link href="/admin/turnkey?tab=projects" className="text-coral-text">← Turnkey projects</Link>} title={p?.title ?? 'New turnkey project'}
         actions={p ? <Link href={`/turnkey/${p.project_id}`} target="_blank" className="btn btn-ghost">View page ↗</Link> : undefined} />
       <Card title="Project" className="mb-6">
         <ActionForm action={saveProject} className="px-6 pb-6" submitLabel={isNew ? 'Create project' : 'Save project'} hideSubmit={!edit}>

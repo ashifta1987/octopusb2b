@@ -42,7 +42,7 @@ export function ImportUploader({ supplier = null }: { supplier?: string | null }
         <input type="file" name="zip" accept=".zip,application/zip" className="input py-2" onChange={(e) => setZip(e.target.files?.[0] ?? null)} />
         <span className="text-xs text-muted">Up to 200 MB · .jpg .jpeg .png .webp .avif, max 15 MB each · any folder structure · names matched case-insensitively.</span>
       </label>
-      {step && <p role="status" className="text-sm text-blue font-semibold">{step}</p>}
+      {step && <p role="status" className="text-sm text-coral-text font-semibold">{step}</p>}
       {err && <p role="alert" className="text-sm text-bad">{err}</p>}
       <button type="submit" className="btn btn-primary" disabled={pending}>{pending ? 'Working…' : 'Upload and check'}</button>
     </form>

@@ -38,7 +38,7 @@ export default async function ImportPage() {
             const d = r.status === 'committed' && r.report ? r.report : r.diff;
             return (
               <tr key={r.id}>
-                <td className="td font-semibold"><Link href={`/admin/import/${r.id}`} className="text-blue hover:underline">{r.name}</Link></td>
+                <td className="td font-semibold"><Link href={`/admin/import/${r.id}`} className="text-coral-text hover:underline">{r.name}</Link></td>
                 <td className="td"><StatusBadge status={r.status} /></td>
                 <td className="td mono text-sm">{d?.products?.create ?? 0} new · {(d?.products as { update?: number })?.update ?? 0} upd</td>
                 <td className="td mono text-sm">{d?.prices?.create ?? 0} new · {(d?.prices as { update?: number })?.update ?? 0} upd</td>

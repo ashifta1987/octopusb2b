@@ -202,7 +202,7 @@ export function ProductForm({
             </div>
             <div>
               <span className="label">Octopus product status</span>
-              <div className="input flex items-center bg-surface mono text-sm">{productId ? status : 'new (autosaves as draft)'}</div>
+              <div className="input flex items-center bg-pearl mono text-sm">{productId ? status : 'new (autosaves as draft)'}</div>
             </div>
           </div>
           {uploadBlocked && <p className="mt-3 text-sm text-bad" role="alert">Product upload is switched off for {supplier?.code}. Turn it on in Suppliers to add or edit products.</p>}
@@ -239,7 +239,7 @@ export function ProductForm({
                 );
               })}
             </div>
-            <p className="text-xs text-muted mt-1">Missing a category? <Link href="/distributor/catalog" className="text-blue font-semibold">Add it in Categories &amp; tags</Link>. The category sets the default HS code.</p>
+            <p className="text-xs text-muted mt-1">Missing a category? <Link href="/distributor/catalog" className="text-coral-text font-semibold">Add it in Categories &amp; tags</Link>. The category sets the default HS code.</p>
             {err(errors.category_id)}
           </fieldset>
           <fieldset>
@@ -250,7 +250,7 @@ export function ProductForm({
                 return (
                   <button key={t.id} type="button" aria-pressed={on}
                     onClick={() => setValue('tag_ids', on ? tagIds.filter((x) => x !== t.id) : [...tagIds, t.id], { shouldDirty: true })}
-                    className={cn('rounded-full px-3 py-1 text-xs font-semibold border', on ? 'bg-blue-soft border-blue text-[#1E4F9C]' : 'bg-white border-line-2 text-muted')}>
+                    className={cn('rounded-full px-3 py-1 text-xs font-semibold border', on ? 'bg-tint border-coral-text text-coral-text' : 'bg-white border-line-strong text-muted')}>
                     {on ? '✓ ' : '+ '}{t.name}<span className="sr-only"> ({t.kind})</span>
                   </button>
                 );
@@ -272,11 +272,11 @@ export function ProductForm({
         <section className="card p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Photos</h2>
-            <span className="text-xs font-semibold rounded-full bg-blue-soft text-[#1E4F9C] px-2 py-1">AI tools · {aiMode === 'live' ? 'live' : 'mock'}</span>
+            <span className="text-xs font-semibold rounded-full bg-tint text-coral-text px-2 py-1">AI tools · {aiMode === 'live' ? 'live' : 'mock'}</span>
           </div>
           <div className="flex flex-wrap gap-3">
             {images.map((url, i) => (
-              <div key={url + i} className={cn('relative w-28 h-28 rounded-[10px] overflow-hidden border', i === 0 ? 'border-navy border-2' : 'border-line')}>
+              <div key={url + i} className={cn('relative w-28 h-28 rounded-[10px] overflow-hidden border', i === 0 ? 'border-ink border-2' : 'border-line')}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={url} alt={i === 0 ? 'Main photo' : `Photo ${i + 1}`} className="w-full h-full object-cover" />
                 <span className="absolute left-1 top-1 text-[10px] font-semibold bg-white/90 rounded px-1">{i === 0 ? 'Main' : i + 1}</span>
@@ -286,12 +286,12 @@ export function ProductForm({
                 </div>
               </div>
             ))}
-            <label className="w-28 h-28 rounded-[10px] border-2 border-dashed border-line-2 flex items-center justify-center text-sm font-semibold text-blue cursor-pointer text-center">
+            <label className="w-28 h-28 rounded-[10px] border-2 border-dashed border-line-strong flex items-center justify-center text-sm font-semibold text-coral-text cursor-pointer text-center">
               {uploading ? 'Uploading…' : '+ Add photos'}
               <input type="file" accept="image/*" multiple className="sr-only" onChange={(e) => upload(e.target.files)} disabled={uploading} />
             </label>
           </div>
-          <div className="mt-4 rounded-[10px] border border-line bg-surface p-4">
+          <div className="mt-4 rounded-[10px] border border-line bg-pearl p-4">
             <div className="font-semibold text-sm">Enhance photos with AI</div>
             <p className="text-xs text-muted mt-1">White background, remove supplier logos and watermarks, auto-crop. Only enhance photos you have the right to use. Originals are always kept.</p>
             <div className="flex flex-wrap gap-2 mt-3">
@@ -299,7 +299,7 @@ export function ProductForm({
               <button type="button" className="btn btn-ghost btn-sm" disabled={aiBlocked || !!aiBusy} onClick={() => runAi('poster')}>{aiBusy === 'poster' ? 'Creating…' : '✦ Make poster'}</button>
             </div>
             {poster && (
-              <div className="mt-4 rounded-[10px] bg-navy text-white p-5 max-w-sm">
+              <div className="mt-4 rounded-[10px] bg-ink text-white p-5 max-w-sm">
                 <div className="font-display text-xl font-bold">{poster.headline}</div>
                 <div className="text-sm opacity-80 mt-1">{poster.tagline}</div>
                 <ul className="mt-3 text-sm list-disc pl-5">{poster.bullets?.map((b) => <li key={b}>{b}</li>)}</ul>
@@ -329,7 +329,7 @@ export function ProductForm({
           </div>
         </section>
 
-        {aiNote && <div role="status" className="rounded-[10px] border border-blue/30 bg-blue-soft px-4 py-3 text-sm text-[#1E4F9C]">{aiNote}</div>}
+        {aiNote && <div role="status" className="rounded-[10px] border border-coral-text/30 bg-tint px-4 py-3 text-sm text-coral-text">{aiNote}</div>}
         {aiBlocked && supplier && <p className="text-sm text-warn">AI tools are switched off for {supplier.code}.</p>}
 
         {/* Price tiers */}
@@ -407,7 +407,7 @@ export function ProductForm({
             <div>
               <label htmlFor="pf-hs" className="label">HS code</label>
               <input id="pf-hs" className="input mono" {...register('hs_code')} placeholder="Leave blank to detect automatically" />
-              {hsInfo?.status === 'suggested' && <p className="text-xs mt-1 text-[#8A5A00]" data-testid="hs-suggested">Suggested by {hsInfo.source === 'ai' ? 'the AI classifier' : 'a product-type rule'} — check it. Typing a code here makes it a manual (confirmed) code.</p>}
+              {hsInfo?.status === 'suggested' && <p className="text-xs mt-1 text-warn" data-testid="hs-suggested">Suggested by {hsInfo.source === 'ai' ? 'the AI classifier' : 'a product-type rule'} — check it. Typing a code here makes it a manual (confirmed) code.</p>}
               {hsInfo?.status === 'confirmed' && hsInfo.source && <p className="text-xs mt-1 text-ok">Confirmed ({hsInfo.source === 'sheet' ? 'from the import sheet' : hsInfo.source === 'manual' ? 'entered manually' : 'product-type rule'})</p>}
               {hsInfo?.status === 'missing' && hsInfo.note && <p className="text-xs mt-1 text-bad">{hsInfo.note}</p>}
               {!hsInfo && <p className="text-xs mt-1 text-muted">Blank = a 4-digit heading is detected automatically after saving.</p>}
@@ -440,7 +440,7 @@ export function ProductForm({
                         <input id={`cert-${c.id}`} type="checkbox" checked={certIds.includes(c.id)} disabled={['expired', 'rejected'].includes(c.status)}
                           onChange={(e) => setValue('certificate_ids', e.target.checked ? [...certIds, c.id] : certIds.filter((x) => x !== c.id), { shouldDirty: true })} />
                         <label htmlFor={`cert-${c.id}`} className="text-sm">{c.name}{c.issuer ? ` · ${c.issuer}` : ''}{c.expires_at ? ` · valid until ${c.expires_at}` : ''}</label>
-                        <span className="text-xs font-semibold rounded-full bg-surface border border-line px-2 py-0.5">{c.status}</span>
+                        <span className="text-xs font-semibold rounded-full bg-pearl border border-line px-2 py-0.5">{c.status}</span>
                       </li>
                     ))}
                   </ul>
@@ -474,7 +474,7 @@ export function ProductForm({
         <div className="card p-4">
           <div className="flex justify-between text-sm font-semibold"><span>Listing completeness</span><span className="mono">{pct}%</span></div>
           <div className="h-2 bg-line rounded-full mt-2" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Listing completeness">
-            <div className="h-2 bg-blue-fill rounded-full" style={{ width: `${pct}%` }} />
+            <div className="h-2 bg-coral rounded-full" style={{ width: `${pct}%` }} />
           </div>
           <ul className="mt-3 space-y-1 text-xs">
             {checks.map((c) => <li key={c.label} className={c.ok ? 'text-ok' : 'text-muted'}>{c.ok ? '✓' : '○'} {c.label}</li>)}

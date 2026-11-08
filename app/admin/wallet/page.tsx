@@ -78,7 +78,7 @@ export default async function WalletAdminPage() {
       <PageHeader title="Wallets & payments" subtitle="Turn the wallet on or off, see customer balances, confirm top-ups and review the service price list." />
       <StepUpNote className="-mt-3 mb-4" />
 
-      <section className="rounded-[12px] bg-navy text-white px-7 py-6 mb-6 flex flex-wrap items-center justify-between gap-4">
+      <section className="rounded-[12px] bg-ink text-white px-7 py-6 mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-white">Wallet system</h2>
           <p className="text-white/80 text-[15px] mt-1">
@@ -101,7 +101,7 @@ export default async function WalletAdminPage() {
         <div className="px-6 pb-2 grid gap-6 lg:grid-cols-[1fr_1.6fr]">
           <div>
             <h3 className="font-semibold mb-1">Default limit</h3>
-            <p className="text-sm text-muted mb-3">Applies to every customer without their own limit. Set 0 to give no credit by default. Credit used now: <b className="mono text-navy">{money(creditUsedBy, cur)}</b>.</p>
+            <p className="text-sm text-muted mb-3">Applies to every customer without their own limit. Set 0 to give no credit by default. Credit used now: <b className="mono text-ink">{money(creditUsedBy, cur)}</b>.</p>
             <ActionForm action={saveCreditDefault} className="grid gap-3" submitLabel="Save default" hideSubmit={!s.isAdmin} confirm="Change the default wallet credit limit for all customers without their own limit?">
               <div className="grid grid-cols-[1fr_110px] gap-3">
                 <Field label="Credit limit" htmlFor="cd-amount" hint="e.g. 1000.00"><input id="cd-amount" name="amount" inputMode="decimal" className="input mono" defaultValue={major(creditDefault.amount_minor ?? 0)} disabled={!s.isAdmin} required /></Field>

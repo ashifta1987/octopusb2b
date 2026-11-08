@@ -6,6 +6,7 @@ import { getSession } from '@/lib/auth';
 import { getEmail } from '@/lib/adapters';
 import { SITE_URL } from '@/components/store/seo';
 import { leadSchema, FLOOR_PLAN_EXT, FLOOR_PLAN_MAX_BYTES, type LeadValues } from '@/lib/turnkey/schema';
+import { BRAND } from '@/lib/brand';
 
 /** Turnkey Projects server actions (ADDON-31): floor-plan upload URL, lead submit (rate-limited, routed), atlas signals. */
 
@@ -87,7 +88,7 @@ async function sendLeadEmails(r: { lead_id: string; reference: string; assigned_
   await mail.send({
     to: v.email,
     subject: `Octopus B2B · ${title} — ${what} received (${r.reference})`,
-    html: `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#11133C;line-height:1.5">
+    html: `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:${BRAND.black};line-height:1.5">
       <p>Hello ${esc(v.contact_name)},</p>
       <p>Thank you — we received your ${what} for <b>${esc(title)}</b>. Your reference is <b>${r.reference}</b>.</p>
       <p>${v.kind === 'quote' ? 'A sourcing lead will reply within 24 hours with a USD quote and Incoterm. A sample quote follows within 5 days; we schedule QC once the PO is signed.' : 'Packages for this project go live once enough buyers register interest. We will contact you as soon as it is ready, usually with a first rough quote.'}</p>
@@ -100,7 +101,7 @@ async function sendLeadEmails(r: { lead_id: string; reference: string; assigned_
       await mail.send({
         to: staff.email as string,
         subject: `New turnkey ${what}: ${title} · ${v.company_name} (${v.country}) · ${r.reference}`,
-        html: `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#11133C">
+        html: `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:${BRAND.black}">
           <p>${esc(v.company_name)} (${v.country}) sent a ${what} for <b>${esc(title)}</b>. It is assigned to you.</p>
           <p><a href="${SITE_URL}/admin/turnkey?lead=${r.lead_id}">Open the lead</a></p></div>`,
       }, { template: `turnkey.${v.kind}.staff` });

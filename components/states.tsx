@@ -14,10 +14,10 @@ export function ErrorState({ error, retry, home = '/' }: { error: unknown; retry
   const digest = error instanceof Error && 'digest' in error ? String((error as Error & { digest?: string }).digest ?? '') : '';
   return (
     <div role="alert" className="max-w-xl mx-auto my-16 px-6 text-center">
-      <div className="w-12 h-12 rounded-full bg-[#FDECEC] border border-[#F3C5C5] flex items-center justify-center mx-auto mb-3" aria-hidden>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B42318" strokeWidth="2"><path d="M12 8v5M12 16.5v.5" /><circle cx="12" cy="12" r="9" /></svg>
+      <div className="w-12 h-12 rounded-full bg-bad-bg border border-bad-bg flex items-center justify-center mx-auto mb-3" aria-hidden>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-bad" strokeWidth="2"><path d="M12 8v5M12 16.5v.5" /><circle cx="12" cy="12" r="9" /></svg>
       </div>
-      <h1 className="font-display text-xl font-semibold text-navy">This page could not be loaded</h1>
+      <h1 className="font-display text-xl font-semibold text-ink">This page could not be loaded</h1>
       <p className="text-sm text-muted mt-2">Something went wrong on our side. Try again — if it keeps happening, contact support and quote the reference below.</p>
       {digest && <p className="mono text-xs text-muted mt-2">Reference: {digest}</p>}
       <div className="mt-5 flex gap-3 justify-center">

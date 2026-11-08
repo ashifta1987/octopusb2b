@@ -14,7 +14,7 @@ export function StepUpCallout({ path, text = 'Your 2FA code is older than 10 min
   path: string; text?: string; label?: string;
 }) {
   return (
-    <div role="status" className="rounded-[10px] border border-warn/40 bg-[#FFF3D6] text-[#8A5A00] px-4 py-3 flex flex-wrap items-center gap-3">
+    <div role="status" className="rounded-[10px] border border-warn/40 bg-warn-bg text-warn px-4 py-3 flex flex-wrap items-center gap-3">
       <span className="text-sm flex-1 min-w-[200px]">{text}</span>
       <a href={stepUpRedirect(path)} className="btn btn-primary btn-sm">{label}</a>
     </div>

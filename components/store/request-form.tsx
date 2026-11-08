@@ -88,7 +88,7 @@ export function RequestForm({ type, action, defaults, productId, feeCents, feeLa
       </fieldset>
 
       <div className="border-t border-line pt-6 space-y-5">
-        <div className="rounded-[12px] bg-surface p-5">
+        <div className="rounded-[12px] bg-pearl p-5">
           <h3 className="font-sans font-semibold text-[16px]">Fees for this request</h3>
           <div className="flex justify-between mt-2 text-[14px]" data-testid="fee-row"><span className="text-muted">{serviceName}</span><span className="mono font-semibold">{feeCents > 0 ? money(feeCents, currency) : 'Free'}</span></div>
           {feeCents > 0 && (
@@ -123,9 +123,9 @@ function WarehouseInput({ f, reg, error, warehouses, demo }: { f: Field; reg: Us
       <legend className="label flex items-center gap-2">{f.label}{f.required && <span className="text-bad" aria-hidden> *</span>}{demo && warehouses.length > 0 && <span className="pill bg-warn-bg text-warn">Example</span>}</legend>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {opts.map((o) => (
-          <label key={o.value} className="relative flex gap-3 rounded-[12px] border border-line-2 bg-white p-4 cursor-pointer min-h-11 has-[:checked]:border-navy has-[:checked]:bg-blue-soft has-[:checked]:shadow-[inset_0_0_0_1px_#11133C]">
-            <input type="radio" value={o.value} {...reg} className="mt-1 w-4 h-4 accent-[#11133C]" />
-            <span><span className="block font-semibold text-navy text-[15px]">{o.title}</span>{o.body && <span className="block text-[13px] text-muted mt-0.5">{o.body}</span>}</span>
+          <label key={o.value} className="relative flex gap-3 rounded-[12px] border border-line-strong bg-white p-4 cursor-pointer min-h-11 has-[:checked]:border-ink has-[:checked]:bg-tint has-[:checked]:shadow-[inset_0_0_0_1px_var(--ink)]">
+            <input type="radio" value={o.value} {...reg} className="mt-1 w-4 h-4 accent-ink" />
+            <span><span className="block font-semibold text-ink text-[15px]">{o.title}</span>{o.body && <span className="block text-[13px] text-muted mt-0.5">{o.body}</span>}</span>
           </label>
         ))}
       </div>

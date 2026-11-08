@@ -255,7 +255,7 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2 mb-6">
-        <Card title="Pending wallet top-ups" action={<Link href="/admin/wallet" className="text-sm text-blue font-semibold">Wallets →</Link>}>
+        <Card title="Pending wallet top-ups" action={<Link href="/admin/wallet" className="text-sm text-coral-text font-semibold">Wallets →</Link>}>
           <Table head={['Date', 'Customer', 'Reference', 'Amount', '']} empty={<EmptyState title="No top-ups waiting" />}>
             {(topups.data ?? []).map((t) => (
               <tr key={t.id}>

@@ -49,9 +49,9 @@ export default async function OfficeServices({ searchParams }: { searchParams: P
             const details = r.details as Record<string, unknown>;
             const summary = Object.entries(details ?? {}).filter(([, v]) => v != null && v !== '').slice(0, 4).map(([k, v]) => `${humanize(k)}: ${typeof v === 'object' ? JSON.stringify(v) : String(v)}`).join(' · ');
             return (
-              <tr key={r.id} className={r.id === highlight ? 'bg-blue-soft' : undefined}>
+              <tr key={r.id} className={r.id === highlight ? 'bg-tint' : undefined}>
                 <td className="td mono text-sm">{r.code}</td>
-                <td className="td"><span className="text-xs font-semibold rounded-full bg-blue-soft text-[#1E4F9C] px-2 py-1">{one(r.services as unknown as { name: string } | null)?.name ?? r.service_code}</span></td>
+                <td className="td"><span className="text-xs font-semibold rounded-full bg-tint text-coral-text px-2 py-1">{one(r.services as unknown as { name: string } | null)?.name ?? r.service_code}</span></td>
                 <td className="td text-sm"><div className="font-semibold">{o?.name ?? '—'}</div><div className="text-xs text-muted">{[o?.city, o?.country].filter(Boolean).join(', ')}</div></td>
                 <td className="td text-sm max-w-[320px]">{one(r.products as unknown as { title: string } | null)?.title && <div className="font-medium">{one(r.products as unknown as { title: string } | null)?.title}</div>}<div className="text-xs text-muted break-words">{summary || '—'}</div></td>
                 <td className="td"><Money cents={r.fee_minor} currency={r.currency} /><div className="text-xs text-muted">{r.paid_via}</div></td>

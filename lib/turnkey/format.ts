@@ -17,8 +17,8 @@ export const CATEGORY_PILL: Record<TurnkeyCategory, string> = {
   'self-service': 'Self-service', food: 'Food', leisure: 'Leisure', 'small-factory': 'Small factory', infrastructure: 'Infra', 'fit-out': 'Fit-out',
 };
 export const CATEGORY_PILL_CLASS: Record<TurnkeyCategory, string> = {
-  'self-service': 'bg-[#E0E7FF] text-[#3730A3]', food: 'bg-[#FFE4E6] text-[#9F1239]', leisure: 'bg-[#DCFCE7] text-[#166534]',
-  'small-factory': 'bg-[#FEF3C7] text-[#854D0E]', infrastructure: 'bg-[#CFFAFE] text-[#155E75]', 'fit-out': 'bg-[#F3E8FF] text-[#6B21A8]',
+  'self-service': 'bg-tint text-coral-text', food: 'bg-bad-bg text-bad', leisure: 'bg-ok-bg text-ok',
+  'small-factory': 'bg-warn-bg text-warn', infrastructure: 'bg-cyan-bg text-cyan', 'fit-out': 'bg-violet-bg text-violet',
 };
 
 export type TurnkeyProject = {

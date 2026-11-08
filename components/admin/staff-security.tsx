@@ -94,7 +94,7 @@ export function StaffSecurityForm({ settings, action }: { settings: StaffSecurit
           </div>
         </div>
         {!enforce && (
-          <div role="alert" className="mt-4 rounded-[10px] border border-bad/40 bg-[#FDE8E8] text-[#A32D2D] px-4 py-3 text-sm">
+          <div role="alert" className="mt-4 rounded-[10px] border border-bad/40 bg-bad-bg text-bad px-4 py-3 text-sm">
             <p className="font-semibold">Warning: without required 2FA, a stolen password is enough to open the back office, move money and read KYC documents.</p>
             {turningOff2fa ? (
               <div className="mt-3">

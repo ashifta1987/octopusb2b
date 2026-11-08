@@ -44,7 +44,7 @@ export function CodeInput({ value, onChange, disabled, idPrefix = 'otp', autoFoc
               if (e.key === 'ArrowLeft' && i > 0) refs.current[i - 1]?.focus();
               if (e.key === 'ArrowRight' && i < 5) refs.current[i + 1]?.focus();
             }}
-            className="w-11 h-[54px] sm:w-[52px] sm:h-[60px] border border-[#C5CCD6] rounded-[10px] text-center font-mono font-semibold text-2xl bg-white text-navy disabled:opacity-60"
+            className="w-11 h-[54px] sm:w-[52px] sm:h-[60px] border border-line-strong rounded-[10px] text-center font-mono font-semibold text-2xl bg-white text-ink disabled:opacity-60"
           />
         ))}
       </div>

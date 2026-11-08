@@ -106,12 +106,12 @@ export default async function AdminPoolsPage({ searchParams }: { searchParams: S
       <nav aria-label="Filter pools" className="flex flex-wrap gap-2 mb-4">
         {['open', 'locked', 'confirmed', 'shipped', 'completed', 'expired', 'cancelled', 'all'].map((k) => (
           <Link key={k} href={href({ status: k === 'open' ? null : k, closing: null, pool: null })} aria-current={status === k && !closing ? 'page' : undefined}
-            className={`px-3.5 py-1.5 rounded-full border text-sm font-semibold ${status === k && !closing ? 'bg-navy text-white border-navy' : 'bg-white border-line-2'}`}>
+            className={`px-3.5 py-1.5 rounded-full border text-sm font-semibold ${status === k && !closing ? 'bg-ink text-white border-ink' : 'bg-white border-line-strong'}`}>
             {k === 'locked' ? 'Waiting for balances' : humanize(k)}{k !== 'all' && ` · ${statusCount[k] ?? 0}`}
           </Link>
         ))}
         <Link href={href({ closing: closing ? null : '1', status: null, pool: null })} aria-current={closing ? 'page' : undefined}
-          className={`px-3.5 py-1.5 rounded-full border text-sm font-semibold ${closing ? 'bg-[#B4540A] text-white border-[#B4540A]' : 'bg-white border-line-2'}`}>Closing within 48 h</Link>
+          className={`px-3.5 py-1.5 rounded-full border text-sm font-semibold ${closing ? 'bg-needs text-white border-needs' : 'bg-white border-line-strong'}`}>Closing within 48 h</Link>
       </nav>
 
       <Card>
@@ -124,12 +124,12 @@ export default async function AdminPoolsPage({ searchParams }: { searchParams: S
             const open = sp.pool === p.id;
             const unit = p.products?.unit ?? 'units';
             const rows = [
-              <tr key={p.id} className={open ? 'bg-surface' : undefined}>
-                <td className="td"><Link href={`/pool/${p.code}`} className="mono text-sm font-semibold hover:text-blue">{p.code}</Link><div className="text-xs text-muted">opened {fmtDate(p.created_at)}</div></td>
+              <tr key={p.id} className={open ? 'bg-pearl' : undefined}>
+                <td className="td"><Link href={`/pool/${p.code}`} className="mono text-sm font-semibold hover:text-coral-text">{p.code}</Link><div className="text-xs text-muted">opened {fmtDate(p.created_at)}</div></td>
                 <td className="td text-sm">{p.products?.title ?? '—'}<div className="text-xs text-muted mono">{supCode.get(p.supplier_id) ?? ''}</div></td>
                 <td className="td text-sm">
                   <div className="mono">{p.filled_qty.toLocaleString('en-US')} / {p.target_qty.toLocaleString('en-US')}</div>
-                  <div className="w-28 h-1.5 bg-[#E9ECF1] rounded-full mt-1 overflow-hidden" aria-hidden><div className="h-full bg-blue-fill" style={{ width: `${pct(p.filled_qty, p.target_qty)}%` }} /></div>
+                  <div className="w-28 h-1.5 bg-fill rounded-full mt-1 overflow-hidden" aria-hidden><div className="h-full bg-coral" style={{ width: `${pct(p.filled_qty, p.target_qty)}%` }} /></div>
                   <div className="text-xs text-muted">{pct(p.filled_qty, p.target_qty)}% · {money(p.final_price_minor ?? p.pool_price_minor, p.currency)}/unit</div>
                 </td>
                 <td className="td text-sm">{active.length} / {p.max_buyers}</td>
@@ -161,7 +161,7 @@ export default async function AdminPoolsPage({ searchParams }: { searchParams: S
             if (open) {
               rows.push(
                 <tr key={`${p.id}-pledges`}>
-                  <td colSpan={8} className="td bg-surface">
+                  <td colSpan={8} className="td bg-pearl">
                     {list.length ? (
                       <table className="w-full border-collapse bg-white rounded-[10px]">
                         <thead><tr>{['Buyer', 'Company (staff only)', 'Qty', 'Deposit', 'Pay source', 'Status', 'Joined', ''].map((h) => <th key={h} className="th">{h}</th>)}</tr></thead>

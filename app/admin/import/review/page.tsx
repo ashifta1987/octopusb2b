@@ -38,7 +38,7 @@ export default async function ImportReviewPage({ searchParams }: { searchParams:
 
   return (
     <>
-      <PageHeader eyebrow={<Link href="/admin/import" className="text-blue">← Bulk import</Link>} title="Import review queue"
+      <PageHeader eyebrow={<Link href="/admin/import" className="text-coral-text">← Bulk import</Link>} title="Import review queue"
         subtitle="A product cannot be published while it has open or held items here, or while its supplier's legal name is unresolved." />
       <Tabs base="/admin/import/review" param={sp.run ? `run=${encodeURIComponent(sp.run)}&tab` : 'tab'} active={tab} tabs={[{ key: 'open', label: 'Open', count: count('open') }, { key: 'held', label: 'Held', count: count('held') }, { key: 'done', label: 'Resolved', count: count('done') }]} />
       <Card className="mb-6">

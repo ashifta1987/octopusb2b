@@ -12,7 +12,7 @@ export async function MailDeliverabilityAlert({ showOk = false }: { showOk?: boo
     ) : null;
   }
   return (
-    <section role="alert" data-testid="mail-deliverability" className="mb-6 rounded-[14px] border border-bad/40 bg-[#FEF2F2] px-5 py-4 text-[14px] text-[#7F1D1D]">
+    <section role="alert" data-testid="mail-deliverability" className="mb-6 rounded-[14px] border border-bad/40 bg-bad-bg px-5 py-4 text-[14px] text-bad">
       <h2 className="text-[15px] font-bold text-bad">Email deliverability: customer emails to these addresses will bounce</h2>
       <ul className="mt-2 space-y-1.5">
         {bad.map((c) => (

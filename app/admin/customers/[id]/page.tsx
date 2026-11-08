@@ -45,7 +45,7 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
   return (
     <>
       <PageHeader
-        eyebrow={<Link href="/admin/customers" className="text-blue">← Customers</Link>}
+        eyebrow={<Link href="/admin/customers" className="text-coral-text">← Customers</Link>}
         title={<span className="inline-flex flex-wrap items-center gap-3">{org.name as string}{isVip && <StatusBadge status="vip" label="VIP" tone="blue" />}</span>}
         subtitle={<span className="mono">{(org.buyer_code as string | null) ?? '—'} · {COUNTRY_NAMES[org.country as string] ?? org.country ?? '—'}{org.city ? ` · ${org.city}` : ''}</span>}
       />
@@ -66,7 +66,7 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
               <dt className="text-muted">Business type</dt><dd>{humanize(org.business_type as string | null) || '—'}</dd>
               <dt className="text-muted">Registration no.</dt><dd className="mono">{(org.registration_no as string | null) ?? '—'}</dd>
               <dt className="text-muted">Website</dt><dd className="break-all">{(org.website as string | null) ?? '—'}</dd>
-              <dt className="text-muted">KYC</dt><dd><StatusBadge status={org.kyc_status as string} /> {can(s, 'customers', 'view') && <Link href="/office/kyc" className="text-blue text-xs ml-2">KYC review</Link>}</dd>
+              <dt className="text-muted">KYC</dt><dd><StatusBadge status={org.kyc_status as string} /> {can(s, 'customers', 'view') && <Link href="/office/kyc" className="text-coral-text text-xs ml-2">KYC review</Link>}</dd>
               <dt className="text-muted">Customer since</dt><dd>{fmtDate(org.created_at as string)}</dd>
             </dl>
           </Card>
@@ -87,12 +87,12 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
             )}
           </Card>
 
-          <Card title="Assistant conversations" action={can(s, 'assistant', 'view') ? <Link href="/office/assistant" className="text-sm text-blue">Assistant queue</Link> : undefined}>
+          <Card title="Assistant conversations" action={can(s, 'assistant', 'view') ? <Link href="/office/assistant" className="text-sm text-coral-text">Assistant queue</Link> : undefined}>
             {(sessions ?? []).length === 0 ? <EmptyState title="No conversations visible" body="Only the account manager, the team queue and supervisors can read a customer's assistant history." /> : (
               <ul className="divide-y divide-line">
                 {(sessions ?? []).map((x) => (
                   <li key={x.id as string} className="py-2.5 flex flex-wrap justify-between gap-2 text-sm">
-                    {can(s, 'assistant', 'view') ? <Link className="font-semibold text-blue" href={`/office/assistant?session=${x.id}`}>{(x.title as string | null) ?? 'Conversation'}</Link> : <span className="font-semibold">{(x.title as string | null) ?? 'Conversation'}</span>}
+                    {can(s, 'assistant', 'view') ? <Link className="font-semibold text-coral-text" href={`/office/assistant?session=${x.id}`}>{(x.title as string | null) ?? 'Conversation'}</Link> : <span className="font-semibold">{(x.title as string | null) ?? 'Conversation'}</span>}
                     <span className="flex items-center gap-2"><StatusBadge status={x.status as string} label={humanize(x.status as string)} tone={x.status === 'escalated' ? 'amber' : x.status === 'human' ? 'green' : x.status === 'closed' ? 'gray' : 'blue'} /><span className="text-muted">{fmtDate(x.last_message_at as string, true)}</span></span>
                   </li>
                 ))}

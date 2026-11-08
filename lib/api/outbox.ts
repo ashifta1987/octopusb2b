@@ -6,6 +6,7 @@ import { currentTraceId, traceLog, withTrace } from '@/lib/trace';
 import { MAX_ATTEMPTS, notificationFor, retryPlan, wantsEmail, type OutboxEvent } from './outbox-rules';
 import { amt, amt0, cur } from './money';
 import { deliverWebhook, isBroadcastEvent, publicEventFor, type Endpoint } from './webhooks';
+import { BRAND } from '@/lib/brand';
 
 type Sb = ReturnType<typeof createAdminClient>;
 
@@ -164,13 +165,13 @@ async function email(sb: Sb, ev: OutboxEvent, orgId: string, env: Awaited<Return
     const subject = tpl ? fill(tpl.subject, r.full_name ?? '') : `${n.title}${brand ? ` · ${brand}` : ''}`;
     const html = tpl
       ? fill(tpl.body, r.full_name ?? '')
-      : `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#0b1b3f">
+      : `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:${BRAND.black}">
   <p>Hello ${esc(r.full_name ?? '')},</p>
-  <h2 style="font-size:18px;margin:16px 0 8px">${esc(n.title)}</h2>
+  <h2 style="color:${BRAND.ink};font-size:18px;margin:16px 0 8px">${esc(n.title)}</h2>
   <p>${esc(n.body)}</p>
-  <p><a href="${esc(link)}" style="display:inline-block;background:#1f5fff;color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Open in your account</a></p>
-  <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>
-  <p style="font-size:12px;color:#6b7280">${esc(brand)}${env.company?.address ? ` · ${esc(env.company.address)}` : ''}${env.company?.email ? ` · ${esc(env.company.email)}` : ''}</p>
+  <p><a href="${esc(link)}" style="display:inline-block;background:${BRAND.coral};color:#fff;padding:10px 16px;border-radius:6px;text-decoration:none">Open in your account</a></p>
+  <hr style="border:none;border-top:1px solid ${BRAND.line};margin:24px 0"/>
+  <p style="font-size:12px;color:${BRAND.muted}">${esc(brand)}${env.company?.address ? ` · ${esc(env.company.address)}` : ''}${env.company?.email ? ` · ${esc(env.company.email)}` : ''}</p>
 </div>`;
     await mailer.send({ to: r.email!, subject, html }, { template: tpl ? ev.event_type : `default:${ev.event_type}`, eventId: ev.id });
   }

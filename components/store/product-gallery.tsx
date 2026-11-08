@@ -45,7 +45,7 @@ export function ProductGallery({ images, title, mainClassName = 'aspect-square',
         aria-roledescription={n > 1 ? 'carousel' : undefined} aria-label={n > 1 ? `${title}, image ${cur + 1} of ${n}. Use the arrow keys or swipe for more.` : undefined}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={img.url} alt={img.alt || (n > 1 ? `${title} — image ${cur + 1} of ${n}` : title)} width={800} height={800}
-          decoding="async" className={`${mainClassName} w-full object-cover bg-surface select-none`} draggable={false} data-testid="gallery-main" />
+          decoding="async" className={`${mainClassName} w-full object-cover bg-pearl select-none`} draggable={false} data-testid="gallery-main" />
       </div>
       {n > 1 && (
         <ul className="flex flex-wrap justify-start gap-2" aria-label="Product images" data-testid="gallery-thumbs">
@@ -53,7 +53,7 @@ export function ProductGallery({ images, title, mainClassName = 'aspect-square',
             <li key={`${m.url}-${i}`}>
               <button type="button" ref={(el) => { thumbs.current[i] = el; }} onClick={() => go(i)} aria-current={i === cur ? 'true' : undefined}
                 tabIndex={i === cur ? 0 : -1}
-                className={`block w-12 h-12 sm:w-14 sm:h-14 rounded-md overflow-hidden border bg-surface ${i === cur ? 'border-navy ring-2 ring-navy ring-offset-1' : 'border-line hover:border-navy'}`}>
+                className={`block w-12 h-12 sm:w-14 sm:h-14 rounded-md overflow-hidden border bg-pearl ${i === cur ? 'border-ink ring-2 ring-ink ring-offset-1' : 'border-line hover:border-ink'}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={m.url} alt={`Image ${i + 1} of ${n}`} width={56} height={56} loading="lazy" decoding="async" className="w-full h-full object-cover" draggable={false} />
               </button>

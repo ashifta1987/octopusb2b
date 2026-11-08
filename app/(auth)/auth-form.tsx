@@ -84,14 +84,14 @@ export function AuthForm({ initialMode, next, initialError, google = false }: { 
       {mode === 'signup' && (
         <div className="grid grid-cols-3 gap-2 mb-8" aria-label="Progress">
           {steps.map((s, i) => (
-            <div key={s}><div className={cn('h-1 rounded-full', i <= stepIdx ? 'bg-blue-fill' : 'bg-line')} /><div className={cn('mt-2 text-xs', i <= stepIdx ? 'font-semibold text-navy' : 'text-muted')}>{s}</div></div>
+            <div key={s}><div className={cn('h-1 rounded-full', i <= stepIdx ? 'bg-coral' : 'bg-line')} /><div className={cn('mt-2 text-xs', i <= stepIdx ? 'font-semibold text-ink' : 'text-muted')}>{s}</div></div>
           ))}
         </div>
       )}
-      <div className="grid grid-cols-2 bg-[#E9ECF1] rounded-[10px] p-1 mb-7" role="tablist">
+      <div className="grid grid-cols-2 bg-fill rounded-[10px] p-1 mb-7" role="tablist">
         {(['signup', 'login'] as const).map((m) => (
           <button key={m} role="tab" aria-selected={mode === m} onClick={() => { setMode(m); setStep('email'); setErr(null); }}
-            className={cn('min-h-11 rounded-[8px] font-semibold', mode === m ? 'bg-white shadow-sm text-navy' : 'text-muted')}>{m === 'signup' ? 'Sign up' : 'Log in'}</button>
+            className={cn('min-h-11 rounded-[8px] font-semibold', mode === m ? 'bg-white shadow-sm text-ink' : 'text-muted')}>{m === 'signup' ? 'Sign up' : 'Log in'}</button>
         ))}
       </div>
 
@@ -116,14 +116,14 @@ export function AuthForm({ initialMode, next, initialError, google = false }: { 
             <div>
               <div className="flex justify-between items-baseline">
                 <label htmlFor="password" className="label">Password</label>
-                {mode === 'login' && <Link href="/forgot" className="text-[13px] font-semibold text-blue">Forgot password?</Link>}
+                {mode === 'login' && <Link href="/forgot" className="inline-flex items-center min-h-11 text-[13px] font-semibold text-coral-text">Forgot password?</Link>}
               </div>
               <PasswordInput id="password" required autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} className="input min-h-12" value={password} onChange={(e) => setPassword(e.target.value)} />
               {mode === 'signup' && <p className="text-sm text-muted mt-2">At least 8 characters, with a number.</p>}
             </div>
             {err && <p className="text-sm text-bad" role="alert">{err}</p>}
             <button className="btn btn-primary w-full min-h-[50px]" disabled={busy}>{busy ? 'Please wait…' : mode === 'signup' ? 'Create account with email' : 'Log in'}</button>
-            <button type="button" onClick={emailCode} disabled={!email || busy} className="w-full text-sm font-semibold text-blue disabled:opacity-50">Email me a 6-digit code instead</button>
+            <button type="button" onClick={emailCode} disabled={!email || busy} className="w-full min-h-11 text-sm font-semibold text-coral-text disabled:opacity-50">Email me a 6-digit code instead</button>
           </form>
         </>
       ) : (
@@ -136,7 +136,7 @@ export function AuthForm({ initialMode, next, initialError, google = false }: { 
           </div>
           {err && <p className="text-sm text-bad" role="alert">{err}</p>}
           <button className="btn btn-primary w-full min-h-[50px]" disabled={busy}>{busy ? 'Verifying…' : 'Verify'}</button>
-          <button type="button" className="w-full text-sm font-semibold text-blue" onClick={() => setStep('email')}>Use a different email</button>
+          <button type="button" className="w-full text-sm font-semibold text-coral-text" onClick={() => setStep('email')}>Use a different email</button>
         </form>
       )}
     </div>

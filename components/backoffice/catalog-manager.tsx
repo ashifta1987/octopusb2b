@@ -63,14 +63,14 @@ export function CatalogManager({ categories, tags, canEdit, actions }: {
           const isOpen = open.has(c.id);
           return (
             <li key={c.id} role="treeitem" aria-expanded={kids.length ? isOpen : undefined} aria-selected={selected === c.id}>
-              <div className={cn('flex items-center gap-2 pr-4 py-2 border-l-[3px]', selected === c.id ? 'bg-blue-soft border-blue' : 'border-transparent hover:bg-surface')} style={{ paddingLeft: 12 + depth * 20 }}>
+              <div className={cn('flex items-center gap-2 pr-4 py-2 border-l-[3px]', selected === c.id ? 'bg-tint border-coral-text' : 'border-transparent hover:bg-pearl')} style={{ paddingLeft: 12 + depth * 20 }}>
                 {kids.length ? (
                   <button type="button" className="w-5 text-muted text-xs" aria-label={isOpen ? `Collapse ${c.name}` : `Expand ${c.name}`}
                     onClick={() => setOpen((s) => { const n = new Set(s); if (n.has(c.id)) n.delete(c.id); else n.add(c.id); return n; })}>
                     {isOpen ? '▾' : '▸'}
                   </button>
                 ) : <span className="w-5" aria-hidden />}
-                <span className={cn('mono text-[10px] font-bold rounded px-1', c.level === 1 ? 'bg-navy text-white' : 'bg-blue-soft text-[#1E4F9C]')}>L{c.level}</span>
+                <span className={cn('mono text-[10px] font-bold rounded px-1', c.level === 1 ? 'bg-ink text-white' : 'bg-tint text-coral-text')}>L{c.level}</span>
                 <button type="button" className={cn('flex-1 text-left text-[15px]', selected === c.id && 'font-semibold', !c.active && 'line-through text-muted')} onClick={() => setSelected(c.id)}>
                   {c.name}{!c.active && <span className="sr-only"> (hidden)</span>}
                 </button>
@@ -92,7 +92,7 @@ export function CatalogManager({ categories, tags, canEdit, actions }: {
 
   return (
     <div className="space-y-6">
-      {msg && <div role="status" className={cn('rounded-[10px] border px-4 py-3 text-sm', msg.ok ? 'bg-[#E3F5EA] border-ok/40 text-[#156B3A]' : 'bg-[#FDE8E8] border-bad/40 text-[#A32D2D]')}>{msg.text}</div>}
+      {msg && <div role="status" className={cn('rounded-[10px] border px-4 py-3 text-sm', msg.ok ? 'bg-ok-bg border-ok/40 text-ok' : 'bg-bad-bg border-bad/40 text-bad')}>{msg.text}</div>}
       <div className="grid lg:grid-cols-[420px_1fr] gap-6 items-start">
         <section className="card overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-line">
@@ -176,9 +176,9 @@ function CategoryDetail({ cat, path, total, canEdit, pending, mergeTargets, path
       <nav aria-label="Category path" className="text-sm text-muted">{path.map((p) => p.name).join(' › ')}</nav>
       <div className="flex flex-wrap items-center gap-2 mt-1">
         <h2 className="text-2xl font-semibold">{cat.name}</h2>
-        <span className="text-xs font-semibold rounded-full bg-blue-soft text-[#1E4F9C] px-2 py-1">Level {cat.level} of 4</span>
-        <span className="text-xs font-semibold rounded-full bg-surface border border-line px-2 py-1">{total} products</span>
-        {!cat.active && <span className="text-xs font-semibold rounded-full bg-[#FFF3D6] text-[#8A5A00] px-2 py-1">Hidden</span>}
+        <span className="text-xs font-semibold rounded-full bg-tint text-coral-text px-2 py-1">Level {cat.level} of 4</span>
+        <span className="text-xs font-semibold rounded-full bg-pearl border border-line px-2 py-1">{total} products</span>
+        {!cat.active && <span className="text-xs font-semibold rounded-full bg-warn-bg text-warn px-2 py-1">Hidden</span>}
       </div>
       <form className="grid sm:grid-cols-2 gap-4 mt-5" onSubmit={(e) => { e.preventDefault(); onSave({ name, hs_code: hs || null }); }}>
         <div>
@@ -187,7 +187,7 @@ function CategoryDetail({ cat, path, total, canEdit, pending, mergeTargets, path
         </div>
         <div>
           <span className="label">URL slug</span>
-          <div className="input flex items-center bg-surface mono text-sm overflow-hidden">{[...path.slice(0, -1).map((p) => p.slug), slugify(name)].join('/')}</div>
+          <div className="input flex items-center bg-pearl mono text-sm overflow-hidden">{[...path.slice(0, -1).map((p) => p.slug), slugify(name)].join('/')}</div>
         </div>
         <div>
           <label htmlFor="cd-hs" className="label">Default HS code</label>
@@ -239,7 +239,7 @@ function NewTag({ onAdd, pending }: { onAdd: (n: string, k: string) => void; pen
   const [n, setN] = useState('');
   const [k, setK] = useState('feature');
   return (
-    <form className="mt-4 rounded-[10px] bg-surface p-4 flex flex-wrap gap-3 items-end" onSubmit={(e) => { e.preventDefault(); if (n.trim()) { onAdd(n.trim(), k); setN(''); } }}>
+    <form className="mt-4 rounded-[10px] bg-pearl p-4 flex flex-wrap gap-3 items-end" onSubmit={(e) => { e.preventDefault(); if (n.trim()) { onAdd(n.trim(), k); setN(''); } }}>
       <div className="flex-1 min-w-[200px]">
         <label htmlFor="nt-name" className="label">New tag</label>
         <input id="nt-name" className="input" value={n} onChange={(e) => setN(e.target.value)} placeholder="e.g. Marine grade" />
@@ -269,9 +269,9 @@ function TagItem({ tag, canEdit, pending, onSave, onDelete }: { tag: TagRow; can
   );
   return (
     <li className="flex items-center gap-2">
-      <span className="rounded-full bg-blue-soft text-[#1E4F9C] text-sm font-semibold px-3 py-1">{tag.name} <span className="mono text-[11px] text-[#2A4A7F]">{tag.products}</span></span>
+      <span className="rounded-full bg-tint text-coral-text text-sm font-semibold px-3 py-1">{tag.name} <span className="mono text-[11px] text-coral-text">{tag.products}</span></span>
       {canEdit && <>
-        <button type="button" className="text-xs text-blue font-semibold" onClick={() => setEdit(true)} aria-label={`Edit tag ${tag.name}`}>Edit</button>
+        <button type="button" className="text-xs text-coral-text font-semibold" onClick={() => setEdit(true)} aria-label={`Edit tag ${tag.name}`}>Edit</button>
         <button type="button" className="text-xs text-bad font-semibold" onClick={onDelete} aria-label={`Delete tag ${tag.name}`}>Delete</button>
       </>}
     </li>

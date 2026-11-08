@@ -31,10 +31,10 @@ async function InvoicesPageContent() {
     <div className="max-w-[1160px]">
       <PageHeader title="Invoices and receipts" subtitle="Invoices, receipts and credit notes for every service. Open one to download or email it." />
       <div className="card p-5 mb-5 flex flex-wrap gap-x-10 gap-y-2 items-baseline" data-testid="awaiting-total">
-        <div className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-[#5A6475]">Awaiting payment</div>
+        <div className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-muted">Awaiting payment</div>
         {Object.keys(due.byCurrency).length === 0 ? <div className="text-[22px] font-extrabold">{money(0, 'USD')}</div>
           : Object.entries(due.byCurrency).map(([c, v]) => <div key={c} className="text-[22px] font-extrabold" data-currency={c}>{money(v!, c)}</div>)}
-        <div className="text-[13px] text-[#5A6475]">Same as “Due now” in Ledger and statements: deposits and balances due on orders, plus proformas awaiting payment.</div>
+        <div className="text-[13px] text-muted">Same as “Due now” in Ledger and statements: deposits and balances due on orders, plus proformas awaiting payment.</div>
       </div>
       <Card>
         <Table head={['Date', 'Document', 'Number', 'For', 'Amount', 'Status', '']} empty={<EmptyState title="No documents yet" body="Invoices and receipts appear here as soon as they are issued." />}>

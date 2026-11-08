@@ -41,7 +41,7 @@ export function SlaCounter({ due, resolvedAt, className }: { due: string | null;
   }, []);
   const s = slaInfo(due, now, resolvedAt);
   return (
-    <span suppressHydrationWarning className={cn('font-semibold mono text-xs', s.overdue ? 'text-bad' : s.soon ? 'text-[#8A5A00]' : 'text-muted', className)}>
+    <span suppressHydrationWarning className={cn('font-semibold mono text-xs', s.overdue ? 'text-bad' : s.soon ? 'text-warn' : 'text-muted', className)}>
       {s.overdue && <span aria-hidden>⚠ </span>}{s.text}
     </span>
   );
@@ -149,7 +149,7 @@ export function ConversationWorkspace({
       <section className="card flex flex-col min-w-0" aria-label="Conversation">
         <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-b border-line">
           <div className="text-sm text-muted">
-            Status: <strong className="text-navy">{status === 'bot' ? 'Octo answering' : status === 'human' ? 'Human (you or team)' : status === 'escalated' ? 'Waiting for a human' : 'Closed'}</strong>
+            Status: <strong className="text-ink">{status === 'bot' ? 'Octo answering' : status === 'human' ? 'Human (you or team)' : status === 'escalated' ? 'Waiting for a human' : 'Closed'}</strong>
           </div>
           <div className="flex flex-wrap gap-2">
             {canTakeOver && !closed && status !== 'human' && (
@@ -175,16 +175,16 @@ export function ConversationWorkspace({
               <li key={m.id} className={cn('flex gap-2 items-start', right ? 'flex-row-reverse' : '', m.author === 'system' && 'justify-center')}>
                 {m.author !== 'system' && (
                   <span aria-hidden className={cn('shrink-0 w-8 h-8 rounded-full grid place-items-center text-[11px] font-bold',
-                    m.author === 'bot' ? 'bg-blue-fill text-white' : m.author === 'customer' ? 'bg-navy text-white' : 'bg-ok text-white')}>
+                    m.author === 'bot' ? 'bg-coral text-white' : m.author === 'customer' ? 'bg-ink text-white' : 'bg-ok text-white')}>
                     {m.author === 'bot' ? 'O' : m.author === 'customer' ? 'C' : initials(name)}
                   </span>
                 )}
                 <div className={cn('rounded-[12px] px-4 py-2.5 max-w-[80%] text-[15px]',
-                  m.author === 'bot' && 'bg-blue-soft text-navy',
-                  m.author === 'customer' && 'bg-navy text-white',
-                  m.author === 'staff' && !m.hidden_from_customer && 'bg-[#E3F5EA] text-[#14532D]',
-                  m.author === 'staff' && m.hidden_from_customer && 'bg-[#FFF8E1] text-[#5C3D00] border border-dashed border-warn/60',
-                  m.author === 'system' && 'bg-[#FFF3D6] text-[#8A5A00] text-sm max-w-[90%]')}>
+                  m.author === 'bot' && 'bg-tint text-ink',
+                  m.author === 'customer' && 'bg-ink text-white',
+                  m.author === 'staff' && !m.hidden_from_customer && 'bg-ok-bg text-ok',
+                  m.author === 'staff' && m.hidden_from_customer && 'bg-warn-bg text-warn border border-dashed border-warn/60',
+                  m.author === 'system' && 'bg-warn-bg text-warn text-sm max-w-[90%]')}>
                   <div className={cn('text-[11px] font-semibold mb-0.5 flex flex-wrap gap-x-2', m.author === 'customer' ? 'text-white/80' : 'opacity-80')}>
                     <span>{authorLabel(m.author, m.hidden_from_customer, name)}</span>
                     {m.author === 'staff' && m.hidden_from_customer && <span className="uppercase tracking-wide rounded bg-warn/20 px-1">Internal</span>}
@@ -204,7 +204,7 @@ export function ConversationWorkspace({
             <>
               <label htmlFor="asst-reply" className="label">{internal ? 'Internal note (never shown to the customer)' : 'Reply to the customer'}</label>
               <textarea
-                id="asst-reply" ref={boxRef} className={cn('input min-h-24 py-2', internal && 'bg-[#FFF8E1]')} value={draft} maxLength={4000}
+                id="asst-reply" ref={boxRef} className={cn('input min-h-24 py-2', internal && 'bg-warn-bg')} value={draft} maxLength={4000}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); send(); } }}
                 placeholder={internal ? 'Note for colleagues…' : 'Type your reply — it appears in the customer’s thread instantly.'}
@@ -231,7 +231,7 @@ export function ConversationWorkspace({
         {identity}
         <section className="card p-5">
           <div className="flex items-center gap-2 mb-1">
-            <span aria-hidden className="w-7 h-7 rounded-full bg-blue-fill text-white grid place-items-center text-xs font-bold">O</span>
+            <span aria-hidden className="w-7 h-7 rounded-full bg-coral text-white grid place-items-center text-xs font-bold">O</span>
             <h3 className="font-semibold">Octo side rail</h3>
           </div>
           <p className="text-xs text-muted mb-3">Facts from this customer&apos;s own data. Click one to insert it into your reply.</p>
@@ -241,9 +241,9 @@ export function ConversationWorkspace({
             <ul className="space-y-2">
               {railFacts.map((f) => (
                 <li key={f.key} className="rounded-[10px] border border-line">
-                  <button type="button" className="w-full text-left px-3 py-2 hover:bg-surface rounded-[10px] disabled:opacity-60" disabled={!canReply || closed}
+                  <button type="button" className="w-full text-left px-3 py-2 hover:bg-pearl rounded-[10px] disabled:opacity-60" disabled={!canReply || closed}
                     onClick={() => insert(f.text)} aria-label={`Insert fact: ${f.title}`}>
-                    <span className="block text-xs font-semibold text-blue">{f.title} <span className="text-muted font-normal">· insert</span></span>
+                    <span className="block text-xs font-semibold text-coral-text">{f.title} <span className="text-muted font-normal">· insert</span></span>
                     <span className="block text-[13px] whitespace-pre-line line-clamp-4">{f.text}</span>
                   </button>
                   {(f.kind === 'quotes' || f.kind === 'wallet') && f.ref && (
@@ -281,7 +281,7 @@ export function ConversationWorkspace({
       </aside>
 
       {resolveOpen && (
-        <div className="fixed inset-0 z-50 bg-navy/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="resolve-title">
+        <div className="fixed inset-0 z-50 bg-ink/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="resolve-title">
           <div className="card w-full max-w-md p-6">
             <h2 id="resolve-title" className="text-xl font-semibold">Resolve this handoff</h2>
             <label htmlFor="resolve-outcome" className="label mt-4">Outcome *</label>

@@ -42,11 +42,11 @@ async function Body({ params }: { params: Promise<{ id: string }> }) {
     <div className="max-w-[760px] mx-auto px-4 sm:px-8 py-10">
       <div className="bg-white border border-line rounded-[16px] p-6 sm:p-8" data-testid="turnkey-confirmation">
         <Eyebrow className="text-ok">{quote ? 'Quote request received' : 'Interest registered'}</Eyebrow>
-        <h1 className="font-display font-bold text-[26px] sm:text-[30px] text-navy mt-2">Thank you — your reference is <span className="mono text-blue" data-testid="lead-reference">{lead.reference}</span></h1>
+        <h1 className="font-display font-bold text-[26px] sm:text-[30px] text-ink mt-2">Thank you — your reference is <span className="mono text-coral-text" data-testid="lead-reference">{lead.reference}</span></h1>
         <p className="text-muted mt-2">{proj?.title}{pkg ? ` · ${pkg.tier_name} package` : ''}. We sent a confirmation email with the same reference.</p>
         <ol className="mt-6 grid gap-3 sm:grid-cols-3">
           {steps.map(([t, d]) => (
-            <li key={t} className="rounded-[12px] bg-surface p-4"><div className="font-semibold text-navy">{t}</div><p className="text-[13.5px] text-muted mt-1">{d}</p></li>
+            <li key={t} className="rounded-[12px] bg-pearl p-4"><div className="font-semibold text-ink">{t}</div><p className="text-[13.5px] text-muted mt-1">{d}</p></li>
           ))}
         </ol>
         <div className="mt-6 flex flex-wrap gap-2.5">

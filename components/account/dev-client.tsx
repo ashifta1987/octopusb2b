@@ -34,7 +34,7 @@ export function CopyField({ label, value, action }: { label: string; value: stri
   return (
     <div className="flex flex-col gap-1.5 min-w-0">
       <span className="text-[13px] font-semibold">{label}</span>
-      <div className="flex items-center gap-2 min-h-11 border border-line bg-surface rounded-[8px] pl-3 pr-1.5 overflow-hidden">
+      <div className="flex items-center gap-2 min-h-11 border border-line bg-pearl rounded-[8px] pl-3 pr-1.5 overflow-hidden">
         <code className="mono text-sm font-medium flex-1 min-w-0 truncate">{value}</code>
         {action ?? <CopyButton value={value} />}
       </div>
@@ -54,7 +54,7 @@ function ScopeGrid({ value, onChange, disabled, idPrefix }: { value: string[]; o
             <input
               id={id}
               type="checkbox"
-              className="w-[18px] h-[18px] accent-blue"
+              className="w-[18px] h-[18px] accent-coral-text"
               checked={on}
               disabled={disabled}
               onChange={(e) => onChange(e.target.checked ? [...value, sc] : value.filter((x) => x !== sc))}
@@ -149,14 +149,14 @@ export function CreateKeyButton({ appId, mode, allowed }: { appId: string; mode:
       </button>
       {err && <p className="text-sm text-bad" role="alert">{err}</p>}
       {secret && (
-        <div className="rounded-[10px] border border-warn/40 bg-[#FFF3D6] p-4" role="alert">
-          <p className="text-sm font-semibold text-[#8A5A00]">Copy this client secret now — it will not be shown again.</p>
-          <p className="text-xs text-[#8A5A00] mt-0.5">We only store a hash. If you lose it, revoke it and create a new one.</p>
+        <div className="rounded-[10px] border border-warn/40 bg-warn-bg p-4" role="alert">
+          <p className="text-sm font-semibold text-warn">Copy this client secret now — it will not be shown again.</p>
+          <p className="text-xs text-warn mt-0.5">We only store a hash. If you lose it, revoke it and create a new one.</p>
           <div className="mt-3 flex items-center gap-2 min-h-11 border border-line bg-white rounded-[8px] pl-3 pr-1.5">
             <code className="mono text-sm font-medium flex-1 min-w-0 break-all py-2" aria-label="New client secret">{secret}</code>
             <CopyButton value={secret} />
           </div>
-          <button type="button" className="mt-3 text-sm underline text-[#8A5A00]" onClick={() => setSecret(null)}>I have saved it — hide</button>
+          <button type="button" className="mt-3 text-sm underline text-warn" onClick={() => setSecret(null)}>I have saved it — hide</button>
         </div>
       )}
     </div>
@@ -193,7 +193,7 @@ export function WebhookForm() {
         <div className="flex flex-wrap gap-2.5">
           {WEBHOOK_EVENTS.map((ev) => (
             <label key={ev} htmlFor={`wh-ev-${ev}`} className="flex items-center gap-2.5 min-h-10 border border-line rounded-[8px] px-3 mono text-[13px] font-medium cursor-pointer">
-              <input id={`wh-ev-${ev}`} type="checkbox" className="w-[18px] h-[18px] accent-blue" checked={events.includes(ev)}
+              <input id={`wh-ev-${ev}`} type="checkbox" className="w-[18px] h-[18px] accent-coral-text" checked={events.includes(ev)}
                 onChange={(e) => setEvents(e.target.checked ? [...events, ev] : events.filter((x) => x !== ev))} />
               {ev}
             </label>

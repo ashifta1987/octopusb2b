@@ -11,15 +11,14 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
       <Suspense fallback={null}>
         <MaintenanceNotice variant="prominent" />
       </Suspense>
-      <Suspense fallback={null}>
-        <StoreAnnouncement />
-      </Suspense>
+      {/* cached data only → part of the static shell (no pop-in, no layout shift) */}
+      <StoreAnnouncement />
       {/* Header reads the session cookie → streamed; fixed-height fallback avoids layout shift. */}
-      <Suspense fallback={<div className="h-[150px] bg-white border-b border-line" aria-hidden />}>
+      <Suspense fallback={<div className="h-[196px] min-[761px]:h-[202px] lg:h-[142px] bg-white border-b border-line" aria-hidden />}>
         <StoreHeader />
       </Suspense>
       <main id="main" className="flex-1">{children}</main>
-      <Suspense fallback={<div className="h-[320px] bg-navy mt-16" aria-hidden />}>
+      <Suspense fallback={<div className="h-[320px] bg-ink mt-16" aria-hidden />}>
         <StoreFooter />
       </Suspense>
     </div>

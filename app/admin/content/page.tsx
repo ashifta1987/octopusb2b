@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { MailDeliverabilityAlert } from '@/components/admin/mail-deliverability';
 import { HomeTab } from './home-tab';
+import { MediaTab } from './media-tab';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { Card, PageHeader, EmptyState, StatusBadge, Notice, Table } from '@/components/ui';
@@ -25,6 +26,7 @@ const TABS = [
   { key: 'blocks', label: 'Content blocks' },
   { key: 'company', label: 'Company & branches' },
   { key: 'home', label: 'Home page' },
+  { key: 'media', label: 'Media' },
 ];
 
 /** Admin → Site content (CMS.png). Content editors draft; Admin publishes legal pages. */
@@ -47,6 +49,7 @@ export default async function ContentPage({ searchParams }: { searchParams: Prom
       {tab === 'blocks' && <BlocksTab editable={editable} canCreate={can(sess, 'content', 'create')} />}
       {tab === 'company' && <CompanyTab editable={editable} isAdmin={sess.isAdmin} />}
       {tab === 'home' && <HomeTab editable={editable} isAdmin={sess.isAdmin} />}
+      {tab === 'media' && <MediaTab editable={editable} />}
     </>
   );
 }
@@ -95,7 +98,7 @@ async function TermsTab({ isAdmin, editable, sectionNo, viewId }: { isAdmin: boo
         <nav aria-label="Sections" className="px-6 pt-4 flex flex-wrap gap-2">
           {Array.from({ length: 15 }, (_, i) => i + 1).map((n) => (
             <Link key={n} href={`/admin/content?tab=terms&s=${n}${vParam}`} aria-current={n === no ? 'true' : undefined} aria-label={`Section ${n}`}
-              className={cn('min-w-10 h-10 inline-flex items-center justify-center rounded-[8px] border mono text-sm font-semibold', n === no ? 'bg-navy text-white border-navy' : 'bg-white border-line-2 hover:border-navy')}>
+              className={cn('min-w-10 h-10 inline-flex items-center justify-center rounded-[8px] border mono text-sm font-semibold', n === no ? 'bg-ink text-white border-ink' : 'bg-white border-line-strong hover:border-ink')}>
               {n}
             </Link>
           ))}
@@ -112,8 +115,8 @@ async function TermsTab({ isAdmin, editable, sectionNo, viewId }: { isAdmin: boo
               <div className="label">Live values used in this section</div>
               <div className="flex flex-wrap gap-2">
                 {vars.map((k) => settingMap.has(k)
-                  ? <span key={k} className="rounded-full bg-blue-soft px-2.5 py-1 text-xs font-semibold text-[#1E4F9C]">{k} = {String(settingMap.get(k))}</span>
-                  : <span key={k} className="rounded-full bg-[#FFF3D6] px-2.5 py-1 text-xs font-semibold text-[#8A5A00]">{k} = not set</span>)}
+                  ? <span key={k} className="rounded-full bg-tint px-2.5 py-1 text-xs font-semibold text-coral-text">{k} = {String(settingMap.get(k))}</span>
+                  : <span key={k} className="rounded-full bg-warn-bg px-2.5 py-1 text-xs font-semibold text-warn">{k} = not set</span>)}
               </div>
             </div>
           )}
@@ -186,7 +189,7 @@ async function PagesTab({ isAdmin, editable, canCreate, slug }: { isAdmin: boole
                     {pages.filter((p) => (group === 'Legal') === p.is_legal).map((p) => (
                       <li key={p.id}>
                         <Link href={`/admin/content?tab=pages&page=${p.slug}`} aria-current={page?.id === p.id ? 'true' : undefined}
-                          className={cn('flex items-center justify-between gap-3 px-5 py-3', page?.id === p.id ? 'bg-blue-soft border-l-4 border-l-blue' : 'hover:bg-surface')}>
+                          className={cn('flex items-center justify-between gap-3 px-5 py-3', page?.id === p.id ? 'bg-tint border-l-4 border-l-coral-text' : 'hover:bg-pearl')}>
                           <span className="font-medium">{p.title}</span><StatusBadge status={p.status} label={p.status === 'published' ? 'Live' : undefined} />
                         </Link>
                       </li>
@@ -251,7 +254,7 @@ async function PagesTab({ isAdmin, editable, canCreate, slug }: { isAdmin: boole
                         <span className="text-sm text-muted">by {p.created_by ? who.get(p.created_by) ?? '—' : '—'} · {fmtDate(p.created_at, true)}</span>
                         {isAdmin && <span className="ml-auto"><RunButton className="btn btn-primary btn-sm" confirm="Publish this proposal to the live legal page?" action={applyProposal.bind(null, p.id)}>Publish proposal</RunButton></span>}
                       </div>
-                      <details className="mt-2"><summary className="text-sm cursor-pointer text-blue">Show text</summary><pre className="mt-2 whitespace-pre-wrap text-sm bg-surface rounded-md p-3 max-h-64 overflow-auto">{snap.body}</pre></details>
+                      <details className="mt-2"><summary className="text-sm cursor-pointer text-coral-text">Show text</summary><pre className="mt-2 whitespace-pre-wrap text-sm bg-pearl rounded-md p-3 max-h-64 overflow-auto">{snap.body}</pre></details>
                     </li>
                   );
                 })}

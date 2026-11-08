@@ -10,9 +10,9 @@ const n = (v: number) => v.toLocaleString('en-US');
 export function ProgressBar({ filled, target, className = 'h-1.5', label }: { filled: number; target: number; className?: string; label?: string }) {
   const p = pct(filled, target);
   return (
-    <div className={`w-full rounded-full bg-[#E9ECF1] overflow-hidden ${className}`} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={p}
+    <div className={`w-full rounded-full bg-fill overflow-hidden ${className}`} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={p}
       aria-label={label ?? `${n(filled)} of ${n(target)} pledged (${p}%)`}>
-      <div className="h-full rounded-full bg-blue-fill" style={{ width: `${p}%` }} />
+      <div className="h-full rounded-full bg-coral" style={{ width: `${p}%` }} />
     </div>
   );
 }
@@ -32,8 +32,8 @@ export function PoolCard({ pool: p, categoryName, variant = 'grid' }: { pool: Po
     return (
       <article className="card p-4 flex flex-col gap-2.5 h-full">
         <div className="flex justify-between items-start gap-2">
-          <h3 className="font-semibold text-[14px] leading-snug line-clamp-2"><Link href={href} className="hover:text-blue">{p.product.title}</Link></h3>
-          <span className="shrink-0 rounded-full bg-[#FFF3D6] text-[#8A5A00] text-[11px] font-semibold px-2 py-0.5"><Countdown to={p.deadline_at} prefix="Closes in " /></span>
+          <h3 className="font-semibold text-[14px] leading-snug line-clamp-2"><Link href={href} className="hover:text-coral-text">{p.product.title}</Link></h3>
+          <span className="shrink-0 rounded-full bg-warn-bg text-warn text-[11px] font-semibold px-2 py-0.5"><Countdown to={p.deadline_at} prefix="Closes in " /></span>
         </div>
         <ProgressBar filled={p.filled_qty} target={p.target_qty} />
         <div className="flex justify-between text-[12px] text-muted"><span>{n(p.filled_qty)} of {n(p.target_qty)} {p.product.unit}</span><span>{n(left)} to go</span></div>
@@ -48,13 +48,13 @@ export function PoolCard({ pool: p, categoryName, variant = 'grid' }: { pool: Po
   const body = (
     <>
       <div className="flex justify-between items-start gap-3">
-        <h3 className="font-semibold text-[15px] leading-snug"><Link href={href} className="hover:text-blue">{p.product.title}</Link></h3>
+        <h3 className="font-semibold text-[15px] leading-snug"><Link href={href} className="hover:text-coral-text">{p.product.title}</Link></h3>
         <span className="mono text-[11px] text-muted shrink-0 pt-0.5">{p.code}</span>
       </div>
       {p.supplier && <div className="text-[12px] text-muted">Supplier <span className="mono">{p.supplier.code}</span>{p.supplier.country && <> · {p.supplier.country}</>}</div>}
       <ProgressBar filled={p.filled_qty} target={p.target_qty} />
       <div className="flex justify-between text-[12px] text-muted">
-        <span><span className="mono font-semibold text-navy">{n(p.filled_qty)} {p.product.unit}</span> of {n(p.target_qty)} {p.product.unit}</span>
+        <span><span className="mono font-semibold text-ink">{n(p.filled_qty)} {p.product.unit}</span> of {n(p.target_qty)} {p.product.unit}</span>
         <span>{p.buyers} {p.buyers === 1 ? 'buyer' : 'buyers'}</span>
       </div>
       <div className="flex justify-between items-end">
@@ -65,7 +65,7 @@ export function PoolCard({ pool: p, categoryName, variant = 'grid' }: { pool: Po
         {p.saving_pct > 0 && <span className="text-[13px] font-semibold text-ok" title="Saving against the base tier price if the pool fills">save {p.saving_pct}%</span>}
       </div>
       <div className="flex justify-between items-center mt-auto pt-1">
-        <span className="text-[12px] font-semibold text-[#B4540A] inline-flex items-center gap-1">
+        <span className="text-[12px] font-semibold text-needs inline-flex items-center gap-1">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2 2M9 2h6" /></svg>
           <Countdown to={p.deadline_at} suffix=" left" />
         </span>
@@ -78,7 +78,7 @@ export function PoolCard({ pool: p, categoryName, variant = 'grid' }: { pool: Po
     <div className="relative">
       <ProductImage src={p.product.image_url} alt={p.product.title} className={variant === 'list' ? 'aspect-square h-full' : 'aspect-[16/10]'} />
       <div className="absolute inset-x-2.5 top-2.5 flex justify-between items-start gap-2">
-        {categoryName ? <span className="rounded-full bg-white text-navy text-[11px] font-semibold px-2 py-0.5 shadow-sm">{categoryName}</span> : <span />}
+        {categoryName ? <span className="rounded-full bg-white text-ink text-[11px] font-semibold px-2 py-0.5 shadow-sm">{categoryName}</span> : <span />}
         <FillBadge filled={p.filled_qty} target={p.target_qty} />
       </div>
     </div>
@@ -124,7 +124,7 @@ export function HowPoolsWork({ depositPct, minPledge, balanceHours, id = 'how' }
       <ol className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mt-6">
         {steps.map(([t, b], i) => (
           <li key={t}>
-            <span className="w-8 h-8 rounded-full bg-navy text-white font-semibold text-sm flex items-center justify-center" aria-hidden>{i + 1}</span>
+            <span className="w-8 h-8 rounded-full bg-ink text-white font-semibold text-sm flex items-center justify-center" aria-hidden>{i + 1}</span>
             <h3 className="font-semibold mt-3"><span className="sr-only">Step {i + 1}: </span>{t}</h3>
             <p className="text-[13px] text-muted mt-1.5 leading-relaxed">{b}</p>
           </li>

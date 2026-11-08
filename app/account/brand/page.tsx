@@ -41,16 +41,16 @@ async function BrandProjects({ searchParams }: { searchParams: Promise<{ project
 
   return (
     <div className="max-w-[980px]" data-testid="brand-projects">
-      <div className="k !text-blue">Make My Brand</div>
+      <div className="k !text-coral-text">Make My Brand</div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <h1 className="text-[30px] font-extrabold leading-[1.15] flex items-center gap-2">Brand projects <NewBadge /></h1>
         <Link href="/request/brand" className="btn btn-primary" data-testid="start-brand">Start a brand project</Link>
       </div>
-      <p className="mt-1 text-[14.5px] text-body-2">Your logo on verified products. Your account manager sends a proof and a quote before you pay anything.</p>
+      <p className="mt-1 text-[14.5px] text-black">Your logo on verified products. Your account manager sends a proof and a quote before you pay anything.</p>
 
       {rows.length === 0 ? (
         <div className="card p-8 mt-6 text-center" data-testid="brand-empty">
-          <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-soft text-blue"><Icon name="tag" /></span>
+          <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-tint text-coral-text"><Icon name="tag" /></span>
           <p className="mt-3 text-[16px] font-semibold">No brand projects yet</p>
           <p className="text-[14px] text-muted mt-1">Pick a verified product, upload your logo and tell us where the stock goes.</p>
           <Link href="/request/brand" className="btn btn-primary mt-4">Start a brand project</Link>
@@ -63,13 +63,13 @@ async function BrandProjects({ searchParams }: { searchParams: Promise<{ project
             const on = sp.project === r.ref;
             const logos = (r.logo_paths ?? []) as string[];
             return (
-              <li key={r.id as string} className={`card p-5 ${on ? 'border-navy shadow-[inset_0_0_0_1px_#11133C]' : ''}`} data-testid="brand-project" id={r.ref as string}>
+              <li key={r.id as string} className={`card p-5 ${on ? 'border-ink shadow-[inset_0_0_0_1px_var(--ink)]' : ''}`} data-testid="brand-project" id={r.ref as string}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2.5"><span className="mono font-bold text-navy">{r.ref as string}</span><Pill tone={tone}>{label}</Pill></div>
+                  <div className="flex items-center gap-2.5"><span className="mono font-bold text-ink">{r.ref as string}</span><Pill tone={tone}>{label}</Pill></div>
                   <span className="text-[13px] text-muted">Sent {fmtDate(r.created_at as string)}</span>
                 </div>
                 <dl className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-2 text-[14px]">
-                  <div><dt className="k">Product</dt><dd className="mt-0.5">{p ? <Link href={`/p/${p.slug}`} className="text-blue font-semibold">{p.title as string}</Link> : (r.product_link as string) ?? '—'}</dd></div>
+                  <div><dt className="k">Product</dt><dd className="mt-0.5">{p ? <Link href={`/p/${p.slug}`} className="text-coral-text font-semibold">{p.title as string}</Link> : (r.product_link as string) ?? '—'}</dd></div>
                   <div><dt className="k">Quantity</dt><dd className="mt-0.5">{r.quantity ? `${Number(r.quantity).toLocaleString('en-US')} units` : 'Your account manager confirms the minimum'}</dd></div>
                   <div><dt className="k">Branding and packaging</dt><dd className="mt-0.5">{[METHOD[r.method as string], PACK[r.packaging as string]].filter(Boolean).join(' · ') || '—'}</dd></div>
                   <div><dt className="k">Stock goes to</dt><dd className="mt-0.5">{r.stock_destination === 'bulk' ? `Bulk to ${COUNTRY_NAMES[r.bulk_country as string] ?? r.bulk_country}` : 'Octopus warehouse, order by order'}</dd></div>

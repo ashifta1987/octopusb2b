@@ -21,7 +21,7 @@ export function PortalShell({ session, nav, children, searchPlaceholder = 'Searc
   const initials = name.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
   const sub = roleLabel ?? (session.org?.name ? `${session.org.name} · Customer` : session.roles.map((r) => r.replace('_', ' ')).join(', '));
   return (
-    <div className="min-h-screen bg-surface">
+    <div className="min-h-screen bg-pearl">
       <MaintenanceNotice />
       <header className="bg-white border-b border-line">
         <div className="flex flex-wrap items-center gap-4 px-6 py-3">
@@ -38,7 +38,7 @@ export function PortalShell({ session, nav, children, searchPlaceholder = 'Searc
           ) : (
             <div className="ml-auto flex items-center gap-3">
               <PortalSwitcher session={session} />
-              <div className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center font-semibold text-sm" aria-hidden>{initials}</div>
+              <div className="w-10 h-10 rounded-full bg-ink text-white flex items-center justify-center font-semibold text-sm" aria-hidden>{initials}</div>
               <div className="hidden sm:block leading-tight">
                 <div className="font-semibold text-[15px]">{name}</div>
                 <div className="text-xs text-muted capitalize">{sub}</div>
@@ -68,7 +68,7 @@ function PortalSwitcher({ session }: { session: Session }) {
   if (links.length < 2) return null;
   return (
     <nav aria-label="Switch portal" className="hidden lg:flex gap-1">
-      {links.map((l) => <Link key={l.href} href={l.href} className="px-3 py-2 rounded-md text-sm font-semibold text-muted hover:text-navy hover:bg-surface">{l.label}</Link>)}
+      {links.map((l) => <Link key={l.href} href={l.href} className="px-3 py-2 rounded-md text-sm font-semibold text-muted hover:text-ink hover:bg-pearl">{l.label}</Link>)}
     </nav>
   );
 }
@@ -91,10 +91,10 @@ export function WorkspaceSwitcher({ session, current }: { session: Session; curr
         {list.map((w) => (
           <form key={w.key} action={switchWorkspace}>
             <input type="hidden" name="workspace" value={w.key} />
-            <button type="submit" role="menuitem" className="w-full text-left flex items-center gap-3 px-2 py-2 rounded-md hover:bg-surface">
-              <span className="w-8 h-8 rounded-md bg-navy text-white text-xs font-bold flex items-center justify-center flex-none" aria-hidden>{w.short}</span>
+            <button type="submit" role="menuitem" className="w-full text-left flex items-center gap-3 px-2 py-2 rounded-md hover:bg-pearl">
+              <span className="w-8 h-8 rounded-md bg-ink text-white text-xs font-bold flex items-center justify-center flex-none" aria-hidden>{w.short}</span>
               <span className="min-w-0">
-                <span className="block text-sm font-semibold text-navy">{w.label}</span>
+                <span className="block text-sm font-semibold text-ink">{w.label}</span>
                 <span className="block text-xs text-muted truncate">{w.description}</span>
               </span>
             </button>
@@ -106,12 +106,12 @@ export function WorkspaceSwitcher({ session, current }: { session: Session; curr
 }
 
 export function StaffUserMenu({ name, initials, sub, email }: { name: string; initials: string; sub: string; email: string | null }) {
-  const item = 'block w-full text-left px-3 py-2 rounded-md text-sm font-semibold text-navy hover:bg-surface';
+  const item = 'block w-full text-left px-3 py-2 rounded-md text-sm font-semibold text-ink hover:bg-pearl';
   return (
     <details className="relative">
-      <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer flex items-center gap-3 rounded-md px-1 py-1 hover:bg-surface">
+      <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer flex items-center gap-3 rounded-md px-1 py-1 hover:bg-pearl">
         <span className="sr-only">Account menu: </span>
-        <span className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center font-semibold text-sm" aria-hidden>{initials}</span>
+        <span className="w-10 h-10 rounded-full bg-ink text-white flex items-center justify-center font-semibold text-sm" aria-hidden>{initials}</span>
         <span className="hidden sm:block leading-tight text-left">
           <span className="block font-semibold text-[15px]">{name}</span>
           <span className="block text-xs text-muted capitalize">{sub}</span>

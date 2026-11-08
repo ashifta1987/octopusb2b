@@ -83,10 +83,10 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
         <span className="k mr-1">Shipping type</span>
         {SHIPS.map(([k, l]) => {
           const on = (ship ?? '') === k;
-          return <Link key={l} href={href({ ship: k || undefined })} aria-current={on ? 'true' : undefined} className={`inline-flex items-center min-h-11 px-4 rounded-full border text-[14px] font-medium ${on ? 'bg-navy text-white border-navy hover:text-white' : 'bg-white text-navy border-line-2 hover:border-navy'}`}>{l}</Link>;
+          return <Link key={l} href={href({ ship: k || undefined })} aria-current={on ? 'true' : undefined} className={`inline-flex items-center min-h-11 px-4 rounded-full border text-[14px] font-medium ${on ? 'bg-ink text-white border-ink hover:text-white' : 'bg-white text-ink border-line-strong hover:border-ink'}`}>{l}</Link>;
         })}
         <label className="sm:ml-auto inline-flex items-center gap-2.5 min-h-11 cursor-pointer text-[14px] font-medium">
-          <input type="checkbox" name="wh" value="1" defaultChecked={sp.wh === '1'} className="w-5 h-5 accent-[#11133C]" />In our warehouse now
+          <input type="checkbox" name="wh" value="1" defaultChecked={sp.wh === '1'} className="w-5 h-5 accent-ink" />In our warehouse now
         </label>
         <button type="submit" className="btn btn-ghost btn-sm">Apply</button>
       </div>
@@ -96,11 +96,11 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
 
   return (
     <div data-testid="dropship-catalogue">
-      <div className="k !text-blue">Dropshipping</div>
+      <div className="k !text-coral-text">Dropshipping</div>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="max-w-[860px]">
           <h1 className="text-[30px] font-extrabold leading-[1.15]">Catalogue</h1>
-          <p className="mt-1 text-[14.5px] text-body-2">Only products available for dropshipping to your markets are shown · Verified suppliers only · Prices include shipping and duties to the country you choose</p>
+          <p className="mt-1 text-[14.5px] text-black">Only products available for dropshipping to your markets are shown · Verified suppliers only · Prices include shipping and duties to the country you choose</p>
         </div>
         <Link href={href({ list: sp.list === '1' ? undefined : '1' })} className="btn btn-ghost" data-testid="import-list-link"><Icon name="doc" size={18} />{sp.list === '1' ? 'Show all products' : `Import list (${list.size})`}</Link>
       </div>
@@ -128,8 +128,8 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
                 const added = list.has(r.product_id);
                 const detail = `/account/dropship/catalogue/${r.product_id}?country=${country}`;
                 return (
-                  <li key={r.product_id} className={`card overflow-hidden flex flex-col ${blocked ? 'bg-surface' : ''}`} data-testid={blocked ? 'catalogue-blocked' : 'catalogue-card'}>
-                    <div className={`relative aspect-square bg-surface ${blocked ? 'opacity-50' : ''}`}>
+                  <li key={r.product_id} className={`card overflow-hidden flex flex-col ${blocked ? 'bg-pearl' : ''}`} data-testid={blocked ? 'catalogue-blocked' : 'catalogue-card'}>
+                    <div className={`relative aspect-square bg-pearl ${blocked ? 'opacity-50' : ''}`}>
                       {r.image_url
                         // eslint-disable-next-line @next/next/no-img-element
                         ? <img src={r.image_url} alt="" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
@@ -137,8 +137,8 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
                       <span className="absolute top-2.5 left-2.5"><VerifiedBadge /></span>
                     </div>
                     <div className="p-4 flex flex-col flex-1">
-                      {quote && <div className="flex flex-wrap gap-1.5"><ShippingTypePill type={quote.service} /><span className="pill bg-surface text-muted border border-line">{days(quote)}</span></div>}
-                      <h2 className="mt-2.5 text-[15.5px] font-bold leading-snug line-clamp-2"><Link href={detail} className="text-navy hover:text-blue">{r.title}</Link></h2>
+                      {quote && <div className="flex flex-wrap gap-1.5"><ShippingTypePill type={quote.service} /><span className="pill bg-pearl text-muted border border-line">{days(quote)}</span></div>}
+                      <h2 className="mt-2.5 text-[15.5px] font-bold leading-snug line-clamp-2"><Link href={detail} className="text-ink hover:text-coral-text">{r.title}</Link></h2>
                       <p className="mt-1.5 text-[13px] text-muted">
                         {r.stock_warehouse > 0 ? `${r.stock_warehouse.toLocaleString('en-US')} in our warehouse` : r.stock_partner > 0 ? `${r.stock_partner.toLocaleString('en-US')} at partner warehouses` : 'Ships from the global network'}
                         {r.variant_count > 1 ? ` · ${r.variant_count} variants` : ''}

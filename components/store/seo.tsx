@@ -19,7 +19,7 @@ export function Breadcrumbs({ items }: { items: { name: string; href?: string }[
         {items.map((it, i) => (
           <li key={i} className="flex items-center gap-1.5">
             {i > 0 && <span aria-hidden>/</span>}
-            {it.href && i < items.length - 1 ? <Link href={it.href} className="hover:text-blue">{it.name}</Link> : <span aria-current={i === items.length - 1 ? 'page' : undefined} className="text-navy font-medium">{it.name}</span>}
+            {it.href && i < items.length - 1 ? <Link href={it.href} className="hover:text-coral-text">{it.name}</Link> : <span aria-current={i === items.length - 1 ? 'page' : undefined} className="text-ink font-medium">{it.name}</span>}
           </li>
         ))}
       </ol>
@@ -38,7 +38,7 @@ export function breadcrumbLd(items: { name: string; href?: string }[]) {
 /** Plain-text CMS body → paragraphs (no HTML injection). */
 export function Prose({ text }: { text: string }) {
   return (
-    <div className="space-y-4 text-[16px] leading-7 text-ink">
+    <div className="space-y-4 text-[16px] leading-7 text-black">
       {text.split(/\n{2,}/).map((p, i) => <p key={i} className="whitespace-pre-line">{p}</p>)}
     </div>
   );

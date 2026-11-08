@@ -15,8 +15,8 @@ export function LedgerTable({ groups, cur, from, totals }: { groups: LedgerGroup
         <thead><tr>{['Date', 'Journal', 'Description', 'Debit', 'Credit', 'Balance'].map((h, i) => <th key={h} className={`th ${i >= 3 ? 'text-right' : ''}`}>{h}</th>)}</tr></thead>
         {groups.map((g) => (
           <tbody key={g.kind} data-account={g.kind}>
-            <tr><th colSpan={6} scope="rowgroup" className="text-left px-4 pt-5 pb-2 text-[15px] font-bold text-navy border-t-2 border-navy">{g.label}</th></tr>
-            <tr className="bg-surface" data-row="opening">
+            <tr><th colSpan={6} scope="rowgroup" className="text-left px-4 pt-5 pb-2 text-[15px] font-bold text-ink border-t-2 border-ink">{g.label}</th></tr>
+            <tr className="bg-pearl" data-row="opening">
               <td className={`td text-sm ${nw}`}>{fmtDate(from)}</td>
               <td className="td font-semibold" colSpan={2}>Opening balance</td>
               <td className="td" /><td className="td" />
@@ -41,14 +41,14 @@ export function LedgerTable({ groups, cur, from, totals }: { groups: LedgerGroup
           </tbody>
         ))}
         <tfoot>
-          <tr className="bg-navy text-white" data-row="totals">
+          <tr className="bg-ink text-white" data-row="totals">
             <td className="px-4 py-3 font-semibold" colSpan={3}>Totals</td>
             <td className={`px-4 py-3 text-right mono text-sm ${nw}`}>{money(totals.debit, cur)}</td>
             <td className={`px-4 py-3 text-right mono text-sm ${nw}`}>{money(totals.credit, cur)}</td>
             <td className="px-4 py-3" />
           </tr>
           {groups.map((g) => (
-            <tr key={g.kind} className="bg-[#1B1F52] text-white" data-row="closing-summary">
+            <tr key={g.kind} className="bg-ink text-white" data-row="closing-summary">
               <td className="px-4 py-2.5" colSpan={5}>{CLOSING_LABEL[g.kind]}</td>
               <td className={`px-4 py-2.5 text-right mono text-sm font-semibold ${nw}`}>{money(g.closing, cur)}</td>
             </tr>

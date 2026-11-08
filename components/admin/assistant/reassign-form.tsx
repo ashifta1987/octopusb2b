@@ -21,7 +21,7 @@ export function ReassignButton({ orgId, orgName, currentStaffId, candidates, cap
     <>
       <button type="button" className={className} onClick={() => { setErr(null); setStaff(''); setReason(''); setOpen(true); }}>{label}</button>
       {open && (
-        <div className="fixed inset-0 z-50 bg-navy/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby={`${id}-t`}>
+        <div className="fixed inset-0 z-50 bg-ink/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby={`${id}-t`}>
           <div className="card w-full max-w-md p-6 text-left">
             <h2 id={`${id}-t`} className="text-xl font-semibold">Reassign account manager</h2>
             <p className="text-sm text-muted mt-1">{orgName}</p>

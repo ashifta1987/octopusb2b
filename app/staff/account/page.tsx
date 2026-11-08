@@ -86,7 +86,7 @@ async function AccountBody() {
 /** Staff account (SPEC §17): profile, change password (step-up), 2FA devices + backup codes, sessions. */
 export default function StaffAccountPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-surface" />}>
+    <Suspense fallback={<div className="min-h-screen bg-pearl" />}>
       <AccountBody />
     </Suspense>
   );

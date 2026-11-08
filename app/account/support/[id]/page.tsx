@@ -64,7 +64,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
 
   return (
     <>
-      <div className="mb-3 text-sm"><Link href="/account/support" className="text-muted hover:text-navy">← Help &amp; complaints</Link></div>
+      <div className="mb-3 text-sm"><Link href="/account/support" className="text-muted hover:text-ink">← Help &amp; complaints</Link></div>
       <PageHeader
         eyebrow={<span className="eyebrow">{t.code} · {humanize(t.category)}</span>}
         title={t.subject}
@@ -90,9 +90,9 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
                   const atts = parseAttachments(m.attachments);
                   return (
                     <li key={m.id} className={cn('flex', mine ? 'justify-end' : 'justify-start')}>
-                      <div className={cn('max-w-[85%] rounded-[12px] border px-4 py-3', mine ? 'bg-blue-soft border-blue/20' : 'bg-white border-line')}>
+                      <div className={cn('max-w-[85%] rounded-[12px] border px-4 py-3', mine ? 'bg-tint border-coral-text/20' : 'bg-white border-line')}>
                         <div className="flex flex-wrap items-baseline gap-x-2 text-xs">
-                          <span className="font-semibold text-navy">{who}</span>
+                          <span className="font-semibold text-ink">{who}</span>
                           <time className="text-muted mono" dateTime={m.created_at}>{fmtDate(m.created_at, true)}</time>
                         </div>
                         <p className="mt-1 whitespace-pre-wrap break-words text-[15px]">{m.body}</p>
@@ -103,7 +103,7 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
                               const preview = IMG.test(a.name) ? signed.get(a.path) : undefined;
                               return (
                                 <li key={a.path}>
-                                  <a href={href} target="_blank" rel="noopener" className="inline-flex items-center gap-2 rounded-[8px] border border-line bg-white px-2 py-1.5 text-sm hover:border-navy">
+                                  <a href={href} target="_blank" rel="noopener" className="inline-flex items-center gap-2 rounded-[8px] border border-line bg-white px-2 py-1.5 text-sm hover:border-ink">
                                     {preview ? (
                                       // eslint-disable-next-line @next/next/no-img-element
                                       <img src={preview} alt="" className="h-10 w-10 rounded object-cover" />

@@ -199,7 +199,7 @@ export default async function AdminAssistantPage({ searchParams }: { searchParam
           <Table head={['Customer', 'Account manager', 'Team', 'Assigned', 'Reason', 'VIP', '']} empty={<EmptyState title={aq ? 'No matching assignments' : 'No assignments yet'} body="Customers get an account manager when their KYC is verified." />}>
             {assignments.map((a) => (
               <tr key={a.org_id as string} className="border-t border-line">
-                <td className="td"><Link href={`/admin/customers/${a.org_id}`} className="font-semibold text-blue">{a.org?.name ?? 'Customer'}</Link><div className="text-xs text-muted mono">{a.org?.buyer_code ?? ''} {a.org?.country ? `· ${a.org.country}` : ''}</div></td>
+                <td className="td"><Link href={`/admin/customers/${a.org_id}`} className="font-semibold text-coral-text">{a.org?.name ?? 'Customer'}</Link><div className="text-xs text-muted mono">{a.org?.buyer_code ?? ''} {a.org?.country ? `· ${a.org.country}` : ''}</div></td>
                 <td className="td text-sm">{a.manager}</td>
                 <td className="td text-sm">{(a.team as string | null) ?? '—'}</td>
                 <td className="td text-sm text-muted">{fmtDate(a.assigned_at as string)}</td>

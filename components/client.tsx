@@ -21,7 +21,7 @@ export function ConfirmCharge({
     <>
       <button type="button" className={cn(buttonClass, className)} onClick={() => { setErr(null); setOpen(true); }}>{label}</button>
       {open && (
-        <div className="fixed inset-0 z-50 bg-navy/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="cc-title">
+        <div className="fixed inset-0 z-50 bg-ink/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="cc-title">
           <div className="card w-full max-w-md p-6">
             <h2 id="cc-title" className="text-xl font-semibold">{title}</h2>
             <dl className="mt-4 space-y-2 text-[15px]">
@@ -67,7 +67,7 @@ export function FileDrop({ name, accept, multiple, hint, onFiles }: { name?: str
       onDragOver={(e) => { e.preventDefault(); setOver(true); }}
       onDragLeave={() => setOver(false)}
       onDrop={(e) => { e.preventDefault(); setOver(false); if (ref.current) { ref.current.files = e.dataTransfer.files; } set(e.dataTransfer.files); }}
-      className={cn('rounded-[10px] border-2 border-dashed px-4 py-6 text-center cursor-pointer focus-within:ring-2 focus-within:ring-blue focus-within:ring-offset-2', over ? 'border-blue bg-blue-soft' : 'border-line-2 bg-surface')}
+      className={cn('rounded-[10px] border-2 border-dashed px-4 py-6 text-center cursor-pointer focus-within:ring-2 focus-within:ring-coral-text focus-within:ring-offset-2', over ? 'border-coral-text bg-tint' : 'border-line-strong bg-pearl')}
       onClick={() => ref.current?.click()}
     >
       {/* The visually hidden input stays keyboard-focusable; the zone shows the focus ring (SPEC §12 keyboard + labels). */}
@@ -117,7 +117,7 @@ export function ActionButton({ action, children, className = 'btn btn-primary bt
 export function Switch({ checked, onChange, label, disabled }: { checked: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
   return (
     <button type="button" role="switch" aria-checked={checked} aria-label={label} disabled={disabled} onClick={() => onChange(!checked)}
-      className={cn('relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50', checked ? 'bg-blue-fill' : 'bg-line-2')}>
+      className={cn('relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50', checked ? 'bg-coral' : 'bg-line-strong')}>
       <span className={cn('absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform', checked ? 'translate-x-[22px]' : 'translate-x-0.5')} />
       <span className="sr-only">{checked ? 'On' : 'Off'}</span>
     </button>

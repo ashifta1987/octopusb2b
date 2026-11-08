@@ -7,6 +7,7 @@ import { getRequestMeta } from '@/lib/staff/request-meta';
 import { emailIsStaff, isStaffUser } from '@/lib/staff/server';
 import { checkCustomerSignupEmail } from '@/lib/staff/customer-guard';
 import { getEmail } from '@/lib/adapters';
+import { BRAND } from '@/lib/brand';
 
 /**
  * Customer authentication (SPEC §4.1, ADDON-22): email + password only — no Google / social sign-in.
@@ -73,8 +74,8 @@ async function sendLockoutAlert(email: string, ip: string | null, minutes: numbe
     await getEmail().send({
       to: email,
       subject: 'Your Octopus B2B account was locked',
-      html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#0b1b3f">
-  <h2 style="font-size:18px">Account locked for ${minutes} minutes</h2>
+      html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:${BRAND.black}">
+  <h2 style="color:${BRAND.ink};font-size:18px">Account locked for ${minutes} minutes</h2>
   <p>There were 5 wrong password attempts on your account${ip ? ` from IP address <b>${ip.replace(/[<>&"]/g, '')}</b>` : ''}. We locked sign-in for ${minutes} minutes to protect it.</p>
   <p>If this wasn't you, reset your password once the lock ends: <a href="${origin}/forgot">${origin}/forgot</a></p>
 </div>`,

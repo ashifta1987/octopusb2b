@@ -62,7 +62,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, Props>(function Passwo
         aria-controls={rest.id}
         title={label}
         disabled={rest.disabled}
-        className="absolute inset-y-0 right-0 my-auto mr-1 flex h-10 w-10 items-center justify-center rounded-[8px] text-muted hover:text-navy focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-blue motion-safe:transition-colors disabled:opacity-50"
+        className="absolute inset-y-0 right-0 my-auto mr-1 flex h-10 w-10 items-center justify-center rounded-[8px] text-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-coral-text motion-safe:transition-colors disabled:opacity-50"
       >
         {s.visible ? <EyeOff size={18} aria-hidden /> : <Eye size={18} aria-hidden />}
       </button>

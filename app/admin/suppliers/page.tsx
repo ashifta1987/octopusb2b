@@ -72,7 +72,7 @@ export default async function SuppliersPage({ searchParams }: { searchParams: Pr
         </Card>
       )}
       {(sp.new || sel) && (
-        <Card title={sel ? `Edit ${sel.code}` : 'New supplier'} className="mb-6" action={<Link href="/admin/suppliers" className="text-sm text-blue">Close</Link>}>
+        <Card title={sel ? `Edit ${sel.code}` : 'New supplier'} className="mb-6" action={<Link href="/admin/suppliers" className="text-sm text-coral-text">Close</Link>}>
           <ActionForm key={sel?.id ?? 'new'} action={sel ? updateSupplier : createSupplier} className="px-6 pb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" submitLabel={sel ? 'Save supplier' : 'Create supplier'} hideSubmit={sel ? !edit : false} resetOnSuccess={!sel}>
             {sel && <input type="hidden" name="id" value={sel.id} />}
             <Field label="Legal name" htmlFor="su-name" className="lg:col-span-2"><input id="su-name" name="legal_name" className="input" required defaultValue={String(sel?.legal_name ?? '')} /></Field>
@@ -101,7 +101,7 @@ export default async function SuppliersPage({ searchParams }: { searchParams: Pr
             </div>
           )}
           {sel && delPreview && (
-            <div className="mx-6 mb-6 rounded-[10px] border-2 border-bad/40 bg-[#FDF2F2] p-5" data-testid="delete-supplier">
+            <div className="mx-6 mb-6 rounded-[10px] border-2 border-bad/40 bg-bad-bg p-5" data-testid="delete-supplier">
               <h3 className="font-semibold text-bad">Delete {delPreview.code} permanently</h3>
               <p className="text-sm mt-1">Erases the supplier and everything below from the platform. This cannot be undone. The code <b className="mono">{delPreview.code}</b> is then given to the next new supplier.</p>
               <ul className="text-sm mt-3 grid sm:grid-cols-2 gap-x-6 gap-y-1">
@@ -135,7 +135,7 @@ export default async function SuppliersPage({ searchParams }: { searchParams: Pr
             const swv = sw(x);
             const pc = prodCount.get(x.id) ?? { live: 0, total: 0 };
             return (
-              <tr key={x.id} className={cn(sel?.id === x.id && 'bg-blue-soft', x.archived_at && 'opacity-60')}>
+              <tr key={x.id} className={cn(sel?.id === x.id && 'bg-tint', x.archived_at && 'opacity-60')}>
                 <td className="td"><div className="font-semibold">{x.legal_name}</div><div className="flex items-center gap-2 text-xs text-muted"><span className="mono">{x.code}</span><CountryTag code={x.country} />{String(x.city ?? '')}{x.archived_at && <StatusBadge status="archived" />}</div></td>
                 <td className="td text-sm">{String(x.contact_name ?? '—')}<div className="mono text-xs text-muted">{String(x.contact_email ?? '')}</div></td>
                 <td className="td text-sm">{pc.live} live / {pc.total}</td>

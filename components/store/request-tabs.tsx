@@ -21,9 +21,9 @@ export function RequestTabs({ blocks, active, qs = '' }: { blocks: Record<string
           return (
             <li key={t} className="shrink-0 w-[200px] lg:w-auto">
               <Link href={`/request/${t}${qs}`} aria-current={on ? 'page' : undefined} data-testid={`request-tab-${t}`}
-                className={`block h-full rounded-[14px] border px-4 py-3.5 ${on ? 'bg-navy border-navy text-white hover:text-white' : 'bg-white border-line hover:border-navy'}`}>
+                className={`block h-full rounded-[14px] border px-4 py-3.5 ${on ? 'bg-ink border-ink text-white hover:text-white' : 'bg-white border-line hover:border-ink'}`}>
                 <span className="font-semibold flex items-center gap-1.5">{title}{t === 'brand' && <NewBadge />}</span>
-                <span className={`block text-[13px] mt-1 ${on ? 'text-[#C9CFDB]' : 'text-muted'}`}>{sub}</span>
+                <span className={`block text-[13px] mt-1 ${on ? 'text-on-ink' : 'text-muted'}`}>{sub}</span>
               </Link>
             </li>
           );

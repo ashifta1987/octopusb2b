@@ -50,7 +50,7 @@ export function AccountShell({ session, ctx, newQuotes, mobileBar, children }: {
   const role = session.org ? `${session.org.name}` : 'Customer';
 
   return (
-    <div className="min-h-screen bg-[#F5F6F8]">
+    <div className="min-h-screen bg-pearl">
       <MaintenanceNotice />
       <header className="bg-white">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center gap-x-5 gap-y-3">
@@ -60,30 +60,30 @@ export function AccountShell({ session, ctx, newQuotes, mobileBar, children }: {
             <label htmlFor="acct-q" className="sr-only">Search your requests and orders</label>
             <input id="acct-q" name="q" className="input !rounded-[10px]" placeholder="Search your requests and orders (reference or product)" />
           </form>
-          {isStaging() && <span className="order-2 mono text-[11px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full bg-[#FEF3C7] text-[#92400E]" data-testid="staging-badge" title="Staging environment: test data, not the live site">Staging</span>}
+          {isStaging() && <span className="order-2 mono text-[11px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full bg-warn-bg text-warn" data-testid="staging-badge" title="Staging environment: test data, not the live site">Staging</span>}
           <div className="order-2 lg:order-3 ml-auto flex items-center gap-3">
             {ctx?.wallet && (
-              <Link href="/account/wallet" className="hidden sm:block rounded-[10px] border border-line px-3.5 py-1.5 leading-tight hover:border-navy" data-testid="header-wallet">
-                <span className="block mono text-[10.5px] font-semibold uppercase tracking-[.08em] text-[#5A6475]">Wallet</span>
+              <Link href="/account/wallet" className="hidden sm:block rounded-[10px] border border-line px-3.5 py-1.5 leading-tight hover:border-ink" data-testid="header-wallet">
+                <span className="block mono text-[10.5px] font-semibold uppercase tracking-[.08em] text-muted">Wallet</span>
                 <span className="block font-bold text-[16px]">{money(Number(ctx.wallet.available_cents), 'USD')}</span>
               </Link>
             )}
-            <Link href="/account/notifications" aria-label={`Notifications${ctx?.unread ? `, ${ctx.unread} unread` : ''}`} className="relative w-11 h-11 rounded-[10px] border border-line flex items-center justify-center hover:border-navy">
+            <Link href="/account/notifications" aria-label={`Notifications${ctx?.unread ? `, ${ctx.unread} unread` : ''}`} className="relative w-11 h-11 rounded-[10px] border border-line flex items-center justify-center hover:border-ink">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
-              {!!ctx?.unread && <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-[#E5532D]" aria-hidden />}
+              {!!ctx?.unread && <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-bad" aria-hidden />}
             </Link>
             <details className="relative">
               <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer flex items-center gap-2.5">
-                <span className="w-11 h-11 rounded-full bg-navy text-white flex items-center justify-center font-semibold text-sm" aria-hidden>{initials}</span>
+                <span className="w-11 h-11 rounded-full bg-ink text-white flex items-center justify-center font-semibold text-sm" aria-hidden>{initials}</span>
                 <span className="hidden md:block leading-tight text-left">
                   <span className="block font-semibold text-[15px]">{name}</span>
-                  <span className="block text-[13px] text-[#5A6475]">{role}</span>
+                  <span className="block text-[13px] text-muted">{role}</span>
                 </span>
                 <span className="sr-only">Account menu</span>
               </summary>
               <div className="absolute right-0 mt-2 w-[220px] bg-white border border-line rounded-[10px] shadow-lg p-2 z-50">
-                <Link href="/account/kyc" className="block px-3 py-2.5 rounded-md text-sm font-semibold hover:bg-surface">Company and verification</Link>
-                <form action="/auth/signout" method="post"><button type="submit" className="w-full text-left px-3 py-2.5 rounded-md text-sm font-semibold text-bad hover:bg-surface">Sign out</button></form>
+                <Link href="/account/kyc" className="block px-3 py-2.5 rounded-md text-sm font-semibold hover:bg-pearl">Company and verification</Link>
+                <form action="/auth/signout" method="post"><button type="submit" className="w-full text-left px-3 py-2.5 rounded-md text-sm font-semibold text-bad hover:bg-pearl">Sign out</button></form>
               </div>
             </details>
           </div>

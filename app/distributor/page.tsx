@@ -54,7 +54,7 @@ export default async function DistributorHome() {
         <Stat label="Open RFQs" value={<Link href="/distributor/rfqs" className="hover:underline">{openRfqs ?? 0}</Link>} hint="Quote on behalf of your suppliers" />
       </div>
 
-      <section className="rounded-[12px] border-2 border-dashed border-line-2 bg-white p-6 mb-6 flex flex-wrap items-center justify-between gap-4">
+      <section className="rounded-[12px] border-2 border-dashed border-line-strong bg-white p-6 mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold">Supplier self-service portal</h2>
           <p className="text-sm text-muted mt-1">
@@ -128,11 +128,11 @@ export default async function DistributorHome() {
           </div>
         )}
         <div className="px-6 py-4 border-t border-line text-sm text-muted grid gap-1 md:grid-cols-2">
-          <div><b className="text-navy">Portal login</b> · supplier can sign in (only when the portal is open)</div>
-          <div><b className="text-navy">Product upload</b> · products can be added or edited for this supplier</div>
-          <div><b className="text-navy">RFQ replies</b> · quotes can be sent for this supplier</div>
-          <div><b className="text-navy">Listings live</b> · supplier&apos;s products can go live to buyers</div>
-          <div><b className="text-navy">AI tools</b> · photo enhance, poster maker and SEO fix for this supplier&apos;s products</div>
+          <div><b className="text-ink">Portal login</b> · supplier can sign in (only when the portal is open)</div>
+          <div><b className="text-ink">Product upload</b> · products can be added or edited for this supplier</div>
+          <div><b className="text-ink">RFQ replies</b> · quotes can be sent for this supplier</div>
+          <div><b className="text-ink">Listings live</b> · supplier&apos;s products can go live to buyers</div>
+          <div><b className="text-ink">AI tools</b> · photo enhance, poster maker and SEO fix for this supplier&apos;s products</div>
           <div className="text-xs">Buyers only ever see the supplier code and country — never the names or contacts above.</div>
         </div>
       </Card>

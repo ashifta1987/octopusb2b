@@ -22,7 +22,7 @@ export function BackupCodesPanel({ codes, email, onDone, doneLabel = 'I saved my
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="border border-[#F3D9A6] bg-[#FFF8EB] rounded-[10px] px-3.5 py-3 text-[13px] leading-[1.45] text-[#6B4A07]">
+      <div className="border border-warn-bg bg-warn-bg rounded-[10px] px-3.5 py-3 text-[13px] leading-[1.45] text-warn">
         These {codes.length} backup codes are shown only once. Each works one time if you lose your phone; using one lets you set up a new authenticator.
       </div>
       <ol className="grid grid-cols-2 gap-2 list-none m-0 p-4 bg-white border border-line rounded-[10px]" aria-label="Backup codes">
@@ -32,8 +32,8 @@ export function BackupCodesPanel({ codes, email, onDone, doneLabel = 'I saved my
         <button type="button" className="btn btn-ghost" onClick={copy}>{copied ? 'Copied ✓' : 'Copy codes'}</button>
         <button type="button" className="btn btn-ghost" onClick={download}>Download .txt</button>
       </div>
-      <label className="flex items-start gap-2.5 text-sm text-[#3B4556]">
-        <input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} className="w-[18px] h-[18px] mt-0.5 accent-blue" />
+      <label className="flex items-start gap-2.5 text-sm text-black">
+        <input type="checkbox" checked={saved} onChange={(e) => setSaved(e.target.checked)} className="w-[18px] h-[18px] mt-0.5 accent-coral-text" />
         I have saved these codes somewhere safe
       </label>
       <button type="button" className="btn btn-primary w-full min-h-[50px]" disabled={!saved} onClick={onDone}>{doneLabel}</button>

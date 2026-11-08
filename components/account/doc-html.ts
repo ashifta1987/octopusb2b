@@ -2,6 +2,7 @@ import 'server-only';
 import { BANK_COLS, accountFor, bankLines, type BankAccount } from '@/lib/bank-accounts';
 import { createClient } from '@/lib/supabase/server';
 import { COUNTRY_NAMES, humanize, asCurrency, CURRENCY_PREFIX, type Currency } from '@/lib/format';
+import { BRAND } from '@/lib/brand';
 
 /**
  * Print-ready, self-contained HTML for customer documents (Invoice.png).
@@ -289,44 +290,44 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
 <style>
 @page{size:A4;margin:14mm 14mm 16mm}
 *{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-html,body{margin:0;background:#EEF0F4;color:#11133C;font:400 12px/1.5 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif}
-a{color:#2A6FD6;text-decoration:none}
+html,body{margin:0;background:${BRAND.fill};color:${BRAND.black};font:400 12px/1.5 Figtree,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif}
+a{color:${BRAND.coralText};text-decoration:none}
 .mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .page{width:210mm;min-height:297mm;margin:24px auto;background:#fff;padding:16mm 16mm 14mm;box-shadow:0 2px 16px rgba(17,19,60,.08)}
-.toolbar{position:sticky;top:0;z-index:5;display:flex;justify-content:center;gap:10px;padding:10px;background:#11133C}
-.toolbar button,.toolbar a{font:600 13px/1 Inter,system-ui,sans-serif;border-radius:8px;padding:10px 16px;border:1px solid #fff;cursor:pointer;background:#fff;color:#11133C}
-.toolbar .primary{background:#2A6FD6;border-color:#2A6FD6;color:#fff}
+.toolbar{position:sticky;top:0;z-index:5;display:flex;justify-content:center;gap:10px;padding:10px;background:${BRAND.ink}}
+.toolbar button,.toolbar a{font:600 13px/1 Figtree,system-ui,sans-serif;border-radius:8px;padding:10px 16px;border:1px solid #fff;cursor:pointer;background:#fff;color:${BRAND.ink}}
+.toolbar .primary{background:${BRAND.coral};border-color:${BRAND.coral};color:#fff}
 .head{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
 .logo{height:44px;width:auto;display:block}
-h1{font:700 22px/1.2 Lexend,Inter,system-ui,sans-serif;margin:20px 0 8px;text-transform:uppercase;letter-spacing:.01em}
-h1 .num{color:#2A6FD6}
+h1{font:700 22px/1.2 Lexend,Figtree,system-ui,sans-serif;margin:20px 0 8px;text-transform:uppercase;letter-spacing:.01em}
+h1 .num{color:${BRAND.coralText}}
 .pill{display:inline-block;font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px}
-.pill.warn{background:#FFF3D6;color:#8A5A00}.pill.ok{background:#E3F5EA;color:#156B3A}.pill.bad{background:#FDE8E8;color:#A32D2D}.pill.info{background:#E8F0FC;color:#1E4F9C}
-.seller{font-size:11px;color:#3D4456}.seller b{display:block;color:#11133C;font-size:12px;margin-bottom:6px}.seller p{margin:0 0 6px}
-.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;background:#F5F6F8;border-radius:10px;padding:14px 16px;margin:22px 0 16px}
-.lbl{font:600 9.5px/1.2 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:#5A6475;margin-bottom:6px}
+.pill.warn{background:${BRAND.warnBg};color:${BRAND.warn}}.pill.ok{background:${BRAND.okBg};color:${BRAND.ok}}.pill.bad{background:${BRAND.badBg};color:${BRAND.bad}}.pill.info{background:${BRAND.tint};color:${BRAND.coralText}}
+.seller{font-size:11px;color:${BRAND.black}}.seller b{display:block;color:${BRAND.ink};font-size:12px;margin-bottom:6px}.seller p{margin:0 0 6px}
+.meta{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;background:${BRAND.pearl};border-radius:10px;padding:14px 16px;margin:22px 0 16px}
+.lbl{font:600 9.5px/1.2 Jost,"Futura PT",Futura,system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:${BRAND.muted};margin-bottom:6px}
 .meta .v{font-weight:600;font-size:12.5px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
-.box{border:1px solid #E2E5EA;border-radius:10px;padding:14px 16px}
+.box{border:1px solid ${BRAND.line};border-radius:10px;padding:14px 16px}
 .box .name{font-weight:700;font-size:13px;margin-bottom:4px}
 .kv{margin:3px 0}
 table.items{width:100%;border-collapse:collapse;margin-bottom:8px}
-table.items th{font:600 9.5px/1.2 "IBM Plex Mono",ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:#5A6475;text-align:left;padding:8px 10px;border-bottom:1.5px solid #11133C}
-table.items td{font-size:12px;padding:10px;border-bottom:1px solid #E2E5EA;vertical-align:top}
+table.items th{font:600 9.5px/1.2 Jost,"Futura PT",Futura,system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:${BRAND.muted};text-align:left;padding:8px 10px;border-bottom:1.5px solid ${BRAND.ink}}
+table.items td{font-size:12px;padding:10px;border-bottom:1px solid ${BRAND.line};vertical-align:top}
 .r{text-align:right!important}
-.sub{color:#5A6475;font-size:11px}
+.sub{color:${BRAND.muted};font-size:11px}
 .bottom{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;margin-top:16px;align-items:start}
 .row{display:flex;justify-content:space-between;gap:12px;margin:5px 0}
-.totals .row{color:#3D4456}
-.grand{display:flex;justify-content:space-between;align-items:center;background:#11133C;color:#fff;border-radius:10px;padding:14px 16px;margin-top:10px}
-.grand .amt{font:700 20px/1 Lexend,Inter,system-ui,sans-serif}
-.receipt .big{font:700 26px/1.1 Lexend,Inter,system-ui,sans-serif;margin:4px 0 10px}
-.foot{display:grid;grid-template-columns:1.4fr 1fr;gap:24px;border-top:1px solid #E2E5EA;margin-top:22px;padding-top:16px;align-items:end}
-.terms h3{font-size:12px;color:#2A6FD6;margin:0 0 6px}
-.terms ul{margin:0;padding-left:16px;font-size:10.5px;color:#3D4456}.terms li{margin:2px 0}
-.sign{text-align:center;border-top:1px solid #11133C;padding-top:8px}.sign b{display:block;font-size:12px}.sign span{font-size:10.5px;color:#5A6475}
-.help{text-align:center;margin-top:22px;font-size:11px;color:#3D4456}.help b{display:block;color:#11133C;margin-bottom:4px}
-.gen{font:400 9.5px/1.4 "IBM Plex Mono",ui-monospace,monospace;color:#5A6475;margin-top:4px}
+.totals .row{color:${BRAND.black}}
+.grand{display:flex;justify-content:space-between;align-items:center;background:${BRAND.ink};color:#fff;border-radius:10px;padding:14px 16px;margin-top:10px}
+.grand .amt{font:700 20px/1 Lexend,Figtree,system-ui,sans-serif}
+.receipt .big{font:700 26px/1.1 Lexend,Figtree,system-ui,sans-serif;margin:4px 0 10px}
+.foot{display:grid;grid-template-columns:1.4fr 1fr;gap:24px;border-top:1px solid ${BRAND.line};margin-top:22px;padding-top:16px;align-items:end}
+.terms h3{font-size:12px;color:${BRAND.coral};margin:0 0 6px}
+.terms ul{margin:0;padding-left:16px;font-size:10.5px;color:${BRAND.black}}.terms li{margin:2px 0}
+.sign{text-align:center;border-top:1px solid ${BRAND.ink};padding-top:8px}.sign b{display:block;font-size:12px}.sign span{font-size:10.5px;color:${BRAND.muted}}
+.help{text-align:center;margin-top:22px;font-size:11px;color:${BRAND.black}}.help b{display:block;color:${BRAND.ink};margin-bottom:4px}
+.gen{font:400 9.5px/1.4 Jost,"Futura PT",Futura,system-ui,sans-serif;color:${BRAND.muted};margin-top:4px}
 @media print{html,body{background:#fff}.toolbar{display:none!important}.page{margin:0;width:auto;min-height:0;padding:0;box-shadow:none}.box,table.items,.bottom,.foot{break-inside:avoid}}
 @media screen and (max-width:820px){.page{width:auto;margin:0;padding:20px}.head,.two,.bottom,.foot{grid-template-columns:1fr}.meta{grid-template-columns:1fr 1fr}}
 </style>
@@ -339,7 +340,7 @@ table.items td{font-size:12px;padding:10px;border-bottom:1px solid #E2E5EA;verti
 <main class="page">
   <header class="head">
     <div>
-      <img class="logo" src="${esc(opts.origin)}/logo.png" alt="${esc(co?.brand ?? 'Octopus B2B')}">
+      <img class="logo" src="${esc(opts.origin)}/brand/octopus-b2b-logo.png" alt="${esc(co?.brand ?? 'Octopus B2B')}">
       <h1>${esc(title)} <span class="num">${esc(doc.number)}</span></h1>
       <span class="pill ${statusTone}">${esc(statusText)}</span>
     </div>

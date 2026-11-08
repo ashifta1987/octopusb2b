@@ -66,7 +66,7 @@ async function Content({ searchParams }: { searchParams: SP }) {
       <section className="card p-5 flex gap-4 items-center">
         <div className="w-20 shrink-0 rounded-[10px] overflow-hidden"><ProductImage src={product.image_url} alt={product.title} className="aspect-square" width={160} height={160} /></div>
         <div className="min-w-0">
-          <Link href={`/p/${product.slug}`} className="font-semibold text-[17px] hover:text-blue">{product.title}</Link>
+          <Link href={`/p/${product.slug}`} className="font-semibold text-[17px] hover:text-coral-text">{product.title}</Link>
           <div className="text-[13px] text-muted mt-1">
             MOQ {product.moq.toLocaleString('en-US')} {product.unit}
             {product.supplier && <> · Supplier <span className="mono">{product.supplier.code}</span>{product.supplier.country && ` · ${product.supplier.country}`}</>}

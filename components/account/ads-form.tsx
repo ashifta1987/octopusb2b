@@ -99,8 +99,8 @@ export function AdsCampaignForm({ placements, countries, disabled, walletCents, 
             ) : (
               <div className="space-y-3">
                 {placements.map((p) => (
-                  <label key={p.code} htmlFor={`pl-${p.code}`} className={cn('flex items-center gap-3 min-h-12 border rounded-[10px] px-4 cursor-pointer', placement === p.code ? 'border-blue bg-blue-soft/40' : 'border-line')}>
-                    <input id={`pl-${p.code}`} type="radio" name="placement" className="w-[18px] h-[18px] accent-blue" checked={placement === p.code}
+                  <label key={p.code} htmlFor={`pl-${p.code}`} className={cn('flex items-center gap-3 min-h-12 border rounded-[10px] px-4 cursor-pointer', placement === p.code ? 'border-coral-text bg-tint/40' : 'border-line')}>
+                    <input id={`pl-${p.code}`} type="radio" name="placement" className="w-[18px] h-[18px] accent-coral-text" checked={placement === p.code}
                       onChange={() => { setPlacement(p.code); setBidCents((b) => Math.max(b, p.min_cpc_cents)); }} />
                     <span className="flex-1 text-[15px]">{p.name}</span>
                     <span className="mono text-xs text-muted">min {fmt(p.min_cpc_cents)} / click</span>
@@ -111,19 +111,19 @@ export function AdsCampaignForm({ placements, countries, disabled, walletCents, 
           </fieldset>
           <fieldset className="mt-5">
             <legend className="label">Buyer countries <span className="font-normal text-muted">· {picked.length ? `${picked.length} selected` : 'All countries'}</span></legend>
-            <details className="border border-line-2 rounded-[8px]">
+            <details className="border border-line-strong rounded-[8px]">
               <summary className="cursor-pointer px-3 py-2.5 text-[15px]">{picked.length ? picked.join(', ') : 'All countries (choose to narrow)'}</summary>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 p-3 max-h-64 overflow-y-auto border-t border-line">
                 {countryList.map(([code, label]) => (
                   <label key={code} htmlFor={`ct-${code}`} className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input id={`ct-${code}`} type="checkbox" className="accent-blue" checked={picked.includes(code)}
+                    <input id={`ct-${code}`} type="checkbox" className="accent-coral-text" checked={picked.includes(code)}
                       onChange={(e) => setPicked(e.target.checked ? [...picked, code] : picked.filter((x) => x !== code))} />
                     <span className="mono text-xs text-muted w-6">{code}</span>{label}
                   </label>
                 ))}
               </div>
             </details>
-            {picked.length > 0 && <button type="button" className="mt-2 text-sm underline text-blue" onClick={() => setPicked([])}>Clear — show in all countries</button>}
+            {picked.length > 0 && <button type="button" className="mt-2 text-sm underline text-coral-text" onClick={() => setPicked([])}>Clear — show in all countries</button>}
           </fieldset>
         </section>
 
@@ -133,7 +133,7 @@ export function AdsCampaignForm({ placements, countries, disabled, walletCents, 
           <div>
             <label htmlFor="ad-bid" className="label">Your bid per click: <span className="mono">{fmt(bid)}</span></label>
             <div className="flex items-center gap-3">
-              <input id="ad-bid" type="range" className="flex-1 accent-blue" min={minCpc} max={Math.max(minCpc * 10, currency === 'CNY' ? 3500 : 500)} step={1} value={bid}
+              <input id="ad-bid" type="range" className="flex-1 accent-coral-text" min={minCpc} max={Math.max(minCpc * 10, currency === 'CNY' ? 3500 : 500)} step={1} value={bid}
                 onChange={(e) => setBidCents(Number(e.target.value))} aria-valuetext={fmt(bid)} />
               <label htmlFor="ad-bid-n" className="sr-only">Bid per click in {currency}</label>
               <input id="ad-bid-n" type="number" className="input w-28 mono" min={(minCpc / 100).toFixed(2)} step="0.01" value={(bid / 100).toFixed(2)}
@@ -144,7 +144,7 @@ export function AdsCampaignForm({ placements, countries, disabled, walletCents, 
           <div className="mt-5">
             <label htmlFor="ad-budget" className="label">Daily budget: <span className="mono">{fmt(budgetUsd * 100)}</span></label>
             <div className="flex items-center gap-3">
-              <input id="ad-budget" type="range" className="flex-1 accent-blue" min={5} max={budgetMax} step={1} value={Math.min(budgetUsd, budgetMax)}
+              <input id="ad-budget" type="range" className="flex-1 accent-coral-text" min={5} max={budgetMax} step={1} value={Math.min(budgetUsd, budgetMax)}
                 onChange={(e) => setBudgetUsd(Number(e.target.value))} aria-valuetext={fmt(budgetUsd * 100)} />
               <label htmlFor="ad-budget-n" className="sr-only">Daily budget in {currency}</label>
               <input id="ad-budget-n" type="number" className="input w-28 mono" min={1} step="1" value={budgetUsd}
@@ -159,12 +159,12 @@ export function AdsCampaignForm({ placements, countries, disabled, walletCents, 
         <section className="card p-5" aria-label="Ad preview">
           <div className="text-sm font-semibold mb-3">Preview</div>
           <div className="border border-line rounded-[12px] p-4 flex gap-3 items-start">
-            <span className="mono text-[9px] font-semibold tracking-wider uppercase bg-surface border border-line rounded px-1.5 py-0.5 text-muted shrink-0">Sponsored</span>
+            <span className="mono text-[9px] font-semibold tracking-wider uppercase bg-pearl border border-line rounded px-1.5 py-0.5 text-muted shrink-0">Sponsored</span>
             <div className="ph w-12 h-12 rounded-[8px] shrink-0" aria-hidden>Img</div>
             <div className="min-w-0">
               <div className="font-semibold text-[15px] break-words">{headline || 'Your headline'}</div>
               <div className="text-xs text-muted mt-0.5 break-words">{body || 'Your short line'}</div>
-              <div className="text-xs text-blue mt-1 truncate">{link || '/'}</div>
+              <div className="text-xs text-coral-text mt-1 truncate">{link || '/'}</div>
             </div>
           </div>
           <p className="text-xs text-muted mt-3">Ads are always labelled “Sponsored”. Every ad is reviewed before it goes live.</p>

@@ -89,9 +89,9 @@ async function AccountHomeContent({ searchParams }: { searchParams: Promise<{ no
       {notice && <div className="mb-4"><Notice tone="blue">{notice}</Notice></div>}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="mono text-[11.5px] font-semibold uppercase tracking-[.1em] text-blue">My account</div>
+          <div className="mono text-[11.5px] font-semibold uppercase tracking-[.1em] text-coral-text">My account</div>
           <h1 className="text-[32px] sm:text-[36px] font-extrabold leading-tight">{org.name}</h1>
-          <p className="text-[15px] text-[#5A6475] mt-1">Everything Octopus is doing for you, in one place. {ctx.onCount === 1 ? 'One service is' : `${ctx.onCount} services are`} switched on for your company.</p>
+          <p className="text-[15px] text-muted mt-1">Everything Octopus is doing for you, in one place. {ctx.onCount === 1 ? 'One service is' : `${ctx.onCount} services are`} switched on for your company.</p>
         </div>
         <div className="flex flex-wrap gap-3">
           <Link href="/account/wallet#add-funds" className="btn btn-primary min-h-11">Add funds</Link>
@@ -104,27 +104,27 @@ async function AccountHomeContent({ searchParams }: { searchParams: Promise<{ no
           <div className="px-5 pt-5 pb-4 border-b border-line">
             <div className="flex items-center justify-between gap-3">
               <h2 id="waiting-h" className="text-[20px] font-bold">Waiting for you</h2>
-              {items.length > 0 && <span className="mono text-[11px] font-bold uppercase px-2.5 py-1 rounded-full bg-[#FDECD9] text-[#9A4A10]">{items.length} {items.length === 1 ? 'action' : 'actions'}</span>}
+              {items.length > 0 && <span className="mono text-[11px] font-bold uppercase px-2.5 py-1 rounded-full bg-warn-bg text-warn">{items.length} {items.length === 1 ? 'action' : 'actions'}</span>}
             </div>
             {present.length > 1 && (
               <nav aria-label="Filter by service" className="mt-3 flex flex-wrap gap-2">
                 {['all', ...present].map((k) => (
                   <Link key={k} href={k === 'all' ? '/account#waiting' : `/account?w=${k}#waiting`} aria-current={filter === k ? 'true' : undefined} scroll={false}
-                    className={`inline-flex items-center min-h-10 px-4 rounded-full border text-[14px] font-medium ${filter === k ? 'bg-navy text-white border-navy' : 'border-line-2 bg-white hover:border-navy'}`}>{k === 'all' ? 'All' : SVC_LABEL[k]}</Link>
+                    className={`inline-flex items-center min-h-10 px-4 rounded-full border text-[14px] font-medium ${filter === k ? 'bg-ink text-white border-ink' : 'border-line-strong bg-white hover:border-ink'}`}>{k === 'all' ? 'All' : SVC_LABEL[k]}</Link>
                 ))}
               </nav>
             )}
           </div>
           {shown.length === 0 ? (
-            <p className="px-5 py-8 text-[15px] text-[#5A6475]">Nothing needs you right now. New quotes, payments due and questions from our team appear here.</p>
+            <p className="px-5 py-8 text-[15px] text-muted">Nothing needs you right now. New quotes, payments due and questions from our team appear here.</p>
           ) : (
             <ul>
               {shown.map((i) => (
                 <li key={i.key} className="flex flex-wrap sm:flex-nowrap items-center gap-4 px-5 py-4 border-b border-line last:border-0">
                   <div className="flex-1 min-w-0">
-                    <div className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-blue">{SVC_LABEL[i.service]}</div>
+                    <div className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-coral-text">{SVC_LABEL[i.service]}</div>
                     <div className="font-semibold text-[16px]">{i.title}</div>
-                    <div className="text-[14px] text-[#5A6475]">{i.body}</div>
+                    <div className="text-[14px] text-muted">{i.body}</div>
                   </div>
                   <Link href={i.href} className={`btn min-h-11 shrink-0 ${i.primary ? 'btn-dark' : 'btn-ghost'}`}>{i.cta}</Link>
                 </li>
@@ -134,40 +134,40 @@ async function AccountHomeContent({ searchParams }: { searchParams: Promise<{ no
         </section>
 
         <div className="space-y-5">
-          <section aria-labelledby="mgr-h" className="card p-5 border-2 !border-navy" data-testid="manager-card">
-            <h2 id="mgr-h" className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-[#5A6475]">Your account manager</h2>
+          <section aria-labelledby="mgr-h" className="card p-5 border-2 !border-ink" data-testid="manager-card">
+            <h2 id="mgr-h" className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-muted">Your account manager</h2>
             {ctx.manager ? (
               <>
                 <div className="flex items-center gap-3 mt-3">
-                  <span className="w-12 h-12 rounded-full bg-blue-fill text-white font-bold flex items-center justify-center" aria-hidden>{ctx.manager.name.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase()}</span>
+                  <span className="w-12 h-12 rounded-full bg-coral text-white font-bold flex items-center justify-center" aria-hidden>{ctx.manager.name.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase()}</span>
                   <div className="leading-tight">
                     <div className="font-bold text-[16px]">{ctx.manager.name}</div>
-                    <div className="text-[13px] text-[#5A6475]">{['Octopus', ctx.manager.office].filter(Boolean).join(', ')}</div>
+                    <div className="text-[13px] text-muted">{['Octopus', ctx.manager.office].filter(Boolean).join(', ')}</div>
                   </div>
                 </div>
-                <p className="text-[14px] text-[#2B3445] mt-3">One person for all your services: sourcing, dropshipping, warehouse and Make My Brand. Checks quotes before you see them and approves within your limits.</p>
+                <p className="text-[14px] text-black mt-3">One person for all your services: sourcing, dropshipping, warehouse and Make My Brand. Checks quotes before you see them and approves within your limits.</p>
                 <div className="mt-4 flex gap-2"><Link href="/account/support" className="btn btn-dark btn-sm min-h-11 flex-1">Message</Link></div>
               </>
             ) : (
-              <p className="text-[14px] text-[#5A6475] mt-3">We are assigning your account manager. Until then, our team answers in <Link href="/account/support" className="text-blue font-semibold">Messages</Link>.</p>
+              <p className="text-[14px] text-muted mt-3">We are assigning your account manager. Until then, our team answers in <Link href="/account/support" className="text-coral-text font-semibold">Messages</Link>.</p>
             )}
           </section>
 
           <section aria-labelledby="wallet-h" className="card p-5" data-testid="wallet-card">
             <h2 id="wallet-h" className="text-[18px] font-bold">Wallet</h2>
-            <div className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-[#5A6475] mt-3">Available</div>
+            <div className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-muted mt-3">Available</div>
             <div className="text-[28px] font-extrabold">{money(Number(w?.available_cents ?? 0), 'USD')}</div>
             <dl className="mt-2 space-y-1.5 text-[14px]">
               {(holds.data ?? []).map((h) => (
-                <div key={h.id} className="flex justify-between gap-3"><dt className="text-[#5A6475]">On hold · {SVC_LABEL[h.service as string]} {h.ref_id}</dt><dd className="font-semibold">{money(Number(h.amount_cents), 'USD')}</dd></div>
+                <div key={h.id} className="flex justify-between gap-3"><dt className="text-muted">On hold · {SVC_LABEL[h.service as string]} {h.ref_id}</dt><dd className="font-semibold">{money(Number(h.amount_cents), 'USD')}</dd></div>
               ))}
               {due.map((o) => (
-                <div key={o.id} className="flex justify-between gap-3"><dt className="text-[#5A6475]">Due · order {o.code}</dt><dd className="font-semibold">{o.status === 'deposit_pending' ? 'Deposit' : 'Balance'}</dd></div>
+                <div key={o.id} className="flex justify-between gap-3"><dt className="text-muted">Due · order {o.code}</dt><dd className="font-semibold">{o.status === 'deposit_pending' ? 'Deposit' : 'Balance'}</dd></div>
               ))}
-              {Number(w?.pending_transfers_cents ?? 0) > 0 && <div className="flex justify-between gap-3"><dt className="text-[#5A6475]">Transfer being checked</dt><dd className="font-semibold">{money(Number(w!.pending_transfers_cents), 'USD')}</dd></div>}
+              {Number(w?.pending_transfers_cents ?? 0) > 0 && <div className="flex justify-between gap-3"><dt className="text-muted">Transfer being checked</dt><dd className="font-semibold">{money(Number(w!.pending_transfers_cents), 'USD')}</dd></div>}
             </dl>
-            <p className="text-[13px] text-[#5A6475] mt-3">
-              Top up by US dollar bank transfer (TT){bank ? <> to the {bank.account_holder} account{bank.bank_name ? ` at ${bank.bank_name}` : ''}</> : null}, quoting your reference <b className="mono text-navy">{w?.reference}</b>. The wallet is credited once Octopus finance confirms the money has arrived. No card payments.
+            <p className="text-[13px] text-muted mt-3">
+              Top up by US dollar bank transfer (TT){bank ? <> to the {bank.account_holder} account{bank.bank_name ? ` at ${bank.bank_name}` : ''}</> : null}, quoting your reference <b className="mono text-ink">{w?.reference}</b>. The wallet is credited once Octopus finance confirms the money has arrived. No card payments.
             </p>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <Link href="/account/wallet#bank" className="btn btn-primary btn-sm min-h-11">Bank details</Link>
@@ -187,42 +187,42 @@ async function AccountHomeContent({ searchParams }: { searchParams: Promise<{ no
               <li key={svc.key} className="card p-5 flex flex-col" data-testid={`service-${svc.key}`}>
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-[17px] font-bold">{svc.label}</h3>
-                  <span className={`mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full ${on ? 'bg-[#DCFCE7] text-[#166534]' : 'bg-surface text-[#5A6475]'}`}>{on ? `On${st.plan ? ` · ${st.plan}` : ''}` : st.status === 'paused' ? 'Paused' : 'Off'}</span>
+                  <span className={`mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full ${on ? 'bg-ok-bg text-ok' : 'bg-pearl text-muted'}`}>{on ? `On${st.plan ? ` · ${st.plan}` : ''}` : st.status === 'paused' ? 'Paused' : 'Off'}</span>
                 </div>
                 {svc.key === 'sourcing' && on ? (
                   <div data-testid="dashboard-sourcing">
                     <dl className="grid grid-cols-2 gap-3 mt-3">
-                      <div><dt className="mono text-[10.5px] uppercase tracking-[.06em] text-[#5A6475]">Open requests</dt><dd className="text-[24px] font-extrabold">{openReq}</dd></div>
-                      <div><dt className="mono text-[10.5px] uppercase tracking-[.06em] text-[#5A6475]">Quotes ready</dt><dd className="text-[24px] font-extrabold">{byRfq.size}</dd></div>
+                      <div><dt className="mono text-[10.5px] uppercase tracking-[.06em] text-muted">Open requests</dt><dd className="text-[24px] font-extrabold">{openReq}</dd></div>
+                      <div><dt className="mono text-[10.5px] uppercase tracking-[.06em] text-muted">Quotes ready</dt><dd className="text-[24px] font-extrabold">{byRfq.size}</dd></div>
                     </dl>
                     {/* the 3 latest requests (7 Nov request: dashboard shows the latest sourcing requests) */}
                     {(rfqs.data ?? []).length > 0 && (
                       <ul className="mt-3 space-y-1 text-[13.5px]">
                         {(rfqs.data ?? []).slice(0, 3).map((r) => (
-                          <li key={r.id as string} className="flex justify-between gap-2"><Link href={`/account/sourcing/${r.code}`} className="truncate hover:text-blue"><span className="mono text-[12px]">{r.code}</span> {r.title}</Link></li>
+                          <li key={r.id as string} className="flex justify-between gap-2"><Link href={`/account/sourcing/${r.code}`} className="truncate hover:text-coral-text"><span className="mono text-[12px]">{r.code}</span> {r.title}</Link></li>
                         ))}
                       </ul>
                     )}
                   </div>
                 ) : on ? (
-                  <p className="text-[14px] text-[#5A6475] mt-3">Your account manager is setting this up. Figures appear here once it is running.</p>
+                  <p className="text-[14px] text-muted mt-3">Your account manager is setting this up. Figures appear here once it is running.</p>
                 ) : (
-                  <p className="text-[14px] text-[#5A6475] mt-3">{ABOUT[svc.key]}</p>
+                  <p className="text-[14px] text-muted mt-3">{ABOUT[svc.key]}</p>
                 )}
-                <Link href={svc.href} className="mt-auto pt-4 text-blue font-semibold text-[15px]">{on ? `Open ${svc.label}` : 'Start'} →</Link>
+                <Link href={svc.href} className="mt-auto pt-4 text-coral-text font-semibold text-[15px]">{on ? `Open ${svc.label}` : 'Start'} →</Link>
               </li>
             );
           })}
         </ul>
-        <p className="text-[13px] text-[#5A6475] mt-2">A service that is not switched on shows a short explanation and a Start button.</p>
+        <p className="text-[13px] text-muted mt-2">A service that is not switched on shows a short explanation and a Start button.</p>
       </section>
 
       <section aria-labelledby="activity-h" className="card mt-8 overflow-hidden">
         <h2 id="activity-h" className="text-[18px] font-bold px-5 pt-5 pb-3">Recent activity</h2>
-        {act.length === 0 ? <p className="px-5 pb-6 text-[15px] text-[#5A6475]">No activity yet.</p> : (
+        {act.length === 0 ? <p className="px-5 pb-6 text-[15px] text-muted">No activity yet.</p> : (
           <div className="overflow-x-auto">
             <table className="w-full text-[15px]">
-              <thead><tr className="bg-surface text-left">{['When', 'Service', 'What happened', 'By'].map((h) => <th key={h} className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-[#5A6475] px-5 py-2.5">{h}</th>)}</tr></thead>
+              <thead><tr className="bg-pearl text-left">{['When', 'Service', 'What happened', 'By'].map((h) => <th key={h} className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-muted px-5 py-2.5">{h}</th>)}</tr></thead>
               <tbody>{act.map((a, i) => (
                 <tr key={i} className="border-t border-line"><td className="px-5 py-3 whitespace-nowrap">{fmtDate(a.at, true)}</td><td className="px-5 py-3">{a.service}</td><td className="px-5 py-3">{a.text}</td><td className="px-5 py-3">{a.by}</td></tr>
               ))}</tbody>

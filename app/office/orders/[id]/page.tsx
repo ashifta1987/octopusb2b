@@ -152,7 +152,7 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
                   <li key={sh.id} className="border border-line rounded-[10px] px-4 py-2 text-sm">
                     <div className="flex justify-between gap-2"><span className="mono font-semibold">{sh.tracking_no}</span><StatusBadge status={sh.status} /></div>
                     <div className="text-muted">{sh.code} · {sh.service_code}</div>
-                    {sh.label_url && <a href={sh.label_url} target="_blank" rel="noopener" className="text-blue font-semibold text-xs">Print label</a>}
+                    {sh.label_url && <a href={sh.label_url} target="_blank" rel="noopener" className="text-coral-text font-semibold text-xs">Print label</a>}
                   </li>
                 ))}
               </ul>

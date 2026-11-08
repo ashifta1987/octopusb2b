@@ -42,9 +42,9 @@ async function Detail({ params, searchParams }: { params: Promise<{ id: string }
     <div data-testid="dropship-product">
       <nav aria-label="Breadcrumb" className="text-[13.5px]">
         <ol className="flex flex-wrap items-center gap-1.5">
-          <li><Link href="/account/dropship" className="text-blue font-medium">Dropshipping</Link></li><li aria-hidden className="text-muted">›</li>
-          <li><Link href={`/account/dropship/catalogue?country=${country}`} className="text-blue font-medium">Catalogue</Link></li><li aria-hidden className="text-muted">›</li>
-          <li aria-current="page" className="text-body-2 line-clamp-1">{p.title}</li>
+          <li><Link href="/account/dropship" className="text-coral-text font-medium">Dropshipping</Link></li><li aria-hidden className="text-muted">›</li>
+          <li><Link href={`/account/dropship/catalogue?country=${country}`} className="text-coral-text font-medium">Catalogue</Link></li><li aria-hidden className="text-muted">›</li>
+          <li aria-current="page" className="text-black line-clamp-1">{p.title}</li>
         </ol>
       </nav>
 
@@ -52,14 +52,14 @@ async function Detail({ params, searchParams }: { params: Promise<{ id: string }
       {(() => {
         const gallery = (
         <section className="card p-3 sm:p-4" aria-label="Photos">
-          <div className="relative aspect-square rounded-[10px] overflow-hidden bg-surface">
+          <div className="relative aspect-square rounded-[10px] overflow-hidden bg-pearl">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             {images[0] ? <img src={images[0]} alt={p.title} className="absolute inset-0 w-full h-full object-cover" /> : <div className="absolute inset-0 flex flex-col items-center justify-center text-muted gap-2"><Icon name="box" size={32} />Photo coming</div>}
           </div>
           {images.length > 1 && (
             <ul className="mt-3 grid grid-cols-3 gap-3">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              {images.slice(1, 4).map((src) => <li key={src} className="relative aspect-square rounded-[8px] overflow-hidden bg-surface border border-line"><img src={src} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" /></li>)}
+              {images.slice(1, 4).map((src) => <li key={src} className="relative aspect-square rounded-[8px] overflow-hidden bg-pearl border border-line"><img src={src} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" /></li>)}
             </ul>
           )}
           <p className="mt-2.5 text-[12.5px] text-muted">{images.length ? `Photo 1 of ${images.length} · all photos go to your store` : 'Photos are added before the product goes to your store'}</p>
@@ -69,7 +69,7 @@ async function Detail({ params, searchParams }: { params: Promise<{ id: string }
         const info = (
           <>
           <div>
-            {p.category_name && <div className="k !text-blue">{p.category_name}</div>}
+            {p.category_name && <div className="k !text-coral-text">{p.category_name}</div>}
             <h1 className="mt-1 text-[24px] sm:text-[30px] font-extrabold leading-[1.15]">{p.title}</h1>
             <div className="mt-2.5 flex flex-wrap gap-1.5">
               <VerifiedBadge />
@@ -77,7 +77,7 @@ async function Detail({ params, searchParams }: { params: Promise<{ id: string }
               {p.services.some((q) => q.service === 'express') && <Pill tone="info">Express available</Pill>}
             </div>
             {fastest && cheapest ? (
-              <p className="mt-3 text-[15px] text-body-2">Ships {fastest.service === 'express' ? 'Express' : fastest.service === 'standard' ? 'Standard' : 'Economy'} to {countryName} in {days(fastest)}. From {usd(cheapest.total_cents)} per order, shipping and duties included.</p>
+              <p className="mt-3 text-[15px] text-black">Ships {fastest.service === 'express' ? 'Express' : fastest.service === 'standard' ? 'Standard' : 'Economy'} to {countryName} in {days(fastest)}. From {usd(cheapest.total_cents)} per order, shipping and duties included.</p>
             ) : (
               <div className="mt-3"><Notice tone="warn">Not available to {countryName}: {p.blocked_reason}.</Notice></div>
             )}
@@ -102,10 +102,10 @@ async function Detail({ params, searchParams }: { params: Promise<{ id: string }
         <p className="mt-1 text-[13.5px] text-muted">This title, these bullet points and this description are pushed to your store with the photos. No Octopus name, supplier name or Octopus price appears in the listing.</p>
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="rounded-[10px] border border-line p-4">
-            <div className="k">Title</div><div className="mt-1 text-[16px] font-bold text-navy">{p.store_title}</div>
-            {p.store_bullets.length > 0 && <><div className="k mt-3">Bullet points</div><ul className="mt-1 list-disc pl-5 space-y-1 text-[14px] text-body-2">{p.store_bullets.map((b) => <li key={b}>{b}</li>)}</ul></>}
+            <div className="k">Title</div><div className="mt-1 text-[16px] font-bold text-ink">{p.store_title}</div>
+            {p.store_bullets.length > 0 && <><div className="k mt-3">Bullet points</div><ul className="mt-1 list-disc pl-5 space-y-1 text-[14px] text-black">{p.store_bullets.map((b) => <li key={b}>{b}</li>)}</ul></>}
           </div>
-          <div className="rounded-[10px] border border-line p-4"><div className="k">Description</div><p className="mt-1 text-[14px] text-body-2 leading-relaxed">{p.store_description ?? TBC}</p></div>
+          <div className="rounded-[10px] border border-line p-4"><div className="k">Description</div><p className="mt-1 text-[14px] text-black leading-relaxed">{p.store_description ?? TBC}</p></div>
         </div>
       </section>
 
@@ -113,16 +113,16 @@ async function Detail({ params, searchParams }: { params: Promise<{ id: string }
         <section className="card p-5" aria-labelledby="ship-h">
           <h2 id="ship-h" className="text-[16px] font-bold">Shipping and restrictions</h2>
           <dl className="mt-3 space-y-3 text-[13.5px]">
-            <div><dt className="k">Ships from</dt><dd className="mt-0.5 text-body-2">Express: Octopus warehouse. Standard: partner warehouses. Economy: global network, checked and repacked by Octopus.</dd></div>
-            <div><dt className="k">Handling time</dt><dd className="mt-0.5 text-body-2">{cfg.handlingDays ? `Packed within ${cfg.handlingDays} working days of payment. Delivery days in the table start after that.` : TBC}</dd></div>
-            {p.has_battery && <div><dt className="k">Battery</dt><dd className="mt-0.5 text-body-2">Built-in battery. Ships only on routes that accept batteries, which is why some countries can be unavailable.</dd></div>}
-            {p.has_liquid && <div><dt className="k">Liquid</dt><dd className="mt-0.5 text-body-2">Contains liquid. Ships only on routes that accept liquids.</dd></div>}
-            <div><dt className="k">Not available to</dt><dd className="mt-0.5 text-body-2" data-testid="not-available-to">{notTo.length ? notTo.join(', ') : 'No restrictions on the current routes.'}</dd></div>
+            <div><dt className="k">Ships from</dt><dd className="mt-0.5 text-black">Express: Octopus warehouse. Standard: partner warehouses. Economy: global network, checked and repacked by Octopus.</dd></div>
+            <div><dt className="k">Handling time</dt><dd className="mt-0.5 text-black">{cfg.handlingDays ? `Packed within ${cfg.handlingDays} working days of payment. Delivery days in the table start after that.` : TBC}</dd></div>
+            {p.has_battery && <div><dt className="k">Battery</dt><dd className="mt-0.5 text-black">Built-in battery. Ships only on routes that accept batteries, which is why some countries can be unavailable.</dd></div>}
+            {p.has_liquid && <div><dt className="k">Liquid</dt><dd className="mt-0.5 text-black">Contains liquid. Ships only on routes that accept liquids.</dd></div>}
+            <div><dt className="k">Not available to</dt><dd className="mt-0.5 text-black" data-testid="not-available-to">{notTo.length ? notTo.join(', ') : 'No restrictions on the current routes.'}</dd></div>
           </dl>
         </section>
         <section className="card p-5" aria-labelledby="pack-h">
           <h2 id="pack-h" className="text-[16px] font-bold">Packing</h2>
-          <ul className="mt-3 list-disc pl-5 space-y-1.5 text-[13.5px] text-body-2">
+          <ul className="mt-3 list-disc pl-5 space-y-1.5 text-[13.5px] text-black">
             <li>Your packing slip, with your store name, goes in every parcel</li>
             <li>Plain outer box with no Octopus branding</li>
             <li>No Octopus prices or invoices inside the parcel</li>
@@ -130,14 +130,14 @@ async function Detail({ params, searchParams }: { params: Promise<{ id: string }
         </section>
         <section className="card p-5" aria-labelledby="ret-h">
           <h2 id="ret-h" className="text-[16px] font-bold">Returns</h2>
-          <p className="mt-3 text-[13.5px] text-body-2">{cfg.returns ?? 'Returns policy to be confirmed.'}</p>
+          <p className="mt-3 text-[13.5px] text-black">{cfg.returns ?? 'Returns policy to be confirmed.'}</p>
         </section>
       </div>
 
-      <section className="mt-5 rounded-[14px] bg-navy text-white p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4 justify-between" data-testid="make-it-your-brand">
+      <section className="mt-5 rounded-[14px] bg-ink text-white p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4 justify-between" data-testid="make-it-your-brand">
         <div className="flex items-center gap-3.5">
           <span className="inline-flex items-center justify-center w-11 h-11 rounded-[10px] bg-white/10"><Icon name="tag" /></span>
-          <div><div className="k !text-[#9CC2FF]">Make it your brand</div><h2 className="!text-white text-[18px] font-bold">Want your logo on this product?</h2><p className="text-[13.5px] text-[#C9D0E8]">Start a Make My Brand project for your own logo and packaging.</p></div>
+          <div><div className="k !text-on-ink-link">Make it your brand</div><h2 className="!text-white text-[18px] font-bold">Want your logo on this product?</h2><p className="text-[13.5px] text-on-ink">Start a Make My Brand project for your own logo and packaging.</p></div>
         </div>
         <Link href={`${BRAND_START_HREF}?product=${p.product_id}`} className="btn btn-light">Start a Make My Brand project</Link>
       </section>

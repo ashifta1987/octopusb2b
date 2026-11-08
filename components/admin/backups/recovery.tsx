@@ -48,13 +48,13 @@ export function RecoveryCompare({ table, rows, restorable, canRestore, reasonDis
         <div className="flex gap-2" role="group" aria-label="Show rows">
           {(['diff', 'all'] as const).map((f) => (
             <button key={f} type="button" aria-pressed={filter === f} onClick={() => setFilter(f)}
-              className={cn('rounded-full border px-4 py-2 text-sm font-semibold', filter === f ? 'bg-navy text-white border-navy' : 'bg-white border-line-2')}>
+              className={cn('rounded-full border px-4 py-2 text-sm font-semibold', filter === f ? 'bg-ink text-white border-ink' : 'bg-white border-line-strong')}>
               {f === 'diff' ? 'Missing & changed' : 'All rows'}
             </button>
           ))}
         </div>
       </div>
-      {reasonDisabled && <div className="px-5 pb-3"><p role="status" className="rounded-[10px] border border-warn/40 bg-[#FFF3D6] px-4 py-3 text-sm text-[#8A5A00]">{reasonDisabled}</p></div>}
+      {reasonDisabled && <div className="px-5 pb-3"><p role="status" className="rounded-[10px] border border-warn/40 bg-warn-bg px-4 py-3 text-sm text-warn">{reasonDisabled}</p></div>}
 
       {shown.length === 0 ? (
         <p className="px-5 pb-6 text-sm text-muted">{rows.length ? 'Every row matches the live data.' : 'This recovery table is empty.'}</p>
@@ -67,7 +67,7 @@ export function RecoveryCompare({ table, rows, restorable, canRestore, reasonDis
             return (
               <li key={r.id} className="border-b border-line">
                 <div className="flex items-center gap-3 px-5 py-3">
-                  <input type="checkbox" aria-label={`Select ${title(r)}`} className="w-[18px] h-[18px] accent-[#2A6FD6]" disabled={!enabled || r.status === 'same'}
+                  <input type="checkbox" aria-label={`Select ${title(r)}`} className="w-[18px] h-[18px] accent-coral" disabled={!enabled || r.status === 'same'}
                     checked={picked.includes(r.id)} onChange={(e) => setPicked((c) => (e.target.checked ? [...c, r.id] : c.filter((x) => x !== r.id)))} />
                   <button type="button" className="flex-1 min-w-0 text-left" aria-expanded={isOpen} onClick={() => setOpen(isOpen ? null : r.id)}>
                     <span className="font-semibold truncate block">{title(r)}</span>
@@ -81,7 +81,7 @@ export function RecoveryCompare({ table, rows, restorable, canRestore, reasonDis
                       <thead><tr><th className="th w-[180px]">Field</th><th className="th">Backup</th><th className="th">Current (live)</th></tr></thead>
                       <tbody>
                         {keys.map((k) => (
-                          <tr key={k} className={cn(changed.has(k) && 'bg-[#FFF8E6]')}>
+                          <tr key={k} className={cn(changed.has(k) && 'bg-warn-bg')}>
                             <td className="td mono font-semibold align-top">{k}{changed.has(k) && <span className="sr-only"> (changed)</span>}{changed.has(k) && <span aria-hidden className="text-warn"> ●</span>}</td>
                             <td className="td mono align-top break-all whitespace-pre-wrap">{show(r.backup[k])}</td>
                             <td className="td mono align-top break-all whitespace-pre-wrap">{r.current ? show(r.current[k]) : <i className="text-bad not-italic">missing</i>}</td>

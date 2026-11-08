@@ -12,7 +12,7 @@ import { DownloadBackupButton, FilterSelect, RestoreForm, RestoreActions, TypeOp
 /* ───────── Status cards ───────── */
 
 function Pill({ tone, children }: { tone: 'green' | 'amber' | 'red' | 'gray'; children: React.ReactNode }) {
-  const t = { green: 'bg-[#E3F5EA] text-[#156B3A]', amber: 'bg-[#FFF3D6] text-[#8A5A00]', red: 'bg-[#FDE8E8] text-[#A32D2D]', gray: 'bg-[#EEF0F4] text-[#3D4456]' }[tone];
+  const t = { green: 'bg-ok-bg text-ok', amber: 'bg-warn-bg text-warn', red: 'bg-bad-bg text-bad', gray: 'bg-fill text-black' }[tone];
   return <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap', t)}>{children}</span>;
 }
 
@@ -117,7 +117,7 @@ export function BackupsTable({ backups, filter, names, canDownload, canRestore }
               {rows.map((b, i) => {
                 const usable = b.status === 'completed';
                 return (
-                  <tr key={b.id} className={cn(i === 0 && usable && 'bg-[#F7F9FC]')}>
+                  <tr key={b.id} className={cn(i === 0 && usable && 'bg-fill')}>
                     <td className="td">
                       <div className="mono font-semibold text-[13px]">{b.code}</div>
                       <div className="text-xs text-muted max-w-[260px] truncate" title={subLabel(b)}>{subLabel(b)}</div>
@@ -164,7 +164,7 @@ function Steps({ current, done }: { current: number; done: number }) {
         const isCur = n === current && !isDone;
         return (
           <li key={s} aria-current={isCur ? 'step' : undefined}
-            className={cn('rounded-full px-3 py-1.5 text-xs font-semibold', isDone ? 'bg-navy text-white' : isCur ? 'bg-blue-fill text-white' : 'bg-[#EEF0F4] text-[#3D4456]')}>
+            className={cn('rounded-full px-3 py-1.5 text-xs font-semibold', isDone ? 'bg-ink text-white' : isCur ? 'bg-coral text-white' : 'bg-fill text-black')}>
             {n} {s}{isDone ? ' ✓' : ''}
           </li>
         );
@@ -210,14 +210,14 @@ export function RestoreCard({ mode, request, backup, checks, postChecks, names, 
         <div className="eyebrow mono text-xs text-muted uppercase tracking-wider">Restore</div>
         <h2 className="text-lg font-semibold mt-1">Restore wizard</h2>
         <p className="text-sm text-muted mt-1">Pick a completed backup above and press <b>Restore</b> (or <b>Verify</b> for a restore drill). Every restore is verified in a scratch project first, then needs a second approver.</p>
-        <p className="text-sm mt-3"><Link href="/admin/backups/recovery" className="text-blue font-semibold">Partial restore — compare records side by side →</Link></p>
+        <p className="text-sm mt-3"><Link href="/admin/backups/recovery" className="text-coral-text font-semibold">Partial restore — compare records side by side →</Link></p>
       </section>
     );
   }
 
   if (mode === 'new') {
     return (
-      <section id="restore" className="card border-2 border-navy p-6 mb-6 scroll-mt-6">
+      <section id="restore" className="card border-2 border-ink p-6 mb-6 scroll-mt-6">
         <div className="mono text-xs text-muted uppercase tracking-wider">New restore request</div>
         <h2 className="text-xl font-semibold mt-1">Restore from <span className="mono">{backup.code}</span></h2>
         <p className="text-sm text-muted mt-1">{chinaTime(backup.started_at ?? backup.created_at)} China time · {fmtBytes(backup.size_bytes)}</p>
@@ -250,7 +250,7 @@ export function RestoreCard({ mode, request, backup, checks, postChecks, names, 
   const report = r.report as Record<string, unknown> | null;
 
   return (
-    <section id="restore" className="card border-2 border-navy p-6 mb-6 scroll-mt-6">
+    <section id="restore" className="card border-2 border-ink p-6 mb-6 scroll-mt-6">
       {(r.status === 'verifying' || r.status === 'running') && <AutoRefresh every={5000} />}
       <div className="flex flex-wrap justify-between gap-3">
         <div className="mono text-xs text-muted uppercase tracking-wider">Restore request {r.code}</div>
@@ -267,9 +267,9 @@ export function RestoreCard({ mode, request, backup, checks, postChecks, names, 
             <TypeOption name={`rt-${r.id}`} value={r.restore_type} title={type} body={r.restore_type === 'partial' ? `Modules: ${r.modules.join(', ') || '—'}${Object.values(r.records ?? {}).flat().length ? ` · ${new Set(Object.values(r.records).flat()).size} record IDs` : ''}` : impactText(r.restore_type)} checked disabled />
           </div>
           <div className="label mt-4">Reason (shown to approver and in audit log)</div>
-          <p className="input flex items-center bg-surface">{r.reason}</p>
+          <p className="input flex items-center bg-pearl">{r.reason}</p>
           {r.restore_type === 'partial' && (
-            <p className="text-sm mt-3"><Link href="/admin/backups/recovery" className="text-blue font-semibold">Open the compare screen to pick rows →</Link></p>
+            <p className="text-sm mt-3"><Link href="/admin/backups/recovery" className="text-coral-text font-semibold">Open the compare screen to pick rows →</Link></p>
           )}
         </div>
         <div>
@@ -314,13 +314,13 @@ export function RestoreList({ requests, backups, names, selected }: { requests: 
               {requests.map((r) => {
                 const st = RESTORE_STATUS[r.status] ?? { label: r.status, tone: 'gray' as const };
                 return (
-                  <tr key={r.id} className={cn(selected === r.id && 'bg-[#F7F9FC]')}>
+                  <tr key={r.id} className={cn(selected === r.id && 'bg-fill')}>
                     <td className="td mono text-[13px] font-semibold">{r.code}</td>
                     <td className="td mono text-[13px]">{backups[r.backup_id] ?? '—'}</td>
                     <td className="td">{TYPE_LABEL[r.restore_type] ?? r.restore_type}</td>
                     <td className="td whitespace-nowrap">{chinaTime(r.created_at)} · {names[r.requested_by]?.split(' ')[0] ?? 'staff'}</td>
                     <td className="td"><StatusBadge status={r.status} tone={st.tone} label={st.label} /></td>
-                    <td className="td text-right"><Link href={`/admin/backups?rs=${r.id}#restore`} scroll={false} className="text-blue font-semibold text-sm">{r.status === 'completed' || r.status === 'failed' ? 'Report' : 'Open'}</Link></td>
+                    <td className="td text-right"><Link href={`/admin/backups?rs=${r.id}#restore`} scroll={false} className="text-coral-text font-semibold text-sm">{r.status === 'completed' || r.status === 'failed' ? 'Report' : 'Open'}</Link></td>
                   </tr>
                 );
               })}
@@ -364,7 +364,7 @@ export function ExportsCard({ exports, canExport, from, to }: { exports: ExportR
 }
 
 function StatusLabel({ status }: { status: string }) {
-  const t = { ready: 'text-ok', failed: 'text-bad', running: 'text-blue', queued: 'text-warn', expired: 'text-muted' }[status] ?? 'text-muted';
+  const t = { ready: 'text-ok', failed: 'text-bad', running: 'text-coral-text', queued: 'text-warn', expired: 'text-muted' }[status] ?? 'text-muted';
   return <span className={cn('font-semibold', t)}>{status === 'ready' ? 'Ready' : status.charAt(0).toUpperCase() + status.slice(1)}</span>;
 }
 
@@ -400,14 +400,14 @@ export function SettingsCard({ settings, isAdmin }: { settings: BackupSettings; 
           <div>
             <div className="label">Off-site storage</div>
             <div className="flex gap-2 items-start">
-              <p className="input flex items-center flex-1 bg-surface" aria-label="Current off-site storage">{offsiteLabel}</p>
+              <p className="input flex items-center flex-1 bg-pearl" aria-label="Current off-site storage">{offsiteLabel}</p>
               <OffsiteTestButton allowed={isAdmin} />
             </div>
             <p className={cn('text-xs mt-1 font-semibold', o.last_test_ok === true ? 'text-ok' : o.last_test_ok === false ? 'text-bad' : 'text-muted')}>
               {o.last_test_at ? `${o.last_test_ok ? 'Connected' : 'Connection failed'} · last test ${chinaTime(o.last_test_at)}` : 'Not tested yet'}
             </p>
             <details className="mt-2">
-              <summary className="text-sm text-blue font-semibold cursor-pointer">Edit connection</summary>
+              <summary className="text-sm text-coral-text font-semibold cursor-pointer">Edit connection</summary>
               <div className="grid sm:grid-cols-2 gap-3 mt-3">
                 <div><label className="label" htmlFor="bs-provider">Provider</label><input id="bs-provider" name="offsite_provider" className="input" placeholder="Cloudflare R2" defaultValue={o.provider ?? ''} /></div>
                 <div><label className="label" htmlFor="bs-bucket">Bucket</label><input id="bs-bucket" name="offsite_bucket" className="input" placeholder="octopus-backups" defaultValue={o.bucket ?? ''} /></div>
@@ -433,8 +433,8 @@ export function SettingsCard({ settings, isAdmin }: { settings: BackupSettings; 
               ['pitr_enabled', 'Point-in-time recovery (Supabase PITR add-on) is enabled', settings.pitr_enabled ?? false],
               ['require_mfa', 'Require a fresh 2FA check for downloads, restores and approvals', settings.require_mfa ?? true],
             ] as const).map(([name, label, checked]) => (
-              <label key={name} className="flex gap-2.5 items-start text-sm text-[#3B4556]">
-                <input type="checkbox" name={name} defaultChecked={checked} className="mt-0.5 w-[18px] h-[18px] accent-[#2A6FD6] flex-none" />{label}
+              <label key={name} className="flex gap-2.5 items-start text-sm text-black">
+                <input type="checkbox" name={name} defaultChecked={checked} className="mt-0.5 w-[18px] h-[18px] accent-coral flex-none" />{label}
               </label>
             ))}
           </div>

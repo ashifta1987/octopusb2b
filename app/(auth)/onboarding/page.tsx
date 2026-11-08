@@ -47,7 +47,7 @@ async function refuseStaff(userId: string, email: string | null) {
 
 /** Create profile — required before anything else (SPEC §4.1 step 2). */
 export default function OnboardingPage(props: { searchParams: Promise<{ error?: string; next?: string }> }) {
-  return <Suspense fallback={<main className="min-h-screen bg-surface" />}><Onboarding {...props} /></Suspense>;
+  return <Suspense fallback={<main className="min-h-screen bg-pearl" />}><Onboarding {...props} /></Suspense>;
 }
 
 async function Onboarding({ searchParams }: { searchParams: Promise<{ error?: string; next?: string }> }) {
@@ -57,7 +57,7 @@ async function Onboarding({ searchParams }: { searchParams: Promise<{ error?: st
   if (s.profile && s.org) redirect(next);
   if (s.isStaff || (await refuseStaff(s.userId, s.email))) {
     return (
-      <main className="min-h-screen bg-surface px-6 py-10">
+      <main className="min-h-screen bg-pearl px-6 py-10">
         <div className="max-w-[560px] mx-auto">
           <Logo />
           <h1 className="text-[28px] font-semibold mt-8">This is a staff account</h1>
@@ -73,11 +73,11 @@ async function Onboarding({ searchParams }: { searchParams: Promise<{ error?: st
   const { error } = await searchParams;
   const types = ['Importer / wholesaler', 'Retailer / e-commerce', 'Contractor / end user', 'Distributor', 'Manufacturer', 'Other'];
   return (
-    <main className="min-h-screen bg-surface px-6 py-10">
+    <main className="min-h-screen bg-pearl px-6 py-10">
       <div className="max-w-[560px] mx-auto">
         <Logo />
         <div className="grid grid-cols-3 gap-2 my-8">
-          {['Email', 'Verify', 'Profile'].map((x) => <div key={x}><div className="h-1 rounded-full bg-blue-fill" /><div className="mt-2 text-xs font-semibold">{x}</div></div>)}
+          {['Email', 'Verify', 'Profile'].map((x) => <div key={x}><div className="h-1 rounded-full bg-coral" /><div className="mt-2 text-xs font-semibold">{x}</div></div>)}
         </div>
         <h1 className="text-[28px] font-semibold">Create your profile</h1>
         <p className="text-muted mt-1">We need a few details before you can request quotes or place orders.</p>

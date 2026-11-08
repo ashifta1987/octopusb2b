@@ -114,8 +114,8 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
     <>
       <MailDeliverabilityAlert />
       {showFirstSupplier && (
-        <section className="mb-6 rounded-[14px] border border-blue/30 bg-blue-soft px-5 py-4 flex flex-wrap items-center justify-between gap-4" aria-label="Get started">
-          <p className="text-[15px] text-[#1E4F9C]">
+        <section className="mb-6 rounded-[14px] border border-coral-text/30 bg-tint px-5 py-4 flex flex-wrap items-center justify-between gap-4" aria-label="Get started">
+          <p className="text-[15px] text-coral-text">
             Demo data cleared on <strong>{fmtDate(wipe!.at!)}</strong>{wipe!.by_name ? <> by <strong>{wipe!.by_name}</strong></> : null}. Add your first supplier to get started.
           </p>
           {can(s, 'suppliers', 'create') && <Link href="/admin/suppliers?new=1" className="btn btn-primary">Create first supplier</Link>}
@@ -142,8 +142,8 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
         <Stat label="Customers" value={orgList.length.toLocaleString()} hint={`${kycPct}% KYC verified`} hintTone={kycPct >= 50 ? 'ok' : 'warn'} />
         <Stat label="KYC verified" value={`${kycPct}%`} hint={`${verified} of ${orgList.length}`} />
         <Stat label="Live products" value={(liveProducts.count ?? 0).toLocaleString()} />
-        <Stat label="Open RFQs" value={(openRfqs.count ?? 0).toLocaleString()} hint={<Link className="text-blue" href="/office/rfqs">Open queue →</Link>} />
-        <Stat label="Tickets open" value={(openTickets.count ?? 0).toLocaleString()} hint={<Link className="text-blue" href="/office/support">Support desk →</Link>} />
+        <Stat label="Open RFQs" value={(openRfqs.count ?? 0).toLocaleString()} hint={<Link className="text-coral-text" href="/office/rfqs">Open queue →</Link>} />
+        <Stat label="Tickets open" value={(openTickets.count ?? 0).toLocaleString()} hint={<Link className="text-coral-text" href="/office/support">Support desk →</Link>} />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr] mb-6">
@@ -154,7 +154,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
                 {[...gmvByMonth.entries()].map(([k, v], i, arr) => (
                   <div key={k} className="flex-1 flex flex-col items-center justify-end h-full">
                     <div className="text-xs font-semibold mono mb-1">{money(v, ctx.currency, { compact: true })}</div>
-                    <div className={`w-full max-w-[56px] rounded-t-md ${i === arr.length - 1 ? 'bg-blue-fill' : 'bg-navy'}`} style={{ height: `${Math.max(2, (v / maxMonth) * 190)}px` }} />
+                    <div className={`w-full max-w-[56px] rounded-t-md ${i === arr.length - 1 ? 'bg-coral' : 'bg-ink'}`} style={{ height: `${Math.max(2, (v / maxMonth) * 190)}px` }} />
                   </div>
                 ))}
               </div>
@@ -175,7 +175,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
               ))
             )}
             <p className="text-xs text-muted mt-3">From ledger revenue accounts grouped by journal stream. Wallet top-ups are customer money, not revenue. Bar length uses the total converted into {ctx.currency}.</p>
-            {can(s, 'finance', 'view') && <Link href="/admin/finance" className="text-sm text-blue font-semibold mt-2 inline-block">Finance & revenue →</Link>}
+            {can(s, 'finance', 'view') && <Link href="/admin/finance" className="text-sm text-coral-text font-semibold mt-2 inline-block">Finance & revenue →</Link>}
           </div>
         </Card>
       </div>
@@ -207,7 +207,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2 mb-6">
-        <Card title="Top suppliers" action={can(s, 'suppliers', 'view') && <Link href="/admin/suppliers" className="text-sm text-blue font-semibold">Manage →</Link>}>
+        <Card title="Top suppliers" action={can(s, 'suppliers', 'view') && <Link href="/admin/suppliers" className="text-sm text-coral-text font-semibold">Manage →</Link>}>
           <Table head={['Supplier', 'GMV', 'Orders']} empty={<EmptyState title="No supplier orders in this period" />}>
             {topSuppliers.map(([id, a]) => {
               const sp = supMap.get(id);

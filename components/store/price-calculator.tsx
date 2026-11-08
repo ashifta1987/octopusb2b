@@ -53,7 +53,7 @@ export function PriceCalculator({ productId, tiers, currency, unit, unitOne, moq
             return (
               <li key={t.min_qty}>
                 <button type="button" aria-pressed={on} onClick={() => set(Math.max(moq, t.min_qty))}
-                  className={`w-full text-left rounded-[10px] border-[1.5px] px-3 py-3 ${on ? 'bg-blue-fill border-blue text-white' : 'bg-white border-line hover:border-navy'}`}>
+                  className={`w-full text-left rounded-[10px] border-[1.5px] px-3 py-3 ${on ? 'bg-coral border-coral-text text-white' : 'bg-white border-line hover:border-ink'}`}>
                   <span className={`block text-[12px] ${on ? 'text-white' : 'text-muted'}`}>
                     {t.min_qty.toLocaleString('en-US')}{next ? `–${(next.min_qty - 1).toLocaleString('en-US')}` : '+'} {unit}
                   </span>
@@ -79,7 +79,7 @@ export function PriceCalculator({ productId, tiers, currency, unit, unitOne, moq
           <div className="flex flex-wrap gap-2 mt-3" role="group" aria-label="Quick quantities">
             {quick.map((n) => (
               <button key={n} type="button" onClick={() => set(n)} aria-pressed={qty === n} data-testid="qty-chip"
-                className={`rounded-full border px-3 py-1 text-[13px] ${qty === n ? 'border-navy bg-navy text-white' : 'border-line-2 bg-white'}`}>
+                className={`rounded-full border px-3 py-1 text-[13px] ${qty === n ? 'border-ink bg-ink text-white' : 'border-line-strong bg-white'}`}>
                 {fq(n)}
               </button>
             ))}
@@ -87,7 +87,7 @@ export function PriceCalculator({ productId, tiers, currency, unit, unitOne, moq
         )}
       </div>
 
-      <div className="rounded-[10px] bg-surface px-4 py-3 flex flex-wrap justify-between items-end gap-3" aria-live="polite">
+      <div className="rounded-[10px] bg-pearl px-4 py-3 flex flex-wrap justify-between items-end gap-3" aria-live="polite">
         <div>
           <div className="text-[13px] text-muted">Your unit price</div>
           <div className="font-display font-bold text-lg"><span data-testid="unit-price">{tier ? `${fmt(tier.unit_price_cents)} / ${unitOne}` : '—'}</span></div>
@@ -102,12 +102,12 @@ export function PriceCalculator({ productId, tiers, currency, unit, unitOne, moq
         <Link href={`/request/sourcing?product=${productId}&qty=${qty}`} className="btn btn-primary">Request quote</Link>
         <Link href={`/request/sample?product=${productId}`} className="btn btn-ghost">Request sample</Link>
         {whatsapp && (
-          <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="btn btn-ghost col-span-2 !border-ok text-[#156B3A]">Enquire on WhatsApp</a>
+          <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="btn btn-ghost col-span-2 !border-ok text-ok">Enquire on WhatsApp</a>
         )}
       </div>
       <p className="text-[12px] text-muted text-center">
-        RFQ fee <span className="mono font-semibold text-navy">{rfqFee ? fee(rfqFee) : 'free'}</span> per request
-        {sampleFee != null && <> · Sample <span className="mono font-semibold text-navy">{fee(sampleFee)}</span> + shipping</>}
+        RFQ fee <span className="mono font-semibold text-ink">{rfqFee ? fee(rfqFee) : 'free'}</span> per request
+        {sampleFee != null && <> · Sample <span className="mono font-semibold text-ink">{fee(sampleFee)}</span> + shipping</>}
       </p>
     </section>
   );

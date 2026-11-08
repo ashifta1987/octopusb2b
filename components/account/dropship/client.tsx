@@ -69,13 +69,13 @@ export function DropshipBuyBox({ gallery, info, productId, services, variants, m
               const on = v.id === variantId;
               return (
                 <button key={v.id} type="button" role="radio" aria-checked={on} onClick={() => { setVariant(v.id); }}
-                  className={`inline-flex items-center gap-2 min-h-11 px-3.5 rounded-full border text-[14px] font-medium ${on ? 'bg-navy text-white border-navy' : 'bg-white text-navy border-line-2 hover:border-navy'}`}>
+                  className={`inline-flex items-center gap-2 min-h-11 px-3.5 rounded-full border text-[14px] font-medium ${on ? 'bg-ink text-white border-ink' : 'bg-white text-ink border-line-strong hover:border-ink'}`}>
                   {v.colour && <span className="w-3.5 h-3.5 rounded-full border border-black/15" style={{ background: v.colour }} aria-hidden />}{v.name}
                 </button>
               );
             })}
           </div>
-          {variant && <p className="mt-3 text-[13.5px] text-body-2"><b className="text-navy">{variant.name}:</b> {variant.stock_warehouse.toLocaleString('en-US')} in our warehouse (Express) · {variant.stock_partner.toLocaleString('en-US')} at partner warehouses (Standard)</p>}
+          {variant && <p className="mt-3 text-[13.5px] text-black"><b className="text-ink">{variant.name}:</b> {variant.stock_warehouse.toLocaleString('en-US')} in our warehouse (Express) · {variant.stock_partner.toLocaleString('en-US')} at partner warehouses (Standard)</p>}
         </div>
       )}
       </div>
@@ -95,14 +95,14 @@ export function DropshipBuyBox({ gallery, info, productId, services, variants, m
                   const on = q.service === ship;
                   const ok = available(q);
                   return (
-                    <tr key={q.service} className={`${on ? 'bg-blue-soft' : ''} ${ok ? 'cursor-pointer' : 'opacity-60'}`} onClick={() => ok && choose(q.service)}>
-                      <td className={`td !py-3 ${on ? 'shadow-[inset_3px_0_0_#2A6FD6]' : ''}`}>
+                    <tr key={q.service} className={`${on ? 'bg-tint' : ''} ${ok ? 'cursor-pointer' : 'opacity-60'}`} onClick={() => ok && choose(q.service)}>
+                      <td className={`td !py-3 ${on ? 'shadow-[inset_3px_0_0_var(--coral)]' : ''}`}>
                         <label className="inline-flex items-center gap-2.5 min-h-11 cursor-pointer">
-                          <input type="radio" name="ship" value={q.service} checked={on} disabled={!ok} onChange={() => choose(q.service)} className="w-4 h-4 accent-[#2A6FD6]" />
+                          <input type="radio" name="ship" value={q.service} checked={on} disabled={!ok} onChange={() => choose(q.service)} className="w-4 h-4 accent-coral" />
                           <ShippingTypePill type={q.service} />
                         </label>
                       </td>
-                      <td className="td !py-3 !px-3 text-body-2 text-[13.5px]">{FROM[q.service]}{!ok && <span className="block text-bad text-[12.5px]">Out of stock for this variant</span>}</td>
+                      <td className="td !py-3 !px-3 text-black text-[13.5px]">{FROM[q.service]}{!ok && <span className="block text-bad text-[12.5px]">Out of stock for this variant</span>}</td>
                       <td className="td !py-3 text-right tabular-nums whitespace-nowrap">{usd(q.product_cents)}</td>
                       <td className="td !py-3 text-right tabular-nums whitespace-nowrap">{usd(q.ship_duty_cents)}</td>
                       <td className="td !py-3 text-right tabular-nums whitespace-nowrap">{usd(q.fee_cents)}</td>
@@ -117,7 +117,7 @@ export function DropshipBuyBox({ gallery, info, productId, services, variants, m
           <p className="px-5 py-3.5 text-[13px] text-muted">Economy parcels are checked and repacked by Octopus. Charged from your US dollar wallet when each order comes in. Top up by bank transfer. An order that mixes shipping types ships one parcel per type, each with its own tracking.</p>
         </section>
 
-        <section className="rounded-[14px] bg-white border-2 border-navy p-5" aria-labelledby="price-h" data-testid="price-box">
+        <section className="rounded-[14px] bg-white border-2 border-ink p-5" aria-labelledby="price-h" data-testid="price-box">
           <div className="flex items-center justify-between gap-2"><h2 id="price-h" className="text-[17px] font-bold">Your price</h2>{demo && <ExamplePill />}</div>
           {quote && (
             <dl className="mt-3 space-y-1.5 text-[14px]">
@@ -128,7 +128,7 @@ export function DropshipBuyBox({ gallery, info, productId, services, variants, m
           {markup && <p className="mt-1.5 text-[12.5px] text-muted">Your pricing rule: cost × {markup}, rounded up to end in .99.</p>}
           <label htmlFor="sell" className="k block mt-4">Your selling price (US$)</label>
           <input id="sell" inputMode="decimal" className="input mt-1.5 !text-[17px] font-semibold tabular-nums" value={price} onChange={(e) => { setEdited(true); setPrice(e.target.value.replace(/[^0-9.]/g, '')); }} data-testid="sell-price" />
-          <div className="mt-3 rounded-[10px] bg-surface border border-line p-3.5 grid grid-cols-2 gap-3" aria-live="polite">
+          <div className="mt-3 rounded-[10px] bg-pearl border border-line p-3.5 grid grid-cols-2 gap-3" aria-live="polite">
             <div><div className="k">Profit per order</div><div className={`mt-1 text-[22px] font-extrabold tabular-nums ${pr && pr.c < 0 ? 'text-bad' : 'text-ok'}`} data-testid="profit">{pr ? usd(pr.c) : '—'}</div></div>
             <div><div className="k">Margin</div><div className={`mt-1 text-[22px] font-extrabold tabular-nums ${pr && pr.c < 0 ? 'text-bad' : 'text-ok'}`} data-testid="margin">{pr ? `${pr.pct}%` : '—'}</div></div>
           </div>

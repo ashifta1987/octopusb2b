@@ -47,13 +47,13 @@ export default async function Shipping({ searchParams }: { searchParams: Promise
             <section className="card p-6">
               <h2 className="text-lg font-semibold mb-4">1 · Route</h2>
               <div className="grid sm:grid-cols-[1fr_auto_1fr] gap-4 items-center">
-                <div className="rounded-[10px] bg-surface p-4">
+                <div className="rounded-[10px] bg-pearl p-4">
                   <div className="eyebrow text-muted">Ship from · supplier</div>
                   <div className="font-semibold mt-1">{sup?.legal_name} ({sup?.code})</div>
                   <div className="text-sm text-muted">{[sup?.city, sup?.country].filter(Boolean).join(', ')}</div>
                 </div>
                 <span aria-hidden className="text-muted text-xl">→</span>
-                <div className="rounded-[10px] bg-surface p-4">
+                <div className="rounded-[10px] bg-pearl p-4">
                   <div className="eyebrow text-muted">Ship to · buyer</div>
                   <div className="font-semibold mt-1">{org?.name}</div>
                   <div className="text-sm text-muted">{[org?.city, org?.country ? COUNTRY_NAMES[org.country] ?? org.country : null].filter(Boolean).join(', ')} · Incoterm {sel.incoterm ?? '—'}</div>
@@ -104,10 +104,10 @@ export default async function Shipping({ searchParams }: { searchParams: Promise
             {exceptions.map((x) => {
               const last = ((x.tracking_events ?? []) as { status: string; description: string | null; occurred_at: string }[]).sort((a, b) => b.occurred_at.localeCompare(a.occurred_at))[0];
               return (
-                <li key={x.id} className="flex flex-wrap items-center gap-3 rounded-[10px] border border-bad/40 bg-[#FDF6F6] px-4 py-3 text-sm">
+                <li key={x.id} className="flex flex-wrap items-center gap-3 rounded-[10px] border border-bad/40 bg-bad-bg px-4 py-3 text-sm">
                   <StatusBadge status="exception" />
                   <span className="mono font-semibold">{x.tracking_no}</span>
-                  <Link href={`/office/orders/${one(x.orders as unknown as { id: string } | null)?.id}`} className="mono text-blue">{one(x.orders as unknown as { code: string } | null)?.code}</Link>
+                  <Link href={`/office/orders/${one(x.orders as unknown as { id: string } | null)?.id}`} className="mono text-coral-text">{one(x.orders as unknown as { code: string } | null)?.code}</Link>
                   <span className="text-muted">{last?.description ?? ''} · {fmtDate(x.last_event_at, true)}</span>
                 </li>
               );
@@ -125,7 +125,7 @@ export default async function Shipping({ searchParams }: { searchParams: Promise
             return (
               <tr key={x.id}>
                 <td className="td mono text-sm">{x.code}</td>
-                <td className="td mono text-sm"><Link href={`/office/orders/${ord?.id}`} className="text-blue">{ord?.code}</Link></td>
+                <td className="td mono text-sm"><Link href={`/office/orders/${ord?.id}`} className="text-coral-text">{ord?.code}</Link></td>
                 <td className="td mono text-sm">{x.tracking_no ?? '—'}</td>
                 <td className="td text-sm">{x.service_code ?? '—'}</td>
                 <td className="td"><Money cents={x.rate_cents} currency={x.currency} /></td>

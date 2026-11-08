@@ -1,25 +1,31 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { cn } from '@/lib/cn';
 import { humanize, money, fmtDate } from '@/lib/format';
 
 /* ───────── Logo ───────── */
-export function Logo({ white = false, className }: { white?: boolean; className?: string }) {
+/**
+ * Brand logo — full lockup only, never recoloured, stretched or rotated (brand guide).
+ * Colour version on light backgrounds, white version on Ink or black. Header 42 px (phone 36), footer `size="footer"` 48 px.
+ */
+export function Logo({ white = false, className, size = 'header' }: { white?: boolean; className?: string; size?: 'header' | 'footer' }) {
   return (
     <Link href="/" className={cn('inline-flex items-center shrink-0', className)} aria-label="Octopus B2B home">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={white ? '/logo-white.png' : '/logo.png'} alt="Octopus B2B" className="h-[44px] w-auto block" />
+      <Image src={white ? '/brand/octopus-b2b-logo-white.png' : '/brand/octopus-b2b-logo.png'} alt="Octopus B2B" width={800} height={208}
+        sizes={size === 'footer' ? '185px' : '162px'} priority={size === 'header'}
+        className={cn('block w-auto', size === 'footer' ? 'h-12' : 'h-9 sm:h-[42px]')} />
     </Link>
   );
 }
 
 /* ───────── StatusBadge — driven by state-machine enums; always text + colour ───────── */
 const TONES: Record<string, string> = {
-  green: 'bg-[#E3F5EA] text-[#156B3A]',
-  amber: 'bg-[#FFF3D6] text-[#8A5A00]',
-  red: 'bg-[#FDE8E8] text-[#A32D2D]',
-  blue: 'bg-blue-soft text-[#1E4F9C]',
-  gray: 'bg-[#EEF0F4] text-[#3D4456]',
-  navy: 'bg-navy text-white',
+  green: 'bg-ok-bg text-ok',
+  amber: 'bg-warn-bg text-warn',
+  red: 'bg-bad-bg text-bad',
+  blue: 'bg-tint text-coral-text',
+  gray: 'bg-fill text-black',
+  navy: 'bg-ink text-white',
 };
 const STATUS_TONE: Record<string, keyof typeof TONES> = {
   verified: 'green', live: 'green', paid: 'green', confirmed: 'green', completed: 'green', delivered: 'green', credited: 'green', active: 'green',
@@ -52,10 +58,10 @@ export function Money({ cents, currency = 'USD', className, compact }: { cents: 
 export function SupplierCode({ code, country, verified, className }: { code: string; country?: string | null; verified?: boolean; className?: string }) {
   return (
     <span className={cn('inline-flex items-center gap-1.5 text-[13px] text-muted', className)}>
-      {country && <span className="mono text-[10px] font-semibold bg-surface border border-line rounded px-1 py-px text-navy">{country}</span>}
+      {country && <span className="mono text-[10px] font-semibold bg-pearl border border-line rounded px-1 py-px text-ink">{country}</span>}
       <span>Supplier {code}</span>
       {verified && (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1F9D55" strokeWidth="2.2" aria-label="Verified supplier" role="img">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ok" strokeWidth="2.2" aria-label="Verified supplier" role="img">
           <circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" />
         </svg>
       )}
@@ -82,7 +88,7 @@ export function Stat({ label, value, hint, hintTone }: { label: string; value: R
   return (
     <div className="card p-5">
       <div className="text-sm text-muted">{label}</div>
-      <div className="mt-2 font-display text-[28px] font-bold leading-tight text-navy">{value}</div>
+      <div className="mt-2 font-display text-[28px] font-bold leading-tight text-ink">{value}</div>
       {hint && <div className={cn('mt-1 text-sm', hintTone === 'ok' ? 'text-ok' : hintTone === 'warn' ? 'text-warn' : hintTone === 'bad' ? 'text-bad' : 'text-muted')}>{hint}</div>}
     </div>
   );
@@ -105,8 +111,8 @@ export function PageHeader({ title, subtitle, actions, eyebrow }: { title: React
 export function EmptyState({ title, body, action }: { title: string; body?: string; action?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center text-center py-12 px-6">
-      <div className="w-12 h-12 rounded-full bg-surface border border-line flex items-center justify-center mb-3" aria-hidden>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#5B6175" strokeWidth="2"><path d="M4 7h16M4 12h16M4 17h10" /></svg>
+      <div className="w-12 h-12 rounded-full bg-pearl border border-line flex items-center justify-center mb-3" aria-hidden>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-muted" strokeWidth="2"><path d="M4 7h16M4 12h16M4 17h10" /></svg>
       </div>
       <div className="font-semibold">{title}</div>
       {body && <p className="text-sm text-muted mt-1 max-w-md">{body}</p>}
@@ -123,7 +129,7 @@ export function Timeline({ items }: { items: { title: string; body?: string | nu
       {items.map((it, i) => (
         <li key={i} className="relative pl-6 pb-5 last:pb-0">
           {i < items.length - 1 && <span className="absolute left-[5px] top-3 bottom-0 w-px bg-line" aria-hidden />}
-          <span className={cn('absolute left-0 top-1.5 w-[11px] h-[11px] rounded-full border-2', it.tone === 'todo' ? 'bg-white border-line-2' : it.tone === 'current' ? 'bg-blue-fill border-blue' : 'bg-ok border-ok')} aria-hidden />
+          <span className={cn('absolute left-0 top-1.5 w-[11px] h-[11px] rounded-full border-2', it.tone === 'todo' ? 'bg-white border-line-strong' : it.tone === 'current' ? 'bg-coral border-coral-text' : 'bg-ok border-ok')} aria-hidden />
           <div className="font-semibold text-[15px]">{it.title}</div>
           {it.body && <div className="text-sm text-muted">{it.body}</div>}
           <div className="text-xs text-muted mono mt-0.5">{fmtDate(it.at, true)}</div>
@@ -145,8 +151,8 @@ export function OrderProgress({ status }: { status: string }) {
     <div className="grid grid-cols-4 gap-2">
       {PROGRESS.map((p, i) => (
         <div key={p}>
-          <div className={cn('h-1 rounded-full', i < rank ? 'bg-blue-fill' : 'bg-line')} />
-          <div className={cn('mt-2 text-sm', i < rank ? 'font-semibold text-navy' : 'text-muted')}>{p === 'in_production' ? 'Processing' : humanize(p)}</div>
+          <div className={cn('h-1 rounded-full', i < rank ? 'bg-coral' : 'bg-line')} />
+          <div className={cn('mt-2 text-sm', i < rank ? 'font-semibold text-ink' : 'text-muted')}>{p === 'in_production' ? 'Processing' : humanize(p)}</div>
         </div>
       ))}
     </div>
@@ -172,11 +178,11 @@ export function PermissionGate({ allowed, children, fallback = null }: { allowed
 }
 
 export function Notice({ tone = 'blue', children }: { tone?: 'blue' | 'amber' | 'red' | 'green'; children: React.ReactNode }) {
-  const t = { blue: 'bg-blue-soft border-blue/30 text-[#1E4F9C]', amber: 'bg-[#FFF3D6] border-warn/40 text-[#8A5A00]', red: 'bg-[#FDE8E8] border-bad/40 text-[#A32D2D]', green: 'bg-[#E3F5EA] border-ok/40 text-[#156B3A]' }[tone];
+  const t = { blue: 'bg-tint border-coral-text/30 text-coral-text', amber: 'bg-warn-bg border-warn/40 text-warn', red: 'bg-bad-bg border-bad/40 text-bad', green: 'bg-ok-bg border-ok/40 text-ok' }[tone];
   return <div role="status" className={cn('rounded-[10px] border px-4 py-3 text-sm', t)}>{children}</div>;
 }
 
 export function SampleBadge() {
-  return <span className="inline-block rounded-md bg-surface border border-line px-2 py-1 text-xs font-semibold text-navy">Sample data</span>;
+  return <span className="inline-block rounded-md bg-pearl border border-line px-2 py-1 text-xs font-semibold text-ink">Sample data</span>;
 }
 

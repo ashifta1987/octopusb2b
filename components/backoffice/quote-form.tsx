@@ -15,7 +15,7 @@ export function QuoteForm({ action, suppliers, defaultQty, defaultIncoterm, unit
   const cur = asCurrency(currency);
   return (
     <ActionForm action={action} submitLabel="Send quote" resetOnSuccess confirm={`Send this quote to the buyer? Prices are in ${cur}.`}>
-      <p className="text-sm text-muted mb-3">Prices in <b className="text-navy">{cur}</b> ({CURRENCY_PREFIX[cur]}) — the platform currency. The quote locks this currency and the current approved rate.</p>
+      <p className="text-sm text-muted mb-3">Prices in <b className="text-ink">{cur}</b> ({CURRENCY_PREFIX[cur]}) — the platform currency. The quote locks this currency and the current approved rate.</p>
       <div className="grid sm:grid-cols-3 gap-3">
         <div className="sm:col-span-3">
           <label htmlFor={id('sup')} className="label">Supplier *</label>

@@ -121,11 +121,11 @@ export function BackupProgress({ initial, githubConfigured }: { initial: Live | 
         <span className="mono text-sm">{pct}%</span>
       </div>
       <div className="mt-2 h-2.5 rounded-full bg-line" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct} aria-label="Backup progress">
-        <div className={cn('h-2.5 rounded-full transition-all', failed ? 'bg-bad' : done ? 'bg-ok' : 'bg-blue-fill')} style={{ width: `${pct}%` }} />
+        <div className={cn('h-2.5 rounded-full transition-all', failed ? 'bg-bad' : done ? 'bg-ok' : 'bg-coral')} style={{ width: `${pct}%` }} />
       </div>
       {failed && row.error && <p className="text-sm text-bad mt-2">{row.error}</p>}
       {(notConfigured || (row.status === 'queued' && githubConfigured === false)) && (
-        <div role="status" className="mt-4 rounded-[10px] border border-warn/40 bg-[#FFF3D6] px-4 py-3 text-sm text-[#8A5A00]">
+        <div role="status" className="mt-4 rounded-[10px] border border-warn/40 bg-warn-bg px-4 py-3 text-sm text-warn">
           <b>Backup workflow not connected yet.</b> The backup was saved as <i>queued</i>, but GitHub Actions could not be started.
           To finish setup (see <span className="mono">docs/BACKUP-SETUP.md</span>): add the <span className="mono">backup.yml</span> workflow to the repository,
           set <span className="mono">GITHUB_REPO</span> and <span className="mono">GITHUB_ACTIONS_TOKEN</span> (workflow scope) in the Vercel environment, add the off-site
@@ -204,8 +204,8 @@ const TYPES: { value: string; title: string; body: string }[] = [
 
 export function TypeOption({ value, title, body, checked, disabled, onChange, name = 'restore_type' }: { value: string; title: string; body: string; checked: boolean; disabled?: boolean; onChange?: () => void; name?: string }) {
   return (
-    <label className={cn('flex gap-3 rounded-xl border p-4 cursor-pointer', checked ? 'border-blue border-2 bg-blue-soft/40' : 'border-line', disabled && 'cursor-default')}>
-      <input type="radio" name={name} value={value} checked={checked} disabled={disabled} onChange={onChange} className="mt-1 w-[18px] h-[18px] accent-[#2A6FD6] flex-none" />
+    <label className={cn('flex gap-3 rounded-xl border p-4 cursor-pointer', checked ? 'border-coral-text border-2 bg-tint/40' : 'border-line', disabled && 'cursor-default')}>
+      <input type="radio" name={name} value={value} checked={checked} disabled={disabled} onChange={onChange} className="mt-1 w-[18px] h-[18px] accent-coral flex-none" />
       <span>
         <span className="block font-semibold text-[16px]">{title}</span>
         <span className="block text-sm text-muted mt-0.5">{body}</span>
@@ -260,7 +260,7 @@ export function RestoreForm({ backupId, backupCode, initialType, canRequest }: {
             <div className="grid sm:grid-cols-2 gap-2">
               {PARTIAL_MODULES.map((m) => (
                 <label key={m.key} className="flex gap-2 items-start text-sm">
-                  <input type="checkbox" className="mt-0.5 w-[18px] h-[18px] accent-[#2A6FD6]" checked={modules.includes(m.key)}
+                  <input type="checkbox" className="mt-0.5 w-[18px] h-[18px] accent-coral" checked={modules.includes(m.key)}
                     onChange={(e) => setModules((cur) => (e.target.checked ? [...cur, m.key] : cur.filter((x) => x !== m.key)))} />
                   {m.label}
                 </label>
@@ -268,7 +268,7 @@ export function RestoreForm({ backupId, backupCode, initialType, canRequest }: {
             </div>
             <label htmlFor="rs-records" className="label mt-4">Record IDs (optional — leave empty to compare the whole module)</label>
             <textarea id="rs-records" className="input min-h-[72px] mono text-xs" placeholder="Paste record UUIDs separated by commas or new lines" value={records} onChange={(e) => setRecords(e.target.value)} />
-            <p className="text-xs text-muted mt-1">After verification you pick the exact rows on the <a className="text-blue font-semibold" href="/admin/backups/recovery">compare screen</a>. Money records are never overwritten.</p>
+            <p className="text-xs text-muted mt-1">After verification you pick the exact rows on the <a className="text-coral-text font-semibold" href="/admin/backups/recovery">compare screen</a>. Money records are never overwritten.</p>
           </div>
         )}
         <label htmlFor="rs-reason" className="label mt-4">Reason (shown to approver and in audit log)</label>
@@ -377,8 +377,8 @@ export function ExportForm({ defaultFrom, defaultTo, allowed }: { defaultFrom: s
         <legend className="sr-only">Modules</legend>
         <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
           {EXPORT_GROUPS.map((g) => (
-            <label key={g.key} className="flex gap-2.5 items-start text-sm text-[#3B4556]">
-              <input type="checkbox" className="mt-0.5 w-[18px] h-[18px] accent-[#2A6FD6] flex-none" checked={groups.includes(g.key)}
+            <label key={g.key} className="flex gap-2.5 items-start text-sm text-black">
+              <input type="checkbox" className="mt-0.5 w-[18px] h-[18px] accent-coral flex-none" checked={groups.includes(g.key)}
                 onChange={(e) => setGroups((cur) => (e.target.checked ? [...cur, g.key] : cur.filter((x) => x !== g.key)))} />
               {g.label}
             </label>
@@ -395,7 +395,7 @@ export function ExportForm({ defaultFrom, defaultTo, allowed }: { defaultFrom: s
           </div>
         </div>
         <label className="flex gap-2.5 items-center text-sm mt-4">
-          <input type="checkbox" className="w-[18px] h-[18px] accent-[#2A6FD6]" checked={email} onChange={(e) => setEmail(e.target.checked)} />
+          <input type="checkbox" className="w-[18px] h-[18px] accent-coral" checked={email} onChange={(e) => setEmail(e.target.checked)} />
           Email me the download link
         </label>
         <button type="submit" className="btn btn-dark mt-4">{pending ? 'Creating…' : 'Create export'}</button>
@@ -413,7 +413,7 @@ export function ExportDownload({ id, status }: { id: string; status: string }) {
   if (status === 'queued' || status === 'failed') {
     return (
       <span className="inline-flex flex-col items-end">
-        <button type="button" className="text-blue font-semibold text-sm" disabled={pending} onClick={() => start(async () => {
+        <button type="button" className="text-coral-text font-semibold text-sm" disabled={pending} onClick={() => start(async () => {
           setErr(null);
           const r = await callApi(`/api/exports/${id}/run`);
           if (!r.ok) setErr(errorText(r.error));
@@ -426,7 +426,7 @@ export function ExportDownload({ id, status }: { id: string; status: string }) {
   if (status !== 'ready') return <span className="text-sm text-muted">{status === 'running' ? 'Building…' : 'Expired'}</span>;
   return (
     <span className="inline-flex flex-col items-end">
-      <button type="button" className="text-blue font-semibold text-sm" disabled={pending} onClick={() => start(async () => {
+      <button type="button" className="text-coral-text font-semibold text-sm" disabled={pending} onClick={() => start(async () => {
         setErr(null);
         const r = await callApi(`/api/exports/${id}/download`, 'GET');
         const urls = Array.isArray(r.urls) ? (r.urls as string[]) : typeof r.url === 'string' ? [r.url] : [];

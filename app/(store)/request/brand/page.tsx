@@ -48,7 +48,7 @@ async function BrandRequest({ searchParams }: { searchParams: SP }) {
     <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-10 sm:py-12" data-testid="request-brand">
       <div className="eyebrow">Request Center</div>
       <h1 className="text-[34px] sm:text-[44px] font-extrabold leading-[1.1] mt-3 max-w-[780px]">Put your brand on a verified product</h1>
-      <p className="text-[17px] text-body-2 mt-4 max-w-[760px] leading-relaxed">Tell us the product, your logo and where the stock goes. Your account manager sends a proof and a quote before you pay anything.</p>
+      <p className="text-[17px] text-black mt-4 max-w-[760px] leading-relaxed">Tell us the product, your logo and where the stock goes. Your account manager sends a proof and a quote before you pay anything.</p>
       <RequestTabs blocks={blocks} active="brand" qs={chosenOk ? `?product=${wanted}` : ''} />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px] items-start">
@@ -60,17 +60,17 @@ async function BrandRequest({ searchParams }: { searchParams: SP }) {
         <aside className="space-y-4 min-w-0">
           <section className="card p-5" aria-labelledby="am-h">
             <div className="flex items-center gap-3">
-              <span className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-navy text-white"><Icon name="user" /></span>
-              <div><h2 id="am-h" className="font-bold text-navy">Your account manager</h2><p className="text-[13px] text-muted">{reply ? `Replies within ${reply} working hours` : 'One person for your whole project'}</p></div>
+              <span className="inline-flex items-center justify-center w-11 h-11 rounded-full bg-ink text-white"><Icon name="user" /></span>
+              <div><h2 id="am-h" className="font-bold text-ink">Your account manager</h2><p className="text-[13px] text-muted">{reply ? `Replies within ${reply} working hours` : 'One person for your whole project'}</p></div>
             </div>
           </section>
-          <section className="rounded-[14px] bg-navy text-white p-6" aria-labelledby="mmb-steps-h">
+          <section className="rounded-[14px] bg-ink text-white p-6" aria-labelledby="mmb-steps-h">
             <h2 id="mmb-steps-h" className="!text-white text-lg font-semibold">What happens next</h2>
             <ol className="mt-4 space-y-3">
               {MMB_STEPS.map((s, i) => (
                 <li key={s.title} className="flex gap-3">
-                  <span className="w-7 h-7 shrink-0 rounded-full border-2 border-[#5B9BF0] flex items-center justify-center text-[11px] font-semibold" aria-hidden>{i + 1}</span>
-                  <div><div className="font-semibold text-[14.5px]">{s.title}</div><div className="text-[12.5px] text-[#C9CFDB]">{s.tag === 'You' ? 'You' : 'Octopus'}</div></div>
+                  <span className="w-7 h-7 shrink-0 rounded-full border-2 border-coral flex items-center justify-center text-[11px] font-semibold" aria-hidden>{i + 1}</span>
+                  <div><div className="font-semibold text-[14.5px]">{s.title}</div><div className="text-[12.5px] text-on-ink">{s.tag === 'You' ? 'You' : 'Octopus'}</div></div>
                 </li>
               ))}
             </ol>

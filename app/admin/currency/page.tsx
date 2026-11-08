@@ -58,7 +58,7 @@ export default async function CurrencyPage() {
       />
       <StepUpNote className="-mt-3 mb-4" />
 
-      <section className="rounded-[12px] bg-navy text-white px-7 py-6 mb-6 flex flex-wrap items-center justify-between gap-4">
+      <section className="rounded-[12px] bg-ink text-white px-7 py-6 mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-semibold text-white">Platform currency</h2>
           <p className="text-white/80 text-[15px] mt-1">
@@ -68,7 +68,7 @@ export default async function CurrencyPage() {
         </div>
         <span className="flex items-center gap-3">
           <span className="mono text-3xl font-semibold" aria-hidden>{CURRENCY_PREFIX[current]}</span>
-          <span className="rounded-full bg-white text-navy px-4 py-1.5 font-semibold mono">{current}</span>
+          <span className="rounded-full bg-white text-ink px-4 py-1.5 font-semibold mono">{current}</span>
         </span>
       </section>
 
@@ -96,7 +96,7 @@ export default async function CurrencyPage() {
               <Field label="Effective from" htmlFor="fx-from" hint="Leave empty for now, or schedule a future time."><LocalDateTimeInput id="fx-from" name="effective_from" isoName="effective_from_iso" /></Field>
               <Field label="Note" htmlFor="fx-note" className="sm:col-span-2"><input id="fx-note" name="note" className="input" maxLength={200} placeholder="e.g. Monthly review, bank rate 1 Nov" /></Field>
             </ActionForm>
-          ) : <div className="px-6 pb-6 text-sm text-muted">Current approved rate: <b className="mono text-navy">{rate}</b></div>}
+          ) : <div className="px-6 pb-6 text-sm text-muted">Current approved rate: <b className="mono text-ink">{rate}</b></div>}
           {upcoming && <p className="px-6 pb-5 text-sm">Scheduled: <b className="mono">{Number(upcoming.rate)}</b> from {fmtDate(upcoming.effective_from, true)}</p>}
         </Card>
 
@@ -149,7 +149,7 @@ export default async function CurrencyPage() {
                   {r.note && <div className="text-muted mt-0.5 max-w-[200px]">“{r.note}”</div>}
                   {r.impact && (
                     <details className="mt-1">
-                      <summary className="cursor-pointer text-blue font-semibold">Impact at request time</summary>
+                      <summary className="cursor-pointer text-coral-text font-semibold">Impact at request time</summary>
                       <div className="mt-2 w-[min(80vw,720px)]"><ImpactView impact={r.impact} to={r.to_currency} serviceNames={serviceNames} /></div>
                     </details>
                   )}

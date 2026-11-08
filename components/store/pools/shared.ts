@@ -36,9 +36,9 @@ export function priceAt(tiers: PoolTier[], qty: number): number | null {
 /** Fill status badge (hot / warm / cool) — always text + colour. */
 export function fillTone(filled: number, target: number): { key: 'hot' | 'warm' | 'cool'; label: string; cls: string } {
   const pct = target > 0 ? filled / target : 0;
-  if (pct >= 0.75) return { key: 'hot', label: 'Almost full', cls: 'bg-[#E3F5EA] text-[#156B3A]' };
-  if (pct >= 0.3) return { key: 'warm', label: 'On track', cls: 'bg-[#FFF3D6] text-[#8A5A00]' };
-  return { key: 'cool', label: 'Needs buyers', cls: 'bg-[#FDE8E8] text-[#A32D2D]' };
+  if (pct >= 0.75) return { key: 'hot', label: 'Almost full', cls: 'bg-ok-bg text-ok' };
+  if (pct >= 0.3) return { key: 'warm', label: 'On track', cls: 'bg-warn-bg text-warn' };
+  return { key: 'cool', label: 'Needs buyers', cls: 'bg-bad-bg text-bad' };
 }
 
 export function pct(filled: number, target: number) {

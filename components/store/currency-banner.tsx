@@ -19,7 +19,7 @@ export function CurrencySwitchBanner({ to, appliedAt }: { to: string; appliedAt:
   if (!show) return null;
   const cur = asCurrency(to);
   return (
-    <div className="bg-blue-soft border-b border-blue/30 text-navy text-[14px]" role="status">
+    <div className="bg-tint border-b border-coral-text/30 text-ink text-[14px]" role="status">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-2.5 flex items-center justify-between gap-4">
         <p>
           <strong>Prices are now shown in {CURRENCY_PREFIX[cur]} ({cur}).</strong>{' '}

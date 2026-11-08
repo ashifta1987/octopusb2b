@@ -37,7 +37,7 @@ export default async function WalletPage() {
       <PageHeader title="Wallet" subtitle="One US dollar wallet for every service. Top up by bank transfer; money for work in progress is held, then charged or released." />
       {!settings.wallet_enabled && <div className="mb-6"><Notice tone="amber">The wallet is switched off at the moment. Top-ups are paused.</Notice></div>}
 
-      <section className="rounded-[14px] bg-navy text-white p-6 sm:p-8 mb-6" aria-label="Wallet balance" data-testid="wallet-balance">
+      <section className="rounded-[14px] bg-ink text-white p-6 sm:p-8 mb-6" aria-label="Wallet balance" data-testid="wallet-balance">
         <div className="flex flex-wrap justify-between gap-6">
           <div>
             <div className="text-sm text-white/70">Available</div>
@@ -61,11 +61,11 @@ export default async function WalletPage() {
             {bank ? (
               <>
                 <dl className="grid grid-cols-[150px_1fr] gap-y-2 text-[15px]">
-                  {bankLines(bank).map(([k, v]) => <div key={k} className="contents"><dt className="text-[#5A6475]">{k}</dt><dd className="font-medium mono break-all">{v}</dd></div>)}
-                  <dt className="text-[#5A6475]">Your reference</dt><dd className="font-bold mono text-navy">{w?.reference}</dd>
+                  {bankLines(bank).map(([k, v]) => <div key={k} className="contents"><dt className="text-muted">{k}</dt><dd className="font-medium mono break-all">{v}</dd></div>)}
+                  <dt className="text-muted">Your reference</dt><dd className="font-bold mono text-ink">{w?.reference}</dd>
                 </dl>
-                {bank.notes && <p className="text-[13px] text-[#5A6475] mt-3">{bank.notes}</p>}
-                <p className="text-[13px] text-[#5A6475] mt-3">Send US dollars only and quote your reference. No card payments.</p>
+                {bank.notes && <p className="text-[13px] text-muted mt-3">{bank.notes}</p>}
+                <p className="text-[13px] text-muted mt-3">Send US dollars only and quote your reference. No card payments.</p>
               </>
             ) : (
               <Notice tone="amber">Bank details are not published yet. Ask your account manager in <Link href="/account/support" className="underline">Messages</Link>.</Notice>
@@ -75,7 +75,7 @@ export default async function WalletPage() {
         <Card title="I have sent a transfer">
           <div id="add-funds" className="px-6 pb-6 scroll-mt-24">
             <div id="slip" className="scroll-mt-24" />
-            {settings.wallet_enabled && bank ? <TransferForm orgId={org.id} reference={w?.reference ?? ''} /> : <p className="text-[14px] text-[#5A6475]">Top-ups are not available right now.</p>}
+            {settings.wallet_enabled && bank ? <TransferForm orgId={org.id} reference={w?.reference ?? ''} /> : <p className="text-[14px] text-muted">Top-ups are not available right now.</p>}
           </div>
         </Card>
       </div>
@@ -91,7 +91,7 @@ export default async function WalletPage() {
                 <td className="td">
                   <span className="mono whitespace-nowrap">{t.amount_received_cents != null ? money(Number(t.amount_received_cents), 'USD') : '—'}</span>
                   {t.amount_received_cents != null && Number(t.amount_received_cents) !== Number(t.amount_cents) && (
-                    <div className="text-xs text-[#9A4A10] mt-0.5" data-testid="transfer-difference">
+                    <div className="text-xs text-warn mt-0.5" data-testid="transfer-difference">
                       {money(Math.abs(Number(t.amount_cents) - Number(t.amount_received_cents)), 'USD')} {Number(t.amount_received_cents) < Number(t.amount_cents) ? 'less' : 'more'} than claimed{t.received_note ? ` (${t.received_note})` : ''}
                     </div>
                   )}
@@ -118,7 +118,7 @@ export default async function WalletPage() {
         </Table>
       </Card>
 
-      <Card title="Transactions" className="mt-6" action={<Link href="/account/ledger?account=wallet" className="text-sm font-semibold text-blue">Full ledger →</Link>}>
+      <Card title="Transactions" className="mt-6" action={<Link href="/account/ledger?account=wallet" className="inline-flex items-center min-h-11 text-sm font-semibold text-coral-text">Full ledger →</Link>}>
         <Table head={['Date', 'Description', 'Reference', 'Amount', 'Balance after']} empty={<EmptyState title="No wallet transactions yet" body="Credited transfers, charges and refunds appear here." />}>
           {tx.map((r) => (
             <tr key={r.id}>
