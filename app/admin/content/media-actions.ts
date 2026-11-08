@@ -34,3 +34,4 @@ export async function saveSiteMedia(_prev: Result | null, fd: FormData): Promise
   revalidatePath('/admin/content');
   return ok('Picture saved. The site shows it within a minute.');
 }
+

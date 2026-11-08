@@ -31,3 +31,4 @@ for (const s of slots) {
   up++; console.log(`  ✔ ${s.key} → ${path}`);
 }
 console.log(`uploaded ${up} pictures to ${target === '.env.local' ? 'LIVE' : 'staging'} site-media`);
+

@@ -1,6 +1,8 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
+import { getSiteMedia, slot } from '@/lib/media';
 import { getSiteContent, block } from '@/lib/content';
 import { Breadcrumbs, JsonLd, breadcrumbLd, parts } from '@/components/store/seo';
 import {
@@ -38,7 +40,8 @@ function Preview({ src, alt, className = '' }: { src: string; alt: string; class
 }
 
 async function MakeMyBrandView() {
-  const { blocks, settings } = await getSiteContent();
+  const [{ blocks, settings }, media] = await Promise.all([getSiteContent(), getSiteMedia()]);
+  const mgr = slot(media, 'mmb.manager.photo', { src: '/images/services/brand-consulting.webp', alt: 'An Octopus brand consultant going through colour swatches and packaging samples with a customer', width: 1200, height: 800 });
   const methods = brandMethods(settings);
   const reply = replyHours(settings);
   const demo = isDemo(settings);
@@ -156,7 +159,11 @@ async function MakeMyBrandView() {
       {/* Account manager */}
       <section aria-labelledby="mmb-am-h" className="border-b border-line">
         <div className={`${W} py-12 sm:py-16`}>
-          <div className="card p-6 sm:p-8 grid gap-8 lg:grid-cols-2">
+          <div className="card overflow-hidden grid lg:grid-cols-2" data-testid="mmb-manager">
+            <div className="relative min-h-[240px] lg:min-h-full bg-ill-bg">
+              <Image src={mgr.src} alt={mgr.alt} width={mgr.width} height={mgr.height} sizes="(min-width:1100px) 620px, 100vw" className="absolute inset-0 w-full h-full object-cover" />
+            </div>
+            <div className="p-6 sm:p-8 space-y-6">
             <div>
               <div className="k !text-coral-text">Your account manager</div>
               <h2 id="mmb-am-h" className="mt-2 text-[25px] sm:text-[30px] font-extrabold leading-[1.15]">One person for your whole project</h2>
@@ -172,7 +179,8 @@ async function MakeMyBrandView() {
               ))}
             </ul>
           </div>
-        </div>
+            </div>
+          </div>
       </section>
 
       {/* What it costs */}
