@@ -163,7 +163,7 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
             warehouses={warehouses} demo={demo}
           />
           {type === '3pl' && (
-            <div className="rounded-[12px] border border-line bg-pearl p-4 text-[14px]" data-testid="3pl-rates">
+            <div id="rates" className="scroll-mt-28 rounded-[12px] border border-line bg-pearl p-4 text-[14px]" data-testid="3pl-rates">
               <div className="flex items-center gap-2 font-semibold text-ink">3PL rates{demo && rates && <ExamplePill />}</div>
               <p className="mt-1 text-black">{rates ?? `${TBC}. Octopus sends storage, pick-and-pack and shipping rates for your goods after you submit.`}</p>
             </div>

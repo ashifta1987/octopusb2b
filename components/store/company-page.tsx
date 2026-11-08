@@ -35,8 +35,8 @@ export async function CompanyPage({ slug, showContact }: { slug: 'about' | 'cont
                     <div className="text-[13px] text-muted">{[b.city, b.country].filter(Boolean).join(', ')}</div>
                     <address className="not-italic text-[14px] mt-2 space-y-1">
                       {b.address && <div>{b.address}</div>}
-                      {b.phone && <div><a href={`tel:${b.phone.replace(/\s/g, '')}`} className="text-coral-text">{b.phone}</a></div>}
-                      {b.email && <div><a href={`mailto:${b.email}`} className="text-coral-text">{b.email}</a></div>}
+                      {b.phone && <div><a href={`tel:${b.phone.replace(/\s/g, '')}`} className="inline-flex items-center min-h-11 text-coral-text">{b.phone}</a></div>}
+                      {b.email && <div><a href={`mailto:${b.email}`} className="inline-flex items-center min-h-11 text-coral-text">{b.email}</a></div>}
                     </address>
                   </li>
                 ))}
@@ -52,8 +52,8 @@ export async function CompanyPage({ slug, showContact }: { slug: 'about' | 'cont
               {company.address && <div className="text-muted">{company.address}</div>}
               {company.address_cn && <div className="text-muted" lang="zh-CN">{company.address_cn}</div>}
               {company.contact_person && <div>Contact: {company.contact_person}</div>}
-              {company.phone && <div><a href={`tel:${company.phone.replace(/\s/g, '')}`} className="font-semibold">{company.phone}</a>{wa && ' · WhatsApp'}</div>}
-              {company.email && <div><a href={`mailto:${company.email}`} className="font-semibold text-coral-text">{company.email}</a></div>}
+              {company.phone && <div><a href={`tel:${company.phone.replace(/\s/g, '')}`} className="inline-flex items-center min-h-11 font-semibold">{company.phone}</a>{wa && ' · WhatsApp'}</div>}
+              {company.email && <div><a href={`mailto:${company.email}`} className="inline-flex items-center min-h-11 font-semibold text-coral-text">{company.email}</a></div>}
               {company.website && <div className="text-muted">{company.website}</div>}
             </address>
           </aside>

@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -267,12 +266,9 @@ async function MakeMyBrandView() {
   );
 }
 
-function MmbSkeleton() {
-  return <div aria-busy="true" aria-label="Loading" className="wrap py-10 space-y-6"><div className="h-[360px] card" /><div className="grid gap-3 lg:grid-cols-3">{[0, 1, 2].map((i) => <div key={i} className="card h-[140px]" />)}</div></div>;
-}
-
 /** ADDON-44-D board 21 — public Make My Brand page. Numbers only from settings ("To be confirmed" when empty); examples labelled. */
 export default function MakeMyBrandPage() {
-  return <Suspense fallback={<MmbSkeleton />}><MakeMyBrandView /></Suspense>;
+  // cached data only (site content + media keys), so no Suspense: the hero is in the static shell and paints first
+  return <MakeMyBrandView />;
 }
 

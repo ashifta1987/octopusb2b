@@ -124,7 +124,7 @@ export function BrandRequestWizard({ products, methods, initialProduct, orgId, m
 
   return (
     <div className="card p-5 sm:p-7" data-testid="brand-wizard">
-      {mode === 'guest' && <div className="mb-5"><Notice>Sign in to send a brand request. <Link href={loginHref} className="underline font-semibold">Sign in or create an account</Link>.</Notice></div>}
+      {mode === 'guest' && <div className="mb-5"><Notice>Sign in to send a brand request. <Link href={loginHref} className="inline-flex items-center min-h-11 underline font-semibold">Sign in or create an account</Link>.</Notice></div>}
       {mode === 'no-org' && <div className="mb-5"><Notice tone="warn">Please <Link href="/onboarding" className="underline font-semibold">complete your company profile</Link> before sending requests.</Notice></div>}
 
       <ol className="grid grid-cols-3 gap-2" aria-label="Progress">

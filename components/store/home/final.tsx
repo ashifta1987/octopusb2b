@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { block } from '@/lib/content';
+import { block, getSiteContent } from '@/lib/content';
 import { money } from '@/lib/format';
 import { getSession } from '@/lib/auth';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
@@ -65,44 +65,12 @@ export async function FinalHome() {
   const second = warehouses.find((w) => !/shenzhen/i.test(w.city));
   const hours = settings.assistant_office_hours as { start?: string; end?: string } | undefined;
 
-  const tabs: PickerTab[] = [
-    { key: 'drop', label: 'Dropship', service: 'Dropshipping', promise: 'List verified products in your store. We ship each order to your customer.', steps: ['Pick products and set your price', 'Your customer orders, the order lands here', 'We pack with your slip and ship with tracking'], fact: 'No stock, no minimum', cta: 'Start dropshipping →', href: '/go/dropship' },
-    { key: 'brand', label: 'Put my brand on it', service: 'Make My Brand', promise: 'Your logo on a verified product, made, checked and stocked for you.', steps: ['Pick a product from our verified suppliers', 'Add your logo print, engraving or branded box', 'Approve proof and sample, then we produce and check'], fact: 'Price confirmed before you pay', cta: 'Start a brand project →', href: '/request/brand' },
-    { key: 'source', label: 'Source a product', service: 'Product sourcing', promise: 'Tell us the product. We find the verified factory and get you competing quotes.', steps: ['Send your request with product, quantity and destination', 'Compare quotes from verified factories within 24 hours', 'We inspect the goods and ship them to your door'], fact: rfq ? `RFQ fee ${rfq} · quotes in 24 h` : 'Quotes in 24 h', cta: 'Request quotes →', href: '/request/sourcing' },
-    ...(poolsOn ? [{ key: 'pool', label: 'Share a factory order', service: 'MOQ pools', promise: 'Factory minimum too big? Join other buyers on one factory order and each take the quantity you need.', steps: ['Join an open pool or start one for a product', 'Commit your quantity; money waits in escrow', 'When the pool reaches the factory minimum, it is ordered, checked and shipped'], fact: "Pay only for your share · refunded if the pool doesn't fill by its deadline", cta: 'See open pools →', href: '/pools' }] : []),
-    { key: 'store', label: 'Store and ship', service: '3PL & shipping', promise: 'Keep your stock in Shenzhen. We ship every order worldwide.', steps: ['Send your bulk order into our Shenzhen warehouse', 'We count it and store it by SKU, live in your account', 'We pick, pack and ship each order worldwide with tracking'], fact: 'Same or next working day dispatch', cta: 'Get a 3PL quote →', href: '/request/3pl' },
-  ];
 
   const orgLd = company && { '@context': 'https://schema.org', '@type': 'Organization', name: company.brand ?? company.legal_name, legalName: company.legal_name, url: SITE_URL, logo: `${SITE_URL}/brand/octopus-b2b-logo.png`, email: company.email ?? undefined, telephone: company.phone ?? undefined };
 
   return (
     <div data-testid="home-final">
       {orgLd && <JsonLd data={orgLd} />}
-
-      {/* Hero + picker */}
-      <section className="bg-pearl" aria-labelledby="hero-h">
-        <div className="wrap pt-8 md:pt-12 pb-10 md:pb-14">
-          <div className="grid gap-8 lg:grid-cols-[1fr_560px] items-center">
-            <div>
-              <div className="label-caps text-coral-text">{block(blocks, 'home3.hero.eyebrow', 'Dropshipping · Branding · Sourcing · Warehousing')}</div>
-              <h1 id="hero-h" className="mt-3 text-[34px] md:text-[50px] leading-[1.05] font-extrabold tracking-[-0.03em]">
-                {block(blocks, 'home3.hero.title', 'From the factory to your customer.')} <span className="text-coral-text">{block(blocks, 'home3.hero.title2', 'One account.')}</span>
-              </h1>
-              <p className="mt-4 text-[16.5px] leading-[1.6] text-black max-w-[560px]">{block(blocks, 'home3.hero.lead', 'Sell without holding stock, put your brand on verified products, source from factories in China and ship worldwide, with one US dollar wallet and one account manager.')}</p>
-              <form action="/search" role="search" className="mt-6 flex max-w-[600px] rounded-[12px] border-[1.5px] border-ink bg-white overflow-hidden focus-within:ring-3 focus-within:ring-coral-text">
-                <label htmlFor="hero-q" className="sr-only">Search products, HS codes or suppliers</label>
-                <input id="hero-q" name="q" type="search" placeholder="Search products, HS codes or suppliers" className="flex-1 min-w-0 px-4 min-h-14 text-[16px] outline-none placeholder:text-muted" />
-                <button type="submit" className="btn btn-dark rounded-none min-h-14 px-6">Search</button>
-              </form>
-              <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[14px] text-black">
-                {['Verified factories', 'Quotes in 24 h', 'One account manager', 'Escrow wallet'].map((t) => <li key={t} className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-ok" aria-hidden />{t}</li>)}
-              </ul>
-            </div>
-            <HeroFeather img={M.hero} />
-          </div>
-          <div className="mt-8"><ServicePicker tabs={tabs} /></div>
-        </div>
-      </section>
 
       {/* Route */}
       <Band white label="How it fits together">
@@ -195,6 +163,55 @@ export async function FinalHome() {
 
       <OctoButton face={M.face} />
     </div>
+  );
+}
+
+
+/**
+ * Hero + service picker — only cached data (site content, media keys, service prices), so it is part of the static
+ * shell and paints first (LCP = the H1); the rest of the page streams in below it.
+ */
+export async function HomeHero() {
+  const [{ blocks, settings }, media, services] = await Promise.all([getSiteContent(), getSiteMedia(), getServices()]);
+  const hero = slot(media, 'home.hero.image', { src: '/images/services/3d-3pl-logistics.webp', alt: 'The Octopus mascot storing, packing and loading parcels onto a delivery truck', width: 1200, height: 800 });
+  const M = { hero };
+  const rfq = services.rfq?.priceCents ? money(services.rfq.priceCents, services.rfq.currency) : null;
+  const poolsOn = settings.pool_enabled !== false;
+  const tabs: PickerTab[] = [
+    { key: 'drop', label: 'Dropship', service: 'Dropshipping', promise: 'List verified products in your store. We ship each order to your customer.', steps: ['Pick products and set your price', 'Your customer orders, the order lands here', 'We pack with your slip and ship with tracking'], fact: 'No stock, no minimum', cta: 'Start dropshipping →', href: '/go/dropship' },
+    { key: 'brand', label: 'Put my brand on it', service: 'Make My Brand', promise: 'Your logo on a verified product, made, checked and stocked for you.', steps: ['Pick a product from our verified suppliers', 'Add your logo print, engraving or branded box', 'Approve proof and sample, then we produce and check'], fact: 'Price confirmed before you pay', cta: 'Start a brand project →', href: '/request/brand' },
+    { key: 'source', label: 'Source a product', service: 'Product sourcing', promise: 'Tell us the product. We find the verified factory and get you competing quotes.', steps: ['Send your request with product, quantity and destination', 'Compare quotes from verified factories within 24 hours', 'We inspect the goods and ship them to your door'], fact: rfq ? `RFQ fee ${rfq} · quotes in 24 h` : 'Quotes in 24 h', cta: 'Request quotes →', href: '/request/sourcing' },
+    ...(poolsOn ? [{ key: 'pool', label: 'Share a factory order', service: 'MOQ pools', promise: 'Factory minimum too big? Join other buyers on one factory order and each take the quantity you need.', steps: ['Join an open pool or start one for a product', 'Commit your quantity; money waits in escrow', 'When the pool reaches the factory minimum, it is ordered, checked and shipped'], fact: "Pay only for your share · refunded if the pool doesn't fill by its deadline", cta: 'See open pools →', href: '/pools' }] : []),
+    { key: 'store', label: 'Store and ship', service: '3PL & shipping', promise: 'Keep your stock in Shenzhen. We ship every order worldwide.', steps: ['Send your bulk order into our Shenzhen warehouse', 'We count it and store it by SKU, live in your account', 'We pick, pack and ship each order worldwide with tracking'], fact: 'Same or next working day dispatch', cta: 'Get a 3PL quote →', href: '/request/3pl' },
+  ];
+  return (
+    <>
+      {/* Hero + picker */}
+      <section className="bg-pearl" aria-labelledby="hero-h">
+        <div className="wrap pt-8 md:pt-12 pb-10 md:pb-14">
+          <div className="grid gap-8 lg:grid-cols-[1fr_560px] items-center">
+            <div>
+              <div className="label-caps text-coral-text">{block(blocks, 'home3.hero.eyebrow', 'Dropshipping · Branding · Sourcing · Warehousing')}</div>
+              <h1 id="hero-h" className="mt-3 text-[34px] md:text-[50px] leading-[1.05] font-extrabold tracking-[-0.03em]">
+                {block(blocks, 'home3.hero.title', 'From the factory to your customer.')} <span className="text-coral-text">{block(blocks, 'home3.hero.title2', 'One account.')}</span>
+              </h1>
+              <p className="mt-4 text-[16.5px] leading-[1.6] text-black max-w-[560px]">{block(blocks, 'home3.hero.lead', 'Sell without holding stock, put your brand on verified products, source from factories in China and ship worldwide, with one US dollar wallet and one account manager.')}</p>
+              <form action="/search" role="search" className="mt-6 flex max-w-[600px] rounded-[12px] border-[1.5px] border-ink bg-white overflow-hidden focus-within:ring-3 focus-within:ring-coral-text">
+                <label htmlFor="hero-q" className="sr-only">Search products, HS codes or suppliers</label>
+                <input id="hero-q" name="q" type="search" placeholder="Search products, HS codes or suppliers" className="flex-1 min-w-0 px-4 min-h-14 text-[16px] outline-none placeholder:text-muted" />
+                <button type="submit" className="btn btn-dark rounded-none min-h-14 px-6">Search</button>
+              </form>
+              <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[14px] text-black">
+                {['Verified factories', 'Quotes in 24 h', 'One account manager', 'Escrow wallet'].map((t) => <li key={t} className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-ok" aria-hidden />{t}</li>)}
+              </ul>
+            </div>
+            <HeroFeather img={M.hero} />
+          </div>
+          <div className="mt-8"><ServicePicker tabs={tabs} /></div>
+        </div>
+      </section>
+
+    </>
   );
 }
 
