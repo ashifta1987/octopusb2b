@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { UnreadMenuBadge } from '@/components/account/unread-count';
 
 /** ADDON-41 board 01 — service tabs and the section side menu (both follow the current path). */
 export type Tab = { key: string; label: string; href: string; match: string[] };
@@ -46,7 +47,8 @@ export function SectionMenu({ tabs, menus }: { tabs: Tab[]; menus: Record<string
                   <Link href={i.href} prefetch={false} aria-current={on ? 'page' : undefined}
                     className={`flex items-center justify-between min-h-[44px] px-3 rounded-[10px] text-[15px] ${on ? 'bg-ink text-white font-semibold' : 'text-black hover:bg-pearl'}`}>
                     {i.label}
-                    {!!i.badge && i.badge > 0 && <span data-testid="nav-badge" aria-label={`${i.badge} new`} className="min-w-[22px] h-[22px] px-1.5 rounded-full bg-coral text-white text-[12px] font-bold leading-[22px] text-center">{i.badge}</span>}
+                    {/* Notifications: live count (drops at once when one is opened — bug 1, 8 Nov 2026) */}
+                    {i.href === '/account/notifications' ? <UnreadMenuBadge count={i.badge ?? 0} /> : !!i.badge && i.badge > 0 && <span data-testid="nav-badge" aria-label={`${i.badge} new`} className="min-w-[22px] h-[22px] px-1.5 rounded-full bg-coral text-white text-[12px] font-bold leading-[22px] text-center">{i.badge}</span>}
                   </Link>
                 </li>
               );

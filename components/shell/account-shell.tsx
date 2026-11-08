@@ -5,6 +5,7 @@ import type { Session } from '@/lib/auth';
 import { money } from '@/lib/format';
 import { SERVICES, isStaging, type getAccountContext } from '@/lib/core/account';
 import { AccountTabs, SectionMenu, type Tab, type MenuSection } from './account-tabs';
+import { UnreadBellDot } from '@/components/account/unread-count';
 
 type Ctx = Awaited<ReturnType<typeof getAccountContext>>;
 
@@ -68,9 +69,10 @@ export function AccountShell({ session, ctx, newQuotes, mobileBar, children }: {
                 <span className="block font-bold text-[16px]">{money(Number(ctx.wallet.available_cents), 'USD')}</span>
               </Link>
             )}
-            <Link href="/account/notifications" aria-label={`Notifications${ctx?.unread ? `, ${ctx.unread} unread` : ''}`} className="relative w-11 h-11 rounded-[10px] border border-line flex items-center justify-center hover:border-ink">
+            <Link href="/account/notifications" data-testid="header-bell" className="relative w-11 h-11 rounded-[10px] border border-line flex items-center justify-center hover:border-ink">
+              <span className="sr-only">Notifications</span>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
-              {!!ctx?.unread && <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-bad" aria-hidden />}
+              <UnreadBellDot count={ctx?.unread ?? 0} />
             </Link>
             <details className="relative">
               <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer flex items-center gap-2.5">
