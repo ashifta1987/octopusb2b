@@ -27,8 +27,8 @@ export default async function MyTurnkeyPage() {
             const pkg = (Array.isArray(l.turnkey_packages) ? l.turnkey_packages[0] : l.turnkey_packages) as { tier_name: string } | null;
             return (
               <tr key={l.lead_id as string}>
-                <td className="td mono text-sm"><Link href={`/turnkey/confirmation/${l.lead_id}`} className="text-blue hover:underline">{l.reference as string}</Link></td>
-                <td className="td font-semibold"><Link href={`/turnkey/${l.project_id}`} className="hover:text-blue">{proj?.title}</Link>{pkg && <div className="text-xs text-muted">{pkg.tier_name} package</div>}</td>
+                <td className="td mono text-sm"><Link href={`/turnkey/confirmation/${l.lead_id}`} className="text-coral-text hover:underline">{l.reference as string}</Link></td>
+                <td className="td font-semibold"><Link href={`/turnkey/${l.project_id}`} className="hover:text-coral-text">{proj?.title}</Link>{pkg && <div className="text-xs text-muted">{pkg.tier_name} package</div>}</td>
                 <td className="td text-sm">{l.kind === 'quote' ? 'Quote request' : 'Interest'}</td>
                 <td className="td"><StatusBadge status={l.status as string} /></td>
                 <td className="td text-sm">{l.target_open_date ? fmtDate(l.target_open_date as string) : '—'}</td>

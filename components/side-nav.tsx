@@ -35,11 +35,11 @@ export function SideNav({ sections, moderation = null, badges = {}, mobileHidden
               return (
                 <Link key={i.href} href={i.href} aria-current={active === i.href ? 'page' : undefined}
                   className={cn('whitespace-nowrap rounded-[8px] px-3.5 py-2.5 md:py-3 text-[15px] font-medium flex-none flex items-center justify-between gap-2',
-                    active === i.href ? 'bg-navy text-white font-semibold' : 'text-navy hover:bg-surface')}>
+                    active === i.href ? 'bg-ink text-white font-semibold' : 'text-ink hover:bg-pearl')}>
                   <span>{i.label}</span>
                   {badge > 0 && (
                     <span data-testid={i.href === MODERATION ? 'moderation-badge' : 'nav-badge'} aria-label={i.href === MODERATION ? `${badge} pending` : `${badge} new`}
-                      className="min-w-[22px] h-[22px] px-1.5 rounded-full bg-[#DC2626] text-white text-[12px] font-bold leading-[22px] text-center tabular-nums">
+                      className="min-w-[22px] h-[22px] px-1.5 rounded-full bg-bad text-white text-[12px] font-bold leading-[22px] text-center tabular-nums">
                       {badge > 999 ? '999+' : badge}
                     </span>
                   )}

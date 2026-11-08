@@ -54,7 +54,7 @@ export default async function TurnkeyAdminPage({ searchParams }: { searchParams:
   const unassigned = L.filter((l) => !l.assigned_to && !['won', 'lost'].includes(l.status)).length;
   const tabLink = (t: string, label: string) => (
     <Link href={`/admin/turnkey${t === 'leads' ? '' : `?tab=${t}`}`} aria-current={tab === t ? 'page' : undefined}
-      className={`px-4 py-2 rounded-full text-sm font-semibold ${tab === t ? 'bg-navy text-white' : 'bg-white border border-line text-navy hover:border-navy'}`}>{label}</Link>
+      className={`px-4 py-2 rounded-full text-sm font-semibold ${tab === t ? 'bg-ink text-white' : 'bg-white border border-line text-ink hover:border-ink'}`}>{label}</Link>
   );
 
   return (
@@ -75,19 +75,19 @@ export default async function TurnkeyAdminPage({ searchParams }: { searchParams:
             {LEAD_STATUSES.map((st) => {
               const col = L.filter((l) => l.status === st);
               return (
-                <section key={st} className="shrink-0 w-[300px] bg-surface rounded-[12px] p-3" aria-label={`${st} leads`}>
+                <section key={st} className="shrink-0 w-[300px] bg-pearl rounded-[12px] p-3" aria-label={`${st} leads`}>
                   <h2 className="font-semibold text-sm capitalize mb-2 flex justify-between">{st}<span className="mono text-muted">{col.length}</span></h2>
                   <ul className="space-y-2.5">
                     {col.map((l) => (
                       <li key={l.lead_id} id={`lead-${l.lead_id}`} data-testid="lead-card" data-reference={l.reference}
-                        className={`bg-white rounded-[10px] border p-3 text-[13px] ${sp.lead === l.lead_id ? 'border-blue ring-2 ring-blue/30' : 'border-line'}`}>
+                        className={`bg-white rounded-[10px] border p-3 text-[13px] ${sp.lead === l.lead_id ? 'border-coral-text ring-2 ring-coral-text/30' : 'border-line'}`}>
                         <div className="flex justify-between gap-2"><span className="mono font-semibold">{l.reference}</span><StatusBadge status={l.kind === 'quote' ? 'quote' : 'interest'} label={l.kind} /></div>
                         <div className="font-semibold mt-1">{l.turnkey_projects?.title}{l.turnkey_packages ? ` · ${l.turnkey_packages.tier_name}` : ''}</div>
                         <div>{l.company_name} · {l.contact_name}</div>
-                        <div className="text-muted break-all"><a href={`mailto:${l.email}`} className="text-blue">{l.email}</a>{l.phone ? ` · ${l.phone}` : ''}</div>
+                        <div className="text-muted break-all"><a href={`mailto:${l.email}`} className="text-coral-text">{l.email}</a>{l.phone ? ` · ${l.phone}` : ''}</div>
                         <div className="text-muted">{COUNTRY_NAMES[l.country] ?? l.country}{l.region ? ` · ${l.region}` : ''}{l.preferred_delivery_term ? ` · ${l.preferred_delivery_term}${l.delivery_place ? ` ${l.delivery_place}` : ''}` : ''}{l.target_open_date ? ` · open ${fmtDate(l.target_open_date)}` : ''}</div>
                         {l.message && <p className="mt-1 text-[12.5px] whitespace-pre-wrap line-clamp-4">{l.message}</p>}
-                        {plans.get(l.lead_id) && <a href={plans.get(l.lead_id)} target="_blank" rel="noopener noreferrer" className="text-blue font-semibold text-[12.5px]">Floor plan ↗</a>}
+                        {plans.get(l.lead_id) && <a href={plans.get(l.lead_id)} target="_blank" rel="noopener noreferrer" className="text-coral-text font-semibold text-[12.5px]">Floor plan ↗</a>}
                         <div className="text-[11.5px] text-muted mt-1">{fmtDate(l.created_at, true)} · {l.assigned_to ? `assigned to ${nameOf.get(l.assigned_to) ?? 'staff'}` : <b className="text-warn">triage pool</b>}</div>
                         {edit && <LeadControls leadId={l.lead_id} status={l.status} assignedTo={l.assigned_to} agents={agents} />}
                       </li>
@@ -124,14 +124,14 @@ export default async function TurnkeyAdminPage({ searchParams }: { searchParams:
               const interest = interestBy.get(p.project_id as string) ?? 0;
               return (
                 <tr key={p.project_id as string} data-testid="project-row" data-project={p.project_id as string}>
-                  <td className="td"><Link href={`/admin/turnkey/${p.project_id}`} className="font-semibold text-blue hover:underline">{p.title as string}</Link><div className="mono text-xs text-muted">{p.project_id as string}</div></td>
+                  <td className="td"><Link href={`/admin/turnkey/${p.project_id}`} className="font-semibold text-coral-text hover:underline">{p.title as string}</Link><div className="mono text-xs text-muted">{p.project_id as string}</div></td>
                   <td className="td">{edit ? <StatusSwitch projectId={p.project_id as string} status={p.status as string} /> : <StatusBadge status={p.status as string} />}</td>
                   <td className="td mono">{p.is_starter_pick ? `#${p.starter_rank}` : '—'}</td>
                   <td className="td mono text-sm">{kUsd(p.starting_budget_usd as number | null) ?? '—'}</td>
                   <td className="td mono">{interest}{p.status === 'register-interest' && interest >= threshold && <div className="text-xs text-ok font-semibold">Ready to build packages</div>}</td>
                   <td className="td mono">{quoteBy.get(p.project_id as string) ?? 0}</td>
                   <td className="td mono">{pkgBy.get(p.project_id as string) ?? 0}</td>
-                  <td className="td"><Link href={`/turnkey/${p.project_id}`} target="_blank" className="text-sm text-blue">View ↗</Link></td>
+                  <td className="td"><Link href={`/turnkey/${p.project_id}`} target="_blank" className="text-sm text-coral-text">View ↗</Link></td>
                 </tr>
               );
             })}

@@ -22,7 +22,7 @@ export async function AdSlot({ placement, layout = 'banner', houseFallback = tru
   const why = blocks['ads.why'] ?? 'This is a sponsored listing. Advertisers bid per click on this placement.';
 
   const label = (
-    <span className="mono text-[10px] font-semibold uppercase tracking-[0.1em] bg-surface border border-line rounded px-1.5 py-0.5 text-muted whitespace-nowrap">
+    <span className="mono text-[10px] font-semibold uppercase tracking-[0.1em] bg-pearl border border-line rounded px-1.5 py-0.5 text-muted whitespace-nowrap">
       {view.sponsored ? 'Sponsored' : 'Octopus B2B'}
     </span>
   );

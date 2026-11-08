@@ -24,7 +24,7 @@ export function ForgotForm() {
         </form>
       )}
       <p className="text-[13px] text-muted m-0">Lost your phone instead? Ask an Admin to reset your two-step verification.</p>
-      <Link href="/staff/login" className="text-[15px] font-semibold text-blue">Back to sign-in</Link>
+      <Link href="/staff/login" className="text-[15px] font-semibold text-coral-text">Back to sign-in</Link>
     </div>
   );
 }

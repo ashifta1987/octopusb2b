@@ -2,29 +2,28 @@
 
 /*
  * Octopus B2B brand tokens (ADDON-46 brand system, values from ADDON-48 Part 1) — the ONE source of truth.
- * Components use the Tailwind names below (bg-navy = Octopus Ink, bg-blue-fill = Coral Blue, text-blue = Coral text,
- * bg-surface = Aqua Pearl …); no hex in components. Coral Blue #4977BC is for fills with white text only (white on it
+ * Components use the Tailwind names below (bg-ink = Octopus Ink, bg-coral = Coral Blue, text-coral-text = Coral text,
+ * bg-pearl = Aqua Pearl …); no hex in components. Coral Blue #4977BC is for fills with white text only (white on it
  * is 4.52:1) — never small text on Pearl (4.42:1); text and links use Coral text #3C66A8.
  */
 :root {
   /* brand */
-  --navy: #1a174a;        /* Octopus Ink: headings, header bars, footer, dark buttons, active menu */
-  --navy-2: #2c2870;      /* Ink 2: hover on Ink */
-  --blue: #4977bc;        /* Coral Blue: filled primary buttons (white text), step numbers, icons */
-  --blue-text: #3c66a8;   /* Coral text: links and coral text on light backgrounds, focus ring */
-  --blue-dark: #3c66a8;   /* hover on Coral Blue fills */
-  --blue-soft: #e4ebf6;   /* coral tint */
-  --blue-soft-2: #eef2f9; /* coral tint, lighter */
-  --surface: #fffdef;     /* Aqua Pearl: page background everywhere */
-  --cream: #fdf7ea;       /* behind 3D illustrations (matches the image edges) */
-  --ink: #231f20;         /* Trench Black: body text */
-  --body-2: #231f20;      /* long body text (was #3B4556) */
+  --ink: #1a174a;        /* Octopus Ink: headings, header bars, footer, dark buttons, active menu */
+  --ink-2: #2c2870;      /* Ink 2: hover on Ink */
+  --coral: #4977bc;        /* Coral Blue: filled primary buttons (white text), step numbers, icons */
+  --coral-text: #3c66a8;   /* Coral text: links and coral text on light backgrounds, focus ring */
+  --coral-hover: #3c66a8;   /* hover on Coral Blue fills */
+  --tint: #e4ebf6;   /* coral tint */
+  --tint-2: #eef2f9; /* coral tint, lighter */
+  --pearl: #fffdef;     /* Aqua Pearl: page background everywhere */
+  --ill-bg: #fdf7ea;       /* behind 3D illustrations (matches the image edges) */
+  --black: #231f20;         /* Trench Black: body text */
   --muted: #5a6475;
   --line: #e5e2d4;        /* card borders */
-  --line-2: #cdc9b6;      /* ghost buttons, inputs */
-  --line-3: #efede2;      /* dividers */
+  --line-strong: #cdc9b6;      /* ghost buttons, inputs */
+  --fill: #efede2;      /* dividers */
   --on-ink-link: #a9c1e8; /* on Ink: links */
-  --on-ink-text: #c9cfe0; /* on Ink: text */
+  --on-ink: #c9cfe0; /* on Ink: text */
   --on-ink-muted: #dce4f2;/* on Ink: secondary lines on photos */
   /* status (unchanged) — darkened hues that pass 4.5:1 as text */
   --green: #1f9d55;
@@ -40,36 +39,42 @@
   --bad-bg: #fee2e2;
   --new-bg: #f59e0b;
   --focus: #3c66a8;
+  /* named accents kept from the old screens (category pills, staff badges, illustration details) */
+  --gold: #f5b544;
+  --ok-bright: #4ade80;
+  --violet: #6b21a8;
+  --violet-bg: #f3e8ff;
+  --pink: #9d174d;
+  --pink-bg: #fce7f3;
+  --cyan: #155e75;
+  --cyan-bg: #cffafe;
 }
 
 @theme inline {
-  --color-navy: var(--navy);
-  --color-navy-2: var(--navy-2);
-  --color-blue: var(--blue-text);
-  --color-blue-fill: var(--blue);
-  --color-blue-dark: var(--blue-dark);
-  --color-blue-soft: var(--blue-soft);
-  --color-blue-soft-2: var(--blue-soft-2);
-  --color-surface: var(--surface);
-  --color-cream: var(--cream);
   /* brand names (compact kit): ink · ink-2 · coral · coral-text · pearl · black · muted · line · line-strong · fill · tint · ill-bg · on-ink */
-  --color-ink: var(--navy);
-  --color-ink-2: var(--navy-2);
-  --color-coral: var(--blue);
-  --color-coral-text: var(--blue-text);
-  --color-pearl: var(--surface);
-  --color-black: var(--ink);
-  --color-line-strong: var(--line-2);
-  --color-fill: var(--line-3);
-  --color-tint: var(--blue-soft);
-  --color-ill-bg: var(--cream);
-  --color-body-2: var(--body-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-coral: var(--coral);
+  --color-coral-text: var(--coral-text);
+  --color-pearl: var(--pearl);
+  --color-black: var(--black);
+  --color-line-strong: var(--line-strong);
+  --color-fill: var(--fill);
+  --color-tint: var(--tint);
+  --color-tint-2: var(--tint-2);
+  --color-gold: var(--gold);
+  --color-ok-bright: var(--ok-bright);
+  --color-violet: var(--violet);
+  --color-violet-bg: var(--violet-bg);
+  --color-pink: var(--pink);
+  --color-pink-bg: var(--pink-bg);
+  --color-cyan: var(--cyan);
+  --color-cyan-bg: var(--cyan-bg);
+  --color-ill-bg: var(--ill-bg);
   --color-muted: var(--muted);
   --color-line: var(--line);
-  --color-line-2: var(--line-2);
-  --color-line-3: var(--line-3);
   --color-on-ink-link: var(--on-ink-link);
-  --color-on-ink: var(--on-ink-text);
+  --color-on-ink: var(--on-ink);
   --color-on-ink-muted: var(--on-ink-muted);
   --color-ok: var(--green-ink);
   --color-warn: var(--amber-ink);
@@ -87,8 +92,8 @@
 }
 
 html { -webkit-text-size-adjust: 100%; }
-body { background: var(--surface); color: var(--ink); font-family: var(--font-sans); font-size: 16px; line-height: 1.6; }
-h1, h2, h3, h4 { font-family: var(--font-display); color: var(--navy); letter-spacing: -0.01em; line-height: 1.12; }
+body { background: var(--pearl); color: var(--black); font-family: var(--font-sans); font-size: 16px; line-height: 1.6; }
+h1, h2, h3, h4 { font-family: var(--font-display); color: var(--ink); letter-spacing: -0.01em; line-height: 1.12; }
 @layer base {
   /* ADDON-46 type scale defaults (page utilities still win): H1 50/1.05 (phone 34), H2 34/1.12 (phone 25) */
   h1 { font-size: 34px; line-height: 1.05; font-weight: 800; }
@@ -103,16 +108,16 @@ h1, h2, h3, h4 { font-family: var(--font-display); color: var(--navy); letter-sp
   /* ADDON-44 sizes: public pages 48 px, hero 52 px (account pages keep the 44 px default) */
   .btn-pub { @apply min-h-12; }
   .btn-hero { @apply min-h-13 px-6; }
-  .btn-primary { @apply bg-blue-fill text-white hover:bg-blue-dark; }
-  .btn-dark { @apply bg-navy text-white hover:bg-navy-2; }
-  .btn-ghost { @apply bg-white text-navy border-line-2 hover:border-navy; }
-  .btn-light { @apply bg-white text-navy hover:bg-blue-soft; }
+  .btn-primary { @apply bg-coral text-white hover:bg-coral-text; }
+  .btn-dark { @apply bg-ink text-white hover:bg-ink-2; }
+  .btn-ghost { @apply bg-white text-ink border-line-strong hover:border-ink; }
+  .btn-light { @apply bg-white text-ink hover:bg-tint; }
   .btn-danger { @apply bg-bad text-white hover:opacity-90; }
   .card { @apply bg-white border border-line rounded-[14px]; }
-  .input { @apply w-full min-h-11 px-3 rounded-[8px] border border-line-2 bg-white text-[15px] text-black focus:border-blue focus:outline-none focus:ring-2 focus:ring-blue/20; }
-  .label { @apply block text-sm font-semibold text-navy mb-1.5; }
+  .input { @apply w-full min-h-11 px-3 rounded-[8px] border border-line-strong bg-white text-[15px] text-black focus:border-coral-text focus:outline-none focus:ring-2 focus:ring-coral-text/20; }
+  .label { @apply block text-sm font-semibold text-ink mb-1.5; }
   .ph { background: repeating-linear-gradient(135deg, #edeff3 0 10px, #e5e8ed 10px 20px); @apply flex items-center justify-center text-muted font-mono text-xs text-center; }
-  .eyebrow { @apply font-mono text-xs font-semibold uppercase tracking-[0.12em] text-blue; }
+  .eyebrow { @apply font-mono text-xs font-semibold uppercase tracking-[0.12em] text-coral-text; }
   .mono { font-family: var(--font-mono); }
   /* ADDON-44 pill + label ("k") */
   .pill { @apply inline-flex items-center gap-1 font-mono text-[11px] font-semibold uppercase tracking-[.06em] leading-none px-2.5 py-[5px] rounded-full whitespace-nowrap; }

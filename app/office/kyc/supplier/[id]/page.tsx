@@ -26,7 +26,7 @@ export default async function SupplierApplicationPage({ params }: { params: Prom
   await sb.rpc('log_staff_view', { p_entity: 'supplier_applications', p_entity_id: id, p_details: { sheet: !!a.product_sheet_path } }).then(() => undefined, () => undefined);
   const canApprove = can(s, 'suppliers', 'approve');
   const closed = ['approved', 'rejected'].includes(a.status as string);
-  const link = (u: string | null) => (u ? <a href={/^https?:/.test(u) ? u : `https://${u}`} target="_blank" rel="noopener noreferrer" className="text-blue break-all">{u}</a> : null);
+  const link = (u: string | null) => (u ? <a href={/^https?:/.test(u) ? u : `https://${u}`} target="_blank" rel="noopener noreferrer" className="text-coral-text break-all">{u}</a> : null);
 
   return (
     <>
@@ -68,7 +68,7 @@ export default async function SupplierApplicationPage({ params }: { params: Prom
                     <ReasonButton action={reviewSupplierApplication.bind(null, id, 'approved')} label="Approve" title="Approve application" placeholder="Internal note (optional)" required={false} className="btn btn-sm bg-ok text-white" confirmLabel="Approve" />
                   </div>
                 )}
-            <p className="text-xs text-muted">Approving does not create the supplier. Add it in <Link href="/admin/suppliers" className="text-blue">Admin → Suppliers</Link> after the factory audit. Every decision is written to the audit log.</p>
+            <p className="text-xs text-muted">Approving does not create the supplier. Add it in <Link href="/admin/suppliers" className="text-coral-text">Admin → Suppliers</Link> after the factory audit. Every decision is written to the audit log.</p>
           </div>
         </Card>
       </div>

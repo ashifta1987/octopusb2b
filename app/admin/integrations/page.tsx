@@ -57,7 +57,7 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
         {shown.map((i) => (
           <section key={i.code} className="card p-5 flex flex-col">
             <div className="flex items-start gap-3">
-              <span className="w-11 h-11 rounded-[8px] bg-surface border border-line mono text-xs font-semibold flex items-center justify-center uppercase" aria-hidden>{i.code.slice(0, 3)}</span>
+              <span className="w-11 h-11 rounded-[8px] bg-pearl border border-line mono text-xs font-semibold flex items-center justify-center uppercase" aria-hidden>{i.code.slice(0, 3)}</span>
               <div className="min-w-0">
                 <h2 className="font-semibold text-[17px]">{i.name}</h2>
                 <div className="text-sm text-muted">{KIND_LABEL[i.kind] ?? humanize(i.kind)}</div>
@@ -86,10 +86,10 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
       </div>
 
       {showPostman && postman && (
-        <section className="card border-2 border-blue p-6 mb-6" aria-labelledby="pm-title">
+        <section className="card border-2 border-coral-text p-6 mb-6" aria-labelledby="pm-title">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex items-start gap-3">
-              <span className="w-12 h-12 rounded-[10px] bg-navy text-white mono text-xs font-semibold flex items-center justify-center" aria-hidden>PM</span>
+              <span className="w-12 h-12 rounded-[10px] bg-ink text-white mono text-xs font-semibold flex items-center justify-center" aria-hidden>PM</span>
               <div>
                 <h2 id="pm-title" className="font-semibold text-xl">{postman.name}</h2>
                 <p className="text-sm text-muted">Official API partner · public workspace “Octopus B2B API”, collections “Octopus B2B API v1” and the supplier API (SPEC §15.2)</p>
@@ -106,7 +106,7 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
             <Field label="Collection ID · public v1" htmlFor="pm-pub"><input id="pm-pub" name="public_v1" className="input mono" defaultValue={pmCfg.collection_ids?.public_v1 ?? ''} placeholder="not set" disabled={!edit} /></Field>
             <Field label="Collection ID · supplier v1" htmlFor="pm-sup"><input id="pm-sup" name="supplier_v1" className="input mono" defaultValue={pmCfg.collection_ids?.supplier_v1 ?? ''} placeholder="not set" disabled={!edit} /></Field>
             <Field label="Monitor ID" htmlFor="pm-mon"><input id="pm-mon" name="monitor_id" className="input mono" defaultValue={pmCfg.monitor_id ?? ''} placeholder="not set" disabled={!edit} /></Field>
-            <div className="sm:col-span-2 lg:col-span-4 rounded-[10px] bg-surface px-4 py-3 text-sm">
+            <div className="sm:col-span-2 lg:col-span-4 rounded-[10px] bg-pearl px-4 py-3 text-sm">
               <b>API key:</b> <span className="mono">POSTMAN_API_KEY</span> is stored in the server environment / Supabase Vault and is never shown here. These IDs are non-secret config.
             </div>
           </ActionForm>
@@ -147,7 +147,7 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
       <Card title="Failed jobs (outbox)" className="mb-6" action={
         <span className="flex items-center gap-3 text-sm">
           <span className="text-muted">{pendingN} pending · {failedN} failed · {deadN} dead</span>
-          <a className="text-blue font-semibold" href={sp.outbox === 'all' ? '/admin/integrations' : '/admin/integrations?outbox=all'}>{sp.outbox === 'all' ? 'Show failed only' : 'Show all events'}</a>
+          <a className="text-coral-text font-semibold" href={sp.outbox === 'all' ? '/admin/integrations' : '/admin/integrations?outbox=all'}>{sp.outbox === 'all' ? 'Show failed only' : 'Show all events'}</a>
         </span>}>
         <Table head={['Created', 'Event', 'Status', 'Attempts', 'Last error', '']} empty={<EmptyState title={outboxFilter ? 'No failed or dead jobs 🎉' : 'No events yet'} />}>
           {(outbox ?? []).map((e) => (
@@ -199,7 +199,7 @@ export default async function IntegrationsPage({ searchParams }: { searchParams:
       <Card title="Platform events">
         <p className="px-6 text-sm text-muted">Every business change writes an outbox event in the same transaction; workers deliver it to email, PDF, carriers and customer webhooks with retries (1 min → 6 h), then dead-letter here.</p>
         <div className="px-6 py-4 flex flex-wrap gap-2">
-          {EVENTS.map((e) => <span key={e} className="mono text-xs rounded-md bg-surface border border-line px-2 py-1">{e}</span>)}
+          {EVENTS.map((e) => <span key={e} className="mono text-xs rounded-md bg-pearl border border-line px-2 py-1">{e}</span>)}
         </div>
       </Card>
     </>

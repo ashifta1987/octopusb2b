@@ -75,7 +75,7 @@ export default async function SupportDesk({ searchParams }: { searchParams: Prom
       <div className="grid lg:grid-cols-[380px_1fr] gap-6 items-start">
         <section className="card overflow-hidden">
           <nav className="flex flex-wrap gap-2 p-4 border-b border-line" aria-label="Ticket filters">
-            {FILTERS.map((k) => <Link key={k} href={link({ f: k, t: undefined })} aria-current={f === k ? 'page' : undefined} className={cn('rounded-full px-3 py-1.5 text-sm font-semibold border', f === k ? 'bg-navy text-white border-navy' : 'border-line-2')}>{humanize(k)}</Link>)}
+            {FILTERS.map((k) => <Link key={k} href={link({ f: k, t: undefined })} aria-current={f === k ? 'page' : undefined} className={cn('rounded-full px-3 py-1.5 text-sm font-semibold border', f === k ? 'bg-ink text-white border-ink' : 'border-line-strong')}>{humanize(k)}</Link>)}
             <form className="w-full flex gap-2 mt-1">
               <input type="hidden" name="f" value={f} />
               <label htmlFor="sd-p" className="sr-only">Priority</label>
@@ -89,7 +89,7 @@ export default async function SupportDesk({ searchParams }: { searchParams: Prom
                 const sla = slaLabel(x.sla_due_at, x.status);
                 return (
                   <li key={x.id}>
-                    <Link href={link({ t: x.id })} aria-current={x.id === sel ? 'true' : undefined} className={cn('block px-4 py-3 border-l-[3px]', x.id === sel ? 'bg-blue-soft border-blue' : 'border-transparent hover:bg-surface')}>
+                    <Link href={link({ t: x.id })} aria-current={x.id === sel ? 'true' : undefined} className={cn('block px-4 py-3 border-l-[3px]', x.id === sel ? 'bg-tint border-coral-text' : 'border-transparent hover:bg-pearl')}>
                       <div className="flex justify-between gap-2 text-xs"><span className="mono text-muted">{x.code} · {one(x.organizations as unknown as { name: string } | null)?.name}</span><span className={cn('font-semibold', sla.bad ? 'text-bad' : 'text-muted')}>{sla.text}</span></div>
                       <div className="font-semibold mt-1">{x.subject}</div>
                       <div className="flex gap-2 mt-1.5">
@@ -116,12 +116,12 @@ export default async function SupportDesk({ searchParams }: { searchParams: Prom
                 <StatusBadge status={t.status} />
               </div>
               <div className="grid sm:grid-cols-3 gap-3 mt-4">
-                <div className="rounded-[10px] bg-surface p-3"><div className="text-sm text-muted">Customer</div><div className="font-semibold">{org?.name} · {org?.country} · KYC {humanize(org?.kyc_status)}</div></div>
-                <div className="rounded-[10px] bg-surface p-3"><div className="text-sm text-muted">Order</div><div className="font-semibold mono">{ord ? <Link href={`/office/orders/${ord.id}`} className="text-blue">{ord.code}</Link> : '—'}</div>{ord && <div className="text-xs text-muted">{humanize(ord.status)}</div>}</div>
-                <div className="rounded-[10px] bg-surface p-3"><div className="text-sm text-muted">Supplier · SLA</div><div className="font-semibold mono">{ord ? one(ord.suppliers)?.code ?? '—' : '—'}</div><div className={cn('text-xs', slaLabel(t.sla_due_at, t.status).bad ? 'text-bad font-semibold' : 'text-muted')}>{slaLabel(t.sla_due_at, t.status).text} · assigned {name(t.assigned_to)}</div></div>
+                <div className="rounded-[10px] bg-pearl p-3"><div className="text-sm text-muted">Customer</div><div className="font-semibold">{org?.name} · {org?.country} · KYC {humanize(org?.kyc_status)}</div></div>
+                <div className="rounded-[10px] bg-pearl p-3"><div className="text-sm text-muted">Order</div><div className="font-semibold mono">{ord ? <Link href={`/office/orders/${ord.id}`} className="text-coral-text">{ord.code}</Link> : '—'}</div>{ord && <div className="text-xs text-muted">{humanize(ord.status)}</div>}</div>
+                <div className="rounded-[10px] bg-pearl p-3"><div className="text-sm text-muted">Supplier · SLA</div><div className="font-semibold mono">{ord ? one(ord.suppliers)?.code ?? '—' : '—'}</div><div className={cn('text-xs', slaLabel(t.sla_due_at, t.status).bad ? 'text-bad font-semibold' : 'text-muted')}>{slaLabel(t.sla_due_at, t.status).text} · assigned {name(t.assigned_to)}</div></div>
               </div>
               {ord?.delivered_at && (
-                <div className={cn('mt-3 rounded-[10px] px-4 py-2 text-sm', ord.claim_hidden_until && new Date(ord.claim_hidden_until) > new Date() ? 'bg-[#E3F5EA] text-[#156B3A]' : 'bg-[#FDE8E8] text-[#A32D2D]')}>
+                <div className={cn('mt-3 rounded-[10px] px-4 py-2 text-sm', ord.claim_hidden_until && new Date(ord.claim_hidden_until) > new Date() ? 'bg-ok-bg text-ok' : 'bg-bad-bg text-bad')}>
                   Claim window (Terms): visible defects until {fmtDate(ord.claim_visible_until)}, hidden defects until {fmtDate(ord.claim_hidden_until)}
                 </div>
               )}
@@ -131,8 +131,8 @@ export default async function SupportDesk({ searchParams }: { searchParams: Prom
               <h3 className="text-lg font-semibold mb-4">Conversation</h3>
               <ol className="space-y-3">
                 {(msgs ?? []).map((m) => (
-                  <li key={m.id} className={cn('rounded-[10px] px-4 py-3 max-w-[85%]', m.internal ? 'ml-auto bg-[#FFF8E1] border border-dashed border-warn/60' : m.is_staff ? 'ml-auto bg-blue-soft' : 'bg-surface')}>
-                    <div className={cn('text-xs font-semibold', m.internal ? 'text-[#8A5A00]' : m.is_staff ? 'text-blue' : 'text-navy')}>
+                  <li key={m.id} className={cn('rounded-[10px] px-4 py-3 max-w-[85%]', m.internal ? 'ml-auto bg-warn-bg border border-dashed border-warn/60' : m.is_staff ? 'ml-auto bg-tint' : 'bg-pearl')}>
+                    <div className={cn('text-xs font-semibold', m.internal ? 'text-warn' : m.is_staff ? 'text-coral-text' : 'text-ink')}>
                       {m.internal ? 'Internal note · ' : m.is_staff ? 'Support · ' : 'Customer · '}{name(m.author_id)} · {fmtDate(m.created_at, true)}
                     </div>
                     <p className="text-[15px] mt-1 whitespace-pre-line">{m.body}</p>
@@ -158,7 +158,7 @@ export default async function SupportDesk({ searchParams }: { searchParams: Prom
                 </ActionForm>
                 <div>
                   <span className="label">Assigned to</span>
-                  <div className="input flex items-center bg-surface">{name(t.assigned_to)}</div>
+                  <div className="input flex items-center bg-pearl">{name(t.assigned_to)}</div>
                   {t.assigned_to !== s.userId && <div className="mt-3"><RunButton action={updateTicket.bind(null, t.id, { assign_to_me: true })}>Assign to me</RunButton></div>}
                 </div>
               </section>

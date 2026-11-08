@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { BRAND } from '@/lib/brand';
 
 /** Web app manifest (brand kit): Octopus Ink theme, Aqua Pearl background, icons from public/brand. */
 export default function manifest(): MetadataRoute.Manifest {
@@ -8,8 +9,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Sourcing, Make My Brand, dropshipping, MOQ pools, turnkey projects and 3PL from China, in one account.',
     start_url: '/',
     display: 'standalone',
-    background_color: '#FFFDEF',
-    theme_color: '#1A174A',
+    background_color: BRAND.pearl,
+    theme_color: BRAND.ink,
     icons: [
       { src: '/brand/favicon-32.png', sizes: '32x32', type: 'image/png' },
       { src: '/brand/apple-touch-icon-180.png', sizes: '180x180', type: 'image/png' },

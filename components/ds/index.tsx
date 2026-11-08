@@ -1,6 +1,6 @@
 /**
  * ADDON-44 PART 1 — shared design-system components (build once, reuse).
- * Tokens live in app/globals.css (navy, blue-fill, blue = text blue #1E58B0, ok/warn/needs/bad pairs, new-bg).
+ * Tokens live in app/globals.css (ink, coral, coral-text, pearl, black, line, tint, ill-bg, ok/warn/needs/bad pairs, new-bg).
  * Every interactive element here is ≥ 44 px tall and gets the global 3 px focus ring.
  * Live gallery of every component and state: /dev/ui (staging and local only).
  */
@@ -39,16 +39,16 @@ const TONE: Record<Tone, string> = {
   warn: 'bg-warn-bg text-warn',
   needs: 'bg-needs-bg text-needs',
   bad: 'bg-bad-bg text-bad',
-  info: 'bg-blue-soft text-blue',
-  neutral: 'bg-surface text-muted border border-line',
-  navy: 'bg-navy text-white',
+  info: 'bg-tint text-coral-text',
+  neutral: 'bg-pearl text-muted border border-line',
+  navy: 'bg-ink text-white',
 };
 export function Pill({ tone = 'neutral', children, className = '', testId }: { tone?: Tone; children: ReactNode; className?: string; testId?: string }) {
   return <span className={`pill ${TONE[tone]} ${className}`} data-testid={testId}>{children}</span>;
 }
 /** NEW badge — navy text on amber. */
 export function NewBadge({ className = '' }: { className?: string }) {
-  return <span className={`pill !px-1.5 !py-[3px] !text-[9.5px] bg-new-bg text-navy font-bold ${className}`}>New</span>;
+  return <span className={`pill !px-1.5 !py-[3px] !text-[9.5px] bg-new-bg text-ink font-bold ${className}`}>New</span>;
 }
 /** Amber "EXAMPLE" on any block whose numbers are not live. */
 export function ExamplePill({ label = 'Example', className = '' }: { label?: string; className?: string }) {
@@ -68,9 +68,9 @@ export function VerifiedBadge({ verified = true, explain }: { verified?: boolean
 
 export type ShippingType = 'express' | 'standard' | 'economy';
 const SHIP: Record<ShippingType, [string, string]> = {
-  express: ['Express', 'bg-blue-soft text-blue'],
-  standard: ['Standard', 'bg-ok-bg text-[#166534]'],
-  economy: ['Economy', 'bg-warn-bg text-[#8A4B00]'],
+  express: ['Express', 'bg-tint text-coral-text'],
+  standard: ['Standard', 'bg-ok-bg text-ok'],
+  economy: ['Economy', 'bg-warn-bg text-warn'],
 };
 /** Express / Standard / Economy — always the word, never colour alone. Optional delivery days ("5–10 days"). */
 export function ShippingTypePill({ type, days }: { type: ShippingType; days?: string | null }) {
@@ -82,7 +82,7 @@ export function ShippingTypePill({ type, days }: { type: ShippingType; days?: st
 /** Navy strip, 13.5 px white text centred: [NEW] text + light-blue link. */
 export function AnnouncementBar({ text, linkText, href, isNew = true }: { text: string; linkText?: string; href?: string; isNew?: boolean }) {
   return (
-    <div className="bg-navy text-white text-[13.5px]" role="region" aria-label="Announcement" data-testid="announcement-bar">
+    <div className="bg-ink text-white text-[13.5px]" role="region" aria-label="Announcement" data-testid="announcement-bar">
       <p className="wrap py-2.5 text-center leading-snug">
         {isNew && <NewBadge className="mr-2 align-[1px]" />}
         <span>{text}</span>
@@ -103,7 +103,7 @@ export function ServiceRail({ items, active, extra }: { items: RailItem[]; activ
           return (
             <li key={it.key} className="shrink-0">
               <Link href={it.href} aria-current={on ? 'page' : undefined}
-                className={`inline-flex items-center gap-1.5 min-h-11 px-3.5 rounded-full text-[14px] font-medium whitespace-nowrap ${on ? 'bg-navy text-white hover:text-white' : 'text-navy hover:bg-surface'}`}>
+                className={`inline-flex items-center gap-1.5 min-h-11 px-3.5 rounded-full text-[14px] font-medium whitespace-nowrap ${on ? 'bg-ink text-white hover:text-white' : 'text-ink hover:bg-pearl'}`}>
                 {it.label}{it.isNew && <NewBadge />}
               </Link>
             </li>
@@ -112,7 +112,7 @@ export function ServiceRail({ items, active, extra }: { items: RailItem[]; activ
         {extra && (
           <li className="shrink-0 flex items-center">
             <span className="w-px h-5 bg-line mx-2" aria-hidden />
-            <Link href={extra.href} className="inline-flex items-center min-h-11 px-3.5 rounded-full text-[14px] font-medium text-navy hover:bg-surface whitespace-nowrap">{extra.label}</Link>
+            <Link href={extra.href} className="inline-flex items-center min-h-11 px-3.5 rounded-full text-[14px] font-medium text-ink hover:bg-pearl whitespace-nowrap">{extra.label}</Link>
           </li>
         )}
       </ul>
@@ -125,8 +125,8 @@ export function ServiceRail({ items, active, extra }: { items: RailItem[]; activ
 export function SectionEyebrow({ n, children, isNew, pill }: { n?: number; children: ReactNode; isNew?: boolean; pill?: ReactNode }) {
   return (
     <div className="flex items-center gap-2.5">
-      {n != null && <span className="inline-flex items-center justify-center w-7 h-7 rounded-[8px] bg-navy text-white text-[13px] font-bold">{n}</span>}
-      <span className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-blue">{children}</span>
+      {n != null && <span className="inline-flex items-center justify-center w-7 h-7 rounded-[8px] bg-ink text-white text-[13px] font-bold">{n}</span>}
+      <span className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-coral-text">{children}</span>
       {isNew && <NewBadge />}
       {pill}
     </div>
@@ -139,7 +139,7 @@ export function StepCard({ n, step }: { n: number; step: Step }) {
   return (
     <li className="card p-4 sm:p-[18px] h-full" data-testid="step-card">
       <div className="flex items-center justify-between gap-2">
-        <span className="inline-flex items-center justify-center w-7 h-7 rounded-[8px] bg-blue-fill text-white text-[13px] font-bold">{n}</span>
+        <span className="inline-flex items-center justify-center w-7 h-7 rounded-[8px] bg-coral text-white text-[13px] font-bold">{n}</span>
         {step.tag && <Pill tone={step.tag === 'You' ? 'info' : 'navy'} className="!text-[10px]">{step.tag}</Pill>}
       </div>
       <h3 className="text-[15.5px] font-bold mt-3 leading-snug">{step.title}</h3>
@@ -158,7 +158,7 @@ export function ServiceChoiceCard({ icon, title, body, cta, href, primary, disab
 }) {
   return (
     <div className={`card p-5 flex flex-col h-full ${disabled ? 'opacity-70' : ''}`} data-testid={testId ?? 'service-choice'}>
-      <span className={`inline-flex items-center justify-center w-10 h-10 rounded-[10px] ${primary ? 'bg-navy text-white' : 'bg-blue-soft text-blue'}`}><Icon name={icon} /></span>
+      <span className={`inline-flex items-center justify-center w-10 h-10 rounded-[10px] ${primary ? 'bg-ink text-white' : 'bg-tint text-coral-text'}`}><Icon name={icon} /></span>
       <h3 className="text-[16.5px] font-bold mt-3 flex items-center gap-2">{title}{isNew && <NewBadge />}</h3>
       <p className="text-[14px] text-muted mt-1 leading-relaxed flex-1">{body}</p>
       {note && <div className="mt-2 text-[12.5px]">{note}</div>}
@@ -171,20 +171,20 @@ export function ServiceChoiceCard({ icon, title, body, cta, href, primary, disab
 
 /** Navy "STUDIO PREVIEW" pill top-left on the image + mandatory caption underneath. */
 export function StudioPreviewLabel({ className = '' }: { className?: string }) {
-  return <span className={`pill bg-navy text-white !text-[10px] ${className}`} data-testid="studio-preview">Studio preview</span>;
+  return <span className={`pill bg-ink text-white !text-[10px] ${className}`} data-testid="studio-preview">Studio preview</span>;
 }
 export const STUDIO_CAPTION = 'Illustrative preview. Not approved artwork.';
 export function StudioPreviewCard({ src, alt, brand, title }: { src: string; alt: string; brand: string; title: string }) {
   return (
     <figure className="card overflow-hidden" data-testid="studio-preview-card">
-      <div className="relative aspect-[4/3] bg-surface">
+      <div className="relative aspect-[4/3] bg-pearl">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={src} alt={alt} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
         <StudioPreviewLabel className="absolute top-3 left-3" />
-        <span className="absolute bottom-3 left-1/2 -translate-x-1/2 mono text-[11px] font-bold tracking-[.18em] uppercase px-3 py-1 bg-white/95 text-navy border border-dashed border-navy/50 rounded-[4px]">{brand}</span>
+        <span className="absolute bottom-3 left-1/2 -translate-x-1/2 mono text-[11px] font-bold tracking-[.18em] uppercase px-3 py-1 bg-white/95 text-ink border border-dashed border-ink/50 rounded-[4px]">{brand}</span>
       </div>
       <figcaption className="px-4 py-3">
-        <div className="text-[14px] font-semibold text-navy">{title}</div>
+        <div className="text-[14px] font-semibold text-ink">{title}</div>
         <div className="text-[12.5px] text-muted mt-0.5">{STUDIO_CAPTION}</div>
       </figcaption>
     </figure>
@@ -195,8 +195,8 @@ export function StudioPreviewCard({ src, alt, brand, title }: { src: string; alt
 export function ProofPoint({ icon, title, body }: { icon: IconName; title: string; body: string }) {
   return (
     <li className="flex gap-3">
-      <span className="inline-flex items-center justify-center w-10 h-10 rounded-[10px] bg-blue-soft text-blue shrink-0"><Icon name={icon} /></span>
-      <div><div className="text-[15.5px] font-bold text-navy">{title}</div><p className="text-[14px] text-muted mt-0.5 leading-relaxed">{body}</p></div>
+      <span className="inline-flex items-center justify-center w-10 h-10 rounded-[10px] bg-tint text-coral-text shrink-0"><Icon name={icon} /></span>
+      <div><div className="text-[15.5px] font-bold text-ink">{title}</div><p className="text-[14px] text-muted mt-0.5 leading-relaxed">{body}</p></div>
     </li>
   );
 }
@@ -207,10 +207,10 @@ export function FAQ({ items, id }: { items: [string, ReactNode][]; id?: string }
     <div className="card divide-y divide-line" id={id} data-testid="faq">
       {items.map(([q, a]) => (
         <details key={q} className="group">
-          <summary className="flex items-center justify-between gap-4 min-h-[54px] px-5 cursor-pointer list-none font-semibold text-[15.5px] text-navy [&::-webkit-details-marker]:hidden">
+          <summary className="flex items-center justify-between gap-4 min-h-[54px] px-5 cursor-pointer list-none font-semibold text-[15.5px] text-ink [&::-webkit-details-marker]:hidden">
             {q}<Icon name="chevron" size={18} className="text-muted transition-transform group-open:rotate-180" />
           </summary>
-          <div className="px-5 pb-4 -mt-1 text-[14.5px] text-body-2 leading-relaxed">{a}</div>
+          <div className="px-5 pb-4 -mt-1 text-[14.5px] text-black leading-relaxed">{a}</div>
         </details>
       ))}
     </div>
@@ -219,7 +219,7 @@ export function FAQ({ items, id }: { items: [string, ReactNode][]; id?: string }
 
 /** Small notice row (tone + icon + text) for "coming soon", blocked and empty states. */
 export function Notice({ tone = 'info', children, testId }: { tone?: 'info' | 'warn' | 'bad' | 'ok'; children: ReactNode; testId?: string }) {
-  const cls = { info: 'bg-blue-soft text-navy border-[#C9DBF7]', warn: 'bg-warn-bg text-warn border-[#FCD9A0]', bad: 'bg-bad-bg text-bad border-[#FBC7C7]', ok: 'bg-ok-bg text-ok border-[#B7EBC9]' }[tone];
+  const cls = { info: 'bg-tint text-ink border-tint', warn: 'bg-warn-bg text-warn border-warn-bg', bad: 'bg-bad-bg text-bad border-bad-bg', ok: 'bg-ok-bg text-ok border-ok-bg' }[tone];
   return (
     <div className={`flex gap-2.5 items-start rounded-[10px] border px-3.5 py-3 text-[14px] leading-relaxed ${cls}`} data-testid={testId}>
       <Icon name={tone === 'info' ? 'info' : tone === 'ok' ? 'check' : 'alert'} size={18} className="mt-0.5" />

@@ -19,7 +19,7 @@ export async function BankAccounts({ isAdmin, legalName }: { isAdmin: boolean; l
           <div key={a.id} className="rounded-[12px] border border-line p-4">
             <div className="flex items-center justify-between mb-3">
               <div className="font-semibold"><span className="mono">{a.currency}</span> · {a.bank_name}</div>
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${a.active ? 'bg-[#DCFCE7] text-[#15803D]' : 'bg-surface text-muted'}`}>{a.active ? 'Active' : 'Inactive'}</span>
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${a.active ? 'bg-ok-bg text-ok' : 'bg-pearl text-muted'}`}>{a.active ? 'Active' : 'Inactive'}</span>
             </div>
             <ActionForm action={saveBankAccount} className="grid gap-3 sm:grid-cols-2" submitLabel="Save account" submitClass="btn btn-ghost btn-sm" hideSubmit={!isAdmin}
               confirm={`Save the ${a.currency} bank account? Buyers will pay into the account shown here.`}>
@@ -29,7 +29,7 @@ export async function BankAccounts({ isAdmin, legalName }: { isAdmin: boolean; l
           </div>
         ))}
         {isAdmin ? (
-          <div className="rounded-[12px] border border-dashed border-line-2 p-4">
+          <div className="rounded-[12px] border border-dashed border-line-strong p-4">
             <h3 className="font-semibold mb-3">Add bank account</h3>
             <ActionForm action={saveBankAccount} className="grid gap-3 sm:grid-cols-2" submitLabel="Add bank account" resetOnSuccess
               confirm="Add this bank account? Buyers paying in this currency will see it.">

@@ -8,7 +8,7 @@ const LABELS = ['Very poor', 'Poor', 'OK', 'Good', 'Excellent'];
 
 function Star({ filled }: { filled: boolean }) {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden className={filled ? 'text-[#E0820B]' : 'text-line-2'}>
+    <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden className={filled ? 'text-needs' : 'text-line-strong'}>
       <path fill="currentColor" d="m12 2.8 2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z" />
     </svg>
   );
@@ -42,7 +42,7 @@ export function SupportCsat({ ticketId }: { ticketId: string }) {
           {LABELS.map((label, i) => {
             const n = i + 1;
             return (
-              <label key={n} className="cursor-pointer rounded has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue" onMouseEnter={() => setHover(n)} title={`${n} – ${label}`}>
+              <label key={n} className="cursor-pointer rounded has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-coral-text" onMouseEnter={() => setHover(n)} title={`${n} – ${label}`}>
                 <input type="radio" name="csat" value={n} checked={value === n} onChange={() => setValue(n)} className="sr-only" />
                 <Star filled={n <= shown} />
                 <span className="sr-only">{n} out of 5 – {label}</span>

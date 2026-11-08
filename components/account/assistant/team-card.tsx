@@ -7,10 +7,10 @@ import type { AccountTeam } from '@/lib/assistant/types';
 /** "Your account team" (Assistant.png right rail + Customer.png dashboard strip). Server components. */
 
 const OctoSquare = ({ size = 44 }: { size?: number }) => (
-  <span aria-hidden className="flex-none rounded-[12px] bg-blue-fill text-white flex items-center justify-center font-display font-bold text-[16px]" style={{ width: size, height: size }}>O</span>
+  <span aria-hidden className="flex-none rounded-[12px] bg-coral text-white flex items-center justify-center font-display font-bold text-[16px]" style={{ width: size, height: size }}>O</span>
 );
 const ManagerCircle = ({ initials, size = 44 }: { initials: string; size?: number }) => (
-  <span aria-hidden className="flex-none rounded-full bg-navy text-white flex items-center justify-center font-display font-bold text-[15px]" style={{ width: size, height: size }}>{initials}</span>
+  <span aria-hidden className="flex-none rounded-full bg-ink text-white flex items-center justify-center font-display font-bold text-[15px]" style={{ width: size, height: size }}>{initials}</span>
 );
 
 function waLink(phone: string | null) {
@@ -27,13 +27,13 @@ export function AccountTeamCard({ team, stats }: { team: AccountTeam | null; sta
         <OctoSquare />
         <div className="flex flex-col gap-[3px] flex-1 min-w-0">
           <strong className="font-semibold text-[14px]">Octo <span className="font-normal text-muted">· AI assistant</span></strong>
-          <span className="text-[12px] text-[#166534] inline-flex gap-1 items-center"><span aria-hidden className="w-1.5 h-1.5 rounded-full bg-[#166534]" />Online 24/7 · instant replies</span>
+          <span className="text-[12px] text-ok inline-flex gap-1 items-center"><span aria-hidden className="w-1.5 h-1.5 rounded-full bg-ok" />Online 24/7 · instant replies</span>
           <span className="text-[12px] text-muted">
             {stats.sessions ? `Handled ${stats.resolvedByBot} of your ${stats.sessions} past conversation${stats.sessions === 1 ? '' : 's'} on its own` : 'Answers from your own orders, RFQs, wallet and shipments'}
           </span>
         </div>
       </div>
-      <div className="h-px bg-[#EEF0F3]" />
+      <div className="h-px bg-fill" />
       {team ? (
         <div className="flex gap-3 items-start">
           <ManagerCircle initials={team.initials} />
@@ -51,8 +51,8 @@ export function AccountTeamCard({ team, stats }: { team: AccountTeam | null; sta
       ) : (
         <p className="m-0 text-[13px] text-muted">A dedicated account manager is assigned once your company is verified. Until then, Octo hands questions to the account team.</p>
       )}
-      <div className="h-px bg-[#EEF0F3]" />
-      <dl className="m-0 flex flex-col gap-1.5 text-[13px] text-[#3B4556]">
+      <div className="h-px bg-fill" />
+      <dl className="m-0 flex flex-col gap-1.5 text-[13px] text-black">
         <div className="flex justify-between gap-3"><dt>Monthly response SLA</dt><dd className="m-0 font-semibold">{stats.slaPct != null ? `${stats.slaPct}% within ${stats.slaMinutes} min` : `Target: ${stats.slaMinutes} min`}</dd></div>
         <div className="flex justify-between gap-3"><dt>Bot resolution rate</dt><dd className="m-0 font-semibold">{stats.botResolutionPct != null ? `${stats.botResolutionPct}%` : '—'}</dd></div>
         <div className="flex justify-between gap-3"><dt>Average satisfaction</dt><dd className="m-0 font-semibold">{stats.satisfactionPct != null ? `${stats.satisfactionPct}% helpful (${stats.ratings})` : 'No ratings yet'}</dd></div>
@@ -68,7 +68,7 @@ export async function AccountTeamStrip({ orgId }: { orgId: string }) {
   if (!settings.enabled) return null;
   const stats = await getTeamStats(sb, orgId, settings.slaMinutes);
   return (
-    <section aria-label="Your account team" className="mb-6 rounded-[16px] border border-[#B9D2F5] bg-[#F7FAFE] px-5 py-4 flex flex-wrap items-center gap-x-8 gap-y-4">
+    <section aria-label="Your account team" className="mb-6 rounded-[16px] border border-tint bg-tint-2 px-5 py-4 flex flex-wrap items-center gap-x-8 gap-y-4">
       <div className="flex items-center gap-3 flex-[1_1_300px] min-w-0">
         <OctoSquare size={44} />
         <div className="min-w-0">

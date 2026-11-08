@@ -35,7 +35,7 @@ export function AssistantPageClient({ boot }: { boot: Bootstrap }) {
     <section className="flex-[999_1_520px] min-w-0 flex flex-col gap-4">
       <div className="flex flex-wrap gap-2.5 justify-between items-center">
         <div className="flex gap-3 items-center">
-          <span aria-hidden className="w-12 h-12 rounded-[12px] bg-blue-fill text-white flex items-center justify-center font-display font-bold text-[18px]">O</span>
+          <span aria-hidden className="w-12 h-12 rounded-[12px] bg-coral text-white flex items-center justify-center font-display font-bold text-[18px]">O</span>
           <div className="flex flex-col gap-0.5">
             <h1 className="m-0 font-display font-extrabold text-[24px] leading-[1.2]">Octo · your account assistant</h1>
             <span className="text-[13px] text-muted">AI-powered · answers in seconds · hands off to a human when it matters</span>
@@ -80,7 +80,7 @@ export function AssistantPageClient({ boot }: { boot: Bootstrap }) {
         <div className="grid gap-2.5 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
           {CAN_DO.map(([t, s, prompt]) => (
             <button key={t} type="button" onClick={() => setPrefill({ text: prompt, n: Date.now() })}
-              className="text-left px-3 py-2.5 rounded-[10px] bg-white border border-line flex flex-col gap-[3px] hover:border-blue">
+              className="text-left px-3 py-2.5 rounded-[10px] bg-white border border-line flex flex-col gap-[3px] hover:border-coral-text">
               <b className="font-semibold text-[13px]">{t}</b><span className="text-[12px] text-muted">{s}</span>
             </button>
           ))}

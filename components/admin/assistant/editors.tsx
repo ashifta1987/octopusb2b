@@ -20,7 +20,7 @@ export function TopicsEditor({ initial, action, disabled }: { initial: string[];
       <ul className="flex flex-wrap gap-2" aria-label="Sensitive topics">
         {topics.length === 0 && <li className="text-sm text-muted">No topics — add at least one.</li>}
         {topics.map((t) => (
-          <li key={t} className="inline-flex items-center gap-1 rounded-full bg-[#FDE8E8] text-[#A32D2D] pl-3 pr-1 py-1 text-sm font-semibold">
+          <li key={t} className="inline-flex items-center gap-1 rounded-full bg-bad-bg text-bad pl-3 pr-1 py-1 text-sm font-semibold">
             {t}
             {!disabled && (
               <button type="button" className="w-6 h-6 rounded-full hover:bg-white/60 grid place-items-center" aria-label={`Remove ${t}`} onClick={() => setTopics(topics.filter((x) => x !== t))}>×</button>

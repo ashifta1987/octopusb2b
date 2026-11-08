@@ -38,11 +38,11 @@ export default function DevUiPage() {
       <ServiceRail items={RAIL} active="sourcing" extra={{ key: 'all', label: 'All categories', href: '/products' }} />
       <div className="wrap pt-10">
         <div className="flex items-center gap-3 flex-wrap"><h1 className="text-[30px] font-extrabold leading-[1.15]">UI components</h1><Pill tone="warn">Staging only</Pill></div>
-        <p className="text-[15px] text-body-2 mt-2 max-w-[760px]">ADDON-44 design system. Tokens are in <code className="mono text-[13px]">app/globals.css</code>, components in <code className="mono text-[13px]">components/ds</code>. This page returns 404 on the live site.</p>
+        <p className="text-[15px] text-black mt-2 max-w-[760px]">ADDON-44 design system. Tokens are in <code className="mono text-[13px]">app/globals.css</code>, components in <code className="mono text-[13px]">components/ds</code>. This page returns 404 on the live site.</p>
 
-        <Block name="Colours" note="Blue text and links always use blue-text #1E58B0 (6.3:1 on white). #2A6FD6 is only for filled buttons with white text.">
+        <Block name="Colours" note="Links and coral text use coral-text #3C66A8 (5.6:1 on Pearl). Coral #4977BC is only for filled buttons with white text (4.52:1).">
           <ul className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-            {([['navy', '#11133C', 'bg-navy text-white'], ['blue (fill)', '#2A6FD6', 'bg-blue-fill text-white'], ['blue-text', '#1E58B0', 'bg-white text-blue border border-line'], ['bg', '#F5F6F8', 'bg-surface text-navy border border-line'], ['border', '#E2E5EA', 'bg-line text-navy'], ['muted', '#5A6475', 'bg-white text-muted border border-line'], ['body-2', '#3B4556', 'bg-white text-body-2 border border-line'], ['soft-blue', '#E6EFFC', 'bg-blue-soft text-navy'], ['green', '#15803D / #DCFCE7', 'bg-ok-bg text-ok'], ['amber', '#92400E / #FEF3C7', 'bg-warn-bg text-warn'], ['orange', '#9A3412 / #FFEDD5', 'bg-needs-bg text-needs'], ['red', '#991B1B / #FEE2E2', 'bg-bad-bg text-bad'], ['new badge', '#11133C / #F59E0B', 'bg-new-bg text-navy']] as const).map(([n, hex, cls]) => (
+            {([['ink', '#1A174A', 'bg-ink text-white'], ['ink-2', '#2C2870', 'bg-ink-2 text-white'], ['coral (fill)', '#4977BC', 'bg-coral text-white'], ['coral-text', '#3C66A8', 'bg-white text-coral-text border border-line'], ['pearl', '#FFFDEF', 'bg-pearl text-ink border border-line'], ['black', '#231F20', 'bg-black text-white'], ['muted', '#5A6475', 'bg-white text-muted border border-line'], ['line', '#E5E2D4', 'bg-line text-ink'], ['line-strong', '#CDC9B6', 'bg-line-strong text-ink'], ['fill', '#EFEDE2', 'bg-fill text-ink'], ['tint', '#E4EBF6', 'bg-tint text-ink'], ['ill-bg', '#FDF7EA', 'bg-ill-bg text-ink border border-line'], ['on ink', '#A9C1E8 / #C9CFE0', 'bg-ink text-on-ink'], ['green', '#15803D / #DCFCE7', 'bg-ok-bg text-ok'], ['amber', '#92400E / #FEF3C7', 'bg-warn-bg text-warn'], ['orange', '#9A3412 / #FFEDD5', 'bg-needs-bg text-needs'], ['red', '#991B1B / #FEE2E2', 'bg-bad-bg text-bad'], ['new badge', '#1A174A / #F59E0B', 'bg-new-bg text-ink']] as const).map(([n, hex, cls]) => (
               <li key={n} className={`rounded-[10px] p-3 min-h-[76px] ${cls}`}><div className="text-[13px] font-semibold">{n}</div><div className="mono text-[11px] mt-1">{hex}</div></li>
             ))}
           </ul>
@@ -54,7 +54,7 @@ export default function DevUiPage() {
             <div><K>H1 account · 30/1.15 800</K><div className="font-display text-[30px] leading-[1.15] font-extrabold">Dropship catalogue</div></div>
             <div><K>H2 section · 34/1.12 800 (phone 25)</K><div className="font-display text-[25px] sm:text-[34px] leading-[1.12] font-extrabold">How it works</div></div>
             <div><K>H3 card · 17 700</K><div className="font-display text-[17px] font-bold">Pick a verified product</div></div>
-            <div><K>Body · Inter 16/1.6</K><p className="text-[16px] leading-[1.6] text-body-2 max-w-[640px]">Pick a product from our verified suppliers and we put your logo on it, on the product and on the box.</p></div>
+            <div><K>Body · Inter 16/1.6</K><p className="text-[16px] leading-[1.6] text-black max-w-[640px]">Pick a product from our verified suppliers and we put your logo on it, on the product and on the box.</p></div>
             <div><K>Label (k) · IBM Plex Mono 11 600 uppercase</K><div className="k">Customers in</div></div>
             <div><K>Money and ids · tabular</K><div className="tabular-nums text-[18px] font-semibold">US$ 1,234.56 <span className="mono text-[14px] text-muted ml-2">MB-0042</span></div></div>
           </div>
@@ -69,7 +69,7 @@ export default function DevUiPage() {
             <button className="btn btn-primary">Account 44</button>
             <button className="btn btn-ghost btn-sm">Small 38</button>
             <button className="btn btn-primary" disabled>Disabled</button>
-            <span className="bg-navy p-3 rounded-[10px]"><button className="btn btn-light">Light on navy</button></span>
+            <span className="bg-ink p-3 rounded-[10px]"><button className="btn btn-light">Light on navy</button></span>
           </div>
         </Block>
 
@@ -132,7 +132,7 @@ export default function DevUiPage() {
             <Notice tone="warn">{STORE_SOON}</Notice>
             <Notice tone="bad">Cannot ship to Saudi Arabia: contains a battery not allowed on this route.</Notice>
             <Notice tone="ok">Added to your import list.</Notice>
-            <p className="text-[14px] text-muted">Unknown value: <b className="text-navy">{TBC}</b></p>
+            <p className="text-[14px] text-muted">Unknown value: <b className="text-ink">{TBC}</b></p>
           </div>
         </Block>
 
@@ -143,7 +143,7 @@ export default function DevUiPage() {
         </Block>
 
         <Block name="Icons" note="2 px stroke, 18–20 px. Never emoji.">
-          <div className="flex flex-wrap gap-4 text-navy">
+          <div className="flex flex-wrap gap-4 text-ink">
             {(['check', 'shield', 'user', 'doc', 'box', 'tag', 'truck', 'warehouse', 'search', 'arrow', 'info', 'alert', 'chevron'] as const).map((n) => <span key={n} className="inline-flex flex-col items-center gap-1 text-[11px] text-muted"><Icon name={n} />{n}</span>)}
           </div>
         </Block>

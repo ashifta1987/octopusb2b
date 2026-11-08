@@ -80,7 +80,7 @@ export function StartPoolForm({ product: pr, rules, addresses, walletEnabled, wa
               const price = priceAt(pr.tiers, p);
               return (
                 <button key={p} type="button" onClick={() => setTarget(String(p))} aria-pressed={Number(target) === p}
-                  className={`px-3 py-1.5 rounded-full border text-[13px] ${Number(target) === p ? 'bg-navy text-white border-navy' : 'bg-white border-line-2'}`}>
+                  className={`px-3 py-1.5 rounded-full border text-[13px] ${Number(target) === p ? 'bg-ink text-white border-ink' : 'bg-white border-line-strong'}`}>
                   {fmt(p)} {pr.unit}{price != null && <span className="opacity-80"> · {money(price, pr.currency)}/{pr.unitOne}</span>}
                 </button>
               );
@@ -122,12 +122,12 @@ export function StartPoolForm({ product: pr, rules, addresses, walletEnabled, wa
         <fieldset>
           <legend className="label">Pay deposit from</legend>
           <div className="grid gap-2 sm:grid-cols-2">
-            <label className={`flex items-center gap-3 rounded-[10px] border-2 px-4 py-3 ${paySource === 'wallet' ? 'border-blue bg-blue-soft/40' : 'border-line'} ${!walletEnabled ? 'opacity-50' : 'cursor-pointer'}`}>
-              <input type="radio" name="spay" checked={paySource === 'wallet'} disabled={!walletEnabled} onChange={() => setPay('wallet')} className="accent-[#2A6FD6]" />
+            <label className={`flex items-center gap-3 rounded-[10px] border-2 px-4 py-3 ${paySource === 'wallet' ? 'border-coral-text bg-tint/40' : 'border-line'} ${!walletEnabled ? 'opacity-50' : 'cursor-pointer'}`}>
+              <input type="radio" name="spay" checked={paySource === 'wallet'} disabled={!walletEnabled} onChange={() => setPay('wallet')} className="accent-coral" />
               <span><b>Wallet</b> · <span className="mono">{money(walletBalance, pr.currency)}</span>{walletCredit > 0 && <> · credit <span className="mono">{money(walletCredit, pr.currency)}</span></>}</span>
             </label>
-            <label className={`flex items-center gap-3 rounded-[10px] border-2 px-4 py-3 cursor-pointer ${paySource === 'card' ? 'border-blue bg-blue-soft/40' : 'border-line'}`}>
-              <input type="radio" name="spay" checked={paySource === 'card'} onChange={() => setPay('card')} className="accent-[#2A6FD6]" />
+            <label className={`flex items-center gap-3 rounded-[10px] border-2 px-4 py-3 cursor-pointer ${paySource === 'card' ? 'border-coral-text bg-tint/40' : 'border-line'}`}>
+              <input type="radio" name="spay" checked={paySource === 'card'} onChange={() => setPay('card')} className="accent-coral" />
               <b>Bank transfer</b>
             </label>
           </div>
@@ -135,8 +135,8 @@ export function StartPoolForm({ product: pr, rules, addresses, walletEnabled, wa
         </fieldset>
         <div>
           <label className="flex items-start gap-2.5 text-[13px] cursor-pointer">
-            <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-0.5 w-4 h-4 accent-[#2A6FD6]" />
-            <span>I agree to the <Link href="/pools/terms" target="_blank" className="text-blue font-semibold underline">Group Buy Terms</Link>. If the pool fills, my pledge becomes a firm order.</span>
+            <input type="checkbox" checked={terms} onChange={(e) => setTerms(e.target.checked)} className="mt-0.5 w-4 h-4 accent-coral" />
+            <span>I agree to the <Link href="/pools/terms" target="_blank" className="text-coral-text font-semibold underline">Group Buy Terms</Link>. If the pool fills, my pledge becomes a firm order.</span>
           </label>
           {e1('terms')}
         </div>

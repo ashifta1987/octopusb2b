@@ -57,8 +57,8 @@ export default async function OfficeRfq({ params }: { params: Promise<{ id: stri
               <h3 className="font-semibold mb-1">Requested specs</h3>
               <p className="text-sm whitespace-pre-line">{r.details || <span className="text-muted">No details given.</span>}</p>
               {prod && (
-                <div className="mt-4 rounded-[10px] bg-surface p-4">
-                  <div className="text-sm">Linked product: <Link href={`/p/${prod.slug}`} className="text-blue font-semibold">{prod.title}</Link></div>
+                <div className="mt-4 rounded-[10px] bg-pearl p-4">
+                  <div className="text-sm">Linked product: <Link href={`/p/${prod.slug}`} className="text-coral-text font-semibold">{prod.title}</Link></div>
                   {prod.product_specs?.length > 0 && (
                     <dl className="grid sm:grid-cols-2 gap-x-6 mt-2 text-sm">
                       {[...prod.product_specs].sort((a, b) => a.sort - b.sort).map((sp) => <div key={sp.name} className="flex justify-between border-b border-line py-1"><dt className="text-muted">{sp.name}</dt><dd>{sp.value}</dd></div>)}
@@ -114,13 +114,13 @@ async function RequestThread({ rfqId, code, canReply }: { rfqId: string; code: s
     <Card title={`Messages with the customer · ${(msgs ?? []).length}`}>
       <div className="px-6 pb-6 space-y-3">
         {(msgs ?? []).map((m) => (
-          <div key={m.id as string} className={`rounded-[10px] px-3 py-2 text-sm ${m.from_staff ? 'bg-surface border border-line' : 'bg-[#E6EFFC]'}`}>
+          <div key={m.id as string} className={`rounded-[10px] px-3 py-2 text-sm ${m.from_staff ? 'bg-pearl border border-line' : 'bg-tint'}`}>
             <div className="text-xs text-muted">{m.from_staff ? 'Octopus team' : 'Customer'} · {fmtDate(m.created_at as string, true)}</div>
             <p className="whitespace-pre-line mt-0.5">{m.body as string}</p>
           </div>
         ))}
         {(files ?? []).length > 0 && (
-          <ul className="text-sm space-y-1">{(files ?? []).map((f) => <li key={f.id as string}><a href={`/api/request-files/${f.id}`} className="text-blue font-semibold">{f.file_name as string}</a> <span className="text-xs text-muted">{f.file_kind as string}{f.from_staff ? ' · team' : ' · customer'}</span></li>)}</ul>
+          <ul className="text-sm space-y-1">{(files ?? []).map((f) => <li key={f.id as string}><a href={`/api/request-files/${f.id}`} className="text-coral-text font-semibold">{f.file_name as string}</a> <span className="text-xs text-muted">{f.file_kind as string}{f.from_staff ? ' · team' : ' · customer'}</span></li>)}</ul>
         )}
         {canReply ? <MessageForm kind="rfq" id={rfqId} refCode={code} label="Reply to the customer" /> : <p className="text-sm text-muted">You can read the thread; replying needs requests edit permission.</p>}
       </div>

@@ -75,7 +75,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
                 return (
                   <li key={sv.code}>
                     <Link href={`/admin/services?code=${sv.code}`} aria-current={active ? 'true' : undefined}
-                      className={cn('block px-5 py-4 border-b border-line last:border-0', active ? 'bg-blue-soft border-l-4 border-l-blue' : 'hover:bg-surface')}>
+                      className={cn('block px-5 py-4 border-b border-line last:border-0', active ? 'bg-tint border-l-4 border-l-coral-text' : 'hover:bg-pearl')}>
                       <div className="flex justify-between gap-3"><span className="font-semibold">{sv.name}</span><StatusBadge status={sv.active ? 'live' : 'off'} label={sv.active ? 'Live' : 'Off'} /></div>
                       <div className="mono text-sm text-muted mt-1">
                         {pu?.amount_minor === 0 ? 'Free · quoted later' : pu ? `${money(pu.amount_minor, 'USD')} ${sv.unit}` : 'USD price not set'}
@@ -83,7 +83,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
                       {pu?.amount_minor !== 0 && (
                         <div className="mono text-xs text-muted mt-0.5">
                           {pc?.amount_minor != null ? money(pc.amount_minor, 'CNY') : 'CNY not set'}
-                          {pc?.converted && <span className="ml-1.5 rounded bg-surface border border-line px-1 py-px text-[10px] uppercase">converted</span>}
+                          {pc?.converted && <span className="ml-1.5 rounded bg-pearl border border-line px-1 py-px text-[10px] uppercase">converted</span>}
                         </div>
                       )}
                     </Link>
@@ -118,7 +118,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
                 <Field label="Unit / pricing model" htmlFor="s-unit"><input id="s-unit" name="unit" className="input" defaultValue={selected.unit} required disabled={!editable} /></Field>
                 <Field label="Short description shown to buyers" htmlFor="s-desc" className="sm:col-span-2"><textarea id="s-desc" name="description" className="input min-h-20 py-2" defaultValue={selected.description ?? ''} disabled={!editable} /></Field>
                 <label className="flex items-center gap-2"><input type="checkbox" name="active" defaultChecked={selected.active} disabled={!editable} /> Service is live</label>
-                <div className="sm:col-span-2 rounded-[10px] bg-surface px-4 py-3 text-sm">
+                <div className="sm:col-span-2 rounded-[10px] bg-pearl px-4 py-3 text-sm">
                   Buyers will see ({ctx.currency}): <b>{selected.name} · {platformInfo && platformInfo.amount_minor != null ? (platformInfo.amount_minor === 0 ? 'Free' : `${money(platformInfo.amount_minor, platformInfo.currency)} ${selected.unit}`) : 'price not set'}</b>
                   {platformInfo?.converted && <span className="text-muted"> · converted from USD at {ctx.rate} CNY/USD</span>}
                 </div>

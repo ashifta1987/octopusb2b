@@ -87,11 +87,11 @@ export function CurrencySwitchWizard({ current, rate, serviceNames, pending }: {
           <fieldset>
             <legend className="label">3 · Customer wallets</legend>
             <div className="grid gap-3 sm:grid-cols-2">
-              <label className="flex gap-3 rounded-[10px] border border-line p-4 has-[:checked]:border-blue has-[:checked]:bg-blue-soft">
+              <label className="flex gap-3 rounded-[10px] border border-line p-4 has-[:checked]:border-coral-text has-[:checked]:bg-tint">
                 <input type="radio" name="wallet_option" value="keep" defaultChecked className="mt-1" />
                 <span><b>Keep balances</b><span className="block text-sm text-muted">Existing {current} balances stay spendable as they are. New charges use the {to} wallet; customers top up in {to}. Nothing is converted.</span></span>
               </label>
-              <label className="flex gap-3 rounded-[10px] border border-line p-4 has-[:checked]:border-blue has-[:checked]:bg-blue-soft">
+              <label className="flex gap-3 rounded-[10px] border border-line p-4 has-[:checked]:border-coral-text has-[:checked]:bg-tint">
                 <input type="radio" name="wallet_option" value="convert" className="mt-1" />
                 <span><b>Convert balances</b><span className="block text-sm text-muted">Every positive {current} balance is moved to the {to} wallet at the switch rate through a conversion journal (fx_conversion), shown on each customer’s ledger.</span></span>
               </label>
@@ -184,11 +184,11 @@ export function ImpactView({ impact, to, serviceNames }: { impact: Impact; to: s
         {missing.length ? (
           <>
             <ul className="list-disc pl-5">{missing.map((c) => <li key={c}>{serviceNames[c] ?? c} <span className="mono text-xs text-muted">{c}</span></li>)}</ul>
-            <p className="text-xs text-muted mt-2">These will be converted from USD and marked “converted”. <Link href="/admin/services" className="text-blue font-semibold">Set {to} prices</Link></p>
+            <p className="text-xs text-muted mt-2">These will be converted from USD and marked “converted”. <Link href="/admin/services" className="text-coral-text font-semibold">Set {to} prices</Link></p>
           </>
         ) : <span className="text-ok font-semibold">✓ All active services have a {to} price</span>}
       </div>
-      <div className={`rounded-[10px] border p-4 text-sm ${supports ? 'border-line' : 'border-bad bg-[#FDE8E8]'}`}>
+      <div className={`rounded-[10px] border p-4 text-sm ${supports ? 'border-line' : 'border-bad bg-bad-bg'}`}>
         <h3 className="font-semibold mb-1">Payment adapter</h3>
         {supports
           ? <span className="text-ok font-semibold">✓ Supports {to}</span>

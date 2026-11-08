@@ -53,7 +53,7 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
               {queue.map((q) => (
                 <li key={q.id}>
                   <Link href={`/office/products?p=${q.id}`} aria-current={q.id === sel ? 'true' : undefined}
-                    className={cn('flex gap-3 px-5 py-3 border-l-[3px]', q.id === sel ? 'bg-blue-soft border-blue' : 'border-transparent hover:bg-surface')}>
+                    className={cn('flex gap-3 px-5 py-3 border-l-[3px]', q.id === sel ? 'bg-tint border-coral-text' : 'border-transparent hover:bg-pearl')}>
                     <div className="min-w-0 flex-1">
                       <div className="font-semibold text-sm line-clamp-2">{q.title}</div>
                       <div className="text-xs text-muted mono">{one(q.suppliers as unknown as { code: string } | null)?.code} · {fmtDate(q.updated_at, true)}</div>
@@ -102,8 +102,8 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
                     .map(([l, v]) => <div key={l as string}><dt className="text-muted">{l}</dt><dd className="font-medium">{v || '—'}</dd></div>)}
                 </dl>
                 <div className="flex flex-wrap gap-1">
-                  {((p.product_tags ?? []) as { tags: { name: string } | { name: string }[] | null }[]).map((t, i) => <span key={i} className="text-xs rounded-full bg-blue-soft text-[#1E4F9C] px-2 py-0.5 font-semibold">{one(t.tags)?.name}</span>)}
-                  {((p.product_certificates ?? []) as { certificates: { name: string; status: string } | { name: string; status: string }[] | null }[]).map((c, i) => { const x = one(c.certificates); return <span key={`c${i}`} className="text-xs rounded-full bg-[#E3F5EA] text-[#156B3A] px-2 py-0.5 font-semibold">{x?.name} · {x?.status}</span>; })}
+                  {((p.product_tags ?? []) as { tags: { name: string } | { name: string }[] | null }[]).map((t, i) => <span key={i} className="text-xs rounded-full bg-tint text-coral-text px-2 py-0.5 font-semibold">{one(t.tags)?.name}</span>)}
+                  {((p.product_certificates ?? []) as { certificates: { name: string; status: string } | { name: string; status: string }[] | null }[]).map((c, i) => { const x = one(c.certificates); return <span key={`c${i}`} className="text-xs rounded-full bg-ok-bg text-ok px-2 py-0.5 font-semibold">{x?.name} · {x?.status}</span>; })}
                 </div>
               </div>
             </div>
@@ -119,9 +119,9 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
                 </dl>
               </div>
             )}
-            <div className="mt-4 rounded-[10px] bg-surface p-4 text-sm">
+            <div className="mt-4 rounded-[10px] bg-pearl p-4 text-sm">
               <div className="text-xs text-muted">Search preview</div>
-              <div className="text-blue font-semibold">{p.seo_title || p.title}</div>
+              <div className="text-coral-text font-semibold">{p.seo_title || p.title}</div>
               <div className="text-muted">{p.seo_description || '—'}</div>
               {tiers[0] && <div className="text-xs text-muted mt-1">From {money(lowest.unit_price_cents, lowest.currency)} / {p.unit}{lowestPlatform != null ? ` · storefront ≈ ${money(lowestPlatform, cx.currency)} (converted)` : ''}</div>}
             </div>

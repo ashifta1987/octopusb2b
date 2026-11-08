@@ -5,6 +5,7 @@ import { getCurrencyContext } from '@/lib/currency';
 import { withCurrency } from '@/lib/format';
 import { revealTimeout } from '@/lib/password-reveal';
 import { PasswordRevealProvider } from '@/components/password/password-input';
+import { BRAND } from '@/lib/brand';
 import './globals.css';
 
 // ADDON-46 fonts: Degular Display (headings) / Degular (text) / Futura (labels). Until the licences arrive:
@@ -33,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /** Browser UI colour = Octopus Ink (brand kit). */
-export const viewport: Viewport = { themeColor: '#1A174A' };
+export const viewport: Viewport = { themeColor: BRAND.ink };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // ADDON-25: how long a revealed password stays visible (site_settings auth.password_reveal_timeout_s, cached)

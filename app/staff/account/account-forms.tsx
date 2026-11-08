@@ -190,7 +190,7 @@ export function AuthenticatorDevices({ devices }: { devices: Device[] }) {
           <p className="text-sm">On the <b>new phone</b>, open Google Authenticator → <b>+</b> → <b>Scan a QR code</b>.</p>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={enr.qr} alt="QR code for the new authenticator" width={180} height={180} className="bg-white p-2 border border-line rounded-[8px]" />
-          <details className="text-[13px]"><summary className="cursor-pointer text-blue">Can&apos;t scan? Enter the key instead</summary><code className="mono break-all block mt-1" data-testid="mfa-secret">{enr.secret}</code></details>
+          <details className="text-[13px]"><summary className="cursor-pointer text-coral-text">Can&apos;t scan? Enter the key instead</summary><code className="mono break-all block mt-1" data-testid="mfa-secret">{enr.secret}</code></details>
           <label htmlFor="mfa-code" className="label">6-digit code from the new phone</label>
           <input id="mfa-code" className="input mono tracking-[.3em] max-w-[180px]" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} />
           <div className="flex gap-2"><button type="submit" className="btn btn-primary min-h-11" disabled={busy}>{busy ? 'Checking…' : 'Confirm and add'}</button><button type="button" className="btn btn-ghost min-h-11" onClick={cancel}>Cancel</button></div>

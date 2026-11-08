@@ -19,7 +19,7 @@ export function Breadcrumbs({ items }: { items: { name: string; href?: string }[
         {items.map((it, i) => (
           <li key={i} className="flex items-center gap-1.5">
             {i > 0 && <span aria-hidden>/</span>}
-            {it.href && i < items.length - 1 ? <Link href={it.href} className="hover:text-blue">{it.name}</Link> : <span aria-current={i === items.length - 1 ? 'page' : undefined} className="text-navy font-medium">{it.name}</span>}
+            {it.href && i < items.length - 1 ? <Link href={it.href} className="hover:text-coral-text">{it.name}</Link> : <span aria-current={i === items.length - 1 ? 'page' : undefined} className="text-ink font-medium">{it.name}</span>}
           </li>
         ))}
       </ol>

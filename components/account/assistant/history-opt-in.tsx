@@ -10,8 +10,8 @@ export function HistoryOptIn({ initialOptIn }: { initialOptIn: boolean }) {
   const [pending, start] = useTransition();
   return (
     <div>
-      <label className="flex gap-2.5 items-start text-[12px] text-[#3B4556] leading-normal">
-        <input type="checkbox" checked={on} disabled={pending} className="w-[18px] h-[18px] mt-px flex-none accent-blue"
+      <label className="flex gap-2.5 items-start text-[12px] text-black leading-normal">
+        <input type="checkbox" checked={on} disabled={pending} className="w-[18px] h-[18px] mt-px flex-none accent-coral-text"
           onChange={(e) => {
             const next = e.target.checked;
             if (!next && !window.confirm('Stop using your chat history? Titles and page context of your past conversations will be anonymised.')) return;

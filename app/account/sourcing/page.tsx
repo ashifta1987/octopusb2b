@@ -57,7 +57,7 @@ export default async function SourcingList({ searchParams }: { searchParams: Pro
           <ul className="divide-y divide-line" data-testid="sourcing-list">
             {rows.map((r) => (
               <li key={r.id}>
-                <Link href={`/account/sourcing/${encodeURIComponent(r.ref)}`} className="grid gap-x-4 gap-y-1 px-5 py-4 hover:bg-surface md:grid-cols-[150px_1fr_130px_120px_110px_110px] items-center" data-ref={r.ref}>
+                <Link href={`/account/sourcing/${encodeURIComponent(r.ref)}`} className="grid gap-x-4 gap-y-1 px-5 py-4 hover:bg-pearl md:grid-cols-[150px_1fr_130px_120px_110px_110px] items-center" data-ref={r.ref}>
                   <div>
                     <div className="mono text-[13px] font-semibold">{r.ref}</div>
                     <div className="text-[12px] text-muted">{fmtDate(r.created_at)}</div>
@@ -72,10 +72,10 @@ export default async function SourcingList({ searchParams }: { searchParams: Pro
                   </div>
                   <div><span className={`inline-flex rounded-full px-2.5 py-1 text-[12px] font-semibold ${STATUS_TONE[r.status]}`}>{r.status}</span></div>
                   <div className="text-[13px]">
-                    {r.kind === 'rfq' ? <>{r.quotes} quote{r.quotes === 1 ? '' : 's'}{r.newQuotes > 0 && <span className="ml-1.5 inline-flex rounded-full bg-[#DC2626] text-white text-[11px] font-bold px-1.5" data-testid="row-new-quotes">{r.newQuotes} new</span>}</> : <span className="text-muted">—</span>}
+                    {r.kind === 'rfq' ? <>{r.quotes} quote{r.quotes === 1 ? '' : 's'}{r.newQuotes > 0 && <span className="ml-1.5 inline-flex rounded-full bg-bad text-white text-[11px] font-bold px-1.5" data-testid="row-new-quotes">{r.newQuotes} new</span>}</> : <span className="text-muted">—</span>}
                   </div>
                   <div className="text-[13px]">{r.fee > 0 ? money(r.fee, r.currency) : <span className="text-muted">No fee</span>}</div>
-                  <div className="text-right text-[13px] font-semibold text-blue">{r.newQuotes > 0 ? 'Compare quotes →' : r.order ? 'Go to order →' : 'Open →'}</div>
+                  <div className="text-right text-[13px] font-semibold text-coral-text">{r.newQuotes > 0 ? 'Compare quotes →' : r.order ? 'Go to order →' : 'Open →'}</div>
                 </Link>
               </li>
             ))}

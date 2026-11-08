@@ -10,11 +10,11 @@ export type LogisticsStats = { countries?: string; hubs?: string; parcels_daily?
 export type Destinations = { items?: { flag?: string; name: string }[]; more?: number };
 
 const CARDS = [
-  { key: 'yun', href: '/request/3pl', Icon: Globe, blob: 'bg-[#E6EFFC]', icon: 'bg-navy', eyebrow: 'text-blue', btn: 'btn btn-primary',
+  { key: 'yun', href: '/request/3pl', Icon: Globe, blob: 'bg-tint', icon: 'bg-ink', eyebrow: 'text-coral-text', btn: 'btn btn-primary',
     fallback: 'Global shipping|Global shipping to {countries} countries||See shipping options' },
-  { key: '3pl', href: '/request/3pl', Icon: Warehouse, blob: 'bg-[#DBEAFE]', icon: 'bg-[#1E40AF]', eyebrow: 'text-[#1E40AF]', btn: 'btn btn-dark',
+  { key: '3pl', href: '/request/3pl', Icon: Warehouse, blob: 'bg-tint', icon: 'bg-coral-text', eyebrow: 'text-coral-text', btn: 'btn btn-dark',
     fallback: '3PL fulfilment|Warehouses near your buyers||Request a 3PL quote' },
-  { key: 'dropship', href: '/request/dropship', Icon: Truck, blob: 'bg-[#F3E8FF]', icon: 'bg-[#6B21A8]', eyebrow: 'text-[#6B21A8]', btn: 'btn bg-[#6B21A8] text-white hover:bg-[#581C87]',
+  { key: 'dropship', href: '/request/dropship', Icon: Truck, blob: 'bg-violet-bg', icon: 'bg-violet', eyebrow: 'text-violet', btn: 'btn bg-violet text-white hover:bg-violet',
     fallback: 'Dropshipping|Ship under your brand, zero stock||Start a dropship request' },
 ] as const;
 
@@ -50,14 +50,14 @@ export function LogisticsBand({ blocks, stats, live }: { blocks: Blocks; stats: 
       <div className="relative max-w-[1360px] mx-auto px-4 sm:px-8 py-12 sm:py-14">
         <div className="flex flex-wrap justify-between items-end gap-6 mb-8">
           <div className="flex-[1_1_480px] min-w-0 flex flex-col gap-3.5">
-            <span className="self-start inline-flex items-center gap-2.5 max-w-full rounded-full border border-[rgba(111,168,242,0.4)] bg-[rgba(42,111,214,0.18)] text-[#C7DBFA] mono text-[11px] sm:text-[12px] font-semibold uppercase tracking-[0.08em] leading-tight px-3.5 py-2">
+            <span className="self-start inline-flex items-center gap-2.5 max-w-full rounded-full border border-[rgba(111,168,242,0.4)] bg-[rgba(42,111,214,0.18)] text-tint mono text-[11px] sm:text-[12px] font-semibold uppercase tracking-[0.08em] leading-tight px-3.5 py-2">
               <Plane className="w-3.5 h-3.5 shrink-0" aria-hidden focusable="false" />
               {block(blocks, 'home.logistics.pill', 'Official logistics partner')}
             </span>
             <h2 id="home-logistics-h" className="!text-white text-[28px] sm:text-[36px] lg:text-[42px] font-extrabold leading-[1.08] tracking-[-0.025em] max-w-[760px]">
-              <Emphasis text={title} className="text-[#6FA8F2]" />
+              <Emphasis text={title} className="text-on-ink-link" />
             </h2>
-            <p className="text-[15px] sm:text-[16px] leading-[1.6] text-[#C3CBD7] max-w-[640px]">{block(blocks, 'home.logistics.body')}</p>
+            <p className="text-[15px] sm:text-[16px] leading-[1.6] text-line-strong max-w-[640px]">{block(blocks, 'home.logistics.body')}</p>
           </div>
           <div className="flex flex-wrap gap-2.5">
             <Link href="/request/3pl" className="btn btn-light min-h-[46px]">{bQuote}</Link>
@@ -66,7 +66,7 @@ export function LogisticsBand({ blocks, stats, live }: { blocks: Blocks; stats: 
         </div>
 
         {tiles.length === 0 && (
-          <p className="mb-9 rounded-[14px] border border-white/10 bg-white/5 px-5 py-[18px] text-[14px] text-[#C3CBD7]">
+          <p className="mb-9 rounded-[14px] border border-white/10 bg-white/5 px-5 py-[18px] text-[14px] text-line-strong">
             {block(blocks, 'home.logistics.stats_empty', 'Live shipping figures appear here as soon as the first orders ship.')}
           </p>
         )}
@@ -74,7 +74,7 @@ export function LogisticsBand({ blocks, stats, live }: { blocks: Blocks; stats: 
           <dl className={`grid gap-3.5 grid-cols-2 mb-9 ${tiles.length >= 4 ? 'lg:grid-cols-4' : tiles.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
             {tiles.map((t) => (
               <div key={t.l} className="rounded-[14px] border border-white/10 bg-white/5 px-5 py-[18px] flex flex-col-reverse gap-1.5">
-                <dt className="text-[13px] text-[#B4BECD]">{t.l}</dt>
+                <dt className="text-[13px] text-on-ink">{t.l}</dt>
                 <dd className="font-display font-extrabold text-[24px] sm:text-[28px] leading-none text-white">{t.v}</dd>
               </div>
             ))}
@@ -86,7 +86,7 @@ export function LogisticsBand({ blocks, stats, live }: { blocks: Blocks; stats: 
             const [eb, title3, body, cta] = copy(blocks, `home.logistics.${key}`, fallback, vars);
             const points = copy(blocks, `home.logistics.${key}.points`, '', vars).filter((p) => p && !hasToken(p));
             return (
-              <li key={key} className="relative overflow-hidden rounded-[18px] bg-white text-navy p-[26px] flex flex-col gap-3.5">
+              <li key={key} className="relative overflow-hidden rounded-[18px] bg-white text-ink p-[26px] flex flex-col gap-3.5">
                 <span aria-hidden className={`absolute -top-10 -right-10 w-[180px] h-[180px] rounded-full ${blob}`} />
                 <span className={`relative w-[50px] h-[50px] rounded-xl text-white flex items-center justify-center ${icon}`} aria-hidden>
                   <Icon className="w-6 h-6" strokeWidth={2} focusable="false" />
@@ -95,9 +95,9 @@ export function LogisticsBand({ blocks, stats, live }: { blocks: Blocks; stats: 
                   <span className={`mono text-[11px] uppercase tracking-[0.08em] font-semibold ${eyebrow}`}>{eb}</span>
                   <h3 className="text-[20px] sm:text-[22px] font-extrabold leading-[1.2]">{hasToken(title3) ? block(blocks, `home.logistics.${key}.title_plain`, eb) : title3}</h3>
                 </div>
-                {body && <p className="relative text-[14px] leading-[1.55] text-[#3B4556]">{body}</p>}
+                {body && <p className="relative text-[14px] leading-[1.55] text-black">{body}</p>}
                 {points.length > 0 && (
-                  <ul className="relative list-disc pl-[18px] flex flex-col gap-1.5 text-[13.5px] text-[#3B4556]">
+                  <ul className="relative list-disc pl-[18px] flex flex-col gap-1.5 text-[13.5px] text-black">
                     {points.map((p) => <li key={p}>{p}</li>)}
                   </ul>
                 )}
@@ -109,20 +109,20 @@ export function LogisticsBand({ blocks, stats, live }: { blocks: Blocks; stats: 
 
         {chips.length === 0 && (
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3.5 pt-6 border-t border-white/10">
-            <h3 className="!text-[#B4BECD] mono text-[12px] font-medium uppercase tracking-[0.08em]">{block(blocks, 'home.logistics.destinations_label', 'Key destinations')}</h3>
-            <p className="text-[13px] text-[#C3CBD7]">{block(blocks, 'home.logistics.destinations_empty', 'Destinations are listed here once orders ship.')}</p>
+            <h3 className="!text-on-ink mono text-[12px] font-medium uppercase tracking-[0.08em]">{block(blocks, 'home.logistics.destinations_label', 'Key destinations')}</h3>
+            <p className="text-[13px] text-line-strong">{block(blocks, 'home.logistics.destinations_empty', 'Destinations are listed here once orders ship.')}</p>
           </div>
         )}
         {chips.length > 0 && (
           <div className="flex flex-wrap items-center gap-x-6 gap-y-3.5 pt-6 border-t border-white/10">
-            <h3 id="home-destinations-h" className="!text-[#B4BECD] mono text-[12px] font-medium uppercase tracking-[0.08em]">{block(blocks, 'home.logistics.destinations_label', 'Key destinations')}</h3>
+            <h3 id="home-destinations-h" className="!text-on-ink mono text-[12px] font-medium uppercase tracking-[0.08em]">{block(blocks, 'home.logistics.destinations_label', 'Key destinations')}</h3>
             <ul className="flex flex-wrap gap-2" aria-labelledby="home-destinations-h">
               {chips.map((c) => (
-                <li key={c.name} className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.07] px-3 py-1.5 text-[13px] text-[#E4E8EE]">
+                <li key={c.name} className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.07] px-3 py-1.5 text-[13px] text-fill">
                   {c.flag && <span aria-hidden>{c.flag}</span>}{c.name}
                 </li>
               ))}
-              {moreChips ? <li className="inline-flex items-center px-1 text-[13px] text-[#B4BECD]">+ {moreChips} more</li> : null}
+              {moreChips ? <li className="inline-flex items-center px-1 text-[13px] text-on-ink">+ {moreChips} more</li> : null}
             </ul>
           </div>
         )}

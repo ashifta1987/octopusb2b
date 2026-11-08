@@ -38,7 +38,7 @@ export function CancelOrderButton({ orderId, orderCode, action }: { orderId: str
     <>
       <button type="button" className="btn btn-ghost btn-sm text-bad" onClick={() => { setErr(null); setOpen(true); }}>Cancel order</button>
       {open && (
-        <div className="fixed inset-0 z-50 bg-navy/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="cancel-title">
+        <div className="fixed inset-0 z-50 bg-ink/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="cancel-title">
           <div className="card w-full max-w-md p-6">
             <h2 id="cancel-title" className="text-xl font-semibold">Cancel {orderCode}?</h2>
             <p className="text-sm text-muted mt-1">You can cancel until the deposit is paid. The proforma invoice will be voided. This cannot be undone.</p>

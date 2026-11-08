@@ -18,7 +18,7 @@ export function AccountTabs({ tabs }: { tabs: Tab[] }) {
         {tabs.map((t) => (
           <li key={t.key} className="shrink-0">
             <Link href={t.href} aria-current={t.key === cur ? 'page' : undefined}
-              className={`inline-flex items-center min-h-[48px] px-3.5 text-[15px] font-medium border-b-[3px] ${t.key === cur ? 'border-blue text-navy font-semibold' : 'border-transparent text-[#3B4556] hover:text-navy'}`}>
+              className={`inline-flex items-center min-h-[48px] px-3.5 text-[15px] font-medium border-b-[3px] ${t.key === cur ? 'border-coral-text text-ink font-semibold' : 'border-transparent text-black hover:text-ink'}`}>
               {t.label}
             </Link>
           </li>
@@ -37,16 +37,16 @@ export function SectionMenu({ tabs, menus }: { tabs: Tab[]; menus: Record<string
     <nav aria-label="Section" data-testid="section-menu">
       {sections.map((s) => (
         <div key={s.title} className="mb-5">
-          <div className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-[#5A6475] px-3 mb-1.5">{s.title}</div>
+          <div className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-muted px-3 mb-1.5">{s.title}</div>
           <ul className="space-y-0.5">
             {s.items.map((i) => {
               const on = i.href.split('#')[0] === active && !i.href.includes('#');
               return (
                 <li key={i.href}>
                   <Link href={i.href} prefetch={false} aria-current={on ? 'page' : undefined}
-                    className={`flex items-center justify-between min-h-[44px] px-3 rounded-[10px] text-[15px] ${on ? 'bg-navy text-white font-semibold' : 'text-[#2B3445] hover:bg-surface'}`}>
+                    className={`flex items-center justify-between min-h-[44px] px-3 rounded-[10px] text-[15px] ${on ? 'bg-ink text-white font-semibold' : 'text-black hover:bg-pearl'}`}>
                     {i.label}
-                    {!!i.badge && i.badge > 0 && <span data-testid="nav-badge" aria-label={`${i.badge} new`} className="min-w-[22px] h-[22px] px-1.5 rounded-full bg-blue-fill text-white text-[12px] font-bold leading-[22px] text-center">{i.badge}</span>}
+                    {!!i.badge && i.badge > 0 && <span data-testid="nav-badge" aria-label={`${i.badge} new`} className="min-w-[22px] h-[22px] px-1.5 rounded-full bg-coral text-white text-[12px] font-bold leading-[22px] text-center">{i.badge}</span>}
                   </Link>
                 </li>
               );

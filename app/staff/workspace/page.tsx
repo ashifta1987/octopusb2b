@@ -43,11 +43,11 @@ async function WorkspaceBody() {
               <li key={w.key}>
                 <form action={switchWorkspace}>
                   <input type="hidden" name="workspace" value={w.key} />
-                  <button type="submit" className="w-full text-left bg-white border-2 border-line hover:border-blue focus-visible:border-blue rounded-[10px] px-4 py-4 flex items-center gap-3.5 transition-colors">
-                    <span className="w-11 h-11 rounded-[8px] bg-navy text-white flex items-center justify-center font-bold text-[15px] flex-none" aria-hidden>{w.short}</span>
+                  <button type="submit" className="w-full text-left bg-white border-2 border-line hover:border-coral-text focus-visible:border-coral-text rounded-[10px] px-4 py-4 flex items-center gap-3.5 transition-colors">
+                    <span className="w-11 h-11 rounded-[8px] bg-ink text-white flex items-center justify-center font-bold text-[15px] flex-none" aria-hidden>{w.short}</span>
                     <span className="flex-1 min-w-0">
-                      <span className="block font-semibold text-[16px] text-navy">{w.label}</span>
-                      <span className="block text-sm text-[#3B4556] leading-[1.45]">{w.description}</span>
+                      <span className="block font-semibold text-[16px] text-ink">{w.label}</span>
+                      <span className="block text-sm text-black leading-[1.45]">{w.description}</span>
                     </span>
                     {(last || badge) && (
                       <span className="text-xs text-muted text-right flex-none flex flex-col gap-1">
@@ -64,7 +64,7 @@ async function WorkspaceBody() {
       )}
       <div className="flex justify-between items-center text-sm text-muted gap-3 flex-wrap">
         <span>Role: {roleText}{prof?.office ? ` · ${prof.office}` : ''}</span>
-        <form action={staffSignOut}><button type="submit" className="font-semibold text-blue">Sign out</button></form>
+        <form action={staffSignOut}><button type="submit" className="font-semibold text-coral-text">Sign out</button></form>
       </div>
     </div>
   );

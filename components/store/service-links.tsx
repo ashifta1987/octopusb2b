@@ -31,7 +31,7 @@ export function ServiceLinks({ poolsOn, turnkeyOn, pill }: { poolsOn: boolean; t
         return (
           <li key={it.key} className="shrink-0">
             <Link href={it.href} aria-current={on ? 'page' : undefined} data-testid={`rail-${it.key}`}
-              className={on ? 'inline-flex items-center gap-[7px] px-4 py-2 min-h-11 rounded-full bg-ink text-white text-[14px] font-semibold whitespace-nowrap hover:bg-ink-2 hover:text-white' : `${pill} min-h-11 text-navy`}>
+              className={on ? 'inline-flex items-center gap-[7px] px-4 py-2 min-h-11 rounded-full bg-ink text-white text-[14px] font-semibold whitespace-nowrap hover:bg-ink-2 hover:text-white' : `${pill} min-h-11 text-ink`}>
               {it.label}{it.isNew && <NewBadge />}
             </Link>
           </li>

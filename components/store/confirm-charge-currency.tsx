@@ -26,7 +26,7 @@ export function ConfirmChargeCurrency({
     <>
       <button type="button" className={cn(buttonClass, className)} onClick={() => { setErr(null); setOpen(true); }}>{label}</button>
       {open && (
-        <div className="fixed inset-0 z-50 bg-navy/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="ccc-title">
+        <div className="fixed inset-0 z-50 bg-ink/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="ccc-title">
           <div className="card w-full max-w-md p-6">
             <h2 id="ccc-title" className="text-xl font-semibold">{title}</h2>
             <dl className="mt-4 space-y-2 text-[15px]">

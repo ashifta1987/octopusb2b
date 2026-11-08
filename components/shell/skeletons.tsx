@@ -3,7 +3,7 @@
  * `Bar` = one grey line; sizes follow the account layout (header, tabs, side menu, page title, cards, table rows).
  */
 const Bar = ({ w = '100%', h = 14, className = '' }: { w?: string | number; h?: number; className?: string }) => (
-  <span className={`block rounded-md bg-[#E6E9EF] animate-pulse ${className}`} style={{ width: w, height: h }} aria-hidden />
+  <span className={`block rounded-md bg-fill animate-pulse ${className}`} style={{ width: w, height: h }} aria-hidden />
 );
 
 export function PageSkeleton({ cards = 2, table = true }: { cards?: number; table?: boolean }) {

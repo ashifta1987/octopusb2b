@@ -18,12 +18,12 @@ export function VerifiedSuppliers({ blocks, suppliers, categories, showPlacehold
           {suppliers.map((s) => {
             const cats = categories[s.id] ?? [];
             return (
-              <li key={s.id} className="relative card rounded-[14px] p-[22px] flex flex-col gap-3.5 hover:border-blue focus-within:border-blue">
+              <li key={s.id} className="relative card rounded-[14px] p-[22px] flex flex-col gap-3.5 hover:border-coral-text focus-within:border-coral-text">
                 <div className="flex gap-3.5 items-center">
-                  <span className="w-[52px] h-[52px] shrink-0 rounded-xl bg-blue-soft text-[#1E4FA0] flex items-center justify-center mono text-[14px] font-semibold" aria-hidden>{s.country ?? '—'}</span>
+                  <span className="w-[52px] h-[52px] shrink-0 rounded-xl bg-tint text-coral-text flex items-center justify-center mono text-[14px] font-semibold" aria-hidden>{s.country ?? '—'}</span>
                   <div className="min-w-0 flex flex-col gap-1">
                     <h3 className="font-sans font-semibold text-[16px]">
-                      <Link href={`/search?q=${encodeURIComponent(s.code)}`} className="after:absolute after:inset-0 after:rounded-[14px] hover:text-blue">
+                      <Link href={`/search?q=${encodeURIComponent(s.code)}`} className="after:absolute after:inset-0 after:rounded-[14px] hover:text-coral-text">
                         Supplier {s.code}<span className="sr-only"> — view products</span>
                       </Link>
                     </h3>
@@ -31,10 +31,10 @@ export function VerifiedSuppliers({ blocks, suppliers, categories, showPlacehold
                   </div>
                 </div>
                 <ul className="flex flex-wrap gap-1.5" aria-label="Badges">
-                  {s.verified && <li className="rounded-full bg-[#DCFCE7] text-[#166534] text-[12px] font-semibold px-2 py-[5px] leading-none">Verified</li>}
-                  {s.supplier_type && <li className="rounded-full bg-[#DBEAFE] text-[#1E3A8A] text-[12px] font-semibold px-2 py-[5px] leading-none">{humanize(s.supplier_type)}</li>}
+                  {s.verified && <li className="rounded-full bg-ok-bg text-ok text-[12px] font-semibold px-2 py-[5px] leading-none">Verified</li>}
+                  {s.supplier_type && <li className="rounded-full bg-tint text-ink text-[12px] font-semibold px-2 py-[5px] leading-none">{humanize(s.supplier_type)}</li>}
                 </ul>
-                {cats.length > 0 && <p className="text-[14px] text-[#3B4556]">{cats.join(' · ')}</p>}
+                {cats.length > 0 && <p className="text-[14px] text-black">{cats.join(' · ')}</p>}
               </li>
             );
           })}
@@ -59,7 +59,7 @@ export function Testimonials({ blocks, showPlaceholders = false }: { blocks: Blo
     return (
       <section aria-labelledby="home-testimonials-h" className="max-w-[1280px] mx-auto px-4 sm:px-8 pt-[72px]">
         <SectionHead id="home-testimonials-h" title={block(blocks, 'home.testimonials.title', 'What buyers say')} />
-        <p className="bg-white border border-dashed border-line-2 rounded-[14px] p-[26px] text-[16px] leading-[1.55] text-[#3B4556]">
+        <p className="bg-white border border-dashed border-line-strong rounded-[14px] p-[26px] text-[16px] leading-[1.55] text-black">
           {block(blocks, 'home.testimonials.empty', 'Reviews from verified buyers will be published here.')}
         </p>
       </section>
@@ -73,8 +73,8 @@ export function Testimonials({ blocks, showPlaceholders = false }: { blocks: Blo
       <ul className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))]">
         {shown.map(([quote, who], i) => (
           <li key={i} aria-hidden={items.length === 1 && i > 0 ? true : undefined}>
-            <figure className="h-full bg-white border border-dashed border-line-2 rounded-[14px] p-[26px] flex flex-col gap-4">
-              <blockquote className="text-[17px] leading-[1.55] text-[#3B4556]">{quote}</blockquote>
+            <figure className="h-full bg-white border border-dashed border-line-strong rounded-[14px] p-[26px] flex flex-col gap-4">
+              <blockquote className="text-[17px] leading-[1.55] text-black">{quote}</blockquote>
               {who && <figcaption className="text-[14px] font-semibold">{who}</figcaption>}
             </figure>
           </li>
@@ -88,7 +88,7 @@ export function Testimonials({ blocks, showPlaceholders = false }: { blocks: Blo
 export function HomeCta({ blocks, aside }: { blocks: Blocks; aside?: React.ReactNode }) {
   return (
     <section aria-labelledby="home-cta-h" className={`max-w-[1280px] mx-auto px-4 sm:px-8 pt-[72px] pb-6 ${aside ? 'grid gap-4 lg:grid-cols-[1.6fr_1fr]' : ''}`}>
-      <div className="rounded-[20px] bg-navy text-white px-6 py-10 sm:p-12 flex flex-wrap gap-6 justify-between items-center">
+      <div className="rounded-[20px] bg-ink text-white px-6 py-10 sm:p-12 flex flex-wrap gap-6 justify-between items-center">
         <div className="flex-[1_1_420px] min-w-0 flex flex-col gap-2.5">
           <h2 id="home-cta-h" className="!text-white text-[28px] sm:text-[34px] font-extrabold leading-[1.1]">{block(blocks, 'home.cta.title')}</h2>
           <p className="text-[16px] sm:text-[18px] text-white">{block(blocks, 'home.cta.body')}</p>

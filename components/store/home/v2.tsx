@@ -25,13 +25,13 @@ const Arrow = () => <span aria-hidden>→</span>;
 export function Eyebrow({ n, children, badge }: { n?: number; children: React.ReactNode; badge?: string }) {
   return (
     <div className="flex items-center gap-2.5">
-      {n != null && <span className="inline-flex items-center justify-center w-7 h-7 rounded-[7px] bg-navy text-white text-[13px] font-bold">{n}</span>}
-      <span className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-blue">{children}</span>
-      {badge && <span className="mono text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#F59E0B] text-[#3B2500]">{badge}</span>}
+      {n != null && <span className="inline-flex items-center justify-center w-7 h-7 rounded-[7px] bg-ink text-white text-[13px] font-bold">{n}</span>}
+      <span className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-coral-text">{children}</span>
+      {badge && <span className="mono text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-new-bg text-ink">{badge}</span>}
     </div>
   );
 }
-function Check({ className = 'text-[#16A34A] bg-[#DCFCE7]' }: { className?: string }) {
+function Check({ className = 'text-ok bg-ok-bg' }: { className?: string }) {
   return (
     <span className={`inline-flex items-center justify-center w-[18px] h-[18px] rounded-full shrink-0 ${className}`} aria-hidden>
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5"><path d="m5 12 5 5 9-10" /></svg>
@@ -39,19 +39,19 @@ function Check({ className = 'text-[#16A34A] bg-[#DCFCE7]' }: { className?: stri
   );
 }
 function Ticks({ items }: { items: string[] }) {
-  return <ul className="flex flex-wrap gap-x-5 gap-y-1 text-[13.5px] text-[#4B5565]">{items.filter(Boolean).map((t) => <li key={t}>✓ {t}</li>)}</ul>;
+  return <ul className="flex flex-wrap gap-x-5 gap-y-1 text-[13.5px] text-muted">{items.filter(Boolean).map((t) => <li key={t}>✓ {t}</li>)}</ul>;
 }
 /** "**Bold part** rest" → bold lead-in + normal text */
 function Lead({ text }: { text: string }) {
   const m = /^\*\*(.+?)\*\*(.*)$/.exec(text);
-  return m ? <><b className="font-semibold text-navy">{m[1]}</b>{m[2]}</> : <>{text}</>;
+  return m ? <><b className="font-semibold text-ink">{m[1]}</b>{m[2]}</> : <>{text}</>;
 }
 function NumberedList({ items }: { items: string[] }) {
   return (
     <ol className="space-y-3">
       {items.filter(Boolean).map((t, i) => (
-        <li key={t} className="flex items-center gap-3 text-[15.5px] text-[#3B4556]">
-          <span className="inline-flex items-center justify-center w-7 h-7 rounded-[7px] bg-navy text-white text-[13px] font-bold shrink-0">{i + 1}</span>
+        <li key={t} className="flex items-center gap-3 text-[15.5px] text-black">
+          <span className="inline-flex items-center justify-center w-7 h-7 rounded-[7px] bg-ink text-white text-[13px] font-bold shrink-0">{i + 1}</span>
           <span><Lead text={t} /></span>
         </li>
       ))}
@@ -62,11 +62,11 @@ function SectionTitle({ id, eyebrow, title, body, href, link }: { id: string; ey
   return (
     <div className="flex flex-wrap justify-between items-end gap-4 mb-7">
       <div className="max-w-[640px]">
-        <div className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-blue">{eyebrow}</div>
+        <div className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-coral-text">{eyebrow}</div>
         <h2 id={id} className="text-[28px] sm:text-[34px] font-extrabold leading-[1.12] tracking-[-0.02em] mt-2">{title}</h2>
-        {body && <p className="text-[16.5px] text-[#3B4556] mt-3 leading-relaxed">{body}</p>}
+        {body && <p className="text-[16.5px] text-black mt-3 leading-relaxed">{body}</p>}
       </div>
-      {href && link && <Link href={href} className="inline-flex items-center gap-1 min-h-11 font-semibold text-blue text-[15px]">{link} <Arrow /></Link>}
+      {href && link && <Link href={href} className="inline-flex items-center gap-1 min-h-11 font-semibold text-coral-text text-[15px]">{link} <Arrow /></Link>}
     </div>
   );
 }
@@ -75,9 +75,9 @@ function StepCards({ steps }: { steps: string[][] }) {
     <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {steps.map(([t, b], i) => (
         <li key={t} className="card rounded-[14px] p-5 sm:p-6">
-          <span className="inline-flex items-center justify-center w-7 h-7 rounded-[7px] bg-blue-fill text-white text-[13px] font-bold">{i + 1}</span>
+          <span className="inline-flex items-center justify-center w-7 h-7 rounded-[7px] bg-coral text-white text-[13px] font-bold">{i + 1}</span>
           <h3 className="text-[17px] font-semibold mt-4">{t}</h3>
-          <p className="text-[14.5px] text-[#5B6575] mt-2 leading-relaxed">{b}</p>
+          <p className="text-[14.5px] text-muted mt-2 leading-relaxed">{b}</p>
         </li>
       ))}
     </ol>
@@ -93,21 +93,21 @@ const steps = (blocks: Blocks, key: string, fallback: string[]) => fallback.map(
 export function SourcingHero({ blocks, defaultCountry, fee }: { blocks: Blocks; defaultCountry: string; fee: { cents: number; currency: string } | null }) {
   const countries = Object.entries(COUNTRY_NAMES).sort((a, b) => a[1].localeCompare(b[1]));
   return (
-    <section id="sourcing" aria-labelledby="home-hero-h" className="bg-gradient-to-b from-white to-[#F3F6FB] border-b border-line">
+    <section id="sourcing" aria-labelledby="home-hero-h" className="bg-gradient-to-b from-white to-tint-2 border-b border-line">
       <div className={`${W} py-12 lg:py-16 grid gap-10 lg:grid-cols-[1.05fr_1fr] items-center`}>
         <div className="min-w-0">
           <Eyebrow n={1}>{block(blocks, 'home2.sourcing.eyebrow', 'Product sourcing from China')}</Eyebrow>
           <h1 id="home-hero-h" className="mt-4 text-[38px] sm:text-[52px] font-extrabold leading-[1.04] tracking-[-0.03em]">
-            {block(blocks, 'home2.sourcing.title', 'Tell us the product.')} <span className="text-blue">{block(blocks, 'home2.sourcing.title_em', 'We find the factory.')}</span>
+            {block(blocks, 'home2.sourcing.title', 'Tell us the product.')} <span className="text-coral-text">{block(blocks, 'home2.sourcing.title_em', 'We find the factory.')}</span>
           </h1>
-          <p className="mt-5 text-[17px] text-[#3B4556] leading-relaxed max-w-[600px]">
+          <p className="mt-5 text-[17px] text-black leading-relaxed max-w-[600px]">
             {block(blocks, 'home2.sourcing.body', 'Our sourcing team in four China hubs matches you with verified factories, gets you competing quotes within 24 hours, inspects the goods and ships them to your door in 220+ countries. One contract, one invoice, paid through escrow.')}
           </p>
           <div className="mt-6"><NumberedList items={copy(blocks, 'home2.sourcing.steps', '**Send one request**: product, quantity, destination|**Compare quotes** from matched, verified suppliers|**We inspect and ship**; you pay from escrow on approval')} /></div>
           <div className="mt-5"><Ticks items={copy(blocks, 'home2.sourcing.ticks', 'Verified factories only|QC photos before shipping|Samples on request')} /></div>
         </div>
         <div className="relative min-w-0">
-          <div className="rounded-[18px] overflow-hidden border border-[#D6E2F5] bg-[#C9D1DF]">
+          <div className="rounded-[18px] overflow-hidden border border-tint bg-on-ink">
             <Illustration src="/home/sourcing.png" alt="" w={574} h={303} />
             <div className="h-14" aria-hidden />
           </div>
@@ -116,8 +116,8 @@ export function SourcingHero({ blocks, defaultCountry, fee }: { blocks: Blocks; 
               <h2 id="home-quote-h" className="text-[17px] font-semibold">{block(blocks, 'home2.quote.title', 'Get quotes in 24 h')}</h2>
               {/* ADDON-36 (H1): the real RFQ fee from the fee settings — "Free" only when it is 0 */}
               {fee && fee.cents > 0
-                ? <span className="text-[12.5px] font-semibold text-[#3B4556]" data-testid="quote-fee">RFQ fee {money(fee.cents, fee.currency)}</span>
-                : <span className="mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D]" data-testid="quote-fee">Free</span>}
+                ? <span className="text-[12.5px] font-semibold text-black" data-testid="quote-fee">RFQ fee {money(fee.cents, fee.currency)}</span>
+                : <span className="mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-ok-bg text-ok" data-testid="quote-fee">Free</span>}
             </div>
             <label className="sr-only" htmlFor="hq-title">Product</label>
             <input id="hq-title" name="title" required maxLength={200} className="input mt-3" placeholder={block(blocks, 'home2.quote.placeholder', 'Product, e.g. handheld fan 4000mAh')} />
@@ -130,7 +130,7 @@ export function SourcingHero({ blocks, defaultCountry, fee }: { blocks: Blocks; 
               </select>
             </div>
             <button type="submit" className="btn btn-primary w-full mt-3 min-h-[48px] text-[16px]">{block(blocks, 'home2.quote.button', 'Request quotes')} <Arrow /></button>
-            <p className="text-center text-[13px] text-[#5B6575] mt-3">Or <Link href="/products" className="font-semibold text-blue">browse ready-to-order products</Link></p>
+            <p className="text-center text-[13px] text-muted mt-3">Or <Link href="/products" className="font-semibold text-coral-text">browse ready-to-order products</Link></p>
           </form>
         </div>
       </div>
@@ -156,11 +156,11 @@ export function ServiceCards({ blocks, poolsOn, turnkeyOn }: { blocks: Blocks; p
           const first = i === 0;
           return (
             <li key={c.k}>
-              <Link href={c.href} className={`group h-full rounded-[14px] p-5 flex flex-col gap-1.5 border ${first ? 'bg-navy border-navy text-white hover:text-white' : 'bg-white border-line hover:border-blue'}`}>
-                <span className={`inline-flex items-center justify-center w-7 h-7 rounded-[7px] text-[13px] font-bold ${first ? 'bg-blue-fill text-white' : 'bg-navy text-white'}`}>{i + 1}</span>
-                <span className={`mt-2 text-[17px] font-semibold flex items-center gap-2 ${first ? 'text-white' : 'text-navy'}`}>{t}{'isNew' in c && c.isNew && <span className="mono text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-[#F59E0B] text-[#3B2500]">New</span>}</span>
-                <span className={`text-[14px] leading-snug ${first ? 'text-[#C9D0E8]' : 'text-[#5B6575]'}`}>{b}</span>
-                <span className={`mt-auto pt-1 text-[14px] font-semibold ${first ? 'text-[#8FB6FF]' : 'text-blue'}`}>{cta} <Arrow /></span>
+              <Link href={c.href} className={`group h-full rounded-[14px] p-5 flex flex-col gap-1.5 border ${first ? 'bg-ink border-ink text-white hover:text-white' : 'bg-white border-line hover:border-coral-text'}`}>
+                <span className={`inline-flex items-center justify-center w-7 h-7 rounded-[7px] text-[13px] font-bold ${first ? 'bg-coral text-white' : 'bg-ink text-white'}`}>{i + 1}</span>
+                <span className={`mt-2 text-[17px] font-semibold flex items-center gap-2 ${first ? 'text-white' : 'text-ink'}`}>{t}{'isNew' in c && c.isNew && <span className="mono text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-new-bg text-ink">New</span>}</span>
+                <span className={`text-[14px] leading-snug ${first ? 'text-on-ink' : 'text-muted'}`}>{b}</span>
+                <span className={`mt-auto pt-1 text-[14px] font-semibold ${first ? 'text-on-ink-link' : 'text-coral-text'}`}>{cta} <Arrow /></span>
               </Link>
             </li>
           );
@@ -173,7 +173,7 @@ export function ServiceCards({ blocks, poolsOn, turnkeyOn }: { blocks: Blocks; p
 /* ───────── how sourcing works + ready to order ───────── */
 export function SourcingSteps({ blocks, products }: { blocks: Blocks; products: CardProduct[] }) {
   return (
-    <section aria-labelledby="home-how-sourcing-h" className="bg-surface border-b border-line">
+    <section aria-labelledby="home-how-sourcing-h" className="bg-pearl border-b border-line">
       <div className={`${W} py-14`}>
         <SectionTitle id="home-how-sourcing-h" eyebrow={block(blocks, 'home2.how_sourcing.eyebrow', 'Product sourcing')} title={block(blocks, 'home2.how_sourcing.title', 'How sourcing works')}
           body={block(blocks, 'home2.how_sourcing.body', 'From request to delivered goods, with one Octopus contact the whole way.')} href="/request/sourcing" link={block(blocks, 'home2.how_sourcing.link', 'Start a sourcing request')} />
@@ -198,19 +198,19 @@ function ReadyCard({ p }: { p: CardProduct }) {
   const tag = p.octopus_dropship ? 'Dropship' : p.ready_to_ship ? '3PL stock' : p.tiers.length > 1 ? 'Bulk tier' : null;
   const price = p.tiers.length ? Math.min(...p.tiers.map((t) => t.unit_price_cents)) : p.min_price_cents;
   return (
-    <Link href={`/p/${p.slug}`} className="group card rounded-[14px] overflow-hidden flex flex-col h-full hover:border-blue">
+    <Link href={`/p/${p.slug}`} className="group card rounded-[14px] overflow-hidden flex flex-col h-full hover:border-coral-text">
       {p.image_url
         // eslint-disable-next-line @next/next/no-img-element
-        ? <img src={p.image_url} alt={p.title} width={400} height={400} loading="lazy" decoding="async" className="aspect-square w-full object-cover bg-surface" />
-        : <div className="aspect-square bg-surface" aria-hidden />}
+        ? <img src={p.image_url} alt={p.title} width={400} height={400} loading="lazy" decoding="async" className="aspect-square w-full object-cover bg-pearl" />
+        : <div className="aspect-square bg-pearl" aria-hidden />}
       <div className="p-4 flex flex-col gap-1.5 flex-1">
         <div className="flex items-center justify-between gap-2">
-          {tag ? <span className="mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#E6EFFC] text-[#1E4F9C]">{tag}</span> : <span />}
-          {p.supplier?.country && <span className="mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-surface border border-line text-[#4B5565]">{p.supplier.country}</span>}
+          {tag ? <span className="mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-tint text-coral-text">{tag}</span> : <span />}
+          {p.supplier?.country && <span className="mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-pearl border border-line text-muted">{p.supplier.country}</span>}
         </div>
-        <h3 className="text-[15px] font-semibold leading-snug line-clamp-2 group-hover:text-blue">{p.title}</h3>
-        {price != null && <div className="text-[13px] text-[#5B6575]"><span className="mono text-[10.5px] uppercase">From</span> <b className="text-[17px] text-navy font-bold">{money(price, p.currency)}</b> / {unitOne(p.unit)}</div>}
-        <div className="mono text-[10.5px] uppercase tracking-[.04em] text-[#5B6575] mt-auto">MOQ {p.moq.toLocaleString('en-US')} {p.unit}{p.supplier?.verified ? ' · Verified factory' : ''}</div>
+        <h3 className="text-[15px] font-semibold leading-snug line-clamp-2 group-hover:text-coral-text">{p.title}</h3>
+        {price != null && <div className="text-[13px] text-muted"><span className="mono text-[10.5px] uppercase">From</span> <b className="text-[17px] text-ink font-bold">{money(price, p.currency)}</b> / {unitOne(p.unit)}</div>}
+        <div className="mono text-[10.5px] uppercase tracking-[.04em] text-muted mt-auto">MOQ {p.moq.toLocaleString('en-US')} {p.unit}{p.supplier?.verified ? ' · Verified factory' : ''}</div>
       </div>
     </Link>
   );
@@ -226,9 +226,9 @@ export function Dropshipping({ blocks, countries }: { blocks: Blocks; countries?
           <div className="min-w-0">
             <Eyebrow n={3}>{block(blocks, 'home2.drop.eyebrow', 'Dropshipping from China')}</Eyebrow>
             <h2 id="home-drop-h" className="mt-3 text-[32px] sm:text-[40px] font-extrabold leading-[1.08] tracking-[-0.02em]">
-              {block(blocks, 'home2.drop.title_a', 'You sell.')} <span className="text-blue">{block(blocks, 'home2.drop.title_em', 'We ship')}</span> {block(blocks, 'home2.drop.title_b', 'to your customer.')}
+              {block(blocks, 'home2.drop.title_a', 'You sell.')} <span className="text-coral-text">{block(blocks, 'home2.drop.title_em', 'We ship')}</span> {block(blocks, 'home2.drop.title_b', 'to your customer.')}
             </h2>
-            <p className="mt-4 text-[17px] text-[#3B4556] leading-relaxed">
+            <p className="mt-4 text-[17px] text-black leading-relaxed">
               {block(blocks, 'home2.drop.body', `List any product from our verified factories in your shop. When your customer orders, we pack it in China under your brand and deliver it to their door in ${where}. You never hold stock.`)}
             </p>
             <div className="mt-6"><NumberedList items={copy(blocks, 'home2.drop.steps', '**Pick products** and set your own selling price|**Your customer orders** in your shop, and the order lands here|**We pack and ship** with your slip and tracking')} /></div>
@@ -241,7 +241,7 @@ export function Dropshipping({ blocks, countries }: { blocks: Blocks; countries?
           <Illustration src="/home/dropshipping.png" alt={block(blocks, 'home2.drop.alt', 'A parcel packed under your brand travels from the factory to your customer’s door')} w={630} h={390} />
         </div>
       </section>
-      <section id="how-dropshipping" aria-labelledby="home-how-drop-h" className="bg-surface border-y border-line">
+      <section id="how-dropshipping" aria-labelledby="home-how-drop-h" className="bg-pearl border-y border-line">
         <div className={`${W} py-14`}>
           <SectionTitle id="home-how-drop-h" eyebrow={block(blocks, 'home2.how_drop.eyebrow', 'Dropshipping')} title={block(blocks, 'home2.how_drop.title', 'How dropshipping works')}
             body={block(blocks, 'home2.how_drop.body', 'Four steps from first listing to a delivered parcel. You see the full cost before you confirm each order.')} href="/request/dropship" link={block(blocks, 'home2.how_drop.link', 'Open a dropship account')} />
@@ -267,11 +267,11 @@ export function Pools({ blocks, pools, depositPct }: { blocks: Blocks; pools: Po
           <div className="min-w-0">
             <Eyebrow n={4}>{block(blocks, 'home2.pools.eyebrow', 'MOQ pools · Group buying')}</Eyebrow>
             <h2 id="home-pools-h" className="mt-3 text-[32px] sm:text-[38px] font-extrabold leading-[1.08] tracking-[-0.02em]">{block(blocks, 'home2.pools.title', 'Factory minimum too big? Share it.')}</h2>
-            <p className="mt-4 text-[17px] text-[#3B4556] leading-relaxed">{block(blocks, 'home2.pools.body', "Join other buyers on the same product until the pool reaches the factory's minimum order. Everyone pays the bulk price, and each buyer's share ships separately.")}</p>
-            <ol className="mt-7 pt-5 border-t-2 border-[#D6E2F5] grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {s.map((t, i) => <li key={t}><div className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-blue">Step {i + 1}</div><div className="text-[15px] font-semibold mt-1.5 leading-snug">{t}</div></li>)}
+            <p className="mt-4 text-[17px] text-black leading-relaxed">{block(blocks, 'home2.pools.body', "Join other buyers on the same product until the pool reaches the factory's minimum order. Everyone pays the bulk price, and each buyer's share ships separately.")}</p>
+            <ol className="mt-7 pt-5 border-t-2 border-tint grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {s.map((t, i) => <li key={t}><div className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-coral-text">Step {i + 1}</div><div className="text-[15px] font-semibold mt-1.5 leading-snug">{t}</div></li>)}
             </ol>
-            <p className="mt-5 text-[14px] text-[#5B6575]">{block(blocks, 'home2.pools.note', "If a pool doesn't fill before it closes, your deposit goes back to your wallet.")}</p>
+            <p className="mt-5 text-[14px] text-muted">{block(blocks, 'home2.pools.note', "If a pool doesn't fill before it closes, your deposit goes back to your wallet.")}</p>
           </div>
           <Illustration src="/home/pools.png" alt={block(blocks, 'home2.pools.alt', 'Three buyers sharing one factory pallet')} w={571} h={356} />
         </div>
@@ -279,7 +279,7 @@ export function Pools({ blocks, pools, depositPct }: { blocks: Blocks; pools: Po
           <div className="mt-12" data-testid="home-open-pools">
             <div className="flex flex-wrap justify-between items-end gap-4 mb-4">
               <h3 className="text-[22px] font-semibold">{block(blocks, 'home2.pools.open', 'Open pools')}</h3>
-              <Link href="/pools" className="inline-flex items-center gap-1 min-h-11 font-semibold text-blue text-[15px]">{block(blocks, 'home2.pools.link', 'See all open pools')} <Arrow /></Link>
+              <Link href="/pools" className="inline-flex items-center gap-1 min-h-11 font-semibold text-coral-text text-[15px]">{block(blocks, 'home2.pools.link', 'See all open pools')} <Arrow /></Link>
             </div>
             <ul className="grid gap-4 md:grid-cols-3">{pools.map((p) => <li key={p.id}><MiniPool p={p} /></li>)}</ul>
           </div>
@@ -293,18 +293,18 @@ function MiniPool({ p }: { p: PoolCard }) {
   const pct = p.target_qty ? Math.min(100, Math.round((p.filled_qty / p.target_qty) * 100)) : 0;
   const price = p.pool_price_minor ?? p.base_price_minor;
   return (
-    <Link href={`/pool/${p.code}`} className="card rounded-[14px] p-4 block hover:border-blue">
+    <Link href={`/pool/${p.code}`} className="card rounded-[14px] p-4 block hover:border-coral-text">
       <div className="text-[15.5px] font-semibold line-clamp-1">{p.product.title}</div>
       <div className="flex justify-between items-baseline mt-2 text-[12.5px]">
-        <span className="mono uppercase tracking-[.06em] text-[#5B6575]"><TimeLeft deadline={p.deadline_at} /></span>
-        <span className="text-[#3B4556]">{pct} % filled</span>
+        <span className="mono uppercase tracking-[.06em] text-muted"><TimeLeft deadline={p.deadline_at} /></span>
+        <span className="text-black">{pct} % filled</span>
       </div>
       <div className="h-1.5 rounded-full bg-line mt-1.5 overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Filled">
-        <div className="h-full rounded-full bg-gradient-to-r from-blue to-[#5B9BFF]" style={{ width: `${pct}%` }} />
+        <div className="h-full rounded-full bg-gradient-to-r from-coral-text to-coral" style={{ width: `${pct}%` }} />
       </div>
       <div className="flex justify-between items-center mt-3">
         {price != null ? <b className="text-[15px]">{money(price, p.currency)} / {unitOne(p.product.unit)}</b> : <span />}
-        {p.saving_pct > 0 && <span className="mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D]">Save {p.saving_pct} %</span>}
+        {p.saving_pct > 0 && <span className="mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-ok-bg text-ok">Save {p.saving_pct} %</span>}
       </div>
     </Link>
   );
@@ -313,16 +313,16 @@ function MiniPool({ p }: { p: PoolCard }) {
 /* ───────── 4 · 3PL warehousing ───────── */
 export function Warehousing({ blocks }: { blocks: Blocks }) {
   return (
-    <section id="warehousing" aria-labelledby="home-3pl-h" className="bg-surface border-t border-line">
+    <section id="warehousing" aria-labelledby="home-3pl-h" className="bg-pearl border-t border-line">
       <div className={`${W} py-14 lg:py-16 grid gap-10 lg:grid-cols-[1fr_1fr] items-center`}>
         <Illustration src="/home/warehousing.png" alt={block(blocks, 'home2.3pl.alt', 'Warehouse shelves with stock stored by SKU')} w={585} h={365} className="order-2 lg:order-1" />
         <div className="min-w-0 order-1 lg:order-2">
           <Eyebrow n={5}>{block(blocks, 'home2.3pl.eyebrow', '3PL warehousing')}</Eyebrow>
           <h2 id="home-3pl-h" className="mt-3 text-[32px] sm:text-[38px] font-extrabold leading-[1.08] tracking-[-0.02em]">{block(blocks, 'home2.3pl.title', 'Your stock, stored near your buyers')}</h2>
-          <p className="mt-4 text-[17px] text-[#3B4556] leading-relaxed">{block(blocks, 'home2.3pl.body', 'Ship your bulk order into our network once. We receive it, store it by SKU and send out each order as it comes in, so your buyers get delivery in days, not weeks.')}</p>
+          <p className="mt-4 text-[17px] text-black leading-relaxed">{block(blocks, 'home2.3pl.body', 'Ship your bulk order into our network once. We receive it, store it by SKU and send out each order as it comes in, so your buyers get delivery in days, not weeks.')}</p>
           <ul className="mt-6 space-y-2.5">
             {copy(blocks, 'home2.3pl.list', '**Receive and inspect**: counted and checked against your order on arrival|**Store by SKU**: live stock levels in your account|**Pick, pack and ship**: the same or next working day|**Returns handled**: restocked or reported, your choice').map((t) => (
-              <li key={t} className="flex items-start gap-3 text-[15.5px] text-[#3B4556]"><span className="mt-[3px]"><Check /></span><span><Lead text={t} /></span></li>
+              <li key={t} className="flex items-start gap-3 text-[15.5px] text-black"><span className="mt-[3px]"><Check /></span><span><Lead text={t} /></span></li>
             ))}
           </ul>
           <div className="mt-7 flex flex-wrap gap-3">
@@ -341,13 +341,13 @@ export function ShippingBand({ blocks, stats }: { blocks: Blocks; stats: Shippin
   const labels = copy(blocks, 'home2.ship.labels', 'Countries|Hubs|Parcels / day|Service lines');
   const tiles = [stats.countries, stats.hubs, stats.parcels_daily, stats.service_lines].map((v, i) => ({ v, l: labels[i] })).filter((t) => t.v);
   return (
-    <section id="global-shipping" aria-labelledby="home-ship-h" className="bg-navy text-white">
+    <section id="global-shipping" aria-labelledby="home-ship-h" className="bg-ink text-white">
       <div className={`${W} py-12 grid gap-8 lg:grid-cols-[1fr_auto] items-center`}>
         <div>
-          <span className="mono text-[11px] font-semibold uppercase tracking-[.08em] px-3 py-1 rounded-full border border-white/25 text-[#C9D0E8]">{block(blocks, 'home2.ship.eyebrow', 'Global shipping')}</span>
+          <span className="mono text-[11px] font-semibold uppercase tracking-[.08em] px-3 py-1 rounded-full border border-white/25 text-on-ink">{block(blocks, 'home2.ship.eyebrow', 'Global shipping')}</span>
           <h2 id="home-ship-h" className="!text-white mt-4 text-[26px] sm:text-[32px] font-extrabold leading-[1.15]">
             {stats.countries
-              ? <>Delivered to <span className="text-[#5B9BFF]">{stats.countries} countries</span>, with customs paperwork done for you.</>
+              ? <>Delivered to <span className="text-on-ink-link">{stats.countries} countries</span>, with customs paperwork done for you.</>
               : <>{block(blocks, 'home2.ship.title', 'Delivered worldwide, with customs paperwork done for you.')}</>}
           </h2>
         </div>
@@ -356,7 +356,7 @@ export function ShippingBand({ blocks, stats }: { blocks: Blocks; stats: Shippin
             {tiles.map((t) => (
               <li key={t.l} className="rounded-[12px] border border-white/15 bg-white/[.06] px-4 py-3.5 min-w-[140px]">
                 <div className="text-[24px] font-bold">{t.v}</div>
-                <div className="mono text-[10.5px] uppercase tracking-[.08em] text-[#A9B2D0] mt-1">{t.l}</div>
+                <div className="mono text-[10.5px] uppercase tracking-[.08em] text-on-ink mt-1">{t.l}</div>
               </li>
             ))}
           </ul>
@@ -384,23 +384,23 @@ export function Turnkey({ blocks, projects, packages }: { blocks: Blocks; projec
       <div className={`${W} py-14 lg:py-16`}>
         <Eyebrow n={6} badge="New">{block(blocks, 'home2.tk.eyebrow', 'Turnkey Projects')}</Eyebrow>
         <h2 id="home-tk-h" className="mt-3 text-[32px] sm:text-[38px] font-extrabold leading-[1.1] tracking-[-0.02em] max-w-[720px]">{block(blocks, 'home2.tk.title', 'Open a complete business, delivered in one container')}</h2>
-        <p className="mt-4 text-[17px] text-[#3B4556] leading-relaxed max-w-[780px]">{block(blocks, 'home2.tk.body', 'A Turnkey Project is everything you need to open a specific business, such as a gym, a laundromat or a water-bottling plant, bought as one package. We source each item from the Chinese cities that specialise in it, inspect it, and ship it together in one container to your door. You get one price, one shipment and one team to talk to.')}</p>
+        <p className="mt-4 text-[17px] text-black leading-relaxed max-w-[780px]">{block(blocks, 'home2.tk.body', 'A Turnkey Project is everything you need to open a specific business, such as a gym, a laundromat or a water-bottling plant, bought as one package. We source each item from the Chinese cities that specialise in it, inspect it, and ship it together in one container to your door. You get one price, one shipment and one team to talk to.')}</p>
         <div className="mt-8 grid gap-4 lg:grid-cols-3">
           {cols.map(([k, t, f], ci) => {
             const items = copy(blocks, `home2.tk.${k}`, f);
             return (
-              <div key={k} className={`rounded-[14px] border p-6 ${ci === 0 ? 'bg-[#F5F9FF] border-[#D6E2F5]' : 'bg-white border-line'}`}>
-                <div className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-blue">{block(blocks, `home2.tk.${k}.title`, t)}</div>
+              <div key={k} className={`rounded-[14px] border p-6 ${ci === 0 ? 'bg-tint-2 border-tint' : 'bg-white border-line'}`}>
+                <div className="mono text-[11px] font-semibold uppercase tracking-[.08em] text-coral-text">{block(blocks, `home2.tk.${k}.title`, t)}</div>
                 {k === 'how' ? (
                   <ol className="mt-4 space-y-3.5">
                     {items.map((x, i) => { const [a, ...rest] = x.split(': '); return (
-                      <li key={x} className="flex gap-3"><span className="inline-flex items-center justify-center w-7 h-7 rounded-[7px] bg-navy text-white text-[13px] font-bold shrink-0">{i + 1}</span>
-                        <span><b className="block text-[15.5px] font-semibold">{a}</b>{rest.length > 0 && <span className="block text-[13.5px] text-[#5B6575] leading-snug">{rest.join(': ')}</span>}</span></li>); })}
+                      <li key={x} className="flex gap-3"><span className="inline-flex items-center justify-center w-7 h-7 rounded-[7px] bg-ink text-white text-[13px] font-bold shrink-0">{i + 1}</span>
+                        <span><b className="block text-[15.5px] font-semibold">{a}</b>{rest.length > 0 && <span className="block text-[13.5px] text-muted leading-snug">{rest.join(': ')}</span>}</span></li>); })}
                   </ol>
                 ) : (
-                  <ul className="mt-4 space-y-2.5">{items.map((x) => <li key={x} className="flex items-start gap-3 text-[15.5px] text-[#3B4556]"><span className="mt-[3px]"><Check /></span>{x}</li>)}</ul>
+                  <ul className="mt-4 space-y-2.5">{items.map((x) => <li key={x} className="flex items-start gap-3 text-[15.5px] text-black"><span className="mt-[3px]"><Check /></span>{x}</li>)}</ul>
                 )}
-                {k === 'who' && <p className="mt-5 pt-4 border-t border-line text-[13.5px] text-[#5B6575]">{block(blocks, 'home2.tk.note', 'Prices are equipment estimates, FOB China. Rent, civil works and local licences are not included.')}</p>}
+                {k === 'who' && <p className="mt-5 pt-4 border-t border-line text-[13.5px] text-muted">{block(blocks, 'home2.tk.note', 'Prices are equipment estimates, FOB China. Rent, civil works and local licences are not included.')}</p>}
               </div>
             );
           })}
@@ -408,24 +408,24 @@ export function Turnkey({ blocks, projects, packages }: { blocks: Blocks; projec
         <div className="mt-12 flex flex-wrap justify-between items-end gap-4 mb-4">
           <div>
             <h3 className="text-[22px] font-semibold">{block(blocks, 'home2.tk.five', `Start with these ${five.length === 5 ? 'five' : five.length}`)}</h3>
-            <p className="text-[14.5px] text-[#5B6575] mt-1">{block(blocks, 'home2.tk.five_sub', 'The most requested projects, with live pricing')}</p>
+            <p className="text-[14.5px] text-muted mt-1">{block(blocks, 'home2.tk.five_sub', 'The most requested projects, with live pricing')}</p>
           </div>
-          <Link href="/turnkey/atlas" className="inline-flex items-center gap-1 min-h-11 font-semibold text-blue text-[15px]">See all {projects.length} businesses <Arrow /></Link>
+          <Link href="/turnkey/atlas" className="inline-flex items-center gap-1 min-h-11 font-semibold text-coral-text text-[15px]">See all {projects.length} businesses <Arrow /></Link>
         </div>
         <ul className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {five.map((p) => { const f = from(p); const pb = payback(p); return (
             <li key={p.project_id}>
-              <Link href={`/turnkey/${p.project_id}`} className="group card rounded-[14px] overflow-hidden flex flex-col h-full hover:border-blue" data-testid="home-turnkey-card">
+              <Link href={`/turnkey/${p.project_id}`} className="group card rounded-[14px] overflow-hidden flex flex-col h-full hover:border-coral-text" data-testid="home-turnkey-card">
                 <TkImage p={p} label={p.title} className="h-[140px]" />
                 <div className="p-4 flex flex-col gap-1.5 flex-1">
                   {p.status === 'live'
-                    ? <span className="self-start mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D]">Live</span>
-                    : <span className="self-start mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#E6EFFC] text-[#1E4F9C]">Register interest</span>}
-                  <h4 className="text-[16px] font-semibold leading-snug group-hover:text-blue">{p.title}</h4>
-                  {p.short_reason && <p className="text-[13.5px] text-[#5B6575] leading-snug line-clamp-2">{p.short_reason}</p>}
+                    ? <span className="self-start mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-ok-bg text-ok">Live</span>
+                    : <span className="self-start mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-tint text-coral-text">Register interest</span>}
+                  <h4 className="text-[16px] font-semibold leading-snug group-hover:text-coral-text">{p.title}</h4>
+                  {p.short_reason && <p className="text-[13.5px] text-muted leading-snug line-clamp-2">{p.short_reason}</p>}
                   <div className="mt-auto pt-2 border-t border-line">
-                    {f != null && <div className="text-[13px] text-[#5B6575]"><span className="mono text-[10.5px] uppercase">From</span> <b className="text-[17px] text-navy font-bold">{kUsd(f)}</b></div>}
-                    {pb && <div className="text-[13px] text-[#5B6575]">{pb}</div>}
+                    {f != null && <div className="text-[13px] text-muted"><span className="mono text-[10.5px] uppercase">From</span> <b className="text-[17px] text-ink font-bold">{kUsd(f)}</b></div>}
+                    {pb && <div className="text-[13px] text-muted">{pb}</div>}
                   </div>
                 </div>
               </Link>
@@ -433,7 +433,7 @@ export function Turnkey({ blocks, projects, packages }: { blocks: Blocks; projec
         </ul>
         {counts.length > 0 && (
           <div className="mt-5 flex flex-wrap items-center gap-2">
-            <span className="mono text-[11px] uppercase tracking-[.08em] text-[#5B6575] mr-1">Browse by type</span>
+            <span className="mono text-[11px] uppercase tracking-[.08em] text-muted mr-1">Browse by type</span>
             {counts.map(({ c, n }) => <Link key={c} href={`/turnkey/atlas?category=${c}`} className={`inline-flex items-center min-h-11 mono text-[10.5px] font-bold uppercase px-3 rounded-full ${CATEGORY_PILL_CLASS[c]}`}>{CATEGORY_PILL[c]} · {n}</Link>)}
           </div>
         )}
@@ -454,14 +454,14 @@ export function StatsAndServices({ blocks, tiles }: { blocks: Blocks; tiles: { l
     ['api', '/developers', 'API and integrations|Connect your shop or ERP.'],
   ] as const;
   return (
-    <section aria-labelledby="home-also-h" className="bg-surface border-y border-line">
+    <section aria-labelledby="home-also-h" className="bg-pearl border-y border-line">
       <div className={`${W} py-12`}>
         {shown.length > 0 && (
           <ul className="grid grid-cols-2 lg:grid-cols-4 rounded-[14px] border border-line bg-white overflow-hidden mb-10" data-testid="home-stats">
             {shown.map((t, i) => (
               <li key={t.label} className={`px-5 py-5 ${i ? 'border-l border-line' : ''}`}>
                 <div className="text-[24px] font-bold">{t.value}</div>
-                <div className="mono text-[10.5px] uppercase tracking-[.08em] text-[#5B6575] mt-1">{t.label}</div>
+                <div className="mono text-[10.5px] uppercase tracking-[.08em] text-muted mt-1">{t.label}</div>
               </li>
             ))}
           </ul>
@@ -470,7 +470,7 @@ export function StatsAndServices({ blocks, tiles }: { blocks: Blocks; tiles: { l
         <ul className="grid gap-3 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           <MmbAlsoCard blocks={blocks} />
           {svc.map(([k, href, f]) => { const [t, b] = copy(blocks, `home2.also.${k}`, f); return (
-            <li key={k}><Link href={href} className="card rounded-[14px] p-5 block h-full hover:border-blue"><div className="text-[16px] font-semibold">{t}</div><p className="text-[13.5px] text-[#5B6575] mt-1.5 leading-snug">{b}</p></Link></li>); })}
+            <li key={k}><Link href={href} className="card rounded-[14px] p-5 block h-full hover:border-coral-text"><div className="text-[16px] font-semibold">{t}</div><p className="text-[13.5px] text-muted mt-1.5 leading-snug">{b}</p></Link></li>); })}
         </ul>
       </div>
     </section>
@@ -482,16 +482,16 @@ function MmbAlsoCard({ blocks }: { blocks: Blocks }) {
   const [t, b, link] = copy(blocks, 'home2.also.brand', 'Make My Brand|Your logo on verified products, stocked in our warehouse and shipped worldwide.|See how it works →');
   return (
     <li className="col-span-2" data-testid="also-mmb">
-      <Link href={BRAND_PAGE_HREF} className="group h-full rounded-[14px] bg-navy text-white hover:text-white p-5 flex gap-4 items-center">
+      <Link href={BRAND_PAGE_HREF} className="group h-full rounded-[14px] bg-ink text-white hover:text-white p-5 flex gap-4 items-center">
         <div className="flex-1 min-w-0">
           <div className="text-[17px] font-bold flex items-center gap-2 text-white">{t}<NewBadge /></div>
-          <p className="text-[13.5px] text-[#C9D0E8] mt-1.5 leading-snug">{b}</p>
-          <span className="inline-flex items-center min-h-11 text-[14px] font-semibold text-[#9CC2FF] group-hover:text-white">{link}</span>
+          <p className="text-[13.5px] text-on-ink mt-1.5 leading-snug">{b}</p>
+          <span className="inline-flex items-center min-h-11 text-[14px] font-semibold text-on-ink-link group-hover:text-white">{link}</span>
         </div>
-        <div className="relative w-[96px] sm:w-[120px] aspect-square rounded-[10px] overflow-hidden bg-[#EDE6DC] shrink-0">
+        <div className="relative w-[96px] sm:w-[120px] aspect-square rounded-[10px] overflow-hidden bg-ill-bg shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/mmb/G1000.jpg" alt="" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
-          <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 mono text-[8px] font-bold tracking-[.14em] uppercase px-1.5 py-0.5 bg-white/95 text-navy border border-dashed border-navy/50 rounded-[3px] whitespace-nowrap">{EXAMPLE_BRAND}</span>
+          <span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 mono text-[8px] font-bold tracking-[.14em] uppercase px-1.5 py-0.5 bg-white/95 text-ink border border-dashed border-ink/50 rounded-[3px] whitespace-nowrap">{EXAMPLE_BRAND}</span>
         </div>
       </Link>
     </li>
@@ -510,7 +510,7 @@ export function MakeMyBrand({ blocks }: { blocks: Blocks }) {
       <div className={`${W} py-12 sm:py-16`}>
         <SectionEyebrow n={2} isNew>{block(blocks, 'home2.mmb.eyebrow', 'Make My Brand')}</SectionEyebrow>
         <h2 id="home-mmb-h" className="mt-3 text-[25px] sm:text-[34px] font-extrabold leading-[1.12] tracking-[-0.02em]">{block(blocks, 'home2.mmb.title', 'Your brand on proven products.')}</h2>
-        <p className="mt-3 text-[16px] text-body-2 leading-relaxed max-w-[620px]">{block(blocks, 'home2.mmb.lead', 'Pick a product from our verified suppliers and we put your logo on it, on the product and on the box. We produce and check it, keep it as your stock in our warehouse, and ship it worldwide, in bulk to one country or order by order from your online store.')}</p>
+        <p className="mt-3 text-[16px] text-black leading-relaxed max-w-[620px]">{block(blocks, 'home2.mmb.lead', 'Pick a product from our verified suppliers and we put your logo on it, on the product and on the box. We produce and check it, keep it as your stock in our warehouse, and ship it worldwide, in bulk to one country or order by order from your online store.')}</p>
         <div className="mt-8"><DsStepCards steps={MMB_STEPS_SHORT} /></div>
         <div className="mt-8 grid gap-8 lg:grid-cols-[1.15fr_1fr] items-start">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -546,12 +546,12 @@ export function Suppliers({ blocks, suppliers, categories, sponsored }: { blocks
           {suppliers.map((s) => (
             <li key={s.id} className="card rounded-[14px] p-4">
               <div className="flex items-center justify-between">
-                {s.country && <span className="mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-surface border border-line text-[#4B5565]">{s.country}</span>}
-                {s.verified && <span className="mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-[#DCFCE7] text-[#15803D]">Verified</span>}
+                {s.country && <span className="mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-pearl border border-line text-muted">{s.country}</span>}
+                {s.verified && <span className="mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-ok-bg text-ok">Verified</span>}
               </div>
               <div className="text-[16px] font-semibold mt-2.5">{s.verified ? 'Octopus verified factory' : 'Factory'}</div>
-              {(s.province || s.country) && <div className="text-[14px] text-[#5B6575]">{[s.province, s.country && (COUNTRY_NAMES[s.country] ?? s.country)].filter(Boolean).join(', ')}</div>}
-              <div className="mono text-[10.5px] uppercase tracking-[.04em] text-[#5B6575] mt-1.5">{[s.supplier_type, ...(categories[s.id] ?? []).slice(0, 2)].filter(Boolean).join(' · ')}</div>
+              {(s.province || s.country) && <div className="text-[14px] text-muted">{[s.province, s.country && (COUNTRY_NAMES[s.country] ?? s.country)].filter(Boolean).join(', ')}</div>}
+              <div className="mono text-[10.5px] uppercase tracking-[.04em] text-muted mt-1.5">{[s.supplier_type, ...(categories[s.id] ?? []).slice(0, 2)].filter(Boolean).join(' · ')}</div>
             </li>
           ))}
           {sponsored && <li>{sponsored}</li>}

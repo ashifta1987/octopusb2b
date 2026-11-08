@@ -226,7 +226,7 @@ export function KycForm({
           <h2 id="kyc-s4" className="text-lg font-semibold">4 · Documents</h2>
           <p className="mt-1 mb-4 text-sm text-muted">PDF, JPG or PNG, up to 10 MB each. Only our verification team can see them.</p>
           {mode === 'docs' && (
-            <p className="mb-4 rounded-[10px] border border-warn/40 bg-[#FFF3D6] px-4 py-3 text-sm text-[#8A5A00]" role="status">
+            <p className="mb-4 rounded-[10px] border border-warn/40 bg-warn-bg px-4 py-3 text-sm text-warn" role="status">
               Your details were received, but some required documents are missing. Upload them here to start the review.
             </p>
           )}
@@ -237,7 +237,7 @@ export function KycForm({
               const id = `kyc-doc-${d.type}`;
               const fe = fileErr[d.type];
               return (
-                <li key={d.type} className="rounded-[10px] border border-dashed border-line-2 bg-surface/40 px-4 py-3">
+                <li key={d.type} className="rounded-[10px] border border-dashed border-line-strong bg-pearl/40 px-4 py-3">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="min-w-0">
                       <label htmlFor={id} className="font-semibold text-[15px]">{d.label}{d.required && <Req />}{d.required && <span className="sr-only"> (required)</span>}</label>
@@ -247,9 +247,9 @@ export function KycForm({
                     </div>
                     <div className="flex items-center gap-2">
                       {f ? (
-                        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-blue-soft text-[#1E4F9C]">Ready to upload</span>
+                        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-tint text-coral-text">Ready to upload</span>
                       ) : ex ? (
-                        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-[#E3F5EA] text-[#156B3A]">Uploaded</span>
+                        <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-ok-bg text-ok">Uploaded</span>
                       ) : null}
                       {!locked && (
                         <>
@@ -285,7 +285,7 @@ export function KycForm({
               <input id="kyc-consent" type="checkbox" className="mt-1 h-4 w-4 shrink-0" checked={consent} onChange={(e) => setConsent(e.target.checked)} disabled={pending} required aria-required />
               <label htmlFor="kyc-consent" className="text-[15px]">
                 I confirm these details are correct and agree that Octopus B2B stores them to verify my business and to improve its service, as described in the{' '}
-                <Link href="/legal/privacy" className="font-semibold text-blue underline" target="_blank">Privacy Policy</Link>.
+                <Link href="/legal/privacy" className="font-semibold text-coral-text underline" target="_blank">Privacy Policy</Link>.
               </label>
             </div>
           )}

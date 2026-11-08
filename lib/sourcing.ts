@@ -52,7 +52,7 @@ export function timelineStep(s: SourcingStatus, reached: SourcingStatus = s): nu
 }
 
 export const STATUS_TONE: Record<SourcingStatus, string> = {
-  Submitted: 'bg-[#EEF2F7] text-[#3B4556]', 'Under review': 'bg-[#FEF3C7] text-[#92400E]', Quoted: 'bg-[#E6EFFC] text-[#1E4F9C]',
-  Accepted: 'bg-[#DCFCE7] text-[#15803D]', Onboarding: 'bg-[#F3E8FF] text-[#6B21A8]', Active: 'bg-[#DCFCE7] text-[#15803D]', Closed: 'bg-[#F1F5F9] text-[#64748B]',
+  Submitted: 'bg-fill text-black', 'Under review': 'bg-warn-bg text-warn', Quoted: 'bg-tint text-coral-text',
+  Accepted: 'bg-ok-bg text-ok', Onboarding: 'bg-violet-bg text-violet', Active: 'bg-ok-bg text-ok', Closed: 'bg-fill text-muted',
 };
 

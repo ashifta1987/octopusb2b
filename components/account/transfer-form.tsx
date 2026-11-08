@@ -49,9 +49,9 @@ export function TransferForm({ orgId, reference }: { orgId: string; reference: s
         <label htmlFor="tf-slip" className="label">Transfer slip</label>
         <input id="tf-slip" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" onChange={(e) => setFile(e.target.files?.[0] ?? null)}
           className="block w-full text-[14px] file:btn file:btn-ghost file:mr-3 file:min-h-11" />
-        <p className="text-[12.5px] text-[#5A6475] mt-1">Quote <b className="mono">{reference}</b> on the transfer so we can match it. PDF, JPG or PNG, up to 10 MB.</p>
+        <p className="text-[12.5px] text-muted mt-1">Quote <b className="mono">{reference}</b> on the transfer so we can match it. PDF, JPG or PNG, up to 10 MB.</p>
       </div>
-      {msg && <p role={msg.ok ? 'status' : 'alert'} className={`sm:col-span-2 rounded-[10px] px-4 py-3 text-[14px] ${msg.ok ? 'bg-[#F0FDF4] text-[#166534]' : 'bg-[#FEF2F2] text-bad'}`}>{msg.text}</p>}
+      {msg && <p role={msg.ok ? 'status' : 'alert'} className={`sm:col-span-2 rounded-[10px] px-4 py-3 text-[14px] ${msg.ok ? 'bg-ok-bg text-ok' : 'bg-bad-bg text-bad'}`}>{msg.text}</p>}
       <div className="sm:col-span-2"><button type="submit" className="btn btn-primary min-h-11" disabled={!!busy}>{busy ?? 'Send to finance'}</button></div>
     </form>
   );

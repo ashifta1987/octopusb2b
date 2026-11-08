@@ -41,7 +41,7 @@ async function Terms() {
           </ol>
         </>
       ) : <p className="text-muted mt-4">The Group Buy Terms are being prepared.</p>}
-      <p className="text-sm text-muted mt-10">These terms apply in addition to our general <Link href="/legal/terms" className="text-blue font-semibold">Terms &amp; Conditions</Link>. <Link href="/pools" className="text-blue font-semibold">Browse open pools</Link>.</p>
+      <p className="text-sm text-muted mt-10">These terms apply in addition to our general <Link href="/legal/terms" className="text-coral-text font-semibold">Terms &amp; Conditions</Link>. <Link href="/pools" className="text-coral-text font-semibold">Browse open pools</Link>.</p>
     </div>
   );
 }

@@ -93,13 +93,13 @@ export function ShipmentCreator({ orderId, orderCode, fromCountry, toCountry, de
       <section className="card p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold">3 · Choose a YunExpress service</h2>
-          <span className="text-xs font-semibold rounded-full bg-surface border border-line px-2 py-1">Price trial · {fromCountry} → {toCountry}</span>
+          <span className="text-xs font-semibold rounded-full bg-pearl border border-line px-2 py-1">Price trial · {fromCountry} → {toCountry}</span>
         </div>
         {!rates ? <p className="text-sm text-muted">Enter the parcel details and get rates.</p> : !rates.length ? <p className="text-sm text-muted">No services available for this route.</p> : (
           <fieldset className="space-y-3">
             <legend className="sr-only">Service</legend>
             {rates.map((r, i) => (
-              <label key={r.service} className={cn('flex items-center gap-4 rounded-[10px] border-2 px-5 py-4 cursor-pointer', pick === i ? 'border-blue bg-blue-soft' : 'border-line')}>
+              <label key={r.service} className={cn('flex items-center gap-4 rounded-[10px] border-2 px-5 py-4 cursor-pointer', pick === i ? 'border-coral-text bg-tint' : 'border-line')}>
                 <input type="radio" name="svc" checked={pick === i} onChange={() => setPick(i)} />
                 <div className="flex-1"><div className="font-semibold">{r.carrier} · {r.service}</div><div className="text-sm text-muted">{r.days} days</div></div>
                 <div className="text-right"><div className="mono font-bold text-lg">{money(r.priceCents, RATE_CURRENCY)}</div></div>
@@ -109,7 +109,7 @@ export function ShipmentCreator({ orderId, orderCode, fromCountry, toCountry, de
         )}
         {err && <p className="mt-3 text-sm text-bad" role="alert">{err}</p>}
         <div className="border-t border-line mt-5 pt-4 flex flex-wrap items-center justify-between gap-3">
-          <span className="text-sm text-muted">Shipping cost is billed to: <b className="text-navy">{incoterm === 'DDP' || incoterm === 'DAP' ? `Seller (${incoterm})` : `Buyer (${incoterm ?? 'FOB'})`}</b></span>
+          <span className="text-sm text-muted">Shipping cost is billed to: <b className="text-ink">{incoterm === 'DDP' || incoterm === 'DAP' ? `Seller (${incoterm})` : `Buyer (${incoterm ?? 'FOB'})`}</b></span>
           <button type="button" className="btn btn-primary" disabled={pending || pick == null || !rates?.length} onClick={create}>{pending && rates ? 'Creating…' : 'Create shipment and print label'}</button>
         </div>
       </section>

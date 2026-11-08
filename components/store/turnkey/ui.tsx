@@ -6,10 +6,10 @@ import { CATEGORY_PILL, CATEGORY_PILL_CLASS, fromLabel, kUsd, type TurnkeyPackag
 export function TkPill({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full mono text-[11px] font-semibold uppercase tracking-[.04em] leading-none ${className}`}>{children}</span>;
 }
-export const LivePill = () => <TkPill className="bg-[#DCFCE7] text-[#15803D]">Live</TkPill>;
-export const TopPill = ({ rank }: { rank?: number | null }) => <TkPill className="bg-[#FEF3C7] text-[#92400E]">{rank ? `#${rank} top pick` : 'Top pick'}</TkPill>;
+export const LivePill = () => <TkPill className="bg-ok-bg text-ok">Live</TkPill>;
+export const TopPill = ({ rank }: { rank?: number | null }) => <TkPill className="bg-warn-bg text-warn">{rank ? `#${rank} top pick` : 'Top pick'}</TkPill>;
 export const CategoryPill = ({ p }: { p: Pick<TurnkeyProject, 'category'> }) => <TkPill className={CATEGORY_PILL_CLASS[p.category]}>{CATEGORY_PILL[p.category]}</TkPill>;
-export const Eyebrow = ({ children, className = 'text-blue' }: { children: React.ReactNode; className?: string }) =>
+export const Eyebrow = ({ children, className = 'text-coral-text' }: { children: React.ReactNode; className?: string }) =>
   <div className={`mono text-[11px] font-semibold uppercase tracking-[.08em] ${className}`}>{children}</div>;
 
 /** Project photo (1200×800, set 7 Nov 2026) with its alt text; striped placeholder only if a project has no photo. */
@@ -17,18 +17,18 @@ export function TkImage({ p, label, className = '', priority = false }: { p?: Pi
   if (p?.hero_image_path) {
     // eslint-disable-next-line @next/next/no-img-element
     return <img src={p.hero_image_path} alt={p.hero_image_alt || p.title} width={1200} height={800} decoding="async"
-      loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : undefined} className={`object-cover w-full h-full bg-surface ${className}`} />;
+      loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : undefined} className={`object-cover w-full h-full bg-pearl ${className}`} />;
   }
   return (
     <div aria-hidden className={`flex items-center justify-center mono text-[12px] text-muted ${className}`}
-      style={{ background: 'repeating-linear-gradient(135deg,#EDEFF3 0 10px,#E5E8ED 10px 20px)' }}>{label}</div>
+      style={{ background: 'repeating-linear-gradient(135deg,var(--fill) 0 10px,var(--line) 10px 20px)' }}>{label}</div>
   );
 }
 
 export function ProjectCard({ p, compact = false }: { p: TurnkeyProject; compact?: boolean }) {
   return (
     <Link href={`/turnkey/${p.project_id}`} data-testid="turnkey-card" data-project={p.project_id}
-      className="group bg-white border border-line rounded-[14px] overflow-hidden flex flex-col hover:border-blue hover:shadow-sm transition-colors focus-visible:outline-3 focus-visible:outline-[#1D4ED8]">
+      className="group bg-white border border-line rounded-[14px] overflow-hidden flex flex-col hover:border-coral-text hover:shadow-sm transition-colors focus-visible:outline-3 focus-visible:outline-coral-text">
       <TkImage p={p} label={p.title} className={compact ? 'h-[120px]' : 'h-[140px]'} />
       <div className="p-4 flex flex-col gap-2 flex-1">
         <div className="flex flex-wrap gap-1.5">
@@ -36,10 +36,10 @@ export function ProjectCard({ p, compact = false }: { p: TurnkeyProject; compact
           {p.is_starter_pick && <TopPill />}
           <CategoryPill p={p} />
         </div>
-        <div className="font-display font-bold text-[15px] text-navy leading-snug group-hover:text-blue">{p.title}</div>
+        <div className="font-display font-bold text-[15px] text-ink leading-snug group-hover:text-coral-text">{p.title}</div>
         {p.short_reason && <p className="text-[13px] text-muted leading-snug">{p.short_reason}</p>}
         <div className="mt-auto pt-1 flex items-end justify-between gap-2">
-          <span className="font-semibold text-[14px] text-navy">{fromLabel(p)}</span>
+          <span className="font-semibold text-[14px] text-ink">{fromLabel(p)}</span>
           <span className="mono text-[11px] uppercase text-muted text-right">{[p.hub_label, p.lead_time_days ? `~${p.lead_time_days} d` : null].filter(Boolean).join(' · ')}</span>
         </div>
       </div>
@@ -55,17 +55,17 @@ export function StarterStrip({ projects }: { projects: TurnkeyProject[] }) {
     <ul className="flex lg:grid lg:grid-cols-5 gap-3.5 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 lg:mx-0 lg:px-0 lg:overflow-visible" data-testid="starter-strip">
       {picks.map((p) => (
         <li key={p.project_id} className="snap-start shrink-0 w-[220px] lg:w-auto">
-          <Link href={`/turnkey/${p.project_id}`} data-testid="starter-card" className="h-full bg-white border border-line rounded-[14px] overflow-hidden flex flex-col hover:border-blue">
+          <Link href={`/turnkey/${p.project_id}`} data-testid="starter-card" className="h-full bg-white border border-line rounded-[14px] overflow-hidden flex flex-col hover:border-coral-text">
             <TkImage p={p} label={p.title} className="h-[120px] lg:h-[140px]" />
             <div className="p-3.5 flex flex-col gap-1.5 flex-1">
               <div className="flex items-start justify-between gap-2">
                 <TopPill rank={p.starter_rank} />
                 <span className="mono text-[10.5px] uppercase text-muted text-right">{p.hub_label}</span>
               </div>
-              <div className="font-display font-bold text-[14.5px] text-navy leading-snug">{p.title}</div>
+              <div className="font-display font-bold text-[14.5px] text-ink leading-snug">{p.title}</div>
               {p.short_reason && <p className="text-[12.5px] text-muted leading-snug">{p.short_reason}</p>}
               <div className="mt-auto flex justify-between text-[13px] pt-1">
-                <b className="text-navy">{fromLabel(p)}</b>
+                <b className="text-ink">{fromLabel(p)}</b>
                 {p.lead_time_days && <span className="text-muted">~{p.lead_time_days} days</span>}
               </div>
             </div>
@@ -84,12 +84,12 @@ export function LiveModuleCard({ p, packages }: { p: TurnkeyProject; packages: T
       <TkImage p={p} label={p.title} className="h-[120px] sm:h-full" />
       <div className="p-4 sm:p-5 flex flex-col gap-2.5">
         <div className="flex flex-wrap gap-1.5"><LivePill /><CategoryPill p={p} /></div>
-        <h3 className="font-display font-bold text-[18px] text-navy">{p.title}</h3>
+        <h3 className="font-display font-bold text-[18px] text-ink">{p.title}</h3>
         {p.short_reason && <p className="text-[13.5px] text-muted">{p.short_reason}</p>}
         {tiers.length > 0 && (
-          <dl className="grid grid-cols-3 gap-2 rounded-[10px] bg-surface px-3 py-2">
+          <dl className="grid grid-cols-3 gap-2 rounded-[10px] bg-pearl px-3 py-2">
             {tiers.map((k) => (
-              <div key={k.package_id}><dt className="mono text-[10px] uppercase text-muted">{k.tier_name}</dt><dd className="font-semibold text-[13px] text-navy">{kUsd(k.starting_budget_usd)}</dd></div>
+              <div key={k.package_id}><dt className="mono text-[10px] uppercase text-muted">{k.tier_name}</dt><dd className="font-semibold text-[13px] text-ink">{kUsd(k.starting_budget_usd)}</dd></div>
             ))}
           </dl>
         )}

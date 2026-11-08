@@ -28,7 +28,7 @@ export async function LeadPage({ slug, kind, searchParams }: { slug: string; kin
   return (
     <div className="max-w-[880px] mx-auto px-4 sm:px-8 py-6">
       <Breadcrumbs items={[{ name: 'Home', href: '/' }, { name: 'Turnkey Projects', href: '/turnkey' }, { name: p.title, href: `/turnkey/${slug}` }, { name: kind === 'quote' ? 'Request this package' : 'Register interest' }]} />
-      <h1 className="font-display font-bold text-[26px] sm:text-[32px] text-navy mt-4">{kind === 'quote' ? 'Request this package' : 'Register interest'} · {p.title}</h1>
+      <h1 className="font-display font-bold text-[26px] sm:text-[32px] text-ink mt-4">{kind === 'quote' ? 'Request this package' : 'Register interest'} · {p.title}</h1>
       <p className="text-muted mt-1.5 text-[15px]">
         {kind === 'quote'
           ? 'A sourcing lead replies within 24 hours with a USD quote and Incoterm. No payment now.'
@@ -43,7 +43,7 @@ export async function LeadPage({ slug, kind, searchParams }: { slug: string; kin
             message: one(searchParams.talk) ? 'I would like to talk to a sourcing lead about this project.' : '',
           }} />
       </div>
-      <p className="text-[13px] text-muted mt-4">Prefer to chat? <Link href="/account/assistant" className="text-blue font-semibold">Ask Octo</Link> or reply to the confirmation email.</p>
+      <p className="text-[13px] text-muted mt-4">Prefer to chat? <Link href="/account/assistant" className="text-coral-text font-semibold">Ask Octo</Link> or reply to the confirmation email.</p>
     </div>
   );
 }

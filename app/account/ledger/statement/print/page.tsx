@@ -18,7 +18,7 @@ export default async function StatementPrint({ searchParams }: { searchParams: P
   const { currencies, totals } = ledger;
   const c = content.company;
   return (
-    <div className="statement bg-white mx-auto max-w-[210mm] p-[14mm] text-[13px] text-navy shadow-sm print:shadow-none">
+    <div className="statement bg-white mx-auto max-w-[210mm] p-[14mm] text-[13px] text-ink shadow-sm print:shadow-none">
       <style>{`
         @page { size: A4; margin: 12mm; }
         @media print {
@@ -42,7 +42,7 @@ export default async function StatementPrint({ searchParams }: { searchParams: P
           <div className="text-muted">{[c?.phone, c?.email].filter(Boolean).join(' · ')}</div>
         </div>
       </div>
-      <div className="mt-6 rounded-[10px] bg-surface p-4 grid grid-cols-2 gap-4">
+      <div className="mt-6 rounded-[10px] bg-pearl p-4 grid grid-cols-2 gap-4">
         <div><div className="mono text-[10px] uppercase tracking-wider text-muted">Account holder</div><div className="font-semibold">{s.org.name}</div><div className="text-muted">{[s.org.city, s.org.country].filter(Boolean).join(', ')}</div></div>
         <div className="text-right">
           <div className="mono text-[10px] uppercase tracking-wider text-muted">Closing balances</div>

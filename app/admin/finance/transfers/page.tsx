@@ -33,7 +33,7 @@ async function TransfersPageContent() {
               <li key={t.id} className="p-5 grid gap-4 lg:grid-cols-[1fr_420px]" data-testid="transfer-row">
                 <div>
                   <div className="font-semibold text-[16px]">{name(t.organizations)} <span className="mono text-sm text-muted">· {t.reference}</span></div>
-                  <div className="text-[14px] text-[#5A6475]">Claimed {money(Number(t.amount_cents), 'USD')} · sent {fmtDate(t.created_at as string, true)}{t.bank_ref ? ` · customer reference ${t.bank_ref}` : ''}</div>
+                  <div className="text-[14px] text-muted">Claimed {money(Number(t.amount_cents), 'USD')} · sent {fmtDate(t.created_at as string, true)}{t.bank_ref ? ` · customer reference ${t.bank_ref}` : ''}</div>
                   {slips[i] ? <a href={slips[i]!} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm mt-3 min-h-11">Open transfer slip</a> : <div className="text-sm text-bad mt-2">Slip not found</div>}
                 </div>
                 <div>

@@ -25,7 +25,7 @@ export function ApproveQuoteButton({
     <>
       <button type="button" className={className} onClick={() => { setErr(null); setAgree(false); setOpen(true); }}>{label}</button>
       {open && (
-        <div className="fixed inset-0 z-50 bg-navy/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+        <div className="fixed inset-0 z-50 bg-ink/50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby={titleId}>
           <div className="card w-full max-w-md p-6 text-left">
             <h2 id={titleId} className="text-xl font-semibold">Approve quote {quoteCode}?</h2>
             <p className="text-sm text-muted mt-1">We will issue a proforma invoice. The order is binding once Octopus B2B confirms it in writing after your deposit.</p>
@@ -37,7 +37,7 @@ export function ApproveQuoteButton({
             <label className="mt-4 flex items-start gap-2 text-sm">
               <input type="checkbox" className="mt-1 w-4 h-4" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
               <span>
-                I accept the <a href="/legal/terms" target="_blank" rel="noopener" className="text-blue underline">Terms &amp; Conditions</a>
+                I accept the <a href="/legal/terms" target="_blank" rel="noopener" className="text-coral-text underline">Terms &amp; Conditions</a>
                 {termsVersion ? ` (${termsVersion})` : ''}. Other quotes for this RFQ will be closed.
               </span>
             </label>

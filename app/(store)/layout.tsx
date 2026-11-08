@@ -19,7 +19,7 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
         <StoreHeader />
       </Suspense>
       <main id="main" className="flex-1">{children}</main>
-      <Suspense fallback={<div className="h-[320px] bg-navy mt-16" aria-hidden />}>
+      <Suspense fallback={<div className="h-[320px] bg-ink mt-16" aria-hidden />}>
         <StoreFooter />
       </Suspense>
     </div>

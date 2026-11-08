@@ -41,7 +41,7 @@ export function ApplyForm({ categories }: { categories: string[] }) {
 
   if (done) {
     return (
-      <div role="status" className="rounded-[14px] border border-[#BBF7D0] bg-[#F0FDF4] p-6" data-testid="apply-done">
+      <div role="status" className="rounded-[14px] border border-ok-bg bg-ok-bg p-6" data-testid="apply-done">
         <h3 className="text-lg font-bold">Application received</h3>
         <p className="mt-1 text-[15px]">Your reference is <b className="mono">{done}</b>. We sent a confirmation email and will contact you within 3 working days.</p>
       </div>
@@ -62,8 +62,8 @@ export function ApplyForm({ categories }: { categories: string[] }) {
         <legend className="label">What do you make?{req}</legend>
         <div className="flex flex-wrap gap-2 mt-1">
           {[...categories, 'Other'].map((c) => (
-            <label key={c} className="inline-flex items-center gap-2 rounded-full border border-line-2 bg-white px-3.5 min-h-11 text-[14px] cursor-pointer has-[:checked]:border-navy has-[:checked]:bg-surface">
-              <input type="checkbox" value={c} {...register('categories')} className="w-4 h-4 accent-[#2A6FD6]" />{c}
+            <label key={c} className="inline-flex items-center gap-2 rounded-full border border-line-strong bg-white px-3.5 min-h-11 text-[14px] cursor-pointer has-[:checked]:border-ink has-[:checked]:bg-pearl">
+              <input type="checkbox" value={c} {...register('categories')} className="w-4 h-4 accent-coral" />{c}
             </label>
           ))}
         </div>
@@ -82,7 +82,7 @@ export function ApplyForm({ categories }: { categories: string[] }) {
         <p className="text-[12px] text-muted mt-1">PDF, Excel, CSV, JPG or PNG, up to 20 MB. A price list with MOQ helps us review faster.</p>
       </div>
       <div className="sm:col-span-2"><label htmlFor="sa-notes" className="label">Anything else?</label><textarea {...f('notes')} rows={3} className="input py-2.5 min-h-[96px]" placeholder="Export markets, certifications, factory size…" />{errOf('notes')}</div>
-      {err && <p role="alert" className="sm:col-span-2 rounded-[10px] bg-[#FEF2F2] text-bad text-[14px] px-4 py-3">{err}</p>}
+      {err && <p role="alert" className="sm:col-span-2 rounded-[10px] bg-bad-bg text-bad text-[14px] px-4 py-3">{err}</p>}
       <div className="sm:col-span-2 flex flex-wrap items-center gap-3">
         <button type="submit" className="btn btn-primary min-h-11" disabled={!!busy}>{busy ?? 'Apply to sell →'}</button>
         <span className="text-[12.5px] text-muted">Free to apply. We only use these details to review your application.</span>

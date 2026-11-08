@@ -64,7 +64,7 @@ export async function HomeTab({ editable, isAdmin }: { editable: boolean; isAdmi
               {editable && <div className="mt-2"><RunButton action={deleteBanner.bind(null, b.id)} confirm={`Delete “${b.title}”?`} className="btn btn-ghost btn-sm text-bad">Delete</RunButton></div>}
             </div>
           ))}
-          {editable && <div className="border border-dashed border-line-2 rounded-[12px] p-4"><div className="font-semibold mb-3">New banner</div>{bannerForm()}</div>}
+          {editable && <div className="border border-dashed border-line-strong rounded-[12px] p-4"><div className="font-semibold mb-3">New banner</div>{bannerForm()}</div>}
         </div>
       </Card>
 

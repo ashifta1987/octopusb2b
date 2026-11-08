@@ -43,16 +43,16 @@ export function StaffShell({ session, nav, counts, moderation, children }: {
   return (
     <div className="min-h-screen bg-pearl">
       <MaintenanceNotice />
-      <header className="bg-navy text-white">
+      <header className="bg-ink text-white">
         <div className="px-4 sm:px-6 py-3 flex flex-wrap items-center gap-x-5 gap-y-3">
           <Logo white />
-          <span className="mono text-[11px] font-bold uppercase tracking-[.08em] px-3 py-1 rounded-full bg-white text-navy" data-testid="staff-only">Admin · staff only</span>
+          <span className="mono text-[11px] font-bold uppercase tracking-[.08em] px-3 py-1 rounded-full bg-white text-ink" data-testid="staff-only">Admin · staff only</span>
           <form action="/office/orders" role="search" className="order-3 lg:order-none basis-full lg:basis-auto lg:flex-1 lg:max-w-[520px]">
             <label htmlFor="staff-q" className="sr-only">Search orders by code or title</label>
             <input id="staff-q" name="q" className="input !rounded-[10px] !border-white" placeholder="Search orders by code or title" />
           </form>
-          {isStaging() && <span className="order-2 mono text-[11px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full bg-[#FEF3C7] text-[#92400E]" data-testid="staging-badge" title="Staging environment: test data, not the live site">Staging</span>}
-          <div className="ml-auto flex items-center gap-3 [&_summary]:text-white [&_.btn-ghost]:!text-white [&_.text-muted]:!text-white/70 [&_summary_.bg-navy]:!bg-blue-fill">
+          {isStaging() && <span className="order-2 mono text-[11px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full bg-warn-bg text-warn" data-testid="staging-badge" title="Staging environment: test data, not the live site">Staging</span>}
+          <div className="ml-auto flex items-center gap-3 [&_summary]:text-white [&_.btn-ghost]:!text-white [&_.btn-ghost]:!bg-transparent [&_.btn-ghost]:!border-white/40 [&_.text-muted]:!text-white/70 [&_summary_.bg-ink]:!bg-coral">
             <WorkspaceSwitcher session={session} current="Admin" />
             <StaffUserMenu name={name} initials={initials} sub={sub} email={session.email} />
           </div>

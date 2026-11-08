@@ -70,18 +70,18 @@ export default async function DeveloperPage({ searchParams }: { searchParams: Pr
         subtitle="Connect your Shopify or WooCommerce store to Octopus B2B (coming soon — upload orders as a sheet meanwhile). Use these credentials in your app, a plugin, or Postman."
         actions={
           <div className="flex flex-col items-end gap-1.5">
-            <div role="tablist" aria-label="Environment" className="inline-flex p-1 rounded-[10px] bg-[#E9ECF1] border border-line">
+            <div role="tablist" aria-label="Environment" className="inline-flex p-1 rounded-[10px] bg-fill border border-line">
               <Link role="tab" aria-selected={mode === 'test'} href={href({ mode: 'sandbox' })}
-                className={cn('min-w-[120px] text-center px-5 py-2.5 rounded-[8px] text-[15px] font-semibold', mode === 'test' ? 'bg-white shadow-sm text-navy' : 'text-muted')}>Sandbox</Link>
+                className={cn('min-w-[120px] text-center px-5 py-2.5 rounded-[8px] text-[15px] font-semibold', mode === 'test' ? 'bg-white shadow-sm text-ink' : 'text-muted')}>Sandbox</Link>
               {verified ? (
                 <Link role="tab" aria-selected={mode === 'live'} href={href({ mode: 'live' })}
-                  className={cn('min-w-[120px] text-center px-5 py-2.5 rounded-[8px] text-[15px] font-semibold', mode === 'live' ? 'bg-white shadow-sm text-navy' : 'text-muted')}>Live</Link>
+                  className={cn('min-w-[120px] text-center px-5 py-2.5 rounded-[8px] text-[15px] font-semibold', mode === 'live' ? 'bg-white shadow-sm text-ink' : 'text-muted')}>Live</Link>
               ) : (
                 <span role="tab" aria-selected={false} aria-disabled="true" title="Live keys unlock after KYC is verified"
                   className="min-w-[120px] text-center px-5 py-2.5 rounded-[8px] text-[15px] font-semibold text-muted/60 cursor-not-allowed">Live 🔒</span>
               )}
             </div>
-            {!verified && <p className="text-xs text-muted">Live keys unlock after <Link href="/account/kyc" className="underline text-blue">KYC verification</Link>.</p>}
+            {!verified && <p className="text-xs text-muted">Live keys unlock after <Link href="/account/kyc" className="underline text-coral-text">KYC verification</Link>.</p>}
           </div>
         }
       />
@@ -186,7 +186,7 @@ export default async function DeveloperPage({ searchParams }: { searchParams: Pr
               <a className="btn btn-primary w-full" href={POSTMAN_DOWNLOADS.publicCollection} download>Download Postman collection</a>
               <a className="btn btn-ghost w-full" href={POSTMAN_DOWNLOADS.sandboxEnvironment} download>Sandbox environment</a>
               <a className="btn btn-ghost w-full" href="/api/v1/openapi.json" target="_blank" rel="noopener">OpenAPI spec (JSON)</a>
-              <a className="inline-flex text-blue font-semibold text-[15px] hover:underline" href="/api/v1/openapi.json" target="_blank" rel="noopener">Read the API docs →</a>
+              <a className="inline-flex text-coral-text font-semibold text-[15px] hover:underline" href="/api/v1/openapi.json" target="_blank" rel="noopener">Read the API docs →</a>
             </div>
           </Card>
           <Card title="Usage">
@@ -204,12 +204,12 @@ export default async function DeveloperPage({ searchParams }: { searchParams: Pr
       <Card title="Quick start" className="mt-6">
         <div className="px-6 pb-6 space-y-4">
           <p className="text-[15px]">1. Get an access token (valid 1 hour)</p>
-          <pre tabIndex={0} aria-label="Code example" className="m-0 bg-navy text-[#E4E8EE] rounded-[12px] p-[18px] mono text-[13px] leading-[1.7] overflow-x-auto whitespace-pre">{`curl -X POST ${base}/oauth/token \\
+          <pre tabIndex={0} aria-label="Code example" className="m-0 bg-ink text-fill rounded-[12px] p-[18px] mono text-[13px] leading-[1.7] overflow-x-auto whitespace-pre">{`curl -X POST ${base}/oauth/token \\
   -d grant_type=client_credentials \\
   -d client_id=${clientIdForDocs} \\
   -d client_secret=YOUR_CLIENT_SECRET`}</pre>
           <p className="text-[15px]">2. Call the API with the token</p>
-          <pre tabIndex={0} aria-label="Code example" className="m-0 bg-navy text-[#E4E8EE] rounded-[12px] p-[18px] mono text-[13px] leading-[1.7] overflow-x-auto whitespace-pre">{`curl "${base}/products?limit=50" \\
+          <pre tabIndex={0} aria-label="Code example" className="m-0 bg-ink text-fill rounded-[12px] p-[18px] mono text-[13px] leading-[1.7] overflow-x-auto whitespace-pre">{`curl "${base}/products?limit=50" \\
   -H "Authorization: Bearer ACCESS_TOKEN"`}</pre>
         </div>
       </Card>
@@ -226,7 +226,7 @@ export default async function DeveloperPage({ searchParams }: { searchParams: Pr
               {hooks.map((h) => (
                 <tr key={h.id}>
                   <td className="td mono text-sm break-all max-w-[280px]">{h.url}</td>
-                  <td className="td"><div className="flex flex-wrap gap-1">{h.events.map((e) => <span key={e} className="mono text-xs bg-surface border border-line rounded px-1.5 py-0.5">{e}</span>)}</div></td>
+                  <td className="td"><div className="flex flex-wrap gap-1">{h.events.map((e) => <span key={e} className="mono text-xs bg-pearl border border-line rounded px-1.5 py-0.5">{e}</span>)}</div></td>
                   <td className="td"><WebhookSecret id={h.id} hint={h.secret.slice(-4)} /></td>
                   <td className="td"><WebhookToggle id={h.id} active={h.active} url={h.url} /></td>
                   <td className="td text-right">

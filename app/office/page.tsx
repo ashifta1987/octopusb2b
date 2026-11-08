@@ -71,9 +71,9 @@ export default async function OfficeQueues() {
         {visible.map((q) => {
           const flagged = q.items.filter((i) => i.flag).length;
           return (
-            <Link key={q.key} href={q.href} className={cn('card p-5 hover:border-blue', flagged > 0 && 'border-bad/50')}>
+            <Link key={q.key} href={q.href} className={cn('card p-5 hover:border-coral-text', flagged > 0 && 'border-bad/50')}>
               <div className="text-sm text-muted">{q.title}</div>
-              <div className="mt-2 font-display text-[28px] font-bold leading-tight text-navy">{q.count ?? 0}</div>
+              <div className="mt-2 font-display text-[28px] font-bold leading-tight text-ink">{q.count ?? 0}</div>
               <div className={cn('mt-1 text-sm', flagged ? 'text-bad font-semibold' : 'text-muted')}>{flagged ? `${flagged} flagged` : q.items[0] ? `Oldest ${age(q.items[0].at || new Date().toISOString())}` : 'All clear'}</div>
             </Link>
           );
@@ -81,12 +81,12 @@ export default async function OfficeQueues() {
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {visible.map((q) => (
-          <Card key={q.key} title={q.title} action={<Link href={q.href} className="text-sm font-semibold text-blue">Open queue →</Link>}>
+          <Card key={q.key} title={q.title} action={<Link href={q.href} className="text-sm font-semibold text-coral-text">Open queue →</Link>}>
             {q.items.length === 0 ? <EmptyState title="Nothing waiting" body="This queue is clear." /> : (
               <ul className="divide-y divide-line border-t border-line">
                 {q.items.map((i) => (
                   <li key={i.id}>
-                    <Link href={i.href} className="flex items-center gap-3 px-6 py-3 hover:bg-surface">
+                    <Link href={i.href} className="flex items-center gap-3 px-6 py-3 hover:bg-pearl">
                       <div className="min-w-0 flex-1">
                         <div className="font-semibold truncate">{i.title}</div>
                         <div className={cn('text-sm', i.flag ? 'text-bad' : 'text-muted')}>{i.flag && <span className="sr-only">Flagged: </span>}{i.sub}</div>

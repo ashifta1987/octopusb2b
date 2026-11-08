@@ -142,7 +142,7 @@ export default async function AssistantQueuePage({ searchParams }: { searchParam
                 <div>
                   <span className="text-muted">Support ticket</span>{' '}
                   {can(s, 'support', 'view')
-                    ? <Link className="text-blue font-semibold mono" href={`/office/support?t=${esc.ticket_id}`}>{(ticket?.code as string | undefined) ?? 'Open ticket'}</Link>
+                    ? <Link className="text-coral-text font-semibold mono" href={`/office/support?t=${esc.ticket_id}`}>{(ticket?.code as string | undefined) ?? 'Open ticket'}</Link>
                     : <span className="mono">{(ticket?.code as string | undefined) ?? 'Ticket opened'}</span>}
                   {ticket?.status && <span className="ml-1"><StatusBadge status={ticket.status as string} /></span>}
                 </div>
@@ -177,7 +177,7 @@ export default async function AssistantQueuePage({ searchParams }: { searchParam
   }
 
   const href = (id: string) => `/office/assistant?session=${id}`;
-  const itemCls = (id: string) => cn('block px-4 py-3 border-l-[3px]', id === selId ? 'bg-blue-soft border-blue' : 'border-transparent hover:bg-surface');
+  const itemCls = (id: string) => cn('block px-4 py-3 border-l-[3px]', id === selId ? 'bg-tint border-coral-text' : 'border-transparent hover:bg-pearl');
   const overdueCount = escalations.filter((e) => e.sla_due_at && new Date(e.sla_due_at).getTime() < now).length;
 
   return (

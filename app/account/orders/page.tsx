@@ -34,7 +34,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
           <div className="flex flex-wrap justify-between gap-3">
             <div>
               <div className="mono text-xs text-muted">{featured.code}</div>
-              <Link href={`/account/orders/${featured.id}`} className="text-xl font-semibold hover:text-blue">{featured.title}</Link>
+              <Link href={`/account/orders/${featured.id}`} className="text-xl font-semibold hover:text-coral-text">{featured.title}</Link>
             </div>
             <StatusBadge status={featured.status as string} />
           </div>
@@ -44,7 +44,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
       <nav aria-label="Filter orders" className="flex gap-2 mb-4">
         {[{ k: undefined, l: 'All' }, { k: 'active', l: 'Active' }, { k: 'done', l: 'Completed & cancelled' }].map((t) => (
           <Link key={t.l} href={t.k ? `/account/orders?filter=${t.k}` : '/account/orders'} aria-current={filter === t.k ? 'page' : undefined}
-            className={`px-4 py-2 rounded-full border text-sm font-semibold ${filter === t.k ? 'bg-navy text-white border-navy' : 'bg-white border-line-2'}`}>{t.l}</Link>
+            className={`px-4 py-2 rounded-full border text-sm font-semibold ${filter === t.k ? 'bg-ink text-white border-ink' : 'bg-white border-line-strong'}`}>{t.l}</Link>
         ))}
       </nav>
       <Card>
@@ -53,7 +53,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
           {(orders ?? []).map((o) => (
             <tr key={o.id}>
               <td className="td mono text-sm">{o.code}</td>
-              <td className="td font-semibold"><Link href={`/account/orders/${o.id}`} className="hover:text-blue">{o.title}</Link><div className="text-xs text-muted font-normal">{Number(o.quantity).toLocaleString('en-US')} units</div></td>
+              <td className="td font-semibold"><Link href={`/account/orders/${o.id}`} className="hover:text-coral-text">{o.title}</Link><div className="text-xs text-muted font-normal">{Number(o.quantity).toLocaleString('en-US')} units</div></td>
               <td className="td"><Money cents={Number(o.total_cents)} currency={o.currency as string} /></td>
               <td className="td"><Money cents={Number(o.paid_cents)} currency={o.currency as string} className="text-muted" /></td>
               <td className="td"><StatusBadge status={o.status as string} /></td>

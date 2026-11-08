@@ -9,6 +9,6 @@ export function StaffHeading({ title, hint }: { title: string; hint?: React.Reac
 }
 
 export function LockNotice({ children }: { children: React.ReactNode }) {
-  return <div className="border border-[#F3D9A6] bg-[#FFF8EB] rounded-[10px] px-3.5 py-3 text-[13px] leading-[1.45] text-[#6B4A07]">{children}</div>;
+  return <div className="border border-warn-bg bg-warn-bg rounded-[10px] px-3.5 py-3 text-[13px] leading-[1.45] text-warn">{children}</div>;
 }
 

@@ -70,8 +70,8 @@ async function LedgerContent({ searchParams }: { searchParams: Promise<{ from?: 
 
   return (
     <>
-      <PageHeader title={<>Ledger and statements <span className="block sm:inline text-[18px] sm:text-[20px] font-semibold text-[#5A6475]" data-testid="ledger-period">· {fmtDate(range.from)} – {fmtDate(range.to)}</span></>}
-        subtitle={<>Your account with {content.company?.legal_name ?? 'Octopus B2B'}: every charge, payment and credit, with a running balance per currency. Invoices and receipts are on <Link href="/account/invoices" className="text-blue font-semibold">Invoices and receipts</Link>.</>} />
+      <PageHeader title={<>Ledger and statements <span className="block sm:inline text-[18px] sm:text-[20px] font-semibold text-muted" data-testid="ledger-period">· {fmtDate(range.from)} – {fmtDate(range.to)}</span></>}
+        subtitle={<>Your account with {content.company?.legal_name ?? 'Octopus B2B'}: every charge, payment and credit, with a running balance per currency. Invoices and receipts are on <Link href="/account/invoices" className="text-coral-text font-semibold">Invoices and receipts</Link>.</>} />
 
       <form method="get" className="flex flex-wrap items-end gap-3 mb-6" aria-label="Filter ledger">
         <div><label htmlFor="from" className="label">From</label><input id="from" name="from" type="date" className="input" defaultValue={range.from} /></div>
@@ -100,7 +100,7 @@ async function LedgerContent({ searchParams }: { searchParams: Promise<{ from?: 
           <>
             <span className="btn btn-ghost opacity-50 cursor-not-allowed" aria-disabled="true" title="No entries in this period" data-testid="export-pdf">Statement PDF</span>
             <span className="btn btn-ghost opacity-50 cursor-not-allowed" aria-disabled="true" title="No entries in this period" data-testid="export-csv">Download CSV</span>
-            <span className="text-[13px] text-[#5A6475] self-center">No entries in this period to export.</span>
+            <span className="text-[13px] text-muted self-center">No entries in this period to export.</span>
           </>
         )}
       </form>
@@ -108,7 +108,7 @@ async function LedgerContent({ searchParams }: { searchParams: Promise<{ from?: 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         <div data-testid="balance-due"><Stat label="Balance due" value={<MultiMoney values={balanceDue} fallback={platformCur} />} hint="Invoiced and not yet paid" /></div>
         <div data-testid="due-now"><Stat label="Due now" value={<MultiMoney values={dueNowSum} fallback={platformCur} />} hint="Deposits, balances and proformas awaiting payment" hintTone={anyDue ? 'warn' : 'ok'} /></div>
-        <Stat label="Wallet balance" value={<MultiMoney values={walletBal} fallback={platformCur} />} hint={<Link href="/account/wallet" className="underline">Open wallet</Link>} />
+        <Stat label="Wallet balance" value={<MultiMoney values={walletBal} fallback={platformCur} />} hint={<Link href="/account/wallet" className="inline-flex items-center min-h-11 underline">Open wallet</Link>} />
         <Stat label={range.from || range.to ? 'Paid this period' : 'Paid to date'} value={<MultiMoney values={paidPeriod} fallback={platformCur} />} hint={`${periodPayments.length} order payments · wallet top-ups are in the ledger below`} />
       </div>
 

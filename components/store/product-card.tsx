@@ -24,16 +24,16 @@ export function fmtQty(n: number, unit: string) {
 export function ProductTags({ tags, dropship, ready, max = 4 }: { tags: TagRef[]; dropship: boolean; ready: boolean; max?: number }) {
   const certs = tags.filter((t) => t.kind === 'certification');
   const items: { key: string; label: string; cls: string; check?: boolean }[] = [];
-  if (ready) items.push({ key: 'rts', label: 'Ready to ship', cls: 'bg-[#E3F5EA] text-[#156B3A]' });
-  if (dropship) items.push({ key: 'ds', label: 'Dropshipping', cls: 'bg-blue-soft text-[#1E4F9C]' });
-  certs.forEach((c) => items.push({ key: c.slug, label: c.name, cls: 'bg-white border border-line text-navy', check: true }));
+  if (ready) items.push({ key: 'rts', label: 'Ready to ship', cls: 'bg-ok-bg text-ok' });
+  if (dropship) items.push({ key: 'ds', label: 'Dropshipping', cls: 'bg-tint text-coral-text' });
+  certs.forEach((c) => items.push({ key: c.slug, label: c.name, cls: 'bg-white border border-line text-ink', check: true }));
   if (!items.length) return null;
   return (
     <ul className="flex flex-wrap gap-1.5" aria-label="Product tags">
       {items.slice(0, max).map((t) => (
         <li key={t.key} className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-semibold ${t.cls}`}>
           {t.check && (
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#1F9D55" strokeWidth="3" aria-hidden><path d="m5 12 5 5 9-10" /></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ok" strokeWidth="3" aria-hidden><path d="m5 12 5 5 9-10" /></svg>
           )}
           {t.label}
         </li>
@@ -47,7 +47,7 @@ export function ProductImage({ src, alt, className = 'aspect-[4/3]', label = 'Pr
 }) {
   if (!src) return <div className={`ph ${className}`} role="img" aria-label={`${alt} — photo coming soon`}>{label}</div>;
   // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt={alt} width={width} height={height} loading="lazy" decoding="async" className={`${className} w-full object-cover bg-surface`} />;
+  return <img src={src} alt={alt} width={width} height={height} loading="lazy" decoding="async" className={`${className} w-full object-cover bg-pearl`} />;
 }
 
 /** Products.png card: tier price range, MOQ, tags and <SupplierCode/>. `featured` variant = Main.png card. */
@@ -63,7 +63,7 @@ export function ProductCard({ p, categoryName, variant = 'grid', cta = 'quote' }
       <div className="p-4 flex flex-col gap-2 flex-1">
         {categoryName && <div className="mono text-[11px] uppercase tracking-wider text-muted">{categoryName}</div>}
         <h3 className="font-sans text-[15px] font-semibold leading-snug line-clamp-2">
-          <Link href={`/p/${p.slug}`} className="hover:text-blue">{p.title}</Link>
+          <Link href={`/p/${p.slug}`} className="hover:text-coral-text">{p.title}</Link>
         </h3>
         {variant === 'featured' && base ? (
           <div>
@@ -79,9 +79,9 @@ export function ProductCard({ p, categoryName, variant = 'grid', cta = 'quote' }
           {/* ADDON-44 rule 4: public cards never show the supplier code */}
           {p.supplier && (
             <span className="inline-flex items-center gap-1.5 text-[13px] text-muted" data-testid="card-factory">
-              {p.supplier.country && <span className="mono text-[10px] font-semibold bg-surface border border-line rounded px-1 py-px text-navy">{p.supplier.country}</span>}
+              {p.supplier.country && <span className="mono text-[10px] font-semibold bg-pearl border border-line rounded px-1 py-px text-ink">{p.supplier.country}</span>}
               <span>{p.supplier.verified ? 'Verified factory' : 'Factory'}</span>
-              {p.supplier.verified && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15803D" strokeWidth="2.2" aria-hidden><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>}
+              {p.supplier.verified && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ok" strokeWidth="2.2" aria-hidden><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>}
             </span>
           )}
           {variant !== 'featured' && (cta === 'pool' ? (
@@ -118,7 +118,7 @@ export function GridSkeleton({ n = 8, cols = 'lg:grid-cols-4' }: { n?: number; c
         <div key={i} className="card overflow-hidden">
           <div className="ph aspect-[4/3]" />
           <div className="p-4 space-y-2">
-            <div className="h-4 bg-surface rounded w-4/5" /><div className="h-4 bg-surface rounded w-1/2" /><div className="h-8 bg-surface rounded" />
+            <div className="h-4 bg-pearl rounded w-4/5" /><div className="h-4 bg-pearl rounded w-1/2" /><div className="h-8 bg-pearl rounded" />
           </div>
         </div>
       ))}

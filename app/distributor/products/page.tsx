@@ -63,7 +63,7 @@ export default async function DistributorProducts({ searchParams }: { searchPara
         subtitle={selected ? 'Only this supplier\'s products. Drafts autosave; submit them for moderation when ready.' : 'Products of the suppliers assigned to you. Drafts autosave; submit them for moderation when ready.'}
         eyebrow={selected ? (
           <Link href={qs({ supplier: undefined, page: undefined })} data-testid="clear-supplier"
-            className="inline-flex items-center gap-1.5 rounded-full border border-line-2 bg-white px-3 py-1 text-[13px] font-semibold hover:border-navy">
+            className="inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-white px-3 py-1 text-[13px] font-semibold hover:border-ink">
             <span aria-hidden>×</span> All suppliers
           </Link>
         ) : undefined}

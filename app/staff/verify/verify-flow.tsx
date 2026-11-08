@@ -50,8 +50,8 @@ export function VerifyFlow(p: Props) {
 
 function TrustBox({ hours, checked, onChange }: { hours: number; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <label className="flex items-start gap-2.5 text-sm leading-[1.45] text-[#3B4556] cursor-pointer">
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="w-[18px] h-[18px] mt-0.5 accent-blue flex-none" />
+    <label className="flex items-start gap-2.5 text-sm leading-[1.45] text-black cursor-pointer">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="w-[18px] h-[18px] mt-0.5 accent-coral-text flex-none" />
       Trust this computer for {hours >= 48 && hours % 24 === 0 ? `${hours / 24} days` : `${hours} hours`} — you won&apos;t be asked for the code again on it until then
     </label>
   );
@@ -60,7 +60,7 @@ function TrustBox({ hours, checked, onChange }: { hours: number; checked: boolea
 function BackLink() {
   return (
     <form action={staffSignOut}>
-      <button type="submit" className="text-[15px] font-semibold text-blue">Back</button>
+      <button type="submit" className="text-[15px] font-semibold text-coral-text">Back</button>
     </form>
   );
 }
@@ -109,8 +109,8 @@ function Challenge(p: Props & { onBackup: () => void }) {
       {err && <p className="text-sm text-bad m-0" role="alert">{err}</p>}
       <button className="btn btn-primary w-full min-h-[50px]" disabled={busy || code.length !== 6}>{busy ? 'Verifying…' : 'Verify and continue'}</button>
       <div className="flex justify-between items-center">
-        <button type="button" onClick={p.onBackup} className="text-[15px] font-semibold text-blue">Use a backup code</button>
-        {p.stepUp ? <button type="button" onClick={() => router.back()} className="text-[15px] font-semibold text-blue">Cancel</button> : <BackLink />}
+        <button type="button" onClick={p.onBackup} className="text-[15px] font-semibold text-coral-text">Use a backup code</button>
+        {p.stepUp ? <button type="button" onClick={() => router.back()} className="text-[15px] font-semibold text-coral-text">Cancel</button> : <BackLink />}
       </div>
       {!p.stepUp && <p className="text-[13px] text-muted leading-[1.45] m-0">First sign-in? You will scan a QR code to set up two-step verification and save 10 backup codes.</p>}
     </form>
@@ -147,7 +147,7 @@ function BackupCode(p: Props & { onBack: () => void }) {
       {err && <p className="text-sm text-bad m-0" role="alert">{err}</p>}
       <button className="btn btn-primary w-full min-h-[50px]" disabled={busy || !code.trim()}>{busy ? 'Checking…' : 'Use backup code'}</button>
       <div className="flex justify-between items-center">
-        <button type="button" onClick={p.onBack} className="text-[15px] font-semibold text-blue">Use my authenticator app</button>
+        <button type="button" onClick={p.onBack} className="text-[15px] font-semibold text-coral-text">Use my authenticator app</button>
         <BackLink />
       </div>
       <p className="text-[13px] text-muted leading-[1.45] m-0">No backup codes left? Ask an Admin to reset your two-step verification.</p>
@@ -230,8 +230,8 @@ function Enrol(p: Props) {
           </ol>
           {enr && (
             <div className="mt-3">
-              <button type="button" className="text-blue font-semibold" onClick={() => setShowSecret((v) => !v)} aria-expanded={showSecret}>Can’t scan? Enter a key instead</button>
-              {showSecret && <div className="mt-2 font-mono text-[13px] text-navy break-all bg-white border border-line rounded-md px-2 py-1.5 select-all">{enr.secret}</div>}
+              <button type="button" className="text-coral-text font-semibold" onClick={() => setShowSecret((v) => !v)} aria-expanded={showSecret}>Can’t scan? Enter a key instead</button>
+              {showSecret && <div className="mt-2 font-mono text-[13px] text-ink break-all bg-white border border-line rounded-md px-2 py-1.5 select-all">{enr.secret}</div>}
             </div>
           )}
         </div>

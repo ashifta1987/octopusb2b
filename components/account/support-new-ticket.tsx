@@ -100,8 +100,8 @@ export function SupportNewTicket({ orders, defaultOrderId, orgId, now, defaultSu
         <legend className="label">Type of request<span className="text-bad" aria-hidden> *</span></legend>
         <div className="grid gap-2 sm:grid-cols-3">
           {CATEGORIES.map((c) => (
-            <label key={c.value} className={cn('cursor-pointer rounded-[8px] border px-3 py-2.5 text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue',
-              category === c.value ? 'bg-navy border-navy text-white' : 'bg-white border-line-2 hover:border-navy')}>
+            <label key={c.value} className={cn('cursor-pointer rounded-[8px] border px-3 py-2.5 text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-coral-text',
+              category === c.value ? 'bg-ink border-ink text-white' : 'bg-white border-line-strong hover:border-ink')}>
               <input type="radio" name="category" value={c.value} checked={category === c.value} onChange={() => setCategory(c.value)} className="sr-only" />
               <span className="block font-semibold">{c.label}{category === c.value && <span className="sr-only"> (selected)</span>}</span>
               <span className={cn('block text-xs mt-0.5', category === c.value ? 'text-white/80' : 'text-muted')}>{c.hint}</span>
@@ -115,8 +115,8 @@ export function SupportNewTicket({ orders, defaultOrderId, orgId, now, defaultSu
           <legend className="label">What happened?</legend>
           <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
             {WHAT_HAPPENED.map((w) => (
-              <label key={w} className={cn('cursor-pointer rounded-[8px] border px-3 py-2.5 text-sm font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-blue',
-                what === w ? 'bg-navy border-navy text-white' : 'bg-white border-line-2 hover:border-navy')}>
+              <label key={w} className={cn('cursor-pointer rounded-[8px] border px-3 py-2.5 text-sm font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-coral-text',
+                what === w ? 'bg-ink border-ink text-white' : 'bg-white border-line-strong hover:border-ink')}>
                 <input type="radio" name="what" value={w} checked={what === w} onChange={() => setWhat(w)} className="sr-only" />
                 {w}{what === w && <span className="sr-only"> (selected)</span>}
               </label>
@@ -159,10 +159,10 @@ export function SupportNewTicket({ orders, defaultOrderId, orgId, now, defaultSu
           placeholder={category === 'complaint' ? 'What is wrong, how you found it, carton or batch marks' : 'How can we help?'} />
       </div>
 
-      <div className="rounded-[10px] border border-dashed border-line-2 bg-surface/50 px-4 py-3">
+      <div className="rounded-[10px] border border-dashed border-line-strong bg-pearl/50 px-4 py-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <p className="text-sm text-muted">
-            {category === 'complaint' ? <><strong className="text-navy">We need:</strong> packing list, photos of cartons and labels, the count.</> : 'Optional: add photos, screenshots or files.'}
+            {category === 'complaint' ? <><strong className="text-ink">We need:</strong> packing list, photos of cartons and labels, the count.</> : 'Optional: add photos, screenshots or files.'}
             <span className="block text-xs mt-0.5">Up to {MAX_FILES} files, 10 MB each.</span>
           </p>
           <input ref={fileRef} id="tk-files" type="file" multiple accept={ACCEPT} className="sr-only" onChange={(e) => addFiles(e.target.files)} />
@@ -208,7 +208,7 @@ function ClaimNotice({ order, now }: { order: SupportOrderOption; now: number })
   if (vis && now <= vis) {
     const days = del ? Math.round((vis - del) / 86_400_000) : null;
     return (
-      <p role="status" className="rounded-[10px] border border-warn/40 bg-[#FFF3D6] px-4 py-3 text-sm text-[#8A5A00]">
+      <p role="status" className="rounded-[10px] border border-warn/40 bg-warn-bg px-4 py-3 text-sm text-warn">
         Report visible problems{days ? ` within ${days} days of delivery` : ''}. {order.code}
         {del ? ` was delivered ${fmtDate(order.delivered_at)}, so the deadline is ` : ' deadline: '}{fmtDate(order.claim_visible_until)}.
         {hid ? ` Hidden defects can be reported until ${fmtDate(order.claim_hidden_until)}.` : ''}
@@ -217,13 +217,13 @@ function ClaimNotice({ order, now }: { order: SupportOrderOption; now: number })
   }
   if (hid && now <= hid) {
     return (
-      <p role="status" className="rounded-[10px] border border-warn/40 bg-[#FFF3D6] px-4 py-3 text-sm text-[#8A5A00]">
+      <p role="status" className="rounded-[10px] border border-warn/40 bg-warn-bg px-4 py-3 text-sm text-warn">
         The window for visible problems on {order.code} ended {fmtDate(order.claim_visible_until)}. Hidden defects can still be reported until {fmtDate(order.claim_hidden_until)}.
       </p>
     );
   }
   return (
-    <p role="status" className="rounded-[10px] border border-bad/40 bg-[#FDE8E8] px-4 py-3 text-sm text-[#A32D2D]">
+    <p role="status" className="rounded-[10px] border border-bad/40 bg-bad-bg px-4 py-3 text-sm text-bad">
       The claim window for {order.code} has ended{hid ? ` (${fmtDate(order.claim_hidden_until)})` : ''}. You can still contact us — our team will review case by case.
     </p>
   );

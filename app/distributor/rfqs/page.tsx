@@ -76,7 +76,7 @@ export default async function DistributorRfqs() {
                 )}
                 <details className="mt-4">
                   <summary className="btn btn-primary btn-sm cursor-pointer list-none inline-flex">Quote on behalf of a supplier</summary>
-                  <div className="mt-4 rounded-[10px] bg-surface p-4">
+                  <div className="mt-4 rounded-[10px] bg-pearl p-4">
                     <QuoteForm idPrefix={`q-${r.id}`} action={sendQuote.bind(null, r.id)} suppliers={supplierOpts} defaultQty={r.quantity} defaultIncoterm={r.incoterm} unit={r.unit} currency={cx.currency} />
                   </div>
                 </details>

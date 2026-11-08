@@ -5,16 +5,16 @@ import {
 /** Main.png category bar: one icon per top-level category (matched on the slug; generic tag icon otherwise). Decorative only. */
 // [slug pattern, icon, stroke colour from docs/design/html/Main.html]
 const ICONS: [RegExp, LucideIcon, string][] = [
-  [/fastener|bolt|screw/, Bolt, '#B45309'],
-  [/tool/, Hammer, '#1E40AF'],
-  [/safety|ppe/, ShieldCheck, '#166534'],
-  [/electric|cable|light/, Zap, '#854D0E'],
-  [/packag|box/, Package, '#6B21A8'],
-  [/hydraul|pneumat|valve|pump/, Gauge, '#155E75'],
-  [/handling|lift|storage/, Forklift, '#9F1239'],
-  [/chemical|lab/, FlaskConical, '#3730A3'],
-  [/office|stationery/, Paperclip, '#1E3A8A'],
-  [/textile|apparel|fabric|workwear/, Shirt, '#9D174D'],
+  [/fastener|bolt|screw/, Bolt, 'var(--needs)'],
+  [/tool/, Hammer, 'var(--coral-text)'],
+  [/safety|ppe/, ShieldCheck, 'var(--green-ink)'],
+  [/electric|cable|light/, Zap, 'var(--amber-ink)'],
+  [/packag|box/, Package, 'var(--violet)'],
+  [/hydraul|pneumat|valve|pump/, Gauge, 'var(--cyan)'],
+  [/handling|lift|storage/, Forklift, 'var(--red-ink)'],
+  [/chemical|lab/, FlaskConical, 'var(--ink-2)'],
+  [/office|stationery/, Paperclip, 'var(--ink)'],
+  [/textile|apparel|fabric|workwear/, Shirt, 'var(--pink)'],
 ];
 
 export function CategoryIcon({ slug, className = 'w-4 h-4' }: { slug: string; className?: string }) {

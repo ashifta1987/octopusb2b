@@ -29,7 +29,7 @@ export type ConversationProps = {
 type UiMessage = AssistantMessage & { pending?: boolean; failed?: boolean };
 
 const OctoAvatar = ({ size = 36 }: { size?: number }) => (
-  <span aria-hidden className="flex-none rounded-[10px] bg-blue-fill text-white flex items-center justify-center font-display font-bold text-[12px]" style={{ width: size, height: size }}>O</span>
+  <span aria-hidden className="flex-none rounded-[10px] bg-coral text-white flex items-center justify-center font-display font-bold text-[12px]" style={{ width: size, height: size }}>O</span>
 );
 
 function sortMsgs(list: UiMessage[]) {
@@ -140,19 +140,19 @@ export function Conversation(p: ConversationProps) {
 
   return (
     <section className={`card p-0 flex flex-col overflow-hidden ${p.className ?? ''}`} aria-label="Conversation with Octo">
-      <div className="px-[18px] py-2.5 border-b border-line flex flex-wrap items-center justify-between gap-2.5 bg-[#FAFBFC]">
+      <div className="px-[18px] py-2.5 border-b border-line flex flex-wrap items-center justify-between gap-2.5 bg-fill">
         <h2 className="m-0 font-display font-bold text-[14px]">Conversation · {fmtDay(p.startedAt ?? messages[0]?.created_at)}</h2>
         <div className="flex flex-wrap items-center gap-2 text-[12px] text-muted">
           {withHuman ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold bg-[#E7F6EC] text-[#166534]"><span aria-hidden className="w-[7px] h-[7px] rounded-full bg-[#166534]" />With {managerFirst}</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold bg-ok-bg text-ok"><span aria-hidden className="w-[7px] h-[7px] rounded-full bg-ok" />With {managerFirst}</span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold bg-[#E7F6EC] text-[#166534]"><span aria-hidden className="w-[7px] h-[7px] rounded-full bg-[#166534]" />Octo online</span>
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold bg-ok-bg text-ok"><span aria-hidden className="w-[7px] h-[7px] rounded-full bg-ok" />Octo online</span>
           )}
           {p.counts && <span>{contextLabel(p.counts)}</span>}
         </div>
       </div>
 
-      <div ref={logRef} role="log" aria-live="polite" aria-label="Messages" className="flex-1 min-h-0 overflow-y-auto p-5 flex flex-col gap-3.5 bg-surface">
+      <div ref={logRef} role="log" aria-live="polite" aria-label="Messages" className="flex-1 min-h-0 overflow-y-auto p-5 flex flex-col gap-3.5 bg-pearl">
         <div className="flex gap-2.5 max-w-[86%] self-start">
           <OctoAvatar />
           <div className="px-3.5 py-3 rounded-[14px] rounded-tl-[4px] bg-white border border-line text-[14.5px] leading-[1.55]">
@@ -161,7 +161,7 @@ export function Conversation(p: ConversationProps) {
             <div className="flex flex-wrap gap-1.5 mt-2.5">
               {chips.map((c) => (
                 <button key={c.label} type="button" disabled={sending} onClick={() => send(c.text)}
-                  className="inline-flex items-center rounded-full border border-[#B9D2F5] bg-[#F4F8FE] px-3 py-2 text-[13px] font-medium text-[#3B4556] hover:border-blue hover:text-blue disabled:opacity-50">{c.label}</button>
+                  className="inline-flex items-center rounded-full border border-tint bg-tint-2 px-3 py-2 text-[13px] font-medium text-black hover:border-coral-text hover:text-coral-text disabled:opacity-50">{c.label}</button>
               ))}
             </div>
           </div>
@@ -170,7 +170,7 @@ export function Conversation(p: ConversationProps) {
         {messages.map((m) => {
           if (m.author === 'system') {
             return (
-              <div key={m.id} role="status" className="self-center max-w-[90%] bg-[#FFF4E5] text-[#6B4A07] border border-[#F3D9A6] rounded-[12px] px-3 py-2 text-[12.5px] leading-[1.45] flex gap-2 items-start">
+              <div key={m.id} role="status" className="self-center max-w-[90%] bg-warn-bg text-warn border border-warn-bg rounded-[12px] px-3 py-2 text-[12.5px] leading-[1.45] flex gap-2 items-start">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" aria-hidden className="flex-none mt-px"><path d="M12 2a10 10 0 1 0 10 10" /><path d="m8 12 3 3 5-6" /></svg>
                 <div><span className="sr-only">System notice: </span>{m.content}</div>
               </div>
@@ -179,9 +179,9 @@ export function Conversation(p: ConversationProps) {
           if (m.author === 'customer') {
             return (
               <div key={m.id} className="flex gap-2.5 max-w-[86%] self-end flex-row-reverse">
-                <span aria-hidden className="flex-none w-9 h-9 rounded-[10px] bg-navy text-white flex items-center justify-center font-display font-bold text-[12px]">{me}</span>
+                <span aria-hidden className="flex-none w-9 h-9 rounded-[10px] bg-ink text-white flex items-center justify-center font-display font-bold text-[12px]">{me}</span>
                 <div className="flex flex-col items-end gap-1">
-                  <div className={`px-3.5 py-3 rounded-[14px] rounded-tr-[4px] bg-blue-fill text-white text-[14.5px] leading-[1.55] whitespace-pre-wrap break-words ${m.pending ? 'opacity-70' : ''}`}>
+                  <div className={`px-3.5 py-3 rounded-[14px] rounded-tr-[4px] bg-coral text-white text-[14.5px] leading-[1.55] whitespace-pre-wrap break-words ${m.pending ? 'opacity-70' : ''}`}>
                     <span className="sr-only">You: </span>{m.content}
                   </div>
                   {m.failed && <span className="text-[11px] text-bad">Not sent</span>}
@@ -194,10 +194,10 @@ export function Conversation(p: ConversationProps) {
             const name = isMgr ? p.team!.name : 'Account team';
             return (
               <div key={m.id} className="flex gap-2.5 max-w-[86%] self-start">
-                <span aria-hidden className="flex-none w-9 h-9 rounded-[10px] bg-[#166534] text-white flex items-center justify-center font-display font-bold text-[12px]">{isMgr ? p.team!.initials : 'AT'}</span>
+                <span aria-hidden className="flex-none w-9 h-9 rounded-[10px] bg-ok text-white flex items-center justify-center font-display font-bold text-[12px]">{isMgr ? p.team!.initials : 'AT'}</span>
                 <div className="flex flex-col gap-1">
-                  <span className="text-[11.5px] font-semibold text-[#166534]">{name} · account manager</span>
-                  <div className="px-3.5 py-3 rounded-[14px] rounded-tl-[4px] bg-[#F0FBF4] border border-[#BFE2CB] text-[14.5px] leading-[1.55] whitespace-pre-wrap break-words">{m.content}</div>
+                  <span className="text-[11.5px] font-semibold text-ok">{name} · account manager</span>
+                  <div className="px-3.5 py-3 rounded-[14px] rounded-tl-[4px] bg-ok-bg border border-ok-bg text-[14.5px] leading-[1.55] whitespace-pre-wrap break-words">{m.content}</div>
                 </div>
               </div>
             );
@@ -214,7 +214,7 @@ export function Conversation(p: ConversationProps) {
       </div>
 
       {!p.withinHours && !withHuman && (
-        <fieldset className="px-4 py-2 border-t border-line bg-[#FFF4E5] text-[12.5px] text-[#6B4A07] flex flex-wrap items-center gap-x-4 gap-y-1">
+        <fieldset className="px-4 py-2 border-t border-line bg-warn-bg text-[12.5px] text-warn flex flex-wrap items-center gap-x-4 gap-y-1">
           <legend className="sr-only">Outside office hours</legend>
           <span>{managerFirst === 'your account manager' ? 'Your account manager' : managerFirst} is outside office hours{p.hoursLabel ? ` (${p.hoursLabel})` : ''}.</span>
           <label className="inline-flex items-center gap-1.5"><input type="radio" name={`ph-${p.channel}`} checked={!preferHuman} onChange={() => setPreferHuman(false)} /> Let Octo try</label>
@@ -229,7 +229,7 @@ export function Conversation(p: ConversationProps) {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(text); } }}
           placeholder={`Message Octo${p.team ? ` or ${p.team.first_name}` : ''}… (Enter to send, Shift + Enter for a new line)`}
-          className="flex-1 min-w-0 min-h-[46px] max-h-[160px] border border-line-2 rounded-[10px] px-3.5 py-3 resize-y text-[15px]"
+          className="flex-1 min-w-0 min-h-[46px] max-h-[160px] border border-line-strong rounded-[10px] px-3.5 py-3 resize-y text-[15px]"
         />
         <div className="flex flex-col gap-1.5 items-end">
           <button type="submit" className="btn btn-primary min-h-[46px]" disabled={sending || !text.trim()}>{sending ? '…' : 'Send'}</button>
@@ -251,7 +251,7 @@ function BotBubble({ m, feedback, onFeedback }: { m: UiMessage; feedback: boolea
     <div className="flex gap-2.5 max-w-[86%] self-start">
       <OctoAvatar />
       <div className="flex flex-col gap-1 min-w-0">
-        <div className="px-3.5 py-3 rounded-[14px] rounded-tl-[4px] bg-white border border-[#B9D2F5] text-[14.5px] leading-[1.55] break-words">
+        <div className="px-3.5 py-3 rounded-[14px] rounded-tl-[4px] bg-white border border-tint text-[14.5px] leading-[1.55] break-words">
           <span className="sr-only">Octo (AI): </span>
           <div className="whitespace-pre-wrap">{m.content}</div>
           {low && <div className="mt-1 text-[12px] text-muted">Confidence {Math.round(Number(m.confidence) * 100)}%</div>}
@@ -259,7 +259,7 @@ function BotBubble({ m, feedback, onFeedback }: { m: UiMessage; feedback: boolea
           {uniqLinks.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mt-2.5">
               {uniqLinks.map((l) => (
-                <Link key={l.href} href={l.href} className="inline-flex items-center rounded-full border border-line-2 bg-white px-3 py-2 text-[13px] font-medium text-[#3B4556] hover:border-blue hover:text-blue">{l.label}</Link>
+                <Link key={l.href} href={l.href} className="inline-flex items-center rounded-full border border-line-strong bg-white px-3 py-2 text-[13px] font-medium text-black hover:border-coral-text hover:text-coral-text">{l.label}</Link>
               ))}
             </div>
           )}
@@ -295,7 +295,7 @@ function DraftCard({ messageId, index, draft }: { messageId: string; index: numb
       ] as [string, string][]).filter(([, v]) => v)
     : Object.entries(draft.details).filter(([k]) => k !== 'source').map(([k, v]) => [k.replace(/_/g, ' '), String(v)] as [string, string]);
   return (
-    <div className="mt-3 rounded-[12px] border border-line bg-surface p-3 text-[13.5px]">
+    <div className="mt-3 rounded-[12px] border border-line bg-pearl p-3 text-[13.5px]">
       <div className="flex items-center justify-between gap-2">
         <strong>{draft.kind === 'rfq' ? 'Draft RFQ' : `Draft ${draft.service_name ?? draft.service_code} request`}</strong>
         <span className="text-[11px] font-semibold rounded-full bg-white border border-line px-2 py-0.5">Not submitted</span>
@@ -305,7 +305,7 @@ function DraftCard({ messageId, index, draft }: { messageId: string; index: numb
         {fee && (<><dt className="text-muted">Service charge</dt><dd className="m-0 font-semibold">{fee}</dd></>)}
       </dl>
       {step === 'done' && result ? (
-        <div className="mt-2.5 text-ok font-semibold" role="status">Submitted ✓ <Link href={result.href} className="text-blue underline ml-1">{result.label}</Link></div>
+        <div className="mt-2.5 text-ok font-semibold" role="status">Submitted ✓ <Link href={result.href} className="text-coral-text underline ml-1">{result.label}</Link></div>
       ) : step === 'confirm' ? (
         <div className="mt-2.5 flex flex-wrap items-center gap-2">
           <span className="text-[12.5px]">{fee ? `Submit now? ${fee} will be charged per your wallet/billing settings.` : 'Submit this request now?'}</span>

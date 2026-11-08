@@ -35,20 +35,20 @@ async function ServiceStartContent({ service }: { service: Exclude<ServiceKey, '
   const on = serviceOn(st);
   return (
     <div className="max-w-[860px]">
-      <div className="mono text-[11.5px] font-semibold uppercase tracking-[.1em] text-blue">{on ? 'Switched on' : 'Not switched on yet'}</div>
+      <div className="mono text-[11.5px] font-semibold uppercase tracking-[.1em] text-coral-text">{on ? 'Switched on' : 'Not switched on yet'}</div>
       <h1 className="text-[32px] font-extrabold leading-tight">{c.title}</h1>
       <section className="card p-6 mt-5" data-testid={on ? 'service-setting-up' : 'service-start'}>
         <p className="text-[16px]">{c.lead}</p>
         <ul className="mt-4 space-y-2">{c.points.map((p) => <li key={p} className="flex gap-2.5 text-[15px]"><span aria-hidden className="text-ok font-bold">✓</span>{p}</li>)}</ul>
         {on ? (
           <>
-            <p className="mt-5 text-[15px] text-[#5A6475]">Your account manager is setting this up for your company{st.plan ? ` (plan: ${st.plan})` : ''}. You will see it here as soon as it is running.</p>
+            <p className="mt-5 text-[15px] text-muted">Your account manager is setting this up for your company{st.plan ? ` (plan: ${st.plan})` : ''}. You will see it here as soon as it is running.</p>
             {service === 'dropship' && <Link href="/account/dropship/catalogue" className="btn btn-primary min-h-11 mt-4" data-testid="browse-catalogue">Browse catalogue</Link>}
           </>
         ) : (
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link href={`/account/support?topic=${service}`} className="btn btn-primary min-h-11">Start {c.title}</Link>
-            <span className="text-[14px] text-[#5A6475]">{ctx.manager ? `${ctx.manager.name}, your account manager,` : 'Your account manager'} switches it on and explains the prices.</span>
+            <span className="text-[14px] text-muted">{ctx.manager ? `${ctx.manager.name}, your account manager,` : 'Your account manager'} switches it on and explains the prices.</span>
             {service === 'dropship' && <Link href="/account/dropship/catalogue" className="btn btn-ghost min-h-11" data-testid="browse-catalogue">Browse catalogue</Link>}
           </div>
         )}

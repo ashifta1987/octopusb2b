@@ -13,7 +13,7 @@ import { supplierScope } from '@/lib/distributor/supplier-scope';
 export const metadata = { title: 'Bulk upload (Excel)' };
 
 const MODE: Record<string, { label: string; tone: string }> = {
-  create: { label: 'Create', tone: 'text-blue' }, update: { label: 'Update', tone: 'text-warn' }, unchanged: { label: 'No change', tone: 'text-muted' },
+  create: { label: 'Create', tone: 'text-coral-text' }, update: { label: 'Update', tone: 'text-warn' }, unchanged: { label: 'No change', tone: 'text-muted' },
 };
 
 export default async function ImportPage({ searchParams }: { searchParams: Promise<{ job?: string; supplier?: string }> }) {
@@ -45,13 +45,13 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
   return (
     <>
       <PageHeader title={selected ? `Bulk upload · ${selected.code} · ${selected.legal_name}` : 'Bulk upload (Excel)'}
-        eyebrow={selected ? <Link href="/distributor/products/import" className="inline-flex items-center gap-1.5 rounded-full border border-line-2 bg-white px-3 py-1 text-[13px] font-semibold hover:border-navy"><span aria-hidden>×</span> All suppliers</Link> : undefined}
+        eyebrow={selected ? <Link href="/distributor/products/import" className="inline-flex items-center gap-1.5 rounded-full border border-line-strong bg-white px-3 py-1 text-[13px] font-semibold hover:border-ink"><span aria-hidden>×</span> All suppliers</Link> : undefined}
         subtitle="Create or update hundreds of products at once. Every product has a platform-wide unique SKU: a new SKU creates a product, a SKU you already own updates it." />
       <ol className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6" aria-label="Progress">
         {steps.map((t, i) => (
           <li key={t} aria-current={i + 1 === step ? 'step' : undefined}>
-            <div className={cn('h-1 rounded-full', i + 1 <= step ? 'bg-blue-fill' : 'bg-line')} />
-            <div className={cn('mt-2 text-sm', i + 1 <= step ? 'font-semibold text-navy' : 'text-muted')}>{i + 1} · {t}</div>
+            <div className={cn('h-1 rounded-full', i + 1 <= step ? 'bg-coral' : 'bg-line')} />
+            <div className={cn('mt-2 text-sm', i + 1 <= step ? 'font-semibold text-ink' : 'text-muted')}>{i + 1} · {t}</div>
           </li>
         ))}
       </ol>
@@ -104,7 +104,7 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
         <Card className="mb-6" title={<>3 · Check results <span className="mono text-sm text-muted font-normal">· {job.file_name}</span></>}
           action={<StatusBadge status={job.status === 'validated' ? 'in_review' : job.status === 'imported' ? 'completed' : 'submitted'} label={job.status} />}>
           <div className="px-6 pb-4 flex flex-wrap gap-3 items-center">
-            <span className="text-sm" data-testid="import-summary"><b>{job.total_rows}</b> rows · <span className="text-blue font-semibold">{creates} new</span> · <span className="text-warn font-semibold">{updates} updates</span> · <span className="text-muted">{(rows ?? []).filter((r) => (r.data as ImportData).mode === 'unchanged' && !r.errors).length} unchanged</span> · <span className="text-bad font-semibold">{(rows ?? []).filter((r) => r.errors).length} with errors</span> · {imported} imported</span>
+            <span className="text-sm" data-testid="import-summary"><b>{job.total_rows}</b> rows · <span className="text-coral-text font-semibold">{creates} new</span> · <span className="text-warn font-semibold">{updates} updates</span> · <span className="text-muted">{(rows ?? []).filter((r) => (r.data as ImportData).mode === 'unchanged' && !r.errors).length} unchanged</span> · <span className="text-bad font-semibold">{(rows ?? []).filter((r) => r.errors).length} with errors</span> · {imported} imported</span>
             <span className="flex-1" />
             {importable > 0 && !((job.cost_flagged_rows ?? 0) > 0 && !job.cost_confirmed_at) && <RunButton className="btn btn-primary btn-sm" action={importValidRows.bind(null, job.id)} confirm={`Save ${creates} new products (drafts) and ${updates} updates?`}>Confirm and import {importable}</RunButton>}
             {submittable > 0 && <RunButton className="btn btn-dark btn-sm" action={submitImported.bind(null, job.id)} confirm={`Submit ${submittable} products of this job for moderation?`}>Submit {submittable} for moderation</RunButton>}
@@ -128,17 +128,17 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
               const warns = (r.warnings ?? []) as string[];
               const m = MODE[d.mode ?? 'create'];
               return (
-                <tr key={r.id} className={errs.length ? 'bg-[#FDF6F6]' : undefined} data-testid="import-row" data-row={r.row_no}>
+                <tr key={r.id} className={errs.length ? 'bg-bad-bg' : undefined} data-testid="import-row" data-row={r.row_no}>
                   <td className="td mono text-sm">{r.row_no}</td>
                   <td className="td mono text-xs">{d.sku || <span className="text-bad">—</span>}</td>
                   <td className="td text-sm">{d.title || <span className="text-muted">—</span>}<div className="text-xs text-muted">{d.category_path}</div></td>
                   <td className="td mono text-sm">{d.supplier_code}</td>
                   <td className="td text-xs mono">{d.tiers.map((t) => `${t.min_qty}+ ${money(t.unit_price_cents, d.currency ?? 'USD')}`).join(' · ')}</td>
                   <td className={cn('td text-sm font-semibold', m.tone)}>{errs.length ? '—' : m.label}
-                    {!errs.length && d.diff?.some((x) => x.field === 'category') && <div><span className="inline-block mt-1 text-[11px] font-semibold px-1.5 py-0.5 rounded bg-[#FFF3D6] text-[#8A5A00]" data-testid="category-change">Category change</span></div>}
+                    {!errs.length && d.diff?.some((x) => x.field === 'category') && <div><span className="inline-block mt-1 text-[11px] font-semibold px-1.5 py-0.5 rounded bg-warn-bg text-warn" data-testid="category-change">Category change</span></div>}
                     {d.diff && d.diff.length > 0 && (
-                      <details className="font-normal"><summary className="cursor-pointer text-xs text-blue">{d.diff.length} change{d.diff.length === 1 ? '' : 's'}</summary>
-                        <ul className="text-xs text-navy mt-1 space-y-0.5">{d.diff.map((x) => <li key={x.field} data-field={x.field} className={x.field === 'category' ? 'bg-[#FFF3D6] rounded px-1 -mx-1' : undefined}><b>{x.field}</b>: <span className="text-muted line-through">{x.from}</span> → {x.to}</li>)}</ul>
+                      <details className="font-normal"><summary className="cursor-pointer text-xs text-coral-text">{d.diff.length} change{d.diff.length === 1 ? '' : 's'}</summary>
+                        <ul className="text-xs text-ink mt-1 space-y-0.5">{d.diff.map((x) => <li key={x.field} data-field={x.field} className={x.field === 'category' ? 'bg-warn-bg rounded px-1 -mx-1' : undefined}><b>{x.field}</b>: <span className="text-muted line-through">{x.from}</span> → {x.to}</li>)}</ul>
                       </details>
                     )}
                   </td>

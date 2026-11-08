@@ -122,7 +122,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
             const self = t.id === s.userId;
             const targetIsAdmin = byUser.get(t.id)?.includes('admin') ?? false;
             return (
-              <tr key={t.id} className={cn(selUser?.id === t.id && 'bg-blue-soft', deactivated && 'opacity-70')}>
+              <tr key={t.id} className={cn(selUser?.id === t.id && 'bg-tint', deactivated && 'opacity-70')}>
                 <td className="td">
                   <div className="font-semibold">{t.full_name}{self && <span className="text-xs text-muted"> (you)</span>}</div>
                   <div className="mono text-sm text-muted break-all">{t.email ?? sec?.email}</div>
@@ -168,7 +168,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
 
       {selUser && (
         <div id="edit-user" className="mb-6">
-          <Card title={`Roles · ${selUser.full_name}`} action={<Link href="/admin/staff" className="text-sm text-blue">Close</Link>}>
+          <Card title={`Roles · ${selUser.full_name}`} action={<Link href="/admin/staff" className="text-sm text-coral-text">Close</Link>}>
             <ActionForm key={selUser.id} action={setUserRoles} className="px-6 pb-6" submitLabel="Save roles" hideSubmit={!edit} confirm="Update this person's roles? You may be asked for your 2FA code.">
               <input type="hidden" name="user_id" value={selUser.id} />
               <fieldset className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -193,7 +193,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
             {staffRoles.map((r) => (
               <li key={r.code}>
                 <Link href={`/admin/staff?role=${r.code}`} aria-current={selRole?.code === r.code ? 'true' : undefined}
-                  className={cn('block px-5 py-3 border-b border-line last:border-0', selRole?.code === r.code ? 'bg-blue-soft border-l-4 border-l-blue' : 'hover:bg-surface')}>
+                  className={cn('block px-5 py-3 border-b border-line last:border-0', selRole?.code === r.code ? 'bg-tint border-l-4 border-l-coral-text' : 'hover:bg-pearl')}>
                   <div className="font-semibold">{r.name}</div>
                   <div className="text-xs text-muted">{roleMembers(r.code)} member{roleMembers(r.code) === 1 ? '' : 's'} · {r.code === 'admin' ? 'full access' : r.description}</div>
                 </Link>

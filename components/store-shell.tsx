@@ -25,7 +25,7 @@ export async function StoreHeader() {
   const top = stockedCategories(categories, counts).filter((c) => c.level === 1);
   // real number of live products (no marketing figure)
   const products = live.products ? new Intl.NumberFormat('en-US').format(live.products) : null;
-  const pill = 'inline-flex items-center gap-[7px] px-3 py-2 rounded-full text-[14px] font-medium whitespace-nowrap shrink-0 hover:bg-surface hover:text-navy';
+  const pill = 'inline-flex items-center gap-[7px] px-3 py-2 rounded-full text-[14px] font-medium whitespace-nowrap shrink-0 hover:bg-pearl hover:text-ink';
   return (
     <>
       {/* brand kit: header + service rail stay together at the top while scrolling */}
@@ -33,7 +33,7 @@ export async function StoreHeader() {
       <header className="bg-white border-b border-line">
         <div className="max-w-[1360px] mx-auto px-4 sm:px-8 py-3.5 flex flex-wrap gap-x-5 gap-y-3.5 items-center">
           <Logo />
-          <form action="/search" role="search" className="order-3 sm:order-2 basis-full sm:basis-[440px] sm:flex-1 flex min-w-0 border-[1.5px] border-navy rounded-[10px] overflow-hidden bg-white focus-within:ring-2 focus-within:ring-[#1D4ED8] focus-within:ring-offset-2">
+          <form action="/search" role="search" className="order-3 sm:order-2 basis-full sm:basis-[440px] sm:flex-1 flex min-w-0 border-[1.5px] border-ink rounded-[10px] overflow-hidden bg-white focus-within:ring-2 focus-within:ring-coral-text focus-within:ring-offset-2">
             <label htmlFor="q" className="sr-only">Search products, HS codes or suppliers</label>
             <input id="q" name="q" type="search" placeholder={products ? `Search ${products} products, HS codes or turnkey projects` : 'Search products, HS codes or turnkey projects'}
               className="flex-1 min-w-0 px-4 min-h-[46px] text-[15px] outline-none placeholder:text-muted" />
@@ -52,7 +52,7 @@ export async function StoreHeader() {
         <ul className="max-w-[1360px] mx-auto px-4 sm:px-8 py-2.5 flex gap-1.5 items-center overflow-x-auto overscroll-x-contain">
           {/* ADDON-44: the services first (Make My Brand second, active service highlighted), then the categories */}
           <ServiceLinks poolsOn={settings.pool_enabled !== false} turnkeyOn={settings['turnkey.enabled'] !== false} pill={pill} />
-          {settings.supplier_portal_enabled === true && <li className="shrink-0"><Link href="/suppliers" className={`${pill} text-navy`}>Sell on Octopus B2B</Link></li>}
+          {settings.supplier_portal_enabled === true && <li className="shrink-0"><Link href="/suppliers" className={`${pill} text-ink`}>Sell on Octopus B2B</Link></li>}
           <li className="shrink-0 w-px h-5 bg-line mx-1.5" aria-hidden />
           <li className="shrink-0"><Link href="/products" className={`${pill} text-black`}>All categories</Link></li>
           {top.map((c) => (

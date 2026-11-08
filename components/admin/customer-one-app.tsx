@@ -30,7 +30,7 @@ export async function CustomerOneApp({ orgId, session }: { orgId: string; sessio
     <div className="grid gap-6 lg:grid-cols-2 mt-6 items-start" data-testid="customer-one-app">
       <Card title="Services">
         <div className="px-6 pb-6 space-y-3">
-          <p className="text-sm text-muted">Wallet reference <b className="mono text-navy">{org?.wallet_reference as string}</b>{onHold ? ` · ${money(onHold, 'USD')} on hold` : ''}</p>
+          <p className="text-sm text-muted">Wallet reference <b className="mono text-ink">{org?.wallet_reference as string}</b>{onHold ? ` · ${money(onHold, 'USD')} on hold` : ''}</p>
           {SERVICES.map(([k, label]) => {
             const r = st.get(k);
             return (

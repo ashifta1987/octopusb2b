@@ -69,7 +69,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
           const p = am ? person.get(am.staff_user_id as string) : undefined;
           return (
             <tr key={o.id as string} className="border-t border-line">
-              <td className="td"><Link href={`/admin/customers/${o.id}`} className="font-semibold text-blue">{o.name as string}</Link>{o.city ? <div className="text-xs text-muted">{o.city as string}</div> : null}</td>
+              <td className="td"><Link href={`/admin/customers/${o.id}`} className="font-semibold text-coral-text">{o.name as string}</Link>{o.city ? <div className="text-xs text-muted">{o.city as string}</div> : null}</td>
               <td className="td mono text-sm">{(o.buyer_code as string | null) ?? '—'}</td>
               <td className="td"><span className="inline-flex items-center gap-1.5"><CountryTag code={o.country as string | null} /><span className="text-sm">{COUNTRY_NAMES[o.country as string] ?? ''}</span></span></td>
               <td className="td"><StatusBadge status={o.kyc_status as string} /></td>
@@ -83,7 +83,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
         })}
       </Table>
       </div>
-      <p className="text-xs text-muted mt-3">{rows.length} shown{rows.length >= 300 ? ' (first 300 — refine the search)' : ''}. <Link className="text-blue" href={qs({ vip: vip === '1' ? undefined : '1' })}>{vip === '1' ? 'Show all' : 'Show VIP only'}</Link></p>
+      <p className="text-xs text-muted mt-3">{rows.length} shown{rows.length >= 300 ? ' (first 300 — refine the search)' : ''}. <Link className="text-coral-text" href={qs({ vip: vip === '1' ? undefined : '1' })}>{vip === '1' ? 'Show all' : 'Show VIP only'}</Link></p>
     </>
   );
 }

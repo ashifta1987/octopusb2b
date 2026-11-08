@@ -56,7 +56,7 @@ export default async function MyPoolsPage({ searchParams }: { searchParams: Prom
       <nav aria-label="Filter pledges" className="flex gap-2 mb-4">
         {[{ k: undefined, l: 'All' }, { k: 'active', l: 'Active' }, { k: 'closed', l: 'Closed & refunded' }].map((t) => (
           <Link key={t.l} href={t.k ? `/account/pools?filter=${t.k}` : '/account/pools'} aria-current={filter === t.k ? 'page' : undefined}
-            className={`px-4 py-2 rounded-full border text-sm font-semibold ${filter === t.k ? 'bg-navy text-white border-navy' : 'bg-white border-line-2'}`}>{t.l}</Link>
+            className={`px-4 py-2 rounded-full border text-sm font-semibold ${filter === t.k ? 'bg-ink text-white border-ink' : 'bg-white border-line-strong'}`}>{t.l}</Link>
         ))}
       </nav>
       <Card>
@@ -67,8 +67,8 @@ export default async function MyPoolsPage({ searchParams }: { searchParams: Prom
             return (
               <tr key={r.id}>
                 <td className="td">
-                  <Link href={`/pool/${r.pool_code}`} className="mono text-sm font-semibold hover:text-blue">{r.pool_code}</Link>
-                  <div className="text-sm"><Link href={`/p/${r.product_slug}`} className="hover:text-blue">{r.product_title}</Link></div>
+                  <Link href={`/pool/${r.pool_code}`} className="mono text-sm font-semibold hover:text-coral-text">{r.pool_code}</Link>
+                  <div className="text-sm"><Link href={`/p/${r.product_slug}`} className="hover:text-coral-text">{r.product_title}</Link></div>
                   <div className="text-xs text-muted">Joined {fmtDate(r.joined_at)}</div>
                 </td>
                 <td className="td mono text-sm">{Number(r.qty).toLocaleString('en-US')}</td>
@@ -82,7 +82,7 @@ export default async function MyPoolsPage({ searchParams }: { searchParams: Prom
                     bal > 0 && r.status === 'paid' ? (
                       <>
                         <Money cents={bal} currency={r.currency} />
-                        {r.balance_due_at && <div className="text-xs font-semibold text-[#B4540A]"><Countdown to={r.balance_due_at} withMinutes suffix=" left" /></div>}
+                        {r.balance_due_at && <div className="text-xs font-semibold text-needs"><Countdown to={r.balance_due_at} withMinutes suffix=" left" /></div>}
                       </>
                     ) : <span className="text-sm text-ok font-semibold">{bal === 0 ? 'Paid' : '—'}</span>
                   ) : <span className="text-sm text-muted">{r.pool_status === 'open' ? 'When the pool fills' : '—'}</span>}

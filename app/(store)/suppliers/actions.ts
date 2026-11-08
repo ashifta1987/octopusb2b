@@ -5,6 +5,7 @@ import { getEmail } from '@/lib/adapters';
 import { getSiteContent } from '@/lib/content';
 import { SITE_URL } from '@/components/store/seo';
 import { supplierApplySchema, SHEET_EXT, SHEET_MAX_BYTES, type SupplierApplyValues } from '@/lib/supplier-apply/schema';
+import { BRAND } from '@/lib/brand';
 
 /** ADDON-36 C5 — public supplier applications. Rate-limited per IP / email; product sheet via a signed upload URL. */
 
@@ -71,7 +72,7 @@ async function sendEmails(r: { id: string; reference: string }, v: ReturnType<ty
   await mail.send({
     to: v.contact_email,
     subject: `Octopus B2B · supplier application received (${r.reference})`,
-    html: `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#11133C;line-height:1.5">
+    html: `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:${BRAND.black};line-height:1.5">
       <p>Hello ${esc(v.contact_name)},</p>
       <p>Thank you for applying to sell on Octopus B2B. Your reference is <b>${r.reference}</b>.</p>
       <p>Our supplier team checks your business licence and product range, usually within 3 working days, and will contact you about a factory audit and onboarding.</p>
@@ -82,7 +83,7 @@ async function sendEmails(r: { id: string; reference: string }, v: ReturnType<ty
     await mail.send({
       to: company.email,
       subject: `New supplier application: ${v.company_name} (${v.city}) · ${r.reference}`,
-      html: `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#11133C">
+      html: `<div style="font-family:Arial,Helvetica,sans-serif;font-size:15px;color:${BRAND.black}">
         <p>${esc(v.company_name)} (${esc(v.city)}) applied to sell on Octopus B2B. Categories: ${esc(v.categories.join(', '))}.</p>
         <p><a href="${SITE_URL}/office/kyc/supplier/${r.id}">Review the application</a></p></div>`,
     }, { template: 'supplier_application.staff' });

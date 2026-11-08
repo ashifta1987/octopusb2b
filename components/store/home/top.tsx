@@ -19,7 +19,7 @@ function AnnouncementLine({ raw }: { raw: string[] }) {
   const [pill, ...rest] = text.split(' · ');
   return (
     <div className="max-w-[1360px] mx-auto px-4 sm:px-8 py-2 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-center" data-testid="announcement">
-      {rest.length > 0 && <span className="mono text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-[#F59E0B] text-navy">{pill}</span>}
+      {rest.length > 0 && <span className="mono text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-new-bg text-ink">{pill}</span>}
       <span>{rest.length ? rest.join(' · ') : text}</span>
       {linkText && href && /^(\/|https:\/\/)/.test(href) && <Link href={href} className="inline-flex items-center min-h-6 font-semibold text-on-ink-link hover:text-white underline-offset-2 hover:underline">{linkText}</Link>}
     </div>
@@ -38,23 +38,23 @@ export function AnnouncementBar({ blocks, vars, skipTurnkey = false }: { blocks:
   ].filter((l) => l[0] && !(skipTurnkey && /turnkey/i.test(l.join(' '))));
   if (!lines.length) return null;
   return (
-    <TrackSlot slot="announcement" className="bg-navy text-white text-[13.5px]">
+    <TrackSlot slot="announcement" className="bg-ink text-white text-[13.5px]">
       {lines.length === 1 ? <AnnouncementLine raw={lines[0]} /> : <AnnouncementRotator lines={lines.map((l, i) => <AnnouncementLine key={i} raw={l} />)} />}
     </TrackSlot>
   );
 }
 
 const THEME: Record<HomeBanner['theme'], string> = {
-  navy: 'bg-navy text-white', blue: 'bg-blue-fill text-white', light: 'bg-[#EEF4FD] text-navy',
+  navy: 'bg-ink text-white', blue: 'bg-coral text-white', light: 'bg-tint-2 text-ink',
 };
 
 function Container40() {
   return (
     <div aria-hidden className="hidden min-[761px]:flex flex-col justify-center gap-3 w-[230px] shrink-0">
-      <div className="rounded-[10px] border-2 border-[#4C5BD4] bg-[#262A6B] p-4 shadow-[0_10px_30px_rgba(0,0,0,.25)]">
-        <div className="flex gap-1.5 mb-3">{['#F5B544', '#E5E7EB', '#E5E7EB', '#E5E7EB'].map((c, i) => <span key={i} className="w-3 h-3 rounded-full" style={{ background: c }} />)}</div>
+      <div className="rounded-[10px] border-2 border-coral bg-ink-2 p-4 shadow-[0_10px_30px_rgba(0,0,0,.25)]">
+        <div className="flex gap-1.5 mb-3">{['var(--gold)', 'var(--line)', 'var(--line)', 'var(--line)'].map((c, i) => <span key={i} className="w-3 h-3 rounded-full" style={{ background: c }} />)}</div>
         <div className="mono text-[13px] font-bold tracking-[.12em] text-white text-center border border-white/30 rounded px-2 py-2">OCTOPUS B2B · 40HC</div>
-        <div className="grid grid-cols-6 gap-1 mt-3">{Array.from({ length: 6 }).map((_, i) => <span key={i} className="h-8 rounded-sm bg-[#1C204C]" />)}</div>
+        <div className="grid grid-cols-6 gap-1 mt-3">{Array.from({ length: 6 }).map((_, i) => <span key={i} className="h-8 rounded-sm bg-ink" />)}</div>
       </div>
     </div>
   );
@@ -69,23 +69,23 @@ function LeadSlide({ b, open }: { b: HomeBanner; open: OpenProjectCard | null })
         <img src={b.image_url} alt="" width={1200} height={600} className="absolute inset-0 w-full h-full object-cover opacity-25" />
       )}
       <div className="relative flex-1 min-w-0 flex flex-col gap-4">
-        {b.eyebrow && <div className="flex gap-2">{b.eyebrow.split(' · ').map((e, i) => <span key={i} className={`mono text-[10px] font-bold uppercase px-2 py-1 rounded-full ${i === 0 ? 'bg-[#FEF3C7] text-[#92400E]' : dark ? 'bg-white/10 text-[#C9D0E8]' : 'bg-white text-navy'}`}>{e}</span>)}</div>}
+        {b.eyebrow && <div className="flex gap-2">{b.eyebrow.split(' · ').map((e, i) => <span key={i} className={`mono text-[10px] font-bold uppercase px-2 py-1 rounded-full ${i === 0 ? 'bg-warn-bg text-warn' : dark ? 'bg-white/10 text-on-ink' : 'bg-white text-ink'}`}>{e}</span>)}</div>}
         <h1 id="home-hero-h" className={`font-display font-extrabold text-[30px] sm:text-[40px] xl:text-[44px] leading-[1.05] tracking-[-0.02em] ${dark ? '!text-white' : ''}`}>{b.title}</h1>
-        {b.body && <p className={`text-[15px] sm:text-[16px] leading-[1.55] max-w-[540px] ${dark ? 'text-[#C9D0E8]' : 'text-[#3B4556]'}`}>{b.body}</p>}
+        {b.body && <p className={`text-[15px] sm:text-[16px] leading-[1.55] max-w-[540px] ${dark ? 'text-on-ink' : 'text-black'}`}>{b.body}</p>}
         <div className="flex flex-wrap gap-2.5">
           {b.cta_label && b.cta_href && <Link href={b.cta_href} className="btn btn-primary min-h-11" data-testid="lead-cta">{b.cta_label}</Link>}
           {b.cta2_label && b.cta2_href && <Link href={b.cta2_href} className={`btn min-h-11 ${dark ? 'border border-white/40 text-white hover:bg-white/10 hover:text-white' : 'btn-ghost'}`}>{b.cta2_label}</Link>}
         </div>
-        {b.ticks.length > 0 && <ul className={`flex flex-wrap gap-x-4 gap-y-1 text-[12.5px] ${dark ? 'text-[#A9B2D0]' : 'text-muted'}`}>{b.ticks.map((t) => <li key={t}>✓ {t}</li>)}</ul>}
+        {b.ticks.length > 0 && <ul className={`flex flex-wrap gap-x-4 gap-y-1 text-[12.5px] ${dark ? 'text-on-ink' : 'text-muted'}`}>{b.ticks.map((t) => <li key={t}>✓ {t}</li>)}</ul>}
       </div>
       {b.show_open_project && (
         <div className="relative hidden min-[761px]:flex flex-col justify-center gap-3">
           <Container40 />
           {open && (
-            <div className="rounded-[12px] bg-[#1C204C] border border-white/15 p-3.5 w-[230px] text-[12px]" data-testid="open-project">
-              <div className="flex justify-between gap-2"><span className="mono text-[9.5px] uppercase text-[#A9B2D0]">Open project · {open.reference}</span><span className="mono text-[9.5px] uppercase px-1.5 py-0.5 rounded-full bg-[#DBEAFE] text-[#1E40AF]">{open.stage}</span></div>
+            <div className="rounded-[12px] bg-ink border border-white/15 p-3.5 w-[230px] text-[12px]" data-testid="open-project">
+              <div className="flex justify-between gap-2"><span className="mono text-[9.5px] uppercase text-on-ink">Open project · {open.reference}</span><span className="mono text-[9.5px] uppercase px-1.5 py-0.5 rounded-full bg-tint text-coral-text">{open.stage}</span></div>
               <div className="font-semibold mt-1">{open.project}{open.tier ? ` · ${open.tier}` : ''} · {open.country}</div>
-              <div className="mono text-[9.5px] uppercase text-[#A9B2D0] mt-1">Spec → Quote → QC → Ship → Install</div>
+              <div className="mono text-[9.5px] uppercase text-on-ink mt-1">Spec → Quote → QC → Ship → Install</div>
             </div>
           )}
         </div>
@@ -99,13 +99,13 @@ export function BannerGrid({ blocks, banners, open, pool, poolsOn, vars }: { blo
   const [pEyebrow, pTitle, pBody, pCta] = copy(blocks, 'home.side.pools', 'Group buy|MOQ too big? Pool with other buyers.||See open pools →', vars);
   const [sEyebrow, sTitle, sBody, sCta] = copy(blocks, 'home.side.shipping', 'Dropship · 3PL|Ship worldwide. Your brand on the box.||How shipping works →', vars);
   return (
-    <section aria-labelledby="home-hero-h" className="bg-surface border-b border-line">
+    <section aria-labelledby="home-hero-h" className="bg-pearl border-b border-line">
       <div className="max-w-[1360px] mx-auto px-4 sm:px-8 py-6 grid gap-4 min-[1100px]:grid-cols-[minmax(0,1.9fr)_minmax(0,1fr)]" data-testid="banner-grid">
         <div className="min-h-[340px]">
           {banners.length ? (
             <BannerRotator ids={banners.map((b) => b.id)}>{banners.map((b) => <LeadSlide key={b.id} b={b} open={open} />)}</BannerRotator>
           ) : (
-            <div className="h-full rounded-[18px] bg-navy text-white p-8 flex flex-col justify-center gap-4">
+            <div className="h-full rounded-[18px] bg-ink text-white p-8 flex flex-col justify-center gap-4">
               <h1 id="home-hero-h" className="font-display font-extrabold text-[34px] leading-tight !text-white">{block(blocks, 'home.hero.title', block(blocks, 'home.title', 'Global sourcing, simplified'))}</h1>
               <div><Link href="/products" className="btn btn-primary">Browse products</Link></div>
             </div>
@@ -114,7 +114,7 @@ export function BannerGrid({ blocks, banners, open, pool, poolsOn, vars }: { blo
         <div className="grid gap-4 min-[761px]:grid-cols-2 min-[1100px]:grid-cols-1">
           {poolsOn && (
             <TrackSlot slot="side-pools" className="h-full">
-              <Link href="/pools" className="group h-full rounded-[18px] bg-blue-fill text-white p-5 flex flex-col gap-2 hover:bg-blue-dark hover:text-white">
+              <Link href="/pools" className="group h-full rounded-[18px] bg-coral text-white p-5 flex flex-col gap-2 hover:bg-coral-text hover:text-white">
                 <span className="self-start mono text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-white/15">{pEyebrow}</span>
                 <span className="font-display font-extrabold text-[20px] leading-tight">{pTitle}</span>
                 {pBody && <span className="text-[13px] text-white/85">{pBody}</span>}
@@ -126,11 +126,11 @@ export function BannerGrid({ blocks, banners, open, pool, poolsOn, vars }: { blo
             </TrackSlot>
           )}
           <TrackSlot slot="side-shipping" className="h-full">
-            <a href="#global-shipping" className="group h-full rounded-[18px] bg-[#FFF7E6] border border-[#F8DDA6] text-navy p-5 flex flex-col gap-2 hover:border-[#F5B544]">
-              <span className="self-start mono text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-[#FEF3C7] text-[#92400E]">{sEyebrow}</span>
+            <a href="#global-shipping" className="group h-full rounded-[18px] bg-warn-bg border border-warn-bg text-ink p-5 flex flex-col gap-2 hover:border-gold">
+              <span className="self-start mono text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-warn-bg text-warn">{sEyebrow}</span>
               <span className="font-display font-extrabold text-[20px] leading-tight">{sTitle}</span>
-              {sBody && <span className="text-[13px] text-[#3B4556]">{sBody}</span>}
-              <span className="mt-auto font-semibold text-[13.5px] text-blue group-hover:underline pt-1">{sCta}</span>
+              {sBody && <span className="text-[13px] text-black">{sBody}</span>}
+              <span className="mt-auto font-semibold text-[13.5px] text-coral-text group-hover:underline pt-1">{sCta}</span>
             </a>
           </TrackSlot>
         </div>
@@ -148,7 +148,7 @@ export function StatsStrip({ tiles }: { tiles: { label: string; value: string | 
       <ul className="grid gap-3 grid-cols-2 min-[761px]:grid-cols-3 min-[1100px]:grid-cols-6" data-testid="stats-strip">
         {shown.map((t) => (
           <li key={t.label} className="bg-white border border-line rounded-[12px] px-4 py-3">
-            <div className="font-display font-extrabold text-[22px] text-navy">{t.value}</div>
+            <div className="font-display font-extrabold text-[22px] text-ink">{t.value}</div>
             <div className="mono text-[10.5px] uppercase tracking-[.06em] text-muted">{t.label}</div>
           </li>
         ))}
@@ -167,9 +167,9 @@ export function TurnkeySection({ blocks, projects, packages, vars }: { blocks: B
     <section aria-labelledby="home-turnkey-h" className="max-w-[1360px] mx-auto px-4 sm:px-8 pt-14" data-testid="home-turnkey">
       <div className="flex flex-wrap justify-between items-end gap-4 mb-5">
         <div>
-          <div className="flex gap-2 items-center mb-1"><span className="mono text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#92400E]">New</span><span className="mono text-[11px] uppercase tracking-[.08em] text-blue font-semibold">Turnkey projects</span></div>
+          <div className="flex gap-2 items-center mb-1"><span className="mono text-[9.5px] font-bold uppercase px-1.5 py-0.5 rounded-full bg-warn-bg text-warn">New</span><span className="mono text-[11px] uppercase tracking-[.08em] text-coral-text font-semibold">Turnkey projects</span></div>
           <h2 id="home-turnkey-h" className="font-extrabold leading-[1.1] tracking-[-0.02em] text-[24px] sm:text-[28px]">{block(blocks, 'home.turnkey.title', 'Start a business, not a shopping list')}</h2>
-          <p className="text-[15px] text-[#3B4556] mt-1.5 max-w-2xl">{fill(block(blocks, 'home.turnkey.body', ''), vars)}</p>
+          <p className="text-[15px] text-black mt-1.5 max-w-2xl">{fill(block(blocks, 'home.turnkey.body', ''), vars)}</p>
         </div>
         <div className="flex gap-2.5">
           <Link href="/turnkey/atlas" className="btn btn-ghost">Project Atlas</Link>
@@ -178,9 +178,9 @@ export function TurnkeySection({ blocks, projects, packages, vars }: { blocks: B
       </div>
       <StarterStrip projects={projects} />
       {live.length > 0 && (
-        <div className="mt-4 rounded-[12px] bg-surface border border-line px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13.5px]">
-          <span className="mono text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-[#DCFCE7] text-[#15803D]">Live · quote today</span>
-          {live.map((p) => <Link key={p.project_id} href={`/turnkey/${p.project_id}`} className="font-semibold hover:text-blue">{p.title.replace(/ (fit-out|kiosk|network)$/i, '')} <span className="text-muted font-normal">from {from(p.project_id) ?? kUsd(p.starting_budget_usd)}</span></Link>)}
+        <div className="mt-4 rounded-[12px] bg-pearl border border-line px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13.5px]">
+          <span className="mono text-[10px] font-bold uppercase px-2 py-1 rounded-full bg-ok-bg text-ok">Live · quote today</span>
+          {live.map((p) => <Link key={p.project_id} href={`/turnkey/${p.project_id}`} className="font-semibold hover:text-coral-text">{p.title.replace(/ (fit-out|kiosk|network)$/i, '')} <span className="text-muted font-normal">from {from(p.project_id) ?? kUsd(p.starting_budget_usd)}</span></Link>)}
           {interest > 0 && <span className="text-muted ml-auto">+ {interest} more open for register-interest</span>}
         </div>
       )}
@@ -192,11 +192,11 @@ export function TurnkeySection({ blocks, projects, packages, vars }: { blocks: B
 export function OctoCard({ blocks }: { blocks: Blocks }) {
   const [eyebrow, title, body, cta] = copy(blocks, 'home.octo', 'Your account team|Chat with Octo, 24 / 7.||Open the assistant →');
   return (
-    <div className="rounded-[20px] bg-[#EEF4FD] border border-[#C9DBF6] p-6 sm:p-8 flex flex-col gap-2.5">
-      <div className="mono text-[11px] uppercase tracking-[.08em] text-blue font-semibold">{eyebrow}</div>
+    <div className="rounded-[20px] bg-tint-2 border border-tint p-6 sm:p-8 flex flex-col gap-2.5">
+      <div className="mono text-[11px] uppercase tracking-[.08em] text-coral-text font-semibold">{eyebrow}</div>
       <h2 className="font-display font-extrabold text-[22px] sm:text-[24px] leading-tight">{title}</h2>
-      {body && <p className="text-[14.5px] text-[#3B4556]">{body}</p>}
-      <Link href="/account/assistant" className="mt-auto font-semibold text-blue">{cta}</Link>
+      {body && <p className="text-[14.5px] text-black">{body}</p>}
+      <Link href="/account/assistant" className="mt-auto font-semibold text-coral-text">{cta}</Link>
     </div>
   );
 }

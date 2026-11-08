@@ -124,7 +124,7 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
     <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-10 sm:py-12">
       <div className="eyebrow">{block(blocks, 'request.eyebrow', 'Request Center')}</div>
       <h1 className="text-[34px] sm:text-[44px] font-extrabold leading-[1.1] mt-3 max-w-[780px]">{h1}</h1>
-      <p className="text-[17px] text-[#3B4556] mt-4 max-w-[760px] leading-relaxed">{intro}</p>
+      <p className="text-[17px] text-black mt-4 max-w-[760px] leading-relaxed">{intro}</p>
 
       <RequestTabs blocks={blocks} active={type} qs={productQs} />
 
@@ -137,8 +137,8 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
             <div id="req-locked"><Notice tone="amber">Please <Link href="/onboarding" className="underline font-semibold">complete your company profile</Link> before submitting requests.</Notice></div>
           )}
           {product && (
-            <div className="rounded-[10px] border border-line bg-surface px-4 py-3 text-sm flex flex-wrap justify-between gap-2">
-              <span>Request for <Link href={`/p/${product.slug}`} className="font-semibold text-blue">{product.title}</Link></span>
+            <div className="rounded-[10px] border border-line bg-pearl px-4 py-3 text-sm flex flex-wrap justify-between gap-2">
+              <span>Request for <Link href={`/p/${product.slug}`} className="font-semibold text-coral-text">{product.title}</Link></span>
               <Link href={`/request/${type}`} className="text-muted underline">Remove product</Link>
             </div>
           )}
@@ -163,24 +163,24 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
             warehouses={warehouses} demo={demo}
           />
           {type === '3pl' && (
-            <div className="rounded-[12px] border border-line bg-surface p-4 text-[14px]" data-testid="3pl-rates">
-              <div className="flex items-center gap-2 font-semibold text-navy">3PL rates{demo && rates && <ExamplePill />}</div>
-              <p className="mt-1 text-body-2">{rates ?? `${TBC}. Octopus sends storage, pick-and-pack and shipping rates for your goods after you submit.`}</p>
+            <div className="rounded-[12px] border border-line bg-pearl p-4 text-[14px]" data-testid="3pl-rates">
+              <div className="flex items-center gap-2 font-semibold text-ink">3PL rates{demo && rates && <ExamplePill />}</div>
+              <p className="mt-1 text-black">{rates ?? `${TBC}. Octopus sends storage, pick-and-pack and shipping rates for your goods after you submit.`}</p>
             </div>
           )}
         </section>
 
         <aside className="space-y-4 min-w-0" aria-label="About your request">
           {next.length > 0 && (
-            <section className="rounded-[14px] bg-navy text-white p-7" aria-labelledby="next-h">
+            <section className="rounded-[14px] bg-ink text-white p-7" aria-labelledby="next-h">
               <h2 id="next-h" className="!text-white text-xl font-semibold">{type === 'dropship' ? 'How dropship setup works' : 'What happens next'}</h2>
               <ol className="mt-5 relative">
                 {next.map(([t, b], i) => (
                   <li key={i} className="relative pl-10 pb-5 last:pb-0">
-                    {i < next.length - 1 && <span className="absolute left-[13px] top-7 bottom-0 w-px bg-blue-fill/60" aria-hidden />}
-                    <span className="absolute left-0 top-0 w-7 h-7 rounded-full border-2 border-[#5B9BF0] flex items-center justify-center text-[11px] font-semibold" aria-hidden>{i + 1}</span>
+                    {i < next.length - 1 && <span className="absolute left-[13px] top-7 bottom-0 w-px bg-coral/60" aria-hidden />}
+                    <span className="absolute left-0 top-0 w-7 h-7 rounded-full border-2 border-coral flex items-center justify-center text-[11px] font-semibold" aria-hidden>{i + 1}</span>
                     <div className="font-semibold">{t}</div>
-                    <div className="text-[13px] text-[#C9CFDB] mt-0.5">{(b ?? '').replace('{currency}', svcCurrency)}</div>
+                    <div className="text-[13px] text-on-ink mt-0.5">{(b ?? '').replace('{currency}', svcCurrency)}</div>
                   </li>
                 ))}
               </ol>
@@ -189,7 +189,7 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
           {type === '3pl' && (
             <section className="card p-6" aria-labelledby="before-h" data-testid="before-you-ship">
               <h2 id="before-h" className="text-base font-semibold">Before you ship to us</h2>
-              <ul className="mt-3 space-y-2 text-[13.5px] text-body-2">
+              <ul className="mt-3 space-y-2 text-[13.5px] text-black">
                 {['Label every carton with the SKU and your reference', 'Create an inbound notice in My account › 3PL warehouse before the goods leave',
                   'Check accepted and refused goods with your account manager (batteries, liquids, hazardous goods)',
                   cutoff ? `Same-day dispatch for orders received before ${cutoff}` : `Same-day cut-off time: ${TBC.toLowerCase()}`].map((t) => (
@@ -203,7 +203,7 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
             <section className="card p-6" aria-labelledby="talk-h">
               <h2 id="talk-h" className="text-base font-semibold">{talkT}</h2>
               <p className="text-[13px] text-muted mt-2">{talkB}</p>
-              <a href={wa} target="_blank" rel="noopener noreferrer" className="btn btn-ghost w-full mt-4 !border-ok text-[#156B3A]">Chat on WhatsApp</a>
+              <a href={wa} target="_blank" rel="noopener noreferrer" className="btn btn-ghost w-full mt-4 !border-ok text-ok">Chat on WhatsApp</a>
             </section>
           )}
         </aside>
@@ -217,7 +217,7 @@ function RequestSkeleton() {
     <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-12" aria-busy="true" aria-label="Loading">
       <div className="h-4 w-32 bg-line rounded" /><div className="h-12 w-2/3 bg-line rounded mt-4" />
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-2 mt-8">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="card h-[84px]" />)}</div>
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_300px]"><div className="card h-[640px]" /><div className="rounded-[14px] bg-navy h-[520px]" /></div>
+      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_300px]"><div className="card h-[640px]" /><div className="rounded-[14px] bg-ink h-[520px]" /></div>
     </div>
   );
 }

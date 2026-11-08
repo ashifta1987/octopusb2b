@@ -19,11 +19,11 @@ export function TicketReply({ action, macros }: { action: (fd: FormData) => Prom
       {macros.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 mb-3">
           <span className="text-sm text-muted">Quick replies:</span>
-          {macros.map((m) => <button key={m.id} type="button" className="rounded-full border border-line-2 px-3 py-1 text-sm hover:border-navy" title={m.body} onClick={() => insert(m.body)}>{m.title}</button>)}
+          {macros.map((m) => <button key={m.id} type="button" className="rounded-full border border-line-strong px-3 py-1 text-sm hover:border-ink" title={m.body} onClick={() => insert(m.body)}>{m.title}</button>)}
         </div>
       )}
       <label htmlFor="tr-body" className="sr-only">Reply</label>
-      <textarea id="tr-body" ref={ref} name="body" required className={`input min-h-28 py-2 ${internal ? 'bg-[#FFF8E1]' : ''}`} placeholder="Write a reply to the customer, or an internal note" />
+      <textarea id="tr-body" ref={ref} name="body" required className={`input min-h-28 py-2 ${internal ? 'bg-warn-bg' : ''}`} placeholder="Write a reply to the customer, or an internal note" />
       <div className="flex flex-wrap items-center gap-4 mt-3">
         <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" name="internal" checked={internal} onChange={(e) => setInternal(e.target.checked)} /> Internal note (customer can&apos;t see)</label>
         <label className="inline-flex items-center gap-2 text-sm">Then set status

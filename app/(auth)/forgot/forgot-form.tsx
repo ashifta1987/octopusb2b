@@ -23,7 +23,7 @@ export function ForgotForm() {
           <button className="btn btn-primary w-full min-h-[50px]" disabled={pending}>{pending ? 'Sending…' : 'Send reset link'}</button>
         </form>
       )}
-      <Link href="/login" className="inline-block mt-6 text-[15px] font-semibold text-blue">Back to log in</Link>
+      <Link href="/login" className="inline-block mt-6 text-[15px] font-semibold text-coral-text">Back to log in</Link>
     </div>
   );
 }

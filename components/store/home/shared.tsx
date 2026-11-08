@@ -31,7 +31,7 @@ export function SectionHead({ id, title, href, link, size = 'lg' }: { id?: strin
   return (
     <div className={`flex flex-wrap justify-between items-end gap-4 ${size === 'lg' ? 'mb-6' : 'mb-5'}`}>
       <h2 id={id} className={`font-extrabold leading-[1.1] tracking-[-0.02em] ${size === 'lg' ? 'text-[28px] sm:text-[34px]' : 'text-[24px] sm:text-[28px]'}`}>{title}</h2>
-      {href && link && <Link href={href} className="font-semibold text-blue text-[14px] sm:text-[15px]">{link} <span aria-hidden>→</span></Link>}
+      {href && link && <Link href={href} className="font-semibold text-coral-text text-[14px] sm:text-[15px]">{link} <span aria-hidden>→</span></Link>}
     </div>
   );
 }

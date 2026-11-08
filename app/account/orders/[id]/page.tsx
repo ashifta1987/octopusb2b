@@ -69,7 +69,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
     <>
       <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
         <div>
-          <div className="mb-2 text-sm"><Link href="/account/orders" className="text-blue">← All orders</Link></div>
+          <div className="mb-2 text-sm"><Link href="/account/orders" className="text-coral-text">← All orders</Link></div>
           <h1 className="text-[30px] font-bold leading-tight">Orders &amp; tracking</h1>
           <p className="mt-1 text-muted">Every update on this order, as it happens.</p>
         </div>
@@ -88,7 +88,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
                 <h2 className="text-2xl font-semibold mt-1">{o.title}</h2>
                 <div className="mt-1 text-muted flex flex-wrap items-center gap-x-2">
                   {sup && <SupplierCode code={sup.code} country={sup.country} verified={sup.verified} />}
-                  <span>· {Number(o.quantity).toLocaleString('en-US')} units · <Money cents={money.total_cents} currency={cur} className="text-navy" />{o.incoterm ? ` · ${o.incoterm}` : ''}</span>
+                  <span>· {Number(o.quantity).toLocaleString('en-US')} units · <Money cents={money.total_cents} currency={cur} className="text-ink" />{o.incoterm ? ` · ${o.incoterm}` : ''}</span>
                 </div>
               </div>
               <StatusBadge status={o.status} />
@@ -101,7 +101,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
                 ['Paid', money.paid_cents],
                 ['Balance', balanceDue],
               ].map(([l, v]) => (
-                <div key={l as string} className="rounded-[10px] bg-surface px-4 py-3">
+                <div key={l as string} className="rounded-[10px] bg-pearl px-4 py-3">
                   <dt className="text-xs text-muted">{l}</dt>
                   <dd className="mt-1"><Money cents={v as number} currency={cur} className="text-lg" /></dd>
                 </div>
@@ -114,14 +114,14 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
             <Card className="p-6">
               <h2 className="text-lg font-semibold">{due ? `Pay the ${due.purpose}` : 'Payment'}</h2>
               {due ? (
-                <p className="text-sm text-muted mt-1">Amount due now: <Money cents={due.amount} currency={cur} className="text-navy" /> · reference <span className="mono">{reference}</span></p>
+                <p className="text-sm text-muted mt-1">Amount due now: <Money cents={due.amount} currency={cur} className="text-ink" /> · reference <span className="mono">{reference}</span></p>
               ) : <p className="text-sm text-muted mt-1">The balance invoice is issued before despatch. Nothing is due right now.</p>}
               {due && (
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   {settings.wallet_enabled ? (
                     <div className="rounded-[10px] border border-line p-4">
                       <div className="font-semibold">Pay from {cur} wallet</div>
-                      <p className="text-sm text-muted mt-1">{cur} wallet balance: <Money cents={balance} currency={cur} className="text-navy" />{funds.credit > 0 && <> · credit limit <Money cents={funds.credit} currency={cur} className="text-navy" /></>}</p>
+                      <p className="text-sm text-muted mt-1">{cur} wallet balance: <Money cents={balance} currency={cur} className="text-ink" />{funds.credit > 0 && <> · credit limit <Money cents={funds.credit} currency={cur} className="text-ink" /></>}</p>
                       <div className="mt-3"><PayWalletButton orderId={id} amountCents={due.amount} balanceCents={balance} creditCents={funds.credit} currency={cur} purpose={due.purpose} action={payFromWallet} /></div>
                     </div>
                   ) : null}
@@ -153,11 +153,11 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
                 <span className="text-sm text-muted">Updated {relTime(ship.last_event_at ?? lastTrack?.occurred_at ?? ship.created_at)}</span>
               </div>
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-[10px] bg-surface px-4 py-3"><div className="text-xs text-muted">Current location</div><div className="font-semibold mt-1">{lastTrack?.location ?? '—'}</div></div>
-                <div className="rounded-[10px] bg-surface px-4 py-3"><div className="text-xs text-muted">Estimated delivery</div><div className="font-semibold mt-1">{ship.eta ? fmtDate(ship.eta) : '—'}</div></div>
-                <div className="rounded-[10px] bg-surface px-4 py-3"><div className="text-xs text-muted">Waybill</div><div className="mono font-semibold mt-1 break-all">{ship.tracking_no ?? 'Pending'}</div></div>
-                <div className="rounded-[10px] bg-surface px-4 py-3"><div className="text-xs text-muted">Shipment status</div><div className="mt-1"><StatusBadge status={ship.status} /></div></div>
-                {(ship.parcels || ship.weight_kg) && <div className="rounded-[10px] bg-surface px-4 py-3"><div className="text-xs text-muted">Parcels</div><div className="font-semibold mt-1">{ship.parcels ?? 1} cartons{ship.weight_kg ? ` · ${ship.weight_kg} kg` : ''}</div></div>}
+                <div className="rounded-[10px] bg-pearl px-4 py-3"><div className="text-xs text-muted">Current location</div><div className="font-semibold mt-1">{lastTrack?.location ?? '—'}</div></div>
+                <div className="rounded-[10px] bg-pearl px-4 py-3"><div className="text-xs text-muted">Estimated delivery</div><div className="font-semibold mt-1">{ship.eta ? fmtDate(ship.eta) : '—'}</div></div>
+                <div className="rounded-[10px] bg-pearl px-4 py-3"><div className="text-xs text-muted">Waybill</div><div className="mono font-semibold mt-1 break-all">{ship.tracking_no ?? 'Pending'}</div></div>
+                <div className="rounded-[10px] bg-pearl px-4 py-3"><div className="text-xs text-muted">Shipment status</div><div className="mt-1"><StatusBadge status={ship.status} /></div></div>
+                {(ship.parcels || ship.weight_kg) && <div className="rounded-[10px] bg-pearl px-4 py-3"><div className="text-xs text-muted">Parcels</div><div className="font-semibold mt-1">{ship.parcels ?? 1} cartons{ship.weight_kg ? ` · ${ship.weight_kg} kg` : ''}</div></div>}
               </div>
             </Card>
           )}
