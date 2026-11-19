@@ -53,7 +53,7 @@ try {
   ok(/NOT_FOUND/.test(await tryQ(`select post_request_message('rfq', $1, 'hi') v`, [rfq])), 'B cannot post on A’s request');
   ok(/NOT_FOUND/.test(await tryQ(`select add_request_file('rfq', $1, $2, 'x.pdf', 'spec', 1) v`, [rfq, `rfq/${rfq}/b.pdf`])), 'B cannot attach a file to A’s request');
   ok(Number((await one(`select mark_quotes_viewed($1) v`, [rfq])).v) === 0, 'B opening the URL marks nothing');
-  ok((await db.query(`select 1 from public_suppliers limit 1`)).rowCount >= 0 && (await tryQ(`select legal_name from suppliers where id = $1`, [sup])).rowCount === 0, 'customers cannot read supplier legal names (code only via public_suppliers)');
+  ok(typeof (await tryQ(`select 1 from public_suppliers limit 1`)) === 'string' && (await tryQ(`select legal_name from suppliers where id = $1`, [sup])).rowCount === 0, 'customers cannot read supplier legal names or codes (195: public_suppliers closed)');
   await owner();
 
   // staff reply → from_staff + event for the customer

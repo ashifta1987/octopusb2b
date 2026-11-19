@@ -101,7 +101,7 @@ await test('customer cannot read another org’s orders', async () => {
   assert(foreign.n === 0, `buyer saw ${foreign.n} order(s) outside their org`);
 });
 
-await test('anon cannot read suppliers (legal_name); public_suppliers hides legal fields', async () => {
+await test('anon cannot read suppliers (legal_name) or supplier codes; product_factory gives the label only', async () => {
   await as(null);
   let rows = 0;
   await q('savepoint s');
@@ -113,11 +113,14 @@ await test('anon cannot read suppliers (legal_name); public_suppliers hides lega
     assert(/permission denied/i.test(e.message), `unexpected error: ${e.message}`);
   }
   assert(rows === 0, `anon read ${rows} supplier row(s)`);
-  const ps = await q('select * from public_suppliers limit 1');
-  const cols = ps.fields.map((f) => f.name);
-  for (const bad of ['legal_name', 'contact_name', 'contact_email', 'contact_phone'])
-    assert(!cols.includes(bad), `public_suppliers exposes ${bad}`);
-  assert(ps.rows.length > 0, 'anon should be able to read public_suppliers');
+  // since 195 buyers never see the supplier id or code: public_suppliers is closed; product_factory gives the label only
+  await q('savepoint s');
+  let psErr = '';
+  try { await q('select 1 from public_suppliers limit 1'); await q('release savepoint s'); } catch (e) { psErr = e.message; await q('rollback to savepoint s'); }
+  assert(/permission denied/i.test(psErr), 'anon must not read public_suppliers (supplier codes)');
+  const pf = await q('select * from product_factory limit 1');
+  assert(pf.fields.map((f) => f.name).join(',') === 'product_id,verified,country,province', 'product_factory exposes only verified + country + province');
+  assert(pf.rows.length > 0, 'anon should be able to read product_factory');
   const live = await one(`select count(*)::int n from products where status <> 'live'`);
   assert(live.n === 0, 'anon can see non-live products');
 });

@@ -48,7 +48,7 @@ try {
   // A opens a pool targeting tier 2 (5 × MOQ) and pledges
   await as(A.u);
   const pool = (await one(`select open_pool($1, $2, now() + interval '7 days', 500, null, 2000) v`, [prod.id, tiers[1].min_qty])).v;
-  let p = await one(`select * from pools where id=$1`, [pool]);
+  let p = await one(`select id, code, status, filled_qty, currency from pools where id=$1`, [pool]);   // customer-safe columns (195)
   ok(p.status === 'open' && p.filled_qty === 2000 && p.currency === 'USD', `pool ${p.code} opened from the product, A pledged 2000`);
   await expectErr(() => db.query(`select join_pool($1, 100)`, [pool]), 'PLEDGE_BELOW_MINIMUM', 'pledge below the minimum is refused');
 
@@ -73,7 +73,10 @@ try {
   // anonymity: public participants show buyer code + country only
   await db.query('reset role'); await db.query(`select set_config('request.jwt.claims','{"role":"anon"}',true)`); await db.query('set local role anon');
   const pub = (await db.query(`select * from pool_public_view where pool_id=$1`, [pool])).rows;
-  ok(pub.length === 3 && pub.every((r) => /^BUYER-\d+$/.test(r.buyer_code) && r.country && !('org_id' in r) && !('name' in r)), 'participants are visible by buyer code + country only');
+  ok(pub.length === 3 && pub.every((r) => r.buyer_code === null && r.is_mine === false && r.country && r.qty > 0 && !('org_id' in r) && !('name' in r)), 'participants are visible as country + quantity only (no Customer IDs, 195)');
+  await as(A.u);
+  const mineA = (await db.query(`select * from pool_public_view where pool_id=$1`, [pool])).rows;
+  ok(mineA.filter((r) => r.is_mine).length === 1 && mineA.filter((r) => r.is_mine).every((r) => /^BUYER-\d+$/.test(r.buyer_code)) && mineA.filter((r) => !r.is_mine).every((r) => r.buyer_code === null), 'a buyer sees their own Customer ID only on their own pledge');
 
   // settle (cron) — idempotent
   await sys();

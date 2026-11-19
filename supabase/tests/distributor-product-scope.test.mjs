@@ -48,10 +48,12 @@ try {
   const D = { sub: dist, role: 'authenticated', aal: 'aal2' };
   await as(D);
   // ── reads ──
-  const seen = await db.query(`select supplier_id, count(*)::int n from products group by supplier_id`);
+  // since 195 products.supplier_id is hidden from signed-in roles: whole rows (incl. supplier) come from portal_products()
+  const seen = await db.query(`select supplier_id, count(*)::int n from portal_products() group by supplier_id`);
+  ok(await n(`select count(*) n from products`) === allA, `base table (RLS): exactly the ${allA} ${code(a)} rows`);
   ok(seen.rows.every((r) => r.supplier_id === a), `list without filter: only ${code(a)} (${seen.rows.map((r) => r.n).join('+') || 0} rows; suppliers: ${seen.rows.length})`);
   ok((seen.rows.find((r) => r.supplier_id === a)?.n ?? 0) === allA, `all ${allA} ${code(a)} products still visible (any status)`);
-  ok(await n(`select count(*) n from products where supplier_id = $1`, [b.id]) === 0, `list ?supplier_id=${code(b.id)}: 0 rows`);
+  ok(await n(`select count(*) n from portal_products() where supplier_id = $1`, [b.id]) === 0, `list ?supplier_id=${code(b.id)}: 0 rows`);
   ok(await n(`select count(*) n from products where id = $1`, [b.live_id]) === 0, 'single LIVE product of B: no row');
   ok(await n(`select count(*) n from products where id = $1`, [bDraft]) === 0, 'single non-live product of B: no row');
   ok(await n(`select count(*) n from price_tiers where product_id = $1`, [b.live_id]) === 0, 'price tiers of B: none');
@@ -79,10 +81,10 @@ try {
   await db.query('rollback to savepoint writes');
   // ── an aal1 distributor session does not fall back to the public policy ──
   await as({ ...D, aal: 'aal1' });
-  ok(await n(`select count(*) n from products where supplier_id = $1`, [b.id]) === 0, 'aal1 distributor: B live products hidden too');
+  ok(await n(`select count(*) n from products where id = $1`, [b.live_id]) === 0 && await n(`select count(*) n from portal_products() where supplier_id = $1`, [b.id]) === 0, 'aal1 distributor: B live products hidden too');
   // ── controls: admin, anonymous storefront ──
   await as({ sub: adm, role: 'authenticated', aal: 'aal2' });
-  ok(await n(`select count(*) n from products where supplier_id = $1`, [b.id]) > 0, 'admin: B products visible');
+  ok(await n(`select count(*) n from portal_products() where supplier_id = $1`, [b.id]) > 0, 'admin: B products visible');
   ok(await n(`select count(*) n from storage.objects where bucket_id = 'certificates' and name like $1`, [`${b.id}/%`]) === 1, 'admin: B certificate file visible');
   await as({ role: 'anon' }, 'anon');
   ok(await n(`select count(*) n from products where id = $1`, [b.live_id]) === 1, 'anonymous storefront: B live product visible');
