@@ -7,7 +7,7 @@ import { Card, PageHeader, Table, EmptyState, StatusBadge, Notice } from '@/comp
 import { Field } from '@/components/admin/ui';
 import { ActionForm } from '@/components/admin/client';
 import { fmtDate } from '@/lib/format';
-import { saveCompany } from './actions';
+import { saveCompany, saveInvoicingRule } from './actions';
 
 export const metadata = { title: 'Company' };
 
@@ -24,12 +24,14 @@ async function CompanyContent() {
   const s = await requireStaff('staff', 'view', '/admin/company');
   if (!s.isAdmin) redirect('/forbidden');
   const sb = await createClient();
-  const [{ data: c }, { data: banks }, { data: hist }, { data: divs }] = await Promise.all([
+  const [{ data: c }, { data: banks }, { data: hist }, { data: divs }, { data: ruleRow }] = await Promise.all([
     sb.from('company_profile').select('legal_name, legal_name_cn, registration_no, tax_id, address, address_cn, registered_in, brand, updated_at').eq('id', 1).maybeSingle(),
     sb.from('company_bank_accounts').select('id, currency, bank_name, account_holder, account_number, swift, active').order('currency'),
     sb.from('audit_log').select('id, actor_id, details, created_at').eq('entity', 'company_profile').order('created_at', { ascending: false }).limit(10),
     sb.from('divisions').select('code, name, status').order('sort_order'),
+    sb.from('site_settings').select('value').eq('key', 'invoicing.service_proforma_rule').maybeSingle(),
   ]);
+  const rule = (ruleRow?.value as string | null) ?? 'on_full_payment';
   const actorIds = [...new Set((hist ?? []).map((h) => h.actor_id).filter((x): x is string => !!x))];
   const { data: actors } = actorIds.length ? await sb.from('profiles').select('id, full_name, email').in('id', actorIds) : { data: [] };
   const who = (id: string | null) => (id ? (actors ?? []).find((a) => a.id === id)?.full_name || (actors ?? []).find((a) => a.id === id)?.email || 'Staff' : 'System');
@@ -91,6 +93,19 @@ async function CompanyContent() {
           </Card>
         </div>
       </div>
+      <Card title="Tax invoices for service proformas" className="mt-6" action={<span className="text-xs text-muted">Admin only · audited</span>}>
+        <ActionForm action={saveInvoicingRule} className="px-6 pb-6 grid gap-3" submitLabel="Save rule" confirm="Change when tax invoices are issued for service proformas? It applies to payments from now on. You may be asked for your 2FA code.">
+          <p className="text-sm text-muted">Make My Brand, 3PL and other service proformas. Revenue counts from the tax invoice; until then payments show as Customer deposits in the reports.</p>
+          <label className="flex items-start gap-3 rounded-[10px] border border-line p-3 has-[:checked]:border-coral-text has-[:checked]:bg-tint">
+            <input type="radio" name="rule" value="on_full_payment" defaultChecked={rule === 'on_full_payment'} className="mt-1" />
+            <span><span className="font-semibold block">One tax invoice when the proforma is fully paid</span><span className="text-sm text-muted">Part payments are customer deposits until the last payment arrives.</span></span>
+          </label>
+          <label className="flex items-start gap-3 rounded-[10px] border border-line p-3 has-[:checked]:border-coral-text has-[:checked]:bg-tint">
+            <input type="radio" name="rule" value="per_payment" defaultChecked={rule === 'per_payment'} className="mt-1" />
+            <span><span className="font-semibold block">A tax invoice for every payment</span><span className="text-sm text-muted">Each payment (deposit, part payment, balance) gets its own OCT- tax invoice.</span></span>
+          </label>
+        </ActionForm>
+      </Card>
       <Card title="Change history" className="mt-6" action={<span className="mono text-xs text-muted">last {(hist ?? []).length}</span>}>
         <Table head={['When', 'Who', 'What changed']} empty={<EmptyState title="No changes recorded yet" />}>
           {(hist ?? []).map((h) => (

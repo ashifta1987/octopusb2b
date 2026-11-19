@@ -29,3 +29,19 @@ export async function saveCompany(_prev: Result | null, fd: FormData): Promise<R
   revalidatePath(PAGE);
   return ok(`Saved: ${changed.map((f) => f.replace(/_/g, ' ')).join(', ')}`);
 }
+
+const RULES = ['on_full_payment', 'per_payment'] as const;
+/** When a service proforma gets its tax invoice (migration 201). Admin only, fresh 2FA, audited by set_setting. */
+export async function saveInvoicingRule(_prev: Result | null, fd: FormData): Promise<Result> {
+  const g = await guard('staff', 'view');
+  if ('error' in g) return g.error;
+  if (!g.s.isAdmin) return fail('Only a company-wide Admin can change the invoicing rule.');
+  const rule = str(fd, 'rule');
+  if (!(RULES as readonly string[]).includes(rule)) return fail('Pick a rule.');
+  const stale = await requireFresh(g.sb, PAGE);
+  if (stale) return stale;
+  const { error } = await g.sb.rpc('set_setting', { p_key: 'invoicing.service_proforma_rule', p_value: rule as never });
+  if (error) return failAt(error, PAGE);
+  revalidatePath(PAGE);
+  return ok(rule === 'per_payment' ? 'Saved: a tax invoice for every payment' : 'Saved: one tax invoice when fully paid');
+}

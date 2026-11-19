@@ -144,7 +144,7 @@ export async function loadDocument(id: string, opts: { staff?: boolean } = {}): 
 }
 
 const STATUS_TEXT: Record<string, string> = {
-  awaiting_payment: 'Awaiting payment', paid: 'Paid', issued: 'Issued', cancelled: 'Cancelled', void: 'Void',
+  awaiting_payment: 'Awaiting payment', paid: 'Paid', issued: 'Issued', cancelled: 'Cancelled', void: 'Void', part_paid: 'Part paid', invoiced: 'Paid · invoiced',
 };
 
 export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?: boolean; showSupplier?: boolean }): string {
@@ -189,6 +189,7 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
     if (d.reference) meta.push(['Reference', esc(d.reference), true]);
   }
   if (type === 'credit_note' && b.originalNumber) meta.push(['Credits invoice', esc(b.originalNumber), true]);
+  if (type === 'commercial_invoice' && d.from_proforma) meta.push(['For proforma', esc(d.from_proforma), true]);
   if (order?.code) meta.push(['Order', esc(order.code), true]);
 
   /* ── bill to ── */

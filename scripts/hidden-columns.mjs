@@ -57,6 +57,7 @@ export const HIDDEN_COLUMNS = {
   ledger_entries: ['trace_id', 'is_seed'],
   journals: ['created_by', 'trace_id', 'is_seed'],
   webhook_deliveries: ['trace_id'],
+  document_payments: ['idempotency_key', 'created_by'],
   wallet_holds: ['created_by'],
   organizations: ['is_seed'],
   profiles: ['invited_by'],

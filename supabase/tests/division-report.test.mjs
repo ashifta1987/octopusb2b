@@ -38,7 +38,7 @@ try {
         join ledger_accounts la on la.id = le.account_id and la.kind = 'revenue' where j.division_id = d.id and ${NOT_PF}), 0)
       + coalesce((select sum(case doc_type when 'credit_note' then -amount_cents else amount_cents end) from documents
         where division_id = d.id and doc_type in ('commercial_invoice', 'credit_note') and coalesce(status, '') not in ('void', 'cancelled')), 0) net,
-      coalesce((select sum(amount_cents) from documents p where p.division_id = d.id and p.doc_type = 'proforma_invoice' and coalesce(p.status, '') not in ('void', 'cancelled')
+      coalesce((select sum(amount_cents - coalesce(paid_cents, 0)) from documents p where p.division_id = d.id and p.doc_type = 'proforma_invoice' and coalesce(p.status, '') not in ('void', 'cancelled', 'invoiced')
         and not (p.order_id is not null and exists (select 1 from documents i where i.order_id = p.order_id and i.doc_type = 'commercial_invoice'))), 0) pipe,
       coalesce((select sum(le.credit_cents - le.debit_cents) from journals j join ledger_entries le on le.journal_id = j.id
         join ledger_accounts la on la.id = le.account_id and la.kind = 'revenue' where j.division_id = d.id and not (${NOT_PF})), 0) pf_ledger
@@ -84,12 +84,16 @@ try {
   await db.query('begin');
   const snap = async () => JSON.stringify((await db.query(`select p.oid::regprocedure::text f, md5(p.prosrc) s, p.proacl::text a from pg_proc p where p.pronamespace = 'public'::regnamespace order by 1`)).rows);
   const up = await snap();
+  const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
+  const later = await appliedAfter(db, '20261101000200_report_revenue_from_invoices.sql');
+  await unwind(db, later);
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000200_report_revenue_from_invoices.down.sql', 'utf8'));
   const has199 = (await snap()).includes('division_report');
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000199_division_report.down.sql', 'utf8'));
   ok(has199 && !(await snap()).includes('division_report'), 'down 200 → the 199 report is back; down 199 → removed');
   await db.query(fs.readFileSync('supabase/migrations/20261101000199_division_report.sql', 'utf8'));
   await db.query(fs.readFileSync('supabase/migrations/20261101000200_report_revenue_from_invoices.sql', 'utf8'));
+  await reapply(db, later);
   ok((await snap()) === up, 'up again: identical');
 } catch (e) {
   ok(false, 'unexpected: ' + e.message);

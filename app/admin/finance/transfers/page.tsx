@@ -6,6 +6,8 @@ import { Card, PageHeader, Table, EmptyState, StatusBadge } from '@/components/u
 import { ActionForm, ReasonButton } from '@/components/backoffice/action-form';
 import { money, fmtDate } from '@/lib/format';
 import { confirmTransfer, rejectTransfer } from '../../one-app-actions';
+import { ActionForm as AdminActionForm } from '@/components/admin/client';
+import { recordProformaTransfer } from './proforma-actions';
 
 export const metadata = { title: 'Bank transfers' };
 
@@ -53,6 +55,15 @@ async function TransfersPageContent() {
             ))}
           </ul>
         )}
+      </Card>
+      <Card title="Bank transfer for a proforma" className="mt-6">
+        <p className="px-6 -mt-1 text-sm text-muted">A customer paid a service proforma (Make My Brand, 3PL, …) by bank transfer. Enter what arrived; when the proforma is fully paid its tax invoice is issued automatically. Recording the same bank reference twice changes nothing.</p>
+        <AdminActionForm action={recordProformaTransfer} className="px-6 pb-6 pt-3 grid gap-3 sm:grid-cols-3" submitLabel="Record payment" resetOnSuccess
+          confirm="Record this bank transfer against the proforma? You may be asked for your 2FA code.">
+          <div><label className="label" htmlFor="pf-number">Proforma number</label><input id="pf-number" name="number" className="input mono" placeholder="PF-2026-000012" required /></div>
+          <div><label className="label" htmlFor="pf-amount">Amount received</label><input id="pf-amount" name="amount" inputMode="decimal" className="input" required /></div>
+          <div><label className="label" htmlFor="pf-ref">Bank statement reference</label><input id="pf-ref" name="bank_ref" className="input" required /></div>
+        </AdminActionForm>
       </Card>
       <Card title="Recently decided" className="mt-6">
         <Table head={['Customer', 'Reference', 'Claimed', 'Received', 'Bank reference', 'Result', 'When']} empty={<EmptyState title="No decisions yet" body="Confirmed and rejected transfers appear here." />}>
