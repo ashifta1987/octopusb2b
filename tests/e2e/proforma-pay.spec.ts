@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { adminClient, customerLogin, pgClient, type TempCustomer } from './helpers/customer';
+// commits rows, deletes them and gives an invoice number back: refuses unless env + database are staging
+import { assertStagingOrThrow } from '../../scripts/lib-staging-guard.mjs';
 
 /**
  * Divisions step 5d (20 Nov 2026) — STAGING ONLY. A customer pays a Make My Brand service proforma from the wallet on
@@ -12,11 +14,11 @@ let counterBefore = 0;
 const year = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Shanghai', year: 'numeric' }).format(new Date()));
 
 test.beforeAll(async () => {
+  await assertStagingOrThrow();      // before connecting: the Supabase URL and the DB connection string are the staging project
   const a = adminClient();
-  const { data: env } = await a.from('site_settings').select('value').eq('key', 'app_environment').maybeSingle();
-  if (env?.value !== 'staging') throw new Error('staging only');
   const db = pgClient(); await db.connect();
   try {
+    await assertStagingOrThrow(db);   // …and the connected database is marked staging
     counterBefore = Number((await db.query(`select coalesce((select last_value from document_counters where series = 'OCT' and year = $1), 0) v`, [year])).rows[0].v);
     const org = (await db.query(`insert into organizations(name, country, is_seed) values ('TEST · e2e proforma pay', 'AE', true) returning id`)).rows[0].id as string;
     const email = `e2e.pfpay+${Date.now()}@demo.octopusb2b.com`, password = `E2e-${Math.random().toString(36).slice(2, 10)}-7!`;
@@ -35,8 +37,10 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => {
   if (!cust) return;
+  await assertStagingOrThrow();
   const db = pgClient(); await db.connect();
   try {
+    await assertStagingOrThrow(db);
     await db.query('begin');
     const org = cust.orgId;
     const js = (await db.query(`select id from journals where (ref_type = 'document' and ref_id in (select id from documents where org_id = $1)) or idempotency_key = 'test-e2e-pfpay-' || $1::text`, [org])).rows.map((r) => r.id);

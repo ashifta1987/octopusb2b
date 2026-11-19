@@ -10,7 +10,7 @@
 // and removes its rows afterwards (and gives the invoice number back to the counter so the sequence stays gap-free).
 // Run: node supabase/tests/proforma-invoicing.test.mjs
 import pg from 'pg'; import fs from 'node:fs';
-import { loadStagingEnvOrExit, assertStagingDatabase } from '../../scripts/lib-staging-guard.mjs';
+import { loadStagingEnvOrExit, assertStagingDatabase, assertStagingOrThrow } from '../../scripts/lib-staging-guard.mjs';
 loadStagingEnvOrExit();
 const connect = async () => { const c = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } }); await c.connect(); return c; };
 const db = await connect();
@@ -118,7 +118,10 @@ try {
   await db.query('rollback');
 
   // ───────── two simultaneous identical requests (committed data, cleaned up afterwards) ─────────
+  // This block COMMITS rows, deletes them and gives an invoice number back: check again, right here, that both the
+  // environment and the connected database are staging (lib-staging-guard), on a fresh connection.
   const setup = await connect();
+  await assertStagingOrThrow(setup);
   await setup.query('begin');
   const h = await fixture(setup, 'c');
   await setup.query('commit');
