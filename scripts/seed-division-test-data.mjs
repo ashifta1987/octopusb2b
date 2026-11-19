@@ -20,7 +20,7 @@ else {
   await db.query('begin');
   try {
     if (existing) { await reset(existing.id); const o2 = await one(`select id from organizations where name = $1`, [ORG + ' (second buyer)']); if (o2) await reset(o2.id); }
-    const org = (await one(`insert into organizations(name, country, city) values ($1, 'AE', 'Dubai') returning id`, [ORG])).id;
+    const org = (await one(`insert into organizations(name, country, city, is_seed) values ($1, 'AE', 'Dubai', true) returning id`, [ORG])).id;
     const sup = await one(`select id from suppliers where code = 'OCT-1132'`);
     const prod = await one(`select id, title from products where supplier_id = $1 order by created_at limit 1`, [sup.id]);
     const dsProd = await one(`select product_id id from dropship_products limit 1`);
@@ -47,7 +47,7 @@ else {
     // POOL: pool + 2 pledges + pool order + pledge journal
     T.pool = (await one(`insert into pools(code, product_id, supplier_id, starter_org_id, target_qty, min_pledge, deadline_at, status, pool_price_minor, currency, is_seed) values ('TEST-POOL-1', $1, $2, $3, 5000, 500, now() + interval '7 days', 'open', 150, 'USD', true) returning id`, [prod.id, sup.id, org])).id;
     T.pledge_a = (await one(`insert into pool_pledges(pool_id, org_id, qty, currency, status, deposit_minor, is_seed) values ($1, $2, 2000, 'USD', 'paid', 60000, true) returning id`, [T.pool, org])).id;
-    const org2 = (await one(`insert into organizations(name, country, city) values ($1, 'DE', 'Berlin') returning id`, [ORG + ' (second buyer)'])).id;   // one active pledge per company
+    const org2 = (await one(`insert into organizations(name, country, city, is_seed) values ($1, 'DE', 'Berlin', true) returning id`, [ORG + ' (second buyer)'])).id;   // one active pledge per company
     T.pledge_b = (await one(`insert into pool_pledges(pool_id, org_id, qty, currency, status, deposit_minor, is_seed) values ($1, $2, 1000, 'USD', 'pending', 30000, true) returning id`, [T.pool, org2])).id;
     T.order_pool = (await one(`insert into orders(code, org_id, pool_id, pool_pledge_id, supplier_id, title, quantity, unit_price_cents, total_cents, deposit_cents, status, currency, is_seed) values ('TEST-ORD-POOL', $1, $2, $3, $4, 'TEST order · from pool', 2000, 150, 300000, 60000, 'pi_issued', 'USD', true) returning id`, [org, T.pool, T.pledge_a, sup.id])).id;
     T.j_pledge = await J('TEST pool deposit', 'test-div-pledge', 'pools', 'pool_pledge', T.pledge_a, 60000);
@@ -72,6 +72,9 @@ else {
     T.j_service_fee = await J('TEST 3PL service fee', 'test-div-svcfee', 'service_fees', 'service_request', T.sr_3pl, 2500);
     // advertising (company-wide, report line "advertising")
     T.j_ads = await J('TEST ad click', 'test-div-ads', 'ads', 'ad_campaign', null, 50);
+    // journals and ledger lines are test data too (a demo-data wipe removes them with the organisation)
+    await db.query(`update journals set is_seed = true where idempotency_key like 'test-div-%'`);
+    await db.query(`update ledger_entries set is_seed = true where journal_id in (select id from journals where idempotency_key like 'test-div-%')`);
     await db.query('commit');
     console.log('✔ test data created for organisation', ORG);
   } catch (e) { await db.query('rollback'); console.error('✘', e.message); process.exit(1); }

@@ -1,5 +1,5 @@
 import { getSession } from '@/lib/auth';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { can } from '@/lib/auth';
 import { getCarrier } from '@/lib/adapters';
 
@@ -28,9 +28,17 @@ export async function GET(_req: Request, { params }: { params: Promise<{ trackin
   if (!s.isStaff || !can(s, 'orders', 'view')) return new Response('Shipping labels are printed by the Octopus warehouse team.', { status: 403 });
   const sb = createAdminClient(); // permission checked above; carrier_code is not readable with a user session
   const { data: sh } = await sb.from('shipments')
-    .select('code, tracking_no, service_code, weight_kg, parcels, created_at, carrier_code, orders(code, title, quantity, incoterm, organizations(id, name, city, country), suppliers(code, country, city))')
+    .select('code, tracking_no, service_code, weight_kg, parcels, created_at, carrier_code, division_id, orders(code, title, quantity, incoterm, organizations(id, name, city, country), suppliers(code, country, city))')
     .eq('tracking_no', tracking).maybeSingle();
   if (!sh) return new Response('Label not found', { status: 404 });
+  // divisions (19 Nov 2026): the service-role read above skips row-level security, so check the division here — the
+  // shipment's own division, or the 3PL warehouse (it packs every division's shipments); company-wide roles pass both
+  const user = await createClient();
+  const [{ data: own }, { data: warehouse }] = await Promise.all([
+    user.rpc('in_division', { p_division: sh.division_id }),
+    user.rpc('in_division', { p_division: (await sb.from('divisions').select('id').eq('code', '3PL').single()).data?.id, p_roles: ['warehouse', 'manager'] }),
+  ]);
+  if (!own && !warehouse) return new Response('Label not found', { status: 404 });
   const { data: carrier } = await sb.from('carriers').select('name').eq('code', sh.carrier_code).maybeSingle();
   const o = (Array.isArray(sh.orders) ? sh.orders[0] : sh.orders) as { code: string; title: string; quantity: number; incoterm: string | null; organizations: unknown; suppliers: unknown } | null;
   const org = (Array.isArray(o?.organizations) ? o?.organizations[0] : o?.organizations) as { id: string; name: string; city: string | null; country: string | null } | null;

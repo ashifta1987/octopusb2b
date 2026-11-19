@@ -14,6 +14,8 @@ const ACCOUNTS = [
   { email: 'admin@demo.octopusb2b.com', name: 'TEST FIXTURE · Admin', role: 'admin' },
   { email: 'ops@demo.octopusb2b.com', name: 'TEST FIXTURE · Operations', role: 'operations', divisions: [['SRC', 'staff']] },   // approved mapping
   { email: 'finance@demo.octopusb2b.com', name: 'TEST FIXTURE · Finance', role: 'finance' },
+  { email: 'finance2@demo.octopusb2b.com', name: 'TEST FIXTURE · Finance 2', role: 'finance' },
+  { email: 'support@demo.octopusb2b.com', name: 'TEST FIXTURE · Support', role: 'support', managesBuyer: true },
   { email: 'buyer@demo.octopusb2b.com', name: 'TEST FIXTURE · Buyer', customer: true },
 ];
 const ORG = 'TEST DATA · Staging buyer (fixtures)';
@@ -32,7 +34,17 @@ for (const a of ACCOUNTS) {
     let org = (await db.query(`select id from organizations where name = $1`, [ORG])).rows[0]?.id;
     if (!org) org = (await db.query(`insert into organizations(name, country, city) values ($1, 'AE', 'Dubai') returning id`, [ORG])).rows[0].id;
     await db.query(`insert into org_members(org_id, user_id, member_role) values ($1, $2, 'owner') on conflict do nothing`, [org, id]);
+    await db.query(`update organizations set kyc_status = 'verified' where id = $1`, [org]);
   }
   console.log(`✔ ${a.email} (${a.role ?? 'customer'}) — sign-in blocked`);
 }
+// the support fixture is the buyer company's dedicated account manager (the assistant tests expect it)
+const org = (await db.query(`select id from organizations where name = $1`, [ORG])).rows[0]?.id;
+const sup = (await db.query(`select id from auth.users where email = 'support@demo.octopusb2b.com'`)).rows[0]?.id;
+// the buyer company has one test RFQ + order of its own (the RLS tests check a customer sees its own orders)
+if (org && !(await db.query(`select 1 from orders where org_id = $1`, [org])).rowCount) {
+  const rfq = (await db.query(`insert into rfqs(org_id, title, quantity, unit, status, is_seed) values ($1, 'TEST FIXTURE RFQ', 100, 'pcs', 'quoted', true) returning id`, [org])).rows[0].id;
+  await db.query(`insert into orders(org_id, rfq_id, title, quantity, unit_price_cents, total_cents, deposit_cents, status, currency, is_seed) values ($1, $2, 'TEST FIXTURE order', 100, 100, 10000, 3000, 'deposit_pending', 'USD', true)`, [org, rfq]);
+}
+if (org && sup) await db.query(`insert into account_managers(org_id, staff_user_id, is_primary) values ($1, $2, true) on conflict (org_id) where is_primary do update set staff_user_id = excluded.staff_user_id`, [org, sup]);
 await db.end();

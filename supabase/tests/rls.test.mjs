@@ -86,7 +86,7 @@ await test('customer cannot read another org’s orders', async () => {
   // a second org with an order, created as superuser inside this (rolled back) transaction
   const other = await one(`insert into organizations(name, country) values ('RLS test org', 'DE') returning id`);
   const ord = await one(
-    `insert into orders(org_id, status, title, quantity, unit_price_cents, total_cents, deposit_cents) values ($1,'deposit_pending','RLS secret order',1,100,100,30) returning id`,
+    `insert into orders(org_id, status, title, quantity, unit_price_cents, total_cents, deposit_cents, division_id) values ($1,'deposit_pending','RLS secret order',1,100,100,30, division_id_of('SRC')) returning id`,
     [other.id],
   );
   await q(`insert into documents(org_id, doc_type, number, order_id) values ($1,'proforma_invoice','PI-RLS-TEST',$2)`, [other.id, ord.id]);

@@ -87,14 +87,28 @@ try {
   await db.query('begin');
   const counts = async () => { const o = {}; for (const t of TABLES) o[t] = Number((await one(`select count(*) n from ${t} where division_id is not null`)).n); return o; };
   const before = await counts();
+  // rows given a division explicitly (test orders of divisions the order model has no link for yet: DS / MMB / TK)
+  // cannot be re-derived from their own columns after a down + up — they are expected to come back empty
+  const explicitOrders = Number((await one(`select count(*) n from orders o where division_of_order(o) is null`)).n);
+  const explicitJournals = Number((await one(`select count(*) n from journals j where ref_type = 'order' and ref_id in (select id from orders o where division_of_order(o) is null)`)).n);
+  const explicitLines = Number((await one(`select count(*) n from ledger_entries where journal_id in (select id from journals j where ref_type = 'order' and ref_id in (select id from orders o where division_of_order(o) is null))`)).n);
+  // later migrations that build on the columns are taken down first (192 access rules, 191 advertising line)
+  const has192 = !!(await one(`select to_regprocedure('in_division(uuid,text[])') f`)).f;
+  const has191 = !!(await one(`select 1 x from information_schema.columns where table_name = 'journals' and column_name = 'report_line'`));
+  if (has192) await db.query(fs.readFileSync('supabase/migrations/down/20261101000192_division_access.down.sql', 'utf8'));
+  if (has191) await db.query(fs.readFileSync('supabase/migrations/down/20261101000191_advertising_line.down.sql', 'utf8'));
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000190_division_columns.down.sql', 'utf8'));
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000189_divisions.down.sql', 'utf8'));
   const gone = await one(`select to_regclass('divisions') d, (select count(*) from information_schema.columns where column_name = 'division_id' and table_schema = 'public') c`);
   ok(!gone.d && Number(gone.c) === 0, 'down migrations remove divisions, members and every division_id column');
   await db.query(fs.readFileSync('supabase/migrations/20261101000189_divisions.sql', 'utf8'));
   await db.query(fs.readFileSync('supabase/migrations/20261101000190_division_columns.sql', 'utf8'));
+  if (has191) await db.query(fs.readFileSync('supabase/migrations/20261101000191_advertising_line.sql', 'utf8'));
+  if (has192) await db.query(fs.readFileSync('supabase/migrations/20261101000192_division_access.sql', 'utf8'));
   const after = await counts();
-  ok(JSON.stringify(before) === JSON.stringify(after), 'up again: identical placement');
+  const expected = { ...before, orders: before.orders - explicitOrders, journals: before.journals - explicitJournals, ledger_entries: before.ledger_entries - explicitLines };
+  if (JSON.stringify(expected) !== JSON.stringify(after)) console.log('  before', JSON.stringify(before), '\n  after ', JSON.stringify(after));
+  ok(JSON.stringify(expected) === JSON.stringify(after), `up again: identical placement (${explicitOrders} explicitly placed test order(s) + their journals come back empty, as expected)`);
   await db.query('rollback');
 } catch (e) {
   ok(false, 'unexpected: ' + e.message);
