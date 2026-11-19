@@ -1,17 +1,20 @@
 // ADDON-24: remove the demo dataset from THIS database in one transaction (wipe_demo_data + optional duplicate merge).
 // Refuses unless (1) --env matches site_settings.app_environment of the target and (2) the operator types exactly
 // "DELETE DEMO DATA FOR <project-ref>". Idempotent — a second run deletes nothing.
-// Usage: pnpm db:wipe-demo --env production --operator admin@demo.octopusb2b.com [--merge-duplicates "SOUTHFIELD BIOCHEM PVT LTD"]
+// Usage: pnpm db:wipe-demo --env staging --operator admin@demo.octopusb2b.com [--merge-duplicates "SOUTHFIELD BIOCHEM PVT LTD"]
 //        (add --confirm "DELETE DEMO DATA FOR <ref>" to skip the prompt, e.g. in a supervised terminal session)
-import { config } from 'dotenv'; import pg from 'pg'; import readline from 'node:readline/promises';
+import pg from 'pg'; import readline from 'node:readline/promises';
 import { environmentOf } from './lib-env-guard.mjs';
-config({ path: '.env.local', quiet: true });
+import { loadStagingEnvOrExit, assertStagingDatabase } from './lib-staging-guard.mjs';
+// 19 Nov 2026: STAGING ONLY — stops unless the Supabase URL and database are the staging project
+loadStagingEnvOrExit();
 const arg = (k) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : undefined; };
 const ref = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).hostname.split('.')[0];
 const phrase = `DELETE DEMO DATA FOR ${ref}`;
 const c = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 await c.connect();
 try {
+  await assertStagingDatabase(c);
   const env = await environmentOf(c);
   const wanted = arg('--env');
   if (!wanted || wanted !== env) {

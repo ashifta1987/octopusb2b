@@ -6,11 +6,11 @@
 // Idempotent: does nothing if the test organisation already exists (use --reset to remove and recreate it).
 // Prints the expected vs actual division of every row it created.
 // Run: node scripts/seed-division-test-data.mjs [--reset]
-import { config } from 'dotenv'; import pg from 'pg';
-config({ path: '.env.staging', quiet: true, override: true });
-if (process.env.APP_ENVIRONMENT !== 'staging') { console.error('✘ refused: staging only'); process.exit(1); }
+import pg from 'pg';
+import { loadStagingEnvOrExit, assertStagingDatabase } from './lib-staging-guard.mjs';
+loadStagingEnvOrExit();                                   // stops unless the Supabase URL + database are the staging project
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } }); await db.connect();
-if ((await db.query(`select value #>> '{}' v from site_settings where key = 'app_environment'`)).rows[0]?.v !== 'staging') { console.error('✘ refused: database is not marked staging'); process.exit(1); }
+await assertStagingDatabase(db);
 const ORG = 'TEST DATA · Divisions';
 const one = async (q, p) => (await db.query(q, p)).rows[0];
 

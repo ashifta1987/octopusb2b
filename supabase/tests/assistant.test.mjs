@@ -93,7 +93,9 @@ try {
   ok((await one('select staff_user_id from account_managers where org_id=$1', [org2]))?.staff_user_id === support, 'KYC verification auto-assigns an account manager (sourcing team, least loaded)');
   await as(admin, true);
   await db.query(`select reassign_account_manager($1,$2,'Customer speaks German')`, [org2, ops]);
+  await sys();   // read the result without RLS (account_managers is readable by the manager and the customer only)
   ok((await one('select staff_user_id from account_managers where org_id=$1', [org2])).staff_user_id === ops, 'admin can reassign with a reason');
+  await as(admin, true);
   const m = (await one(`select assistant_metrics() v`)).v;
   ok(m.sessions >= 2 && 'bot_resolution_rate' in m, `metrics available (sessions ${m.sessions}, escalation rate ${m.escalation_rate}%)`);
   await as(buyer);
