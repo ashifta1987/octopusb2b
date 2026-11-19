@@ -144,6 +144,7 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
               <option value="3">Last 3 months</option><option value="6">Last 6 months</option><option value="12">Last 12 months</option>
             </select>
             <button className="btn btn-ghost" type="submit">Apply</button>
+            <Link className="btn btn-ghost" href="/admin/reports/divisions">By division</Link>
             {can(s, 'finance', 'export') && <a className="btn btn-ghost" href="/admin/finance/export?type=revenue">Export CSV</a>}
           </form>
         }

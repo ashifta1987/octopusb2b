@@ -93,6 +93,9 @@ try {
   const explicitJournals = Number((await one(`select count(*) n from journals j where ref_type = 'order' and ref_id in (select id from orders o where division_of_order(o) is null)`)).n);
   // …and their shipments, which take the order's division (TEST-SHP-DS for the dropship label, 196)
   const explicitShipments = Number((await one(`select count(*) n from shipments where order_id in (select id from orders o where division_of_order(o) is null)`)).n);
+  // …and the documents issued for those orders (step 5 test invoices: OCT-DS / OCT-MMB), which take the order's division
+  const explicitDocs = Number((await one(`select count(*) n from documents where order_id in (select id from orders o where division_of_order(o) is null)`)).n);
+  const explicitAudit = Number((await one(`select count(*) n from audit_log where entity = 'order' and division_id is not null and entity_id in (select id::text from orders o where division_of_order(o) is null)`)).n);
   const explicitLines = Number((await one(`select count(*) n from ledger_entries where journal_id in (select id from journals j where ref_type = 'order' and ref_id in (select id from orders o where division_of_order(o) is null))`)).n);
   // later migrations that build on the columns are taken down first (194 access fixes, 192 access rules, 191 advertising line)
   const has192 = !!(await one(`select to_regprocedure('in_division(uuid,text[])') f`)).f;
@@ -116,7 +119,7 @@ try {
   if (has194) await db.query(fs.readFileSync('supabase/migrations/20261101000194_division_access_fixes.sql', 'utf8'));
   await reapply(db, later);
   const after = await counts();
-  const expected = { ...before, orders: before.orders - explicitOrders, journals: before.journals - explicitJournals, ledger_entries: before.ledger_entries - explicitLines, shipments: before.shipments - explicitShipments };
+  const expected = { ...before, orders: before.orders - explicitOrders, journals: before.journals - explicitJournals, ledger_entries: before.ledger_entries - explicitLines, shipments: before.shipments - explicitShipments, ...(before.documents != null ? { documents: before.documents - explicitDocs } : {}), ...(before.audit_log != null ? { audit_log: before.audit_log - explicitAudit } : {}) };
   if (JSON.stringify(expected) !== JSON.stringify(after)) console.log('  before', JSON.stringify(before), '\n  after ', JSON.stringify(after));
   ok(JSON.stringify(expected) === JSON.stringify(after), `up again: identical placement (${explicitOrders} explicitly placed test order(s) + their journals come back empty, as expected)`);
   await db.query('rollback');

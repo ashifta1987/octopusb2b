@@ -83,6 +83,7 @@ else {
   } catch (e) { await db.query('rollback'); console.error('✘', e.message); process.exit(1); }
 }
 await ensureDropshipPrintData();
+await ensureInvoiceSamples();
 await report();
 await db.end();
 
@@ -113,6 +114,34 @@ async function ensureDropshipPrintData() {
   } catch (e) { await db.query('rollback'); console.error('✘ dropship print data:', e.message); process.exitCode = 1; }
 }
 
+// Invoice samples for step 5 (migration 198), idempotent: a tax invoice for the Dropshipping order (Dropship logo),
+// one for the Make My Brand order (Octopus B2B logo) and a proforma — issued through the real functions, so they get
+// real OCT- / PF- numbers from the staging counters. Test data (the test organisation, titles starting with TEST).
+async function ensureInvoiceSamples() {
+  const org = (await one(`select id from organizations where name = $1`, [ORG]))?.id;
+  if (!org) return;
+  if (!(await one(`select to_regprocedure('next_document_number(text,uuid,timestamptz)') f`)).f) { console.log('next_document_number missing — apply migration 198 first'); return; }
+  await db.query('begin');
+  try {
+    await db.query(`select set_config('request.jwt.claims', '{"role":"service_role"}', true)`);
+    for (const code of ['TEST-ORD-DS', 'TEST-ORD-MMB']) {
+      const o = await one(`select id from orders where code = $1 and org_id = $2`, [code, org]);
+      if (!o || (await one(`select 1 x from documents where order_id = $1 and doc_type = 'commercial_invoice'`, [o.id]))) continue;
+      await db.query(`update orders set status = 'qc' where id = $1`, [o.id]);
+      await db.query(`select system_transition_order($1, 'balance_pending', 'TEST invoice sample (step 5)')`, [o.id]);
+    }
+    if (!(await one(`select 1 x from documents where org_id = $1 and doc_type = 'proforma_invoice' and number like 'PF-%'`, [org])))
+      await db.query(`select issue_service_proforma($1, 'brand', 'brand_project', 'MB-TEST-01', 'TEST · Make My Brand sample run', $2::jsonb, 'USD')`,
+        [org, JSON.stringify([{ description: 'TEST sample run · 50 units with logo', qty: 50, unit_cents: 500, amount_cents: 25000 }])]);
+    // mark them (and the receivable journal of the proforma) as test data, so dashboards and the demo wipe treat them as such
+    await db.query(`update documents set is_seed = true where org_id = $1 and number ~ '^(OCT|CN|PF)-' and not is_seed`, [org]);
+    await db.query(`update journals set is_seed = true where ref_type = 'document' and ref_id in (select id from documents where org_id = $1) and not is_seed`, [org]);
+    await db.query('commit');
+    const docs = (await db.query(`select d.number, d.doc_type, v.code from documents d left join divisions v on v.id = d.division_id where d.org_id = $1 and d.number ~ '^(OCT|CN|PF)-' order by d.number`, [org])).rows;
+    console.log(`✔ invoice samples: ${docs.map((d) => `${d.number} (${d.doc_type}, ${d.code ?? '—'})`).join(', ')}`);
+  } catch (e) { await db.query('rollback'); console.error('✘ invoice samples:', e.message); process.exitCode = 1; }
+}
+
 async function reset(orgId) {
   // only the test organisation's rows (children first); journals/ledger lines found by their test idempotency keys
   const js = (await db.query(`select id from journals where idempotency_key like 'test-div-%'`)).rows.map((r) => r.id);
@@ -140,7 +169,7 @@ async function report() {
     union all select 'pools', code, 'POOL', ${code} from pools x where code in ('POOL-9900001', 'TEST-POOL-1')
     union all select 'pool_pledges', qty || ' units', 'POOL', ${code} from pool_pledges x where pool_id = (select id from pools where code in ('POOL-9900001', 'TEST-POOL-1'))
     union all select 'brand_projects', ref, 'MMB', ${code} from brand_projects x where org_id = $1
-    union all select 'documents', number, 'MMB', ${code} from documents x where org_id = $1
+    union all select 'documents', number, coalesce((select v.code from orders o join divisions v on v.id = o.division_id where o.id = x.order_id), 'MMB'), ${code} from documents x where org_id = $1
     union all select 'service_requests', service_code, case service_code when '3pl' then '3PL' else 'DS' end, ${code} from service_requests x where org_id = $1
     union all select 'dropship_import_list', 'import list row', 'DS', ${code} from dropship_import_list x where org_id = $1
     union all select 'turnkey_leads', reference, 'TK', ${code} from turnkey_leads x where org_id = $1

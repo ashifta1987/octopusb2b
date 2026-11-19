@@ -4,6 +4,7 @@ import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { factoryLabel, type FactoryInfo } from '@/lib/factory-label';
 import { COUNTRY_NAMES, humanize, asCurrency, CURRENCY_PREFIX, type Currency } from '@/lib/format';
 import { BRAND } from '@/lib/brand';
+import { DIVISION_LOGOS } from '@/lib/divisions/shared';
 
 /**
  * Print-ready, self-contained HTML for customer documents (Invoice.png).
@@ -60,19 +61,25 @@ export type DocBundle = {
   /** principal company account in the document currency (company_bank_accounts) */
   bank: BankAccount | null;
   settings: { deposit_pct: number; claim_visible_days: number; claim_hidden_days: number; quote_validity_days: number };
+  /** divisions step 5: the division that issued the document (name under the company name, logo) */
+  division?: { code: string; name: string; logo_key: string } | null;
+  /** credit notes: the invoice they credit */
+  originalNumber?: string | null;
+  /** itemised lines (service proformas / invoices issued with invoice_lines) */
+  lines?: { description: string | null; qty: number | null; unit_cents: number | null; amount_cents: number | null }[];
 };
 
 /** Loads a document and its context with the user's RLS client. Returns null when not visible. */
 export async function loadDocument(id: string, opts: { staff?: boolean } = {}): Promise<DocBundle | null> {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const sb = await createClient();
-  const { data: doc } = await sb.from('documents').select('id, org_id, doc_type, number, order_id, amount_cents, status, pdf_path, data, created_at, currency').eq('id', id).maybeSingle();
+  const { data: doc } = await sb.from('documents').select('id, org_id, doc_type, number, order_id, amount_cents, status, pdf_path, data, created_at, currency, division_id, original_document_id').eq('id', id).maybeSingle();
   if (!doc) return null;
 
   const [orgR, orderR, companyR, kycR, settingsR] = await Promise.all([
     doc.org_id ? sb.from('organizations').select('id, name, country, city, registration_no, website').eq('id', doc.org_id).maybeSingle() : Promise.resolve({ data: null }),
     doc.order_id ? sb.from('orders').select('id, code, title, quantity, unit_price_cents, shipping_cents, total_cents, currency, deposit_pct, deposit_cents, paid_cents, incoterm, rfq_id, quote_id, created_at').eq('id', doc.order_id).maybeSingle() : Promise.resolve({ data: null }),
-    sb.from('company_profile').select('legal_name, brand, address, address_cn, contact_person, phone, whatsapp, email, website').eq('id', 1).maybeSingle(),
+    sb.from('company_profile').select('legal_name, legal_name_cn, brand, address, address_cn, registration_no, tax_id, contact_person, phone, whatsapp, email, website').eq('id', 1).maybeSingle(),
     doc.org_id ? sb.from('kyc_submissions').select('company_name, registration_no, address, contact_name, contact_phone, contact_email').eq('org_id', doc.org_id).order('created_at', { ascending: false }).limit(1).maybeSingle() : Promise.resolve({ data: null }),
     sb.from('site_settings').select('key, value').in('key', ['deposit_pct', 'claim_visible_days', 'claim_hidden_days', 'quote_validity_days']),
   ]);
@@ -109,7 +116,17 @@ export async function loadDocument(id: string, opts: { staff?: boolean } = {}): 
     }
   }
 
+  // divisions step 5: issuing division (every document is issued by Shenzhen Octopus Trading Co., Ltd. for one division)
+  const [divR, origR, linesR] = await Promise.all([
+    doc.division_id ? sb.from('divisions').select('code, name, logo_key').eq('id', doc.division_id as string).maybeSingle() : Promise.resolve({ data: null }),
+    doc.original_document_id ? sb.from('documents').select('number').eq('id', doc.original_document_id as string).maybeSingle() : Promise.resolve({ data: null }),
+    sb.from('invoice_lines').select('description, qty, unit_cents, amount_cents, created_at').eq('document_id', doc.id as string).order('created_at'),
+  ]);
+
   return {
+    division: (divR.data as DocBundle['division']) ?? null,
+    lines: ((linesR.data ?? []) as DocBundle['lines']) ?? [],
+    originalNumber: ((origR.data as { number?: string } | null)?.number as string | undefined) ?? ((doc.data as Row | null)?.original_invoice as string | undefined) ?? null,
     doc: doc as DocBundle['doc'],
     org: (orgR.data as Row | null) ?? null,
     order,
@@ -149,7 +166,8 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
   const itemTitle = (d.title as string) ?? (order?.title as string) ?? title;
   const unit = (d.unit as string) ?? (rfq?.unit as string) ?? 'pcs';
   const incoterm = (d.incoterm as string) ?? (order?.incoterm as string) ?? null;
-  const subtotal = qty != null && unitPrice != null ? qty * unitPrice : null;
+  const lines = b.lines ?? [];
+  const subtotal = lines.length ? lines.reduce((a, l) => a + Number(l.amount_cents ?? 0), 0) : qty != null && unitPrice != null ? qty * unitPrice : null;
   const total = num(doc.amount_cents) ?? (subtotal != null ? subtotal + shipping : null) ?? num(order?.total_cents);
   const depPct = num(d.deposit_pct) ?? num(order?.deposit_pct) ?? settings.deposit_pct;
   const depCents = num(d.deposit_cents) ?? num(order?.deposit_cents) ?? (total != null ? Math.round((total * depPct) / 100) : null);
@@ -170,6 +188,7 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
     meta.push(['Method', esc(humanize((d.method as string) ?? '—'))]);
     if (d.reference) meta.push(['Reference', esc(d.reference), true]);
   }
+  if (type === 'credit_note' && b.originalNumber) meta.push(['Credits invoice', esc(b.originalNumber), true]);
   if (order?.code) meta.push(['Order', esc(order.code), true]);
 
   /* ── bill to ── */
@@ -188,14 +207,21 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
     <table class="items">
       <thead><tr><th style="width:28px">#</th><th>Description</th><th>HS code</th><th class="r">Qty</th><th class="r">Unit price</th><th class="r">Amount (${cur})</th></tr></thead>
       <tbody>
-        <tr>
+        ${lines.length ? lines.map((l, i) => `<tr>
+          <td class="mono">${i + 1}</td>
+          <td><b>${esc(l.description ?? itemTitle)}</b>${i === 0 && rfqCode ? `<div class="sub">${esc(rfqCode)}</div>` : ''}</td>
+          <td class="mono">${esc(b.hsCode ?? '—')}</td>
+          <td class="r mono">${l.qty != null ? esc(new Intl.NumberFormat('en-US').format(Number(l.qty))) : '—'}</td>
+          <td class="r mono">${m(l.unit_cents)}</td>
+          <td class="r mono"><b>${m(l.amount_cents)}</b></td>
+        </tr>`).join('') : `<tr>
           <td class="mono">1</td>
           <td><b>${esc(itemTitle)}</b>${opts.showSupplier && supplier ? `<div class="sub">Supplier ${esc(supplier.code)}${supplier.country ? ` · ${esc(supplier.country)}` : ''}${rfqCode ? ` · ${esc(rfqCode)}` : ''}</div>` : (b.factory || rfqCode) ? `<div class="sub">${[b.factory ? esc(factoryLabel(b.factory)) : '', rfqCode ? esc(rfqCode) : ''].filter(Boolean).join(' · ')}</div>` : ''}</td>
           <td class="mono">${esc(b.hsCode ?? '—')}</td>
           <td class="r mono">${qty != null ? esc(new Intl.NumberFormat('en-US').format(qty)) : '—'}<div class="sub">${esc(unit)}</div></td>
           <td class="r mono">${m(unitPrice)}</td>
           <td class="r mono"><b>${m(subtotal)}</b></td>
-        </tr>
+        </tr>`}
       </tbody>
     </table>`;
   }
@@ -262,7 +288,7 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
 
   /* key terms */
   const terms: string[] = [];
-  if (type === 'proforma_invoice') terms.push(`Prices in ${CURRENCY_NAME[cur]}; this proforma invoice is valid for ${settings.quote_validity_days} days from the issue date.`);
+  if (type === 'proforma_invoice') terms.push(`PROFORMA – not a tax invoice. Prices in ${CURRENCY_NAME[cur]}; valid for ${settings.quote_validity_days} days from the issue date. The tax invoice is issued when the order is invoiced.`);
   else terms.push(`All amounts in ${CURRENCY_NAME[cur]}. This document keeps the currency it was issued in.`);
   if (isInvoice || type === 'confirmation') {
     terms.push(`${depPct}% deposit on order confirmation, balance before despatch. Bank charges at both ends are paid by the buyer.`);
@@ -295,6 +321,13 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
   const phone = co?.phone ? esc(co.phone) : '';
   const wa = co?.whatsapp ? String(co.whatsapp).replace(/[^0-9]/g, '') : '';
   const generated = new Date().toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+  // divisions step 5: logo of the issuing division (approved files only), "Octopus B2B · Make My Brand" under the company
+  const logoKey = (b.division?.logo_key ?? 'octopus-b2b') as keyof typeof DIVISION_LOGOS;
+  const logoSrc = DIVISION_LOGOS[logoKey] ?? DIVISION_LOGOS['octopus-b2b'];
+  const logoAlt = logoKey === 'octopus-dropship' ? 'Octopus Dropship' : String(co?.brand ?? 'Octopus B2B');
+  const divisionLine = b.division ? `${String(co?.brand ?? 'Octopus B2B')} · ${b.division.name}` : null;
+  // registration no. / tax ID only when given (never filled in)
+  const regLine = [co?.registration_no ? `Reg. no. ${esc(co.registration_no)}` : '', co?.tax_id ? `Tax ID ${esc(co.tax_id)}` : ''].filter(Boolean).join(' · ');
 
   return `<!doctype html>
 <html lang="en"><head>
@@ -314,6 +347,8 @@ a{color:${BRAND.coralText};text-decoration:none}
 .toolbar .primary{background:${BRAND.coral};border-color:${BRAND.coral};color:#fff}
 .head{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
 .logo{height:44px;width:auto;display:block}
+.division{font-weight:600;color:${BRAND.coralText};font-size:12px;margin:-2px 0 8px}
+.proforma{margin-top:10px;display:inline-block;border:1.5px solid ${BRAND.warn};color:${BRAND.warn};font-weight:700;font-size:12px;letter-spacing:.04em;padding:6px 10px;border-radius:8px}
 h1{font:700 22px/1.2 Lexend,Figtree,system-ui,sans-serif;margin:20px 0 8px;text-transform:uppercase;letter-spacing:.01em}
 h1 .num{color:${BRAND.coralText}}
 .pill{display:inline-block;font-size:11px;font-weight:600;padding:4px 10px;border-radius:999px}
@@ -355,14 +390,18 @@ table.items td{font-size:12px;padding:10px;border-bottom:1px solid ${BRAND.line}
 <main class="page">
   <header class="head">
     <div>
-      <img class="logo" src="${esc(opts.origin)}/brand/octopus-b2b-logo.png" alt="${esc(co?.brand ?? 'Octopus B2B')}">
+      <img class="logo" src="${esc(opts.origin)}${logoSrc}" alt="${esc(logoAlt)}" data-logo="${esc(b.division?.logo_key ?? 'octopus-b2b')}">
       <h1>${esc(title)} <span class="num">${esc(doc.number)}</span></h1>
       <span class="pill ${statusTone}">${esc(statusText)}</span>
+      ${type === 'proforma_invoice' ? '<div class="proforma" data-testid="proforma-notice">PROFORMA – not a tax invoice</div>' : ''}
     </div>
     <div class="seller">
       <b>${legal}</b>
+      ${divisionLine ? `<div class="division" data-testid="division-line">${esc(divisionLine)}</div>` : ''}
+      ${co?.legal_name_cn ? `<p lang="zh">${esc(co.legal_name_cn)}</p>` : ''}
       ${co?.address ? `<p>${esc(co.address)}</p>` : ''}
       ${co?.address_cn ? `<p lang="zh">${esc(co.address_cn)}</p>` : ''}
+      ${regLine ? `<p>${regLine}</p>` : ''}
       <p>${[co?.contact_person, co?.phone, co?.email].filter(Boolean).map(esc).join(' · ')}</p>
     </div>
   </header>

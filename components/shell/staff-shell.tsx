@@ -43,7 +43,7 @@ export function StaffShell({ session, nav, counts, moderation, unread = 0, scope
       ...(can(session, 'wallet', 'approve') ? [{ href: '/admin/finance/transfers', label: 'Bank transfers' }] : []),
     ] },
     // divisions step 4: the legal company and its divisions (company-wide Admin only)
-    ...(session.isAdmin ? [{ title: 'Company', items: [{ href: '/admin/company', label: 'Company' }, { href: '/admin/divisions', label: 'Divisions' }, { href: '/admin/staff#divisions', label: 'Staff & divisions' }] }] : []),
+    ...(session.isAdmin ? [{ title: 'Company', items: [{ href: '/admin/company', label: 'Company' }, { href: '/admin/divisions', label: 'Divisions' }, { href: '/admin/staff#divisions', label: 'Staff & divisions' }, { href: '/admin/reports/divisions', label: 'Reports by division' }] }] : []),
     ...(seesCustomers ? [{ title: 'Customers', items: [{ href: '/admin/customers', label: 'All customers' }, { href: '/admin/brand-projects', label: 'Brand projects' }, ...(session.isAdmin || isManager ? [{ href: '/admin/approvals#limits', label: 'Approval limits' }] : [])] }] : []),
   ];
   const rest = nav.map((s) => ({ ...s, items: s.items.filter((i) => !i.area || can(session, i.area, i.action ?? 'view')) })).filter((s) => s.items.length);
