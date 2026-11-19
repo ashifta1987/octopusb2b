@@ -8,6 +8,7 @@ import { KycReviewButton } from './kyc-review-button';
 import { one } from '@/components/backoffice/server-utils';
 import { fmtDate, humanize, COUNTRY_NAMES } from '@/lib/format';
 import { reviewKyc } from '../../actions';
+import { kycMessageRequired, kycMessageRequiredText } from '@/lib/kyc-message';
 import { StepUpCallout } from '@/components/admin/step-up';
 
 export const metadata = { title: 'KYC submission' };
@@ -87,8 +88,8 @@ export default async function KycDetail({ params }: { params: Promise<{ id: stri
                   : (
                     <div className="flex flex-wrap gap-2">
                       {k.status === 'submitted' && <RunButton action={reviewKyc.bind(null, k.id, 'in_review', {})}>Start review</RunButton>}
-                      <KycReviewButton action={reviewKyc.bind(null, k.id, 'more_info')} label="Request more info" title="Request more information" messagePlaceholder="What does the customer need to provide?" />
-                      <KycReviewButton action={reviewKyc.bind(null, k.id, 'rejected')} label="Reject" title="Reject KYC" messageRequired messagePlaceholder="Why was the verification rejected? What can the customer do next?" className="btn btn-ghost btn-sm text-bad" danger confirmLabel="Reject" />
+                      <KycReviewButton action={reviewKyc.bind(null, k.id, 'more_info')} label="Request more info" title="Request more information" messageRequired={kycMessageRequired('more_info')} requiredText={kycMessageRequiredText('more_info')} confirmLabel="Request information" messagePlaceholder="What does the customer need to provide?" />
+                      <KycReviewButton action={reviewKyc.bind(null, k.id, 'rejected')} label="Reject" title="Reject KYC" messageRequired={kycMessageRequired('rejected')} requiredText={kycMessageRequiredText('rejected')} messagePlaceholder="Why was the verification rejected? What can the customer do next?" className="btn btn-ghost btn-sm text-bad" danger confirmLabel="Reject" />
                       <KycReviewButton action={reviewKyc.bind(null, k.id, 'verified')} label="Approve" title="Approve KYC" className="btn btn-sm bg-ok text-white" confirmLabel="Approve & verify" />
                     </div>
                   )}

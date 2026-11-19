@@ -51,7 +51,7 @@ test('Dropshipping staff: no 3PL inbound request, no Make My Brand project — d
   const sr = await sb.from('service_requests').select('id, details').eq('id', ids.sr3pl);
   expect(sr.error).toBeNull();
   expect(sr.data).toEqual([]);
-  expect((await sb.from('brand_projects').select('*').eq('id', ids.mb)).data).toEqual([]);
+  expect((await sb.from('brand_projects').select('id').eq('id', ids.mb)).data).toEqual([]);
   expect((await sb.rpc('admin_brand_projects', { p_id: ids.mb, p_status: null })).data ?? []).toEqual([]);
   expect((await sb.rpc('brand_project_history', { p_id: ids.mb })).data ?? []).toEqual([]);
   const st = await sb.rpc('set_brand_project_status', { p_id: ids.mb, p_to: 'proof', p_reason: null });

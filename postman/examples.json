@@ -79,6 +79,12 @@
             "country": "CN",
             "province": null,
             "label": "Verified factory · China"
+          },
+          "supplier": {
+            "verified": true,
+            "country": "CN",
+            "province": null,
+            "label": "Verified factory · China"
           }
         }
       ],
@@ -136,6 +142,12 @@
           "currency": "USD"
         },
         "factory": {
+          "verified": true,
+          "country": "CN",
+          "province": null,
+          "label": "Verified factory · China"
+        },
+        "supplier": {
           "verified": true,
           "country": "CN",
           "province": null,
@@ -306,7 +318,13 @@
             "verified": true,
             "country": "DE",
             "province": null,
-            "label": "Verified factory · DE"
+            "label": "Verified factory · Germany"
+          },
+          "supplier": {
+            "verified": true,
+            "country": "DE",
+            "province": null,
+            "label": "Verified factory · Germany"
           }
         },
         {
@@ -338,7 +356,13 @@
             "verified": true,
             "country": "TR",
             "province": null,
-            "label": "Verified factory · TR"
+            "label": "Verified factory · Türkiye"
+          },
+          "supplier": {
+            "verified": true,
+            "country": "TR",
+            "province": null,
+            "label": "Verified factory · Türkiye"
           }
         }
       ],
@@ -382,7 +406,13 @@
           "verified": true,
           "country": "DE",
           "province": null,
-          "label": "Verified factory · DE"
+          "label": "Verified factory · Germany"
+        },
+        "supplier": {
+          "verified": true,
+          "country": "DE",
+          "province": null,
+          "label": "Verified factory · Germany"
         },
         "price_tiers": [
           {
@@ -494,7 +524,13 @@
             "verified": true,
             "country": "VN",
             "province": null,
-            "label": "Verified factory · VN"
+            "label": "Verified factory · Vietnam"
+          },
+          "supplier": {
+            "verified": true,
+            "country": "VN",
+            "province": null,
+            "label": "Verified factory · Vietnam"
           }
         },
         {
@@ -526,7 +562,13 @@
             "verified": true,
             "country": "LK",
             "province": null,
-            "label": "Verified factory · LK"
+            "label": "Verified factory · Sri Lanka"
+          },
+          "supplier": {
+            "verified": true,
+            "country": "LK",
+            "province": null,
+            "label": "Verified factory · Sri Lanka"
           }
         }
       ]
@@ -643,6 +685,12 @@
               "currency": "USD"
             },
             "factory": {
+              "verified": true,
+              "country": "CN",
+              "province": null,
+              "label": "Verified factory · China"
+            },
+            "supplier": {
               "verified": true,
               "country": "CN",
               "province": null,
@@ -914,7 +962,13 @@
           "verified": true,
           "country": "VN",
           "province": null,
-          "label": "Verified factory · VN"
+          "label": "Verified factory · Vietnam"
+        },
+        "supplier": {
+          "verified": true,
+          "country": "VN",
+          "province": null,
+          "label": "Verified factory · Vietnam"
         },
         "created_at": "2026-10-31T21:52:58.726Z"
       },

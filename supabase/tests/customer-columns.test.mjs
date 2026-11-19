@@ -5,7 +5,7 @@
 //  · regression guard: no column readable by anon / a signed-in user looks internal unless it is on the reviewed allowlist
 //  · supplier identity, pool participants, carriers, set-up tables, ads, KYC split behave as agreed
 //  · staff and suppliers keep working (import_product_row, product costs, the assistant queue)
-//  · 195 down → up gives identical grants, policies and views
+//  · 195 down → up gives identical grants, policies and views (later applied migrations are unwound and re-applied around it)
 // Run: node supabase/tests/customer-columns.test.mjs
 import { config } from 'dotenv'; import pg from 'pg'; import fs from 'node:fs';
 config({ path: '.env.staging', quiet: true, override: true });
@@ -219,10 +219,15 @@ try {
     kyc: await all(`select column_name from information_schema.columns where table_name = 'kyc_submissions' order by 1`),
   });
   const after = await snap();
+  // later migrations that are applied (e.g. 196 replaces review_kyc) are unwound first and re-applied afterwards
+  const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
+  const later = await appliedAfter(db, '20261101000195_customer_safe_reads.sql');
+  await unwind(db, later);
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000195_customer_safe_reads.down.sql', 'utf8'));
   const down = await snap();
   ok(down.includes('review_note') && !down.includes('product_factory'), 'down: review note back, factory views removed');
   await db.query(fs.readFileSync('supabase/migrations/20261101000195_customer_safe_reads.sql', 'utf8'));
+  await reapply(db, later);
   const again = await snap();
   if (again !== after) { const a = JSON.parse(after), b = JSON.parse(again); for (const k of Object.keys(a)) if (JSON.stringify(a[k]) !== JSON.stringify(b[k])) { const sa = new Set(a[k].map((x) => JSON.stringify(x))); console.log('  diff in', k, b[k].filter((x) => !sa.has(JSON.stringify(x))).slice(0, 5)); } }
   ok(again === after, 'up again: identical grants, policies, functions and views');

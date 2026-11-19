@@ -5,6 +5,7 @@ import { withSuppliers } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, StatusBadge, Table, EmptyState, Money } from '@/components/ui';
 import { one } from '@/components/backoffice/server-utils';
 import { fmtDate, humanize } from '@/lib/format';
+import { getDivisionScope } from '@/lib/divisions/scope';
 
 export const metadata = { title: 'Orders' };
 
@@ -14,7 +15,8 @@ const FILTERS: Record<string, string[] | null> = {
 };
 
 export default async function OfficeOrders({ searchParams }: { searchParams: Promise<{ f?: string; q?: string }> }) {
-  await requireStaff('orders', 'view', '/office/orders');
+  const s = await requireStaff('orders', 'view', '/office/orders');
+  const scope = await getDivisionScope(s);   // divisions step 4: header switcher
   const { f = 'active', q } = await searchParams;
   const sb = await createClient();
   let query = sb.from('orders')
@@ -22,6 +24,7 @@ export default async function OfficeOrders({ searchParams }: { searchParams: Pro
     .order('updated_at', { ascending: false }).limit(200);
   const st = FILTERS[f] ?? FILTERS.active;
   if (st) query = query.in('status', st);
+  if (!scope.all) query = query.eq('division_id', scope.division.id);
   if (q) query = query.or(`code.ilike.%${q.replace(/[,()]/g, '')}%,title.ilike.%${q.replace(/[,()]/g, '')}%`);
   const { data: rows } = await query;
   // suppliers(code) embed went through orders.supplier_id (hidden, migration 195): supplier_id via service role after requireStaff

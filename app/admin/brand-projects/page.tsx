@@ -6,18 +6,20 @@ import { Card, PageHeader, Table, StatusBadge, EmptyState } from '@/components/u
 import { Loading } from '@/components/admin/ui';
 import { fmtDate } from '@/lib/format';
 import { BRAND_METHOD, BRAND_PACK, BRAND_STATUS_LABEL, BRAND_STEPS, BRAND_TONE, brandDestination as destination, type BrandRow } from '@/lib/brand-projects';
+import { getDivisionScope } from '@/lib/divisions/scope';
 
 export const metadata = { title: 'Brand projects' };
 
 /** Admin › Brand projects (bug 2, 8 Nov 2026): every Make My Brand request, newest first, filter by status. */
 async function BrandProjects({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
-  await requireStaffOrManager('/admin/brand-projects', ['customers', 'view']);
+  const s = await requireStaffOrManager('/admin/brand-projects', ['customers', 'view']);
+  const scope = await getDivisionScope(s);   // divisions step 4: brand projects are all Make My Brand
   const sp = await searchParams;
   const status = sp.status && (BRAND_STEPS as readonly string[]).concat('closed').includes(sp.status) ? sp.status : null;
   const sb = await createClient();
   const { data, error } = await sb.rpc('admin_brand_projects', { p_id: null, p_status: status });
   if (error) throw new Error(`Could not load brand projects: ${error.message}`);
-  const rows = (data ?? []) as BrandRow[];
+  const rows = (scope.all || scope.division.code === 'MMB' ? data ?? [] : []) as BrandRow[];
   const chip = (key: string | null, label: string) => (
     <Link key={label} href={key ? `/admin/brand-projects?status=${key}` : '/admin/brand-projects'} aria-current={status === key ? 'page' : undefined}
       className={`px-4 py-2 rounded-full text-sm font-semibold ${status === key ? 'bg-ink text-white' : 'bg-white border border-line text-ink hover:border-ink'}`}>{label}</Link>

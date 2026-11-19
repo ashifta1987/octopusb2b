@@ -60,6 +60,8 @@ export const HIDDEN_COLUMNS = {
   wallet_holds: ['created_by'],
   organizations: ['is_seed'],
   profiles: ['invited_by'],
+  // migration 196: dropship seller brand / return address — the staff review note and reviewer stay internal
+  dropship_seller_profiles: ['review_note', 'reviewed_by'],
 };
 
 // ── Run directly (node scripts/hidden-columns.mjs) to compare this list with the STAGING database grants. ──

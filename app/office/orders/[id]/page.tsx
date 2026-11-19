@@ -36,7 +36,7 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
     sb.from('order_events').select('id, kind, title, body, created_at').eq('order_id', id).order('created_at'),
     sb.from('documents').select('id, doc_type, number, amount_cents, currency, status, created_at').eq('order_id', id).order('created_at'),
     sb.from('payments').select('id, purpose, method, amount_cents, currency, reference, status, created_at').eq('order_id', id).order('created_at'),
-    sb.from('shipments').select('id, code, tracking_no, status, service_code, label_url, created_at').eq('order_id', id).order('created_at'),
+    sb.from('shipments').select('id, code, tracking_no, status, service_code, label_url, created_at, divisions(code)').eq('order_id', id).order('created_at'),
   ]);
   const org = one(o.organizations as unknown as { id: string; name: string; country: string | null; city: string | null; kyc_status: string } | null);
   const sup = one(o.suppliers as unknown as { code: string; legal_name: string; country: string } | null);
@@ -156,6 +156,10 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
                     <div className="flex justify-between gap-2"><span className="mono font-semibold">{sh.tracking_no}</span><StatusBadge status={sh.status} /></div>
                     <div className="text-muted">{sh.code} · {sh.service_code}</div>
                     {sh.label_url && <a href={sh.label_url} target="_blank" rel="noopener" className="text-coral-text font-semibold text-xs">Print label</a>}
+                    {/* dropship parcels: packing slip with the seller's brand + approved return address (migration 196) */}
+                    {sh.tracking_no && one(sh.divisions as unknown as { code: string } | null)?.code === 'DS' && (
+                      <a href={`/api/packing-slips/${encodeURIComponent(sh.tracking_no)}`} target="_blank" rel="noopener" className="ml-3 text-coral-text font-semibold text-xs">Packing slip</a>
+                    )}
                   </li>
                 ))}
               </ul>

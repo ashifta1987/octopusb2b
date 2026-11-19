@@ -91,11 +91,17 @@ try {
   // cannot be re-derived from their own columns after a down + up — they are expected to come back empty
   const explicitOrders = Number((await one(`select count(*) n from orders o where division_of_order(o) is null`)).n);
   const explicitJournals = Number((await one(`select count(*) n from journals j where ref_type = 'order' and ref_id in (select id from orders o where division_of_order(o) is null)`)).n);
+  // …and their shipments, which take the order's division (TEST-SHP-DS for the dropship label, 196)
+  const explicitShipments = Number((await one(`select count(*) n from shipments where order_id in (select id from orders o where division_of_order(o) is null)`)).n);
   const explicitLines = Number((await one(`select count(*) n from ledger_entries where journal_id in (select id from journals j where ref_type = 'order' and ref_id in (select id from orders o where division_of_order(o) is null))`)).n);
   // later migrations that build on the columns are taken down first (194 access fixes, 192 access rules, 191 advertising line)
   const has192 = !!(await one(`select to_regprocedure('in_division(uuid,text[])') f`)).f;
   const has191 = !!(await one(`select 1 x from information_schema.columns where table_name = 'journals' and column_name = 'report_line'`));
   const has194 = !!(await one(`select to_regprocedure('dropship_can_edit(uuid)') f`)).f;
+  // …and migrations applied after 194 before those (195 views call in_division; 196 dropship seller profiles use division_id_of + the write guard)
+  const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
+  const later = await appliedAfter(db, '20261101000194_division_access_fixes.sql');
+  await unwind(db, later);
   if (has194) await db.query(fs.readFileSync('supabase/migrations/down/20261101000194_division_access_fixes.down.sql', 'utf8'));
   if (has192) await db.query(fs.readFileSync('supabase/migrations/down/20261101000192_division_access.down.sql', 'utf8'));
   if (has191) await db.query(fs.readFileSync('supabase/migrations/down/20261101000191_advertising_line.down.sql', 'utf8'));
@@ -108,8 +114,9 @@ try {
   if (has191) await db.query(fs.readFileSync('supabase/migrations/20261101000191_advertising_line.sql', 'utf8'));
   if (has192) await db.query(fs.readFileSync('supabase/migrations/20261101000192_division_access.sql', 'utf8'));
   if (has194) await db.query(fs.readFileSync('supabase/migrations/20261101000194_division_access_fixes.sql', 'utf8'));
+  await reapply(db, later);
   const after = await counts();
-  const expected = { ...before, orders: before.orders - explicitOrders, journals: before.journals - explicitJournals, ledger_entries: before.ledger_entries - explicitLines };
+  const expected = { ...before, orders: before.orders - explicitOrders, journals: before.journals - explicitJournals, ledger_entries: before.ledger_entries - explicitLines, shipments: before.shipments - explicitShipments };
   if (JSON.stringify(expected) !== JSON.stringify(after)) console.log('  before', JSON.stringify(before), '\n  after ', JSON.stringify(after));
   ok(JSON.stringify(expected) === JSON.stringify(after), `up again: identical placement (${explicitOrders} explicitly placed test order(s) + their journals come back empty, as expected)`);
   await db.query('rollback');

@@ -10,17 +10,22 @@ import { one } from '@/components/backoffice/server-utils';
 import { fmtDate, COUNTRY_NAMES } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { priceTrial, createShipment, simulateTracking } from '../actions';
+import { getDivisionScope } from '@/lib/divisions/scope';
 
 export const metadata = { title: 'Shipping' };
 
+const READY_COLS = 'id, code, title, total_cents, currency, incoterm, updated_at, organizations(name, country, city)';
+const SHIP_COLS = 'id, code, tracking_no, status, service_code, rate_cents, currency, label_url, last_event_at, created_at, orders(id, code), tracking_events(status, description, occurred_at)';
+
 export default async function Shipping({ searchParams }: { searchParams: Promise<{ order?: string }> }) {
   const s = await requireStaff('orders', 'view', '/office/shipping');
+  const scope = await getDivisionScope(s);   // divisions step 4: header switcher
   const { order: selId } = await searchParams;
   const sb = await createClient();
   const carrier = getCarrier();
   const [{ data: readyRows }, { data: ships }] = await Promise.all([
-    sb.from('orders').select('id, code, title, total_cents, currency, incoterm, updated_at, organizations(name, country, city)').eq('status', 'ready_to_ship').order('updated_at').limit(100),
-    sb.from('shipments').select('id, code, tracking_no, status, service_code, rate_cents, currency, label_url, last_event_at, created_at, orders(id, code), tracking_events(status, description, occurred_at)').order('created_at', { ascending: false }).limit(50),
+    (scope.all ? sb.from('orders').select(READY_COLS) : sb.from('orders').select(READY_COLS).eq('division_id', scope.division.id)).eq('status', 'ready_to_ship').order('updated_at').limit(100),
+    (scope.all ? sb.from('shipments').select(SHIP_COLS) : sb.from('shipments').select(SHIP_COLS).eq('division_id', scope.division.id)).order('created_at', { ascending: false }).limit(50),
   ]);
   // suppliers(...) embed went through orders.supplier_id (hidden, migration 195): supplier_id via service role after requireStaff
   const ready = await withSuppliers(sb, 'orders', readyRows, 'code, legal_name, country, city');

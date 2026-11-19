@@ -1,6 +1,6 @@
 import 'server-only';
 import type { createAdminClient } from '@/lib/supabase/server';
-import { publicFactories } from './data';
+import { publicFactories, supplierAlias } from './data';
 import { amt, amt0, cur } from './money';
 
 type Sb = ReturnType<typeof createAdminClient>;
@@ -35,6 +35,7 @@ export function publicQuote(q: Row, factory: unknown) {
     shipping: amt0(shipping_cents, currency),
     total: amt0(total, currency),
     factory,
+    supplier: supplierAlias(factory),   // deprecated alias of `factory` (safe values only)
   };
 }
 
@@ -61,6 +62,7 @@ export function publicOrder(o: Row, factory: unknown) {
     paid: amt0(paid_cents, currency),
     balance: amt0(Number(total_cents ?? 0) - Number(paid_cents ?? 0), currency),
     factory,
+    supplier: supplierAlias(factory),   // deprecated alias of `factory` (safe values only)
   };
 }
 

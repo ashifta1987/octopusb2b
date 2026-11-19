@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { customerMessageFor, KYC_CONTACT_FALLBACK } from '@/lib/kyc-message';
+import { customerMessageFor, KYC_CONTACT_FALLBACK, kycMessageRequired, kycMessageRequiredText } from '@/lib/kyc-message';
 
 describe('customerMessageFor (KYC, migration 195)', () => {
   it('shows the customer message when present', () => {
@@ -17,5 +17,20 @@ describe('customerMessageFor (KYC, migration 195)', () => {
   it('never reads internal_note even if a row happens to carry it', () => {
     const row = { status: 'rejected', customer_message: null, internal_note: 'staff only' } as { status: string; customer_message: null };
     expect(customerMessageFor(row)).toBe(KYC_CONTACT_FALLBACK);
+  });
+});
+
+describe('kycMessageRequired (migration 196: rejected AND more_info need a message to the customer)', () => {
+  it('requires a message when rejecting or asking for more information', () => {
+    expect(kycMessageRequired('rejected')).toBe(true);
+    expect(kycMessageRequired('more_info')).toBe(true);
+  });
+  it('does not require one for in_review / verified', () => {
+    expect(kycMessageRequired('in_review')).toBe(false);
+    expect(kycMessageRequired('verified')).toBe(false);
+  });
+  it('explains what to write for each case', () => {
+    expect(kycMessageRequiredText('more_info')).toMatch(/information or documents/);
+    expect(kycMessageRequiredText('rejected')).toMatch(/rejected/);
   });
 });

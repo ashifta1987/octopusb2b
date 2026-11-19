@@ -6,6 +6,7 @@ import { Card, PageHeader, Stat, Table, StatusBadge, EmptyState } from '@/compon
 import { fmtDate, COUNTRY_NAMES } from '@/lib/format';
 import { LEAD_STATUSES, kUsd } from '@/lib/turnkey/format';
 import { LeadControls, RegionSelect, StatusSwitch } from './controls';
+import { getDivisionScope } from '@/lib/divisions/scope';
 
 export const metadata = { title: 'Turnkey projects' };
 
@@ -17,9 +18,13 @@ type Lead = {
   floor_plan_storage_path: string | null; assigned_to: string | null; created_at: string; turnkey_projects: { title: string } | null; turnkey_packages: { tier_name: string } | null;
 };
 
+const PROJECT_COLS = 'project_id, title, status, category, is_starter_pick, starter_rank, starting_budget_usd, sort_rank';
+const LEAD_COLS = 'lead_id, reference, kind, project_id, status, company_name, contact_name, email, phone, country, region, preferred_delivery_term, delivery_place, target_open_date, message, created_at, turnkey_projects(title), turnkey_packages(tier_name)';
+
 /** Admin → Turnkey (ADDON-31 §5): leads kanban with assignment, projects table, demand signals, sourcing team regions. */
 export default async function TurnkeyAdminPage({ searchParams }: { searchParams: Promise<{ tab?: string; lead?: string }> }) {
   const s = await requireStaff('turnkey', 'view', '/admin/turnkey');
+  const scope = await getDivisionScope(s);   // divisions step 4: header switcher
   const sp = await searchParams;
   const tab = sp.tab === 'projects' || sp.tab === 'signals' ? sp.tab : 'leads';
   const edit = can(s, 'turnkey', 'edit');
@@ -27,8 +32,8 @@ export default async function TurnkeyAdminPage({ searchParams }: { searchParams:
   const admin = createAdminClient();
   const since = daysAgo(30);
   const [{ data: leadRows }, { data: projects }, { data: pkgs }, { data: agentRoles }, { data: signals }, { data: settingRow }] = await Promise.all([
-    sb.from('turnkey_leads').select('lead_id, reference, kind, project_id, status, company_name, contact_name, email, phone, country, region, preferred_delivery_term, delivery_place, target_open_date, message, created_at, turnkey_projects(title), turnkey_packages(tier_name)').order('created_at', { ascending: false }).limit(300),
-    sb.from('turnkey_projects').select('project_id, title, status, category, is_starter_pick, starter_rank, starting_budget_usd, sort_rank').order('sort_rank'),
+    (scope.all ? sb.from('turnkey_leads').select(LEAD_COLS) : sb.from('turnkey_leads').select(LEAD_COLS).eq('division_id', scope.division.id)).order('created_at', { ascending: false }).limit(300),
+    (scope.all ? sb.from('turnkey_projects').select(PROJECT_COLS) : sb.from('turnkey_projects').select(PROJECT_COLS).eq('division_id', scope.division.id)).order('sort_rank'),
     sb.from('turnkey_packages').select('project_id, is_active'),
     admin.from('user_roles').select('user_id').eq('role_code', 'sourcing_agent'),
     sb.from('turnkey_atlas_signals').select('project_id, hub_id, event, country_from').gte('ts', since).limit(20000),

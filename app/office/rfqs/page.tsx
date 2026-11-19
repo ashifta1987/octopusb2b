@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, PageHeader, StatusBadge, Table, EmptyState, Money } from '@/components/ui';
 import { one } from '@/components/backoffice/server-utils';
 import { fmtDate, COUNTRY_NAMES } from '@/lib/format';
+import { getDivisionScope } from '@/lib/divisions/scope';
 
 /** Request time (server components render per request after the session read). */
 const nowMs = () => Date.now();
@@ -15,11 +16,13 @@ const FILTERS: Record<string, string[]> = {
 };
 
 export default async function OfficeRfqs({ searchParams }: { searchParams: Promise<{ f?: string }> }) {
-  await requireStaff('requests', 'view', '/office/rfqs');
+  const s = await requireStaff('requests', 'view', '/office/rfqs');
+  const scope = await getDivisionScope(s);   // divisions step 4: header switcher
   const { f = 'open' } = await searchParams;
   const sb = await createClient();
-  const { data } = await sb.from('rfqs')
-    .select('id, code, title, quantity, unit, target_price_cents, currency, destination_country, destination_city, status, created_at, expires_at, organizations(city, country), quotes(id)')
+  const rfqQ = sb.from('rfqs')
+    .select('id, code, title, quantity, unit, target_price_cents, currency, destination_country, destination_city, status, created_at, expires_at, organizations(city, country), quotes(id)');
+  const { data } = await (scope.all ? rfqQ : rfqQ.eq('division_id', scope.division.id))
     .in('status', FILTERS[f] ?? FILTERS.open).order('created_at', { ascending: f !== 'closed' && f !== 'accepted' }).limit(200);
   return (
     <>

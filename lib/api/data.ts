@@ -8,6 +8,18 @@ type Sb = ReturnType<typeof createAdminClient>;
  *  ("Verified factory · China (Guangdong)"). Never the supplier id, code or name (migration 195, 19 Nov 2026). */
 export type PublicFactory = { verified: boolean; country: string | null; province: string | null; label: string };
 
+/**
+ * DEPRECATED alias kept so API v1 clients that still read `supplier` do not break (19 Nov 2026). It carries exactly
+ * the safe values of `factory` — verified, country, province and the label — copied key by key, so nothing else
+ * (id, code, name, contact) can ever ride along. Will be removed: see postman/README.md → API changelog.
+ */
+export type SupplierAlias = PublicFactory;
+export function supplierAlias(f: unknown): SupplierAlias | null {
+  if (!f || typeof f !== 'object') return null;
+  const x = f as Partial<PublicFactory>;
+  return { verified: !!x.verified, country: x.country ?? null, province: x.province ?? null, label: String(x.label ?? '') };
+}
+
 /** Supplier ids (read server-side with the service-role API client) → factory info. The ids never leave the server. */
 export async function publicFactories(sb: Sb, supplierIds: (string | null | undefined)[]) {
   const uniq = [...new Set(supplierIds.filter(Boolean))] as string[];
@@ -47,6 +59,7 @@ export function publicProduct(p: Record<string, unknown>, fx: FxContext, factory
     ready_to_ship: p.ready_to_ship,
     octopus_dropship: p.octopus_dropship,
     factory: factory ?? null,
+    supplier: supplierAlias(factory),   // deprecated alias of `factory`
   };
 }
 

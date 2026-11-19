@@ -8,14 +8,15 @@ type Input = { customerMessage: string; internalNote: string };
 
 /**
  * KYC decision dialog with two fields (migration 195):
- *  - "Message to customer" → kyc_submissions.customer_message (visible to the customer; required when rejecting)
+ *  - "Message to customer" → kyc_submissions.customer_message (visible to the customer; required when rejecting or
+ *    requesting more information — migration 196)
  *  - "Internal note"       → kyc_submissions.internal_note (staff only)
  */
 export function KycReviewButton({
-  action, label, title, messageRequired = false, messagePlaceholder, className = 'btn btn-ghost btn-sm', confirmLabel = 'Confirm', danger,
+  action, label, title, messageRequired = false, requiredText = 'Write a message to the customer.', messagePlaceholder, className = 'btn btn-ghost btn-sm', confirmLabel = 'Confirm', danger,
 }: {
   action: (input: Input) => Promise<ActionResult>; label: React.ReactNode; title: string; messageRequired?: boolean;
-  messagePlaceholder?: string; className?: string; confirmLabel?: string; danger?: boolean;
+  requiredText?: string; messagePlaceholder?: string; className?: string; confirmLabel?: string; danger?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [customerMessage, setCustomerMessage] = useState('');
@@ -34,7 +35,8 @@ export function KycReviewButton({
             <h2 id={`${id}-t`} className="text-xl font-semibold">{title}</h2>
             <label htmlFor={`${id}-m`} className="label mt-4">Message to customer{messageRequired ? ' *' : ' (optional)'}</label>
             <textarea id={`${id}-m`} className="input min-h-24 py-2" value={customerMessage} placeholder={messagePlaceholder}
-              onChange={(e) => setCustomerMessage(e.target.value)} aria-describedby={`${id}-mh`} />
+              onChange={(e) => setCustomerMessage(e.target.value)} aria-describedby={`${id}-mh`}
+              required={messageRequired} aria-required={messageRequired} aria-invalid={!!err && missing} />
             <p id={`${id}-mh`} className="mt-1 text-xs text-muted">The customer sees this on their verification page.</p>
             <label htmlFor={`${id}-n`} className="label mt-4">Internal note (optional)</label>
             <textarea id={`${id}-n`} className="input min-h-20 py-2" value={internalNote} onChange={(e) => setInternalNote(e.target.value)} aria-describedby={`${id}-nh`} />
@@ -44,7 +46,7 @@ export function KycReviewButton({
               <button type="button" className="btn btn-ghost" onClick={() => setOpen(false)} disabled={pending}>Cancel</button>
               <button type="button" className={cn('btn', danger ? 'btn-danger' : 'btn-primary')} disabled={pending || missing}
                 onClick={() => {
-                  if (missing) { setErr('Write a message to the customer.'); return; }
+                  if (missing) { setErr(requiredText); return; }
                   start(async () => {
                     const r = await action({ customerMessage: customerMessage.trim(), internalNote: internalNote.trim() });
                     if (r && !r.ok) { setErr(r.error ?? 'Failed'); return; }

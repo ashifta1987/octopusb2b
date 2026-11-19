@@ -11,6 +11,7 @@ import { getCurrencyContext } from '@/lib/currency';
 import { money, fmtDate, humanize } from '@/lib/format';
 import { poolSettings, pct } from '@/components/store/pools/shared';
 import { cancelPool, confirmDeposit, defaultPledge, extendPool, forceSettlePool, savePoolRules, togglePools } from './actions';
+import { getDivisionScope } from '@/lib/divisions/scope';
 
 export const metadata = { title: 'Group buying' };
 
@@ -24,6 +25,7 @@ type Pledge = {
 /** Admin › Group buying (SPEC §18.4): ON/OFF switch, rules, all pools with filled % and deposits held, admin actions. */
 export default async function AdminPoolsPage({ searchParams }: { searchParams: SP }) {
   const s = await requireStaff('orders', 'view', '/admin/pools');
+  const scope = await getDivisionScope(s);   // divisions step 4: header switcher
   const sp = await searchParams;
   const status = STATUSES.includes(sp.status ?? '') ? sp.status! : sp.status === 'all' ? 'all' : 'open';
   const closing = sp.closing === '1';
@@ -33,12 +35,13 @@ export default async function AdminPoolsPage({ searchParams }: { searchParams: S
   let q = sb.from('pools').select('id, code, status, currency, target_qty, filled_qty, min_pledge, max_buyers, deadline_at, created_at, pool_price_minor, final_price_minor, balance_due_at, product_id, products(title, slug, unit)')
     .order('deadline_at', { ascending: true }).limit(300);
   if (status !== 'all') q = q.eq('status', status);
+  if (!scope.all) q = q.eq('division_id', scope.division.id);
   if (closing) q = q.eq('status', 'open').lte('deadline_at', new Date(now + 48 * 3600e3).toISOString());
   const seedPools = await seedIds('pools');
   const [{ data: poolRowsRaw, error }, settingsRes, countsRaw, ctx] = await Promise.all([
     q,
     sb.from('site_settings').select('key, value').like('key', 'pool_%'),
-    sb.from('pools').select('id, status'),
+    scope.all ? sb.from('pools').select('id, status') : sb.from('pools').select('id, status').eq('division_id', scope.division.id),
     getCurrencyContext(),
   ]);
   // supplier_id / po_document_id / is_seed are hidden from session reads (migration 195): rows stay on the session client

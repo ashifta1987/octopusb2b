@@ -3164,6 +3164,18 @@
                 "type": "null"
               }
             ]
+          },
+          "supplier": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Factory"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "deprecated": true,
+            "description": "Deprecated alias of `factory`; contains only verified/country/province. Will be removed — see API changelog."
           }
         }
       },
@@ -3450,6 +3462,18 @@
                 "type": "null"
               }
             ]
+          },
+          "supplier": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Factory"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "deprecated": true,
+            "description": "Deprecated alias of `factory`; contains only verified/country/province. Will be removed — see API changelog."
           }
         }
       },
@@ -3730,6 +3754,18 @@
                 "type": "null"
               }
             ]
+          },
+          "supplier": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Factory"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "deprecated": true,
+            "description": "Deprecated alias of `factory`; contains only verified/country/province. Will be removed — see API changelog."
           },
           "events": {
             "type": "array",

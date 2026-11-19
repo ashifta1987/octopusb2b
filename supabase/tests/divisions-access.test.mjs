@@ -56,7 +56,9 @@ try {
   ok(/FORBIDDEN|NOT_FOUND/.test(tr.err ?? ''), `DS staff: RPC transition of the 3PL request refused (${(tr.err ?? 'ALLOWED').slice(0, 60)})`);
   const bs = await tryq(`select set_brand_project_status($1, 'proof', null)`, [mb]);
   ok(/FORBIDDEN|NOT_FOUND/.test(bs.err ?? ''), `DS staff: RPC brand status change refused (${(bs.err ?? 'ALLOWED').slice(0, 60)})`);
-  ok((await all(`select 1 from warehouse_shipments`)).length === 0, 'DS staff: warehouse shipment list — nothing');
+  // the staging test data has one dropship shipment (TEST-SHP-DS, for the dropship label — 196): DS staff see only that
+  const dsShips = await all(`select code, division from warehouse_shipments`);
+  ok(dsShips.every((r) => r.division === 'DS'), `DS staff: warehouse shipment list — Dropshipping shipments only (${dsShips.map((r) => r.code).join(',') || 'none'})`);
   ok((await all(`select 1 from journals where division_id is null`)).length === 0, 'DS staff: company-wide journals — none');
 
   // ── Make My Brand staff ──
@@ -110,13 +112,18 @@ try {
   const snap = async () => JSON.stringify((await all(`select tablename, policyname, qual, with_check from pg_policies where schemaname = 'public' order by 1, 2`)));
   const after = await snap();
   const fs = await import('node:fs');
-  // 194 builds on 192 (its policies call in_division), so it comes down first and goes up again after
+  // 194 builds on 192 (its policies call in_division), so it comes down first and goes up again after; migrations
+  // applied after 194 (195 views call in_division, 196 uses the division write guard) are unwound before that
+  const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
+  const later = await appliedAfter(db, '20261101000194_division_access_fixes.sql');
+  await unwind(db, later);
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000194_division_access_fixes.down.sql', 'utf8'));
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000192_division_access.down.sql', 'utf8'));
   const down = await snap();
   ok(!down.includes('in_division') && !(await one(`select to_regprocedure('in_division(uuid,text[])') f`)).f, 'down: no policy mentions in_division, helper removed');
   await db.query(fs.readFileSync('supabase/migrations/20261101000192_division_access.sql', 'utf8'));
   await db.query(fs.readFileSync('supabase/migrations/20261101000194_division_access_fixes.sql', 'utf8'));
+  await reapply(db, later);
   ok((await snap()) === after, 'up again: identical policies');
 } catch (e) {
   ok(false, 'unexpected: ' + e.message);

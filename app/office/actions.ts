@@ -5,9 +5,11 @@ import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { getCarrier, type RateQuote } from '@/lib/adapters';
 import { toCents, money } from '@/lib/format';
 import { actionSession, fail, ok, type Result } from '@/components/backoffice/server-utils';
+import { kycMessageRequired, kycMessageRequiredText } from '@/lib/kyc-message';
 
 /* ───────── KYC ───────── */
-/** customerMessage is shown to the customer (required when rejecting); internalNote is staff only (migration 195). */
+/** customerMessage is shown to the customer (required when rejecting or asking for more information, migration 196);
+ *  internalNote is staff only (migration 195). */
 export async function reviewKyc(
   submissionId: string, to: 'in_review' | 'verified' | 'rejected' | 'more_info',
   input: { customerMessage?: string; internalNote?: string } = {},
@@ -16,13 +18,13 @@ export async function reviewKyc(
   if ('error' in g) return fail(g.error);
   const customerMessage = (input.customerMessage ?? '').trim();
   const internalNote = (input.internalNote ?? '').trim();
-  if (to === 'rejected' && !customerMessage) return fail('Write a message to the customer explaining why the verification was rejected.');
+  if (kycMessageRequired(to) && !customerMessage) return fail(kycMessageRequiredText(to));
   const sb = await createClient();
   const { error } = await sb.rpc('review_kyc', {
     p_submission: submissionId, p_to: to, p_note: internalNote || null, p_customer_message: customerMessage || null,
   });
   if (error) {
-    if (/KYC_MESSAGE_REQUIRED/.test(error.message)) return fail('Write a message to the customer explaining why the verification was rejected.');
+    if (/KYC_MESSAGE_REQUIRED/.test(error.message)) return fail(kycMessageRequiredText(to));
     if (/FORBIDDEN/.test(error.message)) return fail('You do not have permission to approve KYC submissions.');
     return fail(error);
   }

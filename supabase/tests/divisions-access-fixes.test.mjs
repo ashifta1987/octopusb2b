@@ -104,10 +104,15 @@ try {
     fn: await all(`select p.oid::regprocedure::text f, p.proacl::text a from pg_proc p where p.pronamespace = 'public'::regnamespace order by 1`),
   });
   const after = await snap();
+  // migrations applied after 194 are unwound first and re-applied after (they may build on 194's objects)
+  const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
+  const later = await appliedAfter(db, '20261101000194_division_access_fixes.sql');
+  await unwind(db, later);
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000194_division_access_fixes.down.sql', 'utf8'));
   const down = await snap();
   ok(!down.includes('dropship_products_read') && !down.includes('dropship_can_edit'), 'down: dropship policies and helper removed');
   await db.query(fs.readFileSync('supabase/migrations/20261101000194_division_access_fixes.sql', 'utf8'));
+  await reapply(db, later);
   ok((await snap()) === after, 'up again: identical policies, grants and function permissions');
 } catch (e) {
   ok(false, 'unexpected: ' + e.message);

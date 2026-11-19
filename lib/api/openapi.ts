@@ -120,6 +120,8 @@ const int = { type: 'integer' };
 const bool = { type: 'boolean' };
 const nullable = (s: Record<string, unknown>) => ({ anyOf: [s, { type: 'null' }] });
 const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
+/** Deprecated alias of `factory` on products, quotes and orders (kept for existing API v1 clients, 19 Nov 2026). */
+const supplierAlias = () => ({ ...nullable(ref('Factory')), deprecated: true, description: 'Deprecated alias of `factory`; contains only verified/country/province. Will be removed — see API changelog.' });
 const obj = (properties: Record<string, unknown>, required: string[] = []) => ({ type: 'object', ...(required.length ? { required } : {}), properties });
 const list = (r: string, paged = true) => obj({ data: { type: 'array', items: ref(r) }, ...(paged ? { meta: ref('PageMeta') } : {}) }, ['data']);
 const envelope = (r: string) => obj({ data: ref(r), simulated: { type: 'boolean', description: 'true when a test key was used — nothing was written' } }, ['data']);
@@ -145,7 +147,7 @@ const SCHEMAS: Record<string, unknown> = {
     {
       id: str, slug: str, title: str, description: nullable(str), category_id: nullable(str), unit: str, moq: int, lead_time_days: nullable(int), incoterm: nullable(str),
       origin_country: nullable(str), hs_code: nullable(str), image_url: nullable(str), from_price: nullable(ref('Price')), currency: { ...currency, description: 'Currency the supplier entered the prices in' },
-      ready_to_ship: bool, octopus_dropship: bool, factory: nullable(ref('Factory')),
+      ready_to_ship: bool, octopus_dropship: bool, factory: nullable(ref('Factory')), supplier: supplierAlias(),
     },
     ['id', 'slug', 'title', 'unit', 'moq', 'from_price', 'currency'],
   ),
@@ -169,7 +171,7 @@ const SCHEMAS: Record<string, unknown> = {
     {
       id: str, code: { type: 'string', example: 'QT-1001-1' }, rfq_id: str, quantity: int, incoterm: nullable(str), lead_time_days: nullable(int), notes: nullable(str),
       status: { enum: ['draft', 'sent', 'viewed', 'approved', 'rejected', 'expired', 'superseded'] }, valid_until: ts, created_at: ts,
-      currency, fx_rate_id: nullable(str), unit_price: ref('Amount'), shipping: ref('Amount'), total: ref('Amount'), factory: nullable(ref('Factory')),
+      currency, fx_rate_id: nullable(str), unit_price: ref('Amount'), shipping: ref('Amount'), total: ref('Amount'), factory: nullable(ref('Factory')), supplier: supplierAlias(),
     },
     ['id', 'code', 'rfq_id', 'quantity', 'status', 'currency', 'unit_price', 'shipping', 'total'],
   ),
@@ -189,7 +191,7 @@ const SCHEMAS: Record<string, unknown> = {
       status: { enum: ['pi_issued', 'deposit_pending', 'deposit_paid', 'confirmed', 'in_production', 'qc', 'balance_pending', 'balance_paid', 'ready_to_ship', 'shipped', 'delivered', 'closed', 'cancelled', 'disputed'] },
       title: str, quantity: int, deposit_pct: { type: 'number' }, incoterm: nullable(str), quote_id: nullable(str), rfq_id: nullable(str), terms_version_id: nullable(str),
       currency, fx_rate_id: nullable(str), unit_price: ref('Amount'), shipping: ref('Amount'), total: ref('Amount'), deposit: ref('Amount'), paid: ref('Amount'), balance: ref('Amount'),
-      factory: nullable(ref('Factory')),
+      factory: nullable(ref('Factory')), supplier: supplierAlias(),
       events: { type: 'array', items: obj({ kind: str, title: str, body: nullable(str), created_at: ts }) },
       documents: { type: 'array', items: obj({ id: str, doc_type: str, number: str, currency, amount: nullable(ref('Amount')), status: str, created_at: ts }, ['id', 'doc_type', 'amount']) },
       shipments: { type: 'array', items: obj({ id: str, code: str, tracking_no: nullable(str), status: str, eta: nullable(str), shipping_rate: nullable(ref('Amount')) }, ['id', 'code', 'status']) },

@@ -5,6 +5,8 @@
 // "TEST DATA · Divisions", titles/references starting with "TEST", is_seed = true where the table has it.
 // Idempotent: does nothing if the test organisation already exists (use --reset to remove and recreate it).
 // Prints the expected vs actual division of every row it created.
+// Also (migration 196, every run): an approved dropship seller profile "TEST · Lumen Home" + a DS shipment for
+// TEST-ORD-DS (tracking TESTDS0000000001) for the dropship label / packing slip.
 // Run: node scripts/seed-division-test-data.mjs [--reset]
 import pg from 'pg';
 import { loadStagingEnvOrExit, assertStagingDatabase } from './lib-staging-guard.mjs';
@@ -80,8 +82,36 @@ else {
     console.log('✔ test data created for organisation', ORG);
   } catch (e) { await db.query('rollback'); console.error('✘', e.message); process.exit(1); }
 }
+await ensureDropshipPrintData();
 await report();
 await db.end();
+
+// Dropship label + packing slip test data (migration 196). Idempotent, runs every time (also when the organisation
+// already exists): an APPROVED seller profile with an obviously fake brand + return address, and one DS shipment with a
+// tracking number for TEST-ORD-DS. Print: /api/labels/TESTDS0000000001 and /api/packing-slips/TESTDS0000000001.
+async function ensureDropshipPrintData() {
+  const org = (await one(`select id from organizations where name = $1`, [ORG]))?.id;
+  if (!org) return;
+  if (!(await one(`select to_regclass('public.dropship_seller_profiles') t`)).t) { console.log('dropship_seller_profiles missing — apply migration 196 first'); return; }
+  await db.query('begin');
+  try {
+    await db.query(`insert into dropship_seller_profiles(org_id, brand_name, return_name, return_line1, return_line2, return_city, return_region, return_postal_code, return_country)
+      values ($1, 'TEST · Lumen Home', 'TEST DATA · Lumen Home Returns', 'TEST Unit 0, Example Returns Street', 'TEST DATA — not a real address', 'Dubai', 'Dubai', '00000', 'AE')
+      on conflict (org_id) do update set brand_name = excluded.brand_name, return_name = excluded.return_name, return_line1 = excluded.return_line1,
+        return_line2 = excluded.return_line2, return_city = excluded.return_city, return_region = excluded.return_region,
+        return_postal_code = excluded.return_postal_code, return_country = excluded.return_country`, [org]);
+    // approved separately (a change to the brand / address above puts it back to pending)
+    await db.query(`update dropship_seller_profiles set status = 'approved', reviewed_at = coalesce(reviewed_at, now()), review_note = 'TEST DATA — approved by scripts/seed-division-test-data.mjs' where org_id = $1`, [org]);
+    const order = await one(`select id from orders where code = 'TEST-ORD-DS' and org_id = $1`, [org]);
+    if (order && !(await one(`select 1 x from shipments where order_id = $1`, [order.id])))
+      await db.query(`insert into shipments(code, order_id, org_id, carrier_code, service_code, tracking_no, status, weight_kg, parcels, currency, is_seed)
+        values ('TEST-SHP-DS', $1, $2, 'yunexpress', 'standard', 'TESTDS0000000001', 'created', 1.2, 1, 'USD', true)`, [order.id, org]);
+    await db.query('commit');
+    const p = await one(`select brand_name, status from dropship_seller_profiles where org_id = $1`, [org]);
+    const sh = await one(`select s.tracking_no, d.code from shipments s join divisions d on d.id = s.division_id where s.code = 'TEST-SHP-DS'`);
+    console.log(`✔ dropship print data: profile "${p.brand_name}" (${p.status}), shipment ${sh?.tracking_no} (${sh?.code})`);
+  } catch (e) { await db.query('rollback'); console.error('✘ dropship print data:', e.message); process.exitCode = 1; }
+}
 
 async function reset(orgId) {
   // only the test organisation's rows (children first); journals/ledger lines found by their test idempotency keys
@@ -105,7 +135,8 @@ async function report() {
     union all select 'quotes', code, 'SRC', ${code} from quotes x where code = 'TEST-Q-DIV-1'
     union all select 'orders', code, case code when 'TEST-ORD-SRC' then 'SRC' when 'TEST-ORD-POOL' then 'POOL' when 'TEST-ORD-MMB' then 'MMB' when 'TEST-ORD-DS' then 'DS' when 'TEST-ORD-TK' then 'TK' end, ${code} from orders x where org_id = $1
     union all select 'payments', reference, 'SRC', ${code} from payments x where org_id = $1
-    union all select 'shipments', code, 'SRC (its order)', ${code} from shipments x where org_id = $1
+    union all select 'shipments', code, case code when 'TEST-SHP-DS' then 'DS' else 'SRC (its order)' end, ${code} from shipments x where org_id = $1
+    union all select 'dropship_seller_profiles', brand_name || ' (' || status || ')', 'DS', ${code} from dropship_seller_profiles x where org_id = $1
     union all select 'pools', code, 'POOL', ${code} from pools x where code in ('POOL-9900001', 'TEST-POOL-1')
     union all select 'pool_pledges', qty || ' units', 'POOL', ${code} from pool_pledges x where pool_id = (select id from pools where code in ('POOL-9900001', 'TEST-POOL-1'))
     union all select 'brand_projects', ref, 'MMB', ${code} from brand_projects x where org_id = $1
