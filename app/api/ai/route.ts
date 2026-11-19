@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getSession, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { getAiAdapter } from '@/lib/adapters/ai';
+import { checkProductAccess } from '@/lib/distributor/access';
 
 export const maxDuration = 60;
 
@@ -35,6 +36,8 @@ export async function POST(req: Request) {
   const parsed = body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ ok: false, error: parsed.error.issues[0]?.message ?? 'Invalid request' }, { status: 400 });
   const { kind, supplier_id, product_id, input } = parsed.data;
+  // item 3: a product of a supplier that is not assigned to the caller → 403
+  if (product_id && (await checkProductAccess(s, product_id)) === 'forbidden') return NextResponse.json({ ok: false, error: 'This product belongs to a supplier that is not assigned to you.' }, { status: 403 });
 
   const sb = await createClient();
   // RLS: only visible if the supplier is assigned to this distributor (or staff with suppliers:view)

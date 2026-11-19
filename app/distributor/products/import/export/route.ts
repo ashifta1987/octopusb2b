@@ -4,6 +4,7 @@ import { getManagedSuppliers } from '@/components/backoffice/server-utils';
 import { buildProductWorkbook, XLSX_HEADERS } from '@/components/backoffice/product-workbook';
 import { categoryPaths } from '@/components/backoffice/category-paths';
 import { exportImageName, exportPrice } from '@/lib/product-import';
+import { supplierCodeExists } from '@/lib/distributor/access';
 
 /** "Download my products" (ADDON-33 §8): the caller's suppliers' products in the v2 layout, SKU and current image names filled in.
  *  Re-uploading it unedited changes nothing. ?supplier=<code> limits to one supplier. */
@@ -14,8 +15,11 @@ export async function GET(req: Request) {
   const [suppliers, { paths }] = await Promise.all([getManagedSuppliers(s), categoryPaths(sb)]);
   const only = new URL(req.url).searchParams.get('supplier')?.trim().toUpperCase();
   const mine = suppliers.filter((x) => !only || x.code.toUpperCase() === only);
-  // suppliers come from the caller's RLS view: an unassigned or unknown code is not found (never an empty or full export)
-  if (only && !mine.length) return new Response('Supplier not found', { status: 404 });
+  // suppliers come from the caller's RLS view: never an empty or full export. Item 3: an existing supplier that is not
+  // assigned to the caller is 403, an unknown code 404
+  if (only && !mine.length) {
+    return (await supplierCodeExists(only)) ? new Response('Forbidden: this supplier is not assigned to you', { status: 403 }) : new Response('Supplier not found', { status: 404 });
+  }
   const codeOf = new Map(mine.map((x) => [x.id, x.code]));
   const ids = mine.map((x) => x.id);
   const products: Record<string, unknown>[] = [];

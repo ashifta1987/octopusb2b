@@ -7,7 +7,8 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [{ protocol: 'https', hostname: '*.supabase.co', pathname: '/storage/v1/object/public/site-media/**' }],
   },
-  experimental: { serverActions: { bodySizeLimit: '6mb' } },
+  // authInterrupts: forbidden() → 403 page for another supplier's product in the distributor portal (item 3, 8 Nov 2026)
+  experimental: { serverActions: { bodySizeLimit: '6mb' }, authInterrupts: true },
   partialPrefetching: true,
   turbopack: {
     rules: {

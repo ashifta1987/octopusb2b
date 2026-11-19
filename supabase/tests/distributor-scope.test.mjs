@@ -1,7 +1,8 @@
 // RLS: a distributor sees only the suppliers assigned to them (6 Nov 2026). Rolled back — nothing persists.
 // Fixture: a throwaway distributor assigned to OCT-1132 only. As that user (JWT aal2):
 //  · suppliers: OCT-1132 visible, OCT-1133 not (so ?supplier=OCT-1133 resolves to nothing → 404 in the app)
-//  · products: every OCT-1132 product (any status); of OCT-1133 only what the public storefront shows (live)
+//  · products: every OCT-1132 product (any status); of OCT-1133 nothing — not even its live products (8 Nov 2026,
+//    migration 186: the public storefront policy no longer applies to distributors)
 //  · supplier_switches / distributor_suppliers: nothing of OCT-1133
 import { config } from 'dotenv'; import pg from 'pg';
 config({ path: '.env.local', quiet: true });
@@ -28,7 +29,7 @@ try {
   ok(!(await db.query(`select 1 from suppliers where code = 'OCT-1133'`)).rowCount, 'looking up OCT-1133 by code returns nothing');
   ok(Number((await one(`select count(*) n from products where supplier_id = $1`, [a])).n) === expectA, `all ${expectA} OCT-1132 products visible (any status)`);
   const seenB = Number((await one(`select count(*) n from products where supplier_id = $1`, [b])).n);
-  ok(seenB === liveB, `OCT-1133: only the ${liveB} publicly live product(s) of ${allB} visible (${seenB})`);
+  ok(seenB === 0, `OCT-1133: none of its ${allB} product(s) visible, not even the ${liveB} live one(s) (${seenB})`);
   ok(!(await db.query(`select 1 from products where supplier_id = $1 and status <> 'live'`, [b])).rowCount, 'no OCT-1133 drafts / submitted / archived rows');
   ok(!(await db.query(`select 1 from supplier_switches where supplier_id = $1`, [b])).rowCount, 'OCT-1133 switches hidden');
   ok((await db.query(`select supplier_id from distributor_suppliers`)).rows.every((r) => r.supplier_id === a), 'own assignments only');
