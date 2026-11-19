@@ -110,10 +110,13 @@ try {
   const snap = async () => JSON.stringify((await all(`select tablename, policyname, qual, with_check from pg_policies where schemaname = 'public' order by 1, 2`)));
   const after = await snap();
   const fs = await import('node:fs');
+  // 194 builds on 192 (its policies call in_division), so it comes down first and goes up again after
+  await db.query(fs.readFileSync('supabase/migrations/down/20261101000194_division_access_fixes.down.sql', 'utf8'));
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000192_division_access.down.sql', 'utf8'));
   const down = await snap();
   ok(!down.includes('in_division') && !(await one(`select to_regprocedure('in_division(uuid,text[])') f`)).f, 'down: no policy mentions in_division, helper removed');
   await db.query(fs.readFileSync('supabase/migrations/20261101000192_division_access.sql', 'utf8'));
+  await db.query(fs.readFileSync('supabase/migrations/20261101000194_division_access_fixes.sql', 'utf8'));
   ok((await snap()) === after, 'up again: identical policies');
 } catch (e) {
   ok(false, 'unexpected: ' + e.message);

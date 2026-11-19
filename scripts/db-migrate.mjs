@@ -13,6 +13,7 @@ const url = process.env.DATABASE_URL;
 if (!url) throw new Error('DATABASE_URL missing');
 const client = new pg.Client({ connectionString: url, ssl: { rejectUnauthorized: false } });
 await client.connect();
+if (process.argv.includes('--staging')) await (await import('./lib-staging-guard.mjs')).assertStagingDatabase(client);
 await client.query(`create table if not exists public._migrations (name text primary key, applied_at timestamptz default now())`);
 await client.query(`alter table public._migrations enable row level security`);
 const dir = 'supabase/migrations';
