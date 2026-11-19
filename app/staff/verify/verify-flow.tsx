@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { StaffHeading, LockNotice } from '../_components/bits';
@@ -57,11 +57,16 @@ function TrustBox({ hours, checked, onChange }: { hours: number; checked: boolea
   );
 }
 
+/**
+ * "Back" signs out and returns to the sign-in page. It sits inside the code forms, so it is a plain button that calls
+ * the sign-out action — a <form> here would be a form inside a form (invalid HTML, hydration warning).
+ */
 function BackLink() {
+  const [pending, start] = useTransition();
   return (
-    <form action={staffSignOut}>
-      <button type="submit" className="text-[15px] font-semibold text-coral-text">Back</button>
-    </form>
+    <button type="button" disabled={pending} onClick={() => start(() => staffSignOut())} className="text-[15px] font-semibold text-coral-text" data-testid="staff-verify-back">
+      {pending ? 'Signing out…' : 'Back'}
+    </button>
   );
 }
 
