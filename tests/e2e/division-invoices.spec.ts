@@ -8,7 +8,8 @@ import { createTempStaff, deleteTempStaff, staffLogin, type TempStaff } from './
  *  · Dropshipping tax invoice OCT-DS-…: Dropship logo, "Octopus B2B · Dropshipping" under Shenzhen Octopus Trading Co., Ltd.
  *  · Make My Brand tax invoice OCT-MMB-…: Octopus B2B logo, "Octopus B2B · Make My Brand"
  *  · Proforma PF-…: "PROFORMA – not a tax invoice"
- * Reports by division (temporary Admin): six divisions, Advertising on its own line, company total. Desktop + phone.
+ * Reports by division (temporary Admin): six divisions, Advertising on its own line, proformas as Pipeline (not revenue),
+ * company total. Desktop + phone.
  */
 const SHOTS = process.env.SHOTS_DIR;
 let admin: TempStaff | null = null;
@@ -71,6 +72,8 @@ test('Reports by division: six divisions, advertising on its own line, company t
   for (const c of ['DS', 'MMB', 'SRC', 'POOL', 'TK', '3PL']) await expect(page.getByTestId(`report-row-${c}`)).toBeVisible();
   await expect(page.getByTestId('report-row-advertising')).toContainText('Advertising');
   await expect(page.getByTestId('report-row-total')).toContainText('Company total');
+  await expect(page.getByTestId('pipeline-MMB')).toContainText('proforma');          // proformas are pipeline, not revenue
+  await expect(page.getByTestId('report-row-total')).toContainText('not in total');
   await shot(page, 'reports-divisions-desktop', true);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/admin/reports/divisions?months=all&test=1');

@@ -1,4 +1,5 @@
-// Divisions step 5b (migration 199): division_report(). STAGING ONLY, rolled back, acting as each user via JWT claims.
+// Divisions step 5b/5c (migrations 199 + 200): division_report().
+// Revenue counts from the TAX INVOICE (invoices − credit notes + non-proforma ledger revenue); proformas are "Pipeline". STAGING ONLY, rolled back, acting as each user via JWT claims.
 //  · a company-wide Admin gets six division rows + "Advertising" + "Company-wide (other)"; revenue per division equals
 //    the ledger (revenue accounts, by the journal's division); advertising is its own line; company total = sum of rows
 //  · orders and open work per division match direct counts
@@ -31,8 +32,17 @@ try {
 
   // expected values straight from the tables (as the database owner)
   const exp = {};
-  for (const r of await all(`select d.code, coalesce((select sum(le.credit_cents - le.debit_cents) from journals j join ledger_entries le on le.journal_id = j.id
-      join ledger_accounts la on la.id = le.account_id and la.kind = 'revenue' where j.division_id = d.id), 0)::bigint net from divisions d`)) exp[r.code] = { rev: Number(r.net) };
+  const NOT_PF = `coalesce(j.idempotency_key, '') !~ '^(pi|poolpi|doc-ar):' and not (j.ref_type = 'document' and exists (select 1 from documents x where x.id = j.ref_id and x.doc_type = 'proforma_invoice'))`;
+  for (const r of await all(`select d.code,
+      coalesce((select sum(le.credit_cents - le.debit_cents) from journals j join ledger_entries le on le.journal_id = j.id
+        join ledger_accounts la on la.id = le.account_id and la.kind = 'revenue' where j.division_id = d.id and ${NOT_PF}), 0)
+      + coalesce((select sum(case doc_type when 'credit_note' then -amount_cents else amount_cents end) from documents
+        where division_id = d.id and doc_type in ('commercial_invoice', 'credit_note') and coalesce(status, '') not in ('void', 'cancelled')), 0) net,
+      coalesce((select sum(amount_cents) from documents p where p.division_id = d.id and p.doc_type = 'proforma_invoice' and coalesce(p.status, '') not in ('void', 'cancelled')
+        and not (p.order_id is not null and exists (select 1 from documents i where i.order_id = p.order_id and i.doc_type = 'commercial_invoice'))), 0) pipe,
+      coalesce((select sum(le.credit_cents - le.debit_cents) from journals j join ledger_entries le on le.journal_id = j.id
+        join ledger_accounts la on la.id = le.account_id and la.kind = 'revenue' where j.division_id = d.id and not (${NOT_PF})), 0) pf_ledger
+      from divisions d`)) exp[r.code] = { rev: Number(r.net), pipe: Number(r.pipe), pfLedger: Number(r.pf_ledger) };
   const adv = Number((await one(`select coalesce(sum(le.credit_cents - le.debit_cents), 0)::bigint n from ledger_entries le join ledger_accounts la on la.id = le.account_id and la.kind = 'revenue' join journals j on j.id = le.journal_id where j.division_id is null and j.report_line = 'advertising'`)).n);
   for (const r of await all(`select d.code, count(o.id)::int n from divisions d left join orders o on o.division_id = d.id and o.status <> 'cancelled' group by 1`)) exp[r.code].orders = r.n;
   for (const r of await all(`select d.code, (select count(*) from rfqs where division_id = d.id and status in ('submitted','assigned','quoting'))
@@ -47,13 +57,19 @@ try {
   const rows = await all(`select * from division_report(null, null, true)`);
   const divRows = rows.filter((r) => r.line === 'division');
   ok(divRows.map((r) => r.division_code).join(',') === 'DS,MMB,SRC,POOL,TK,3PL' && rows.some((r) => r.line === 'advertising') && rows.some((r) => r.line === 'company'), `admin: six divisions + Advertising + Company-wide (${rows.map((r) => r.division_code ?? r.line).join(', ')})`);
-  const bad = divRows.filter((r) => Number(Object.values(r.revenue_by_currency).reduce((a, b) => a + Number(b), 0)) !== exp[r.division_code].rev || r.orders_count !== exp[r.division_code].orders || r.open_work !== exp[r.division_code].work);
-  ok(bad.length === 0, `revenue, orders and open work per division match the ledger and the queues${bad.length ? ' — differ: ' + bad.map((r) => r.division_code).join(',') : ''} (${divRows.map((r) => `${r.division_code} rev ${Object.values(r.revenue_by_currency).join('+') || 0} · ${r.orders_count} orders · ${r.open_work} open`).join(' | ')})`);
+  const sumMap = (m) => Object.values(m ?? {}).reduce((a, b) => a + Number(b), 0);
+  const bad = divRows.filter((r) => sumMap(r.revenue_by_currency) !== exp[r.division_code].rev || sumMap(r.pipeline_by_currency) !== exp[r.division_code].pipe || r.orders_count !== exp[r.division_code].orders || r.open_work !== exp[r.division_code].work);
+  ok(bad.length === 0, `revenue (tax invoices − credit notes + other ledger revenue), pipeline, orders and open work per division match${bad.length ? ' — differ: ' + bad.map((r) => r.division_code).join(',') : ''} (${divRows.map((r) => `${r.division_code} rev ${sumMap(r.revenue_by_currency)} · pipeline ${sumMap(r.pipeline_by_currency)} · ${r.orders_count} orders · ${r.open_work} open`).join(' | ')})`);
+  const mmb = divRows.find((r) => r.division_code === 'MMB');
+  ok(exp.MMB.pfLedger > 0 && sumMap(mmb.pipeline_by_currency) > 0 && mmb.pipeline_count > 0, `proformas are pipeline, not revenue (Make My Brand: ${exp.MMB.pfLedger} cents of proforma postings left out of revenue; pipeline ${sumMap(mmb.pipeline_by_currency)} in ${mmb.pipeline_count} proforma(s))`);
   const advRow = rows.find((r) => r.line === 'advertising');
   ok(Number(advRow.revenue_by_currency.USD ?? 0) === adv && adv > 0, `advertising is its own line (${adv} cents, test ad click)`);
   const total = rows.reduce((a, r) => a + Number(r.revenue_converted_minor), 0);
-  const ledgerTotal = Number((await one(`select coalesce(sum(convert_amount((le.credit_cents - le.debit_cents)::bigint, la.currency, current_platform_currency())), 0)::bigint n from ledger_entries le join ledger_accounts la on la.id = le.account_id and la.kind = 'revenue'`)).n);
-  ok(total === ledgerTotal, `company total = sum of the lines = all revenue in the ledger (${total})`);
+  const expTotal = Number((await one(`select coalesce((select sum(convert_amount((le.credit_cents - le.debit_cents)::bigint, la.currency, current_platform_currency())) from ledger_entries le
+      join ledger_accounts la on la.id = le.account_id and la.kind = 'revenue' join journals j on j.id = le.journal_id where ${NOT_PF}), 0)
+    + coalesce((select sum(convert_amount(case doc_type when 'credit_note' then -amount_cents else amount_cents end, coalesce(currency, 'USD'), current_platform_currency()))
+      from documents where doc_type in ('commercial_invoice', 'credit_note') and coalesce(status, '') not in ('void', 'cancelled')), 0) n`)).n);
+  ok(total === expTotal, `company total = sum of the lines = tax invoices − credit notes + other ledger revenue (${total}); pipeline not included`);
   const noTest = await all(`select * from division_report(null, null, false)`);
   ok(noTest.every((r) => Number(r.revenue_converted_minor) <= Number(rows.find((x) => x.line === r.line && x.division_code === r.division_code).revenue_converted_minor)), 'without test data: never more than with test data');
 
@@ -68,9 +84,12 @@ try {
   await db.query('begin');
   const snap = async () => JSON.stringify((await db.query(`select p.oid::regprocedure::text f, md5(p.prosrc) s, p.proacl::text a from pg_proc p where p.pronamespace = 'public'::regnamespace order by 1`)).rows);
   const up = await snap();
+  await db.query(fs.readFileSync('supabase/migrations/down/20261101000200_report_revenue_from_invoices.down.sql', 'utf8'));
+  const has199 = (await snap()).includes('division_report');
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000199_division_report.down.sql', 'utf8'));
-  ok(!(await snap()).includes('division_report'), 'down: removed');
+  ok(has199 && !(await snap()).includes('division_report'), 'down 200 → the 199 report is back; down 199 → removed');
   await db.query(fs.readFileSync('supabase/migrations/20261101000199_division_report.sql', 'utf8'));
+  await db.query(fs.readFileSync('supabase/migrations/20261101000200_report_revenue_from_invoices.sql', 'utf8'));
   ok((await snap()) === up, 'up again: identical');
 } catch (e) {
   ok(false, 'unexpected: ' + e.message);
