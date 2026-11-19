@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { withHiddenColumns } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, EmptyState, StatusBadge, Table } from '@/components/ui';
 import { Field, CountryTag } from '@/components/admin/ui';
 import { ActionForm, RunButton, ToggleSetting } from '@/components/admin/client';
@@ -25,11 +26,13 @@ export default async function SuppliersPage({ searchParams }: { searchParams: Pr
   const sb = await createClient();
   let q = sb.from('suppliers').select('*, supplier_switches(*)').order('code');
   if (!sp.archived) q = q.is('archived_at', null);
-  const [{ data }, { data: counts }] = await Promise.all([q, sb.from('products').select('supplier_id, status').limit(20000)]);
+  const [{ data }, { data: countRows }] = await Promise.all([q, sb.from('products').select('id, status').limit(20000)]);
+  // products.supplier_id is hidden from session reads (migration 195): added with the service role for the rows RLS returned.
+  const counts = await withHiddenColumns<{ id: string; status: string }, { supplier_id: string }>('products', countRows, 'supplier_id');
   let list = (data ?? []) as (Sup & { supplier_switches: Record<string, boolean> | Record<string, boolean>[] | null })[];
   if (sp.q) { const t = sp.q.toLowerCase(); list = list.filter((x) => `${x.code} ${x.legal_name} ${x.country} ${x.city ?? ''}`.toLowerCase().includes(t)); }
   const prodCount = new Map<string, { live: number; total: number; review: number }>();
-  (counts ?? []).forEach((p) => { const a = prodCount.get(p.supplier_id) ?? { live: 0, total: 0, review: 0 }; if (p.status !== 'archived') a.total++; if (p.status === 'live') a.live++; if (p.status === 'submitted' || p.status === 'in_review') a.review++; prodCount.set(p.supplier_id, a); });
+  (counts ?? []).forEach((p) => { const a = prodCount.get(p.supplier_id ?? '') ?? { live: 0, total: 0, review: 0 }; if (p.status !== 'archived') a.total++; if (p.status === 'live') a.live++; if (p.status === 'submitted' || p.status === 'in_review') a.review++; prodCount.set(p.supplier_id ?? '', a); });
   const sel = sp.new ? null : list.find((x) => x.id === sp.id) ?? null;
   // ADDON-27: legal-name variants collected by bulk imports — one must be chosen before the supplier's products can be published
   const { data: variants } = sel ? await sb.from('supplier_name_variants').select('id, variant_name, variant_address, seen_in, is_canonical').eq('supplier_id', sel.id).order('created_at') : { data: [] };

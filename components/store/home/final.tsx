@@ -197,8 +197,8 @@ export async function HomeHero() {
               </h1>
               <p className="mt-4 text-[16.5px] leading-[1.6] text-black max-w-[560px]">{block(blocks, 'home3.hero.lead', 'Sell without holding stock, put your brand on verified products, source from factories in China and ship worldwide, with one US dollar wallet and one account manager.')}</p>
               <form action="/search" role="search" className="mt-6 flex max-w-[600px] rounded-[12px] border-[1.5px] border-ink bg-white overflow-hidden focus-within:ring-3 focus-within:ring-coral-text">
-                <label htmlFor="hero-q" className="sr-only">Search products, HS codes or suppliers</label>
-                <input id="hero-q" name="q" type="search" placeholder="Search products, HS codes or suppliers" className="flex-1 min-w-0 px-4 min-h-14 text-[16px] outline-none placeholder:text-muted" />
+                <label htmlFor="hero-q" className="sr-only">Search products or HS codes</label>
+                <input id="hero-q" name="q" type="search" placeholder="Search products or HS codes" className="flex-1 min-w-0 px-4 min-h-14 text-[16px] outline-none placeholder:text-muted" />
                 <button type="submit" className="btn btn-dark rounded-none min-h-14 px-6">Search</button>
               </form>
               <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[14px] text-black">
@@ -394,7 +394,7 @@ function RestOfHome({ blocks, M, pools, poolsOn, turnkey, ready, countries, seco
                 <li key={p.id} className="shrink-0 w-[240px] md:w-auto snap-start">
                   <Link href={`/p/${p.slug}`} className="card block overflow-hidden h-full hover:border-coral-text">
                     <div className="relative aspect-square bg-fill">{p.image_url && <Image src={p.image_url} alt={p.title} fill sizes="(min-width:1100px) 300px, 240px" className="object-cover" unoptimized />}</div>
-                    <div className="p-4">{p.supplier?.verified && <span className="pill bg-ok-bg text-ok">Verified by Octopus</span>}<div className="mt-2 font-bold text-ink line-clamp-2">{p.title}</div><div className="mt-1 text-[13.5px] text-muted">{p.moq.toLocaleString('en-US')}+ {p.unit} from <b className="text-ink">{low ? money(low, p.currency) : '—'}</b></div></div>
+                    <div className="p-4">{p.factory?.verified && <span className="pill bg-ok-bg text-ok">Verified by Octopus</span>}<div className="mt-2 font-bold text-ink line-clamp-2">{p.title}</div><div className="mt-1 text-[13.5px] text-muted">{p.moq.toLocaleString('en-US')}+ {p.unit} from <b className="text-ink">{low ? money(low, p.currency) : '—'}</b></div></div>
                   </Link>
                 </li>
               );

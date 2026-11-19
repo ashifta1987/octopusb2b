@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { countWithoutSeeds, dropSeeds, seedIds, withHiddenColumns } from '@/components/backoffice/hidden-columns';
 import { Card, Stat, PageHeader, EmptyState, StatusBadge, Table } from '@/components/ui';
 import { Bar, CountryTag } from '@/components/admin/ui';
 import { ToggleSetting } from '@/components/admin/client';
@@ -30,14 +31,18 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
   const since = new Date(); since.setUTCDate(1); since.setUTCHours(0, 0, 0, 0); since.setUTCMonth(since.getUTCMonth() - (months - 1));
   const sb = await createClient();
 
-  const [orders, revenue, orgs, liveProducts, openRfqs, openTickets, srs, settings, audit, history, staffRoles, suppliers, ctx] = await Promise.all([
-    sb.from('orders').select('id, total_cents, currency, status, created_at, supplier_id, org_id').neq('status', 'cancelled').eq('is_seed', false).limit(5000),
+  // is_seed / orders.supplier_id are hidden from session reads (migration 195): rows and counts stay on the session client
+  // (RLS + divisions); seed ids and supplier_id come from the service role after requireStaff.
+  const [seedOrd, seedOrg, seedProd, seedRfq, seedTkt, seedSr] = await Promise.all(
+    ['orders', 'organizations', 'products', 'rfqs', 'tickets', 'service_requests'].map((t) => seedIds(t)));
+  const [ordersRaw, revenue, orgsRaw, liveProductsRaw, openRfqsRaw, openTicketsRaw, srsRaw, settings, audit, history, staffRoles, suppliers, ctx] = await Promise.all([
+    sb.from('orders').select('id, total_cents, currency, status, created_at, org_id').neq('status', 'cancelled').limit(5000 + seedOrd.size),
     sb.rpc('admin_revenue_by_stream', { p_from: since.toISOString() }),
-    sb.from('organizations').select('id, kyc_status, country').is('archived_at', null).eq('is_seed', false).limit(10000),
-    sb.from('products').select('id', { count: 'exact', head: true }).eq('status', 'live').eq('is_seed', false),
-    sb.from('rfqs').select('id', { count: 'exact', head: true }).in('status', OPEN_RFQ).eq('is_seed', false),
-    sb.from('tickets').select('id', { count: 'exact', head: true }).in('status', OPEN_TICKET).eq('is_seed', false),
-    sb.from('service_requests').select('service_code').eq('is_seed', false).limit(5000),
+    sb.from('organizations').select('id, kyc_status, country').is('archived_at', null).limit(10000 + seedOrg.size),
+    sb.from('products').select('id', { count: 'exact', head: true }).eq('status', 'live'),
+    sb.from('rfqs').select('id', { count: 'exact', head: true }).in('status', OPEN_RFQ),
+    sb.from('tickets').select('id', { count: 'exact', head: true }).in('status', OPEN_TICKET),
+    sb.from('service_requests').select('id, service_code').limit(5000 + seedSr.size),
     sb.from('site_settings').select('key, value').in('key', SWITCHES.map((x) => x.key)),
     can(s, 'audit', 'view') ? sb.from('audit_log').select('id, actor_id, action, entity, entity_id, created_at').order('created_at', { ascending: false }).limit(8) : Promise.resolve({ data: [] as never[] }),
     sb.from('status_history').select('id, entity, entity_id, from_status, to_status, actor_id, reason, created_at').order('created_at', { ascending: false }).limit(8),
@@ -45,6 +50,14 @@ export default async function AdminOverview({ searchParams }: { searchParams: Pr
     sb.from('suppliers').select('id, code, legal_name, country, is_seed'),
     getCurrencyContext(),
   ]);
+  const orders = { data: await withHiddenColumns<NonNullable<typeof ordersRaw.data>[number], { supplier_id: string | null }>('orders', dropSeeds(ordersRaw.data, seedOrd, 5000), 'supplier_id') };
+  const orgs = { data: dropSeeds(orgsRaw.data, seedOrg, 10000) };
+  const srs = { data: dropSeeds(srsRaw.data, seedSr, 5000) };
+  const [liveProducts, openRfqs, openTickets] = (await Promise.all([
+    countWithoutSeeds(liveProductsRaw.count, seedProd, (ids) => sb.from('products').select('id', { count: 'exact', head: true }).eq('status', 'live').in('id', ids)),
+    countWithoutSeeds(openRfqsRaw.count, seedRfq, (ids) => sb.from('rfqs').select('id', { count: 'exact', head: true }).in('status', OPEN_RFQ).in('id', ids)),
+    countWithoutSeeds(openTicketsRaw.count, seedTkt, (ids) => sb.from('tickets').select('id', { count: 'exact', head: true }).in('status', OPEN_TICKET).in('id', ids)),
+  ])).map((count) => ({ count }));
   // ADDON-24: one-time banner after the demo wipe, until the first real supplier exists
   const { data: wipeRow } = await sb.from('site_settings').select('value').eq('key', 'demo_wipe').maybeSingle();
   const wipe = wipeRow?.value as { at?: string; by_name?: string | null } | undefined;

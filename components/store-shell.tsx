@@ -34,7 +34,7 @@ export async function StoreHeader() {
         <div className="max-w-[1360px] mx-auto px-4 sm:px-8 py-3.5 flex flex-wrap gap-x-5 gap-y-3.5 items-center">
           <Logo />
           <form action="/search" role="search" className="order-3 sm:order-2 basis-full sm:basis-[440px] sm:flex-1 flex min-w-0 border-[1.5px] border-ink rounded-[10px] overflow-hidden bg-white focus-within:ring-2 focus-within:ring-coral-text focus-within:ring-offset-2">
-            <label htmlFor="q" className="sr-only">Search products, HS codes or suppliers</label>
+            <label htmlFor="q" className="sr-only">Search products, HS codes or turnkey projects</label>
             <input id="q" name="q" type="search" placeholder={products ? `Search ${products} products, HS codes or turnkey projects` : 'Search products, HS codes or turnkey projects'}
               className="flex-1 min-w-0 px-4 min-h-[46px] text-[15px] outline-none placeholder:text-muted" />
             <button type="submit" className="btn btn-dark rounded-none min-h-[46px] px-[22px]" aria-label="Search">

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/cn';
 import { humanize, money, fmtDate } from '@/lib/format';
+import { factoryLabel } from '@/lib/factory-label';
 
 /* ───────── Logo ───────── */
 /**
@@ -54,14 +55,13 @@ export function Money({ cents, currency = 'USD', className, compact }: { cents: 
   return <span className={cn('mono font-semibold tabular-nums', className)}>{money(cents, currency, { compact })}</span>;
 }
 
-/* ───────── SupplierCode — buyers only ever see code + country + badge (SPEC §3, §8.4) ───────── */
-export function SupplierCode({ code, country, verified, className }: { code: string; country?: string | null; verified?: boolean; className?: string }) {
+/* ───────── FactoryBadge — buyers only ever see "Verified factory · China (Guangdong)" (19 Nov 2026: no supplier code) ───────── */
+export function FactoryBadge({ factory, className }: { factory: { verified?: boolean | null; country?: string | null; province?: string | null } | null | undefined; className?: string }) {
   return (
     <span className={cn('inline-flex items-center gap-1.5 text-[13px] text-muted', className)}>
-      {country && <span className="mono text-[10px] font-semibold bg-pearl border border-line rounded px-1 py-px text-ink">{country}</span>}
-      <span>Supplier {code}</span>
-      {verified && (
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ok" strokeWidth="2.2" aria-label="Verified supplier" role="img">
+      <span>{factoryLabel(factory)}</span>
+      {factory?.verified && (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ok" strokeWidth="2.2" aria-label="Verified factory" role="img">
           <circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" />
         </svg>
       )}

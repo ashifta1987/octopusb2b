@@ -1,5 +1,5 @@
 import { apiRoute, isUuid } from '@/lib/api/handler';
-import { PRODUCT_COLUMNS, publicProduct, publicSuppliers } from '@/lib/api/data';
+import { PRODUCT_COLUMNS, publicProduct, publicFactories } from '@/lib/api/data';
 import { json, problem } from '@/lib/api/problem';
 import { loadFx, price } from '@/lib/api/money';
 
@@ -15,19 +15,19 @@ export const GET = apiRoute<{ id: string }>({ scopes: ['catalog:read'] }, async 
     .maybeSingle();
   if (!p) return problem(404, 'NOT_FOUND', 'Product not found.');
 
-  const [tiers, specs, media, tags, certs, sups, fx] = await Promise.all([
+  const [tiers, specs, media, tags, certs, facs, fx] = await Promise.all([
     ctx.sb.from('price_tiers').select('min_qty, unit_price_cents, currency').eq('product_id', p.id).order('min_qty'),
     ctx.sb.from('product_specs').select('name, value').eq('product_id', p.id).order('sort'),
     ctx.sb.from('product_media').select('url, kind, alt').eq('product_id', p.id).order('sort'),
     ctx.sb.from('product_tags').select('tag:tags(name, slug, kind)').eq('product_id', p.id),
     ctx.sb.from('product_certificates').select('certificate:certificates(name, issuer, status, expires_at)').eq('product_id', p.id),
-    publicSuppliers(ctx.sb, [p.supplier_id]),
+    publicFactories(ctx.sb, [p.supplier_id]),
     loadFx(ctx.sb),
   ]);
 
   return json({
     data: {
-      ...publicProduct(p, fx, sups.get(p.supplier_id)),
+      ...publicProduct(p, fx, facs.get(p.supplier_id)),
       price_tiers: (tiers.data ?? []).map((t) => ({ min_qty: t.min_qty, unit_price: price(t.unit_price_cents, t.currency, fx) })),
       specs: specs.data ?? [],
       media: media.data ?? [],

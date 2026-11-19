@@ -1,5 +1,5 @@
 import { apiRoute, pageMeta, range, simId } from '@/lib/api/handler';
-import { publicSuppliers } from '@/lib/api/data';
+import { publicFactories } from '@/lib/api/data';
 import { ORDER_COLUMNS, publicOrder } from '@/lib/api/trade';
 import { amt0, cur } from '@/lib/api/money';
 import { json, problem, problemFromDb } from '@/lib/api/problem';
@@ -14,8 +14,8 @@ export const GET = apiRoute({ scopes: ['orders:read'] }, async ({ ctx, url }) =>
   const [from, to] = range(pg.page, pg.per_page);
   const { data, count, error } = await q.order('created_at', { ascending: false }).range(from, to);
   if (error) return error.code === '22P02' ? problem(400, 'INVALID_QUERY', 'Unknown status.') : problemFromDb(error);
-  const sups = await publicSuppliers(ctx.sb, (data ?? []).map((o) => o.supplier_id));
-  return json({ data: (data ?? []).map((o) => publicOrder(o, sups.get(o.supplier_id) ?? null)), meta: pageMeta(pg.page, pg.per_page, count) });
+  const facs = await publicFactories(ctx.sb, (data ?? []).map((o) => o.supplier_id));
+  return json({ data: (data ?? []).map((o) => publicOrder(o, facs.get(o.supplier_id) ?? null)), meta: pageMeta(pg.page, pg.per_page, count) });
 });
 
 /** POST /api/v1/orders — create an order by approving a quote (issues the proforma invoice). Test keys: simulated. */
@@ -38,7 +38,7 @@ export const POST = apiRoute({ scopes: ['orders:write'] }, async ({ ctx, body })
     const depositPct = Number(pct?.value ?? 30);
     const total = q.unit_price_cents * q.quantity + q.shipping_cents;
     const rfq = q.rfq as unknown as { id: string; title: string };
-    const sups = await publicSuppliers(ctx.sb, [q.supplier_id]);
+    const facs = await publicFactories(ctx.sb, [q.supplier_id]);
     return json(
       {
         data: {
@@ -60,7 +60,7 @@ export const POST = apiRoute({ scopes: ['orders:write'] }, async ({ ctx, body })
           incoterm: q.incoterm,
           quote_id: q.id,
           rfq_id: rfq.id,
-          supplier: sups.get(q.supplier_id) ?? null,
+          factory: facs.get(q.supplier_id) ?? null,
           created_at: new Date().toISOString(),
         },
         simulated: true,
@@ -77,9 +77,9 @@ export const POST = apiRoute({ scopes: ['orders:write'] }, async ({ ctx, body })
   if (error) return problemFromDb(error);
   const r = res as { order_id: string; order_code: string; pi_number: string };
   const { data: o } = await ctx.sb.from('orders').select(ORDER_COLUMNS).eq('id', r.order_id).eq('org_id', ctx.orgId).single();
-  const sups = await publicSuppliers(ctx.sb, [o?.supplier_id]);
+  const facs = await publicFactories(ctx.sb, [o?.supplier_id]);
   return json(
-    { data: { ...publicOrder(o ?? {}, sups.get(o?.supplier_id) ?? null), pi_number: r.pi_number } },
+    { data: { ...publicOrder(o ?? {}, facs.get(o?.supplier_id) ?? null), pi_number: r.pi_number } },
     { status: 201, headers: { Location: `/api/v1/orders/${r.order_id}` } },
   );
 });

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { dropSeeds, seedIds, withHiddenColumns } from '@/components/backoffice/hidden-columns';
 import { Card, Stat, PageHeader, EmptyState, StatusBadge, Table, Notice } from '@/components/ui';
 import { Field } from '@/components/admin/ui';
 import { ActionForm, RunButton, ToggleSetting } from '@/components/admin/client';
@@ -29,16 +30,21 @@ export default async function AdminPoolsPage({ searchParams }: { searchParams: S
   const sb = await createClient();
   const now = nowMs();
 
-  let q = sb.from('pools').select('id, code, status, currency, target_qty, filled_qty, min_pledge, max_buyers, deadline_at, created_at, pool_price_minor, final_price_minor, balance_due_at, po_document_id, product_id, supplier_id, products(title, slug, unit)')
+  let q = sb.from('pools').select('id, code, status, currency, target_qty, filled_qty, min_pledge, max_buyers, deadline_at, created_at, pool_price_minor, final_price_minor, balance_due_at, product_id, products(title, slug, unit)')
     .order('deadline_at', { ascending: true }).limit(300);
   if (status !== 'all') q = q.eq('status', status);
   if (closing) q = q.eq('status', 'open').lte('deadline_at', new Date(now + 48 * 3600e3).toISOString());
-  const [{ data: poolRows, error }, settingsRes, counts, ctx] = await Promise.all([
+  const seedPools = await seedIds('pools');
+  const [{ data: poolRowsRaw, error }, settingsRes, countsRaw, ctx] = await Promise.all([
     q,
     sb.from('site_settings').select('key, value').like('key', 'pool_%'),
-    sb.from('pools').select('status').eq('is_seed', false),
+    sb.from('pools').select('id, status'),
     getCurrencyContext(),
   ]);
+  // supplier_id / po_document_id / is_seed are hidden from session reads (migration 195): rows stay on the session client
+  // (RLS), those columns come from the service role after requireStaff.
+  const poolRows = await withHiddenColumns('pools', poolRowsRaw as Record<string, unknown>[] | null, 'supplier_id, po_document_id');
+  const counts = { data: dropSeeds(countsRaw.data, seedPools) };
   const pools = (poolRows ?? []) as unknown as {
     id: string; code: string; status: string; currency: string; target_qty: number; filled_qty: number; min_pledge: number; max_buyers: number; deadline_at: string;
     created_at: string; pool_price_minor: number | null; final_price_minor: number | null; balance_due_at: string | null; po_document_id: string | null;

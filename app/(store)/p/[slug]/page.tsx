@@ -6,10 +6,11 @@ import { categoryPath, block } from '@/lib/content';
 import { getStoreContent } from '@/components/store/currency';
 import { money, fmtDate, COUNTRY_NAMES } from '@/lib/format';
 import { VerifiedBadge, ServiceChoiceCard, Icon } from '@/components/ds';
-import { getProduct, getRecommendations, getServices, getMoreFromFactory, type PublicSupplier } from '@/components/store/data';
+import { getProduct, getRecommendations, getServices, getMoreFromFactory, type Factory } from '@/components/store/data';
 import { ProductGrid, GridSkeleton, unitOne, fmtQty } from '@/components/store/product-card';
 import { PriceCalculator } from '@/components/store/price-calculator';
 import { cartonQty } from '@/lib/qty';
+import { factoryLabel } from '@/lib/factory-label';
 import { ProductGallery } from '@/components/store/product-gallery';
 import { AdSlot } from '@/components/store/ad-slot';
 import { Breadcrumbs, JsonLd, breadcrumbLd, parts, SITE_URL } from '@/components/store/seo';
@@ -40,11 +41,8 @@ export default function ProductPage({ params }: { params: Params }) {
   );
 }
 
-/** "Octopus verified factory · Guangdong" — the public never sees the supplier code or name (ADDON-44 rule 4). */
-function factoryLine(s: PublicSupplier) {
-  const where = s.province || (s.country ? (COUNTRY_NAMES[s.country] ?? s.country) : null);
-  return [s.verified ? 'Octopus verified factory' : 'Factory', where].filter(Boolean).join(' · ');
-}
+/** "Verified factory · China (Guangdong)" — the public never sees the supplier code, id or name (19 Nov 2026). */
+const factoryLine = (f: Factory) => factoryLabel(f);
 const SERVICE_CTA: Record<string, string> = {
   sourcing: 'Request quote', sample: 'Request sample', qc: 'Book QC inspection', certification: 'Request certification', '3pl': 'Request 3PL', dropship: 'Request dropship',
 };
@@ -53,8 +51,8 @@ async function Content({ params }: { params: Params }) {
   const { slug } = await params;
   const p = await getProduct(slug);
   if (!p) notFound();
-  const [{ categories, company, blocks }, services, recs, more] = await Promise.all([getStoreContent(), getServices(), getRecommendations(p.id, p.category_id), p.supplier_id ? getMoreFromFactory(p.id, p.supplier_id) : Promise.resolve([])]);
-  const verified = !!p.supplier?.verified;
+  const [{ categories, company, blocks }, services, recs, more] = await Promise.all([getStoreContent(), getServices(), getRecommendations(p.id, p.category_id), getMoreFromFactory(p.id)]);
+  const verified = !!p.factory?.verified;
   const path = categoryPath(categories, p.category_id);
   const crumbs = [
     { name: 'Home', href: '/' },
@@ -90,7 +88,7 @@ async function Content({ params }: { params: Params }) {
     ['Lead time', p.lead_time_days ? `${p.lead_time_days} days` : 'On request'],
     ['Incoterm', p.incoterm ?? 'On request'],
     ['Ships from', origin ?? '—'],
-    ['HS code', p.hs_code ? (p.hs_code_status === 'suggested' ? `${p.hs_code} (indicative)` : p.hs_code) : '—'],
+    ['HS code', p.hs_code ? (p.hs_code_indicative ? `${p.hs_code} (indicative)` : p.hs_code) : '—'],
     ['Unit', p.unit],
   ];
 
@@ -124,10 +122,10 @@ async function Content({ params }: { params: Params }) {
           {p.ready_to_ship && <span className="inline-flex ml-2 rounded-full bg-ok-bg text-ok text-[12px] font-semibold px-2.5 py-1">Ready to ship</span>}
           <h1 className="text-[30px] sm:text-[36px] font-extrabold leading-[1.12]">{p.title}</h1>
           {/* ADDON-44-F board 24: verified badge + factory line, never the supplier code */}
-          {p.supplier && (
+          {p.factory && (
             <div className="space-y-1.5" data-testid="factory-line">
-              <VerifiedBadge verified={p.supplier.verified} explain={p.supplier.verified ? 'Octopus checked this factory: licence, site visit, QC record' : undefined} />
-              <div className="text-[13.5px] text-black flex items-center gap-1.5"><Icon name="warehouse" size={16} className="text-muted" />{factoryLine(p.supplier)}</div>
+              <VerifiedBadge verified={p.factory.verified} explain={p.factory.verified ? 'Octopus checked this factory: licence, site visit, QC record' : undefined} />
+              <div className="text-[13.5px] text-black flex items-center gap-1.5"><Icon name="warehouse" size={16} className="text-muted" />{factoryLine(p.factory)}</div>
             </div>
           )}
           {certTags.length > 0 && (
@@ -244,14 +242,13 @@ async function Content({ params }: { params: Params }) {
               Certificates are the manufacturer&apos;s documents; check they cover your import requirements.
             </p>
           </section>
-          {p.supplier && (
+          {p.factory && (
             <section className="card p-5" aria-label="Factory">
               <div className="flex gap-3 items-center">
                 <span className="w-11 h-11 rounded-full bg-tint text-coral-text flex items-center justify-center" aria-hidden><Icon name="warehouse" /></span>
                 <div>
-                  <div className="font-semibold">{factoryLine(p.supplier)}</div>
-                  <div className="text-[13px] text-muted">{p.supplier.supplier_type ?? 'Factory'}</div>
-                  <div className="mt-1.5"><VerifiedBadge verified={p.supplier.verified} /></div>
+                  <div className="font-semibold">{factoryLine(p.factory)}</div>
+                                    <div className="mt-1.5"><VerifiedBadge verified={p.factory.verified} /></div>
                 </div>
               </div>
               <p className="text-[13px] text-muted mt-3">All messages and orders go through Octopus B2B.</p>
@@ -270,7 +267,7 @@ async function Content({ params }: { params: Params }) {
 
       {more.length > 0 && (
         <section className="mt-12" id="more-factory" aria-labelledby="more-h" data-testid="more-factory">
-          <div className="k !text-coral-text">Same {p.supplier?.verified ? 'verified ' : ''}factory</div>
+          <div className="k !text-coral-text">Same {p.factory?.verified ? 'verified ' : ''}factory</div>
           <h2 id="more-h" className="mt-1.5 text-[26px] font-extrabold">More from this factory</h2>
           <ul className="mt-5 grid gap-4 sm:grid-cols-3">
             {more.map((m) => {
@@ -283,7 +280,7 @@ async function Content({ params }: { params: Params }) {
                       {m.image_url && <img src={m.image_url} alt={m.title} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />}
                     </div>
                     <div className="p-4">
-                      {m.supplier?.verified && <VerifiedBadge />}
+                      {m.factory?.verified && <VerifiedBadge />}
                       <div className="mt-2 font-bold text-ink group-hover:text-coral-text line-clamp-2">{m.title}</div>
                       <div className="mt-1 text-[13px] text-muted">{low ? <>From {money(low, m.currency)}</> : 'Price on request'} · MOQ {fmtQty(m.moq, m.unit)}</div>
                     </div>

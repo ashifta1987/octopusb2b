@@ -2,17 +2,27 @@ import 'server-only';
 import { serviceName } from '@/lib/service-names';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { fmtDate, humanize, money } from '@/lib/format';
+import { factoryLabel } from '@/lib/factory-label';
+import { CARRIER_SETTING_KEYS, customerCarrierLabel } from '@/lib/carrier-label';
 
 /**
  * Fact lookups shared by Octo's tools and the staff "Octo side rail" (SPEC §20.5).
- * Always pass the caller's Supabase client so RLS decides what is visible. Never selects supplier legal names
- * (suppliers come from the `public_suppliers` view) and never customer addresses/contacts.
+ * Always pass the caller's Supabase client so RLS decides what is visible. Never selects supplier names, codes or ids
+ * (the factory comes from the `quote_factory` view: "Verified factory · China (Guangdong)") and never customer
+ * addresses/contacts. The carrier is never named from the carrier list: customers only see the public carrier label
+ * once the test shipment passed, otherwise "Octopus B2B shipping" (decision 3, 19 Nov 2026).
  */
 export type Fact<T = Record<string, unknown>> = { title: string; text: string; data: T | null };
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const CARRIERS: Record<string, string> = { yunexpress: 'YunExpress', dhl: 'DHL', fedex: 'FedEx', ups: 'UPS', manual: 'Manual' };
-export const carrierName = (c: string | null | undefined) => (c ? CARRIERS[c] ?? humanize(c) : 'Carrier');
+
+/** The carrier name a customer may see (public site settings; never the carrier list / carrier code). */
+export async function customerCarrier(sb: SupabaseClient): Promise<string> {
+  const { data } = await sb.from('site_settings').select('key, value').in('key', [...CARRIER_SETTING_KEYS]);
+  const raw: Record<string, unknown> = {};
+  (data ?? []).forEach((r) => (raw[r.key as string] = r.value));
+  return customerCarrierLabel(raw);
+}
 
 type ShipmentRow = { id: string; code: string; order_id: string | null; service_code: string | null; tracking_no: string | null; status: string; eta: string | null; last_event_at: string | null; created_at: string };
 type OrderRow = { id: string; code: string; title: string; quantity: number; status: string; total_cents: number; currency: string };
@@ -53,12 +63,13 @@ export async function getShipmentFacts(sb: SupabaseClient, trackingOrOrderCode: 
   }
 
   const sh = shipments[0];
+  const carrier = await customerCarrier(sb);
   const { data: ev } = await sb.from('tracking_events').select('status, description, location, occurred_at').eq('shipment_id', sh.id).order('occurred_at', { ascending: false }).limit(5);
   const events = (ev ?? []) as { status: string; description: string | null; location: string | null; occurred_at: string }[];
   const last = events[0];
   const lines = [
     order ? `Order ${order.code} · ${order.quantity.toLocaleString('en-US')} × ${order.title} (order status: ${humanize(order.status)})` : null,
-    `${serviceName(sh.service_code)} shipment ${sh.code}${sh.tracking_no ? ` · tracking ${sh.tracking_no}` : ''} · status ${humanize(sh.status)}`,
+    `${serviceName(sh.service_code)} shipment ${sh.code} · carrier ${carrier}${sh.tracking_no ? ` · tracking ${sh.tracking_no}` : ''} · status ${humanize(sh.status)}`,
     last ? `Last scan: ${last.description ?? humanize(last.status)}${last.location ? `, ${last.location}` : ''} · ${fmtDate(last.occurred_at, true)}` : 'No tracking scans yet.',
     sh.eta ? `Estimated delivery: ${fmtDate(sh.eta)}` : 'No estimated delivery date yet.',
     events.length > 1 ? `Earlier scans: ${events.slice(1).map((e) => `${e.description ?? humanize(e.status)} (${fmtDate(e.occurred_at)})`).join('; ')}` : null,
@@ -67,34 +78,33 @@ export async function getShipmentFacts(sb: SupabaseClient, trackingOrOrderCode: 
     title: `Shipment ${sh.tracking_no ?? sh.code}`,
     text: lines.join('\n'),
     data: {
-      order_id: order?.id ?? sh.order_id, order_code: order?.code ?? null, shipment_code: sh.code, carrier: serviceName(sh.service_code),
+      order_id: order?.id ?? sh.order_id, order_code: order?.code ?? null, shipment_code: sh.code, service: serviceName(sh.service_code), carrier,
       tracking_no: sh.tracking_no, status: sh.status, eta: sh.eta, events,
     },
   };
 }
 
-type QuoteRow = { id: string; code: string; supplier_id: string; unit_price_cents: number; quantity: number; incoterm: string | null; lead_time_days: number | null; shipping_cents: number; status: string; valid_until: string | null; currency: string };
+type QuoteRow = { id: string; code: string; unit_price_cents: number; quantity: number; incoterm: string | null; lead_time_days: number | null; shipping_cents: number; status: string; valid_until: string | null; currency: string };
 
 export async function getQuoteFacts(sb: SupabaseClient, rfqId: string): Promise<Fact> {
   const q = rfqId.trim();
   const { data: rfq } = await sb.from('rfqs').select('id, code, title, quantity, unit, status, currency')
     .eq(UUID_RE.test(q) ? 'id' : 'code', UUID_RE.test(q) ? q : q.toUpperCase()).maybeSingle();
   if (!rfq) return { title: 'RFQ not found', text: `No RFQ matching "${q}" is visible on this account.`, data: null };
-  const { data: qs } = await sb.from('quotes').select('id, code, supplier_id, unit_price_cents, quantity, incoterm, lead_time_days, shipping_cents, status, valid_until, currency')
+  const { data: qs } = await sb.from('quotes').select('id, code, unit_price_cents, quantity, incoterm, lead_time_days, shipping_cents, status, valid_until, currency')
     .eq('rfq_id', rfq.id).order('unit_price_cents');
   const quotes = (qs ?? []) as QuoteRow[];
-  const supIds = [...new Set(quotes.map((x) => x.supplier_id))];
-  const { data: sups } = supIds.length ? await sb.from('public_suppliers').select('id, code, country, verified').in('id', supIds) : { data: [] };
-  const sup = new Map((sups ?? []).map((s) => [s.id as string, s as { code: string; country: string | null; verified: boolean }]));
+  const { data: facs } = quotes.length ? await sb.from('quote_factory').select('quote_id, verified, country, province').in('quote_id', quotes.map((x) => x.id)) : { data: [] };
+  const fac = new Map((facs ?? []).map((f) => [f.quote_id as string, f as { verified: boolean; country: string | null; province: string | null }]));
   const head = `${rfq.code} · ${rfq.title} · ${Number(rfq.quantity).toLocaleString('en-US')} ${rfq.unit ?? 'pcs'} · status ${humanize(rfq.status as string)}`;
   if (!quotes.length) return { title: `Quotes for ${rfq.code}`, text: `${head}\nNo quotes yet — suppliers are still preparing them.`, data: { rfq_id: rfq.id, rfq_code: rfq.code, quotes: [] } };
 
   const now = Date.now();
   const rows = quotes.map((x) => {
     const total = Number(x.unit_price_cents) * Number(x.quantity) + Number(x.shipping_cents ?? 0);
-    const s = sup.get(x.supplier_id);
+    const f = fac.get(x.id);
     return {
-      code: x.code, supplier_code: s?.code ?? 'OCT-?', supplier_country: s?.country ?? null, verified: !!s?.verified,
+      code: x.code, factory: factoryLabel(f), verified: !!f?.verified,
       unit_price_minor: Number(x.unit_price_cents), quantity: x.quantity, incoterm: x.incoterm, lead_time_days: x.lead_time_days,
       shipping_minor: Number(x.shipping_cents ?? 0), total_minor: total, currency: x.currency, status: x.status, valid_until: x.valid_until,
       expired: !!x.valid_until && new Date(x.valid_until).getTime() < now,
@@ -105,12 +115,12 @@ export async function getQuoteFacts(sb: SupabaseClient, rfqId: string): Promise<
   const cheapest = [...pool].sort((a, b) => a.total_minor - b.total_minor)[0];
   const fastest = [...pool].filter((r) => r.lead_time_days != null).sort((a, b) => (a.lead_time_days ?? 0) - (b.lead_time_days ?? 0))[0];
   const lines = rows.map((r) =>
-    `• ${r.code} · supplier ${r.supplier_code}${r.supplier_country ? ` (${r.supplier_country})` : ''}${r.verified ? ' verified' : ''} · unit ${money(r.unit_price_minor, r.currency)} × ${r.quantity.toLocaleString('en-US')}` +
+    `• ${r.code} · ${r.factory} · unit ${money(r.unit_price_minor, r.currency)} × ${r.quantity.toLocaleString('en-US')}` +
     ` · ${r.incoterm ?? '—'} · lead ${r.lead_time_days != null ? `${r.lead_time_days} days` : '—'} · shipping ${money(r.shipping_minor, r.currency)} · total ${money(r.total_minor, r.currency)}` +
     ` · ${r.expired ? 'expired' : `valid until ${fmtDate(r.valid_until)}`} · ${humanize(r.status)}`);
   const summary = [
-    cheapest ? `Lowest total: ${cheapest.code} (${cheapest.supplier_code}) at ${money(cheapest.total_minor, cheapest.currency)}.` : null,
-    fastest && fastest.code !== cheapest?.code ? `Fastest: ${fastest.code} (${fastest.supplier_code}) in ${fastest.lead_time_days} days.` : null,
+    cheapest ? `Lowest total: ${cheapest.code} at ${money(cheapest.total_minor, cheapest.currency)}.` : null,
+    fastest && fastest.code !== cheapest?.code ? `Fastest: ${fastest.code} in ${fastest.lead_time_days} days.` : null,
   ].filter(Boolean).join(' ');
   return {
     title: `Quotes for ${rfq.code}`,

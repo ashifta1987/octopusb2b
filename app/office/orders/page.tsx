@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireStaff } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { withSuppliers } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, StatusBadge, Table, EmptyState, Money } from '@/components/ui';
 import { one } from '@/components/backoffice/server-utils';
 import { fmtDate, humanize } from '@/lib/format';
@@ -17,12 +18,14 @@ export default async function OfficeOrders({ searchParams }: { searchParams: Pro
   const { f = 'active', q } = await searchParams;
   const sb = await createClient();
   let query = sb.from('orders')
-    .select('id, code, title, status, total_cents, paid_cents, deposit_cents, currency, created_at, updated_at, organizations(name, country), suppliers(code)')
+    .select('id, code, title, status, total_cents, paid_cents, deposit_cents, currency, created_at, updated_at, organizations(name, country)')
     .order('updated_at', { ascending: false }).limit(200);
   const st = FILTERS[f] ?? FILTERS.active;
   if (st) query = query.in('status', st);
   if (q) query = query.or(`code.ilike.%${q.replace(/[,()]/g, '')}%,title.ilike.%${q.replace(/[,()]/g, '')}%`);
-  const { data } = await query;
+  const { data: rows } = await query;
+  // suppliers(code) embed went through orders.supplier_id (hidden, migration 195): supplier_id via service role after requireStaff
+  const data = await withSuppliers(sb, 'orders', rows, 'code');
   return (
     <>
       <PageHeader title="Orders" subtitle="All orders. Open one to move it through its workflow, record bank payments and see its events." />

@@ -14,6 +14,7 @@ import { getSettings, getWalletFunds } from '@/components/account/data';
 import { StartPoolForm } from '@/components/store/pools/start-form';
 import type { AddressOpt } from '@/components/store/pools/join-form';
 import { poolSettings } from '@/components/store/pools/shared';
+import { factoryLabel } from '@/lib/factory-label';
 
 export const metadata: Metadata = { title: 'Start a group-buying pool', robots: { index: false } };
 
@@ -69,7 +70,7 @@ async function Content({ searchParams }: { searchParams: SP }) {
           <Link href={`/p/${product.slug}`} className="font-semibold text-[17px] hover:text-coral-text">{product.title}</Link>
           <div className="text-[13px] text-muted mt-1">
             MOQ {product.moq.toLocaleString('en-US')} {product.unit}
-            {product.supplier && <> · Supplier <span className="mono">{product.supplier.code}</span>{product.supplier.country && ` · ${product.supplier.country}`}</>}
+            {product.factory && <> · {factoryLabel(product.factory)}</>}
           </div>
           {product.tiers.length > 0 && (
             <div className="text-[13px] mt-1">{product.tiers.map((t) => `${t.min_qty.toLocaleString('en-US')}+ ${money(t.unit_price_minor, product.currency)}/${u}`).join(' · ')}</div>

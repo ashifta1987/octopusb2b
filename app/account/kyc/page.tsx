@@ -5,12 +5,13 @@ import { Card, Notice, PageHeader, StatusBadge, EmptyState } from '@/components/
 import { cn } from '@/lib/cn';
 import { KycForm, type KycExistingDoc, type KycFormValues } from '@/components/account/kyc-form';
 import { KYC_DOCS } from '@/components/account/kyc-docs';
+import { customerMessageFor } from '@/lib/kyc-message';
 
 export const metadata = { title: 'Company profile & KYC' };
 
 type Submission = {
   id: string; status: string; company_name: string | null; registration_no: string | null; address: string | null;
-  contact_name: string | null; contact_phone: string | null; contact_email: string | null; review_note: string | null;
+  contact_name: string | null; contact_phone: string | null; contact_email: string | null; customer_message: string | null;
   submitted_at: string | null; reviewed_at: string | null; created_at: string;
 };
 
@@ -59,7 +60,7 @@ export default async function KycPage() {
   const [{ data: org }, { data: subsRaw }] = await Promise.all([
     sb.from('organizations').select('id, name, country, city, business_type, registration_no, website, kyc_status').eq('id', s.org.id).maybeSingle(),
     sb.from('kyc_submissions')
-      .select('id, status, company_name, registration_no, address, contact_name, contact_phone, contact_email, review_note, submitted_at, reviewed_at, created_at')
+      .select('id, status, company_name, registration_no, address, contact_name, contact_phone, contact_email, customer_message, submitted_at, reviewed_at, created_at')
       .eq('org_id', s.org.id).order('created_at', { ascending: false }),
   ]);
   const subs = (subsRaw ?? []) as Submission[];
@@ -98,7 +99,8 @@ export default async function KycPage() {
 
   const doneCount = Math.min(step, 4);
   const pct = Math.round((doneCount / 4) * 100);
-  const reviewNote = latest && (latest.status === 'more_info' || latest.status === 'rejected') ? latest.review_note : null;
+  // Only customer_message is shown to the customer — never the staff internal note (migration 195).
+  const reviewNote = latest && (latest.status === 'more_info' || latest.status === 'rejected') ? customerMessageFor(latest) : null;
 
   return (
     <>
@@ -118,7 +120,7 @@ export default async function KycPage() {
             <Notice tone="amber"><strong>We need more information.</strong>{reviewNote ? <> {reviewNote}</> : null} Update the form below and submit again.</Notice>
           )}
           {status === 'rejected' && (
-            <Notice tone="red"><strong>Verification was not approved.</strong>{reviewNote ? <> Reason: {reviewNote}</> : null} You can correct the details and submit again.</Notice>
+            <Notice tone="red"><strong>Verification was not approved.</strong>{reviewNote ? <> {reviewNote}</> : null} You can correct the details and submit again.</Notice>
           )}
 
           <KycForm mode={mode} initial={initial} existingDocs={docs} latestSubmissionId={latest?.id ?? null} orgId={s.org.id} />
@@ -172,7 +174,7 @@ export default async function KycPage() {
           <Card title="Submission history">
             <div className="px-5 pb-5">
               {subs.length === 0 ? (
-                <EmptyState title="No submissions yet" body="Your KYC submissions and our review notes will appear here." />
+                <EmptyState title="No submissions yet" body="Your KYC submissions and messages from our team will appear here." />
               ) : (
                 <ol className="relative ml-2">
                   {subs.map((sub, i) => (
@@ -184,8 +186,8 @@ export default async function KycPage() {
                         <span className="text-xs text-muted mono">{fmtDate(sub.submitted_at ?? sub.created_at, true)}</span>
                       </div>
                       {sub.company_name && <div className="mt-1 text-sm">{sub.company_name}</div>}
-                      {(sub.status === 'more_info' || sub.status === 'rejected') && sub.review_note && (
-                        <p className="mt-1 text-sm text-muted"><span className="font-semibold text-ink">Review note:</span> {sub.review_note}</p>
+                      {(sub.status === 'more_info' || sub.status === 'rejected') && (
+                        <p className="mt-1 text-sm text-muted"><span className="font-semibold text-ink">Message from our team:</span> {customerMessageFor(sub)}</p>
                       )}
                       {sub.reviewed_at && <div className="text-xs text-muted mt-0.5">Reviewed {fmtDate(sub.reviewed_at)}</div>}
                     </li>

@@ -1,6 +1,6 @@
 import 'server-only';
 import type { createAdminClient } from '@/lib/supabase/server';
-import { publicSuppliers } from './data';
+import { publicFactories } from './data';
 import { amt, amt0, cur } from './money';
 
 type Sb = ReturnType<typeof createAdminClient>;
@@ -24,7 +24,7 @@ export function publicRfq(r: Row) {
 }
 
 /** Quote in API shape (currency + rate locked when the quote was sent). */
-export function publicQuote(q: Row, supplier: unknown) {
+export function publicQuote(q: Row, factory: unknown) {
   const { supplier_id: _s, unit_price_cents, shipping_cents, currency, ...rest } = q;
   void _s;
   const total = Number(unit_price_cents) * Number(q.quantity) + Number(shipping_cents ?? 0);
@@ -34,7 +34,7 @@ export function publicQuote(q: Row, supplier: unknown) {
     unit_price: amt0(unit_price_cents, currency),
     shipping: amt0(shipping_cents, currency),
     total: amt0(total, currency),
-    supplier,
+    factory,
   };
 }
 
@@ -43,12 +43,12 @@ export async function quotesFor(sb: Sb, rfqIds: string[]) {
   if (!rfqIds.length) return [];
   const { data, error } = await sb.from('quotes').select(QUOTE_COLUMNS).in('rfq_id', rfqIds).neq('status', 'draft').order('created_at');
   if (error) throw new Error(error.message);
-  const sups = await publicSuppliers(sb, (data ?? []).map((q) => q.supplier_id));
-  return (data ?? []).map((q) => publicQuote(q, sups.get(q.supplier_id) ?? null));
+  const facs = await publicFactories(sb, (data ?? []).map((q) => q.supplier_id));
+  return (data ?? []).map((q) => publicQuote(q, facs.get(q.supplier_id) ?? null));
 }
 
 /** Order in API shape: every amount carries the order's locked currency. */
-export function publicOrder(o: Row, supplier: unknown) {
+export function publicOrder(o: Row, factory: unknown) {
   const { supplier_id: _omit, unit_price_cents, shipping_cents, total_cents, deposit_cents, paid_cents, currency, ...rest } = o;
   void _omit;
   return {
@@ -60,13 +60,15 @@ export function publicOrder(o: Row, supplier: unknown) {
     deposit: amt0(deposit_cents, currency),
     paid: amt0(paid_cents, currency),
     balance: amt0(Number(total_cents ?? 0) - Number(paid_cents ?? 0), currency),
-    supplier,
+    factory,
   };
 }
 
 /** Document (PI, invoice, receipt…) with its amount in the document's own currency. */
 export function publicDocument(d: Row) {
-  const { amount_cents, currency, ...rest } = d;
+  // emailed_at / supplier_id are internal (migration 195) — dropped even if a caller selected them
+  const { amount_cents, currency, emailed_at: _e, supplier_id: _s, ...rest } = d;
+  void _e; void _s;
   return { ...rest, currency: cur(currency), amount: amt(amount_cents, currency) };
 }
 

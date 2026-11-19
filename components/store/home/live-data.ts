@@ -1,13 +1,15 @@
 import 'server-only';
 import { cacheLife, cacheTag } from 'next/cache';
 import { createAdminClient, createPublicClient } from '@/lib/supabase/server';
+import type { Factory } from '@/components/store/data';
 
 /**
  * Real platform figures for the home page (no fabricated marketing numbers).
  * Aggregates only — no buyer identities leave this function. Values are null/0 when there is no data yet,
  * and the UI shows an empty state instead of a made-up figure.
  */
-export type LiveQuote = { unit_price_minor: number; currency: string; supplier_code: string; supplier_country: string | null };
+/** A quote as the public sees it: price + factory label data (never the supplier code or id). */
+export type LiveQuote = { unit_price_minor: number; currency: string; factory: Factory };
 export type LiveRfq = { code: string; quantity: number; unit: string; title: string; destination_country: string | null; quotes: LiveQuote[]; quote_count: number };
 export type HomeLiveData = {
   products: number;
@@ -30,9 +32,15 @@ export async function getHomeLiveData(): Promise<HomeLiveData> {
   let admin: ReturnType<typeof createAdminClient> | null = null;
   try { admin = createAdminClient(); } catch { admin = null; }
 
+  // products.is_seed and the suppliers table are internal (migration 195) → counted with the service role when available
+  const none = Promise.resolve({ count: 0 as number | null });
   const [prodCount, supCount, tiers] = await Promise.all([
-    pub.from('products').select('id', { count: 'exact', head: true }).eq('status', 'live').is('archived_at', null).eq('is_seed', false),
-    pub.from('public_suppliers').select('id', { count: 'exact', head: true }).eq('verified', true),
+    admin
+      ? admin.from('products').select('id', { count: 'exact', head: true }).eq('status', 'live').is('archived_at', null).eq('is_seed', false)
+      : pub.from('products').select('id', { count: 'exact', head: true }).eq('status', 'live').is('archived_at', null),
+    admin
+      ? admin.from('suppliers').select('id', { count: 'exact', head: true }).eq('verified', true).is('archived_at', null).or('identity_status.is.null,identity_status.eq.ok')
+      : none,
     pub.from('price_tiers').select('product_id, min_qty, unit_price_cents').limit(5000),
   ]);
 
@@ -77,13 +85,16 @@ export async function getHomeLiveData(): Promise<HomeLiveData> {
     shipments = ships.count ?? (ships.data ?? []).length;
     carriers = carr.count ?? 0;
 
-    // live RFQ card: newest open RFQ that has sent quotes; quotes shown by supplier code + country only
+    // live RFQ card: newest open RFQ that has sent quotes; quotes shown by factory label only (never the supplier code)
     for (const r of rfqs.data ?? []) {
       const { data: qs } = await admin.from('quotes').select('unit_price_cents, currency, status, supplier_id').eq('rfq_id', r.id)
         .in('status', ['sent', 'viewed']).order('unit_price_cents', { ascending: true });
       if (!qs?.length) continue;
-      const { data: sups } = await admin.from('public_suppliers').select('id, code, country').in('id', qs.map((q) => q.supplier_id as string));
-      const supMap = new Map((sups ?? []).map((s) => [s.id as string, s]));
+      const { data: sups } = await admin.from('suppliers').select('id, verified, identity_status, archived_at, country, province').in('id', qs.map((q) => q.supplier_id as string));
+      const supMap = new Map((sups ?? []).map((s) => [s.id as string, {
+        verified: !!s.verified && (s.identity_status ?? 'ok') === 'ok' && !s.archived_at,
+        country: (s.country as string | null) ?? null, province: (s.province as string | null) ?? null,
+      } satisfies Factory]));
       const prod = r.products as { title?: string } | { title?: string }[] | null;
       const prodTitle = (Array.isArray(prod) ? prod[0]?.title : prod?.title) ?? null;
       liveRfq = {
@@ -95,8 +106,7 @@ export async function getHomeLiveData(): Promise<HomeLiveData> {
         quote_count: qs.length,
         quotes: qs.slice(0, 3).map((q) => ({
           unit_price_minor: Number(q.unit_price_cents), currency: (q.currency as string) ?? 'USD',
-          supplier_code: (supMap.get(q.supplier_id as string)?.code as string) ?? 'Supplier',
-          supplier_country: (supMap.get(q.supplier_id as string)?.country as string) ?? null,
+          factory: supMap.get(q.supplier_id as string) ?? { verified: false, country: null, province: null },
         })),
       };
       break;

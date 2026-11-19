@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { portalProducts } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, StatusBadge, EmptyState } from '@/components/ui';
 import { one } from '@/components/backoffice/server-utils';
 import { fmtDate, humanize } from '@/lib/format';
@@ -29,7 +30,8 @@ export default async function OfficeQueues() {
   const soon = new Date(nowMs() + 4 * 36e5).toISOString();
   const [kyc, prods, rfqs, srv, ships, tickets] = await Promise.all([
     can(s, 'customers') ? sb.from('kyc_submissions').select('id, company_name, status, submitted_at, organizations(name, country)', { count: 'exact' }).in('status', ['submitted', 'in_review']).order('submitted_at').limit(6) : null,
-    can(s, 'products', 'approve') ? sb.from('products').select('id, title, status, updated_at, suppliers!products_supplier_id_fkey(code)', { count: 'exact' }).in('status', ['submitted', 'in_review']).order('updated_at').limit(6) : null,
+    // supplier embed goes through products.supplier_id (hidden, migration 195): portal_products() keeps it readable for staff
+    can(s, 'products', 'approve') ? portalProducts(sb, { count: 'exact' }).select('id, title, status, updated_at, suppliers!products_supplier_id_fkey(code)').in('status', ['submitted', 'in_review']).order('updated_at').limit(6) : null,
     can(s, 'requests') ? sb.from('rfqs').select('id, code, title, quantity, unit, status, created_at, destination_country', { count: 'exact' }).eq('status', 'submitted').order('created_at').limit(6) : null,
     can(s, 'requests') ? sb.from('service_requests').select('id, code, service_code, status, created_at, organizations(name, country)', { count: 'exact' }).in('status', ['requested', 'paid']).order('created_at').limit(6) : null,
     can(s, 'orders') ? sb.from('shipments').select('id, code, tracking_no, status, last_event_at, created_at, orders(code)', { count: 'exact' }).eq('status', 'exception').order('last_event_at').limit(6) : null,

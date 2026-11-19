@@ -1,6 +1,7 @@
 import 'server-only';
 import { serviceName } from '@/lib/service-names';
-import type { createClient } from '@/lib/supabase/server';
+import { createAdminClient, type createClient } from '@/lib/supabase/server';
+import { withHiddenColumns } from '@/components/backoffice/hidden-columns';
 import { fmtDate, humanize, money } from '@/lib/format';
 
 /**
@@ -46,11 +47,14 @@ export async function getShipmentFacts(sb: Sb, trackingOrOrderCode: string): Pro
 export async function getQuoteFacts(sb: Sb, rfqId: string): Promise<Fact | null> {
   const { data: rfq } = await sb.from('rfqs').select('id, code, title, quantity, status').eq('id', rfqId).maybeSingle();
   if (!rfq) return null;
-  const { data: quotes } = await sb.from('quotes')
-    .select('code, supplier_id, unit_price_cents, quantity, shipping_cents, lead_time_days, incoterm, valid_until, status, currency')
+  const { data: quoteRows } = await sb.from('quotes')
+    .select('id, code, unit_price_cents, quantity, shipping_cents, lead_time_days, incoterm, valid_until, status, currency')
     .eq('rfq_id', rfqId).in('status', ['sent', 'viewed', 'approved']).order('unit_price_cents');
-  const ids = [...new Set((quotes ?? []).map((q) => q.supplier_id as string).filter(Boolean))];
-  const { data: sups } = ids.length ? await sb.from('public_suppliers').select('id, code').in('id', ids) : { data: [] as { id: string; code: string }[] };
+  // quotes.supplier_id is hidden and public_suppliers is service-role only (migration 195): staff side rail only (callers
+  // run requireStaff('assistant')) — supplier_id for the quotes RLS returned, then supplier CODES only.
+  const quotes = await withHiddenColumns<NonNullable<typeof quoteRows>[number], { supplier_id: string | null }>('quotes', quoteRows, 'supplier_id');
+  const ids = [...new Set(quotes.map((q) => q.supplier_id as string).filter(Boolean))];
+  const { data: sups } = ids.length ? await createAdminClient().from('public_suppliers').select('id, code').in('id', ids) : { data: [] as { id: string; code: string }[] };
   const code = (id: string) => (sups ?? []).find((s) => s.id === id)?.code ?? 'Supplier';
   if (!quotes?.length) {
     return { title: `Quotes · ${rfq.code}`, text: `${rfq.code} (${rfq.title}) is ${humanize(rfq.status as string).toLowerCase()} — no quotes sent yet.`, data: { rfq, quotes: [] } };
@@ -62,7 +66,7 @@ export async function getQuoteFacts(sb: Sb, rfqId: string): Promise<Fact | null>
   return {
     title: `Quotes · ${rfq.code}`,
     text: `${rfq.code} (${rfq.title}) has ${quotes.length} quote${quotes.length === 1 ? '' : 's'}:\n${lines.map((l) => `• ${l}`).join('\n')}`,
-    data: { rfq, quotes: quotes.map((q) => ({ ...q, supplier_id: undefined, supplier_code: code(q.supplier_id as string) })) },
+    data: { rfq, quotes: quotes.map((q) => ({ ...q, id: undefined, supplier_id: undefined, supplier_code: code(q.supplier_id as string) })) },
   };
 }
 

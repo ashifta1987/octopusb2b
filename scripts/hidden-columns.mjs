@@ -12,7 +12,7 @@ export const HIDDEN_COLUMNS = {
   product_media: ['storage_path', 'source_file_name', 'sha256'],
   certificates: ['supplier_id', 'number', 'storage_path'],
   pools: ['supplier_id', 'starter_user_id', 'starter_org_id', 'po_document_id', 'trace_id', 'is_seed'],
-  pool_events: ['trace_id'],
+  pool_events: ['title', 'body', 'trace_id'],   // raw texts carry buyer Customer IDs; public reads pool_public_events
   turnkey_equipment: ['supplier_id', 'supplier_hint', 'notes'],
   turnkey_projects: ['is_seed'],
   turnkey_leads: ['assigned_to', 'assigned_at', 'floor_plan_storage_path', 'is_seed'],
@@ -61,3 +61,26 @@ export const HIDDEN_COLUMNS = {
   organizations: ['is_seed'],
   profiles: ['invited_by'],
 };
+
+// ── Run directly (node scripts/hidden-columns.mjs) to compare this list with the STAGING database grants. ──
+// Importing this file does nothing else; running it goes through the staging guard like every other staging script
+// and refuses unless the Supabase URL and the database are the staging project.
+import { fileURLToPath } from 'node:url';
+if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+  const { loadStagingEnvOrExit, assertStagingDatabase } = await import('./lib-staging-guard.mjs');
+  loadStagingEnvOrExit();
+  const pg = (await import('pg')).default;
+  const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+  await db.connect();
+  await assertStagingDatabase(db);
+  let drift = 0;
+  for (const [t, cols] of Object.entries(HIDDEN_COLUMNS)) {
+    const hidden = (await db.query(`select column_name c from information_schema.columns where table_schema = 'public' and table_name = $1
+      and not has_column_privilege('authenticated', format('public.%I', $1::text), column_name, 'SELECT') order by 1`, [t])).rows.map((r) => r.c);
+    const want = [...cols].sort();
+    if (JSON.stringify(hidden) !== JSON.stringify(want)) { drift++; console.log(`✘ ${t}: database hides [${hidden}] — list says [${want}]`); }
+  }
+  await db.end();
+  console.log(drift ? `${drift} table(s) differ from the staging database` : `✔ all ${Object.keys(HIDDEN_COLUMNS).length} tables match the staging database`);
+  process.exitCode = drift ? 1 : 0;
+}

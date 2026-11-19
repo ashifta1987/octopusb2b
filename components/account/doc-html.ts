@@ -1,12 +1,14 @@
 import 'server-only';
 import { BANK_COLS, accountFor, bankLines, type BankAccount } from '@/lib/bank-accounts';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { factoryLabel, type FactoryInfo } from '@/lib/factory-label';
 import { COUNTRY_NAMES, humanize, asCurrency, CURRENCY_PREFIX, type Currency } from '@/lib/format';
 import { BRAND } from '@/lib/brand';
 
 /**
  * Print-ready, self-contained HTML for customer documents (Invoice.png).
- * Seller is always company_profile; suppliers appear only by code (public_suppliers view).
+ * Seller is always company_profile. Customer copies show the factory only as "Verified factory · China (Guangdong)"
+ * (order_factory view); the supplier code appears on staff copies only (read with the service role for staff callers).
  */
 
 export const DOC_TITLE: Record<string, string> = {
@@ -50,7 +52,10 @@ export type DocBundle = {
   kyc: Row | null;
   rfq: Row | null;
   quote: Row | null;
+  /** Staff copies only — never loaded for customers. */
   supplier: { code: string; country: string | null } | null;
+  /** Customer-safe factory label data (verified + country + province). */
+  factory?: FactoryInfo | null;
   hsCode: string | null;
   /** principal company account in the document currency (company_bank_accounts) */
   bank: BankAccount | null;
@@ -58,15 +63,15 @@ export type DocBundle = {
 };
 
 /** Loads a document and its context with the user's RLS client. Returns null when not visible. */
-export async function loadDocument(id: string): Promise<DocBundle | null> {
+export async function loadDocument(id: string, opts: { staff?: boolean } = {}): Promise<DocBundle | null> {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const sb = await createClient();
-  const { data: doc } = await sb.from('documents').select('*').eq('id', id).maybeSingle();
+  const { data: doc } = await sb.from('documents').select('id, org_id, doc_type, number, order_id, amount_cents, status, pdf_path, data, created_at, currency').eq('id', id).maybeSingle();
   if (!doc) return null;
 
   const [orgR, orderR, companyR, kycR, settingsR] = await Promise.all([
     doc.org_id ? sb.from('organizations').select('id, name, country, city, registration_no, website').eq('id', doc.org_id).maybeSingle() : Promise.resolve({ data: null }),
-    doc.order_id ? sb.from('orders').select('id, code, title, quantity, unit_price_cents, shipping_cents, total_cents, currency, deposit_pct, deposit_cents, paid_cents, incoterm, rfq_id, quote_id, supplier_id, created_at').eq('id', doc.order_id).maybeSingle() : Promise.resolve({ data: null }),
+    doc.order_id ? sb.from('orders').select('id, code, title, quantity, unit_price_cents, shipping_cents, total_cents, currency, deposit_pct, deposit_cents, paid_cents, incoterm, rfq_id, quote_id, created_at').eq('id', doc.order_id).maybeSingle() : Promise.resolve({ data: null }),
     sb.from('company_profile').select('legal_name, brand, address, address_cn, contact_person, phone, whatsapp, email, website').eq('id', 1).maybeSingle(),
     doc.org_id ? sb.from('kyc_submissions').select('company_name, registration_no, address, contact_name, contact_phone, contact_email').eq('org_id', doc.org_id).order('created_at', { ascending: false }).limit(1).maybeSingle() : Promise.resolve({ data: null }),
     sb.from('site_settings').select('key, value').in('key', ['deposit_pct', 'claim_visible_days', 'claim_hidden_days', 'quote_validity_days']),
@@ -78,16 +83,26 @@ export async function loadDocument(id: string): Promise<DocBundle | null> {
   let rfq: Row | null = null;
   let quote: Row | null = null;
   let supplier: DocBundle['supplier'] = null;
+  let factory: FactoryInfo | null = null;
   let hsCode: string | null = null;
   if (order) {
     const [rfqR, quoteR, supR] = await Promise.all([
       order.rfq_id ? sb.from('rfqs').select('code, product_id, unit, destination_country, destination_city').eq('id', order.rfq_id as string).maybeSingle() : Promise.resolve({ data: null }),
       order.quote_id ? sb.from('quotes').select('code, valid_until, lead_time_days').eq('id', order.quote_id as string).maybeSingle() : Promise.resolve({ data: null }),
-      order.supplier_id ? sb.from('public_suppliers').select('code, country').eq('id', order.supplier_id as string).maybeSingle() : Promise.resolve({ data: null }),
+      sb.from('order_factory').select('verified, country, province').eq('order_id', order.id as string).maybeSingle(),
     ]);
     rfq = (rfqR.data as Row | null) ?? null;
     quote = (quoteR.data as Row | null) ?? null;
-    supplier = (supR.data as DocBundle['supplier']) ?? null;
+    factory = (supR.data as FactoryInfo | null) ?? null;
+    if (opts.staff) {
+      // staff copy: the caller already passed RLS on this document and is staff (checked by the route)
+      const admin = createAdminClient();
+      const { data: o } = await admin.from('orders').select('supplier_id').eq('id', order.id as string).maybeSingle();
+      if (o?.supplier_id) {
+        const { data: sp } = await admin.from('suppliers').select('code, country').eq('id', o.supplier_id as string).maybeSingle();
+        supplier = (sp as DocBundle['supplier']) ?? null;
+      }
+    }
     if (rfq?.product_id) {
       const { data: p } = await sb.from('products').select('hs_code').eq('id', rfq.product_id as string).maybeSingle();
       hsCode = (p?.hs_code as string | null) ?? null;
@@ -100,7 +115,7 @@ export async function loadDocument(id: string): Promise<DocBundle | null> {
     order,
     company: (companyR.data as Row | null) ?? null,
     kyc: (kycR.data as Row | null) ?? null,
-    rfq, quote, supplier, hsCode,
+    rfq, quote, supplier, factory, hsCode,
     bank: accountFor(((await sb.from('company_bank_accounts').select(BANK_COLS).eq('active', true)).data ?? []) as BankAccount[], (doc.currency as string | null) ?? (order?.currency as string | undefined)),
     settings: {
       deposit_pct: num(s.deposit_pct) ?? 30,
@@ -175,7 +190,7 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
       <tbody>
         <tr>
           <td class="mono">1</td>
-          <td><b>${esc(itemTitle)}</b>${opts.showSupplier && supplier ? `<div class="sub">Supplier ${esc(supplier.code)}${supplier.country ? ` · ${esc(supplier.country)}` : ''}${rfqCode ? ` · ${esc(rfqCode)}` : ''}</div>` : rfqCode ? `<div class="sub">${esc(rfqCode)}</div>` : ''}</td>
+          <td><b>${esc(itemTitle)}</b>${opts.showSupplier && supplier ? `<div class="sub">Supplier ${esc(supplier.code)}${supplier.country ? ` · ${esc(supplier.country)}` : ''}${rfqCode ? ` · ${esc(rfqCode)}` : ''}</div>` : (b.factory || rfqCode) ? `<div class="sub">${[b.factory ? esc(factoryLabel(b.factory)) : '', rfqCode ? esc(rfqCode) : ''].filter(Boolean).join(' · ')}</div>` : ''}</td>
           <td class="mono">${esc(b.hsCode ?? '—')}</td>
           <td class="r mono">${qty != null ? esc(new Intl.NumberFormat('en-US').format(qty)) : '—'}<div class="sub">${esc(unit)}</div></td>
           <td class="r mono">${m(unitPrice)}</td>

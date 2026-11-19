@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { withSuppliers } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, StatusBadge, Money, EmptyState, Table } from '@/components/ui';
 import { one } from '@/components/backoffice/server-utils';
 import { QuoteForm } from '@/components/backoffice/quote-form';
@@ -20,11 +21,13 @@ export default async function OfficeRfq({ params }: { params: Promise<{ id: stri
     .select('id, code, title, details, quantity, unit, target_price_cents, destination_country, destination_city, incoterm, status, fee_minor, currency, created_at, expires_at, organizations(city, country, kyc_status), categories(name), products(id, title, slug, product_specs(name, value, sort))')
     .eq('id', id).maybeSingle();
   if (!r) notFound();
-  const [{ data: quotes }, { data: sups }, cx] = await Promise.all([
-    sb.from('quotes').select('id, code, unit_price_cents, quantity, incoterm, lead_time_days, shipping_cents, currency, notes, status, valid_until, created_at, suppliers(code, legal_name, country)').eq('rfq_id', id).order('created_at'),
+  const [{ data: quoteRows }, { data: sups }, cx] = await Promise.all([
+    sb.from('quotes').select('id, code, unit_price_cents, quantity, incoterm, lead_time_days, shipping_cents, currency, notes, status, valid_until, created_at').eq('rfq_id', id).order('created_at'),
     sb.from('suppliers').select('id, code, legal_name, country, supplier_switches(rfq_replies)').is('archived_at', null).order('code'),
     getCurrencyContext(),
   ]);
+  // suppliers(...) embed went through quotes.supplier_id (hidden, migration 195): supplier_id via service role after requireStaff
+  const quotes = await withSuppliers(sb, 'quotes', quoteRows, 'code, legal_name, country');
   const org = one(r.organizations as unknown as { city: string | null; country: string | null; kyc_status: string } | null);
   const prod = one(r.products as unknown as { id: string; title: string; slug: string; product_specs: { name: string; value: string; sort: number }[] } | null);
   const open = ['submitted', 'assigned', 'quoting', 'quoted'].includes(r.status);

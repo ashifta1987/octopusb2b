@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getSession, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { portalProducts } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, StatusBadge, Table, EmptyState, Money } from '@/components/ui';
 import { one } from '@/components/backoffice/server-utils';
 import { supplierScope } from '@/lib/distributor/supplier-scope';
@@ -22,7 +23,9 @@ export default async function DistributorProducts({ searchParams }: { searchPara
   // per-supplier counts (dropdown) and the categories in use, for every assigned supplier, not archived
   const facets: { supplier_id: string; category_id: string | null }[] = [];
   for (let from = 0; allIds.length; from += 1000) {
-    const { data } = await sb.from('products').select('supplier_id, category_id').in('supplier_id', allIds).neq('status', 'archived').range(from, from + 999);
+    // supplier_id / external_id / listing_status / rejection_reason are hidden from plain products reads (migration 195):
+    // portal_products() returns them only for the caller's own / assigned suppliers (staff with products:view: all)
+    const { data } = await portalProducts(sb).select('supplier_id, category_id').in('supplier_id', allIds).neq('status', 'archived').range(from, from + 999);
     facets.push(...((data ?? []) as typeof facets));
     if ((data ?? []).length < 1000) break;
   }
@@ -37,8 +40,8 @@ export default async function DistributorProducts({ searchParams }: { searchPara
   let rows: Row[] = [];
   let total = 0;
   if (ids.length) {
-    let q = sb.from('products')
-      .select('id, external_id, title, status, listing_status, moq, unit, min_price_cents, currency, image_url, updated_at, rejection_reason, suppliers!products_supplier_id_fkey(code), categories(name)', { count: 'exact' })
+    let q = portalProducts(sb, { count: 'exact' })
+      .select('id, external_id, title, status, listing_status, moq, unit, min_price_cents, currency, image_url, updated_at, rejection_reason, suppliers!products_supplier_id_fkey(code), categories(name)')
       .in('supplier_id', ids).order('updated_at', { ascending: false }).range((page - 1) * size, page * size - 1);
     if (sp.status && STATUSES.includes(sp.status)) q = q.eq('status', sp.status);
     else q = q.neq('status', 'archived');

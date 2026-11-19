@@ -7,13 +7,25 @@ import { toCents, money } from '@/lib/format';
 import { actionSession, fail, ok, type Result } from '@/components/backoffice/server-utils';
 
 /* ───────── KYC ───────── */
-export async function reviewKyc(submissionId: string, to: 'in_review' | 'verified' | 'rejected' | 'more_info', note: string): Promise<Result> {
+/** customerMessage is shown to the customer (required when rejecting); internalNote is staff only (migration 195). */
+export async function reviewKyc(
+  submissionId: string, to: 'in_review' | 'verified' | 'rejected' | 'more_info',
+  input: { customerMessage?: string; internalNote?: string } = {},
+): Promise<Result> {
   const g = await actionSession('customers', 'approve');
   if ('error' in g) return fail(g.error);
-  if ((to === 'rejected' || to === 'more_info') && !note.trim()) return fail('Add a note for the customer.');
+  const customerMessage = (input.customerMessage ?? '').trim();
+  const internalNote = (input.internalNote ?? '').trim();
+  if (to === 'rejected' && !customerMessage) return fail('Write a message to the customer explaining why the verification was rejected.');
   const sb = await createClient();
-  const { error } = await sb.rpc('review_kyc', { p_submission: submissionId, p_to: to, p_note: note.trim() || null });
-  if (error) return fail(error);
+  const { error } = await sb.rpc('review_kyc', {
+    p_submission: submissionId, p_to: to, p_note: internalNote || null, p_customer_message: customerMessage || null,
+  });
+  if (error) {
+    if (/KYC_MESSAGE_REQUIRED/.test(error.message)) return fail('Write a message to the customer explaining why the verification was rejected.');
+    if (/FORBIDDEN/.test(error.message)) return fail('You do not have permission to approve KYC submissions.');
+    return fail(error);
+  }
   revalidatePath('/office/kyc'); revalidatePath(`/office/kyc/${submissionId}`); revalidatePath('/office');
   return ok(undefined, 'KYC updated');
 }

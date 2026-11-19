@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireStaff, can } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { withHiddenColumns, withSuppliers } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, StatusBadge, EmptyState, Stat } from '@/components/ui';
 import { ActionForm, RunButton } from '@/components/backoffice/action-form';
 import { TicketReply } from '@/components/backoffice/ticket-reply';
@@ -26,25 +27,36 @@ export default async function SupportDesk({ searchParams }: { searchParams: Prom
   const s = await requireStaff('support', 'view', '/office/support');
   const { f = 'all', t: selId, p: prio } = await searchParams;
   const sb = await createClient();
-  let q = sb.from('tickets').select('id, code, subject, category, priority, status, sla_due_at, assigned_to, created_at, updated_at, organizations(name)').limit(200);
+  let q = sb.from('tickets').select('id, code, subject, category, priority, status, sla_due_at, created_at, updated_at, organizations(name)').limit(200);
   if (f === 'resolved') q = q.in('status', ['resolved', 'closed']);
   else q = q.not('status', 'in', '(resolved,closed)');
   if (['complaint', 'question', 'feedback'].includes(f)) q = q.eq('category', f);
   if (f === 'overdue') q = q.lt('sla_due_at', new Date().toISOString());
-  if (f === 'mine') q = q.eq('assigned_to', s.userId);
+  // tickets.assigned_to is hidden from session reads (migration 195): "mine" = ids assigned to the caller (service role,
+  // own assignments only), still intersected with the caller's RLS-visible tickets by the session query.
+  if (f === 'mine') {
+    const { data: mineIds } = await createAdminClient().from('tickets').select('id').eq('assigned_to', s.userId).limit(1000);
+    q = q.in('id', (mineIds ?? []).map((r) => r.id as string).concat('00000000-0000-0000-0000-000000000000'));
+  }
   if (prio) q = q.eq('priority', prio);
-  const [{ data: rawTickets }, { count: openCount }, { count: overdueCount }, { data: macros }, { data: csat }] = await Promise.all([
+  const [{ data: ticketRows }, { count: openCount }, { count: overdueCount }, { data: macros }, { data: csat }] = await Promise.all([
     q,
     sb.from('tickets').select('id', { count: 'exact', head: true }).not('status', 'in', '(resolved,closed)'),
     sb.from('tickets').select('id', { count: 'exact', head: true }).not('status', 'in', '(resolved,closed)').lt('sla_due_at', new Date().toISOString()),
     sb.from('support_macros').select('id, title, body').order('title'),
     sb.from('tickets').select('csat').not('csat', 'is', null).limit(500),
   ]);
-  const tickets = (rawTickets ?? []).sort((a, b) => (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9) || (a.sla_due_at ?? '9').localeCompare(b.sla_due_at ?? '9'));
+  const rawTickets = await withHiddenColumns<NonNullable<typeof ticketRows>[number], { assigned_to: string | null }>('tickets', ticketRows, 'assigned_to');
+  const tickets = [...rawTickets].sort((a, b) => (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9) || (a.sla_due_at ?? '9').localeCompare(b.sla_due_at ?? '9'));
   const sel = selId ?? tickets[0]?.id;
-  const { data: t } = sel ? await sb.from('tickets')
-    .select('id, code, org_id, order_id, subject, category, priority, status, sla_due_at, assigned_to, csat, created_at, organizations(name, country, kyc_status), orders(id, code, status, currency, claim_visible_until, claim_hidden_until, delivered_at, suppliers(code))')
+  const { data: tRow } = sel ? await sb.from('tickets')
+    .select('id, code, org_id, order_id, subject, category, priority, status, sla_due_at, csat, created_at, organizations(name, country, kyc_status), orders(id, code, status, currency, claim_visible_until, claim_hidden_until, delivered_at)')
     .eq('id', sel).maybeSingle() : { data: null };
+  // assigned_to and the order's supplier (orders.supplier_id) are hidden from session reads (migration 195): added with the
+  // service role for the ticket / order RLS returned, after requireStaff.
+  const [t = null] = tRow ? await withHiddenColumns<NonNullable<typeof tRow> & Record<string, unknown>, { assigned_to: string | null }>('tickets', [tRow], 'assigned_to') : [];
+  const tOrder = t ? one(t.orders as unknown as Record<string, unknown> | null) : null;
+  const [ordWithSup] = tOrder ? await withSuppliers<Record<string, unknown>, { code: string }>(sb, 'orders', [tOrder as Record<string, unknown>], 'code') : [];
   const { data: msgs } = t ? await sb.from('ticket_messages').select('id, author_id, is_staff, internal, body, attachments, created_at').eq('ticket_id', t.id).order('created_at') : { data: null };
   const authorIds = [...new Set([...(msgs ?? []).map((m) => m.author_id), t?.assigned_to].filter(Boolean))] as string[];
   const { data: people } = authorIds.length ? await sb.from('profiles').select('id, full_name').in('id', authorIds) : { data: [] };
@@ -53,7 +65,7 @@ export default async function SupportDesk({ searchParams }: { searchParams: Prom
   const canEscalate = can(s, 'support', 'create') || can(s, 'finance', 'create');
   const avgCsat = csat?.length ? (csat.reduce((a, c) => a + (c.csat ?? 0), 0) / csat.length).toFixed(1) : null;
   const org = t ? one(t.organizations as unknown as { name: string; country: string | null; kyc_status: string } | null) : null;
-  const ord = t ? one(t.orders as unknown as { id: string; code: string; status: string; currency: string; claim_visible_until: string | null; claim_hidden_until: string | null; delivered_at: string | null; suppliers: { code: string } | { code: string }[] | null } | null) : null;
+  const ord = t ? ((ordWithSup ?? null) as unknown as { id: string; code: string; status: string; currency: string; claim_visible_until: string | null; claim_hidden_until: string | null; delivered_at: string | null; suppliers: { code: string } | { code: string }[] | null } | null) : null;
   // finance approvals use the order currency, else the platform currency (SPEC §15.1)
   const escCurrency = ord?.currency ?? (await getCurrencyContext()).currency;
   const link = (o: Record<string, string | undefined>) => {

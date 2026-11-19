@@ -6,15 +6,16 @@ import { notFound } from 'next/navigation';
 import { requireCustomer } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { getSiteContent } from '@/lib/content';
-import { Card, StatusBadge, Notice, Money, SupplierCode, OrderProgress, Timeline } from '@/components/ui';
+import { Card, StatusBadge, Notice, Money, FactoryBadge, OrderProgress, Timeline } from '@/components/ui';
 import { DocumentButton } from '@/components/client';
 import { fmtDate, humanize } from '@/lib/format';
-import { getSettings, getWalletFunds, supplierMap, DOC_LABEL } from '@/components/account/data';
+import { getSettings, getWalletFunds, orderFactoryMap, DOC_LABEL } from '@/components/account/data';
 import { RealtimeRefresh } from '@/components/account/realtime-refresh';
 import { OrderList, type OrderListItem } from '@/components/account/order-list';
 import { PayWalletButton, CancelOrderButton } from '@/components/account/order-actions';
 import { dueNow, CANCELLABLE, relTime, nowMs } from '@/components/account/order-utils';
 import { payFromWallet, cancelOrder } from '../actions';
+import { customerCarrierLabel } from '@/lib/carrier-label';
 
 export const metadata = { title: 'Order' };
 
@@ -24,7 +25,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
   const s = await requireCustomer(`/account/orders/${id}`);
   if (!s.org) return <Notice tone="amber">Complete your company profile first.</Notice>;
   const sb = await createClient();
-  const { data: o } = await sb.from('orders').select('*').eq('id', id).maybeSingle();
+  const { data: o } = await sb.from('orders').select('id, code, org_id, quote_id, rfq_id, status, title, quantity, unit_price_cents, shipping_cents, total_cents, deposit_pct, deposit_cents, paid_cents, incoterm, terms_version_id, delivered_at, claim_visible_until, claim_hidden_until, created_at, updated_at, currency, fx_rate_id, pool_id, pool_pledge_id').eq('id', id).maybeSingle();
   if (!o) notFound();
   const [{ data: docs }, { data: events }, { data: shipments }, { data: list }, { data: pi }, settings, funds, content] = await Promise.all([
     sb.from('documents').select('id, doc_type, number, amount_cents, currency, status, created_at').eq('order_id', id).order('created_at'),
@@ -41,7 +42,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
   const { data: tracking } = shipIds.length
     ? await sb.from('tracking_events').select('id, status, description, location, occurred_at').in('shipment_id', shipIds).order('occurred_at', { ascending: false })
     : { data: [] as { id: string; status: string; description: string | null; location: string | null; occurred_at: string }[] };
-  const sup = (await supplierMap([o.supplier_id])).get(o.supplier_id);
+  const factory = (await orderFactoryMap([o.id as string])).get(o.id as string);
 
   const money = { status: o.status as string, total_cents: Number(o.total_cents), deposit_cents: Number(o.deposit_cents), paid_cents: Number(o.paid_cents) };
   const due = dueNow(money);
@@ -87,7 +88,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
                 <div className="mono text-xs text-muted">{o.code}{pi?.number ? ` · ${pi.number}` : ''}</div>
                 <h2 className="text-2xl font-semibold mt-1">{o.title}</h2>
                 <div className="mt-1 text-muted flex flex-wrap items-center gap-x-2">
-                  {sup && <SupplierCode code={sup.code} country={sup.country} verified={sup.verified} />}
+                  {factory && <FactoryBadge factory={factory} />}
                   <span>· {Number(o.quantity).toLocaleString('en-US')} units · <Money cents={money.total_cents} currency={cur} className="text-ink" />{o.incoterm ? ` · ${o.incoterm}` : ''}</span>
                 </div>
               </div>
@@ -155,6 +156,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
               <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-[10px] bg-pearl px-4 py-3"><div className="text-xs text-muted">Current location</div><div className="font-semibold mt-1">{lastTrack?.location ?? '—'}</div></div>
                 <div className="rounded-[10px] bg-pearl px-4 py-3"><div className="text-xs text-muted">Estimated delivery</div><div className="font-semibold mt-1">{ship.eta ? fmtDate(ship.eta) : '—'}</div></div>
+                <div className="rounded-[10px] bg-pearl px-4 py-3"><div className="text-xs text-muted">Carrier</div><div className="font-semibold mt-1">{customerCarrierLabel(settings.raw)}</div></div>
                 <div className="rounded-[10px] bg-pearl px-4 py-3"><div className="text-xs text-muted">Waybill</div><div className="mono font-semibold mt-1 break-all">{ship.tracking_no ?? 'Pending'}</div></div>
                 <div className="rounded-[10px] bg-pearl px-4 py-3"><div className="text-xs text-muted">Shipment status</div><div className="mt-1"><StatusBadge status={ship.status} /></div></div>
                 {(ship.parcels || ship.weight_kg) && <div className="rounded-[10px] bg-pearl px-4 py-3"><div className="text-xs text-muted">Parcels</div><div className="font-semibold mt-1">{ship.parcels ?? 1} cartons{ship.weight_kg ? ` · ${ship.weight_kg} kg` : ''}</div></div>}

@@ -163,6 +163,13 @@ try {
   const myCode = (await one(`select buyer_code from organizations where id = $1`, [org])).buyer_code;
   ok(mine.some((r) => r.is_mine && r.buyer_code === myCode) && mine.filter((r) => !r.is_mine).every((r) => r.buyer_code === null), 'customer: own Customer ID only on own pledge');
 
+  await db.query('reset role');
+  await db.query(`insert into pool_events(pool_id, kind, title, body, qty) values ($1, 'joined', 'BUYER-0042 joined', 'BUYER-0042 pledged 300', 300), ($1, 'note', 'Update', 'Thanks BUYER-0042 and BUYER-7', null)`, [pool]);
+  await asAnon();
+  const evs = await all(`select title, body from pool_public_events where pool_id = $1`, [pool]);
+  ok(evs.length >= 2 && !JSON.stringify(evs).match(/BUYER-\d+/i) && evs.some((e) => e.body === 'A buyer pledged 300'), `public key: pool timeline without Customer IDs (${evs.length} events)`);
+  ok(/permission denied/.test((await tryq(`select body from pool_events limit 1`)).err ?? ''), 'public key: raw pool event texts refused');
+
   // ── 6. KYC ──
   await as(cust);
   ok(/permission denied/.test((await tryq(`select internal_note from kyc_submissions where id = $1`, [kyc])).err ?? ''), 'customer: KYC internal note refused');

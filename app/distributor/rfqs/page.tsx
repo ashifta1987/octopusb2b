@@ -1,5 +1,6 @@
-import { getSession } from '@/lib/auth';
+import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { portalProducts, withSuppliers } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, StatusBadge, EmptyState, Money } from '@/components/ui';
 import { getManagedSuppliers, one } from '@/components/backoffice/server-utils';
 import { QuoteForm } from '@/components/backoffice/quote-form';
@@ -13,18 +14,30 @@ const OPEN = ['submitted', 'assigned', 'quoting', 'quoted'];
 
 /** Open RFQs — distributors see only city + country of the buyer, never names or contacts (SPEC §3). */
 export default async function DistributorRfqs() {
-  const s = (await getSession())!;
+  // role check before the service-role read below (the layout guard runs in parallel with the page)
+  const s = await requireRole('distributor', '/distributor/rfqs');
   const sb = await createClient();
   const [suppliers, cx] = await Promise.all([getManagedSuppliers(s), getCurrencyContext()]);
   const myIds = new Set(suppliers.map((x) => x.id));
   // explicit column list: no org_id / contacts are ever selected here
-  const { data: rfqs } = await sb.from('rfqs')
-    .select('id, code, title, details, quantity, unit, target_price_cents, currency, destination_country, destination_city, incoterm, status, created_at, expires_at, categories(name), products(title, supplier_id)')
+  const { data: rfqRows } = await sb.from('rfqs')
+    .select('id, code, title, details, quantity, unit, target_price_cents, currency, destination_country, destination_city, incoterm, status, created_at, expires_at, categories(name), products(id, title)')
     .in('status', OPEN).order('created_at', { ascending: false }).limit(100);
+  // products.supplier_id is hidden from plain products reads (migration 195): portal_products() returns only the caller's
+  // own / assigned suppliers' products, so a product found there is "your supplier".
+  const prodIds = [...new Set((rfqRows ?? []).map((r) => one(r.products as unknown as { id: string } | { id: string }[] | null)?.id).filter((x): x is string => !!x))];
+  const { data: myProds } = prodIds.length ? await portalProducts(sb).select('id, supplier_id').in('id', prodIds) : { data: [] };
+  const supOfProduct = new Map(((myProds ?? []) as { id: string; supplier_id: string }[]).map((x) => [x.id, x.supplier_id]));
+  const rfqs = rfqRows?.map((r) => {
+    const p = one(r.products as unknown as { id: string; title: string } | { id: string; title: string }[] | null);
+    return { ...r, products: p ? { ...p, supplier_id: supOfProduct.get(p.id) ?? '' } : null };
+  }) ?? null;
   const ids = (rfqs ?? []).map((r) => r.id);
-  const { data: quotes } = ids.length
-    ? await sb.from('quotes').select('id, code, rfq_id, supplier_id, unit_price_cents, currency, quantity, incoterm, lead_time_days, status, created_at, suppliers(code)').in('rfq_id', ids)
-    : { data: [] };
+  const { data: quoteRows } = ids.length
+    ? await sb.from('quotes').select('id, code, rfq_id, unit_price_cents, currency, quantity, incoterm, lead_time_days, status, created_at').in('rfq_id', ids)
+    : { data: null };
+  // quotes.supplier_id is hidden too: added with the service role for the quotes RLS returned; supplier codes via the session
+  const quotes = await withSuppliers(sb, 'quotes', quoteRows, 'code');
   const supplierOpts = suppliers.map((x) => ({
     id: x.id,
     label: `${x.code} · ${x.legal_name}${x.supplier_switches?.rfq_replies === false ? ' (RFQ replies off)' : ''}`,
@@ -39,7 +52,7 @@ export default async function DistributorRfqs() {
       ) : (
         <div className="space-y-4">
           {rfqs.map((r) => {
-            const mine = (quotes ?? []).filter((q) => q.rfq_id === r.id && myIds.has(q.supplier_id));
+            const mine = (quotes ?? []).filter((q) => q.rfq_id === r.id && myIds.has(q.supplier_id ?? ''));
             const total = (quotes ?? []).filter((q) => q.rfq_id === r.id).length;
             const prod = one(r.products as unknown as { title: string; supplier_id: string } | { title: string; supplier_id: string }[] | null);
             const cat = one(r.categories as unknown as { name: string } | { name: string }[] | null);

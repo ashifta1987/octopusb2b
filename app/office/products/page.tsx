@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireStaff } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { portalProducts } from '@/components/backoffice/hidden-columns';
 import { HsCode } from '@/components/hs-badge';
 import { ProductGallery } from '@/components/store/product-gallery';
 import { Card, PageHeader, StatusBadge, EmptyState, Money, Notice } from '@/components/ui';
@@ -17,11 +18,13 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
   await requireStaff('products', 'approve', '/office/products');
   const { p: selId } = await searchParams;
   const sb = await createClient();
-  const { data: queue, error: queueError } = await sb.from('products')
+  // moderation / HS / rejection columns are hidden from plain products reads (migration 195): portal_products() returns
+  // them to staff with products:view (the products_staff rows), after requireStaff above.
+  const { data: queue, error: queueError } = await portalProducts(sb)
     .select('id, title, status, updated_at, image_url, moderation_hold, suppliers!products_supplier_id_fkey(code, country)')
     .in('status', ['submitted', 'in_review']).order('updated_at').limit(100);
   const sel = selId ?? queue?.[0]?.id;
-  const { data: p } = sel ? await sb.from('products')
+  const { data: p } = sel ? await portalProducts(sb)
     .select('id, external_id, title, description, status, moderation_hold, moderation_hold_reason, hs_code_status, hs_code_source, hs_code_note, unit, moq, lead_time_days, incoterm, origin_country, hs_code, octopus_dropship, ready_to_ship, seo_title, seo_description, image_url, updated_at, rejection_reason, suppliers!products_supplier_id_fkey(code, legal_name, country, verified, supplier_switches(listings_live)), categories(name), currency, price_tiers(min_qty, unit_price_cents, currency), product_specs(name, value, sort), product_media(url, sort, kind), product_tags(tags(name)), product_certificates(certificates(name, status))')
     .eq('id', sel).maybeSingle() : { data: null };
   const sup = p ? one(p.suppliers as unknown as { code: string; legal_name: string; country: string; verified: boolean; supplier_switches: { listings_live: boolean } | { listings_live: boolean }[] | null } | null) : null;

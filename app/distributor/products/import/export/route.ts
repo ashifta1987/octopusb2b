@@ -1,5 +1,6 @@
 import { getSession } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { hiddenColumnsByIds, portalProducts } from '@/components/backoffice/hidden-columns';
 import { getManagedSuppliers } from '@/components/backoffice/server-utils';
 import { buildProductWorkbook, XLSX_HEADERS } from '@/components/backoffice/product-workbook';
 import { categoryPaths } from '@/components/backoffice/category-paths';
@@ -24,15 +25,20 @@ export async function GET(req: Request) {
   const ids = mine.map((x) => x.id);
   const products: Record<string, unknown>[] = [];
   for (let from = 0; ids.length; from += 1000) {
-    const { data } = await sb.from('products')
-      .select('sku, title, category_id, supplier_id, unit, moq, lead_time_days, incoterm, origin_country, hs_code, currency, octopus_dropship, ready_to_ship, description, created_at, price_tiers(min_qty, unit_price_cents), product_media(sort, url, source_file_name)')
+    // supplier_id is hidden from plain products reads (migration 195): portal_products() = the caller's own / assigned
+    // suppliers' rows (DB-enforced); product_media.source_file_name is added below with the service role.
+    const { data } = await portalProducts(sb)
+      .select('sku, title, category_id, supplier_id, unit, moq, lead_time_days, incoterm, origin_country, hs_code, currency, octopus_dropship, ready_to_ship, description, created_at, price_tiers(min_qty, unit_price_cents), product_media(id, sort, url)')
       .in('supplier_id', ids).neq('status', 'archived').order('created_at').range(from, from + 999);
     products.push(...(data ?? []));
     if ((data ?? []).length < 1000) break;
   }
+  // source_file_name only for the media of the products returned above (role checked at the top of GET)
+  const fileNames = await hiddenColumnsByIds<{ id: string; source_file_name: string | null }>('product_media',
+    products.flatMap((p) => ((p.product_media ?? []) as { id: string }[]).map((m) => m.id)), 'source_file_name');
   const rows = products.map((p) => {
     const tiers = ((p.price_tiers ?? []) as { min_qty: number; unit_price_cents: number }[]).map((t) => ({ q: Number(t.min_qty), c: Number(t.unit_price_cents) })).sort((a, b) => a.q - b.q);
-    const media = ((p.product_media ?? []) as { sort: number; url: string; source_file_name: string | null }[]);
+    const media = ((p.product_media ?? []) as { id: string; sort: number; url: string }[]).map((m) => ({ ...m, source_file_name: fileNames.get(m.id)?.source_file_name ?? null }));
     const img = (pos: number) => { const m = media.find((x) => x.sort === pos); return m ? exportImageName(m) : null; };
     return {
       sku: p.sku as string, title: p.title as string, category_path: paths.get(p.category_id as string) ?? null, supplier_code: codeOf.get(p.supplier_id as string) ?? null,

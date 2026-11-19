@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { can, requireStaff } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { withHiddenColumns } from '@/components/backoffice/hidden-columns';
 import { EmptyState, Notice, PageHeader, StatusBadge } from '@/components/ui';
 import { ToggleSetting } from '@/components/admin/client';
 import { nowMs } from '@/components/admin/server';
@@ -63,13 +64,20 @@ export default async function AssistantQueuePage({ searchParams }: { searchParam
 
   let workspace: React.ReactNode = null;
   if (sel) {
-    const [{ data: msgs }, { data: esc }, { data: orgRow }, { data: am }, { data: orders }, { data: rfqs }] = await Promise.all([
-      sb.from('assistant_messages').select('id, author, author_user_id, content, hidden_from_customer, confidence, tools_called, created_at').eq('session_id', sel.id).order('created_at').limit(500),
-      sel.escalation_id ? sb.from('escalations').select('id, reason, confidence, excerpt, assigned_to, team, ticket_id, requested_at, sla_due_at, taken_by_staff_id, taken_at, resolved_at, outcome').eq('id', sel.escalation_id).maybeSingle() : Promise.resolve({ data: null }),
+    const [{ data: msgRows }, { data: escRow }, { data: orgRow }, { data: am }, { data: orders }, { data: rfqs }] = await Promise.all([
+      sb.from('assistant_messages').select('id, author, author_user_id, content, hidden_from_customer, created_at').eq('session_id', sel.id).order('created_at').limit(500),
+      sel.escalation_id ? sb.from('escalations').select('id, team, ticket_id, requested_at, sla_due_at, taken_at, resolved_at').eq('id', sel.escalation_id).maybeSingle() : Promise.resolve({ data: null }),
       sb.from('organizations').select('id, name, buyer_code, country, city, kyc_status').eq('id', sel.org_id).maybeSingle(),
-      sb.from('account_managers').select('staff_user_id, team, assigned_at, reason').eq('org_id', sel.org_id).maybeSingle(),
+      sb.from('account_managers').select('staff_user_id, team, assigned_at').eq('org_id', sel.org_id).maybeSingle(),
       sb.from('orders').select('id, code, status').eq('org_id', sel.org_id).order('created_at', { ascending: false }).limit(3),
       sb.from('rfqs').select('id, code, status').eq('org_id', sel.org_id).in('status', ['submitted', 'assigned', 'quoting', 'quoted']).order('created_at', { ascending: false }).limit(3),
+    ]);
+    // confidence / tools_called / escalation details are hidden from session reads (migration 195): rows come from the
+    // session client (RLS: account manager, team queue, supervisors), the columns from the service role after requireStaff.
+    const [msgs, [esc = null]] = await Promise.all([
+      withHiddenColumns<NonNullable<typeof msgRows>[number], { confidence: number | null; tools_called: unknown[] | null }>('assistant_messages', msgRows, 'confidence, tools_called'),
+      withHiddenColumns<NonNullable<typeof escRow>, { reason: string | null; confidence: number | null; excerpt: string | null; assigned_to: string | null; taken_by_staff_id: string | null; outcome: string | null }>(
+        'escalations', escRow ? [escRow] : [], 'reason, confidence, excerpt, assigned_to, taken_by_staff_id, outcome'),
     ]);
     const org = orgRow as Org | null;
     const staffIds = [...new Set([...(msgs ?? []).map((m) => m.author_user_id), am?.staff_user_id, esc?.assigned_to, esc?.taken_by_staff_id].filter(Boolean))] as string[];

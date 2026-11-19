@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { portalProducts } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, EmptyState, StatusBadge, Table, Notice } from '@/components/ui';
 import { Tabs } from '@/components/admin/ui';
 import { ActionForm, RunButton } from '@/components/admin/client';
@@ -31,8 +32,10 @@ export default async function ImportReviewPage({ searchParams }: { searchParams:
   const defMarkup = Number(markup?.value ?? 25);
 
   const pids = [...new Set(items.map((i) => i.product_id).filter(Boolean))] as string[];
+  // external_id / listing_status / markup_pct / sell_price_mode are hidden from plain products reads (migration 195):
+  // portal_products() returns them to staff with products:view (same rows the products_staff policy gives).
   const { data: prods } = pids.length
-    ? await sb.from('products').select('id, external_id, title, status, listing_status, markup_pct, sell_price_mode, min_price_cents, currency, moq, price_tiers(min_qty, unit_price_cents), product_costs(supplier_cost_cents)').in('id', pids).order('external_id')
+    ? await portalProducts(sb).select('id, external_id, title, status, listing_status, markup_pct, sell_price_mode, min_price_cents, currency, moq, price_tiers(min_qty, unit_price_cents), product_costs(supplier_cost_cents)').in('id', pids).order('external_id')
     : { data: [] };
   const prodBy = new Map(((prods ?? []) as Prod[]).map((p) => [p.id, p]));
 

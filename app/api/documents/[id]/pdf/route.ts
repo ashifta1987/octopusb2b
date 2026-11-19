@@ -10,12 +10,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const { data: claims } = await sb.auth.getClaims();
   if (!claims?.claims?.sub) return text(401, 'Please sign in to view this document.');
 
-  const bundle = await loadDocument(id);
+  // Supplier codes are internal: staff copies show them, customer copies show only the factory label (19 Nov 2026).
+  const showSupplier = await isStaffUser(claims.claims.sub as string).catch(() => false);
+  const bundle = await loadDocument(id, { staff: showSupplier });
   if (!bundle) return text(404, 'Document not found.');
 
   const url = new URL(req.url);
-  // Supplier codes are internal: staff copies show them, customer copies do not.
-  const showSupplier = await isStaffUser(claims.claims.sub as string).catch(() => false);
   const html = renderDocumentHtml(bundle, { origin: url.origin, print: url.searchParams.get('print') === '1', showSupplier });
   return new Response(html, {
     status: 200,

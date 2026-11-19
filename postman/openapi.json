@@ -2995,26 +2995,44 @@
           }
         }
       },
-      "Supplier": {
+      "Factory": {
         "type": "object",
         "required": [
-          "code",
-          "country"
+          "verified",
+          "label"
         ],
         "properties": {
-          "code": {
-            "type": "string",
-            "example": "OCT-1101"
-          },
-          "country": {
-            "type": "string",
-            "example": "CN"
-          },
           "verified": {
             "type": "boolean"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string",
+                "example": "CN"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "province": {
+            "anyOf": [
+              {
+                "type": "string",
+                "example": "Guangdong"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "type": "string",
+            "example": "Verified factory · China (Guangdong)"
           }
         },
-        "description": "Suppliers are identified by code and country only"
+        "description": "The factory behind a product, quote or order: verified badge, country and province only. Supplier names, codes and ids are never shared."
       },
       "Product": {
         "type": "object",
@@ -3137,10 +3155,10 @@
           "octopus_dropship": {
             "type": "boolean"
           },
-          "supplier": {
+          "factory": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Supplier"
+                "$ref": "#/components/schemas/Factory"
               },
               {
                 "type": "null"
@@ -3423,10 +3441,10 @@
           "total": {
             "$ref": "#/components/schemas/Amount"
           },
-          "supplier": {
+          "factory": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Supplier"
+                "$ref": "#/components/schemas/Factory"
               },
               {
                 "type": "null"
@@ -3703,10 +3721,10 @@
           "balance": {
             "$ref": "#/components/schemas/Amount"
           },
-          "supplier": {
+          "factory": {
             "anyOf": [
               {
-                "$ref": "#/components/schemas/Supplier"
+                "$ref": "#/components/schemas/Factory"
               },
               {
                 "type": "null"
@@ -3883,6 +3901,11 @@
           },
           "service": {
             "type": "string"
+          },
+          "carrier": {
+            "type": "string",
+            "example": "Octopus B2B shipping",
+            "description": "Carrier name shown to customers (the public carrier label once approved, otherwise \"Octopus B2B shipping\")"
           },
           "service_code": {
             "anyOf": [

@@ -6,7 +6,7 @@ import type { Bootstrap } from '@/lib/assistant/bootstrap';
 import { Conversation } from './conversation';
 
 const CAN_DO: [string, string, string][] = [
-  ['Track shipments and give delivery ETA', 'Pulls live status from YunExpress', 'Where is my latest shipment and when will it arrive?'],
+  ['Track shipments and give delivery ETA', 'Pulls live shipment status and tracking', 'Where is my latest shipment and when will it arrive?'],
   ['Compare quotes and tier prices', 'Explains why one is better than another', 'Compare the quotes on my open RFQ'],
   ['Open an RFQ or sample request', 'Fills the form from your context, you confirm', 'Help me open an RFQ for '],
   ['Suggest products and pools', 'Based on your past orders and KYC', 'Which group-buy pools are open that fit my past orders?'],

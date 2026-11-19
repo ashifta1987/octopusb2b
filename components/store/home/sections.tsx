@@ -1,47 +1,41 @@
 import Link from 'next/link';
 import { block } from '@/lib/content';
-import { COUNTRY_NAMES, humanize } from '@/lib/format';
-import type { PublicSupplier } from '@/components/store/data';
+import { humanize } from '@/lib/format';
+import type { VerifiedFactoryCard } from '@/components/store/data';
+import { factoryLabel } from '@/lib/factory-label';
 import { SectionHead } from './shared';
 
 type Blocks = Record<string, string>;
 
-/** Main.png "Verified suppliers": supplier code + country + badges (public_suppliers only) and the categories they list in. */
-export function VerifiedSuppliers({ blocks, suppliers, categories, showPlaceholders = false, sponsored }: { blocks: Blocks; suppliers: PublicSupplier[]; categories: Record<string, string[]>; showPlaceholders?: boolean; sponsored?: React.ReactNode }) {
+/** Main.png "Verified suppliers": factory label ("Verified factory · China (Guangdong)") + type + the categories it lists in.
+ *  Buyers never see a supplier code or id (19 Nov 2026), so the cards carry no code and no link by code. */
+export function VerifiedSuppliers({ blocks, factories, showPlaceholders = false, sponsored }: { blocks: Blocks; factories: VerifiedFactoryCard[]; showPlaceholders?: boolean; sponsored?: React.ReactNode }) {
   // ADDON-32: no real verified supplier → hide the section (bracketed placeholder cards only with home.show_placeholders)
-  if (!suppliers.length && !showPlaceholders) return null;
+  if (!factories.length && !showPlaceholders) return null;
   return (
     <section aria-labelledby="home-suppliers-h" className="max-w-[1280px] mx-auto px-4 sm:px-8 pt-[72px]">
       <SectionHead id="home-suppliers-h" title={block(blocks, 'home.suppliers.title', 'Verified suppliers')} href="/suppliers" link={block(blocks, 'home.suppliers.link', 'Become a supplier')} />
-      {suppliers.length ? (
+      {factories.length ? (
         <ul className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(100%,270px),1fr))]">
-          {suppliers.map((s) => {
-            const cats = categories[s.id] ?? [];
-            return (
-              <li key={s.id} className="relative card rounded-[14px] p-[22px] flex flex-col gap-3.5 hover:border-coral-text focus-within:border-coral-text">
-                <div className="flex gap-3.5 items-center">
-                  <span className="w-[52px] h-[52px] shrink-0 rounded-xl bg-tint text-coral-text flex items-center justify-center mono text-[14px] font-semibold" aria-hidden>{s.country ?? '—'}</span>
-                  <div className="min-w-0 flex flex-col gap-1">
-                    <h3 className="font-sans font-semibold text-[16px]">
-                      <Link href={`/search?q=${encodeURIComponent(s.code)}`} className="after:absolute after:inset-0 after:rounded-[14px] hover:text-coral-text">
-                        Supplier {s.code}<span className="sr-only"> — view products</span>
-                      </Link>
-                    </h3>
-                    {s.country && <span className="text-[13px] text-muted">{COUNTRY_NAMES[s.country] ?? s.country}</span>}
-                  </div>
+          {factories.map((s) => (
+            <li key={s.key} className="relative card rounded-[14px] p-[22px] flex flex-col gap-3.5">
+              <div className="flex gap-3.5 items-center">
+                <span className="w-[52px] h-[52px] shrink-0 rounded-xl bg-tint text-coral-text flex items-center justify-center mono text-[14px] font-semibold" aria-hidden>{s.country ?? '—'}</span>
+                <div className="min-w-0 flex flex-col gap-1">
+                  <h3 className="font-sans font-semibold text-[16px]">{factoryLabel(s)}</h3>
                 </div>
-                <ul className="flex flex-wrap gap-1.5" aria-label="Badges">
-                  {s.verified && <li className="rounded-full bg-ok-bg text-ok text-[12px] font-semibold px-2 py-[5px] leading-none">Verified</li>}
-                  {s.supplier_type && <li className="rounded-full bg-tint text-ink text-[12px] font-semibold px-2 py-[5px] leading-none">{humanize(s.supplier_type)}</li>}
-                </ul>
-                {cats.length > 0 && <p className="text-[14px] text-black">{cats.join(' · ')}</p>}
-              </li>
-            );
-          })}
+              </div>
+              <ul className="flex flex-wrap gap-1.5" aria-label="Badges">
+                {s.verified && <li className="rounded-full bg-ok-bg text-ok text-[12px] font-semibold px-2 py-[5px] leading-none">Verified</li>}
+                {s.supplier_type && <li className="rounded-full bg-tint text-ink text-[12px] font-semibold px-2 py-[5px] leading-none">{humanize(s.supplier_type)}</li>}
+              </ul>
+              {s.categories.length > 0 && <p className="text-[14px] text-black">{s.categories.join(' · ')}</p>}
+            </li>
+          ))}
         </ul>
       ) : (
         <ul className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(min(100%,270px),1fr))]" aria-label="Placeholder supplier cards">
-          {[0, 1, 2].map((i) => <li key={i} className="card rounded-[14px] p-[22px] border-dashed text-muted">[Supplier name] · [City], China · [Type] · [Categories]</li>)}
+          {[0, 1, 2].map((i) => <li key={i} className="card rounded-[14px] p-[22px] border-dashed text-muted">[Verified factory] · China ([Province]) · [Type] · [Categories]</li>)}
         </ul>
       )}
       {sponsored && <div className="mt-4">{sponsored}</div>}

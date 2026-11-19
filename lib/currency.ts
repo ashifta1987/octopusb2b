@@ -19,11 +19,15 @@ export async function getCurrencyContext(): Promise<CurrencyContext> {
   cacheTag('currency');
   cacheTag('site-content');
   const sb = createPublicClient();
-  const [settings, fx] = await Promise.all([
+  // fx_rates.source is hidden from the public key (migration 195): the approved (manual, in effect) rate id comes from
+  // current_fx_rate_id() (security definer, same rule as the database uses), then its public columns are read.
+  const [settings, rateId] = await Promise.all([
     sb.from('site_settings').select('key, value').in('key', ['platform_currency', 'currency_rounding', 'currency_switch_banner']),
-    sb.from('fx_rates').select('id, rate, effective_from').eq('source', 'manual').lte('effective_from', new Date().toISOString())
-      .order('effective_from', { ascending: false }).limit(1).maybeSingle(),
+    sb.rpc('current_fx_rate_id'),
   ]);
+  const fx = rateId.data
+    ? await sb.from('fx_rates').select('id, rate, effective_from').eq('id', rateId.data as string).maybeSingle()
+    : { data: null };
   const s: Record<string, unknown> = {};
   (settings.data ?? []).forEach((r) => (s[r.key] = r.value));
   return {

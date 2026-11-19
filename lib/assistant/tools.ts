@@ -5,6 +5,7 @@ import { getQuoteFacts, getShipmentFacts } from './facts';
 import { redactObject, redactText } from './redact';
 import { isToolName, validateToolArgs, type ToolArgs } from './tool-schemas';
 import type { AssistantDraft, ToolCallLog } from './types';
+import { factoryLabel, type FactoryInfo } from '@/lib/factory-label';
 
 /** Server-side execution of Octo's tools with the customer's own Supabase client (RLS applies). draft_* never submit. */
 
@@ -28,19 +29,18 @@ async function listPools(sb: SupabaseClient, a: ToolArgs<'list_pools'>): Promise
     if (!p) return { output: `No live product matches "${key}".` };
     productId = p.id as string;
   }
-  let q = sb.from('pools').select('id, code, product_id, supplier_id, target_qty, filled_qty, min_pledge, deadline_at, status, pool_price_minor, currency, deposit_pct, products(title, slug)')
+  let q = sb.from('pools').select('id, code, product_id, target_qty, filled_qty, min_pledge, deadline_at, status, pool_price_minor, currency, deposit_pct, products(title, slug)')
     .eq('status', 'open').order('deadline_at').limit(8);
   if (productId) q = q.eq('product_id', productId);
   const { data } = await q;
-  const pools = (data ?? []) as unknown as { id: string; code: string; supplier_id: string; target_qty: number; filled_qty: number; min_pledge: number; deadline_at: string; pool_price_minor: number; currency: string; deposit_pct: number; products: { title: string; slug: string } | null }[];
+  const pools = (data ?? []) as unknown as { id: string; code: string; product_id: string; target_qty: number; filled_qty: number; min_pledge: number; deadline_at: string; pool_price_minor: number; currency: string; deposit_pct: number; products: { title: string; slug: string } | null }[];
   if (!pools.length) return { output: productId ? 'There is no open pool for that product right now.' : 'There are no open group-buy pools right now.', link: { href: '/account/pools', label: 'Group buys →' } };
-  const supIds = [...new Set(pools.map((p) => p.supplier_id))];
-  const { data: sups } = await sb.from('public_suppliers').select('id, code, country').in('id', supIds);
-  const sup = new Map((sups ?? []).map((s) => [s.id as string, s as { code: string; country: string | null }]));
+  // factory label via the pool's product (product_factory view) — never a supplier code or id
+  const { data: facs } = await sb.from('product_factory').select('product_id, verified, country, province').in('product_id', [...new Set(pools.map((p) => p.product_id))]);
+  const fac = new Map((facs ?? []).map((f) => [f.product_id as string, factoryLabel(f as FactoryInfo)]));
   const lines = pools.map((p) => {
-    const s = sup.get(p.supplier_id);
     const pct = p.target_qty ? Math.round((100 * p.filled_qty) / p.target_qty) : 0;
-    return `• ${p.code} · ${p.products?.title ?? 'Product'} · supplier ${s?.code ?? 'OCT-?'}${s?.country ? ` (${s.country})` : ''} · pool price ${money(Number(p.pool_price_minor), p.currency)}/unit` +
+    return `• ${p.code} · ${p.products?.title ?? 'Product'} · ${fac.get(p.product_id) ?? 'Factory'} · pool price ${money(Number(p.pool_price_minor), p.currency)}/unit` +
       ` · ${p.filled_qty.toLocaleString('en-US')}/${p.target_qty.toLocaleString('en-US')} pledged (${pct}%) · min pledge ${p.min_pledge} · deposit ${p.deposit_pct}% · closes ${fmtDate(p.deadline_at)}`;
   });
   return { output: lines.join('\n'), link: { href: '/account/pools', label: 'Group buys →' } };

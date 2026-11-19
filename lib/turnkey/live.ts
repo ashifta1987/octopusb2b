@@ -15,9 +15,9 @@ export async function getOpenProjectCard(): Promise<OpenProjectCard | null> {
   cacheLife({ revalidate: 300 });
   cacheTag('turnkey');
   cacheTag('turnkey-leads');
-  let sb: ReturnType<typeof createAdminClient>;
-  try { sb = createAdminClient(); } catch { return null; }
-  const { data } = await sb.from('turnkey_leads')
+  let admin: ReturnType<typeof createAdminClient>;
+  try { admin = createAdminClient(); } catch { return null; }
+  const { data } = await admin.from('turnkey_leads')
     .select('reference, status, country, turnkey_projects(title), turnkey_packages(tier_name, starting_budget_usd, lead_time_days, payback_months_low, payback_months_high)')
     .in('status', ['contacted', 'quoted']).eq('is_seed', false).order('updated_at', { ascending: false }).limit(1).maybeSingle();
   if (!data) return null;

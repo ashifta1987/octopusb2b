@@ -108,6 +108,7 @@ create view pool_public_view as
 revoke all on pool_public_view from public, anon, authenticated;
 grant select, maintain on pool_public_view to anon, authenticated;
 
+drop view if exists pool_public_events;
 drop view if exists product_factory;
 drop view if exists quote_factory;
 drop view if exists order_factory;

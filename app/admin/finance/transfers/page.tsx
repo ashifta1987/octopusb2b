@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { requireStaff } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { withHiddenColumns } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, Table, EmptyState, StatusBadge } from '@/components/ui';
 import { ActionForm, ReasonButton } from '@/components/backoffice/action-form';
 import { money, fmtDate } from '@/lib/format';
@@ -15,10 +16,12 @@ export const metadata = { title: 'Bank transfers' };
 async function TransfersPageContent() {
   await requireStaff('wallet', 'approve', '/admin/finance/transfers');
   const sb = await createClient();
-  const [pending, done] = await Promise.all([
+  const [pending, doneRaw] = await Promise.all([
     sb.from('wallet_topups').select('id, org_id, amount_cents, reference, bank_ref, slip_path, created_at, organizations(name)').eq('status', 'pending').eq('method', 'bank_transfer').order('created_at'),
-    sb.from('wallet_topups').select('id, amount_cents, amount_received_cents, received_note, reference, bank_ref, status, reject_reason, confirmed_at, organizations(name)').eq('method', 'bank_transfer').in('status', ['credited', 'failed']).order('confirmed_at', { ascending: false }).limit(25),
+    sb.from('wallet_topups').select('id, amount_cents, amount_received_cents, reference, bank_ref, status, reject_reason, confirmed_at, organizations(name)').eq('method', 'bank_transfer').in('status', ['credited', 'failed']).order('confirmed_at', { ascending: false }).limit(25),
   ]);
+  // received_note is hidden from session reads (migration 195): added with the service role after requireStaff.
+  const done = { data: await withHiddenColumns<NonNullable<typeof doneRaw.data>[number], { received_note: string | null }>('wallet_topups', doneRaw.data, 'received_note') };
   // slips: 10-minute signed links through finance's own session (storage policy: wallet:approve)
   const slips = await Promise.all((pending.data ?? []).map(async (t) => (t.slip_path ? (await sb.storage.from('transfer-slips').createSignedUrl(t.slip_path as string, 600)).data?.signedUrl ?? null : null)));
   const name = (o: unknown) => ((Array.isArray(o) ? o[0] : o) as { name?: string } | null)?.name ?? '—';

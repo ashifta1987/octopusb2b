@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireStaff } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { withHiddenColumns } from '@/components/backoffice/hidden-columns';
 import { Card, EmptyState, Notice, PageHeader, Stat, StatusBadge, Table } from '@/components/ui';
 import { ActionForm, ToggleSetting } from '@/components/admin/client';
 import { Bar, Field, Tabs } from '@/components/admin/ui';
@@ -35,13 +36,15 @@ export default async function AdminAssistantPage({ searchParams }: { searchParam
   const from = new Date(now - days * 86_400_000).toISOString();
   const to = new Date(now).toISOString();
 
-  const [settings, workload, { data: metricsRaw, error: metricsErr }, { data: ams }, { data: lastRun }] = await Promise.all([
+  const [settings, workload, { data: metricsRaw, error: metricsErr }, { data: amRows }, { data: lastRun }] = await Promise.all([
     loadAssistantSettings(sb),
     loadWorkload(sb),
     sb.rpc('assistant_metrics', { p_from: from, p_to: to }),
-    sb.from('account_managers').select('org_id, staff_user_id, team, assigned_at, reason, organizations(name, buyer_code, country)').order('assigned_at', { ascending: false }).limit(500),
+    sb.from('account_managers').select('org_id, staff_user_id, team, assigned_at, organizations(name, buyer_code, country)').order('assigned_at', { ascending: false }).limit(500),
     sb.from('integration_logs').select('status, summary, created_at').eq('integration_code', 'assistant').order('created_at', { ascending: false }).limit(1).maybeSingle(),
   ]);
+  // reason is hidden from session reads (migration 195): add it with the service role for the rows RLS returned (after requireStaff).
+  const ams = await withHiddenColumns<NonNullable<typeof amRows>[number], { reason: string | null }>('account_managers', amRows, 'reason', 'org_id');
   const m = (metricsRaw ?? null) as Metrics | null;
   const cost = estimateCost(m?.tokens, settings.costPer1k);
   const perConv = m?.sessions ? cost / m.sessions : 0;

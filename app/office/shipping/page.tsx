@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { withSuppliers } from '@/components/backoffice/hidden-columns';
 import { getCarrier } from '@/lib/adapters';
 import { Card, PageHeader, StatusBadge, Table, EmptyState, Money } from '@/components/ui';
 import { RunButton } from '@/components/backoffice/action-form';
@@ -17,10 +18,12 @@ export default async function Shipping({ searchParams }: { searchParams: Promise
   const { order: selId } = await searchParams;
   const sb = await createClient();
   const carrier = getCarrier();
-  const [{ data: ready }, { data: ships }] = await Promise.all([
-    sb.from('orders').select('id, code, title, total_cents, currency, incoterm, updated_at, organizations(name, country, city), suppliers(code, legal_name, country, city)').eq('status', 'ready_to_ship').order('updated_at').limit(100),
+  const [{ data: readyRows }, { data: ships }] = await Promise.all([
+    sb.from('orders').select('id, code, title, total_cents, currency, incoterm, updated_at, organizations(name, country, city)').eq('status', 'ready_to_ship').order('updated_at').limit(100),
     sb.from('shipments').select('id, code, tracking_no, status, service_code, rate_cents, currency, label_url, last_event_at, created_at, orders(id, code), tracking_events(status, description, occurred_at)').order('created_at', { ascending: false }).limit(50),
   ]);
+  // suppliers(...) embed went through orders.supplier_id (hidden, migration 195): supplier_id via service role after requireStaff
+  const ready = await withSuppliers(sb, 'orders', readyRows, 'code, legal_name, country, city');
   const sel = (ready ?? []).find((o) => o.id === selId);
   const canEdit = can(s, 'orders', 'edit');
   const exceptions = (ships ?? []).filter((x) => x.status === 'exception');

@@ -7,7 +7,8 @@ import { createClient } from '@/lib/supabase/server';
 import { money, fmtDate, COUNTRY_NAMES, humanize } from '@/lib/format';
 import { StatusBadge, Notice } from '@/components/ui';
 import { getStoreContent } from '@/components/store/currency';
-import { getPool, getGroupBuyTerms, type PoolDetail, type PoolParticipant } from '@/components/store/data';
+import { getPool, getGroupBuyTerms, toParticipant, type PoolDetail, type PoolParticipant } from '@/components/store/data';
+import { factoryLabel } from '@/lib/factory-label';
 import { ProductImage, unitOne } from '@/components/store/product-card';
 import { Breadcrumbs, JsonLd, breadcrumbLd, SITE_URL } from '@/components/store/seo';
 import { getSettings, getWalletFunds } from '@/components/account/data';
@@ -94,7 +95,7 @@ async function Content({ params }: { params: Params }) {
               <h1 className="text-[26px] sm:text-[32px] font-extrabold leading-tight mt-3">Group buy: {p.product.title}</h1>
               <div className="flex flex-wrap gap-x-5 gap-y-1 text-[14px] text-muted mt-2">
                 <span className="mono">{p.code}</span>
-                {p.supplier && <span>Supplier <span className="mono">{p.supplier.code}</span>{p.supplier.country && ` · ${p.supplier.country}`}</span>}
+                {p.factory && <span>{factoryLabel(p.factory)}</span>}
                 {p.product.hs_code && <span>HS {p.product.hs_code}</span>}
                 <Link href={`/p/${p.product.slug}`} className="text-coral-text font-semibold">View product</Link>
               </div>
@@ -148,7 +149,7 @@ async function Content({ params }: { params: Params }) {
           <section className="card overflow-hidden" aria-labelledby="buyers-h">
             <div className="flex flex-wrap justify-between items-center gap-2 px-6 pt-6 pb-3">
               <h2 id="buyers-h" className="text-[20px] font-bold">Buyers in this pool</h2>
-              <p className="text-[13px] text-muted">Supplier and other buyers see codes only, not names.</p>
+              <p className="text-[13px] text-muted">Other buyers see only country and quantity — never your company or Customer ID.</p>
             </div>
             <Suspense fallback={<BuyersTable pool={p} />}>
               <BuyersWithMe pool={p} />
@@ -194,7 +195,7 @@ async function Content({ params }: { params: Params }) {
               <div className="flex items-center gap-3 mt-3">
                 <span className="w-10 h-10 rounded-full bg-ink text-white mono text-[12px] font-semibold flex items-center justify-center" aria-hidden>{p.starter.country ?? '—'}</span>
                 <div>
-                  <div className="mono font-semibold">{p.starter.buyer_code}</div>
+                  <div className="font-semibold">Buyer</div>
                   <div className="text-[12px] text-muted">{p.starter.country ? (COUNTRY_NAMES[p.starter.country] ?? p.starter.country) : 'Country not shared'}</div>
                 </div>
               </div>
@@ -218,27 +219,23 @@ async function Content({ params }: { params: Params }) {
   );
 }
 
-function BuyersTable({ pool: p, me }: { pool: PoolDetail; me?: { code: string; company: string } | null }) {
-  const rows = [...p.participants].sort((a, b) => (me && a.buyer_code === me.code ? -1 : me && b.buyer_code === me.code ? 1 : b.joined_at.localeCompare(a.joined_at)));
+/** "Buyer · [country] · [quantity]" — never another buyer's Customer ID; the viewer's own Customer ID only on their own
+ *  pledge (`is_mine` from pool_public_view, read with the viewer's session). */
+function BuyersTable({ pool: p, rows: given, company }: { pool: PoolDetail; rows?: PoolParticipant[]; company?: string }) {
+  const rows = [...(given ?? p.participants)].sort((a, b) => Number(b.is_mine) - Number(a.is_mine) || b.joined_at.localeCompare(a.joined_at));
   if (!rows.length) return <p className="px-6 pb-6 text-sm text-muted">No buyers yet — be the first to pledge.</p>;
-  const paid = (r: PoolParticipant) => r.status !== 'pending';
   return (
     <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable table">
       <table className="w-full border-collapse">
-        <thead><tr>{['Buyer', 'Country', 'Pledged', 'Deposit', 'Joined'].map((h) => <th key={h} className="th">{h}</th>)}</tr></thead>
+        <thead><tr>{['Buyer', 'Country', 'Pledged'].map((h) => <th key={h} className="th">{h}</th>)}</tr></thead>
         <tbody>
-          {rows.map((r) => {
-            const mine = me && r.buyer_code === me.code;
-            return (
-              <tr key={r.buyer_code + r.joined_at} className={mine ? 'bg-tint/30' : undefined}>
-                <td className="td font-semibold">{mine ? <>You · {me!.company}</> : <span className="mono">{r.buyer_code}</span>}</td>
-                <td className="td">{r.country ?? '—'}</td>
-                <td className="td mono">{fmt(r.qty)} {p.product.unit}</td>
-                <td className={`td mono ${paid(r) ? 'text-ok' : 'text-warn'}`}>{money(r.deposit_minor, r.currency)} {paid(r) ? 'paid' : 'pending'}</td>
-                <td className="td text-muted">{fmtDate(r.joined_at)}{r.is_starter && ' · starter'}</td>
-              </tr>
-            );
-          })}
+          {rows.map((r, i) => (
+            <tr key={`${i}-${r.joined_at}`} className={r.is_mine ? 'bg-tint/30' : undefined}>
+              <td className="td font-semibold">{r.is_mine ? <>You{company ? ` · ${company}` : ''}{r.buyer_code && <span className="mono font-normal text-muted"> · {r.buyer_code}</span>}</> : 'Buyer'}</td>
+              <td className="td">{r.country ? (COUNTRY_NAMES[r.country] ?? r.country) : '—'}</td>
+              <td className="td mono">{fmt(r.qty)} {p.product.unit}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
@@ -248,9 +245,11 @@ function BuyersTable({ pool: p, me }: { pool: PoolDetail; me?: { code: string; c
 async function BuyersWithMe({ pool }: { pool: PoolDetail }) {
   const s = await getSession();
   if (!s?.org) return <BuyersTable pool={pool} />;
+  // per-user read: pool_public_view marks the viewer's own pledges (is_mine) and only then includes their Customer ID
   const sb = await createClient();
-  const { data } = await sb.from('organizations').select('buyer_code').eq('id', s.org.id).maybeSingle();
-  return <BuyersTable pool={pool} me={data?.buyer_code ? { code: data.buyer_code as string, company: s.org.name } : null} />;
+  const { data, error } = await sb.from('pool_public_view').select('country, qty, status, joined_at, is_mine, buyer_code').eq('pool_id', pool.id).order('joined_at');
+  if (error || !data) return <BuyersTable pool={pool} />;
+  return <BuyersTable pool={pool} rows={data.map(toParticipant)} company={s.org.name} />;
 }
 
 type MyPledge = {

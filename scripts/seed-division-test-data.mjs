@@ -22,7 +22,8 @@ else {
     if (existing) { await reset(existing.id); const o2 = await one(`select id from organizations where name = $1`, [ORG + ' (second buyer)']); if (o2) await reset(o2.id); }
     const org = (await one(`insert into organizations(name, country, city, is_seed) values ($1, 'AE', 'Dubai', true) returning id`, [ORG])).id;
     const sup = await one(`select id from suppliers where code = 'OCT-1132'`);
-    const prod = await one(`select id, title from products where supplier_id = $1 order by created_at limit 1`, [sup.id]);
+    // a LIVE product, so the test pool also opens on the storefront (/pool/POOL-9900001)
+    const prod = await one(`select id, title from products where supplier_id = $1 and status = 'live' and archived_at is null order by created_at limit 1`, [sup.id]);
     const dsProd = await one(`select product_id id from dropship_products limit 1`);
     const tkProject = await one(`select project_id id from turnkey_projects order by sort_rank limit 1`);
     const W = `wallet_account('${org}', 'USD')`;
@@ -45,7 +46,7 @@ else {
     T.j_rfq_fee = await J('TEST RFQ fee', 'test-div-rfqfee', 'rfq_fees', 'rfq', T.rfq, 500);
     T.j_order_payment = await J('TEST order deposit', 'test-div-orderpay', 'orders', 'payment', T.payment, 36000);
     // POOL: pool + 2 pledges + pool order + pledge journal
-    T.pool = (await one(`insert into pools(code, product_id, supplier_id, starter_org_id, target_qty, min_pledge, deadline_at, status, pool_price_minor, currency, is_seed) values ('TEST-POOL-1', $1, $2, $3, 5000, 500, now() + interval '7 days', 'open', 150, 'USD', true) returning id`, [prod.id, sup.id, org])).id;
+    T.pool = (await one(`insert into pools(code, product_id, supplier_id, starter_org_id, target_qty, min_pledge, deadline_at, status, pool_price_minor, currency, is_seed) values ('POOL-9900001', $1, $2, $3, 5000, 500, now() + interval '7 days', 'open', 150, 'USD', true) returning id`, [prod.id, sup.id, org])).id;
     T.pledge_a = (await one(`insert into pool_pledges(pool_id, org_id, qty, currency, status, deposit_minor, is_seed) values ($1, $2, 2000, 'USD', 'paid', 60000, true) returning id`, [T.pool, org])).id;
     const org2 = (await one(`insert into organizations(name, country, city, is_seed) values ($1, 'DE', 'Berlin', true) returning id`, [ORG + ' (second buyer)'])).id;   // one active pledge per company
     T.pledge_b = (await one(`insert into pool_pledges(pool_id, org_id, qty, currency, status, deposit_minor, is_seed) values ($1, $2, 1000, 'USD', 'pending', 30000, true) returning id`, [T.pool, org2])).id;
@@ -89,7 +90,7 @@ async function reset(orgId) {
   await db.query(`delete from journals where id = any($1)`, [js]);
   for (const [t, c] of [['wallet_holds', 'org_id'], ['dropship_import_list', 'org_id'], ['documents', 'org_id'], ['shipments', 'org_id'], ['payments', 'org_id'], ['orders', 'org_id'], ['pool_pledges', 'org_id'], ['brand_projects', 'org_id'], ['service_requests', 'org_id'], ['turnkey_leads', 'org_id']])
     await db.query(`delete from ${t} where ${c} = $1`, [orgId]);
-  await db.query(`delete from pools where code = 'TEST-POOL-1'`);
+  await db.query(`delete from pools where code in ('POOL-9900001', 'TEST-POOL-1')`);
   await db.query(`delete from quotes where code = 'TEST-Q-DIV-1'`);
   await db.query(`delete from rfqs where org_id = $1`, [orgId]);
   await db.query(`delete from ledger_accounts where org_id = $1`, [orgId]);
@@ -105,8 +106,8 @@ async function report() {
     union all select 'orders', code, case code when 'TEST-ORD-SRC' then 'SRC' when 'TEST-ORD-POOL' then 'POOL' when 'TEST-ORD-MMB' then 'MMB' when 'TEST-ORD-DS' then 'DS' when 'TEST-ORD-TK' then 'TK' end, ${code} from orders x where org_id = $1
     union all select 'payments', reference, 'SRC', ${code} from payments x where org_id = $1
     union all select 'shipments', code, 'SRC (its order)', ${code} from shipments x where org_id = $1
-    union all select 'pools', code, 'POOL', ${code} from pools x where code = 'TEST-POOL-1'
-    union all select 'pool_pledges', qty || ' units', 'POOL', ${code} from pool_pledges x where pool_id = (select id from pools where code = 'TEST-POOL-1')
+    union all select 'pools', code, 'POOL', ${code} from pools x where code in ('POOL-9900001', 'TEST-POOL-1')
+    union all select 'pool_pledges', qty || ' units', 'POOL', ${code} from pool_pledges x where pool_id = (select id from pools where code in ('POOL-9900001', 'TEST-POOL-1'))
     union all select 'brand_projects', ref, 'MMB', ${code} from brand_projects x where org_id = $1
     union all select 'documents', number, 'MMB', ${code} from documents x where org_id = $1
     union all select 'service_requests', service_code, case service_code when '3pl' then '3PL' else 'DS' end, ${code} from service_requests x where org_id = $1

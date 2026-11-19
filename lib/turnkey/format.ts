@@ -33,10 +33,17 @@ export type TurnkeyHub = { hub_id: string; name: string; province: string | null
 export type TurnkeyEquipment = { line_id: string; sort_order: number; group_label: string | null; name: string; quantity: number; unit: string | null; spec_md: string | null; budget_usd: number | null };
 export type TurnkeyPackage = {
   package_id: string; project_id: string; tier_name: string; tier_rank: number; tier_label: string | null; starting_budget_usd: number | null;
-  starting_budget_notes: string | null; capacity_label: string | null; items_count: number | null; space_label: string | null; container_label: string | null;
+  /** staff-only (hidden from customers, migration 195) — present only on admin reads */
+  starting_budget_notes?: string | null; capacity_label: string | null; items_count: number | null; space_label: string | null; container_label: string | null;
   lead_time_days: number | null; monthly_revenue_low: number | null; monthly_revenue_high: number | null; payback_months_low: number | null;
   payback_months_high: number | null; summary_md: string | null; is_active: boolean; equipment: TurnkeyEquipment[];
 };
+/** Customer-safe column lists (migration 195 revokes is_seed / starting_budget_notes / supplier_* / notes from anon + authenticated). */
+export const TURNKEY_PROJECT_COLUMNS = 'project_id, title, category, short_reason, starting_budget_usd, budget_unit, lead_time_days, best_markets, factory_hub_ids, hub_label, status, '
+  + 'is_starter_pick, starter_rank, sort_rank, hero_image_path, hero_image_alt, overview_md, highlights, earn, four_tests, seo_title, seo_description';
+export const TURNKEY_PACKAGE_COLUMNS = 'package_id, project_id, tier_name, tier_rank, tier_label, starting_budget_usd, capacity_label, items_count, space_label, container_label, '
+  + 'lead_time_days, monthly_revenue_low, monthly_revenue_high, payback_months_low, payback_months_high, summary_md, is_active';
+export const TURNKEY_EQUIPMENT_COLUMNS = 'line_id, sort_order, group_label, name, quantity, unit, spec_md, budget_usd';
 export type TurnkeySource = { sort_order: number; region_label: string; title: string; description: string | null };
 
 const nf = new Intl.NumberFormat('en-US');

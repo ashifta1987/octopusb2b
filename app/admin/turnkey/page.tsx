@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
+import { withHiddenColumns } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, Stat, Table, StatusBadge, EmptyState } from '@/components/ui';
 import { fmtDate, COUNTRY_NAMES } from '@/lib/format';
 import { LEAD_STATUSES, kUsd } from '@/lib/turnkey/format';
@@ -25,8 +26,8 @@ export default async function TurnkeyAdminPage({ searchParams }: { searchParams:
   const sb = await createClient();
   const admin = createAdminClient();
   const since = daysAgo(30);
-  const [{ data: leads }, { data: projects }, { data: pkgs }, { data: agentRoles }, { data: signals }, { data: settingRow }] = await Promise.all([
-    sb.from('turnkey_leads').select('*, turnkey_projects(title), turnkey_packages(tier_name)').order('created_at', { ascending: false }).limit(300),
+  const [{ data: leadRows }, { data: projects }, { data: pkgs }, { data: agentRoles }, { data: signals }, { data: settingRow }] = await Promise.all([
+    sb.from('turnkey_leads').select('lead_id, reference, kind, project_id, status, company_name, contact_name, email, phone, country, region, preferred_delivery_term, delivery_place, target_open_date, message, created_at, turnkey_projects(title), turnkey_packages(tier_name)').order('created_at', { ascending: false }).limit(300),
     sb.from('turnkey_projects').select('project_id, title, status, category, is_starter_pick, starter_rank, starting_budget_usd, sort_rank').order('sort_rank'),
     sb.from('turnkey_packages').select('project_id, is_active'),
     admin.from('user_roles').select('user_id').eq('role_code', 'sourcing_agent'),
@@ -40,7 +41,9 @@ export default async function TurnkeyAdminPage({ searchParams }: { searchParams:
     .map((p) => ({ id: p.id, name: p.full_name || p.email || 'Sourcing agent', email: p.email, region: p.region, ooo: !!p.out_of_office }))
     .sort((a, b) => a.name.localeCompare(b.name));
   const nameOf = new Map(agents.map((a) => [a.id, a.name]));
-  const L = (leads ?? []) as unknown as Lead[];
+  // assigned_to / floor_plan_storage_path are hidden from session reads (migration 195): rows stay on the session client
+  // (RLS + divisions), those columns come from the service role after requireStaff.
+  const L = (await withHiddenColumns('turnkey_leads', leadRows as Record<string, unknown>[] | null, 'assigned_to, floor_plan_storage_path', 'lead_id')) as unknown as Lead[];
   const interestBy = new Map<string, number>(); const quoteBy = new Map<string, number>();
   L.forEach((l) => (l.kind === 'interest' ? interestBy : quoteBy).set(l.project_id, ((l.kind === 'interest' ? interestBy : quoteBy).get(l.project_id) ?? 0) + 1));
   const pkgBy = new Map<string, number>(); (pkgs ?? []).forEach((k) => { if (k.is_active) pkgBy.set(k.project_id as string, (pkgBy.get(k.project_id as string) ?? 0) + 1); });

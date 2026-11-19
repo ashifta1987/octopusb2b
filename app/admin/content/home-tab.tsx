@@ -18,7 +18,7 @@ export async function HomeTab({ editable, isAdmin }: { editable: boolean; isAdmi
   const sb = await createClient();
   const since = daysAgo(30);
   const [{ data: banners }, { data: settings }, { data: ann }, { data: events }] = await Promise.all([
-    sb.from('home_banners').select('*').order('sort'),
+    sb.from('home_banners').select('id, eyebrow, title, body, cta_label, cta_href, cta2_label, cta2_href, ticks, theme, image_url, show_open_project, starts_at, ends_at, sort, active').order('sort'),
     sb.from('site_settings').select('key, value').in('key', ['home.announcement_enabled', 'home.show_placeholders', 'home.feature_cards']),
     sb.from('content_blocks').select('value').eq('key', 'home.announcement').maybeSingle(),
     sb.from('banner_events').select('banner_id, slot, event').gte('ts', since).limit(50000),

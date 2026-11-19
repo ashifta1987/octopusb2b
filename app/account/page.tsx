@@ -7,6 +7,7 @@ import { Notice } from '@/components/ui';
 import { fmtDate, money } from '@/lib/format';
 import { getAccountContext, SERVICES, serviceOn, nowIso, withinDays, type ServiceKey } from '@/lib/core/account';
 import { getCompanyBankAccount } from '@/components/account/bank-data';
+import { KYC_CONTACT_FALLBACK } from '@/lib/kyc-message';
 
 export const metadata = { title: 'My account' };
 
@@ -35,7 +36,7 @@ async function AccountHomeContent({ searchParams }: { searchParams: Promise<{ no
     sb.from('quotes').select('id, rfq_id, valid_until, rfqs!inner(code, title, quantity, unit, org_id)').in('status', ['sent', 'viewed']).eq('rfqs.org_id', org.id).gt('valid_until', now),
     sb.from('orders').select('id, code, title, status, total_cents, currency, updated_at').eq('org_id', org.id).order('updated_at', { ascending: false }).limit(50),
     sb.from('wallet_topups').select('id, amount_cents, amount_received_cents, status, reject_reason, created_at, confirmed_at').eq('org_id', org.id).order('created_at', { ascending: false }).limit(20),
-    sb.from('kyc_submissions').select('id, status, review_note, reviewed_at').eq('org_id', org.id).order('submitted_at', { ascending: false }).limit(1).maybeSingle(),
+    sb.from('kyc_submissions').select('id, status, customer_message, reviewed_at').eq('org_id', org.id).order('submitted_at', { ascending: false }).limit(1).maybeSingle(),
     sb.from('documents').select('id, doc_type, number, created_at').eq('org_id', org.id).order('created_at', { ascending: false }).limit(10),
     sb.from('wallet_holds').select('id, amount_cents, service, ref_type, ref_id').eq('org_id', org.id).eq('status', 'open').order('created_at', { ascending: false }).limit(5),
   ]);
@@ -64,7 +65,7 @@ async function AccountHomeContent({ searchParams }: { searchParams: Promise<{ no
     body: `${t.reject_reason}. Check the slip and send it again.`, href: '/account/wallet#slip', cta: 'Upload slip', at: t.confirmed_at as string,
   }));
   if (kyc.data?.status === 'more_info') {
-    items.push({ key: 'kyc', service: 'account', title: 'Company verification needs more information', body: kyc.data.review_note ?? 'Our team asked for another document.', href: '/account/kyc', cta: 'Open', at: kyc.data.reviewed_at ?? now });
+    items.push({ key: 'kyc', service: 'account', title: 'Company verification needs more information', body: (kyc.data.customer_message as string | null)?.trim() || KYC_CONTACT_FALLBACK, href: '/account/kyc', cta: 'Open', at: kyc.data.reviewed_at ?? now });
   }
   items.sort((a, b) => a.at.localeCompare(b.at));
   const present = [...new Set(items.map((i) => i.service))];

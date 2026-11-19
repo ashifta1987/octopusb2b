@@ -33,9 +33,10 @@ export async function checkProductAccess(s: Session, productId: string): Promise
   return supplierAccess(s, await assignedSupplierIds(s), await productSupplierId(productId));
 }
 
-/** Does a supplier with this code exist at all? (public_suppliers: code + country only) — tells 403 from 404. */
+/** Does a supplier with this code exist at all? (public_suppliers: code + country only) — tells 403 from 404.
+ *  public_suppliers is service-role only since migration 195; only a boolean leaves this function (callers have a session). */
 export async function supplierCodeExists(code: string): Promise<boolean> {
-  const sb = await createClient();
-  const { data } = await sb.from('public_suppliers').select('id').ilike('code', code.replace(/[%_]/g, '')).limit(1);
+  const admin = createAdminClient();
+  const { data } = await admin.from('public_suppliers').select('id').ilike('code', code.replace(/[%_]/g, '')).limit(1);
   return !!data?.length;
 }

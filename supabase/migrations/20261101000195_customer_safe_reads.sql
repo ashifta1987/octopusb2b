@@ -68,7 +68,7 @@ select _apply_hidden_columns('{
     "product_media": ["storage_path","source_file_name","sha256"],
     "certificates": ["supplier_id","number","storage_path"],
     "pools": ["supplier_id","starter_user_id","starter_org_id","po_document_id","trace_id","is_seed"],
-    "pool_events": ["trace_id"],
+    "pool_events": ["title","body","trace_id"],
     "turnkey_equipment": ["supplier_id","supplier_hint","notes"],
     "turnkey_projects": ["is_seed"],
     "turnkey_leads": ["assigned_to","assigned_at","floor_plan_storage_path","is_seed"],
@@ -154,6 +154,23 @@ create view pool_public_view with (security_barrier = true) as
    where pl.status = any (array['pending', 'paid', 'confirmed', 'shipped', 'delivered']::pledge_status[]);
 revoke all on pool_public_view from public, anon, authenticated;
 grant select on pool_public_view to anon, authenticated;
+
+-- pool timeline: the raw event texts contain buyer Customer IDs (BUYER-####), so title/body are hidden and the public
+-- reads this view instead (same visibility as the pool_events policy; buyer codes replaced by "A buyer")
+create or replace view pool_public_events with (security_barrier = true) as
+  select e.id, e.pool_id, e.kind,
+         regexp_replace(e.title, 'BUYER-[0-9]+', 'A buyer', 'gi') as title,
+         case e.kind when 'joined' then case when e.qty is null then 'A buyer joined' else 'A buyer pledged ' || abs(e.qty) end
+                     when 'withdrawn' then case when e.qty is null then 'A buyer withdrew' else 'A buyer withdrew ' || abs(e.qty) end
+                     when 'defaulted' then 'Deposit applied to shortfall'
+                     else regexp_replace(e.body, 'BUYER-[0-9]+', 'A buyer', 'gi') end as body,
+         e.qty, e.created_at
+    from pool_events e
+   where exists (select 1 from pools p where p.id = e.pool_id
+                   and (p.status = any (array['open', 'locked', 'confirmed', 'shipped', 'completed']::pool_status[])
+                        or (can('orders', 'view') and in_division(p.division_id)) or p.starter_org_id in (select my_org_ids())));
+revoke all on pool_public_events from public, anon, authenticated;
+grant select on pool_public_events to anon, authenticated;
 
 -- ───────── 4. staff-only set-up tables; advertiser-only impressions; public ads without budgets ─────────
 drop policy if exists carriers_read on carriers;
