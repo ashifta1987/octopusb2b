@@ -2,9 +2,11 @@
 // duplicate insert fails · same SKU different case fails · SKU with a space fails · delete then re-insert fails ·
 // two suppliers cannot share a SKU · non-admin cannot change a SKU · admin change is audited · import_product_row works.
 // Usage: node supabase/tests/sku.test.mjs   (optional: MIGRATION=path.sql to test before applying)
-import { config } from 'dotenv'; import pg from 'pg'; import fs from 'node:fs';
-config({ path: '.env.local', quiet: true });
+import pg from 'pg'; import fs from 'node:fs';
+import { loadStagingEnvOrExit, assertStagingDatabase } from '../../scripts/lib-staging-guard.mjs';
+loadStagingEnvOrExit();
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } }); await db.connect();
+await assertStagingDatabase(db);
 let failed = 0; const ok = (c, m) => { console.log(c ? '✔' : '✘', m); if (!c) failed++; };
 const one = async (s, p) => (await db.query(s, p)).rows[0];
 const before = Number((await one(`select count(*) n from products`)).n);
@@ -27,14 +29,17 @@ try {
   ok(/SKU_RETIRED/.test(await err(ins('QA-SKU-0001', s1)) ?? ''), 'delete then re-insert the same SKU fails (reserved forever)');
   // non-admin update
   const b = await one(ins('QA-SKU-0002', s1));
-  const u = await one(`select ur.user_id from user_roles ur where ur.role_code = 'distributor' limit 1`);
-  if (u) {
-    await db.query('savepoint d');
-    await db.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify({ sub: u.user_id, role: 'authenticated' })]);
-    const e = await err(`update products set external_id = 'QA-SKU-9999' where id = $1`, [b.id]);
-    await db.query('rollback to savepoint d');
-    ok(/SKU_IMMUTABLE/.test(e ?? ''), 'a non-admin cannot change a SKU');
-  } else ok(true, 'no distributor user to test immutability (skipped)');
+  let u = await one(`select ur.user_id from user_roles ur where ur.role_code = 'distributor' limit 1`);
+  if (!u) {
+    const uid = (await one(`insert into auth.users(id, email, aud, role, instance_id) values (gen_random_uuid(), 'sku-dist@example.com', 'authenticated', 'authenticated', '00000000-0000-0000-0000-000000000000') returning id`)).id;
+    await db.query(`insert into user_roles(user_id, role_code) values ($1, 'distributor')`, [uid]);
+    u = { user_id: uid };
+  }
+  await db.query('savepoint d');
+  await db.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify({ sub: u.user_id, role: 'authenticated' })]);
+  const e = await err(`update products set external_id = 'QA-SKU-9999' where id = $1`, [b.id]);
+  await db.query('rollback to savepoint d');
+  ok(/SKU_IMMUTABLE/.test(e ?? ''), 'a non-admin cannot change a SKU');
   await db.query(`update products set external_id = 'QA-SKU-0003' where id = $1`, [b.id]); // service context = admin path
   const aud = await one(`select details from audit_log where action = 'product.sku_changed' and entity_id = $1 order by id desc limit 1`, [b.id]);
   ok(aud?.details?.from === 'QA-SKU-0002' && aud?.details?.to === 'QA-SKU-0003', 'SKU change written to audit_log');

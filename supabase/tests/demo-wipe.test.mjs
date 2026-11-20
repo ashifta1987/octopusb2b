@@ -2,14 +2,14 @@
 // Checks: refuses without the exact confirmation; deletes every is_seed row and the demo users (except the kept admin);
 // keeps real customers, categories, settings; ledger balanced, wallets 0; sequences restart at 1001; audit row written;
 // dashboards (revenue / geography / wallet RPC + overview counts) read zero for seed data.
-import { config } from 'dotenv'; import pg from 'pg';
-config({ path: '.env.local', quiet: true });
+import pg from 'pg';
+import { STAGING_PROJECT_REF, loadStagingEnvOrExit, assertStagingDatabase } from '../../scripts/lib-staging-guard.mjs';
+loadStagingEnvOrExit();
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 await db.connect();
+await assertStagingDatabase(db);
 const one = async (s, p) => (await db.query(s, p)).rows[0];
 const ok = (c, m) => { console.log(c ? '✔' : '✘', m); if (!c) process.exitCode = 1; };
-// 19 Nov 2026: the wipe runs on the STAGING project only (migration 193)
-import { STAGING_PROJECT_REF } from '../../scripts/lib-staging-guard.mjs';
 const REF = STAGING_PROJECT_REF;
 
 // sequences are NOT transactional (setval/nextval survive a rollback) — snapshot them and put them back afterwards
@@ -94,7 +94,7 @@ try {
   const again = (await one(`select wipe_demo_data($1, $2) c`, [`DELETE DEMO DATA FOR ${REF}`, adminId])).c;
   ok(Object.values(again).every((v) => Number(v) === 0), 'running the wipe again deletes nothing (idempotent)');
 
-  // merge the duplicate SOUTHFIELD companies
+  // merge duplicate companies (using SOUTHFIELD if present, otherwise two temporary duplicate orgs inside this rolled-back tx)
   const sf = (await db.query(`select o.id, (select string_agg(u.email, ',') from org_members m join auth.users u on u.id = m.user_id where m.org_id = o.id) members
     from organizations o where name = 'SOUTHFIELD BIOCHEM PVT LTD' order by buyer_code`)).rows;
   if (sf.length === 2) {
@@ -102,8 +102,19 @@ try {
     const m = await one(`select count(*) n, (select string_agg(u.email, ',' order by u.email) from org_members om join auth.users u on u.id = om.user_id where om.org_id = $1) members
       from organizations where name = 'SOUTHFIELD BIOCHEM PVT LTD'`, [sf[0].id]);
     ok(Number(m.n) === 1 && m.members.includes('ashifta1987@gmail.com') && m.members.includes('ashifta@gmail.com'), `SOUTHFIELD merged into one company with both users (${m.members}; moved ${JSON.stringify(moved)})`);
-  } else if (sf.length === 0) console.log('· SOUTHFIELD duplicate merge: skipped — those two live companies do not exist on this database');
-  else ok(false, `expected 2 SOUTHFIELD companies, found ${sf.length}`);
+  } else if (sf.length === 0) {
+    const o1 = (await one(`insert into organizations(name, country) values ('DUPE TEST ORG', 'AE') returning id`)).id;
+    const o2 = (await one(`insert into organizations(name, country) values ('DUPE TEST ORG', 'AE') returning id`)).id;
+    const u1 = (await one(`insert into auth.users(id, email, aud, role, instance_id) values (gen_random_uuid(), 'dupe1@example.com', 'authenticated', 'authenticated', '00000000-0000-0000-0000-000000000000') returning id`)).id;
+    const u2 = (await one(`insert into auth.users(id, email, aud, role, instance_id) values (gen_random_uuid(), 'dupe2@example.com', 'authenticated', 'authenticated', '00000000-0000-0000-0000-000000000000') returning id`)).id;
+    await db.query(`insert into org_members(org_id, user_id, member_role) values ($1, $2, 'owner'), ($3, $4, 'owner')`, [o1, u1, o2, u2]);
+    // new orgs get default company_services rows (177) which share (org_id, service) PK; clear o2's defaults so merge_duplicate_org(149) can move org rows
+    await db.query(`delete from company_services where org_id = $1`, [o2]);
+    const moved = (await one(`select merge_duplicate_org($1, $2) m`, [o1, o2])).m;
+    const m = await one(`select count(*) n, (select string_agg(u.email, ',' order by u.email) from org_members om join auth.users u on u.id = om.user_id where om.org_id = $1) members
+      from organizations where id in ($1, $2)`, [o1, o2]);
+    ok(Number(m.n) === 1 && m.members === 'dupe1@example.com,dupe2@example.com', `duplicate org merged into one company with both users (${m.members}; moved ${JSON.stringify(moved)})`);
+  } else ok(false, `expected 2 SOUTHFIELD companies, found ${sf.length}`);
 } catch (e) {
   ok(false, 'unexpected: ' + e.message);
 } finally {

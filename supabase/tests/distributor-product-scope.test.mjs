@@ -32,7 +32,8 @@ try {
     order by p.supplier_id limit 1`);
   const bDraft = (await one(`select id from products where supplier_id = $1 and status in ('draft','rejected') order by id limit 1`, [b.id]))?.id
     ?? (await one(`select id from products where supplier_id = $1 and status = 'submitted' order by id limit 1`, [b.id])).id;
-  const bSubmitted = (await one(`select id from products where supplier_id = $1 and status in ('submitted','in_review') limit 1`, [b.id]))?.id ?? null;
+  const bSubmitted = (await one(`select id from products where supplier_id = $1 and status in ('submitted','in_review') limit 1`, [b.id]))?.id
+    ?? (await one(`insert into products(external_id, slug, title, supplier_id, status, unit, moq, currency) values ('QA-SCOPE-' || floor(random()*1e6), 'qa-scope-' || gen_random_uuid(), 'Scope test submitted', $1, 'submitted', 'pcs', 10, 'USD') returning id`, [b.id])).id;
   const a = (await one(`select supplier_id id from products where supplier_id <> $1 group by supplier_id order by count(*) desc limit 1`, [b.id])).id;
   const codes = await db.query(`select id, code from suppliers where id in ($1, $2)`, [a, b.id]);
   const code = (id) => codes.rows.find((r) => r.id === id)?.code;
@@ -72,8 +73,8 @@ try {
   ok(tr.denied && /FORBIDDEN/.test(tr.msg), `transition_product on B (archive): ${tr.denied ? tr.msg : 'ALLOWED'}`);
   const tr2 = await denied(`select transition_product($1, 'submitted', 'scope test')`, [bDraft]);
   ok(tr2.denied && /FORBIDDEN/.test(tr2.msg), `transition_product on B (submit): ${tr2.denied ? tr2.msg.slice(0, 60) : 'ALLOWED'}`);
-  if (bSubmitted) { const w = await denied(`select withdraw_from_moderation($1, 'scope test')`, [bSubmitted]); ok(w.denied && /FORBIDDEN/.test(w.msg), `withdraw_from_moderation on B: ${w.denied ? w.msg : 'ALLOWED'}`); }
-  else console.log('· no submitted B product on staging — withdraw check skipped');
+  const w = await denied(`select withdraw_from_moderation($1, 'scope test')`, [bSubmitted]);
+  ok(w.denied && /FORBIDDEN/.test(w.msg), `withdraw_from_moderation on B: ${w.denied ? w.msg : 'ALLOWED'}`);
   const ci = await denied(`select commit_import_run(gen_random_uuid(), null, null)`);
   ok(ci.denied && /permission denied/i.test(ci.msg), `commit_import_run (admin import): ${ci.denied ? ci.msg.slice(0, 70) : 'ALLOWED'}`);
   ok((await denied(`insert into storage.objects(bucket_id, name) values ('product-media', $1)`, [`${b.id}/x-${Date.now()}.jpg`])).denied, 'upload into B product-media folder: denied');
