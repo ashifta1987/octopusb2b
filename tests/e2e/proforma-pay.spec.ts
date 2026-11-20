@@ -11,6 +11,7 @@ import { assertStagingOrThrow } from '../../scripts/lib-staging-guard.mjs';
 let cust: TempCustomer | null = null;
 let pfId = '';
 let counterBefore = 0;
+let pfBefore = 0;
 const year = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Shanghai', year: 'numeric' }).format(new Date()));
 
 test.beforeAll(async () => {
@@ -20,6 +21,7 @@ test.beforeAll(async () => {
   try {
     await assertStagingOrThrow(db);   // …and the connected database is marked staging
     counterBefore = Number((await db.query(`select coalesce((select last_value from document_counters where series = 'OCT' and year = $1), 0) v`, [year])).rows[0].v);
+    pfBefore = Number((await db.query(`select coalesce((select last_value from document_counters where series = 'PF' and year = $1), 0) v`, [year])).rows[0].v);
     const org = (await db.query(`insert into organizations(name, country, is_seed) values ('TEST · e2e proforma pay', 'AE', true) returning id`)).rows[0].id as string;
     const email = `e2e.pfpay+${Date.now()}@demo.octopusb2b.com`, password = `E2e-${Math.random().toString(36).slice(2, 10)}-7!`;
     const { data: u } = await a.auth.admin.createUser({ email, password, email_confirm: true });
@@ -54,6 +56,7 @@ test.afterAll(async () => {
     await db.query(`delete from org_members where org_id = $1`, [org]);
     await db.query(`delete from organizations where id = $1`, [org]);
     await db.query(`update document_counters set last_value = $2 where series = 'OCT' and year = $1 and last_value = $2 + 1`, [year, counterBefore]);
+    await db.query(`update document_counters set last_value = $2 where series = 'PF' and year = $1 and last_value = $2 + 1`, [year, pfBefore]);
     await db.query('commit');
   } finally { await db.end(); }
   await adminClient().auth.admin.deleteUser(cust.id);

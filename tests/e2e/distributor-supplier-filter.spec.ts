@@ -124,13 +124,17 @@ test("direct requests for another supplier's product: edit page 403, create-for 
   const { data: factors } = await sb.auth.mfa.listFactors();
   if (Date.now() / 1000 % 30 > 26) await page.waitForTimeout(4500);
   await sb.auth.mfa.challengeAndVerify({ factorId: factors!.totp[0].id, code: totp(t!.secret) });
-  const list = await sb.from('products').select('id, supplier_id');
+  // supplier_id is a hidden column since migration 195 (the portal reads it via portal_products() after its check)
+  expect((await sb.from('products').select('id, supplier_id')).error?.code).toBe('42501');
+  const list = await sb.from('products').select('id');
   expect(list.error).toBeNull();
-  expect(list.data!.every((p) => p.supplier_id === sup['OCT-1132'].id)).toBe(true);  // only the assigned supplier
-  expect((await sb.from('products').select('id').eq('supplier_id', sup['OCT-1133'].id)).data).toEqual([]);
-  expect((await sb.from('products').select('*').eq('id', live.id)).data).toEqual([]);
-  expect((await sb.from('price_tiers').select('*').eq('product_id', live.id)).data).toEqual([]);
-  expect((await sb.from('product_media').select('*').eq('product_id', live.id)).data).toEqual([]);
+  const ids = list.data!.map((p) => p.id as string);
+  const { data: owners } = await t!.admin.from('products').select('id, supplier_id').in('id', ids.length ? ids : ['00000000-0000-0000-0000-000000000000']);
+  expect((owners ?? []).every((p) => p.supplier_id === sup['OCT-1132'].id)).toBe(true);  // only the assigned supplier
+  expect(ids).not.toContain(live.id);
+  expect((await sb.from('products').select('id').eq('id', live.id)).data).toEqual([]);
+  expect((await sb.from('price_tiers').select('id').eq('product_id', live.id)).data).toEqual([]);
+  expect((await sb.from('product_media').select('id').eq('product_id', live.id)).data).toEqual([]);
   expect((await sb.from('products').update({ updated_at: new Date().toISOString() }).eq('id', live.id).select('id')).data).toEqual([]);
   expect((await sb.from('price_tiers').insert({ product_id: live.id, min_qty: 999999, unit_price_cents: 1, currency: 'USD' })).error).not.toBeNull();
   expect((await sb.rpc('transition_product', { p_product: live.id, p_to: 'archived', p_reason: 'e2e' })).error?.message ?? '').toMatch(/FORBIDDEN/);

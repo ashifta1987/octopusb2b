@@ -113,7 +113,7 @@ test('invoices: "For" filled; awaiting payment total = ledger Due now; wallet sh
   expect(awaiting).toBe(1200);
   expect(dueNow).toBe(awaiting);
   await page.goto('/account/wallet');
-  await expect(page.getByTestId('transfer-difference')).toHaveText('US$ 5.00 less than claimed (bank charges)');
+  await expect(page.getByTestId('transfer-difference')).toHaveText('US$ 5.00 less than claimed');   // the finance note (received_note) is staff-only since migration 195
 });
 
 test('an empty period disables both exports', async ({ page }) => {

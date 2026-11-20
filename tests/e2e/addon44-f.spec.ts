@@ -42,8 +42,10 @@ test('24 · product page: verified factory line without supplier code, four ways
   await page.goto(`/p/${p!.slug}`);
   const line = page.getByTestId('factory-line');
   await expect(line.getByTestId('verified-badge')).toBeVisible();
-  await expect(line).toContainText('Octopus verified factory');
+  // customer-safe label (approved 20 Nov 2026): "Verified factory · China (province/region)", never a supplier code
+  await expect(line).toContainText(/Verified factory · China( \([^)]+\))?/);
   await expect(line).toContainText('Octopus checked this factory');
+  expect(await line.innerText()).not.toMatch(/OCT-\d{4}/);
   const ways = page.getByTestId('product-ways');
   for (const t of ['way-bulk', 'way-brand', 'way-dropship', 'way-3pl']) await expect(ways.getByTestId(t)).toBeVisible();
   await expect(ways.getByTestId('way-brand').getByRole('link')).toHaveAttribute('href', /\/request\/brand\?product=/);

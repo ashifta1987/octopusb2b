@@ -52,7 +52,9 @@ export async function createTempStaff(role: string): Promise<TempStaff> {
 export async function deleteTempStaff(t: TempStaff | null) {
   if (!t) return;
   await t.admin.from('distributor_suppliers').delete().eq('distributor_id', t.id);
-  await t.admin.auth.admin.deleteUser(t.id);
+  const { error } = await t.admin.auth.admin.deleteUser(t.id);
+  // a silent failure left test staff behind: fail loudly (delete the rows that reference the user first)
+  if (error) throw new Error(`deleteTempStaff ${t.email}: ${error.message}`);
 }
 
 /** Real staff sign-in: password → 6-digit code → (workspace chooser) → target path. */
