@@ -46,7 +46,7 @@ export default async function SuppliersPage({ searchParams }: { searchParams: Pr
 
   return (
     <>
-      <PageHeader title="Suppliers" subtitle="Legal names, contacts and verification are staff-only. Buyers see suppliers only as code + country + verified badge."
+      <PageHeader title="Suppliers" subtitle="Legal names, contacts and verification are staff-only. Buyers see only 'Verified factory · China (region)'."
         actions={can(s, 'suppliers', 'create') && <Link href="/admin/suppliers?new=1" className="btn btn-primary">+ Add supplier</Link>} />
 
       <form action="/admin/suppliers" className="flex flex-wrap gap-3 mb-6">

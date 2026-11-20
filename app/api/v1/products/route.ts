@@ -4,7 +4,7 @@ import { json, problem } from '@/lib/api/problem';
 import { loadFx } from '@/lib/api/money';
 import { ProductQuery, zodIssues } from '@/lib/contracts';
 
-/** GET /api/v1/products — live catalogue search. Supplier shown as code + country only. */
+/** GET /api/v1/products — live catalogue search. Factory shown only as 'factory' (verified, country, province); 'supplier' is a deprecated alias with the same safe values. */
 export const GET = apiRoute({ scopes: ['catalog:read'] }, async ({ ctx, url }) => {
   const parsed = ProductQuery.safeParse(Object.fromEntries(url.searchParams));
   if (!parsed.success) return problem(400, 'INVALID_QUERY', 'Invalid query parameters.', { errors: zodIssues(parsed.error) });

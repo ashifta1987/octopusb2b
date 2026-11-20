@@ -104,7 +104,8 @@ try {
   ok(/FORBIDDEN/.test(String(await tryQ(`select confirm_bank_transfer($1, 100000, 'X')`, [tp]))), 'a customer cannot confirm their own transfer');
   await owner(); await as(finU);
   ok(/DIFFERENCE_REASON_REQUIRED/.test(String(await tryQ(`select confirm_bank_transfer($1, 99000, 'SCB-REF-1')`, [tp]))), 'a received amount that differs needs a reason');
-  await db.query(`select confirm_bank_transfer($1, 99000, 'SCB-REF-1', 'bank charges')`, [tp]);     // US$ 990 actually arrived (bank fee)
+  // US$ 990 actually arrived (bank fee): customer reason from the list + internal note (202)
+  await db.query(`select confirm_bank_transfer($1, 99000, 'SCB-REF-1', 'bank charges', 'bank_charges')`, [tp]);
   const tp2 = await (async () => { await owner(); await as(custA); const v = (await one(`select submit_bank_transfer(5000, $1) v`, [`${orgA.id}/s2.png`])).v; await owner(); await as(finU); return v; })();
   ok(/REASON_REQUIRED/.test(String(await tryQ(`select reject_bank_transfer($1, ' ')`, [tp2]))), 'rejecting needs a reason');
   await db.query(`select reject_bank_transfer($1, 'Not on the statement')`, [tp2]);
@@ -113,7 +114,8 @@ try {
   ok(bal === 99000, `wallet is credited with the amount received, not claimed (${bal})`);
   const t1 = await one(`select status, amount_received_cents, receipt_id from wallet_topups where id = $1`, [tp]);
   ok(t1.status === 'credited' && Number(t1.amount_received_cents) === 99000 && t1.receipt_id, 'transfer confirmed with a receipt');
-  ok((await one(`select received_note from wallet_topups where id = $1`, [tp])).received_note === 'bank charges', 'the reason for the difference is saved');
+  const why = await one(`select received_reason, received_note from wallet_topups where id = $1`, [tp]);
+  ok(why.received_reason === 'bank_charges' && why.received_note === 'bank charges', 'the customer reason and the internal note are saved');
   // a service proforma posts a receivable (Orders) debit
   await service();
   const pi = (await one(`select issue_service_proforma($1, 'brand', 'project', 'MB-T41', 'Test', '[{"description":"Deposit","amount_cents":120000}]'::jsonb) v`, [orgA.id])).v;

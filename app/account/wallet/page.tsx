@@ -8,6 +8,7 @@ import { fmtDate, money } from '@/lib/format';
 import { getSettings } from '@/components/account/data';
 import { getOrgLedger } from '@/components/account/ledger-data';
 import { TransferForm } from '@/components/account/transfer-form';
+import { transferReasonLabel } from '@/lib/core/transfer-reason';
 
 export const metadata = { title: 'Wallet' };
 
@@ -25,7 +26,7 @@ export default async function WalletPage() {
     getSettings(),
     getCompanyBankAccount('USD'),
     sb.rpc('my_wallet_summary'),
-    sb.from('wallet_topups').select('id, amount_cents, amount_received_cents, currency, method, reference, bank_ref, status, reject_reason, created_at, confirmed_at').eq('org_id', org.id).order('created_at', { ascending: false }).limit(25),
+    sb.from('wallet_topups').select('id, amount_cents, amount_received_cents, received_reason, received_reason_text, currency, method, reference, bank_ref, status, reject_reason, created_at, confirmed_at').eq('org_id', org.id).order('created_at', { ascending: false }).limit(25),
     sb.from('wallet_holds').select('id, amount_cents, service, ref_type, ref_id, status, captured_cents, created_at, closed_at').eq('org_id', org.id).order('created_at', { ascending: false }).limit(25),
     getOrgLedger(org.id, { account: 'wallet', currency: 'USD' }),
   ]);
@@ -92,7 +93,7 @@ export default async function WalletPage() {
                   <span className="mono whitespace-nowrap">{t.amount_received_cents != null ? money(Number(t.amount_received_cents), 'USD') : '—'}</span>
                   {t.amount_received_cents != null && Number(t.amount_received_cents) !== Number(t.amount_cents) && (
                     <div className="text-xs text-warn mt-0.5" data-testid="transfer-difference">
-                      {money(Math.abs(Number(t.amount_cents) - Number(t.amount_received_cents)), 'USD')} {Number(t.amount_received_cents) < Number(t.amount_cents) ? 'less' : 'more'} than claimed
+                      {money(Math.abs(Number(t.amount_cents) - Number(t.amount_received_cents)), 'USD')} {Number(t.amount_received_cents) < Number(t.amount_cents) ? 'less' : 'more'} than claimed{transferReasonLabel(t.received_reason as string | null, t.received_reason_text as string | null) ? `: ${transferReasonLabel(t.received_reason as string | null, t.received_reason_text as string | null)}` : ''}
                     </div>
                   )}
                 </td>

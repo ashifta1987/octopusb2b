@@ -98,7 +98,7 @@ export default async function OfficeRfq({ params }: { params: Promise<{ id: stri
             {!open ? <p className="text-sm text-muted">This RFQ is {r.status.replace('_', ' ')} and no longer accepts quotes.</p>
               : !canQuote ? <p className="text-sm text-muted">You don&apos;t have permission to send quotes.</p>
                 : <QuoteForm idPrefix="oq" action={sendQuote.bind(null, r.id)} suppliers={supplierOpts} defaultQty={r.quantity} defaultIncoterm={r.incoterm} unit={r.unit} currency={cx.currency} />}
-            <p className="text-xs text-muted mt-3">The buyer sees the supplier as code + country only. Quote validity comes from the quote_validity_days setting.</p>
+            <p className="text-xs text-muted mt-3">Buyers see only &lsquo;Verified factory · China (region)&rsquo;. Quote validity comes from the quote_validity_days setting.</p>
           </div>
         </Card>
       </div>

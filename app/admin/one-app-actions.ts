@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/auth';
 import { mapDbError } from '@/lib/format';
 import { fail, ok, type Result } from '@/components/backoffice/server-utils';
+import { isTransferReason, OTHER_TEXT_MAX } from '@/lib/core/transfer-reason';
 
 /** ADDON-41 41-B staff actions. Every change goes through a database function that checks the right and writes the audit row. */
 const dollars = (v: FormDataEntryValue | null) => { const n = Number(String(v ?? '').replace(/,/g, '')); return Number.isFinite(n) && String(v ?? '').trim() !== '' ? Math.round(n * 100) : null; };
@@ -79,13 +80,21 @@ export async function confirmTransfer(id: string, fd: FormData): Promise<Result>
   if (!(await staff())) return fail('Please sign in again.');
   const received = dollars(fd.get('received'));
   const bankRef = String(fd.get('bank_ref') ?? '').trim();
-  const note = String(fd.get('note') ?? '').trim();
+  const note = String(fd.get('note') ?? '').trim();                 // internal note: staff only
+  const reason = String(fd.get('reason') ?? '').trim();             // shown to the customer (migration 202)
+  const reasonText = String(fd.get('reason_text') ?? '').trim();
   const claimed = Number(fd.get('claimed') ?? 0);
   if (received == null || received <= 0) return fail('Enter the amount that actually arrived, in US dollars.');
   if (!bankRef) return fail('Enter the bank reference from the statement.');
-  if (received !== claimed && !note) return fail('The amount received differs from the claim: add the reason (e.g. bank charges). The customer sees it.');
+  const differs = received !== claimed;
+  if (differs && !isTransferReason(reason)) return fail('The amount received differs from the claim: choose the reason shown to the customer.');
+  if (differs && reason === 'other' && !reasonText) return fail('For "Other", type the short text the customer sees.');
+  if (differs && reason === 'other' && reasonText.length > OTHER_TEXT_MAX) return fail(`Keep the text for the customer to ${OTHER_TEXT_MAX} characters.`);
   const sb = await createClient();
-  const { error } = await sb.rpc('confirm_bank_transfer', { p_topup: id, p_amount_received_cents: received, p_bank_ref: bankRef, p_note: note || null });
+  const { error } = await sb.rpc('confirm_bank_transfer', {
+    p_topup: id, p_amount_received_cents: received, p_bank_ref: bankRef, p_note: note || null,
+    p_reason: differs ? reason : null, p_reason_text: differs && reason === 'other' ? reasonText : null,
+  });
   if (error) return err(error);
   revalidatePath('/admin/finance/transfers'); revalidatePath('/admin');
   return ok(undefined, 'Confirmed. The wallet is credited and a receipt was issued.');
