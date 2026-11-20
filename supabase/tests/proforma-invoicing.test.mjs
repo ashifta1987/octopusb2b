@@ -112,14 +112,17 @@ try {
   const q1 = (await one(`select pay_service_proforma($1, 5000, 'wallet', null, 'pp-1') r`, [g.pf])).r;
   const q2 = (await one(`select pay_service_proforma($1, 20000, 'wallet', null, 'pp-2') r`, [g.pf])).r;
   await sys();
-  const invs = await all(`select amount_cents, data->>'invoice_kind' k from documents where from_proforma_id = $1 order by created_at`, [g.pf]);
-  ok(q1.invoice_id && q2.invoice_id && invs.length === 2 && invs.every((i) => i.k === 'payment') && invs.map((i) => Number(i.amount_cents)).join('+') === '5000+20000', 'rule "per_payment": a tax invoice for every payment (50.00 + 200.00)');
+  // both payments are in one transaction (same created_at): compare the amounts regardless of row order
+  const invs = await all(`select amount_cents, data->>'invoice_kind' k from documents where from_proforma_id = $1`, [g.pf]);
+  ok(q1.invoice_id && q2.invoice_id && invs.length === 2 && invs.every((i) => i.k === 'payment') && invs.map((i) => Number(i.amount_cents)).sort((x, y) => x - y).join('+') === '5000+20000', 'rule "per_payment": a tax invoice for every payment (50.00 + 200.00)');
   ok(Number((await one(`select count(*) n from document_payments where document_id = $1 and invoice_id is null`, [g.pf])).n) === 0 && (await one(`select status from documents where id = $1`, [g.pf])).status === 'invoiced', 'no deposits left; proforma "invoiced" when fully paid');
   await db.query('rollback');
 
   // ───────── two simultaneous identical requests (committed data, cleaned up afterwards) ─────────
   // This block COMMITS rows, deletes them and gives an invoice number back: check again, right here, that both the
   // environment and the connected database are staging (lib-staging-guard), on a fresh connection.
+  const yearPf = (await one(`select extract(year from now() at time zone 'Asia/Shanghai')::int y`)).y;
+  const pfBefore = Number((await one(`select coalesce((select last_value from document_counters where series = 'PF' and year = $1), 0) v`, [yearPf])).v);
   const setup = await connect();
   await assertStagingOrThrow(setup);
   await setup.query('begin');
@@ -144,6 +147,7 @@ try {
   await db.query('begin');
   await sys();
   const invNum = (await one(`select number from documents where from_proforma_id = $1`, [h.pf])).number;
+  const pfNum = (await one(`select number from documents where id = $1`, [h.pf])).number;
   const js = (await all(`select id from journals where (ref_type = 'document' and ref_id in (select id from documents where org_id = $1)) or idempotency_key = 'test-pfi-fund-' || $1::text`, [h.org])).map((r) => r.id);
   await db.query(`update document_payments set invoice_id = null, journal_id = null where org_id = $1`, [h.org]);
   await db.query(`delete from document_payments where org_id = $1`, [h.org]);
@@ -158,7 +162,11 @@ try {
   await db.query(`delete from auth.users where email like 'pfi-c-%@example.com'`);
   const counterNow = Number((await one(`select last_value from document_counters where series = 'OCT' and year = $1`, [year2])).last_value);
   if (counterNow === counterBefore + 1 && invNum.endsWith(String(counterNow).padStart(6, '0'))) await db.query(`update document_counters set last_value = $2 where series = 'OCT' and year = $1`, [year2, counterBefore]);
+  // …and the test proforma's PF- number (it was issued in the committed setup)
+  const pfNow = Number((await one(`select last_value from document_counters where series = 'PF' and year = $1`, [yearPf])).last_value);
+  if (pfNow === pfBefore + 1 && pfNum?.endsWith(String(pfNow).padStart(6, '0'))) await db.query(`update document_counters set last_value = $2 where series = 'PF' and year = $1`, [yearPf, pfBefore]);
   await db.query('commit');
+  ok(Number((await one(`select last_value from document_counters where series = 'PF' and year = $1`, [yearPf])).last_value) === pfBefore, `test proforma number ${pfNum} given back (PF counter ${pfBefore})`);
   ok(Number((await one(`select last_value from document_counters where series = 'OCT' and year = $1`, [year2])).last_value) === counterBefore, `committed test rows removed; invoice number ${invNum} given back (counter ${counterBefore})`);
 
   // ───────── 201 down → up identical ─────────
