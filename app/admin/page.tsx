@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Notice } from '@/components/ui';
 import { money } from '@/lib/format';
 import { getWorkQueue, type QueueItem } from '@/lib/core/work-queue';
+import { getDivisionScope } from '@/lib/divisions/scope';
 import { MailDeliverabilityAlert } from '@/components/admin/mail-deliverability';
 
 export const metadata = { title: 'Work queue' };
@@ -20,8 +21,9 @@ export default async function WorkQueue({ searchParams }: { searchParams: Promis
   const sp = await searchParams;
   const sb = await createClient();
   const isManager = s.roles.includes('account_manager');
+  const scope = await getDivisionScope(s);   // divisions step 4: the header switcher
   const [q, myCustomers, limits, integrations] = await Promise.all([
-    getWorkQueue(s),
+    getWorkQueue(s, scope),
     isManager ? sb.from('account_managers').select('org_id, organizations(name), is_primary').eq('staff_user_id', s.userId).eq('is_primary', true) : Promise.resolve({ data: null }),
     sb.from('manager_limits').select('max_amount_cents, min_margin_pct, set_at').eq('manager_user_id', s.userId).maybeSingle(),
     can(s, 'integrations', 'view') ? sb.from('integrations').select('code, name, status, last_tested_at').in('kind', ['dropship', 'carrier']) : Promise.resolve({ data: null }),

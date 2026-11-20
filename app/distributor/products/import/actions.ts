@@ -86,7 +86,8 @@ export async function validateImport(fd: FormData): Promise<Result<{ jobId: stri
   // upload scoped to one supplier (?supplier=<code> on the page): must be one of the caller's suppliers
   const only = String(fd.get('supplier') ?? '').trim().toUpperCase() || null;
   if (only && !supByCode.has(only)) return fail(`Supplier ${only} was not found among your suppliers.`);
-  const { data: allSup } = await sb.from('public_suppliers').select('id, code');
+  // public_suppliers is service-role only since migration 195: codes only, to tell "not yours" from "unknown" (after actionSession)
+  const { data: allSup } = await admin.from('public_suppliers').select('id, code');
   const knownCodes = new Set((allSup ?? []).map((s) => s.code.toUpperCase()));
   const { data: cats } = await sb.from('categories').select('id, name, parent_id').eq('active', true);
   const byId = new Map((cats ?? []).map((c) => [c.id, c]));

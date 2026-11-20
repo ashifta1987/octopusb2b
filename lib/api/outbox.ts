@@ -262,8 +262,15 @@ async function webhookData(sb: Sb, ev: OutboxEvent, orgId: string | null, pub: s
   }
   // payload fields copied from the DB event must not leak bare *_cents integers
   for (const k of Object.keys(base)) if (k.endsWith('_cents')) delete base[k];
+  // nor internal fields (migration 195 / 19 Nov 2026: supplier identity, carrier, staff-only notes and assignments, trace ids)
+  for (const k of Object.keys(base)) if (INTERNAL_WEBHOOK_KEYS.has(k)) delete base[k];
   return base;
 }
+
+const INTERNAL_WEBHOOK_KEYS = new Set([
+  'supplier_id', 'supplier_code', 'supplier', 'carrier', 'carrier_code', 'assigned_to', 'assigned_by', 'reviewer_id', 'internal_note',
+  'review_note', 'trace_id', 'created_by', 'taken_by_staff_id', 'is_seed', 'dedupe_key', 'idempotency_key', 'starter_org_id', 'starter_user_id',
+]);
 
 async function webhooksOut(sb: Sb, ev: OutboxEvent, orgId: string | null, pub: string, doneRuns: Set<string>) {
   let q = sb.from('webhook_endpoints').select('id, org_id, url, secret, events, active').eq('active', true).contains('events', [pub]);

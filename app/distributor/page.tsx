@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { portalProducts } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, Stat, StatusBadge, EmptyState } from '@/components/ui';
 import { getManagedSuppliers } from '@/components/backoffice/server-utils';
 import { SupplierSwitch } from '@/components/backoffice/supplier-switch';
@@ -22,7 +23,8 @@ export default async function DistributorHome() {
   const suppliers = await getManagedSuppliers(s);
   const ids = suppliers.map((x) => x.id);
   const [{ data: prods }, { count: openRfqs }, { data: portal }] = await Promise.all([
-    ids.length ? sb.from('products').select('supplier_id, status').in('supplier_id', ids).is('archived_at', null) : Promise.resolve({ data: [] as { supplier_id: string; status: string }[] }),
+    // supplier_id is hidden from plain products reads (migration 195): portal_products() = the caller's own / assigned suppliers' rows
+    ids.length ? portalProducts(sb).select('supplier_id, status').in('supplier_id', ids).is('archived_at', null) : Promise.resolve({ data: [] as { supplier_id: string; status: string }[] }),
     sb.from('rfqs').select('id', { count: 'exact', head: true }).in('status', ['submitted', 'assigned', 'quoting', 'quoted']),
     sb.from('site_settings').select('value').eq('key', 'supplier_portal_enabled').maybeSingle(),
   ]);

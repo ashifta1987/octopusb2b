@@ -4,6 +4,7 @@ import { ProductImage, unitOne } from '@/components/store/product-card';
 import type { PoolCard as Pool } from '@/components/store/data';
 import { Countdown } from './countdown';
 import { fillTone, pct } from './shared';
+import { factoryLabel } from '@/lib/factory-label';
 
 const n = (v: number) => v.toLocaleString('en-US');
 
@@ -51,7 +52,7 @@ export function PoolCard({ pool: p, categoryName, variant = 'grid' }: { pool: Po
         <h3 className="font-semibold text-[15px] leading-snug"><Link href={href} className="hover:text-coral-text">{p.product.title}</Link></h3>
         <span className="mono text-[11px] text-muted shrink-0 pt-0.5">{p.code}</span>
       </div>
-      {p.supplier && <div className="text-[12px] text-muted">Supplier <span className="mono">{p.supplier.code}</span>{p.supplier.country && <> · {p.supplier.country}</>}</div>}
+      {p.factory && <div className="text-[12px] text-muted">{factoryLabel(p.factory)}</div>}
       <ProgressBar filled={p.filled_qty} target={p.target_qty} />
       <div className="flex justify-between text-[12px] text-muted">
         <span><span className="mono font-semibold text-ink">{n(p.filled_qty)} {p.product.unit}</span> of {n(p.target_qty)} {p.product.unit}</span>

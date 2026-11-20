@@ -32,14 +32,23 @@ try {
         jsonb_build_object('account', wallet_account($1,'USD'), 'debit', 0, 'credit', 100000, 'org', $1)), 'test-fund-' || $1::text)`, [org]);
     buyers.push({ u, org, c });
   }
-  const prod = await one(`select id, moq from products where slug='stainless-steel-hex-bolts-m10-40-mm-a2-70'`);
+  // the demo bolt product (seed data); on staging (no seed): any live product, given the bolt's MOQ and tiers
+  // (1,000 / 5,000 / 10,000) inside this rolled-back transaction (19 Nov 2026)
+  let prod = await one(`select id, moq from products where slug='stainless-steel-hex-bolts-m10-40-mm-a2-70'`);
+  if (!prod) {
+    prod = await one(`select p.id from products p where p.status = 'live' and p.archived_at is null and supplier_listings_live(p.supplier_id) order by p.created_at limit 1`);
+    await db.query(`update products set moq = 1000 where id = $1`, [prod.id]);
+    await db.query(`delete from price_tiers where product_id = $1`, [prod.id]);
+    for (const [q, c] of [[1000, 19], [5000, 16], [10000, 14]]) await db.query(`insert into price_tiers(product_id, min_qty, unit_price_cents, currency) values ($1, $2, $3, (select currency from products where id = $1))`, [prod.id, q, c]);
+    prod = { id: prod.id, moq: 1000 };
+  }
   const tiers = (await db.query(`select min_qty, unit_price_cents from price_tiers where product_id=$1 order by min_qty`, [prod.id])).rows;
   const [A, B, C] = buyers;
 
   // A opens a pool targeting tier 2 (5 × MOQ) and pledges
   await as(A.u);
   const pool = (await one(`select open_pool($1, $2, now() + interval '7 days', 500, null, 2000) v`, [prod.id, tiers[1].min_qty])).v;
-  let p = await one(`select * from pools where id=$1`, [pool]);
+  let p = await one(`select id, code, status, filled_qty, currency from pools where id=$1`, [pool]);   // customer-safe columns (195)
   ok(p.status === 'open' && p.filled_qty === 2000 && p.currency === 'USD', `pool ${p.code} opened from the product, A pledged 2000`);
   await expectErr(() => db.query(`select join_pool($1, 100)`, [pool]), 'PLEDGE_BELOW_MINIMUM', 'pledge below the minimum is refused');
 
@@ -64,7 +73,10 @@ try {
   // anonymity: public participants show buyer code + country only
   await db.query('reset role'); await db.query(`select set_config('request.jwt.claims','{"role":"anon"}',true)`); await db.query('set local role anon');
   const pub = (await db.query(`select * from pool_public_view where pool_id=$1`, [pool])).rows;
-  ok(pub.length === 3 && pub.every((r) => /^BUYER-\d+$/.test(r.buyer_code) && r.country && !('org_id' in r) && !('name' in r)), 'participants are visible by buyer code + country only');
+  ok(pub.length === 3 && pub.every((r) => r.buyer_code === null && r.is_mine === false && r.country && r.qty > 0 && !('org_id' in r) && !('name' in r)), 'participants are visible as country + quantity only (no Customer IDs, 195)');
+  await as(A.u);
+  const mineA = (await db.query(`select * from pool_public_view where pool_id=$1`, [pool])).rows;
+  ok(mineA.filter((r) => r.is_mine).length === 1 && mineA.filter((r) => r.is_mine).every((r) => /^BUYER-\d+$/.test(r.buyer_code)) && mineA.filter((r) => !r.is_mine).every((r) => r.buyer_code === null), 'a buyer sees their own Customer ID only on their own pledge');
 
   // settle (cron) — idempotent
   await sys();

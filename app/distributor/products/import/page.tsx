@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { portalProducts } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, StatusBadge, Table, EmptyState, Notice } from '@/components/ui';
 import { RunButton } from '@/components/backoffice/action-form';
 import { IMPORT_COLUMNS, type ImportData } from '@/components/backoffice/import-columns';
@@ -27,7 +28,16 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
     jobId ? sb.from('import_jobs').select('id, file_name, status, total_rows, valid_rows, error_rows, unchanged_rows, zip_path, zip_unreferenced, submit_report, cost_flagged_rows, cost_confirmed_at, created_at').eq('id', jobId).maybeSingle() : Promise.resolve({ data: null }),
   ]);
   const job = jobRes.data;
-  const { data: rows } = job ? await sb.from('import_rows').select('id, row_no, data, errors, warnings, product_id, submit_error, products(status, listing_status)').eq('job_id', job.id).order('row_no') : { data: null };
+  const { data: rowsRaw } = job ? await sb.from('import_rows').select('id, row_no, data, errors, warnings, product_id, submit_error, products(status)').eq('job_id', job.id).order('row_no') : { data: null };
+  // products.listing_status is hidden from plain products reads (migration 195): portal_products() returns it for the
+  // caller's own / assigned suppliers' products
+  const pids = [...new Set((rowsRaw ?? []).map((r) => r.product_id as string | null).filter((x): x is string => !!x))];
+  const { data: listing } = pids.length ? await portalProducts(sb).select('id, listing_status').in('id', pids) : { data: [] };
+  const listingOf = new Map(((listing ?? []) as { id: string; listing_status: string | null }[]).map((x) => [x.id, x.listing_status]));
+  const rows = rowsRaw?.map((r) => {
+    const p = (Array.isArray(r.products) ? r.products[0] : r.products) as { status?: string } | null | undefined;
+    return { ...r, products: p ? { ...p, listing_status: listingOf.get(r.product_id as string) ?? null } : null };
+  }) ?? null;
   const pendingRows = (rows ?? []).filter((r) => !r.errors && !r.product_id);
   const importable = pendingRows.filter((r) => (r.data as ImportData).mode !== 'unchanged').length;
   const creates = pendingRows.filter((r) => (r.data as ImportData).mode !== 'update' && (r.data as ImportData).mode !== 'unchanged').length;

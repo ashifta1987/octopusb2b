@@ -6,6 +6,7 @@ import { ReasonButton, RunButton } from '@/components/backoffice/action-form';
 import { one } from '@/components/backoffice/server-utils';
 import { fmtDate, humanize } from '@/lib/format';
 import { transitionService } from '../actions';
+import { getDivisionScope } from '@/lib/divisions/scope';
 
 export const metadata = { title: 'Service requests' };
 
@@ -20,12 +21,14 @@ const FILTERS: Record<string, string[]> = {
 
 export default async function OfficeServices({ searchParams }: { searchParams: Promise<{ f?: string; r?: string; type?: string }> }) {
   const s = await requireStaff('requests', 'view', '/office/services');
+  const scope = await getDivisionScope(s);   // divisions step 4: header switcher
   const { f = 'open', r: highlight, type } = await searchParams;
   const sb = await createClient();
   let q = sb.from('service_requests')
     .select('id, code, service_code, status, details, fee_minor, currency, paid_via, created_at, updated_at, organizations(name, country, city), products(title), services(name)')
     .in('status', FILTERS[f] ?? FILTERS.open).order('created_at').limit(200);
   if (type) q = q.eq('service_code', type);
+  if (!scope.all) q = q.eq('division_id', scope.division.id);
   const [{ data }, { data: services }] = await Promise.all([q, sb.from('services').select('code, name').order('sort')]);
   const canEdit = can(s, 'requests', 'edit');
 

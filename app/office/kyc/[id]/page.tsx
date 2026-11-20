@@ -1,12 +1,14 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireStaff, can } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { Card, PageHeader, StatusBadge, Notice, Timeline } from '@/components/ui';
-import { ReasonButton, RunButton } from '@/components/backoffice/action-form';
+import { RunButton } from '@/components/backoffice/action-form';
+import { KycReviewButton } from './kyc-review-button';
 import { one } from '@/components/backoffice/server-utils';
 import { fmtDate, humanize, COUNTRY_NAMES } from '@/lib/format';
 import { reviewKyc } from '../../actions';
+import { kycMessageRequired, kycMessageRequiredText } from '@/lib/kyc-message';
 import { StepUpCallout } from '@/components/admin/step-up';
 
 export const metadata = { title: 'KYC submission' };
@@ -16,9 +18,13 @@ export default async function KycDetail({ params }: { params: Promise<{ id: stri
   const s = await requireStaff('customers', 'view', `/office/kyc/${id}`);
   const sb = await createClient();
   const { data: k } = await sb.from('kyc_submissions')
-    .select('id, org_id, status, company_name, registration_no, address, contact_name, contact_phone, contact_email, review_note, submitted_at, reviewed_at, organizations(name, country, city, business_type, website, kyc_status), kyc_documents(id, doc_type, storage_path, file_name, created_at)')
+    .select('id, org_id, status, company_name, registration_no, address, contact_name, contact_phone, contact_email, customer_message, submitted_at, reviewed_at, organizations(name, country, city, business_type, website, kyc_status), kyc_documents(id, doc_type, storage_path, file_name, created_at)')
     .eq('id', id).maybeSingle();
   if (!k) notFound();
+  // internal_note is hidden from anon/authenticated (migration 195) — staff read it with the admin client, only after
+  // requireStaff('customers','view') above and only for the row RLS already let this staff member see.
+  const { data: internal } = await createAdminClient().from('kyc_submissions').select('internal_note').eq('id', k.id).maybeSingle();
+  const internalNote = (internal?.internal_note as string | null | undefined) ?? null;
   const org = one(k.organizations as unknown as { name: string; country: string | null; city: string | null; business_type: string | null; website: string | null; kyc_status: string } | null);
   const docs = (k.kyc_documents ?? []) as { id: string; doc_type: string; storage_path: string; file_name: string | null; created_at: string }[];
   // KYC document downloads are a sensitive action (SPEC §17.3): storage RLS needs a fresh 2FA code (mfa_fresh()).
@@ -75,15 +81,16 @@ export default async function KycDetail({ params }: { params: Promise<{ id: stri
         <div className="space-y-6">
           <Card title="Decision">
             <div className="px-6 pb-6 space-y-3">
-              {k.review_note && <Notice tone="blue">Last note: {k.review_note}</Notice>}
+              {k.customer_message && <Notice tone="blue"><span className="font-semibold">Last message to customer:</span> {k.customer_message}</Notice>}
+              {internalNote && <Notice tone="amber"><span className="font-semibold">Last internal note (staff only):</span> {internalNote}</Notice>}
               {!canApprove ? <p className="text-sm text-muted">You can view this submission but not approve it.</p>
                 : closed ? <p className="text-sm text-muted">This submission is {k.status}. The customer can submit again if needed.</p>
                   : (
                     <div className="flex flex-wrap gap-2">
-                      {k.status === 'submitted' && <RunButton action={reviewKyc.bind(null, k.id, 'in_review', '')}>Start review</RunButton>}
-                      <ReasonButton action={reviewKyc.bind(null, k.id, 'more_info')} label="Request more info" title="Request more information" placeholder="What does the customer need to provide?" />
-                      <ReasonButton action={reviewKyc.bind(null, k.id, 'rejected')} label="Reject" title="Reject KYC" placeholder="Reason (shown to the customer)" className="btn btn-ghost btn-sm text-bad" danger confirmLabel="Reject" />
-                      <ReasonButton action={reviewKyc.bind(null, k.id, 'verified')} label="Approve" title="Approve KYC" placeholder="Internal note (optional)" required={false} className="btn btn-sm bg-ok text-white" confirmLabel="Approve & verify" />
+                      {k.status === 'submitted' && <RunButton action={reviewKyc.bind(null, k.id, 'in_review', {})}>Start review</RunButton>}
+                      <KycReviewButton action={reviewKyc.bind(null, k.id, 'more_info')} label="Request more info" title="Request more information" messageRequired={kycMessageRequired('more_info')} requiredText={kycMessageRequiredText('more_info')} confirmLabel="Request information" messagePlaceholder="What does the customer need to provide?" />
+                      <KycReviewButton action={reviewKyc.bind(null, k.id, 'rejected')} label="Reject" title="Reject KYC" messageRequired={kycMessageRequired('rejected')} requiredText={kycMessageRequiredText('rejected')} messagePlaceholder="Why was the verification rejected? What can the customer do next?" className="btn btn-ghost btn-sm text-bad" danger confirmLabel="Reject" />
+                      <KycReviewButton action={reviewKyc.bind(null, k.id, 'verified')} label="Approve" title="Approve KYC" className="btn btn-sm bg-ok text-white" confirmLabel="Approve & verify" />
                     </div>
                   )}
               <p className="text-xs text-muted">Approval unlocks live API keys and wallet withdrawals for this customer. Every decision is written to the audit log.</p>

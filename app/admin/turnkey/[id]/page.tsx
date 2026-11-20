@@ -2,9 +2,10 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { withHiddenColumns } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader } from '@/components/ui';
 import { ActionForm, RunButton } from '@/components/admin/client';
-import { CATEGORY_LABEL, TURNKEY_CATEGORIES, usd, type TurnkeyEquipment, type TurnkeyHub, type TurnkeyPackage, type TurnkeyProject } from '@/lib/turnkey/format';
+import { CATEGORY_LABEL, TURNKEY_CATEGORIES, TURNKEY_EQUIPMENT_COLUMNS, TURNKEY_PACKAGE_COLUMNS, TURNKEY_PROJECT_COLUMNS, usd, type TurnkeyEquipment, type TurnkeyHub, type TurnkeyPackage, type TurnkeyProject } from '@/lib/turnkey/format';
 import { saveProject, savePackage, saveEquipment, deleteEquipment, moveEquipment } from '../actions';
 
 export const metadata = { title: 'Turnkey project' };
@@ -16,14 +17,16 @@ export default async function TurnkeyProjectAdmin({ params }: { params: Promise<
   const edit = can(s, 'turnkey', 'edit');
   const sb = await createClient();
   const isNew = id === 'new';
-  const [{ data: proj }, { data: hubs }, { data: pkgs }] = await Promise.all([
-    isNew ? Promise.resolve({ data: null }) : sb.from('turnkey_projects').select('*').eq('project_id', id).maybeSingle(),
+  const [{ data: proj }, { data: hubs }, { data: pkgRows }] = await Promise.all([
+    isNew ? Promise.resolve({ data: null }) : sb.from('turnkey_projects').select(TURNKEY_PROJECT_COLUMNS).eq('project_id', id).maybeSingle(),
     sb.from('turnkey_hubs').select('*').order('sort_rank'),
-    isNew ? Promise.resolve({ data: [] }) : sb.from('turnkey_packages').select('*, turnkey_equipment(*)').eq('project_id', id).order('tier_rank'),
+    isNew ? Promise.resolve({ data: [] }) : sb.from('turnkey_packages').select(`${TURNKEY_PACKAGE_COLUMNS}, turnkey_equipment(${TURNKEY_EQUIPMENT_COLUMNS})`).eq('project_id', id).order('tier_rank'),
   ]);
   if (!isNew && !proj) notFound();
+  // starting_budget_notes is hidden from session reads (migration 195): added with the service role after requireStaff.
+  const pkgs = await withHiddenColumns('turnkey_packages', pkgRows as Record<string, unknown>[] | null, 'starting_budget_notes', 'package_id');
   const p = proj as TurnkeyProject | null;
-  const packages = ((pkgs ?? []) as (TurnkeyPackage & { turnkey_equipment: TurnkeyEquipment[] })[]).map((k) => ({ ...k, equipment: [...(k.turnkey_equipment ?? [])].sort((a, b) => a.sort_order - b.sort_order) }));
+  const packages = ((pkgs ?? []) as unknown as (TurnkeyPackage & { turnkey_equipment: TurnkeyEquipment[] })[]).map((k) => ({ ...k, equipment: [...(k.turnkey_equipment ?? [])].sort((a, b) => a.sort_order - b.sort_order) }));
   return (
     <>
       <PageHeader eyebrow={<Link href="/admin/turnkey?tab=projects" className="text-coral-text">← Turnkey projects</Link>} title={p?.title ?? 'New turnkey project'}

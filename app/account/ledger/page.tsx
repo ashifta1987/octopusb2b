@@ -6,12 +6,13 @@ import { createClient } from '@/lib/supabase/server';
 import { getSiteContent } from '@/lib/content';
 import { PageHeader, Card, Stat, StatusBadge, EmptyState, Notice, Money } from '@/components/ui';
 import { fmtDate, money, asCurrency, CURRENCIES, CURRENCY_PREFIX, type Currency } from '@/lib/format';
-import { getSettings, latestTermsId, supplierMap } from '@/components/account/data';
+import { getSettings, latestTermsId, quoteFactoryMap } from '@/components/account/data';
 import { getOrgLedger, parseRange, balOf, ledgerGroups } from '@/components/account/ledger-data';
 import { getAmountsDue } from '@/lib/core/amounts-due';
 import { LedgerTable } from '@/components/account/ledger-table';
 import { ApproveQuoteButton } from '@/components/account/approve-quote';
 import { approveQuote } from '../rfqs/actions';
+import { factoryLabel } from '@/lib/factory-label';
 
 export const metadata = { title: 'Ledger and statements' };
 
@@ -41,7 +42,7 @@ async function LedgerContent({ searchParams }: { searchParams: Promise<{ from?: 
     getAmountsDue(s.org.id),
     getSiteContent(),
     sb.from('payments').select('amount_cents, currency, confirmed_at, status').eq('org_id', s.org.id).eq('status', 'confirmed'),
-    sb.from('quotes').select('id, code, supplier_id, unit_price_cents, quantity, incoterm, lead_time_days, shipping_cents, currency, valid_until, rfqs!inner(code, title, unit, org_id)').in('status', ['sent', 'viewed']).eq('rfqs.org_id', s.org.id).gt('valid_until', new Date().toISOString()).order('unit_price_cents').limit(1).maybeSingle(),
+    sb.from('quotes').select('id, code, unit_price_cents, quantity, incoterm, lead_time_days, shipping_cents, currency, valid_until, rfqs!inner(code, title, unit, org_id)').in('status', ['sent', 'viewed']).eq('rfqs.org_id', s.org.id).gt('valid_until', new Date().toISOString()).order('unit_price_cents').limit(1).maybeSingle(),
     getSettings(),
     latestTermsId(),
     sb.rpc('current_platform_currency'),
@@ -58,7 +59,7 @@ async function LedgerContent({ searchParams }: { searchParams: Promise<{ from?: 
   // one definition with the Invoices page "Awaiting payment" total: order deposits/balances due + service proformas awaiting payment
   const dueNowSum = Object.fromEntries(Object.entries(due.byCurrency).filter(([c]) => curFilter(c))) as Partial<Record<Currency, number>>;
   const anyDue = Object.values(dueNowSum).some((v) => !!v);
-  const qSup = quote ? (await supplierMap([quote.supplier_id as string])).get(quote.supplier_id as string) : undefined;
+  const qFactory = quote ? (await quoteFactoryMap([quote.id as string])).get(quote.id as string) : undefined;
   const qRfq = quote?.rfqs as unknown as { code: string; title: string; unit: string } | undefined;
   const qTotal = quote ? Number(quote.unit_price_cents) * Number(quote.quantity) + Number(quote.shipping_cents) : 0;
   const qCur = asCurrency(quote?.currency as string | undefined);
@@ -117,7 +118,7 @@ async function LedgerContent({ searchParams }: { searchParams: Promise<{ from?: 
           <div className="flex flex-wrap justify-between gap-3 mb-3"><h2 className="text-lg font-semibold">Quotation waiting for your approval</h2><StatusBadge status="pending" label="Awaiting your approval" /></div>
           <div className="rounded-[10px] border border-line p-4 flex flex-wrap items-center gap-4 justify-between">
             <div>
-              <div className="mono text-xs text-muted">{quote.code} · from {qRfq.code} · valid until {fmtDate(quote.valid_until as string)}{qSup ? ` · Supplier ${qSup.code}${qSup.country ? ` · ${qSup.country}` : ''}` : ''}</div>
+              <div className="mono text-xs text-muted">{quote.code} · from {qRfq.code} · valid until {fmtDate(quote.valid_until as string)}{qFactory ? ` · ${factoryLabel(qFactory)}` : ''}</div>
               <div className="font-semibold mt-1">{Number(quote.quantity).toLocaleString('en-US')} {qRfq.unit} · {qRfq.title}</div>
               <div className="text-sm text-muted">{money(Number(quote.unit_price_cents), qCur)} per unit · {quote.incoterm}{quote.lead_time_days ? ` · ${quote.lead_time_days} days lead time` : ''}</div>
             </div>

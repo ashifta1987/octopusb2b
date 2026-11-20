@@ -16,7 +16,7 @@ export function AuthShell({ children, title = 'Create a free account', sub = 'An
         <h1 className="!text-white text-[34px] sm:text-[38px] font-bold leading-[1.15] mt-12 max-w-[460px]">{title}</h1>
         <p className="text-on-ink mt-4 text-lg max-w-[440px]">{sub}</p>
         <ul className="mt-8 space-y-4 text-[16px]">
-          {['Send one RFQ to several verified suppliers', 'Ship worldwide with YunExpress tracking', 'Request 3PL fulfillment or dropshipping'].map((t) => (
+          {['Send one RFQ to several verified suppliers', 'Ship worldwide with live tracking', 'Request 3PL fulfillment or dropshipping'].map((t) => (
             <li key={t} className="flex gap-3 items-center">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-on-ink-link" strokeWidth="2.5" aria-hidden><path d="m5 12 5 5 9-10" /></svg>{t}
             </li>

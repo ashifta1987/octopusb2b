@@ -13,7 +13,7 @@ export async function getHomeBanners(): Promise<HomeBanner[]> {
   'use cache';
   cacheLife({ revalidate: 300 });
   cacheTag('home-banners');
-  const { data } = await createPublicClient().from('home_banners').select('*').eq('active', true).eq('position', 'lead').order('sort').limit(10);
+  const { data } = await createPublicClient().from('home_banners').select('id, eyebrow, title, body, cta_label, cta_href, cta2_label, cta2_href, ticks, theme, image_url, show_open_project, starts_at, ends_at, sort').eq('active', true).eq('position', 'lead').order('sort').limit(10);
   const now = Date.now();
   return ((data ?? []) as HomeBanner[])
     .filter((b) => (!b.starts_at || new Date(b.starts_at).getTime() <= now) && (!b.ends_at || new Date(b.ends_at).getTime() > now))

@@ -9,13 +9,16 @@ import { isStaging } from '@/lib/core/account';
 import { AccountTabs, type Tab } from './account-tabs';
 import Link from 'next/link';
 import { UnreadBellDot } from '@/components/account/unread-count';
+import { DivisionSwitcher } from './division-switcher';
+import { setDivisionScope } from '@/app/admin/division-scope-actions';
+import type { DivisionScope } from '@/lib/divisions/shared';
 
 /**
  * ADDON-41 boards 06–08 — staff shell: navy header ("Admin · staff only"), admin tabs, and the side menu
  * (work queue first, then the existing back-office and admin pages the person may open).
  */
-export function StaffShell({ session, nav, counts, moderation, unread = 0, children }: {
-  session: Session; nav: NavSection[]; counts: { queue: number; approvals: number; transfers: number }; moderation?: number | null; unread?: number; children: React.ReactNode;
+export function StaffShell({ session, nav, counts, moderation, unread = 0, scope, children }: {
+  session: Session; nav: NavSection[]; counts: { queue: number; approvals: number; transfers: number }; moderation?: number | null; unread?: number; scope?: DivisionScope; children: React.ReactNode;
 }) {
   const name = session.profile?.full_name ?? session.email ?? 'Staff';
   const initials = name.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
@@ -39,6 +42,8 @@ export function StaffShell({ session, nav, counts, moderation, unread = 0, child
       ...(session.isAdmin || isManager || can(session, 'approvals', 'view') ? [{ href: '/admin/approvals', label: 'Approvals' }] : []),
       ...(can(session, 'wallet', 'approve') ? [{ href: '/admin/finance/transfers', label: 'Bank transfers' }] : []),
     ] },
+    // divisions step 4: the legal company and its divisions (company-wide Admin only)
+    ...(session.isAdmin ? [{ title: 'Company', items: [{ href: '/admin/company', label: 'Company' }, { href: '/admin/divisions', label: 'Divisions' }, { href: '/admin/staff#divisions', label: 'Staff & divisions' }, { href: '/admin/reports/divisions', label: 'Reports by division' }] }] : []),
     ...(seesCustomers ? [{ title: 'Customers', items: [{ href: '/admin/customers', label: 'All customers' }, { href: '/admin/brand-projects', label: 'Brand projects' }, ...(session.isAdmin || isManager ? [{ href: '/admin/approvals#limits', label: 'Approval limits' }] : [])] }] : []),
   ];
   const rest = nav.map((s) => ({ ...s, items: s.items.filter((i) => !i.area || can(session, i.area, i.action ?? 'view')) })).filter((s) => s.items.length);
@@ -62,12 +67,19 @@ export function StaffShell({ session, nav, counts, moderation, unread = 0, child
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
               <UnreadBellDot count={unread} />
             </Link>
+            {scope && <DivisionSwitcher options={scope.options} current={scope.all ? null : scope.division.code} action={setDivisionScope} />}
             <WorkspaceSwitcher session={session} current="Admin" />
             <StaffUserMenu name={name} initials={initials} sub={sub} email={session.email} />
           </div>
         </div>
       </header>
       <AccountTabs tabs={tabs} />
+      {scope && !scope.all && (
+        <div className="bg-tint border-b border-line px-4 sm:px-6 py-2 text-sm flex flex-wrap items-center gap-x-3 gap-y-1" data-testid="division-banner">
+          <span>Showing <b>{scope.division.name}</b> only: lists, counts and notifications follow this division.</span>
+          {scope.options.length > 1 && <form action={setDivisionScope}><input type="hidden" name="division" value="all" /><button className="text-coral-text font-semibold underline">Show all divisions</button></form>}
+        </div>
+      )}
       <div className="flex flex-col md:flex-row">
         <SideNav sections={[...work, ...rest]} moderation={moderation} badges={{ '/admin': counts.queue, '/admin/notifications': unread, '/admin/approvals': counts.approvals, '/admin/finance/transfers': counts.transfers }} />
         <main className="flex-1 min-w-0 px-4 sm:px-8 py-8"><div className="max-w-[1280px] mx-auto">{children}</div></main>

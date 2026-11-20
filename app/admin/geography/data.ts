@@ -1,5 +1,6 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
+import { dropSeeds, seedIds } from '@/components/backoffice/hidden-columns';
 import { getCurrencyContext, toPlatform, type CurrencyContext } from '@/lib/currency';
 
 export const REGION: Record<string, string> = {
@@ -20,11 +21,16 @@ export type Org = { id: string; country: string | null; city: string | null; bus
  *  `gmv` is converted into the platform currency at the approved rate; `gmvBy` keeps each order currency (SPEC §15.1). */
 export async function loadGeography(f: { kyc?: string; type?: string; since?: string; region?: string }) {
   const sb = await createClient();
-  const [{ data: orgsRaw }, { data: orders }, ctx] = await Promise.all([
-    sb.from('organizations').select('id, country, city, business_type, kyc_status, created_at').is('archived_at', null).eq('is_seed', false).limit(20000),
-    sb.from('orders').select('org_id, total_cents, currency, status, created_at').neq('status', 'cancelled').eq('is_seed', false).limit(50000),
+  // is_seed is hidden from session reads (migration 195): rows stay on the session client (RLS), seed ids come from the
+  // service role. Callers check customers:view first (page: requireStaff; export route: can()).
+  const [seedOrgs, seedOrders] = await Promise.all([seedIds('organizations'), seedIds('orders')]);
+  const [{ data: orgsAll }, { data: ordersAll }, ctx] = await Promise.all([
+    sb.from('organizations').select('id, country, city, business_type, kyc_status, created_at').is('archived_at', null).limit(20000 + seedOrgs.size),
+    sb.from('orders').select('id, org_id, total_cents, currency, status, created_at').neq('status', 'cancelled').limit(50000 + seedOrders.size),
     getCurrencyContext(),
   ]);
+  const orgsRaw = dropSeeds(orgsAll, seedOrgs, 20000);
+  const orders = dropSeeds(ordersAll, seedOrders, 50000);
   let orgs = (orgsRaw ?? []) as Org[];
   if (f.kyc) orgs = orgs.filter((o) => (f.kyc === 'pending' ? ['submitted', 'in_review', 'more_info'].includes(o.kyc_status) : o.kyc_status === f.kyc));
   if (f.type) orgs = orgs.filter((o) => o.business_type === f.type);

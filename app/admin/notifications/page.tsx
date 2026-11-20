@@ -7,6 +7,7 @@ import { Loading } from '@/components/admin/ui';
 import { fmtDate } from '@/lib/format';
 import { markNotificationsRead } from '@/app/account/notifications/actions';
 import { NotificationItem } from '@/components/account/notification-item';
+import { getDivisionScope } from '@/lib/divisions/scope';
 
 export const metadata = { title: 'Notifications' };
 
@@ -21,7 +22,10 @@ async function StaffNotifications() {
   if (!s.isStaff) redirect('/login');
   if (s.aal !== 'aal2') redirect('/staff/verify?next=/admin/notifications');
   const sb = await createClient();
-  const { data: rows } = await sb.rpc('my_notifications').select('id, title, body, link, read_at, created_at').order('created_at', { ascending: false }).limit(100);
+  // divisions step 4: one division chosen in the header → only that division's notifications (company-wide ones under "All")
+  const scope = await getDivisionScope(s);
+  const base = sb.rpc('my_notifications').select('id, title, body, link, read_at, created_at');
+  const { data: rows } = await (scope.all ? base : base.eq('division_id', scope.division.id)).order('created_at', { ascending: false }).limit(100);
   type N = { id: string; title: string; body: string | null; link: string | null; read_at: string | null; created_at: string };
   const data = (rows ?? []) as unknown as N[];
   const unread = data.filter((n) => !n.read_at).length;

@@ -5,12 +5,13 @@ import { createTempCustomer, customerLogin, purgeTestOrgs, type TempCustomer } f
 let C: TempCustomer | null = null;
 test.afterAll(async () => { if (C) await purgeTestOrgs([C.orgId], [C.id]); });
 
-test('home hero quote → the sourcing form shows the typed title, quantity and country', async ({ page }) => {
-  await page.goto('/');
-  await page.locator('#hq-title').fill('E2E cable ties 300 mm');
-  await page.locator('#hq-qty').fill('20000');
-  await page.locator('#hq-country').selectOption('DE');
-  await page.getByRole('button', { name: /Request quotes/ }).click();
+// the brand-kit home (step 5) replaced the hero quote box with the service picker's "Source a product" tab
+test('home picker "Source a product" → the sourcing form shows the typed title, quantity and country', async ({ page }) => {
+  await page.goto('/?do=source');
+  await page.locator('#pk-title').fill('E2E cable ties 300 mm');
+  await page.locator('#pk-qty').fill('20000');
+  await page.locator('#pk-country').selectOption('DE');
+  await page.locator('button[form="picker-source"]').click();
   await page.waitForURL(/\/request\/sourcing\?/);
   await expect(page.locator('#rq-title')).toHaveValue('E2E cable ties 300 mm');
   await expect(page.locator('#rq-quantity')).toHaveValue('20000');
@@ -64,9 +65,11 @@ test('fee text never shows "Free" together with a charge; each type has its own 
   const heads = new Set<string>();
   for (const t of ['sourcing', 'dropship', '3pl', 'sample', 'qc', 'certification']) { await page.goto(`/request/${t}`); heads.add(await page.locator('h1').innerText()); }
   expect(heads.size).toBe(6);
-  await page.goto('/');
-  const pill = await page.getByTestId('quote-fee').innerText();
-  expect(pill === 'FREE' || pill === 'Free' || /^RFQ fee /.test(pill)).toBe(true);
+  // home picker, Source tab: the fact line shows the RFQ fee or no fee, never "Free" with a charge
+  await page.goto('/?do=source');
+  const fact = await page.locator('#picker-source').locator('xpath=..').innerText();
+  expect(/RFQ fee US\$ [\d.,]+ · quotes in 24 h|Quotes in 24 h/.test(fact)).toBe(true);
+  expect(fact).not.toMatch(/Free/);
 });
 
 test('login, sign-up and reset pages have their own headings', async ({ page }) => {

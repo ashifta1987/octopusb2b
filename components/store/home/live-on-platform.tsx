@@ -7,6 +7,7 @@ import { Countdown } from '@/components/store/pools/countdown';
 import { block } from '@/lib/content';
 import { SectionHead, n } from './shared';
 import type { LiveRfq } from './live-data';
+import { factoryLabel } from '@/lib/factory-label';
 
 type Blocks = Record<string, string>;
 
@@ -38,7 +39,7 @@ export function LiveOnPlatform({ blocks, liveRfq, pool, featured }: { blocks: Bl
             <ul className="flex flex-col gap-1.5 mt-0.5">
               {liveRfq.quotes.map((q, i) => (
                 <li key={i} className={`flex justify-between rounded-lg px-3 py-2 ${i === 0 ? 'bg-tint' : 'bg-pearl'}`}>
-                  <span className="mono text-[12px] text-muted">{q.supplier_code}{q.supplier_country && ` · ${q.supplier_country}`}</span>
+                  <span className="text-[12px] text-muted">{factoryLabel(q.factory)}</span>
                   <span className="font-display font-extrabold text-[14px]">{money(q.unit_price_minor, q.currency)}<span className="sr-only"> per {unitOne(liveRfq.unit)}</span></span>
                 </li>
               ))}
@@ -76,7 +77,7 @@ export function LiveOnPlatform({ blocks, liveRfq, pool, featured }: { blocks: Bl
           <div className="bg-white border border-line rounded-2xl overflow-hidden flex flex-col">
             <ProductImage src={feat.image_url} alt={feat.title} className="h-[140px]" label="Product photo" width={400} height={140} />
             <div className="p-4 flex flex-col gap-1">
-              <span className="mono text-[11px] uppercase text-muted">{block(blocks, 'home.hero.featured_label', 'Featured')}{feat.supplier && <> · {feat.supplier.code}{feat.supplier.country && ` · ${feat.supplier.country}`}</>}</span>
+              <span className="mono text-[11px] uppercase text-muted">{block(blocks, 'home.hero.featured_label', 'Featured')}{feat.factory && <> · {factoryLabel(feat.factory)}</>}</span>
               <Link href={`/p/${feat.slug}`} className="font-semibold text-[15px] leading-[1.3] hover:text-coral-text">{feat.title}</Link>
               <span className="text-[13px] text-black">
                 <span className="font-display font-extrabold text-[17px] text-ink">{money(fBase.unit_price_cents, feat.currency)}</span>

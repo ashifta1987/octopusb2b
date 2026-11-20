@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { withSuppliers } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, StatusBadge, Money, Timeline, OrderProgress, EmptyState } from '@/components/ui';
 import { DocumentButton } from '@/components/client';
 import { ReasonButton } from '@/components/backoffice/action-form';
@@ -25,15 +26,17 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const s = await requireStaff('orders', 'view', `/office/orders/${id}`);
   const sb = await createClient();
-  const { data: o } = await sb.from('orders')
-    .select('id, code, title, status, quantity, unit_price_cents, shipping_cents, total_cents, deposit_cents, deposit_pct, paid_cents, currency, incoterm, created_at, delivered_at, claim_visible_until, claim_hidden_until, organizations(id, name, country, city, kyc_status), suppliers(code, legal_name, country), quotes(code), rfqs(code)')
+  const { data: oRow } = await sb.from('orders')
+    .select('id, code, title, status, quantity, unit_price_cents, shipping_cents, total_cents, deposit_cents, deposit_pct, paid_cents, currency, incoterm, created_at, delivered_at, claim_visible_until, claim_hidden_until, organizations(id, name, country, city, kyc_status), quotes(code), rfqs(code)')
     .eq('id', id).maybeSingle();
-  if (!o) notFound();
+  if (!oRow) notFound();
+  // suppliers(...) embed went through orders.supplier_id (hidden, migration 195): supplier_id via service role after requireStaff
+  const [o] = await withSuppliers(sb, 'orders', [oRow], 'code, legal_name, country');
   const [{ data: events }, { data: docs }, { data: pays }, { data: ships }] = await Promise.all([
     sb.from('order_events').select('id, kind, title, body, created_at').eq('order_id', id).order('created_at'),
     sb.from('documents').select('id, doc_type, number, amount_cents, currency, status, created_at').eq('order_id', id).order('created_at'),
     sb.from('payments').select('id, purpose, method, amount_cents, currency, reference, status, created_at').eq('order_id', id).order('created_at'),
-    sb.from('shipments').select('id, code, tracking_no, status, service_code, label_url, created_at').eq('order_id', id).order('created_at'),
+    sb.from('shipments').select('id, code, tracking_no, status, service_code, label_url, created_at, divisions(code)').eq('order_id', id).order('created_at'),
   ]);
   const org = one(o.organizations as unknown as { id: string; name: string; country: string | null; city: string | null; kyc_status: string } | null);
   const sup = one(o.suppliers as unknown as { code: string; legal_name: string; country: string } | null);
@@ -153,6 +156,10 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
                     <div className="flex justify-between gap-2"><span className="mono font-semibold">{sh.tracking_no}</span><StatusBadge status={sh.status} /></div>
                     <div className="text-muted">{sh.code} · {sh.service_code}</div>
                     {sh.label_url && <a href={sh.label_url} target="_blank" rel="noopener" className="text-coral-text font-semibold text-xs">Print label</a>}
+                    {/* dropship parcels: packing slip with the seller's brand + approved return address (migration 196) */}
+                    {sh.tracking_no && one(sh.divisions as unknown as { code: string } | null)?.code === 'DS' && (
+                      <a href={`/api/packing-slips/${encodeURIComponent(sh.tracking_no)}`} target="_blank" rel="noopener" className="ml-3 text-coral-text font-semibold text-xs">Packing slip</a>
+                    )}
                   </li>
                 ))}
               </ul>

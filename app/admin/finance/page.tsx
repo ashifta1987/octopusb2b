@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { dropSeeds, seedIds, withHiddenColumns } from '@/components/backoffice/hidden-columns';
 import { Card, Stat, PageHeader, EmptyState, StatusBadge, Table, Notice } from '@/components/ui';
 import { Bar, Field } from '@/components/admin/ui';
 import { ActionForm, RunButton } from '@/components/admin/client';
@@ -25,16 +26,19 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
   const to = new Date(from); to.setUTCMonth(to.getUTCMonth() + 1);
   const sb = await createClient();
 
-  const [rev, revAll, check, payments, topups, approvals, payouts, journals, openOrders, orgs, suppliers, limitRow, wallets, refundsRow, ctx] = await Promise.all([
+  // is_seed / journals.created_by are hidden from session reads (migration 195): rows stay on the session client (RLS),
+  // seed ids and created_by come from the service role after requireStaff.
+  const [seedPay, seedTop, seedJour, seedOrd] = await Promise.all([seedIds('payments'), seedIds('wallet_topups'), seedIds('journals'), seedIds('orders')]);
+  const [rev, revAll, check, paymentsRaw, topupsRaw, approvals, payouts, journalsRaw, openOrdersRaw, orgs, suppliers, limitRow, wallets, refundsRow, ctx] = await Promise.all([
     sb.rpc('admin_revenue_by_stream', { p_from: from.toISOString(), p_to: to.toISOString() }),
     sb.rpc('admin_revenue_by_stream', {}),
     sb.rpc('admin_ledger_check'),
-    sb.from('payments').select('id, org_id, order_id, purpose, method, amount_cents, currency, reference, status, created_at, confirmed_at').eq('is_seed', false).order('created_at', { ascending: false }).limit(25),
-    sb.from('wallet_topups').select('id, org_id, amount_cents, currency, method, reference, status, created_at').eq('status', 'pending').eq('is_seed', false).order('created_at'),
+    sb.from('payments').select('id, org_id, order_id, purpose, method, amount_cents, currency, reference, status, created_at, confirmed_at').order('created_at', { ascending: false }).limit(25 + seedPay.size),
+    sb.from('wallet_topups').select('id, org_id, amount_cents, currency, method, reference, status, created_at').eq('status', 'pending').order('created_at'),
     sb.from('finance_approvals').select('*').order('created_at', { ascending: false }).limit(40),
     sb.from('payouts').select('id, supplier_id, amount_cents, currency, status, reference, created_at, approval_id').order('created_at', { ascending: false }).limit(25),
-    sb.from('journals').select('id, number, memo, stream, created_at, created_by').eq('is_seed', false).order('created_at', { ascending: false }).limit(10),
-    sb.from('orders').select('id, code, org_id, total_cents, paid_cents, deposit_cents, currency, status').not('status', 'in', '(cancelled,closed)').eq('is_seed', false).order('created_at', { ascending: false }).limit(200),
+    sb.from('journals').select('id, number, memo, stream, created_at').order('created_at', { ascending: false }).limit(10 + seedJour.size),
+    sb.from('orders').select('id, code, org_id, total_cents, paid_cents, deposit_cents, currency, status').not('status', 'in', '(cancelled,closed)').order('created_at', { ascending: false }).limit(200 + seedOrd.size),
     sb.from('organizations').select('id, name, country').order('name').limit(1000),
     sb.from('suppliers').select('id, code, legal_name').order('code'),
     sb.from('site_settings').select('value').eq('key', 'finance_approval_limit_cents').maybeSingle(),
@@ -43,6 +47,10 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
     getCurrencyContext(),
   ]);
 
+  const payments = { data: dropSeeds(paymentsRaw.data, seedPay, 25) };
+  const topups = { data: dropSeeds(topupsRaw.data, seedTop) };
+  const journals = { data: await withHiddenColumns<NonNullable<typeof journalsRaw.data>[number], { created_by: string | null }>('journals', dropSeeds(journalsRaw.data, seedJour, 10), 'created_by') };
+  const openOrders = { data: dropSeeds(openOrdersRaw.data, seedOrd, 200) };
   const limit = Number(limitRow.data?.value ?? 100000);
   // Every aggregate is kept per currency (SPEC §15.1) + a total converted into the platform currency at the approved rate.
   type RevRow = { stream: string; credit_cents: number; debit_cents: number; net_cents: number; currency: string; net_converted_minor: number };

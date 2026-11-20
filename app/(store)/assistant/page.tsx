@@ -19,7 +19,7 @@ export default function AssistantExplainer() {
         ['Knows your account', 'Order status, quotes waiting for you, tracking numbers and wallet balance, without searching.'],
         ['A person when it matters', 'Refunds, disputes, QC failures and pricing questions go to your account manager.'],
         ['Office hours in China', 'Our team picks up handovers Monday to Friday, 09:00–18:00 China time. Outside those hours your question waits in the queue for the next morning.'],
-        ['Private by design', 'Octo only sees your organisation’s data. Supplier identities stay hidden behind supplier codes.'],
+        ['Private by design', 'Octo only sees your organisation’s data. Supplier identities stay hidden: you only see the factory as “Verified factory · country (province)”.'],
         ['Full history', 'Every conversation is saved in your account so you can pick up where you left off.'],
       ],
     }} />

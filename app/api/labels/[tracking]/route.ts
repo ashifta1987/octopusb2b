@@ -1,9 +1,7 @@
-import { getSession } from '@/lib/auth';
-import { createAdminClient } from '@/lib/supabase/server';
-import { can } from '@/lib/auth';
 import { getCarrier } from '@/lib/adapters';
-
-const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+import { factoryLabel } from '@/lib/factory-label';
+import { approvedSellerBrand, blockedResponse, printableShipment } from '@/lib/print-access';
+import { DROPSHIP_LABEL_BLOCKED, dropshipFromBox, esc } from '@/lib/dropship-print';
 
 /** Pseudo barcode (visual only, sandbox): bar widths derived from the tracking number characters. */
 function bars(code: string) {
@@ -20,21 +18,32 @@ function bars(code: string) {
   return { svg: out.join(''), width: x };
 }
 
-/** Printable 10 × 15 cm shipping label (sandbox). Staff with orders:view only: labels name the carrier (ADDON-41 white-label). */
+/**
+ * Printable 10 × 15 cm shipping label (sandbox). Staff with orders:view only: labels name the carrier (ADDON-41 white-label).
+ * Dropship parcels (division DS, owner's decision 19 Nov 2026): the From box shows ONLY the seller's brand and APPROVED
+ * return address — no Octopus B2B, no factory label, no supplier address or code, no prices. No approved profile → blocked.
+ */
+type LabelShipment = {
+  code: string; tracking_no: string | null; service_code: string | null; weight_kg: number | null; parcels: number | null; created_at: string;
+  carrier_code: string | null; division_id: string | null; org_id: string | null; orders: unknown;
+};
 export async function GET(_req: Request, { params }: { params: Promise<{ tracking: string }> }) {
   const { tracking } = await params;
-  const s = await getSession();
-  if (!s) return new Response('Sign in to print labels', { status: 401 });
-  if (!s.isStaff || !can(s, 'orders', 'view')) return new Response('Shipping labels are printed by the Octopus warehouse team.', { status: 403 });
-  const sb = createAdminClient(); // permission checked above; carrier_code is not readable with a user session
-  const { data: sh } = await sb.from('shipments')
-    .select('code, tracking_no, service_code, weight_kg, parcels, created_at, carrier_code, orders(code, title, quantity, incoterm, organizations(id, name, city, country), suppliers(code, country, city))')
-    .eq('tracking_no', tracking).maybeSingle();
-  if (!sh) return new Response('Label not found', { status: 404 });
-  const { data: carrier } = await sb.from('carriers').select('name').eq('code', sh.carrier_code).maybeSingle();
+  const got = await printableShipment<LabelShipment>(tracking,
+    'code, tracking_no, service_code, weight_kg, parcels, created_at, carrier_code, division_id, org_id, orders(code, title, quantity, incoterm, organizations(id, name, city, country), suppliers(verified, identity_status, archived_at, country, province))',
+    { signIn: 'Sign in to print labels', forbidden: 'Shipping labels are printed by the Octopus warehouse team.', notFound: 'Label not found' });
+  if ('res' in got) return got.res;
+  const { sb, sh, dsDivisionId } = got;
+  const dropship = !!sh.division_id && sh.division_id === dsDivisionId;
+  const brand = dropship ? await approvedSellerBrand(sb, sh.org_id) : null;
+  if (dropship && !brand) return blockedResponse(DROPSHIP_LABEL_BLOCKED);
+  const { data: carrier } = await sb.from('carriers').select('name').eq('code', sh.carrier_code ?? '').maybeSingle();
   const o = (Array.isArray(sh.orders) ? sh.orders[0] : sh.orders) as { code: string; title: string; quantity: number; incoterm: string | null; organizations: unknown; suppliers: unknown } | null;
   const org = (Array.isArray(o?.organizations) ? o?.organizations[0] : o?.organizations) as { id: string; name: string; city: string | null; country: string | null } | null;
-  const sup = (Array.isArray(o?.suppliers) ? o?.suppliers[0] : o?.suppliers) as { code: string; country: string; city: string | null } | null;
+  const sup = (Array.isArray(o?.suppliers) ? o?.suppliers[0] : o?.suppliers) as { verified: boolean | null; identity_status: string | null; archived_at: string | null; country: string | null; province: string | null } | null;
+  // the label travels with the parcel to the buyer: factory label only, never the supplier code (19 Nov 2026)
+  const fromFactory = factoryLabel(sup ? { verified: !!sup.verified && (sup.identity_status ?? 'ok') === 'ok' && !sup.archived_at, country: sup.country, province: sup.province } : null);
+  const fromBox = brand ? dropshipFromBox(brand) : `<div class="box"><h4>From</h4>Octopus B2B fulfilment<br>${esc(fromFactory)}</div>`;
   const { data: addr } = org ? await sb.from('addresses').select('line1, line2, city, region, postal_code, country').eq('org_id', org.id).order('is_default', { ascending: false }).limit(1).maybeSingle() : { data: null };
   const b = bars(sh.tracking_no ?? tracking);
 
@@ -63,7 +72,7 @@ body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: #000; backgr
   <div class="box"><h4>Ship to</h4><div class="to">${esc(org?.name)}</div>
     ${addr ? `${esc(addr.line1)}${addr.line2 ? `, ${esc(addr.line2)}` : ''}<br>${esc(addr.postal_code)} ${esc(addr.city)}${addr.region ? `, ${esc(addr.region)}` : ''}<br>` : ''}
     <b>${esc(addr?.city ?? org?.city)} · ${esc(addr?.country ?? org?.country)}</b></div>
-  <div class="box"><h4>From</h4>Octopus B2B fulfilment · Supplier ${esc(sup?.code)}<br>${esc(sup?.city)} · ${esc(sup?.country)}</div>
+  ${fromBox}
   <div class="bc"><svg viewBox="0 0 ${b.width} 60" width="90%" height="60" preserveAspectRatio="none" role="img" aria-label="Barcode ${esc(sh.tracking_no)}">${b.svg}</svg></div>
   <div class="trk">${esc(sh.tracking_no)}</div>
   <div class="meta">

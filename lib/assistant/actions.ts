@@ -21,9 +21,12 @@ export async function confirmAssistantDraft(messageId: string, toolIndex: number
   if (!s?.org) return { ok: false, error: 'Please sign in to your company account.' };
   if (!uuid.safeParse(messageId).success || !Number.isInteger(toolIndex) || toolIndex < 0 || toolIndex > 20) return { ok: false, error: 'Invalid draft.' };
   const sb = await createClient();
-  const { data: msg } = await sb.from('assistant_messages').select('id, session_id, author, tools_called').eq('id', messageId).maybeSingle();
+  // RLS decides whether the caller may see this message; tools_called is hidden from customers (migration 195), so the
+  // stored draft is read with the service role for that visible message only — it is never returned to the browser.
+  const { data: msg } = await sb.from('assistant_messages').select('id, session_id, author').eq('id', messageId).maybeSingle();
   if (!msg || msg.author !== 'bot') return { ok: false, error: 'Draft not found.' };
-  const entry = ((msg.tools_called ?? []) as ToolCallLog[])[toolIndex];
+  const { data: logged } = await createAdminClient().from('assistant_messages').select('tools_called').eq('id', msg.id).maybeSingle();
+  const entry = ((logged?.tools_called ?? []) as ToolCallLog[])[toolIndex];
   const draft = entry?.ok ? entry.draft : null;
   if (!draft) return { ok: false, error: 'Draft not found.' };
   const idem = `octo:${messageId}:${toolIndex}`;

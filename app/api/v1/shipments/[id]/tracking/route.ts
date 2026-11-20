@@ -1,6 +1,7 @@
 import { apiRoute, isUuid } from '@/lib/api/handler';
 import { json, problem } from '@/lib/api/problem';
 import { serviceName } from '@/lib/service-names';
+import { getCustomerCarrierLabel } from '@/lib/carrier-label.server';
 
 /** GET /api/v1/shipments/{id|SHP-code|tracking_no}/tracking — shipment status and carrier events (newest first). */
 export const GET = apiRoute<{ id: string }>({ scopes: ['shipments:read', 'orders:read'] }, async ({ ctx, params }) => {
@@ -13,9 +14,10 @@ export const GET = apiRoute<{ id: string }>({ scopes: ['shipments:read', 'orders
     .eq('org_id', ctx.orgId)
     .maybeSingle();
   if (!s) return problem(404, 'NOT_FOUND', 'Shipment not found.');
-  const [{ data: events }, { data: order }] = await Promise.all([
+  const [{ data: events }, { data: order }, carrier] = await Promise.all([
     ctx.sb.from('tracking_events').select('status, description, location, occurred_at').eq('shipment_id', s.id).eq('org_id', ctx.orgId).order('occurred_at', { ascending: false }),
     ctx.sb.from('orders').select('code').eq('id', s.order_id).eq('org_id', ctx.orgId).maybeSingle(),
+    getCustomerCarrierLabel(),
   ]);
-  return json({ data: { ...s, service: serviceName(s.service_code), order_code: order?.code ?? null, events: events ?? [] } }); // white-label: no carrier
+  return json({ data: { ...s, service: serviceName(s.service_code), carrier, order_code: order?.code ?? null, events: events ?? [] } }); // white-label: only the approved public carrier label (decision 3)
 });

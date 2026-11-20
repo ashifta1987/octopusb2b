@@ -376,3 +376,46 @@ export async function unassignSupplier(distributorId: string, supplierId: string
   return ok('Assignment removed');
 }
 
+
+// ───────── divisions step 4: add a person to one or more divisions (one role per division) ─────────
+const DIVISION_ROLE_CODES = ['manager', 'staff', 'warehouse', 'finance'];
+
+/** Add (or change the role of) one staff member in every ticked division. Staff:edit + fresh 2FA; audited by trigger. */
+export async function addToDivisions(_prev: Result | null, fd: FormData): Promise<Result> {
+  const g = await guard('staff', 'edit');
+  if ('error' in g) return g.error;
+  const uid = str(fd, 'user_id');
+  const role = str(fd, 'role');
+  const codes = [...new Set(fd.getAll('divisions').map(String))];
+  if (!uid) return fail('Pick a person.');
+  if (!codes.length) return fail('Tick at least one division.');
+  if (!DIVISION_ROLE_CODES.includes(role)) return fail('Pick a role: manager, staff, warehouse or finance.');
+  const back = `${PAGE}#divisions`;
+  const stale = await requireFresh(g.sb, back);
+  if (stale) return stale;
+  const { data: divs } = await g.sb.from('divisions').select('id, code, name').in('code', codes);
+  if ((divs ?? []).length !== codes.length) return fail('Unknown division');
+  const { data, error } = await g.sb.from('division_members')
+    .upsert((divs ?? []).map((d) => ({ user_id: uid, division_id: d.id, role })), { onConflict: 'user_id,division_id' })
+    .select('division_id');
+  if (error) return failAt(/DIVISION_MEMBER_NOT_STAFF/.test(error.message) ? 'Only staff accounts can be added to a division.' : error, back);
+  if ((data ?? []).length < codes.length) return fail('Not saved (permission or fresh 2FA code needed).');
+  revalidatePath(PAGE);
+  return ok(`Added to ${(divs ?? []).map((d) => d.name).join(', ')} as ${role}`);
+}
+
+/** Remove one staff member from one division (their other divisions stay). */
+export async function removeFromDivision(userId: string, code: string): Promise<Result> {
+  const g = await guard('staff', 'edit');
+  if ('error' in g) return g.error;
+  const back = `${PAGE}#divisions`;
+  const stale = await requireFresh(g.sb, back);
+  if (stale) return stale;
+  const { data: d } = await g.sb.from('divisions').select('id, name').eq('code', code).maybeSingle();
+  if (!d) return fail('NOT_FOUND');
+  const { data, error } = await g.sb.from('division_members').delete().eq('user_id', userId).eq('division_id', d.id).select('user_id');
+  if (error) return failAt(error, back);
+  if (!data?.length) return fail('Not removed (permission or fresh 2FA code needed).');
+  revalidatePath(PAGE);
+  return ok(`Removed from ${d.name}`);
+}

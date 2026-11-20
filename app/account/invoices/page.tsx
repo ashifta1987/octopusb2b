@@ -7,6 +7,8 @@ import { DocumentButton } from '@/components/client';
 import { fmtDate, money } from '@/lib/format';
 import { DOC_LABEL } from '@/components/account/data';
 import { getAmountsDue } from '@/lib/core/amounts-due';
+import { PayProformaButton } from '@/components/account/pay-proforma-button';
+import crypto from 'node:crypto';
 
 const SVC: Record<string, string> = { sourcing: 'Sourcing', dropship: 'Dropshipping', warehouse: '3PL warehouse', brand: 'Make My Brand', wallet: 'Wallet top-up' };
 
@@ -20,7 +22,7 @@ function forLabel(d: { doc_type: unknown; data: unknown; orders: unknown }) {
   return d.doc_type === 'receipt' ? 'Wallet top-up' : '—';
 }
 
-/** ADDON-41 — every invoice, receipt and credit note from the Hong Kong company, from any service. */
+/** ADDON-41 — every invoice, receipt and credit note from Shenzhen Octopus Trading Co., Ltd., from any service. */
 async function InvoicesPageContent() {
   const s = await requireCustomer('/account/invoices');
   const sb = await createClient();
@@ -46,7 +48,15 @@ async function InvoicesPageContent() {
               <td className="td text-sm">{forLabel(d)}</td>
               <td className="td mono whitespace-nowrap">{d.amount_cents != null ? money(Number(d.amount_cents), (d.currency as string) ?? 'USD') : '—'}</td>
               <td className="td"><StatusBadge status={d.status as string} /></td>
-              <td className="td text-right"><DocumentButton docId={d.id as string} compact /></td>
+              <td className="td text-right">
+                <span className="inline-flex flex-wrap items-center justify-end gap-2">
+                  {due.docDue.get(d.id as string) ? (
+                    <PayProformaButton documentId={d.id as string} amountCents={due.docDue.get(d.id as string)!} label={money(due.docDue.get(d.id as string)!, (d.currency as string) ?? 'USD')}
+                      idempotencyKey={`wallet:${d.id}:${crypto.randomUUID()}`} />
+                  ) : null}
+                  <DocumentButton docId={d.id as string} compact />
+                </span>
+              </td>
             </tr>
           ))}
         </Table>

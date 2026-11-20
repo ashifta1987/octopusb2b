@@ -1,18 +1,23 @@
-// Applies forward-only SQL migrations in supabase/migrations, then (optionally) seed.sql.
-// Usage: node scripts/db-migrate.mjs [--seed]
-import { config } from 'dotenv';
-// --staging: migrate the staging project (.env.staging) instead of the one in .env.local
-if (process.argv.includes('--staging')) config({ path: '.env.staging', quiet: true, override: true });
-else await import('dotenv/config');
+// Applies forward-only SQL migrations in supabase/migrations, then (optionally) seed.sql on STAGING.
+// Usage: node scripts/db-migrate.mjs [--staging] [--seed]
+//        node scripts/db-migrate.mjs --live        (loads .env.live ONLY when --live is passed; never runs --seed)
 import pg from 'pg';
 import fs from 'node:fs';
 import path from 'node:path';
 import { assertNotProduction } from './lib-env-guard.mjs';
-config({ path: '.env.local' });
+import { loadStagingEnvOrExit, assertStagingDatabase, loadLiveEnvOrExit, assertLiveDatabase } from './lib-staging-guard.mjs';
+
+const isLive = process.argv.includes('--live');
+if (isLive && process.argv.includes('--staging')) { console.error('✘ refused: cannot pass both --live and --staging'); process.exit(1); }
+if (isLive) loadLiveEnvOrExit();
+else loadStagingEnvOrExit();
+
 const url = process.env.DATABASE_URL;
 if (!url) throw new Error('DATABASE_URL missing');
 const client = new pg.Client({ connectionString: url, ssl: { rejectUnauthorized: false } });
 await client.connect();
+if (isLive) await assertLiveDatabase(client);
+else await assertStagingDatabase(client);
 await client.query(`create table if not exists public._migrations (name text primary key, applied_at timestamptz default now())`);
 await client.query(`alter table public._migrations enable row level security`);
 const dir = 'supabase/migrations';

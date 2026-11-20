@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { withHiddenColumns } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, EmptyState, StatusBadge, Table, Notice } from '@/components/ui';
 import { Field } from '@/components/admin/ui';
 import { ActionForm, RunButton } from '@/components/admin/client';
@@ -20,15 +21,17 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
   const s = await requireStaff('services', 'view', '/admin/services');
   const { code: sel, new: isNew } = await searchParams;
   const sb = await createClient();
-  const [{ data: services }, { data: prices }] = await Promise.all([
+  const [{ data: services }, { data: priceRows }] = await Promise.all([
     sb.from('services').select('code, name, description, unit, active, sort').order('sort'),
-    sb.from('service_prices').select('id, service_code, amount_minor, currency, effective_from, created_by, created_at').order('effective_from', { ascending: false }),
+    sb.from('service_prices').select('id, service_code, amount_minor, currency, effective_from, created_at').order('effective_from', { ascending: false }),
   ]);
+  // created_by is hidden from session reads (migration 195): added with the service role after requireStaff.
+  const prices = await withHiddenColumns('service_prices', priceRows, 'created_by');
   const editable = can(s, 'services', 'edit');
   const list = services ?? [];
   const now = new Date().toISOString();
   const byCode = new Map<string, Price[]>();
-  ((prices ?? []) as Price[]).forEach((p) => byCode.set(p.service_code, [...(byCode.get(p.service_code) ?? []), p]));
+  (prices as unknown as Price[]).forEach((p) => byCode.set(p.service_code, [...(byCode.get(p.service_code) ?? []), p]));
   const currentOf = (code: string, currency: Currency = 'USD') => byCode.get(code)?.find((p) => p.currency === currency && p.effective_from <= now);
   // CNY column: explicit CNY price, or the USD price converted at the approved rate (service_price_info marks it "converted")
   const [ctx, cnyRows] = await Promise.all([

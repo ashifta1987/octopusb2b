@@ -45,6 +45,16 @@ Postman is our official API partner (SPEC §15.2). This folder holds the files w
 
 Never put real customer keys into shared/team environments — keep them as current values in your own fork.
 
+## API changelog
+
+### 19 Nov 2026 — `supplier` replaced by `factory` (products, quotes, orders)
+
+- New field **`factory`**: `{ "verified": true, "country": "CN", "province": "Guangdong", "label": "Verified factory · China (Guangdong)" }`.
+  Supplier ids, codes, names and contacts are no longer returned anywhere in API v1.
+- **Deprecated:** `supplier` stays on products, quotes and orders as an alias of `factory` so existing clients keep working.
+  It contains only the same safe values (`verified`, `country`, `province`, `label`) — never an id, code, name or contact.
+  It is marked `deprecated: true` in `openapi.json` and **will be removed** in a later release; read `factory` instead.
+
 ## Regenerating
 
 ```bash

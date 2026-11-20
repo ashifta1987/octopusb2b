@@ -44,20 +44,22 @@ export function readZip(bytes: Uint8Array, s: Pick<Settings, 'maxImageBytes' | '
 
 const changed = (a: unknown, b: unknown) => (a ?? null) !== (b ?? null);
 
-/** Compare the staged batch with the database: create / update / skip per target table. */
-export async function computeDiff(sb: SupabaseClient, batch: StagingBatch): Promise<ImportDiff> {
+/** Compare the staged batch with the database: create / update / skip per target table.
+ *  `admin` must be the service-role client (stageImport callers pass createAdminClient() after guard('products', 'edit')):
+ *  the import columns it compares are hidden from session reads (migration 195). */
+export async function computeDiff(admin: SupabaseClient, batch: StagingBatch): Promise<ImportDiff> {
   const ids = batch.products.map((p) => p.external_id);
   const [{ data: sup }, { data: prods }] = await Promise.all([
-    sb.from('suppliers').select('id, manufacturer_code, province, handle, contact_name, contact_email, contact_phone, legal_name').eq('external_id', batch.supplier.external_id).maybeSingle(),
-    ids.length ? sb.from('products').select('id, external_id, title, factory_model, specification_raw, selling_points_raw, net_weight, product_size_mm, size_notes, colour_box_mm, carton_size_mm, qty_per_carton, gross_weight, listing_status, import_notes, incoterm, category_id, categories(name)').in('external_id', ids) : Promise.resolve({ data: [] }),
+    admin.from('suppliers').select('id, manufacturer_code, province, handle, contact_name, contact_email, contact_phone, legal_name').eq('external_id', batch.supplier.external_id).maybeSingle(),
+    ids.length ? admin.from('products').select('id, external_id, title, factory_model, specification_raw, selling_points_raw, net_weight, product_size_mm, size_notes, colour_box_mm, carton_size_mm, qty_per_carton, gross_weight, listing_status, import_notes, incoterm, category_id, categories(name)').in('external_id', ids) : Promise.resolve({ data: [] }),
   ]);
   const byExt = new Map((prods ?? []).map((p) => [p.external_id as string, p]));
   const pids = (prods ?? []).map((p) => p.id as string);
   const [{ data: sps }, { data: prices }, { data: media }, { data: review }] = await Promise.all([
-    sup && pids.length ? sb.from('supplier_products').select('product_id, supplier_model, moq, exclusive_channels, exclusivity_flag, status').eq('supplier_id', sup.id).in('product_id', pids) : Promise.resolve({ data: [] }),
-    sup && pids.length ? sb.from('supplier_product_prices').select('product_id, incoterm, moq_tier_min, variant_label, price_minor, currency, valid_from, valid_to').eq('supplier_id', sup.id).in('product_id', pids) : Promise.resolve({ data: [] }),
-    pids.length ? sb.from('product_media').select('product_id, url').in('product_id', pids) : Promise.resolve({ data: [] }),
-    ids.length ? sb.from('import_review_items').select('external_id, issue').in('external_id', ids) : Promise.resolve({ data: [] }),
+    sup && pids.length ? admin.from('supplier_products').select('product_id, supplier_model, moq, exclusive_channels, exclusivity_flag, status').eq('supplier_id', sup.id).in('product_id', pids) : Promise.resolve({ data: [] }),
+    sup && pids.length ? admin.from('supplier_product_prices').select('product_id, incoterm, moq_tier_min, variant_label, price_minor, currency, valid_from, valid_to').eq('supplier_id', sup.id).in('product_id', pids) : Promise.resolve({ data: [] }),
+    pids.length ? admin.from('product_media').select('product_id, url').in('product_id', pids) : Promise.resolve({ data: [] }),
+    ids.length ? admin.from('import_review_items').select('external_id, issue').in('external_id', ids) : Promise.resolve({ data: [] }),
   ]);
 
   const supplierDiff: TableDiff = { create: 0, update: 0, skip: 0, conflicts: [] };

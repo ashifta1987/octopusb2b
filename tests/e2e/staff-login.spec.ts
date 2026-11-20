@@ -1,19 +1,29 @@
 import { expect, test, type Page } from '@playwright/test';
 import { createHmac } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
+import { createTempCustomer, customerLogin, purgeTestOrgs, type TempCustomer } from './helpers/customer';
+import { assertStagingOrThrow } from '../../scripts/lib-staging-guard.mjs';
 
 /**
  * SPEC §17 — staff & back-office login (skeleton; selectors use accessible labels/roles).
  *  1. Invite → set password → enrol 2FA (TOTP computed here) → backup codes → choose workspace.
  *  2. A customer cannot open /office or /admin.
  *  3. Wrong passwords show the remaining attempts (lockout itself is covered by supabase/tests/staff-auth.test.mjs).
- * Needs SUPABASE_SERVICE_ROLE_KEY + NEXT_PUBLIC_SUPABASE_URL (invite via the admin API) and DEMO_PASSWORD.
+ * Self-contained (20 Nov 2026): it creates its own temporary staff member and customer (random passwords) and deletes
+ * them afterwards, so it never skips. It used to skip every case because it needed a shared DEMO_PASSWORD and the
+ * staging demo buyer, whose sign-in is blocked. STAGING ONLY (it creates and deletes users): refuses otherwise.
+ * Run: E2E_BASE_URL=http://localhost:3100 node scripts/with-staging-env.mjs npx playwright test tests/e2e/staff-login.spec.ts
  */
-const PASSWORD = process.env.DEMO_PASSWORD ?? '';
-const BUYER = process.env.E2E_BUYER_EMAIL ?? 'buyer@demo.octopusb2b.com';
 const URL_ = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
-const BASE = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
+const BASE = process.env.E2E_BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3000';
+const PASSWORD = `Staff-${Math.random().toString(36).slice(2, 10)}-${Date.now() % 1000}`;   // this run only
+let buyer: TempCustomer | null = null;
+
+test.beforeAll(async () => {
+  await assertStagingOrThrow();                       // Supabase URL + DB connection string are the staging project
+  if (!URL_ || !SERVICE) throw new Error('NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY missing — run through scripts/with-staging-env.mjs');
+});
 
 /** RFC 6238 TOTP (SHA-1, 30 s, 6 digits) from a base32 secret. */
 function totp(secret: string, at = Date.now()): string {
@@ -34,7 +44,6 @@ async function typeCode(page: Page, code: string) {
 }
 
 test.describe('Staff login — invite → set password → 2FA → workspace', () => {
-  test.skip(!SERVICE || !URL_ || !PASSWORD, 'service role / DEMO_PASSWORD not set');
   let userId = '';
 
   test.afterAll(async () => {
@@ -76,12 +85,14 @@ test.describe('Staff login — invite → set password → 2FA → workspace', (
       await page.getByRole('button', { name: /back office/i }).click();
     }
     await page.waitForURL(/\/office/);
-    await expect(page.getByRole('button', { name: /account menu/i }).or(page.getByLabel('Account menu'))).toBeVisible();
+    // the staff header's account menu (a <details> summary with the sr-only label "Account menu:")
+    await expect(page.locator('summary', { hasText: /account menu/i })).toBeVisible();
   });
 });
 
 test.describe('Staff areas are closed to customers', () => {
-  test.skip(!PASSWORD, 'DEMO_PASSWORD not set');
+  test.beforeAll(async () => { buyer = await createTempCustomer('stafflogin'); });
+  test.afterAll(async () => { if (buyer) await purgeTestOrgs([buyer.orgId], [buyer.id]); });
 
   test('signed-out visitors are sent to the staff login', async ({ page }) => {
     await page.goto('/office');
@@ -90,12 +101,7 @@ test.describe('Staff areas are closed to customers', () => {
   });
 
   test('a customer cannot open /office or /admin', async ({ page }) => {
-    await page.goto('/login');
-    await page.getByRole('tab', { name: /log in/i }).click();
-    await page.getByLabel(/email/i).fill(BUYER);
-    await page.getByLabel(/^password/i).fill(PASSWORD);
-    await page.getByRole('button', { name: /^log in$/i }).click();
-    await page.waitForURL(/\/account/);
+    await customerLogin(page, buyer!);
     for (const path of ['/office', '/admin']) {
       await page.goto(path);
       await expect(page).toHaveURL(/\/login(\?|$)/);
@@ -104,10 +110,10 @@ test.describe('Staff areas are closed to customers', () => {
 
   test('the staff login refuses a customer account', async ({ page }) => {
     await page.goto('/staff/login');
-    await page.getByLabel('Work email').fill(BUYER);
-    await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
+    await page.getByLabel('Work email').fill(buyer!.email);
+    await page.getByLabel('Password', { exact: true }).fill(buyer!.password);
     await page.getByRole('button', { name: 'Continue' }).click();
-    await expect(page.getByRole('alert')).toContainText(/staff portal/i);
+    await expect(page.locator('form [role=alert]')).toContainText(/staff portal/i);
   });
 
   test('a wrong password shows the remaining attempts', async ({ page }) => {
@@ -115,6 +121,6 @@ test.describe('Staff areas are closed to customers', () => {
     await page.getByLabel('Work email').fill(`nobody+${Date.now()}@demo.octopusb2b.com`);
     await page.getByLabel('Password', { exact: true }).fill('wrong-password-1');
     await page.getByRole('button', { name: 'Continue' }).click();
-    await expect(page.getByRole('alert')).toContainText(/attempts? left/i);
+    await expect(page.locator('form [role=alert]')).toContainText(/attempts? left/i);
   });
 });

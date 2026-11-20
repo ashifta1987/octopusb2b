@@ -22,6 +22,11 @@ const seqSnapshot = (await db.query(`select sequencename, last_value from pg_seq
 await db.query('begin');
 // fixture (rolled back): the live Bowijie rows may be on a moderation hold (6 Nov 2026); the gate tests below need it off
 await db.query(`update products set moderation_hold = false where sku like 'CN-GD-BWJ-%'`);
+// fixture (rolled back, 19 Nov 2026): put Bowijie back in its as-imported state — identity under review, products not
+// live, review items open — so the gate checks run the same on staging (where these rows were since moderated)
+await db.query(`update suppliers set identity_status = 'needs_identity_review' where external_id = 'CN-GD-BWJ-0010'`);
+await db.query(`update products set status = 'draft' where external_id like 'CN-GD-BWJ-%' and status not in ('draft', 'submitted', 'in_review')`);
+await db.query(`update import_review_items set status = 'open' where external_id like 'CN-GD-BWJ-%' and status <> 'open'`);
 try {
   const admin = (await one(`select id from auth.users where email = 'admin@demo.octopusb2b.com'`)).id;
 

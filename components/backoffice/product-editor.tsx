@@ -1,6 +1,7 @@
 import 'server-only';
 import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { portalProducts } from '@/components/backoffice/hidden-columns';
 import type { Session } from '@/lib/auth';
 import { COUNTRY_NAMES, asCurrency } from '@/lib/format';
 import { getAiAdapter } from '@/lib/adapters/ai';
@@ -17,7 +18,9 @@ export async function ProductEditor({ session, productId, presetSupplier }: { se
   const [{ data: cats }, { data: tags }, { data: certs }] = await Promise.all([
     sb.from('categories').select('id, name, parent_id, level, hs_code, sort').eq('active', true).order('sort'),
     sb.from('tags').select('id, name, kind').order('kind').order('name'),
-    ids.length ? sb.from('certificates').select('id, supplier_id, name, issuer, status, expires_at').in('supplier_id', ids).order('name') : Promise.resolve({ data: [] }),
+    // certificates.supplier_id is hidden from session reads (migration 195): service role, scoped explicitly to the
+    // suppliers this caller manages (getManagedSuppliers → session RLS on distributor_suppliers / suppliers).
+    ids.length ? createAdminClient().from('certificates').select('id, supplier_id, name, issuer, status, expires_at').in('supplier_id', ids).order('name') : Promise.resolve({ data: [] }),
   ]);
 
   let status = 'draft';
@@ -30,7 +33,9 @@ export async function ProductEditor({ session, productId, presetSupplier }: { se
   };
 
   if (productId) {
-    const { data: p } = await sb.from('products')
+    // supplier_id / HS columns are hidden from plain products reads (migration 195): portal_products() returns them only for
+    // rows the caller may manage (staff with products:view, own / assigned suppliers); `ids` check below still applies.
+    const { data: p } = await portalProducts(sb)
       .select('id, sku, title, supplier_id, category_id, status, hs_code_status, hs_code_source, hs_code_note, unit, moq, lead_time_days, incoterm, origin_country, hs_code, octopus_dropship, ready_to_ship, description, seo_title, seo_description, image_url, currency, price_tiers(min_qty, unit_price_cents, currency), product_specs(name, value, sort), product_tags(tag_id), product_certificates(certificate_id), product_media(url, sort)')
       .eq('id', productId).maybeSingle();
     if (!p || !ids.includes(p.supplier_id)) notFound();

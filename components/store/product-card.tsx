@@ -77,11 +77,11 @@ export function ProductCard({ p, categoryName, variant = 'grid', cta = 'quote' }
         {variant === 'grid' && <ProductTags tags={p.tags} dropship={p.octopus_dropship} ready={p.ready_to_ship} />}
         <div className="mt-auto pt-2 space-y-3">
           {/* ADDON-44 rule 4: public cards never show the supplier code */}
-          {p.supplier && (
+          {p.factory && (
             <span className="inline-flex items-center gap-1.5 text-[13px] text-muted" data-testid="card-factory">
-              {p.supplier.country && <span className="mono text-[10px] font-semibold bg-pearl border border-line rounded px-1 py-px text-ink">{p.supplier.country}</span>}
-              <span>{p.supplier.verified ? 'Verified factory' : 'Factory'}</span>
-              {p.supplier.verified && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ok" strokeWidth="2.2" aria-hidden><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>}
+              {p.factory.country && <span className="mono text-[10px] font-semibold bg-pearl border border-line rounded px-1 py-px text-ink">{p.factory.country}</span>}
+              <span>{p.factory.verified ? 'Verified factory' : 'Factory'}</span>
+              {p.factory.verified && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-ok" strokeWidth="2.2" aria-hidden><circle cx="12" cy="12" r="9" /><path d="m8 12 3 3 5-6" /></svg>}
             </span>
           )}
           {variant !== 'featured' && (cta === 'pool' ? (

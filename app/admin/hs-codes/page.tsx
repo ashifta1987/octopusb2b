@@ -1,5 +1,6 @@
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { portalProducts } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, Table, StatusBadge, EmptyState, Notice, Stat } from '@/components/ui';
 import { RunButton } from '@/components/admin/client';
 import { confirmHsType, runBackfillPreview, applyBackfill } from './actions';
@@ -15,7 +16,8 @@ export default async function HsCodesPage() {
   const sb = await createClient();
   const [{ data: types }, { data: prods }, { data: props }] = await Promise.all([
     sb.from('hs_product_types').select('id, name, type_key, heading, confirmed, source, confidence, reason, keywords').order('name'),
-    sb.from('products').select('hs_product_type_id, hs_code_status, hs_code_source').is('archived_at', null).limit(10000),
+    // HS columns are hidden from plain products reads (migration 195): portal_products() returns them for staff with products:view
+    portalProducts(sb).select('hs_product_type_id, hs_code_status, hs_code_source').is('archived_at', null).limit(10000),
     sb.from('hs_backfill_proposals').select('product_id, heading, source, status, confidence, note, products(sku, title), hs_product_types(name)').order('status'),
   ]);
   const use = new Map<string, { total: number; suggested: number }>();

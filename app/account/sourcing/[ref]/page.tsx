@@ -4,9 +4,9 @@ import { requireCustomer } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { getSiteContent } from '@/lib/content';
 import { parts } from '@/components/store/seo';
-import { PageHeader, Card, EmptyState, Notice, Money, SupplierCode } from '@/components/ui';
+import { PageHeader, Card, EmptyState, Notice, Money, FactoryBadge } from '@/components/ui';
 import { fmtDate, money, COUNTRY_NAMES, humanize } from '@/lib/format';
-import { getSettings, latestTermsId, supplierMap } from '@/components/account/data';
+import { getSettings, latestTermsId, quoteFactoryMap } from '@/components/account/data';
 import { RealtimeRefresh } from '@/components/account/realtime-refresh';
 import { ApproveQuoteButton } from '@/components/account/approve-quote';
 import { nowMs } from '@/components/account/order-utils';
@@ -18,7 +18,7 @@ import { STATUS_TONE, TYPE_LABEL, rfqStatus, serviceStatus, serviceType, timelin
 export const metadata = { title: 'Sourcing request' };
 
 type Quote = {
-  id: string; code: string; supplier_id: string; unit_price_cents: number; quantity: number; incoterm: string; lead_time_days: number | null;
+  id: string; code: string; unit_price_cents: number; quantity: number; incoterm: string; lead_time_days: number | null;
   shipping_cents: number; notes: string | null; status: string; valid_until: string; created_at: string; currency: string; moq: number | null; sample_price_cents: number | null;
 };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -32,12 +32,14 @@ export default async function SourcingDetail({ params }: { params: Promise<{ ref
   const sb = await createClient();
   const col = UUID.test(ref) ? 'id' : 'code';
   const [{ data: rfq }, { data: svc }] = await Promise.all([
-    sb.from('rfqs').select('*').eq(col, ref).maybeSingle(),
-    sb.from('service_requests').select('*').eq(col, ref).maybeSingle(),
+    sb.from('rfqs').select('id, code, org_id, product_id, category_id, title, details, quantity, unit, target_price_cents, destination_country, destination_city, incoterm, status, fee_minor, expires_at, created_by, created_at, updated_at, currency').eq(col, ref).maybeSingle(),
+    sb.from('service_requests').select('id, code, org_id, service_code, product_id, order_id, status, details, fee_minor, paid_via, report_path, created_by, created_at, updated_at, currency, fx_rate_id').eq(col, ref).maybeSingle(),
   ]);
   if (!rfq && !svc) notFound();
   const kind: 'rfq' | 'service' = rfq ? 'rfq' : 'service';
-  const req = (rfq ?? svc)!;
+  // explicit columns (no select('*'): internal columns such as assigned_to are not readable by customers)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const req = (rfq ?? svc)! as Record<string, any>;
   const id = req.id as string;
   const code = req.code as string;
   const fk = kind === 'rfq' ? 'rfq_id' : 'service_request_id';
@@ -56,14 +58,14 @@ export default async function SourcingDetail({ params }: { params: Promise<{ ref
   let docs: { id: string; doc_type: string; number: string; created_at: string }[] = [];
   if (kind === 'rfq') {
     const [{ data: q }, { data: o }] = await Promise.all([
-      sb.from('quotes').select('id, code, supplier_id, unit_price_cents, quantity, incoterm, lead_time_days, shipping_cents, notes, status, valid_until, created_at, currency, moq, sample_price_cents').eq('rfq_id', id).order('unit_price_cents'),
+      sb.from('quotes').select('id, code, unit_price_cents, quantity, incoterm, lead_time_days, shipping_cents, notes, status, valid_until, created_at, currency, moq, sample_price_cents').eq('rfq_id', id).order('unit_price_cents'),
       sb.from('orders').select('id, code, status').eq('rfq_id', id).maybeSingle(),
     ]);
     quotes = ((q ?? []) as Quote[]).map((x) => ({ ...x, unit_price_cents: Number(x.unit_price_cents), shipping_cents: Number(x.shipping_cents), sample_price_cents: x.sample_price_cents == null ? null : Number(x.sample_price_cents), total: Number(x.unit_price_cents) * x.quantity + Number(x.shipping_cents) }));
     order = o as typeof order;
     if (order) docs = ((await sb.from('documents').select('id, doc_type, number, created_at').eq('order_id', order.id).order('created_at')).data ?? []) as typeof docs;
   }
-  const sup = await supplierMap(quotes.map((q) => q.supplier_id));
+  const factories = await quoteFactoryMap(quotes.map((q) => q.id));
   const now = nowMs();
   const approvable = (q: (typeof quotes)[number]) => (q.status === 'sent' || q.status === 'viewed') && new Date(q.valid_until).getTime() > now && !order;
   const type = kind === 'rfq' ? 'sourcing' : serviceType(req.service_code as string);
@@ -139,7 +141,7 @@ export default async function SourcingDetail({ params }: { params: Promise<{ ref
           </Card>
 
           {kind === 'rfq' && (
-            <Card title={`Quotes (${quotes.length})`} action={quotes.length > 1 ? <span className="text-sm text-muted">Side by side · supplier code only</span> : undefined}>
+            <Card title={`Quotes (${quotes.length})`} action={quotes.length > 1 ? <span className="text-sm text-muted">Side by side · factory shown without its name</span> : undefined}>
               {quotes.length === 0 ? (
                 <EmptyState title="No quotes yet" body="Matched suppliers usually quote within 24 hours. This page updates by itself when a quote arrives." />
               ) : (
@@ -150,7 +152,7 @@ export default async function SourcingDetail({ params }: { params: Promise<{ ref
                       {quotes.map((q) => (
                         <th key={q.id} scope="col" className="th align-top normal-case tracking-normal">
                           <div className="mono text-xs text-muted">{q.code}{q.status === 'sent' && <span className="ml-1.5 rounded-full bg-bad text-white text-[10px] font-bold px-1.5 py-0.5">NEW</span>}</div>
-                          <div className="mt-1"><SupplierCode code={sup.get(q.supplier_id)?.code ?? '—'} country={sup.get(q.supplier_id)?.country} verified={sup.get(q.supplier_id)?.verified} /></div>
+                          <div className="mt-1"><FactoryBadge factory={factories.get(q.id)} /></div>
                         </th>
                       ))}
                     </tr></thead>

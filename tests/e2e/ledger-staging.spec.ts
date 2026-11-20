@@ -113,7 +113,7 @@ test('invoices: "For" filled; awaiting payment total = ledger Due now; wallet sh
   expect(awaiting).toBe(1200);
   expect(dueNow).toBe(awaiting);
   await page.goto('/account/wallet');
-  await expect(page.getByTestId('transfer-difference')).toHaveText('US$ 5.00 less than claimed (bank charges)');
+  await expect(page.getByTestId('transfer-difference')).toHaveText('US$ 5.00 less than claimed');   // a transfer confirmed before 202: its note stays internal, no customer reason
 });
 
 test('an empty period disables both exports', async ({ page }) => {

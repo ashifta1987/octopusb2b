@@ -25,24 +25,25 @@ export function quoteText(rows: PriceRow[]): { price: number | null; quote: stri
   return { price: lowest, quote: `${segs.join('  |  ')}  |  ${inc}` };
 }
 
-export async function exportSupplierWorkbookData(sb: SupabaseClient, supplierId: string): Promise<{ supplier: TemplateSupplier; rows: TemplateRow[] }> {
+/** `admin` must be the service-role client (the import columns are hidden from session reads, migration 195). */
+export async function exportSupplierWorkbookData(admin: SupabaseClient, supplierId: string): Promise<{ supplier: TemplateSupplier; rows: TemplateRow[] }> {
   const [{ data: s }, { data: variants }, { data: contacts }, { data: links }] = await Promise.all([
-    sb.from('suppliers').select('id, external_id, manufacturer_code, handle, contact_name, contact_email, contact_phone').eq('id', supplierId).single(),
-    sb.from('supplier_name_variants').select('variant_name, variant_address, seen_in, is_canonical').eq('supplier_id', supplierId).order('created_at'),
-    sb.from('supplier_contacts').select('name, role, phone, email, is_primary').eq('supplier_id', supplierId).order('is_primary', { ascending: false }),
-    sb.from('supplier_products').select('product_id, supplier_model, moq, exclusive_channels, exclusivity_flag, status').eq('supplier_id', supplierId),
+    admin.from('suppliers').select('id, external_id, manufacturer_code, handle, contact_name, contact_email, contact_phone').eq('id', supplierId).single(),
+    admin.from('supplier_name_variants').select('variant_name, variant_address, seen_in, is_canonical').eq('supplier_id', supplierId).order('created_at'),
+    admin.from('supplier_contacts').select('name, role, phone, email, is_primary').eq('supplier_id', supplierId).order('is_primary', { ascending: false }),
+    admin.from('supplier_products').select('product_id, supplier_model, moq, exclusive_channels, exclusivity_flag, status').eq('supplier_id', supplierId),
   ]);
   if (!s) throw new Error('NOT_FOUND');
   const linkBy = new Map((links ?? []).map((l) => [l.product_id as string, l]));
   // products of this supplier: linked through supplier_products, or owned directly (supplier_id)
-  const { data: prods } = await sb.from('products')
+  const { data: prods } = await admin.from('products')
     .select('id, external_id, title, factory_model, moq, net_weight, product_size_mm, size_notes, colour_box_mm, carton_size_mm, qty_per_carton, gross_weight, specification_raw, selling_points_raw, listing_status, import_notes, created_at, categories(name)')
     .or(`supplier_id.eq.${supplierId}${linkBy.size ? `,id.in.(${[...linkBy.keys()].join(',')})` : ''}`)
     .is('archived_at', null).order('created_at');
   const ids = (prods ?? []).map((p) => p.id as string);
   const [{ data: prices }, { data: media }] = await Promise.all([
-    ids.length ? sb.from('supplier_product_prices').select('product_id, incoterm, moq_tier_min, variant_label, price_minor').eq('supplier_id', supplierId).eq('is_superseded', false).in('product_id', ids).order('created_at') : Promise.resolve({ data: [] }),
-    ids.length ? sb.from('product_media').select('product_id, url, sort').in('product_id', ids).order('sort') : Promise.resolve({ data: [] }),
+    ids.length ? admin.from('supplier_product_prices').select('product_id, incoterm, moq_tier_min, variant_label, price_minor').eq('supplier_id', supplierId).eq('is_superseded', false).in('product_id', ids).order('created_at') : Promise.resolve({ data: [] }),
+    ids.length ? admin.from('product_media').select('product_id, url, sort').in('product_id', ids).order('sort') : Promise.resolve({ data: [] }),
   ]);
   const priceBy = new Map<string, PriceRow[]>();
   (prices ?? []).forEach((p) => priceBy.set(p.product_id as string, [...(priceBy.get(p.product_id as string) ?? []), { ...(p as PriceRow), price_minor: Number(p.price_minor) }]));

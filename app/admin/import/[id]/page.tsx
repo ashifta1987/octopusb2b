@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { portalProducts } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, Notice, StatusBadge, Table, Stat } from '@/components/ui';
 import { RunButton } from '@/components/admin/client';
 import { fmtDate, humanize, productStatusView } from '@/lib/format';
@@ -31,7 +32,8 @@ export default async function ImportRunPage({ params }: { params: Promise<{ id: 
   batch.review.forEach((r) => reviewBy.set(r.external_id, (reviewBy.get(r.external_id) ?? 0) + 1));
   const errors = batch.errors ?? [];
   const submitRes = ((run.submit_report as { results?: Record<string, string> } | null)?.results ?? {}) as Record<string, string>;
-  const { data: liveStatus } = committed ? await sb.from('products').select('sku, status, listing_status').in('sku', batch.products.map((x) => x.external_id)) : { data: [] };
+  // listing_status is hidden from plain products reads (migration 195): portal_products() returns it to staff with products:view
+  const { data: liveStatus } = committed ? await portalProducts(sb).select('sku, status, listing_status').in('sku', batch.products.map((x) => x.external_id)) : { data: [] };
   const statusOf = new Map((liveStatus ?? []).map((x) => [x.sku as string, x.status as string]));
   const listingOf = new Map((liveStatus ?? []).map((x) => [x.sku as string, x.listing_status as string | null]));
   const drafts = [...statusOf.entries()].filter(([k, v]) => (v === 'draft' || v === 'rejected') && !['needs_quote', 'in_development'].includes(listingOf.get(k) ?? '')).length;

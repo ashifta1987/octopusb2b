@@ -65,7 +65,7 @@ export const TOOL_DEFINITIONS = [
     type: 'function' as const,
     function: {
       name: 'list_quotes',
-      description: 'Supplier quotes for one of the customer\'s RFQs (supplier shown by code only): unit price, incoterm, lead time, shipping, total, validity.',
+      description: 'Supplier quotes for one of the customer\'s RFQs (factory shown only as e.g. "Verified factory · China (Guangdong)", never a supplier code): unit price, incoterm, lead time, shipping, total, validity.',
       parameters: { type: 'object', properties: { rfq_id_or_code: { type: 'string', description: 'RFQ code (RFQ-…) or id' } }, required: ['rfq_id_or_code'], additionalProperties: false },
     },
   },

@@ -11,8 +11,9 @@ import { fmtDate } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import {
   inviteStaff, resendInvite, resetTwoFactor, endSessions, unlockAccount, createStaffWithoutEmail, saveStaffSecurity,
-  setUserRoles, setStaffActive, savePermissions, assignSupplier, unassignSupplier,
+  setUserRoles, setStaffActive, savePermissions, assignSupplier, unassignSupplier, addToDivisions, removeFromDivision,
 } from './actions';
+import { COMPANY_WIDE_ROLES, DIVISION_ROLES } from '@/lib/divisions/shared';
 
 export const metadata = { title: 'Staff & roles' };
 
@@ -63,6 +64,11 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
     sb.from('distributor_suppliers').select('distributor_id, supplier_id'),
     sb.from('suppliers').select('id, code, legal_name, country').is('archived_at', null).order('code'),
     sb.rpc('admin_staff_security'),
+  ]);
+  // divisions step 4: who works in which division (one role per division; company-wide roles cover every division)
+  const [{ data: divisions }, { data: memberships }] = await Promise.all([
+    sb.from('divisions').select('id, code, name, status').order('sort_order'),
+    sb.from('division_members').select('user_id, division_id, role'),
   ]);
   const staffRoles = (roles ?? []).filter((r) => r.is_staff);
   const staffCodes = new Set(staffRoles.map((r) => r.code));
@@ -165,6 +171,67 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
           })}
         </Table>
       </Card>
+
+      <div id="divisions" className="mb-6 scroll-mt-24">
+        <Card title="Divisions" action={<span className="text-xs text-muted">One person can work in several divisions · one role in each</span>}>
+          <Table head={['Person', 'Divisions', '']} empty={<EmptyState title="No staff yet" />}>
+            {team.filter((t) => t.active).map((t) => {
+              const companyWide = (byUser.get(t.id) ?? []).some((r) => (COMPANY_WIDE_ROLES as readonly string[]).includes(r));
+              const mine = (memberships ?? []).filter((m) => m.user_id === t.id);
+              return (
+                <tr key={t.id} data-testid={`div-row-${t.email ?? t.id}`}>
+                  <td className="td"><div className="font-semibold">{t.full_name}</div><div className="text-xs text-muted">{(byUser.get(t.id) ?? []).map((r) => staffRoles.find((x) => x.code === r)?.name ?? r).join(', ')}</div></td>
+                  <td className="td">
+                    <span className="flex flex-wrap gap-2">
+                      {companyWide && <StatusBadge status="company" tone="blue" label="All divisions (company-wide)" />}
+                      {mine.map((m) => {
+                        const d = (divisions ?? []).find((x) => x.id === m.division_id);
+                        return (
+                          <span key={m.division_id} className="inline-flex items-center gap-1 whitespace-nowrap rounded-full border border-line bg-white pl-3 pr-1 py-0.5 text-sm">
+                            <span className="font-semibold">{d?.name ?? '—'}</span><span className="text-muted">· {m.role}</span>
+                            {edit && d && <RunButton className="w-8 h-8 inline-flex items-center justify-center rounded-full text-muted hover:text-bad" confirm={`Remove ${t.full_name} from ${d.name}? Their other divisions stay.`} action={removeFromDivision.bind(null, t.id, d.code)}><span aria-hidden>×</span><span className="sr-only">Remove from {d.name}</span></RunButton>}
+                          </span>
+                        );
+                      })}
+                      {!companyWide && !mine.length && <span className="text-sm text-muted">No division yet: sees no division work</span>}
+                    </span>
+                  </td>
+                  <td className="td text-right">{edit && <Link href={`/admin/staff?user=${t.id}#add-division`} className="btn btn-ghost btn-sm">Add division</Link>}</td>
+                </tr>
+              );
+            })}
+          </Table>
+          {edit && (
+            <div id="add-division" className="scroll-mt-24 border-t border-line">
+              <ActionForm action={addToDivisions} className="px-6 py-5 grid gap-4 lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)_minmax(0,200px)]" submitLabel="Add to divisions"
+                confirm="Add this person to the ticked divisions? You may be asked for your 2FA code.">
+                <Field label="Person" htmlFor="dv-user">
+                  <select id="dv-user" name="user_id" className="input" required defaultValue={selUser?.id ?? ''}>
+                    <option value="" disabled>Select…</option>
+                    {team.filter((t) => t.active).map((t) => <option key={t.id} value={t.id}>{t.full_name}</option>)}
+                  </select>
+                </Field>
+                <fieldset>
+                  <legend className="label">Divisions (tick one or more)</legend>
+                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                    {(divisions ?? []).filter((d) => d.status === 'active').map((d) => (
+                      <label key={d.code} className="flex items-center gap-2 rounded-[8px] border border-line px-3 py-2 text-sm has-[:checked]:border-coral-text has-[:checked]:bg-tint">
+                        <input type="checkbox" name="divisions" value={d.code} className="w-5 h-5" /> {d.name}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+                <Field label="Role in these divisions" htmlFor="dv-role">
+                  <select id="dv-role" name="role" className="input" required defaultValue="staff">
+                    {DIVISION_ROLES.map((r) => <option key={r} value={r}>{r[0].toUpperCase() + r.slice(1)}</option>)}
+                  </select>
+                </Field>
+                <p className="lg:col-span-3 text-xs text-muted">Already in a division? Adding it again changes the role there. Admin, Finance and Support are company-wide roles and already see every division. Every change is in the audit log.</p>
+              </ActionForm>
+            </div>
+          )}
+        </Card>
+      </div>
 
       {selUser && (
         <div id="edit-user" className="mb-6">

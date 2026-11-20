@@ -120,6 +120,8 @@ const int = { type: 'integer' };
 const bool = { type: 'boolean' };
 const nullable = (s: Record<string, unknown>) => ({ anyOf: [s, { type: 'null' }] });
 const ref = (name: string) => ({ $ref: `#/components/schemas/${name}` });
+/** Deprecated alias of `factory` on products, quotes and orders (kept for existing API v1 clients, 19 Nov 2026). */
+const supplierAlias = () => ({ ...nullable(ref('Factory')), deprecated: true, description: 'Deprecated alias of `factory`; contains only verified/country/province. Will be removed — see API changelog.' });
 const obj = (properties: Record<string, unknown>, required: string[] = []) => ({ type: 'object', ...(required.length ? { required } : {}), properties });
 const list = (r: string, paged = true) => obj({ data: { type: 'array', items: ref(r) }, ...(paged ? { meta: ref('PageMeta') } : {}) }, ['data']);
 const envelope = (r: string) => obj({ data: ref(r), simulated: { type: 'boolean', description: 'true when a test key was used — nothing was written' } }, ['data']);
@@ -140,12 +142,12 @@ const SCHEMAS: Record<string, unknown> = {
     properties: { type: str, title: str, status: int, code: str, detail: str, errors: { type: 'array', items: obj({ path: str, message: str }) } },
   },
   PageMeta: obj({ page: int, per_page: int, total: int, total_pages: int }, ['page', 'per_page', 'total']),
-  Supplier: { ...obj({ code: { type: 'string', example: 'OCT-1101' }, country: { type: 'string', example: 'CN' }, verified: bool }, ['code', 'country']), description: 'Suppliers are identified by code and country only' },
+  Factory: { ...obj({ verified: bool, country: nullable({ type: 'string', example: 'CN' }), province: nullable({ type: 'string', example: 'Guangdong' }), label: { type: 'string', example: 'Verified factory · China (Guangdong)' } }, ['verified', 'label']), description: 'The factory behind a product, quote or order: verified badge, country and province only. Supplier names, codes and ids are never shared.' },
   Product: obj(
     {
       id: str, slug: str, title: str, description: nullable(str), category_id: nullable(str), unit: str, moq: int, lead_time_days: nullable(int), incoterm: nullable(str),
       origin_country: nullable(str), hs_code: nullable(str), image_url: nullable(str), from_price: nullable(ref('Price')), currency: { ...currency, description: 'Currency the supplier entered the prices in' },
-      ready_to_ship: bool, octopus_dropship: bool, supplier: nullable(ref('Supplier')),
+      ready_to_ship: bool, octopus_dropship: bool, factory: nullable(ref('Factory')), supplier: supplierAlias(),
     },
     ['id', 'slug', 'title', 'unit', 'moq', 'from_price', 'currency'],
   ),
@@ -169,7 +171,7 @@ const SCHEMAS: Record<string, unknown> = {
     {
       id: str, code: { type: 'string', example: 'QT-1001-1' }, rfq_id: str, quantity: int, incoterm: nullable(str), lead_time_days: nullable(int), notes: nullable(str),
       status: { enum: ['draft', 'sent', 'viewed', 'approved', 'rejected', 'expired', 'superseded'] }, valid_until: ts, created_at: ts,
-      currency, fx_rate_id: nullable(str), unit_price: ref('Amount'), shipping: ref('Amount'), total: ref('Amount'), supplier: nullable(ref('Supplier')),
+      currency, fx_rate_id: nullable(str), unit_price: ref('Amount'), shipping: ref('Amount'), total: ref('Amount'), factory: nullable(ref('Factory')), supplier: supplierAlias(),
     },
     ['id', 'code', 'rfq_id', 'quantity', 'status', 'currency', 'unit_price', 'shipping', 'total'],
   ),
@@ -189,7 +191,7 @@ const SCHEMAS: Record<string, unknown> = {
       status: { enum: ['pi_issued', 'deposit_pending', 'deposit_paid', 'confirmed', 'in_production', 'qc', 'balance_pending', 'balance_paid', 'ready_to_ship', 'shipped', 'delivered', 'closed', 'cancelled', 'disputed'] },
       title: str, quantity: int, deposit_pct: { type: 'number' }, incoterm: nullable(str), quote_id: nullable(str), rfq_id: nullable(str), terms_version_id: nullable(str),
       currency, fx_rate_id: nullable(str), unit_price: ref('Amount'), shipping: ref('Amount'), total: ref('Amount'), deposit: ref('Amount'), paid: ref('Amount'), balance: ref('Amount'),
-      supplier: nullable(ref('Supplier')),
+      factory: nullable(ref('Factory')), supplier: supplierAlias(),
       events: { type: 'array', items: obj({ kind: str, title: str, body: nullable(str), created_at: ts }) },
       documents: { type: 'array', items: obj({ id: str, doc_type: str, number: str, currency, amount: nullable(ref('Amount')), status: str, created_at: ts }, ['id', 'doc_type', 'amount']) },
       shipments: { type: 'array', items: obj({ id: str, code: str, tracking_no: nullable(str), status: str, eta: nullable(str), shipping_rate: nullable(ref('Amount')) }, ['id', 'code', 'status']) },
@@ -199,7 +201,7 @@ const SCHEMAS: Record<string, unknown> = {
   ),
   Tracking: obj(
     {
-      id: str, code: str, order_id: nullable(str), order_code: nullable(str), service: str, service_code: nullable(str), tracking_no: nullable(str),
+      id: str, code: str, order_id: nullable(str), order_code: nullable(str), service: str, carrier: { type: 'string', example: 'Octopus B2B shipping', description: 'Carrier name shown to customers (the public carrier label once approved, otherwise "Octopus B2B shipping")' }, service_code: nullable(str), tracking_no: nullable(str),
       status: { enum: ['draft', 'priced', 'created', 'label_ready', 'picked_up', 'in_transit', 'out_for_delivery', 'delivered', 'exception', 'returned'] }, eta: nullable(str),
       events: { type: 'array', items: obj({ status: str, description: nullable(str), location: nullable(str), occurred_at: ts }) },
     },

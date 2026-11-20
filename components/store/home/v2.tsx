@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { block } from '@/lib/content';
 import { money, COUNTRY_NAMES } from '@/lib/format';
-import type { CardProduct, PoolCard, PublicSupplier } from '@/components/store/data';
+import type { CardProduct, PoolCard, VerifiedFactoryCard } from '@/components/store/data';
+import { factoryLabel } from '@/lib/factory-label';
 import { unitOne } from '@/components/store/product-card';
 import { CATEGORY_PILL, CATEGORY_PILL_CLASS, TURNKEY_CATEGORIES, kUsd, type TurnkeyPackage, type TurnkeyProject } from '@/lib/turnkey/format';
 import { TkImage } from '@/components/store/turnkey/ui';
@@ -206,11 +207,11 @@ function ReadyCard({ p }: { p: CardProduct }) {
       <div className="p-4 flex flex-col gap-1.5 flex-1">
         <div className="flex items-center justify-between gap-2">
           {tag ? <span className="mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-tint text-coral-text">{tag}</span> : <span />}
-          {p.supplier?.country && <span className="mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-pearl border border-line text-muted">{p.supplier.country}</span>}
+          {p.factory?.country && <span className="mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-pearl border border-line text-muted">{p.factory.country}</span>}
         </div>
         <h3 className="text-[15px] font-semibold leading-snug line-clamp-2 group-hover:text-coral-text">{p.title}</h3>
         {price != null && <div className="text-[13px] text-muted"><span className="mono text-[10.5px] uppercase">From</span> <b className="text-[17px] text-ink font-bold">{money(price, p.currency)}</b> / {unitOne(p.unit)}</div>}
-        <div className="mono text-[10.5px] uppercase tracking-[.04em] text-muted mt-auto">MOQ {p.moq.toLocaleString('en-US')} {p.unit}{p.supplier?.verified ? ' · Verified factory' : ''}</div>
+        <div className="mono text-[10.5px] uppercase tracking-[.04em] text-muted mt-auto">MOQ {p.moq.toLocaleString('en-US')} {p.unit}{p.factory?.verified ? ' · Verified factory' : ''}</div>
       </div>
     </Link>
   );
@@ -536,7 +537,8 @@ export function MakeMyBrand({ blocks }: { blocks: Blocks }) {
 }
 
 /* ───────── verified suppliers ───────── */
-export function Suppliers({ blocks, suppliers, categories, sponsored }: { blocks: Blocks; suppliers: PublicSupplier[]; categories: Record<string, string[]>; sponsored?: React.ReactNode }) {
+/** Factory labels only — buyers never see a supplier code or id (19 Nov 2026). */
+export function Suppliers({ blocks, suppliers, sponsored }: { blocks: Blocks; suppliers: VerifiedFactoryCard[]; sponsored?: React.ReactNode }) {
   if (!suppliers.length) return null;
   return (
     <section aria-labelledby="home-suppliers-h" className="bg-white">
@@ -544,14 +546,13 @@ export function Suppliers({ blocks, suppliers, categories, sponsored }: { blocks
         <SectionTitle id="home-suppliers-h" eyebrow={block(blocks, 'home2.suppliers.eyebrow', 'Trust')} title={block(blocks, 'home.suppliers.title', 'Verified suppliers')} href="/suppliers" link={block(blocks, 'home.suppliers.link', 'Become a supplier')} />
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {suppliers.map((s) => (
-            <li key={s.id} className="card rounded-[14px] p-4">
+            <li key={s.key} className="card rounded-[14px] p-4">
               <div className="flex items-center justify-between">
                 {s.country && <span className="mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-pearl border border-line text-muted">{s.country}</span>}
                 {s.verified && <span className="mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-ok-bg text-ok">Verified</span>}
               </div>
-              <div className="text-[16px] font-semibold mt-2.5">{s.verified ? 'Octopus verified factory' : 'Factory'}</div>
-              {(s.province || s.country) && <div className="text-[14px] text-muted">{[s.province, s.country && (COUNTRY_NAMES[s.country] ?? s.country)].filter(Boolean).join(', ')}</div>}
-              <div className="mono text-[10.5px] uppercase tracking-[.04em] text-muted mt-1.5">{[s.supplier_type, ...(categories[s.id] ?? []).slice(0, 2)].filter(Boolean).join(' · ')}</div>
+              <div className="text-[16px] font-semibold mt-2.5">{factoryLabel(s)}</div>
+              <div className="mono text-[10.5px] uppercase tracking-[.04em] text-muted mt-1.5">{[s.supplier_type, ...s.categories.slice(0, 2)].filter(Boolean).join(' · ')}</div>
             </li>
           ))}
           {sponsored && <li>{sponsored}</li>}

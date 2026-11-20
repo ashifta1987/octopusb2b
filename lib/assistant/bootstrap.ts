@@ -4,7 +4,8 @@ import { getContextCounts, pageHint } from './context';
 import { isWithinOfficeHours, officeHoursLabel } from './escalation';
 import { getAssistantSettings } from './settings';
 import { getAccountTeam } from './team';
-import { MESSAGE_COLUMNS, type AccountTeam, type AssistantMessage, type ContextCounts } from './types';
+import { type AccountTeam, type AssistantMessage, type ContextCounts } from './types';
+import { CUSTOMER_MESSAGE_COLUMNS, toCustomerMessages } from './messages';
 
 /** Initial state for a conversation view (page or drawer). All reads use the customer's client (RLS). */
 export type Bootstrap = {
@@ -30,13 +31,13 @@ export async function loadBootstrap(sb: SupabaseClient, org: { id: string; name:
     getContextCounts(sb, org.id),
     pageHint(sb, opts.page),
     sid ? sb.from('assistant_sessions').select('id, status, started_at, title').eq('id', sid).maybeSingle() : Promise.resolve({ data: null }),
-    sid ? sb.from('assistant_messages').select(MESSAGE_COLUMNS).eq('session_id', sid).order('created_at').limit(300) : Promise.resolve({ data: [] }),
+    sid ? sb.from('assistant_messages').select(CUSTOMER_MESSAGE_COLUMNS).eq('session_id', sid).order('created_at').limit(300) : Promise.resolve({ data: [] }),
   ]);
   const session = (sessRes.data as Bootstrap['session']) ?? null;
   return {
     enabled: settings.enabled,
     session,
-    messages: session ? ((msgRes.data ?? []) as AssistantMessage[]) : [],
+    messages: session ? await toCustomerMessages((msgRes.data ?? []) as AssistantMessage[]) : [],
     team,
     withinHours: isWithinOfficeHours(settings.officeHours),
     hoursLabel: team?.hours_label ?? officeHoursLabel(settings.officeHours),

@@ -8,8 +8,11 @@ import { parseModelReply } from './reply-parse';
 import { getAssistantSettings } from './settings';
 import { TOOL_DEFINITIONS } from './tool-schemas';
 import { executeTool } from './tools';
+import { customerCarrier } from './facts';
+import { scrubCustomerReply } from './scrub';
 import { getAccountTeam } from './team';
-import { MESSAGE_COLUMNS, type AssistantDraft, type AssistantMessage, type ReplyResponse, type ToolCallLog } from './types';
+import { CUSTOMER_MESSAGE_COLUMNS, toCustomerMessages } from './messages';
+import { type AssistantDraft, type AssistantMessage, type ReplyResponse, type ToolCallLog } from './types';
 
 /** Octo reply pipeline (SPEC §20.2, §20.6, §20.7 item 2). Customer client for everything the customer may see; service role only for record_bot_reply/escalate_session. */
 
@@ -57,8 +60,9 @@ function systemPrompt(o: { orgName: string; manager: string | null; context: str
     '- Answer only from the CUSTOMER CONTEXT below and from tool results. If something is not there, say so; never guess numbers, dates, prices or statuses.',
     '- For shipment/tracking questions call get_shipment, for quote comparisons call list_quotes, for group buys call list_pools, for T&C questions call get_terms_section — they return live detail and a link for the customer.',
     '- Quote tool outputs faithfully (codes, amounts with currency, dates). Give carrier ETAs only as the carrier reported them — never promise delivery dates.',
-    '- For shipments always state the order code, carrier, tracking number, the last scan (status, place, time) and the carrier ETA if known.',
-    '- Suppliers are identified only by their supplier code (e.g. OCT-1115). Never mention supplier names, margins, costs, staff data or other customers.',
+    '- For shipments always state the order code, the carrier exactly as the get_shipment tool names it (never any other carrier name), the tracking number, the last scan (status, place, time) and the ETA if known.',
+    '- Never name or guess the shipping carrier beyond what the tool says. Never mention carrier codes or the carrier list.',
+    '- Factories are described only as the tool or context gives them (e.g. "Verified factory · China (Guangdong)"). Never mention supplier codes, ids or names, margins, costs, staff data or other customers.',
     '- You cannot approve or promise money, refunds, credit notes, discounts, payouts, price or T&C changes, KYC decisions, or give legal/tax/customs advice. For those set needs_staff_approval=true and say the account manager will handle it.',
     '- To open an RFQ, sample, QC or other service request, use draft_rfq / draft_service_request. They only create a draft; tell the customer to review the card and click Confirm. Never say it was submitted.',
     '- Be concise and friendly (2–6 short sentences or a short list). Plain text, no markdown headings.',
@@ -81,8 +85,8 @@ function toHistory(rows: AssistantMessage[]): ChatMessage[] {
 }
 
 async function newMessages(sb: SupabaseClient, sessionId: string, since: string): Promise<AssistantMessage[]> {
-  const { data } = await sb.from('assistant_messages').select(MESSAGE_COLUMNS).eq('session_id', sessionId).gte('created_at', since).order('created_at');
-  return (data ?? []) as AssistantMessage[];
+  const { data } = await sb.from('assistant_messages').select(CUSTOMER_MESSAGE_COLUMNS).eq('session_id', sessionId).gte('created_at', since).order('created_at');
+  return toCustomerMessages((data ?? []) as AssistantMessage[]);
 }
 
 async function escalate(admin: SupabaseClient, sessionId: string, reason: string, excerpt: string, confidence: number | null) {
@@ -135,7 +139,7 @@ export async function runReply(i: ReplyInput): Promise<ReplyResponse> {
   const [{ text: context }, { data: org }, { data: hist }] = await Promise.all([
     buildContext(sb, i.orgId),
     sb.from('organizations').select('name').eq('id', i.orgId).maybeSingle(),
-    sb.from('assistant_messages').select(MESSAGE_COLUMNS).eq('session_id', sessionId).order('created_at', { ascending: false }).limit(HISTORY),
+    sb.from('assistant_messages').select(CUSTOMER_MESSAGE_COLUMNS).eq('session_id', sessionId).order('created_at', { ascending: false }).limit(HISTORY),
   ]);
   const history = toHistory(((hist ?? []) as AssistantMessage[]).reverse());
   const pageNote = page ? `\n\nThe customer is currently viewing ${page}.` : '';
@@ -191,6 +195,7 @@ export async function runReply(i: ReplyInput): Promise<ReplyResponse> {
 
   // 3e. record + post-checks
   const parsed = parseModelReply(final);
+  parsed.reply = scrubCustomerReply(parsed.reply, await customerCarrier(sb));
   // Shipment answers always carry the carrier tracking number (SPEC §20 done-when: "real tracking data").
   for (const t of mustQuote) if (!parsed.reply.includes(t)) parsed.reply = `${parsed.reply.trim()} Tracking number: ${t}.`;
   const { data: rec, error: recErr } = await admin.rpc('record_bot_reply', {

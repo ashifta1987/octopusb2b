@@ -29,15 +29,17 @@ export default function Page({ searchParams }: { searchParams: SP }) {
 async function BrandRequest({ searchParams }: { searchParams: SP }) {
   const [sp, { blocks, settings }, session] = await Promise.all([searchParams, getStoreContent(), getSession()]);
   const sb = createPublicClient();
-  // verified suppliers only (public view) → their live products with a photo
-  const { data: sups } = await sb.from('public_suppliers').select('id').eq('verified', true);
-  const supIds = (sups ?? []).map((s) => s.id as string);
+  // products from verified factories only (product_factory view: no supplier ids) → live products with a photo
   const wanted = sp.product && UUID.test(sp.product) ? sp.product : null;
-  const [{ data: list }, { data: one }] = await Promise.all([
-    supIds.length ? sb.from('products').select('id, title, image_url').eq('status', 'live').is('archived_at', null).in('supplier_id', supIds).not('image_url', 'is', null).order('featured', { ascending: false }).order('created_at', { ascending: false }).limit(9) : Promise.resolve({ data: [] }),
-    wanted ? sb.from('products').select('id, title, image_url, supplier_id').eq('id', wanted).eq('status', 'live').maybeSingle() : Promise.resolve({ data: null }),
+  const [{ data: cand }, { data: one }] = await Promise.all([
+    sb.from('products').select('id, title, image_url').eq('status', 'live').is('archived_at', null).not('image_url', 'is', null).order('featured', { ascending: false }).order('created_at', { ascending: false }).limit(60),
+    wanted ? sb.from('products').select('id, title, image_url').eq('id', wanted).eq('status', 'live').maybeSingle() : Promise.resolve({ data: null }),
   ]);
-  const chosenOk = one && supIds.includes(one.supplier_id as string);
+  const candIds = [...(cand ?? []).map((p) => p.id as string), ...(wanted ? [wanted] : [])];
+  const { data: fac } = candIds.length ? await sb.from('product_factory').select('product_id').in('product_id', candIds).eq('verified', true) : { data: [] as { product_id: string }[] };
+  const verifiedIds = new Set((fac ?? []).map((f) => f.product_id as string));
+  const list = (cand ?? []).filter((p) => verifiedIds.has(p.id as string)).slice(0, 9);
+  const chosenOk = !!one && verifiedIds.has(one.id as string);
   const products: BrandProduct[] = [...(chosenOk ? [{ id: one!.id as string, title: one!.title as string, image_url: one!.image_url as string | null }] : []), ...((list ?? []) as BrandProduct[]).filter((p) => p.id !== wanted)].slice(0, 9);
   const mode = !session ? 'guest' : !session.org ? 'no-org' : 'ready';
   const loginHref = `/login?next=${encodeURIComponent(`/request/brand${chosenOk ? `?product=${wanted}` : ''}`)}`;

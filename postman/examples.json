@@ -74,10 +74,17 @@
             "amount_minor": 0,
             "currency": "USD"
           },
-          "supplier": {
-            "code": "OCT-1101",
+          "factory": {
+            "verified": true,
             "country": "CN",
-            "verified": true
+            "province": null,
+            "label": "Verified factory · China"
+          },
+          "supplier": {
+            "verified": true,
+            "country": "CN",
+            "province": null,
+            "label": "Verified factory · China"
           }
         }
       ],
@@ -134,10 +141,17 @@
           "amount_minor": 0,
           "currency": "USD"
         },
-        "supplier": {
-          "code": "OCT-1101",
+        "factory": {
+          "verified": true,
           "country": "CN",
-          "verified": true
+          "province": null,
+          "label": "Verified factory · China"
+        },
+        "supplier": {
+          "verified": true,
+          "country": "CN",
+          "province": null,
+          "label": "Verified factory · China"
         },
         "events": [
           {
@@ -195,7 +209,6 @@
             "doc_type": "proforma_invoice",
             "number": "PI-2026-1002",
             "status": "paid",
-            "emailed_at": null,
             "created_at": "2026-10-31T20:34:02.042298+00:00",
             "currency": "USD",
             "amount": {
@@ -208,7 +221,6 @@
             "doc_type": "receipt",
             "number": "RCT-4EAB9FAE",
             "status": "paid",
-            "emailed_at": null,
             "created_at": "2026-10-31T20:34:02.302442+00:00",
             "currency": "USD",
             "amount": {
@@ -221,7 +233,6 @@
             "doc_type": "confirmation",
             "number": "CNF-2202",
             "status": "issued",
-            "emailed_at": null,
             "created_at": "2026-10-31T20:34:02.542403+00:00",
             "currency": "USD",
             "amount": {
@@ -234,7 +245,6 @@
             "doc_type": "commercial_invoice",
             "number": "INV-2026-0401",
             "status": "paid",
-            "emailed_at": null,
             "created_at": "2026-10-31T20:34:03.102137+00:00",
             "currency": "USD",
             "amount": {
@@ -247,7 +257,6 @@
             "doc_type": "receipt",
             "number": "RCT-30EC9A5D",
             "status": "paid",
-            "emailed_at": null,
             "created_at": "2026-10-31T20:34:03.347249+00:00",
             "currency": "USD",
             "amount": {
@@ -305,10 +314,17 @@
           "currency": "USD",
           "ready_to_ship": true,
           "octopus_dropship": false,
-          "supplier": {
-            "code": "OCT-1108",
+          "factory": {
+            "verified": true,
             "country": "DE",
-            "verified": true
+            "province": null,
+            "label": "Verified factory · Germany"
+          },
+          "supplier": {
+            "verified": true,
+            "country": "DE",
+            "province": null,
+            "label": "Verified factory · Germany"
           }
         },
         {
@@ -336,10 +352,17 @@
           "currency": "USD",
           "ready_to_ship": true,
           "octopus_dropship": false,
-          "supplier": {
-            "code": "OCT-1129",
+          "factory": {
+            "verified": true,
             "country": "TR",
-            "verified": true
+            "province": null,
+            "label": "Verified factory · Türkiye"
+          },
+          "supplier": {
+            "verified": true,
+            "country": "TR",
+            "province": null,
+            "label": "Verified factory · Türkiye"
           }
         }
       ],
@@ -379,10 +402,17 @@
         "currency": "USD",
         "ready_to_ship": true,
         "octopus_dropship": false,
-        "supplier": {
-          "code": "OCT-1108",
+        "factory": {
+          "verified": true,
           "country": "DE",
-          "verified": true
+          "province": null,
+          "label": "Verified factory · Germany"
+        },
+        "supplier": {
+          "verified": true,
+          "country": "DE",
+          "province": null,
+          "label": "Verified factory · Germany"
         },
         "price_tiers": [
           {
@@ -490,10 +520,17 @@
             "amount_minor": 305000,
             "currency": "USD"
           },
-          "supplier": {
-            "code": "OCT-1115",
+          "factory": {
+            "verified": true,
             "country": "VN",
-            "verified": true
+            "province": null,
+            "label": "Verified factory · Vietnam"
+          },
+          "supplier": {
+            "verified": true,
+            "country": "VN",
+            "province": null,
+            "label": "Verified factory · Vietnam"
           }
         },
         {
@@ -521,10 +558,17 @@
             "amount_minor": 330000,
             "currency": "USD"
           },
-          "supplier": {
-            "code": "OCT-1118",
+          "factory": {
+            "verified": true,
             "country": "LK",
-            "verified": true
+            "province": null,
+            "label": "Verified factory · Sri Lanka"
+          },
+          "supplier": {
+            "verified": true,
+            "country": "LK",
+            "province": null,
+            "label": "Verified factory · Sri Lanka"
           }
         }
       ]
@@ -640,10 +684,17 @@
               "amount_minor": 140000,
               "currency": "USD"
             },
-            "supplier": {
-              "code": "OCT-1101",
+            "factory": {
+              "verified": true,
               "country": "CN",
-              "verified": true
+              "province": null,
+              "label": "Verified factory · China"
+            },
+            "supplier": {
+              "verified": true,
+              "country": "CN",
+              "province": null,
+              "label": "Verified factory · China"
             }
           }
         ]
@@ -907,10 +958,17 @@
         "incoterm": "FOB",
         "quote_id": "5b8dac73-7602-489b-84af-b6a2220707cd",
         "rfq_id": "a9670972-4bdf-4c82-ac48-b82bd9d75cab",
-        "supplier": {
-          "code": "OCT-1115",
+        "factory": {
+          "verified": true,
           "country": "VN",
-          "verified": true
+          "province": null,
+          "label": "Verified factory · Vietnam"
+        },
+        "supplier": {
+          "verified": true,
+          "country": "VN",
+          "province": null,
+          "label": "Verified factory · Vietnam"
         },
         "created_at": "2026-10-31T21:52:58.726Z"
       },

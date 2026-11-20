@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { dropSeeds, seedIds } from '@/components/backoffice/hidden-columns';
 import { Card, Stat, PageHeader, EmptyState, StatusBadge, Table, Notice } from '@/components/ui';
 import { CountryTag, Field } from '@/components/admin/ui';
 import { ActionForm, RunButton, ToggleSetting } from '@/components/admin/client';
@@ -28,10 +29,11 @@ export default async function WalletAdminPage() {
   const sb = await createClient();
   const monthStart = new Date(); monthStart.setUTCDate(1); monthStart.setUTCHours(0, 0, 0, 0);
 
-  const [settings, wallets, topups, services, prices, rev, ctx, credit] = await Promise.all([
+  const seedTop = await seedIds('wallet_topups');
+  const [settings, wallets, topupsRaw, services, prices, rev, ctx, credit] = await Promise.all([
     sb.from('site_settings').select('key, value').in('key', ['wallet_enabled', 'wallet_credit_default', ...PLATFORM_SETTINGS.map((p) => p.key)]),
     sb.rpc('admin_wallet_balances'),
-    sb.from('wallet_topups').select('id, org_id, amount_cents, currency, method, reference, status, created_at, organizations(name, country)').eq('is_seed', false).order('created_at', { ascending: false }).limit(40),
+    sb.from('wallet_topups').select('id, org_id, amount_cents, currency, method, reference, status, created_at, organizations(name, country)').order('created_at', { ascending: false }).limit(40 + seedTop.size),
     sb.from('services').select('code, name, unit, active, sort').order('sort'),
     sb.from('service_prices').select('service_code, amount_minor, currency, effective_from').order('effective_from', { ascending: false }),
     can(s, 'finance', 'view') || can(s, 'dashboard', 'view') ? sb.rpc('admin_revenue_by_stream', { p_from: monthStart.toISOString() }) : Promise.resolve({ data: [] }),
@@ -39,6 +41,8 @@ export default async function WalletAdminPage() {
     sb.rpc('admin_wallet_credit_overview'),
   ]);
 
+  // is_seed is hidden from session reads (migration 195): seed ids come from the service role after requireStaff.
+  const topups = { data: dropSeeds(topupsRaw.data, seedTop, 40) };
   const set = new Map((settings.data ?? []).map((r) => [r.key, r.value]));
   const walletOn = set.get('wallet_enabled') === true || set.get('wallet_enabled') === 'true';
   const ws = (wallets.data ?? []) as { org_id: string; org_name: string; country: string | null; kyc_status: string; balance_cents: number; last_activity: string | null; currency: string }[];

@@ -1,5 +1,6 @@
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { withHiddenColumns } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, EmptyState, StatusBadge, Table, Notice, Stat } from '@/components/ui';
 import { Field } from '@/components/admin/ui';
 import { ActionForm, RunButton } from '@/components/admin/client';
@@ -26,14 +27,15 @@ export default async function CurrencyPage() {
   const sb = await createClient();
   const [settings, fx, switches, services] = await Promise.all([
     sb.from('site_settings').select('key, value').in('key', ['platform_currency', 'currency_switch_banner', 'currency_rounding']),
-    sb.from('fx_rates').select('id, rate, effective_from, set_by, source, note, created_at').order('effective_from', { ascending: false }).order('created_at', { ascending: false }).limit(50),
+    sb.from('fx_rates').select('id, rate, effective_from, created_at').order('effective_from', { ascending: false }).order('created_at', { ascending: false }).limit(50),
     sb.from('currency_switch_requests').select('*').order('created_at', { ascending: false }).limit(30),
     sb.from('services').select('code, name').order('sort'),
   ]);
   const set = new Map((settings.data ?? []).map((r) => [r.key, r.value]));
   const current = asCurrency(set.get('platform_currency') as string);
   const banner = set.get('currency_switch_banner') as { from: string; to: string; rate: number; applied_at: string; wallet_option: string } | null;
-  const rates = (fx.data ?? []) as FxRow[];
+  // set_by / source / note are hidden from session reads (migration 195): added with the service role after requireStaff.
+  const rates = (await withHiddenColumns('fx_rates', fx.data, 'set_by, source, note')) as unknown as FxRow[];
   const now = new Date().toISOString();
   const approved = rates.find((r) => r.source === 'manual' && r.effective_from <= now);
   const upcoming = rates.filter((r) => r.source === 'manual' && r.effective_from > now).at(-1);

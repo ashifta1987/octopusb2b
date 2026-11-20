@@ -20,8 +20,9 @@ test.beforeAll(async () => {
   B = await createTempCustomer('41b');
 });
 test.afterAll(async () => {
-  await deleteTempStaff(fin); await deleteTempStaff(mgr);
+  // customers' rows first: the confirmed transfer references the finance user, which blocks deleting it
   await purgeTestOrgs([A?.orgId, B?.orgId].filter(Boolean) as string[], [A?.id, B?.id].filter(Boolean) as string[]);
+  await deleteTempStaff(fin); await deleteTempStaff(mgr);
 });
 
 const shot = async (page: Page, name: string) => { if (SHOTS) await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: true }); };
@@ -68,15 +69,21 @@ test('bank transfer: customer uploads a slip, finance credits the amount receive
   await expect(row).toContainText('US$ 250.00');
   await row.locator('input[name="received"]').fill('245.00');               // bank fee deducted
   await row.locator('input[name="bank_ref"]').fill('SCB-E2E-1');
-  await row.locator('input[name="note"]').fill('bank charges');
+  // 202: the reason shown to the customer (list) and the internal note (staff only) are separate
+  await row.locator('select[name="reason"]').selectOption('bank_charges');
+  await row.locator('input[name="note"]').fill('SCB fee, ticket 4411');
+  if (SHOTS) await row.screenshot({ path: `${SHOTS}/transfer-reason-finance-form.png` });
   fp.once('dialog', (d) => d.accept());
   await row.getByRole('button', { name: 'Confirm and credit' }).click();
-  await expect(fp.getByText('Confirmed. The wallet is credited')).toBeVisible();
+  // the confirmation line can vanish when the list refreshes: the row leaves the queue once it is confirmed
+  await expect(row).toHaveCount(0, { timeout: 20_000 });
   await ctx.close();
 
   await page.goto('/account/wallet');
   await expect(page.getByTestId('wallet-balance')).toContainText('US$ 245.00');
-  await expect(page.getByTestId('transfer-difference')).toHaveText('US$ 5.00 less than claimed (bank charges)');
+  await expect(page.getByTestId('transfer-difference')).toHaveText('US$ 5.00 less than claimed: Bank charges');
+  await expect(page.locator('body')).not.toContainText('ticket 4411');
+  if (SHOTS) await page.getByTestId('transfer-difference').locator('xpath=ancestor::table[1]').screenshot({ path: `${SHOTS}/transfer-reason-customer.png` });   // the internal note never reaches the customer
   await page.goto('/account/invoices');
   await expect(page.getByText(/RCT-W-/)).toBeVisible();
 });

@@ -4,10 +4,12 @@ import { fmtDate, humanize, money } from '@/lib/format';
 import { serviceName } from '@/lib/service-names';
 import { redactText } from './redact';
 import type { ContextCounts } from './types';
+import { factoryLabel, type FactoryInfo } from '@/lib/factory-label';
+import { customerCarrier } from './facts';
 
 /**
  * Context payload for Octo, built only from the customer's OWN rows via their RLS-scoped client (SPEC §20.1, §20.6).
- * Plain-text summary (never raw SQL / raw rows); supplier identities as codes only; contacts and addresses omitted, then redacted again.
+ * Plain-text summary (never raw SQL / raw rows); factories as labels only (no supplier codes), carrier only as the customer label; contacts and addresses omitted, then redacted again.
  */
 export const OPEN_RFQ = ['submitted', 'assigned', 'quoting', 'quoted'];
 const ACTIVE_PLEDGE = ['pending', 'paid', 'confirmed', 'shipped'];
@@ -29,7 +31,7 @@ export async function buildContext(sb: SupabaseClient, orgId: string): Promise<{
   const [org, rfqs, orders, docs, srs, wallets, pledges, shipments, counts] = await Promise.all([
     sb.from('organizations').select('name, buyer_code, country, business_type, kyc_status').eq('id', orgId).maybeSingle(),
     sb.from('rfqs').select('id, code, title, quantity, unit, status, incoterm, destination_country, expires_at, created_at').eq('org_id', orgId).order('created_at', { ascending: false }).limit(10),
-    sb.from('orders').select('id, code, title, quantity, status, total_cents, paid_cents, currency, supplier_id, incoterm, created_at').eq('org_id', orgId).order('created_at', { ascending: false }).limit(8),
+    sb.from('orders').select('id, code, title, quantity, status, total_cents, paid_cents, currency, incoterm, created_at').eq('org_id', orgId).order('created_at', { ascending: false }).limit(8),
     sb.from('documents').select('doc_type, number, amount_cents, currency, status, created_at, orders(code)').eq('org_id', orgId).order('created_at', { ascending: false }).limit(8),
     sb.from('service_requests').select('code, service_code, status, fee_minor, currency, created_at, services(name)').eq('org_id', orgId).order('created_at', { ascending: false }).limit(8),
     sb.from('wallets').select('currency, account_id, balance_minor').eq('org_id', orgId),
@@ -45,14 +47,19 @@ export async function buildContext(sb: SupabaseClient, orgId: string): Promise<{
   const walletRows = (wallets.data ?? []) as Row[];
 
   const [quotes, events, ledger] = await Promise.all([
-    openRfqIds.length ? sb.from('quotes').select('rfq_id, code, supplier_id, unit_price_cents, currency, lead_time_days, status, valid_until').in('rfq_id', openRfqIds) : Promise.resolve({ data: [] as Row[] }),
+    openRfqIds.length ? sb.from('quotes').select('id, rfq_id, code, unit_price_cents, currency, lead_time_days, status, valid_until').in('rfq_id', openRfqIds) : Promise.resolve({ data: [] as Row[] }),
     shipRows.length ? sb.from('tracking_events').select('shipment_id, description, status, location, occurred_at').in('shipment_id', shipRows.map((x) => s(x.id))).order('occurred_at', { ascending: false }).limit(25) : Promise.resolve({ data: [] as Row[] }),
     walletRows.length ? sb.from('ledger_entries').select('account_id, debit_cents, credit_cents, currency').in('account_id', walletRows.map((w) => s(w.account_id))).gte('created_at', since).limit(1000) : Promise.resolve({ data: [] as Row[] }),
   ]);
   const quoteRows = (quotes.data ?? []) as Row[];
-  const supIds = [...new Set([...quoteRows.map((q) => s(q.supplier_id)), ...orderRows.map((o) => s(o.supplier_id))].filter(Boolean))];
-  const { data: supData } = supIds.length ? await sb.from('public_suppliers').select('id, code, country').in('id', supIds) : { data: [] };
-  const supCode = new Map((supData ?? []).map((x) => [s(x.id), `${s(x.code)}${x.country ? ` (${s(x.country)})` : ''}`]));
+  // factory label only ("Verified factory · China (Guangdong)") — never a supplier code or id (19 Nov 2026)
+  const [qf, of, carrier] = await Promise.all([
+    quoteRows.length ? sb.from('quote_factory').select('quote_id, verified, country, province').in('quote_id', quoteRows.map((q) => s(q.id))) : Promise.resolve({ data: [] as Row[] }),
+    orderRows.length ? sb.from('order_factory').select('order_id, verified, country, province').in('order_id', orderRows.map((o) => s(o.id))) : Promise.resolve({ data: [] as Row[] }),
+    customerCarrier(sb),
+  ]);
+  const quoteFactory = new Map(((qf.data ?? []) as Row[]).map((x) => [s(x.quote_id), factoryLabel(x as FactoryInfo)]));
+  const orderFactory = new Map(((of.data ?? []) as Row[]).map((x) => [s(x.order_id), factoryLabel(x as FactoryInfo)]));
   const evRows = (events.data ?? []) as Row[];
   const ledRows = (ledger.data ?? []) as Row[];
 
@@ -65,13 +72,13 @@ export async function buildContext(sb: SupabaseClient, orgId: string): Promise<{
   for (const r of rfqRows) {
     const qs = quoteRows.filter((q) => q.rfq_id === r.id);
     lines.push(`- ${s(r.code)} · ${s(r.title)} · ${Number(r.quantity).toLocaleString('en-US')} ${s(r.unit) || 'pcs'} · ${humanize(s(r.status))}${r.incoterm ? ` · ${s(r.incoterm)}` : ''}${r.destination_country ? ` · to ${s(r.destination_country)}` : ''}` +
-      (qs.length ? ` · ${qs.length} quote(s): ${qs.map((q) => `${s(q.code)} ${supCode.get(s(q.supplier_id)) ?? 'OCT-?'} ${money(Number(q.unit_price_cents), s(q.currency))}/unit${q.lead_time_days != null ? ` ${s(q.lead_time_days)}d` : ''} ${humanize(s(q.status))}`).join('; ')}` : ''));
+      (qs.length ? ` · ${qs.length} quote(s): ${qs.map((q) => `${s(q.code)} ${quoteFactory.get(s(q.id)) ?? 'Factory'} ${money(Number(q.unit_price_cents), s(q.currency))}/unit${q.lead_time_days != null ? ` ${s(q.lead_time_days)}d` : ''} ${humanize(s(q.status))}`).join('; ')}` : ''));
   }
 
   lines.push('', `## Orders (latest ${orderRows.length})`);
   if (!orderRows.length) lines.push('None.');
   for (const r of orderRows) {
-    lines.push(`- ${s(r.code)} · ${Number(r.quantity).toLocaleString('en-US')} × ${s(r.title)} · supplier ${supCode.get(s(r.supplier_id)) ?? 'OCT-?'} · ${humanize(s(r.status))} · total ${money(Number(r.total_cents), s(r.currency))}, paid ${money(Number(r.paid_cents ?? 0), s(r.currency))} · ${s(r.incoterm)} · placed ${fmtDate(s(r.created_at))}`);
+    lines.push(`- ${s(r.code)} · ${Number(r.quantity).toLocaleString('en-US')} × ${s(r.title)} · ${orderFactory.get(s(r.id)) ?? 'Factory'} · ${humanize(s(r.status))} · total ${money(Number(r.total_cents), s(r.currency))}, paid ${money(Number(r.paid_cents ?? 0), s(r.currency))} · ${s(r.incoterm)} · placed ${fmtDate(s(r.created_at))}`);
   }
 
   lines.push('', '## Shipments');
@@ -79,7 +86,7 @@ export async function buildContext(sb: SupabaseClient, orgId: string): Promise<{
   for (const sh of shipRows) {
     const ev = evRows.find((e) => e.shipment_id === sh.id);
     const oc = orderRows.find((x) => x.id === sh.order_id);
-    lines.push(`- ${s(sh.code)}${oc ? ` (order ${s(oc.code)})` : ''} · ${serviceName(s(sh.service_code))} · tracking ${s(sh.tracking_no) || '—'} · ${humanize(s(sh.status))}${sh.eta ? ` · ETA ${fmtDate(s(sh.eta))}` : ''}` +
+    lines.push(`- ${s(sh.code)}${oc ? ` (order ${s(oc.code)})` : ''} · ${serviceName(s(sh.service_code))} · carrier ${carrier} · tracking ${s(sh.tracking_no) || '—'} · ${humanize(s(sh.status))}${sh.eta ? ` · ETA ${fmtDate(s(sh.eta))}` : ''}` +
       (ev ? ` · last scan: ${s(ev.description) || humanize(s(ev.status))}${ev.location ? `, ${s(ev.location)}` : ''} ${fmtDate(s(ev.occurred_at), true)}` : ''));
   }
 

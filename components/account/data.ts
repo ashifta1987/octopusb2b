@@ -59,16 +59,22 @@ export async function latestTermsId(): Promise<{ id: string; version: string } |
   return (data as { id: string; version: string } | null) ?? null;
 }
 
-/** Supplier code/country lookup through the buyer-safe view (never legal names). */
-export async function supplierMap(ids: (string | null | undefined)[]) {
+/** Factory label data ("Verified factory · China (Guangdong)") through the buyer-safe views — never a supplier id or code
+ *  (migration 195, decision 19 Nov 2026). Keyed by QUOTE id / ORDER id. */
+export type FactoryInfo = { verified: boolean; country: string | null; province: string | null };
+async function factoryByView(view: 'quote_factory' | 'order_factory', key: 'quote_id' | 'order_id', ids: (string | null | undefined)[]) {
   const uniq = [...new Set(ids.filter(Boolean) as string[])];
-  const map = new Map<string, { code: string; country: string | null; verified: boolean }>();
+  const map = new Map<string, FactoryInfo>();
   if (!uniq.length) return map;
   const sb = await createClient();
-  const { data } = await sb.from('public_suppliers').select('id, code, country, verified').in('id', uniq);
-  (data ?? []).forEach((s) => map.set(s.id as string, { code: s.code as string, country: s.country as string | null, verified: !!s.verified }));
+  const { data } = await sb.from(view).select(`${key}, verified, country, province`).in(key, uniq);
+  ((data ?? []) as unknown as Record<string, unknown>[]).forEach((f) => map.set(f[key] as string, {
+    verified: !!f.verified, country: (f.country as string | null) ?? null, province: (f.province as string | null) ?? null,
+  }));
   return map;
 }
+export const quoteFactoryMap = (quoteIds: (string | null | undefined)[]) => factoryByView('quote_factory', 'quote_id', quoteIds);
+export const orderFactoryMap = (orderIds: (string | null | undefined)[]) => factoryByView('order_factory', 'order_id', orderIds);
 
 export const DOC_LABEL: Record<string, string> = {
   proforma_invoice: 'Proforma invoice',

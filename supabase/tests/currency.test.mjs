@@ -12,12 +12,19 @@ const expectErr = async (fn, code, m) => { await db.query('savepoint s'); try { 
 
 await db.query('begin');
 try {
+  // staging fixture (rolled back, 19 Nov 2026): the buyer starts with US$ 2,000 in the wallet, like the demo buyer
+  await db.query('reset role');
+  const bOrg = (await one('select org_id from org_members where user_id = $1', [buyer])).org_id;
+  if (Number((await one(`select coalesce(sum(balance_minor), 0) b from wallets where org_id = $1 and currency = 'USD'`, [bOrg])).b) < 200000)
+    await db.query(`select post_journal('test funding (rolled back)', jsonb_build_array(
+      jsonb_build_object('account', cash_account('USD'), 'debit', 200000, 'credit', 0),
+      jsonb_build_object('account', wallet_account($1, 'USD'), 'debit', 0, 'credit', 200000, 'org', $1)), 'currency-test-fund-' || $1::text, 'topup', 'wallet_topup', gen_random_uuid())`, [bOrg]);
   await as(buyer);
   const org = (await one('select my_org_id() v')).v;
   // an open USD proforma invoice created BEFORE the switch
   const r0 = (await one(`select submit_rfq('USD before switch',10,'x') v`)).v;
   await as(ops);
-  const s0 = (await one(`select id from suppliers where code='OCT-1108'`)).id;
+  const s0 = (await one(`(select id from suppliers where code='OCT-1108') union all (select id from suppliers where archived_at is null order by code limit 1) limit 1`)).id  // any supplier on staging (19 Nov 2026);
   const q0 = (await one(`select send_quote($1,$2,5000,10,'FOB',10,0,null) v`, [r0, s0])).v;
   await as(buyer);
   const o0 = (await one(`select approve_quote($1) v`, [q0])).v;
@@ -47,7 +54,7 @@ try {
   ok((await one(`select currency, fee_minor from service_requests where id=$1`, [sr])).currency === 'CNY', 'new service request charged in CNY');
   const rfq = (await one(`select submit_rfq('CNY test',100,'x') v`)).v;
   await as(ops);
-  const sup = (await one(`select id from suppliers where code='OCT-1101'`)).id;
+  const sup = (await one(`(select id from suppliers where code='OCT-1101') union all (select id from suppliers where archived_at is null order by code limit 1) limit 1`)).id  // any supplier on staging (19 Nov 2026);
   const q = (await one(`select send_quote($1,$2,99,100,'FOB',10,0,null) v`, [rfq, sup])).v;
   ok((await one(`select currency from quotes where id=$1`, [q])).currency === 'CNY', 'new quote is in CNY');
   await as(buyer);

@@ -70,18 +70,13 @@ type SbLike = {
 export async function loadFx(sb: SbLike): Promise<FxContext> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const s = sb as any;
-  const [settings, fx] = await Promise.all([
+  // fx_rates.source is hidden from session/public reads (migration 195): take the approved rate id from
+  // current_fx_rate_id() (security definer) so this works with any client, then read that row's public columns.
+  const [settings, rateId] = await Promise.all([
     s.from('site_settings').select('key, value').in('key', ['platform_currency', 'currency_rounding']),
-    s
-      .from('fx_rates')
-      .select('id, rate, effective_from')
-      .eq('source', 'manual')
-      .lte('effective_from', new Date().toISOString())
-      .order('effective_from', { ascending: false })
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+    s.rpc('current_fx_rate_id'),
   ]);
+  const fx = rateId.data ? await s.from('fx_rates').select('id, rate, effective_from').eq('id', rateId.data).maybeSingle() : { data: null };
   const map: Record<string, unknown> = {};
   for (const r of (settings.data ?? []) as { key: string; value: unknown }[]) map[r.key] = r.value;
   const rounding = (map.currency_rounding ?? {}) as Record<string, { step_minor?: number }>;

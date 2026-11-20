@@ -2,6 +2,8 @@ import { expect, type Page } from '@playwright/test';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import pg from 'pg';
 import { config } from 'dotenv';
+// purgeTestOrgs deletes rows and rewinds document counters: staging only
+import { assertStagingOrThrow } from '../../../scripts/lib-staging-guard.mjs';
 
 /**
  * Temporary customer for E2E against the live database: auth user (email confirmed) + profile + organisation + membership.
@@ -37,16 +39,38 @@ export async function customerLogin(page: Page, c: TempCustomer, next = '/accoun
   if (await tab.count()) await tab.click();
   await page.getByLabel(/email/i).first().fill(c.email);
   await page.getByLabel(/^password/i).first().fill(c.password);
-  await page.getByRole('button', { name: /^log in$/i }).click();
-  await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 30_000 });
+  // A full suite signs in many times: when the app's own per-network limit answers "Wait N seconds", wait that long
+  // and try again (at most 3 tries). Any other error still fails the test.
+  for (let attempt = 1; ; attempt++) {
+    await page.getByRole('button', { name: /^log in$/i }).click();
+    const limited = page.getByText(/Too many attempts from your network\. Wait (\d+) seconds?/);
+    const r = await Promise.race([
+      page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 30_000 }).then(() => 'ok' as const, () => 'timeout' as const),
+      limited.waitFor({ timeout: 30_000 }).then(() => 'limited' as const, () => 'timeout' as const),
+    ]);
+    if (r === 'ok') break;
+    if (r === 'timeout') throw new Error('customerLogin: no redirect after signing in');
+    if (attempt >= 3) throw new Error('customerLogin: still rate-limited after 3 tries');
+    const secs = Number((await limited.innerText()).match(/Wait (\d+)/)?.[1] ?? 30);
+    await page.waitForTimeout((secs + 1) * 1000);
+    // fresh form, so the old message cannot be mistaken for a new one
+    await page.goto(`/login?next=${encodeURIComponent(next)}`);
+    if (await tab.count()) await tab.click();
+    await page.getByLabel(/email/i).first().fill(c.email);
+    await page.getByLabel(/^password/i).first().fill(c.password);
+  }
   await expect(page).not.toHaveURL(/\/login/);
 }
 
 /** Delete everything created for these test organisations (children first), then the users. */
 export async function purgeTestOrgs(orgIds: string[], userIds: string[]) {
   if (!orgIds.length && !userIds.length) return;
+  await assertStagingOrThrow();
   const db = pgClient(); await db.connect();
   try {
+    await assertStagingOrThrow(db);
+    // document numbers issued to these organisations (OCT-/CN-/PF-): given back below when they were the newest
+    const issued = (await db.query(`select number from documents where org_id = any($1) and number ~ '^(OCT|CN)-[A-Z0-9]+-[0-9]{4}-[0-9]{6}$|^PF-[0-9]{4}-[0-9]{6}$'`, [orgIds])).rows.map((r) => r.number as string);
     const ids = async (sql: string, p: unknown[]) => (await db.query(sql, p)).rows.map((r) => r.id as string);
     const rfqs = await ids(`select id from rfqs where org_id = any($1)`, [orgIds]);
     const quotes = await ids(`select id from quotes where rfq_id = any($1)`, [rfqs]);
@@ -85,6 +109,18 @@ export async function purgeTestOrgs(orgIds: string[], userIds: string[]) {
     }
     await db.query(`delete from ledger_accounts where org_id = any($1)`, [orgIds]).catch(() => {});
     await db.query(`delete from organizations where id = any($1)`, [orgIds]);
+    // give the numbers back only if ours were the newest in that series/year (never leaves a gap, never reuses one)
+    const series = new Map<string, number>();
+    for (const n of issued) {
+      const [, s, y, seq] = n.match(/^(OCT|CN|PF)-(?:[A-Z0-9]+-)?(\d{4})-(\d{6})$/)!;
+      const k = `${s}|${y}`; series.set(k, Math.max(series.get(k) ?? 0, Number(seq)));
+    }
+    for (const [k, ourMax] of series) {
+      const [s, y] = k.split('|');
+      const like = s === 'PF' ? `PF-${y}-%` : `${s}-%-${y}-%`;
+      const left = Number((await db.query(`select coalesce(max(right(number, 6)::int), 0) m from documents where number like $1`, [like])).rows[0].m);
+      await db.query(`update document_counters set last_value = $3 where series = $1 and year = $2::int and last_value = $4`, [s, y, left, ourMax]);
+    }
     await db.query('commit');
     if (files.length) await adminClient().storage.from('request-files').remove(files);
   } catch (e) {

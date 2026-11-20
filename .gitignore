@@ -48,3 +48,6 @@ docs/qa/2026-11-01-trace/state.json
 # Playwright output
 /test-results/
 /playwright-report/
+
+# one-off local scripts (never committed)
+*.tmp.mjs

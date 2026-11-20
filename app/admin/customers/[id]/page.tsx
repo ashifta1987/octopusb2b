@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { can, requireStaffOrManager } from '@/lib/auth';
 import { CustomerOneApp } from '@/components/admin/customer-one-app';
 import { createClient } from '@/lib/supabase/server';
+import { withHiddenColumns } from '@/components/backoffice/hidden-columns';
 import { Card, EmptyState, PageHeader, Stat, StatusBadge } from '@/components/ui';
 import { ToggleSetting } from '@/components/admin/client';
 import { loadAssistantSettings, loadWorkload } from '@/components/admin/assistant/data';
@@ -23,9 +24,9 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
   const canReassign = s.isAdmin || can(s, 'assistant', 'reassign');
   const path = `/admin/customers/${id}`;
 
-  const [{ data: members }, { data: am }, settings, { count: orders }, { count: rfqs }, { count: tickets }, { data: sessions }, { data: history }, workload] = await Promise.all([
+  const [{ data: members }, { data: amRow }, settings, { count: orders }, { count: rfqs }, { count: tickets }, { data: sessions }, { data: history }, workload] = await Promise.all([
     sb.from('org_members').select('user_id, member_role, created_at').eq('org_id', id).order('created_at'),
-    sb.from('account_managers').select('staff_user_id, team, assigned_at, assigned_by, reason').eq('org_id', id).maybeSingle(),
+    sb.from('account_managers').select('org_id, staff_user_id, team, assigned_at').eq('org_id', id).maybeSingle(),
     loadAssistantSettings(sb),
     sb.from('orders').select('id', { count: 'exact', head: true }).eq('org_id', id),
     sb.from('rfqs').select('id', { count: 'exact', head: true }).eq('org_id', id),
@@ -34,6 +35,8 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
     sb.from('audit_log').select('id, actor_id, action, details, created_at').eq('entity', 'organizations').eq('entity_id', id).like('action', 'assistant.%').order('created_at', { ascending: false }).limit(10),
     canReassign ? loadWorkload(sb) : Promise.resolve([]),
   ]);
+  // assigned_by / reason are hidden from session reads (migration 195): added with the service role for the row RLS returned.
+  const [am] = amRow ? await withHiddenColumns<typeof amRow, { assigned_by: string | null; reason: string | null }>('account_managers', [amRow], 'assigned_by, reason', 'org_id') : [];
   const ids = [...new Set([...(members ?? []).map((m) => m.user_id as string), am?.staff_user_id, am?.assigned_by, ...(history ?? []).map((h) => h.actor_id), ...(history ?? []).map((h) => (h.details as { staff?: string } | null)?.staff)].filter(Boolean))] as string[];
   const { data: ppl } = ids.length ? await sb.from('profiles').select('id, full_name, email, phone, title, team, office, out_of_office').in('id', ids) : { data: [] };
   const P = new Map((ppl ?? []).map((p) => [p.id as string, p]));

@@ -71,7 +71,9 @@ try {
   const d1 = await tryQ(`select * from dropship_rates`);
   const d2 = await tryQ(`select * from dropship_products`);
   await owner();
-  ok(typeof d1 === 'string' && typeof d2 === 'string', 'customer: cannot read rates or dropship products directly');
+  // since 194 the tables are granted to signed-in users for Dropshipping staff; a customer gets no rows (or a refusal)
+  const none = (r) => typeof r === 'string' || r.rowCount === 0;
+  ok(none(d1) && none(d2), 'customer: cannot read rates or dropship products directly');
 
   // import list isolation
   const pid = ids[0];

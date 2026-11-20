@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import ExcelJS from 'exceljs';
-import { createTempStaff, deleteTempStaff, staffLogin, type TempStaff } from './helpers/staff';
+import { createClient } from '@supabase/supabase-js';
+import { createTempStaff, deleteTempStaff, staffLogin, totp, type TempStaff } from './helpers/staff';
 
 /**
  * Distributor › Products filtered by supplier (6 Nov 2026). A temporary distributor (own TOTP, deleted afterwards)
@@ -87,19 +88,59 @@ test('the export follows the supplier filter', async ({ page }) => {
   expect(out.every((s) => s.startsWith('CN-GD-DMN-'))).toBe(true);
 });
 
-test('an unassigned supplier code is not found (page and export)', async ({ page }) => {
+test('an unassigned supplier: page 403, export 403, unknown code 404 (item 3)', async ({ page }) => {
   await t!.admin.from('distributor_suppliers').delete().eq('distributor_id', t!.id).eq('supplier_id', sup['OCT-1133'].id);
   await staffLogin(page, t!, '/distributor/products');
-  // pages render the 404 page (the portal shell streams first, so the HTTP status of a page stays 200 — Next.js streaming)
+  // pages render the 403 page (the portal shell streams first, so the HTTP status of a page stays 200 — Next.js streaming)
   for (const path of ['/distributor/products?supplier=OCT-1133', '/distributor/products/import?supplier=OCT-1133', '/distributor/products?supplier=oct-1133']) {
     await page.goto(path);
-    await expect(page.getByRole('heading', { name: /couldn.t find that page/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /don.t have access/i })).toBeVisible();
     await expect(page.locator('tbody tr:visible')).toHaveCount(0);
   }
-  // the export is a route handler: a real 404, no workbook
-  expect((await page.request.get('/distributor/products/import/export?supplier=OCT-1133')).status()).toBe(404);
+  await page.goto('/distributor/products?supplier=OCT-9999');
+  await expect(page.getByRole('heading', { name: /couldn.t find that page/i })).toBeVisible();
+  // the export is a route handler: a real 403 for an existing supplier, 404 for an unknown code, never a workbook
+  expect((await page.request.get('/distributor/products/import/export?supplier=OCT-1133')).status()).toBe(403);
+  expect((await page.request.get('/distributor/products/import/export?supplier=OCT-9999')).status()).toBe(404);
   // the remaining supplier still works, and "All suppliers" no longer lists OCT-1133
   await page.goto('/distributor/products');
   await expect(page.getByTestId('supplier-filter').locator('option')).toHaveCount(2);
   expect((await skus(page)).every((s) => s.startsWith('CN-GD-BWJ-'))).toBe(true);
+});
+
+test("direct requests for another supplier's product: edit page 403, create-for 403, REST list/single/update/images no data (item 3)", async ({ page }) => {
+  // OCT-1133 was unassigned in the previous test; pick one of its products (live and not live)
+  const { data: bProducts } = await t!.admin.from('products').select('id, status').eq('supplier_id', sup['OCT-1133'].id).limit(50);
+  const live = bProducts!.find((p) => p.status === 'live')!;
+  await staffLogin(page, t!, '/distributor/products');
+  await page.goto(`/distributor/products/${live.id}/edit`);
+  await expect(page.getByRole('heading', { name: /don.t have access/i })).toBeVisible();
+  await page.goto(`/distributor/products/new?supplier=${sup['OCT-1133'].id}`);
+  await expect(page.getByRole('heading', { name: /don.t have access/i })).toBeVisible();
+
+  // straight against the REST API with the distributor's own 2FA (aal2) session — no app in between
+  const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { auth: { persistSession: false } });
+  await sb.auth.signInWithPassword({ email: t!.email, password: t!.password });
+  const { data: factors } = await sb.auth.mfa.listFactors();
+  if (Date.now() / 1000 % 30 > 26) await page.waitForTimeout(4500);
+  await sb.auth.mfa.challengeAndVerify({ factorId: factors!.totp[0].id, code: totp(t!.secret) });
+  // supplier_id is a hidden column since migration 195 (the portal reads it via portal_products() after its check)
+  expect((await sb.from('products').select('id, supplier_id')).error?.code).toBe('42501');
+  const list = await sb.from('products').select('id');
+  expect(list.error).toBeNull();
+  const ids = list.data!.map((p) => p.id as string);
+  const { data: owners } = await t!.admin.from('products').select('id, supplier_id').in('id', ids.length ? ids : ['00000000-0000-0000-0000-000000000000']);
+  expect((owners ?? []).every((p) => p.supplier_id === sup['OCT-1132'].id)).toBe(true);  // only the assigned supplier
+  expect(ids).not.toContain(live.id);
+  expect((await sb.from('products').select('id').eq('id', live.id)).data).toEqual([]);
+  expect((await sb.from('price_tiers').select('id').eq('product_id', live.id)).data).toEqual([]);
+  expect((await sb.from('product_media').select('id').eq('product_id', live.id)).data).toEqual([]);
+  expect((await sb.from('products').update({ updated_at: new Date().toISOString() }).eq('id', live.id).select('id')).data).toEqual([]);
+  expect((await sb.from('price_tiers').insert({ product_id: live.id, min_qty: 999999, unit_price_cents: 1, currency: 'USD' })).error).not.toBeNull();
+  expect((await sb.rpc('transition_product', { p_product: live.id, p_to: 'archived', p_reason: 'e2e' })).error?.message ?? '').toMatch(/FORBIDDEN/);
+  expect((await sb.storage.from('product-media').list(sup['OCT-1133'].id)).data ?? []).toEqual([]);
+  expect((await sb.storage.from('product-media').upload(`${sup['OCT-1133'].id}/e2e-${Date.now()}.png`, new Uint8Array([1]), { contentType: 'image/png' })).error).not.toBeNull();
+  // the product is unchanged
+  const { data: still } = await t!.admin.from('products').select('status').eq('id', live.id).single();
+  expect(still!.status).toBe('live');
 });

@@ -7,6 +7,8 @@ import { createClient } from '@/lib/supabase/server';
 import { slugify, toCents, asCurrency } from '@/lib/format';
 import { actionSession, fail, ok, type Result } from '@/components/backoffice/server-utils';
 import { productSchema, draftSchema, type ProductFormValues } from '@/components/backoffice/product-schema';
+import { checkProductAccess, checkSupplierAccess } from '@/lib/distributor/access';
+import { FORBIDDEN_MESSAGE } from '@/lib/distributor/access-rules';
 
 type Sb = Awaited<ReturnType<typeof createClient>>;
 
@@ -80,6 +82,9 @@ export async function saveProduct(id: string | null, values: ProductFormValues, 
   } else if (!draftSchema.safeParse(values).success) {
     return fail('Add a title and supplier to save a draft.');
   }
+  // item 3: the target supplier, and (on an update) the product's current supplier, must be assigned to the caller
+  if ((await checkSupplierAccess(g.s, values.supplier_id)) !== 'ok') return fail(FORBIDDEN_MESSAGE);
+  if (id && (await checkProductAccess(g.s, id)) !== 'ok') return fail(FORBIDDEN_MESSAGE);
   const sb = await createClient();
   const block = await checkSupplier(sb, values.supplier_id);
   if (block) return fail(block);
@@ -113,6 +118,8 @@ export async function saveProduct(id: string | null, values: ProductFormValues, 
 export async function transitionProduct(id: string, to: 'submitted' | 'paused' | 'live' | 'archived', reason?: string): Promise<Result> {
   const g = await actionSession('products', 'edit');
   if ('error' in g) return fail(g.error);
+  // item 3: status moves only on assigned suppliers' products (approvers keep platform-wide access)
+  if ((await checkProductAccess(g.s, id)) !== 'ok') return fail(FORBIDDEN_MESSAGE);
   const sb = await createClient();
   if (to === 'submitted') {
     const { data: p } = await sb.from('products').select('title, category_id, price_tiers(id)').eq('id', id).maybeSingle();

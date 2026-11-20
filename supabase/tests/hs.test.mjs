@@ -29,7 +29,7 @@ try {
   await db.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify({ sub: adminId, role: 'authenticated', aal: 'aal2' })]);
   await db.query('set local role authenticated');
   const c = (await one(`select confirm_hs_type($1) r`, [t])).r;
-  const stAfterConfirm = (await one(`select hs_code_status from products where id = $1`, [blank])).hs_code_status;
+  const stAfterConfirm = (await one(`select hs_code_status from portal_products() where id = $1`, [blank])).hs_code_status;   // hidden column: staff read whole rows via portal_products() (195)
   const prev = (await db.query(`select * from hs_type_change_preview($1, '8509')`, [t])).rows;
   const ch = (await one(`select change_hs_type_heading($1, '8509') r`, [t])).r;
   const bad = await db.query('savepoint b').then(() => db.query(`select change_hs_type_heading($1, '85091')`, [t])).then(() => 'accepted', (e) => e.message);

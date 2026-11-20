@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import type { Session } from '@/lib/auth';
 import { can } from '@/lib/auth';
 import { money } from '@/lib/format';
+import { divisionCodeForService, type DivisionScope } from '@/lib/divisions/shared';
 
 /**
  * ADDON-41 board 06 — the staff work queue. Read with the staff member's own session, so row-level security scopes it:
@@ -20,7 +21,9 @@ const ago = (iso: string) => {
 };
 const orgName = (o: unknown) => ((Array.isArray(o) ? o[0] : o) as { name?: string } | null)?.name ?? 'Customer';
 
-export async function getWorkQueue(s: Session) {
+/** `scope` (divisions step 4): one division narrows every list and count; company-wide items (wallet top-ups) show under "All divisions" only. */
+export async function getWorkQueue(s: Session, scope?: DivisionScope) {
+  const div = scope && !scope.all ? scope.division : null;
   const sb = await createClient();
   const isOwner = s.isAdmin;
   const isManager = s.roles.includes('account_manager');
@@ -30,19 +33,21 @@ export async function getWorkQueue(s: Session) {
   const [approvals, transfers, rfqs, waiting] = await Promise.all([
     sb.from('approvals').select('id, org_id, service, ref_type, ref_id, amount_cents, margin_pct, reason, approver, assigned_to, created_at, organizations(name)')
       .eq('status', 'pending').order('created_at').limit(100),
-    can(s, 'wallet', 'approve')
+    can(s, 'wallet', 'approve') && !div
       ? sb.from('wallet_topups').select('id, org_id, amount_cents, reference, created_at, organizations(name)').eq('status', 'pending').eq('method', 'bank_transfer').order('created_at').limit(100)
       : Promise.resolve({ data: [] as never[] }),
     seesRequests
-      ? sb.from('rfqs').select('id, code, title, quantity, unit, status, expires_at, created_at, organizations(name)').in('status', ['submitted', 'assigned']).order('created_at').limit(100)
+      ? (div ? sb.from('rfqs').select('id, code, title, quantity, unit, status, expires_at, created_at, organizations(name)').eq('division_id', div.id)
+             : sb.from('rfqs').select('id, code, title, quantity, unit, status, expires_at, created_at, organizations(name)')).in('status', ['submitted', 'assigned']).order('created_at').limit(100)
       : Promise.resolve({ data: [] as never[] }),
     seesRequests
-      ? sb.from('rfqs').select('id', { count: 'exact', head: true }).eq('status', 'quoted')
+      ? (div ? sb.from('rfqs').select('id', { count: 'exact', head: true }).eq('division_id', div.id) : sb.from('rfqs').select('id', { count: 'exact', head: true })).eq('status', 'quoted')
       : Promise.resolve({ count: 0 }),
   ]);
 
   const items: QueueItem[] = [];
   for (const a of approvals.data ?? []) {
+    if (div && divisionCodeForService(a.service as string) !== div.code) continue;
     const mine = (isOwner && a.approver === 'owner') || (a.approver === 'manager' && a.assigned_to === s.userId);
     if (!mine && !isOwner) continue;
     items.push({
