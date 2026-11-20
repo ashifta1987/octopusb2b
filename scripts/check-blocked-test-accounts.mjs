@@ -7,11 +7,11 @@
 // Run: node scripts/with-staging-env.mjs node scripts/check-blocked-test-accounts.mjs
 import pg from 'pg';
 import { createClient } from '@supabase/supabase-js';
-import { assertStagingOrThrow } from './lib-staging-guard.mjs';
+import { loadStagingEnvOrExit, assertStagingDatabase } from './lib-staging-guard.mjs';
 
-await assertStagingOrThrow();
+loadStagingEnvOrExit();
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } }); await db.connect();
-await assertStagingOrThrow(db);
+await assertStagingDatabase(db);
 const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 const anon = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY, { auth: { persistSession: false } });
 let failed = 0;

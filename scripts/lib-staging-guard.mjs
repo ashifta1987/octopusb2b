@@ -13,7 +13,10 @@ export const LIVE_PROJECT_REF = 'qrawnqpxvtjmgncxmffu';
 const refOf = (url) => { try { return new URL(url).hostname.split('.')[0]; } catch { return ''; } };
 const die = (why, what = 'STAGING') => { console.error(`✘ refused: ${why} — this script only runs against the ${what} project.`); process.exit(1); };
 
-/** Checks 1–3 on the CURRENT environment without loading anything or exiting: the reason it is not staging, or null. */
+/**
+ * Checks 1–3 on the CURRENT environment without loading anything or exiting: the reason it is not staging, or null.
+ * @param {Record<string, string | undefined>} [env]
+ */
 export function stagingEnvProblem(env = process.env) {
   const ref = refOf(env.NEXT_PUBLIC_SUPABASE_URL ?? '');
   if (env.APP_ENVIRONMENT !== 'staging') return 'APP_ENVIRONMENT is not "staging"';
@@ -52,7 +55,11 @@ export async function assertStagingDatabase(db) {
   if (env !== 'staging') die(`the database is marked "${env ?? 'unset'}"`);
 }
 
-/** Opposite check for LIVE: requires explicit --live flag + live project URL/DB (never staging). */
+/**
+ * Opposite check for LIVE: requires explicit --live flag + live project URL/DB (never staging).
+ * @param {Record<string, string | undefined>} [env]
+ * @param {string[]} [argv]
+ */
 export function liveEnvProblem(env = process.env, argv = process.argv) {
   if (!argv.includes('--live')) return 'pass --live explicitly to load .env.live and access the LIVE project';
   if (argv.includes('--staging')) return 'cannot pass both --live and --staging';
