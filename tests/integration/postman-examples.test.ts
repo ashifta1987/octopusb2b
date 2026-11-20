@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { setupIntegrationFixtures } from './staging-fixture';
 
 /**
  * Postman saved examples from seed data (SPEC §15.2) + live contract check.
@@ -46,6 +47,7 @@ let clientRowId = '';
 let clientId = '';
 let testKey = '';
 let token = '';
+let cleanupFixtures: () => Promise<void> = async () => {};
 const examples: Record<string, { status: number; body: unknown }> = {};
 const vars: Record<string, string> = {};
 const doc = buildOpenApi('https://octopusb2b.com');
@@ -64,6 +66,7 @@ beforeAll(async () => {
   const { data: u } = await sb.from('profiles').select('id').eq('email', 'buyer@demo.octopusb2b.com').single();
   const { data: m } = await sb.from('org_members').select('org_id').eq('user_id', u!.id).single();
   orgId = m!.org_id;
+  cleanupFixtures = await setupIntegrationFixtures(orgId);
   const { data: c, error } = await sb
     .from('api_clients')
     .insert({ org_id: orgId, name: 'postman examples generator', scopes: ['catalog:read', 'quotes:write', 'orders:read', 'orders:write', 'shipments:read', 'wallet:read', 'webhooks:manage'] })
@@ -79,6 +82,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await cleanupFixtures();
   await sb.from('idempotency_keys').delete().like('key', `api:${orgId}:test:pmex-%`);
   if (vars.webhook_id) await sb.from('webhook_endpoints').delete().eq('id', vars.webhook_id);
   await sb.from('webhook_endpoints').delete().eq('org_id', orgId).like('url', 'https://example.com/octopus/webhooks%');
@@ -106,8 +110,8 @@ describe('Postman examples from seed data', () => {
     const id = operationId(op);
     it(`${op.method.toUpperCase()} ${op.path}`, async () => {
       const pathVar = op.path.startsWith('/products') ? vars.product_id : op.path.startsWith('/rfqs') ? vars.rfq_id : op.path.startsWith('/orders') ? vars.order_id : op.path.startsWith('/shipments') ? vars.shipment_id : vars.webhook_id;
-      if (op.path.includes('{id}') && !pathVar) return; // nothing in the seed for this org
-      if (id === 'postOrders' && !vars.quote_id) return;
+      if (op.path.includes('{id}')) expect(pathVar, `${id}: missing path param in chain`).toBeTruthy();
+      if (id === 'postOrders') expect(vars.quote_id, 'postOrders: missing open quote in chain').toBeTruthy();
       const url = BASE + '/api/v1' + op.path.replace('{id}', encodeURIComponent(pathVar ?? ''));
       const body = id === 'postOrders' ? { quoteId: vars.quote_id } : op.example;
       const headers: Record<string, string> = { Authorization: `Bearer ${token}`, Accept: 'application/json' };

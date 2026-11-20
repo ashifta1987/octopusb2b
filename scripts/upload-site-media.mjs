@@ -1,16 +1,18 @@
 // Uploads the shipped site pictures to the media store and points each Site content key (site_media) at them.
-//   node scripts/upload-site-media.mjs --staging      (staging)
-//   node scripts/upload-site-media.mjs --live         (production; run at go-live)
+//   node scripts/upload-site-media.mjs --staging      (staging, .env.staging)
+//   node scripts/upload-site-media.mjs --live         (production, .env.live — refuses without --live)
 // Files: public/images/services/<name>.webp → site-media/site/services/<name>.webp, octo → site/octo/.
 // Idempotent (upsert). Each slot change is written to audit_log.
 import fs from 'node:fs';
-import { config } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
+import { loadStagingEnvOrExit, loadLiveEnvOrExit } from './lib-staging-guard.mjs';
 
-const target = process.argv.includes('--live') ? '.env.local' : process.argv.includes('--staging') ? '.env.staging' : null;
-if (!target) throw new Error('Usage: --staging | --live');
-const env = config({ path: target, quiet: true, processEnv: {} }).parsed ?? {};
-const sb = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+const isLive = process.argv.includes('--live');
+const isStaging = process.argv.includes('--staging');
+if (!isLive && !isStaging) throw new Error('Usage: --staging | --live');
+if (isLive) loadLiveEnvOrExit();
+else loadStagingEnvOrExit();
+const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 
 const { data: slots, error } = await sb.from('site_media').select('key, default_src, path');
 if (error) throw new Error(error.message);
@@ -30,5 +32,5 @@ for (const s of slots) {
   }
   up++; console.log(`  ✔ ${s.key} → ${path}`);
 }
-console.log(`uploaded ${up} pictures to ${target === '.env.local' ? 'LIVE' : 'staging'} site-media`);
+console.log(`uploaded ${up} pictures to ${isLive ? 'LIVE' : 'staging'} site-media`);
 

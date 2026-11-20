@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import crypto from 'node:crypto';
+import { setupIntegrationFixtures } from './staging-fixture';
 
 // `after()` needs a Next request scope; run the callback immediately in tests.
 vi.mock('next/server', async (orig) => ({ ...(await orig<typeof import('next/server')>()), after: (fn: () => unknown) => void Promise.resolve().then(fn), connection: async () => {} }));
@@ -28,12 +29,14 @@ let clientRowId = '';
 let clientId = '';
 let testKey = '';
 let token = '';
+let cleanupFixtures: () => Promise<void> = async () => {};
 const auth = () => ({ Authorization: `Bearer ${token}` });
 
 beforeAll(async () => {
   const { data: u } = await sb.from('profiles').select('id').eq('email', 'buyer@demo.octopusb2b.com').single();
   const { data: m } = await sb.from('org_members').select('org_id').eq('user_id', u!.id).single();
   orgId = m!.org_id;
+  cleanupFixtures = await setupIntegrationFixtures(orgId);
   const { data: c, error } = await sb
     .from('api_clients')
     .insert({ org_id: orgId, name: 'vitest integration', scopes: ['catalog:read', 'quotes:write', 'orders:read', 'orders:write', 'shipments:read', 'wallet:read', 'webhooks:manage'] })
@@ -49,6 +52,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  await cleanupFixtures();
   await sb.from('idempotency_keys').delete().like('key', `api:${orgId}:test:vitest-%`);
   if (clientRowId) await sb.from('api_clients').delete().eq('id', clientRowId); // cascades api_keys
   await sb.from('webhook_endpoints').delete().eq('org_id', orgId).like('url', 'https://example.com/vitest%');
@@ -93,15 +97,16 @@ describe('auth', () => {
 
 describe('catalog', () => {
   let productId = '';
-  it('searches live products; supplier is code + country only', async () => {
+  it('searches live products; factory and deprecated supplier alias omit supplier codes', async () => {
     const { GET } = await import('@/app/api/v1/products/route');
     const r = await call(GET as Handler, '/api/v1/products?per_page=5', { headers: auth() });
     expect(r.status).toBe(200);
     expect(r.body.data.length).toBeGreaterThan(0);
     const p = r.body.data[0];
     productId = p.id;
-    expect(Object.keys(p.supplier).sort()).toEqual(['code', 'country', 'verified']);
-    expect(JSON.stringify(r.body)).not.toMatch(/legal_name|contact_email|supplier_cost/);
+    expect(Object.keys(p.factory).sort()).toEqual(['country', 'label', 'province', 'verified']);
+    expect(Object.keys(p.supplier).sort()).toEqual(['country', 'label', 'province', 'verified']);
+    expect(JSON.stringify(r.body)).not.toMatch(/legal_name|contact_email|supplier_cost|OCT-\d{4}/);
     const s = await call(GET as Handler, '/api/v1/products?q=bolts', { headers: auth() });
     expect(s.status).toBe(200);
   });
@@ -126,11 +131,10 @@ describe('org data (strictly filtered by token org)', () => {
     expect(det.status).toBe(200);
     expect(Array.isArray(det.body.data.documents)).toBe(true);
     const ship = orders.body.data.length ? (await sb.from('shipments').select('code').eq('org_id', orgId).limit(1).maybeSingle()).data : null;
-    if (ship) {
-      const t = await call((await import('@/app/api/v1/shipments/[id]/tracking/route')).GET as Handler, `/api/v1/shipments/${ship.code}/tracking`, { headers: auth() }, { id: ship.code });
-      expect(t.status).toBe(200);
-      expect(t.body.data.events.length).toBeGreaterThan(0);
-    }
+    expect(ship, 'staging buyer org must have a shipment for tracking test').toBeTruthy();
+    const t = await call((await import('@/app/api/v1/shipments/[id]/tracking/route')).GET as Handler, `/api/v1/shipments/${ship!.code}/tracking`, { headers: auth() }, { id: ship!.code });
+    expect(t.status).toBe(200);
+    expect(t.body.data.events.length).toBeGreaterThan(0);
     const w = await call((await import('@/app/api/v1/wallet/route')).GET as Handler, '/api/v1/wallet', { headers: auth() });
     expect(w.status).toBe(200);
     expect(w.body.data.balance).toMatchObject({ amount_minor: expect.any(Number), currency: expect.stringMatching(/^(USD|CNY)$/) });
@@ -142,8 +146,8 @@ describe('org data (strictly filtered by token org)', () => {
   });
   it('cannot read another org’s order', async () => {
     const { data: foreign } = await sb.from('orders').select('id').neq('org_id', orgId).limit(1).maybeSingle();
-    if (!foreign) return;
-    const r = await call((await import('@/app/api/v1/orders/[id]/route')).GET as Handler, `/api/v1/orders/${foreign.id}`, { headers: auth() }, { id: foreign.id });
+    expect(foreign, 'staging must have another org order').toBeTruthy();
+    const r = await call((await import('@/app/api/v1/orders/[id]/route')).GET as Handler, `/api/v1/orders/${foreign!.id}`, { headers: auth() }, { id: foreign!.id });
     expect(r.status).toBe(404);
   });
 });
@@ -180,9 +184,9 @@ describe('writes (sandbox key → simulated) + idempotency', () => {
   });
   it('simulated order from an open quote', async () => {
     const { data: q } = await sb.from('quotes').select('id, rfq:rfqs!inner(org_id)').eq('rfq.org_id', orgId).in('status', ['sent', 'viewed']).gt('valid_until', new Date().toISOString()).limit(1).maybeSingle();
-    if (!q) return;
+    expect(q, 'staging buyer org must have an open quote').toBeTruthy();
     const { POST } = await import('@/app/api/v1/orders/route');
-    const r = await call(POST as Handler, '/api/v1/orders', { method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json', 'Idempotency-Key': 'vitest-' + crypto.randomUUID() }, body: JSON.stringify({ quoteId: q.id }) });
+    const r = await call(POST as Handler, '/api/v1/orders', { method: 'POST', headers: { ...auth(), 'Content-Type': 'application/json', 'Idempotency-Key': 'vitest-' + crypto.randomUUID() }, body: JSON.stringify({ quoteId: q!.id }) });
     expect(r.status).toBe(201);
     expect(r.body.simulated).toBe(true);
     expect(r.body.data.deposit.amount_minor).toBeGreaterThan(0);

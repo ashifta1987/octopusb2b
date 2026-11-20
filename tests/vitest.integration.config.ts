@@ -2,15 +2,21 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { parse } from 'dotenv';
 import { defineConfig } from 'vitest/config';
+import { stagingEnvProblem } from '../scripts/lib-staging-guard.mjs';
 
 /**
- * Integration tests: call the real Route Handlers against the Supabase project in .env.local.
- * Run: npx vitest run --config tests/vitest.integration.config.ts
- * Uses only sandbox (oct_test_) writes and cleans up the API client/keys/webhooks it creates.
+ * Integration tests: call the real Route Handlers against the STAGING Supabase project (.env.staging).
+ * Refuses to run unless APP_ENVIRONMENT=staging and the Supabase URL + DATABASE_URL are the staging project.
+ * Run: pnpm test:integration
  */
 const root = path.resolve(__dirname, '..');
-const envFile = path.join(root, '.env.local');
-const env = fs.existsSync(envFile) ? parse(fs.readFileSync(envFile)) : {};
+const load = (name: string) => {
+  const f = path.join(root, name);
+  return fs.existsSync(f) ? parse(fs.readFileSync(f)) : {};
+};
+const env = { ...load('.env.local'), ...load('.env.staging') };
+const problem = stagingEnvProblem(env);
+if (problem) throw new Error(`vitest.integration refused: ${problem} — integration tests only run against STAGING.`);
 
 export default defineConfig({
   root,

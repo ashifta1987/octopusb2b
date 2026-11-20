@@ -1,16 +1,28 @@
-// Copies catalogue + site configuration from production to the STAGING database (ADDON-41 setup, 7 Nov 2026).
+// Copies catalogue + site configuration from production (read-only) to the STAGING database (ADDON-41 setup, 7 Nov 2026).
 // Never copies customers, orders, wallet/ledger, KYC, messages, audit or staff accounts.
-// Usage: node scripts/staging-sync.mjs        (reads .env.local = source/live, .env.staging = target)
-// Safety: the target must be the staging project ref AND not be marked production; the source is only read.
+// Usage: node scripts/staging-sync.mjs --live   (--live is required to read .env.live as source; .env.staging is target)
+// Safety: source requires --live (.env.live, read-only tx); target must be STAGING (.env.staging, marked staging).
+import fs from 'node:fs';
 import { config } from 'dotenv';
 import pg from 'pg';
+import { liveEnvProblem, stagingEnvProblem, assertLiveDatabase, assertStagingDatabase } from './lib-staging-guard.mjs';
 
-const src = config({ path: '.env.local', quiet: true, processEnv: {} }).parsed?.DATABASE_URL;
-const stg = config({ path: '.env.staging', quiet: true, processEnv: {} }).parsed;
-const dst = stg?.DATABASE_URL;
-const STAGING_REF = (stg?.NEXT_PUBLIC_SUPABASE_URL ?? '').match(/https:\/\/([a-z0-9]+)\.supabase\.co/)?.[1];
-if (!src || !dst || !STAGING_REF) throw new Error('Missing DATABASE_URL in .env.local or .env.staging');
-if (!dst.includes(STAGING_REF) || src.includes(STAGING_REF)) throw new Error('Refusing: target is not the staging project, or source is staging');
+if (!process.argv.includes('--live')) {
+  console.error('✘ refused: pass --live explicitly to read from .env.live and sync to staging.');
+  process.exit(1);
+}
+if (!fs.existsSync('.env.live')) {
+  console.error('✘ refused: .env.live is missing.');
+  process.exit(1);
+}
+const liveEnv = config({ path: '.env.live', quiet: true, processEnv: {} }).parsed ?? {};
+const stgEnv = config({ path: '.env.staging', quiet: true, processEnv: {} }).parsed ?? {};
+const liveErr = liveEnvProblem(liveEnv, process.argv);
+if (liveErr) { console.error(`✘ refused (source): ${liveErr}`); process.exit(1); }
+const stgErr = stagingEnvProblem(stgEnv);
+if (stgErr) { console.error(`✘ refused (target): ${stgErr}`); process.exit(1); }
+const src = liveEnv.DATABASE_URL;
+const dst = stgEnv.DATABASE_URL;
 
 // ADDON-44: demo rows registered in public.demo_rows (pnpm demo:seed) are kept; live values never overwrite them.
 let DEMO_KEYS = new Set();
@@ -32,12 +44,15 @@ const TABLES = [
 const S = new pg.Client({ connectionString: src, ssl: { rejectUnauthorized: false } });
 const D = new pg.Client({ connectionString: dst, ssl: { rejectUnauthorized: false } });
 await S.connect(); await D.connect();
+await assertLiveDatabase(S);
+await S.query('begin read only');
+await S.query(`set local statement_timeout = '30s'`);
 const envRow = await D.query(`select value #>> '{}' v from site_settings where key = 'app_environment'`);
 if (envRow.rows[0]?.v === 'production') {
   // a fresh staging database inherits 'production' from a migration: re-mark it before anything else
   await D.query(`update site_settings set value = '"staging"'::jsonb where key = 'app_environment'`);
 }
-if ((await D.query(`select value #>> '{}' v from site_settings where key = 'app_environment'`)).rows[0]?.v !== 'staging') throw new Error('Target is not marked staging');
+await assertStagingDatabase(D);
 if ((await D.query(`select to_regclass('public.demo_rows') r`)).rows[0].r) DEMO_KEYS = new Set((await D.query(`select row_key from public.demo_rows where tbl = 'site_settings'`)).rows.map((r) => r.row_key));
 
 const exists = async (c, t) => (await c.query(`select to_regclass($1) r`, [`public.${t}`])).rows[0].r !== null;
@@ -86,4 +101,5 @@ try {
   await D.query('rollback'); console.error('✘ sync failed, staging unchanged:', e.message); process.exitCode = 1;
 }
 for (const [t, a, b] of report) console.log(`${t.padEnd(26)} live ${String(a).padStart(4)}  → inserted ${b}`);
+await S.query('commit').catch(() => {});
 await S.end(); await D.end();
