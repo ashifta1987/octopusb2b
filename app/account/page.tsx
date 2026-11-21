@@ -8,6 +8,7 @@ import { fmtDate, money } from '@/lib/format';
 import { getAccountContext, SERVICES, serviceOn, nowIso, withinDays, type ServiceKey } from '@/lib/core/account';
 import { getCompanyBankAccount } from '@/components/account/bank-data';
 import { KYC_CONTACT_FALLBACK } from '@/lib/kyc-message';
+import { LaunchNotifyForm } from '@/components/store/launch-notify-form';
 
 export const metadata = { title: 'My account' };
 
@@ -184,11 +185,15 @@ async function AccountHomeContent({ searchParams }: { searchParams: Promise<{ no
           {SERVICES.map((svc) => {
             const st = ctx.services[svc.key];
             const on = serviceOn(st);
+            // Dropshipping is not open yet: an off tile says Coming soon with the launch sign-up instead of "Start"
+            const soon = svc.key === 'dropship' && !on;
             return (
               <li key={svc.key} className="card p-5 flex flex-col" data-testid={`service-${svc.key}`}>
                 <div className="flex items-center justify-between gap-2">
                   <h3 className="text-[17px] font-bold">{svc.label}</h3>
-                  <span className={`mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full ${on ? 'bg-ok-bg text-ok' : 'bg-pearl text-muted'}`}>{on ? `On${st.plan ? ` · ${st.plan}` : ''}` : st.status === 'paused' ? 'Paused' : 'Off'}</span>
+                  {soon
+                    ? <span className="mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-warn-bg text-warn">Coming soon</span>
+                    : <span className={`mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full ${on ? 'bg-ok-bg text-ok' : 'bg-pearl text-muted'}`}>{on ? `On${st.plan ? ` · ${st.plan}` : ''}` : st.status === 'paused' ? 'Paused' : 'Off'}</span>}
                 </div>
                 {svc.key === 'sourcing' && on ? (
                   <div data-testid="dashboard-sourcing">
@@ -207,15 +212,20 @@ async function AccountHomeContent({ searchParams }: { searchParams: Promise<{ no
                   </div>
                 ) : on ? (
                   <p className="text-[14px] text-muted mt-3">Your account manager is setting this up. Figures appear here once it is running.</p>
+                ) : soon ? (
+                  <div data-testid="dropship-coming-soon" className="mt-3">
+                    <p className="text-[14px] text-muted">Dropshipping is launching soon: sell from your own store, we pack and ship each order. Leave your email and we tell you once it opens.</p>
+                    <div className="mt-3"><LaunchNotifyForm feature="dropship" source="account" defaultEmail={s.email ?? ''} buttonClass="btn btn-dark min-h-11 w-full" /></div>
+                  </div>
                 ) : (
                   <p className="text-[14px] text-muted mt-3">{ABOUT[svc.key]}</p>
                 )}
-                <Link href={svc.href} className="mt-auto pt-4 text-coral-text font-semibold text-[15px]">{on ? `Open ${svc.label}` : 'Start'} →</Link>
+                {!soon && <Link href={svc.href} className="mt-auto pt-4 text-coral-text font-semibold text-[15px]">{on ? `Open ${svc.label}` : 'Start'} →</Link>}
               </li>
             );
           })}
         </ul>
-        <p className="text-[13px] text-muted mt-2">A service that is not switched on shows a short explanation and a Start button.</p>
+        <p className="text-[13px] text-muted mt-2">A service that is not switched on shows a short explanation and a Start button. Dropshipping is coming soon: leave your email to hear when it opens.</p>
       </section>
 
       <section aria-labelledby="activity-h" className="card mt-8 overflow-hidden">

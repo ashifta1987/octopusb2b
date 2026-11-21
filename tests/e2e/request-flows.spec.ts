@@ -58,10 +58,9 @@ test('fee text never shows "Free" together with a charge; each type has its own 
   const text = await page.getByTestId('fee-text').innerText();
   if (/Free/.test(row)) expect(text).not.toMatch(/charged/i); else expect(text).toMatch(/RFQ fee .* charged/);
   await page.goto('/request/dropship');
-  await expect(page.locator('h1')).toHaveText('Start dropshipping with Octopus B2B');
-  await expect(page.getByText('How dropship setup works')).toBeVisible();
-  await expect(page.getByTestId('fee-row')).toContainText('Free');
-  await expect(page.getByTestId('fee-text')).not.toContainText(/charged from your wallet when you submit/i);
+  await expect(page.locator('h1')).toHaveText('Dropshipping is coming soon');   // 20 Nov 2026: honest Coming soon
+  await expect(page.getByText('How dropshipping will work')).toBeVisible();
+  await expect(page.getByTestId('fee-row')).toHaveCount(0);                        // no setup form, so no fee row
   const heads = new Set<string>();
   for (const t of ['sourcing', 'dropship', '3pl', 'sample', 'qc', 'certification']) { await page.goto(`/request/${t}`); heads.add(await page.locator('h1').innerText()); }
   expect(heads.size).toBe(6);

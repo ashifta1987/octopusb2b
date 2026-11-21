@@ -35,9 +35,19 @@ test('My account home: service tabs, waiting for you, account manager, wallet wi
   await expect(page.getByTestId('waiting')).toContainText('Nothing needs you right now');
   await expect(page.getByTestId('wallet-card')).toContainText(/W-\d{5}/);
   await expect(page.getByTestId('service-sourcing')).toContainText('On');
-  await expect(page.getByTestId('service-dropship')).toContainText('Start');
+  // Dropshipping is Coming soon (21 Nov 2026): no "Start" link, a launch sign-up prefilled with the customer's email
+  const drop = page.getByTestId('service-dropship');
+  await expect(drop).toContainText('Coming soon');
+  await expect(drop.getByRole('link', { name: /Start/ })).toHaveCount(0);
+  await expect(drop.getByTestId('launch-notify-dropship').getByLabel('Email address')).toHaveValue(/@/);
+  await expect(drop.getByTestId('launch-notify-privacy')).toContainText("We’ll only use your email to tell you when dropshipping launches.");
   await shot(page, '01-account-home-desktop');
-  await page.getByTestId('service-dropship').getByRole('link', { name: /Start/ }).click();
+  await page.getByTestId('account-tabs').getByRole('link', { name: 'Dropshipping' }).click();
+  await expect(page.getByTestId('dropship-coming-soon')).toBeVisible();
+  await expect(page.getByRole('main')).not.toContainText('Start Dropshipping');
+  // the other off services still offer Start
+  await page.goto('/account');
+  await page.getByTestId('service-warehouse').getByRole('link', { name: /Start/ }).click();
   await expect(page.getByTestId('service-start')).toBeVisible();
 });
 

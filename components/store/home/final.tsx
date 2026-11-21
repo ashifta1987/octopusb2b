@@ -15,6 +15,7 @@ import { JsonLd, SITE_URL } from '@/components/store/seo';
 import { copy } from './shared';
 import { IllCard, Photo, FloatingCard, InsetPhoto, HeroFeather, OctoButton, NumEyebrow, Ticks, StepRow, Band } from './brand-ui';
 import { ServicePicker, type PickerTab } from './service-picker';
+import { LaunchNotifyForm } from '@/components/store/launch-notify-form';
 
 /**
  * Home "/" — brand kit step 5 (ADDON-48 Part 3, owner's order). Real data only: products, pools, turnkey projects,
@@ -104,12 +105,18 @@ export async function FinalHome() {
             <H2 id="drop-h">You sell. We ship to your customer.</H2>
             <Lead>List verified products in your store. We pack each order under your brand and ship it with tracking. You see the full cost first.</Lead>
             <Ticks className="mt-5" items={['No stock, no minimum', 'Your packing slip, never our prices', 'Tracking to the door']} />
-            <Btns><Link href="/go/dropship" className="btn btn-primary min-h-[52px]">Start dropshipping <Arrow /></Link><Link href="/products" className="btn btn-ghost min-h-[52px]">See the catalogue</Link></Btns>
+            {/* 20 Nov 2026: store connection + dropship ordering are not built yet — say so, and collect sign-ups (migration 203) */}
+            <div className="mt-6 rounded-[12px] border border-line bg-white p-4 max-w-[560px]" data-testid="dropship-coming-soon">
+              <div className="flex items-center gap-2"><span className="pill bg-warn-bg text-warn">Coming soon</span><span className="font-semibold text-ink">Dropshipping is launching soon</span></div>
+              <p className="mt-2 text-[14px] text-black">Store connection and dropship ordering are not open yet. Leave your email and we will tell you once when they launch.</p>
+              <div className="mt-3"><LaunchNotifyForm feature="dropship" source="home" /></div>
+            </div>
+            <Btns><Link href="/products" className="btn btn-ghost min-h-[52px]">See the catalogue</Link></Btns>
           </div>
           <IllCard img={M.drop} chip="Your store → our warehouse → your customer's door" />
         </div>
         <Suspense fallback={null}><DropPreview demo={demo} photo={M.dropPhoto} /></Suspense>
-        <div className="mt-8"><StepRow steps={[['Choose products', 'Pick from products made by verified factories.'], ['Connect your shop', 'Shopify, WooCommerce, or upload a sheet.'], ['Pay per order', 'Product, shipping and fulfilment fee come out of your wallet.'], ['We pack and deliver', 'Packed under your brand and delivered with tracking.']]} /></div>
+        <div className="mt-8"><StepRow steps={[['Choose products', 'Pick from products made by verified factories.'], ['Connect your shop', 'Coming soon: Shopify and WooCommerce store connection.'], ['Pay per order', 'Product, shipping and fulfilment fee come out of your wallet.'], ['We pack and deliver', 'Packed under your brand and delivered with tracking.']]} /></div>
       </Band>
 
       {/* 2 · Make My Brand */}
@@ -178,7 +185,7 @@ export async function HomeHero() {
   const rfq = services.rfq?.priceCents ? money(services.rfq.priceCents, services.rfq.currency) : null;
   const poolsOn = settings.pool_enabled !== false;
   const tabs: PickerTab[] = [
-    { key: 'drop', label: 'Dropship', service: 'Dropshipping', promise: 'List verified products in your store. We ship each order to your customer.', steps: ['Pick products and set your price', 'Your customer orders, the order lands here', 'We pack with your slip and ship with tracking'], fact: 'No stock, no minimum', cta: 'Start dropshipping →', href: '/go/dropship' },
+    { key: 'drop', label: 'Dropship', service: 'Dropshipping', promise: 'List verified products in your store. We ship each order to your customer.', steps: ['Pick products and set your price', 'Your customer orders, the order lands here', 'We pack with your slip and ship with tracking'], fact: 'Coming soon · store connection and dropship ordering are not open yet', cta: 'Coming soon · notify me →', href: '/request/dropship#notify' },
     { key: 'brand', label: 'Put my brand on it', service: 'Make My Brand', promise: 'Your logo on a verified product, made, checked and stocked for you.', steps: ['Pick a product from our verified suppliers', 'Add your logo print, engraving or branded box', 'Approve proof and sample, then we produce and check'], fact: 'Price confirmed before you pay', cta: 'Start a brand project →', href: '/request/brand' },
     { key: 'source', label: 'Source a product', service: 'Product sourcing', promise: 'Tell us the product. We find the verified factory and get you competing quotes.', steps: ['Send your request with product, quantity and destination', 'Compare quotes from verified factories within 24 hours', 'We inspect the goods and ship them to your door'], fact: rfq ? `RFQ fee ${rfq} · quotes in 24 h` : 'Quotes in 24 h', cta: 'Request quotes →', href: '/request/sourcing' },
     ...(poolsOn ? [{ key: 'pool', label: 'Share a factory order', service: 'MOQ pools', promise: 'Factory minimum too big? Join other buyers on one factory order and each take the quantity you need.', steps: ['Join an open pool or start one for a product', 'Commit your quantity; money waits in escrow', 'When the pool reaches the factory minimum, it is ordered, checked and shipped'], fact: "Pay only for your share · refunded if the pool doesn't fill by its deadline", cta: 'See open pools →', href: '/pools' }] : []),
@@ -242,7 +249,7 @@ async function DropPreview({ demo, photo }: { demo: boolean; photo: SiteImage })
     <div className="mt-10 grid gap-6 lg:grid-cols-[1.4fr_1fr] items-stretch">
       {rows.length > 0 ? (
         <div className="card p-4 sm:p-5" data-testid="drop-preview">
-          <div className="flex items-center justify-between gap-2"><div className="flex items-center gap-2"><span className="font-bold text-ink">Catalogue preview</span><span className="pill bg-warn-bg text-warn">Example</span></div><Link href="/go/dropship" className="inline-flex items-center min-h-11 text-[14px] font-semibold text-coral-text">See the catalogue <Arrow /></Link></div>
+          <div className="flex items-center justify-between gap-2"><div className="flex items-center gap-2"><span className="font-bold text-ink">Catalogue preview</span><span className="pill bg-warn-bg text-warn">Example</span></div><Link href="/products" className="inline-flex items-center min-h-11 text-[14px] font-semibold text-coral-text">See the catalogue <Arrow /></Link></div>
           <ul className="mt-3 flex md:grid md:grid-cols-3 gap-3 overflow-x-auto snap-x -mx-1 px-1 pb-1">
             {rows.map((r) => (
               <li key={r.title} className="rounded-[12px] border border-line p-3 shrink-0 w-[220px] md:w-auto snap-start">

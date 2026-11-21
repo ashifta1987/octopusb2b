@@ -11,6 +11,7 @@ import { Notice } from '@/components/ui';
 import { getServices, getProductById } from '@/components/store/data';
 import { REQUEST_TYPES, isRequestType, SERVICE_CODE, type RequestType } from '@/components/store/request-schema';
 import { RequestForm } from '@/components/store/request-form';
+import { LaunchNotifyForm } from '@/components/store/launch-notify-form';
 import { AdSlot } from '@/components/store/ad-slot';
 import { parts } from '@/components/store/seo';
 import { submitRequest } from './actions';
@@ -24,7 +25,7 @@ type SP = Promise<{ product?: string; qty?: string; title?: string; country?: st
 /** ADDON-36 (M1): every request type has its own heading + one-line intro (CMS override: request.h1.<type> = "Title|Intro"). */
 const HEAD: Record<RequestType, string> = {
   sourcing: "Tell us the product. We'll find the factory.|Matched, verified factories quote within 24 hours. You compare and choose; we inspect and ship.",
-  dropship: 'Start dropshipping with Octopus B2B|Sell our verified products in your store. We pack each order under your brand and ship it to your customer.',
+  dropship: 'Dropshipping is coming soon|Sell our verified products in your store and we pack each order under your brand. Store connection and dropship ordering are not open yet: leave your email and we will tell you when they launch.',
   '3pl': 'Store your stock near your buyers|Ship your bulk order once. We receive it, store it by SKU and send out each order as it comes in.',
   sample: 'Order a sample before you buy in bulk|Check quality, packaging and finish in your hands before you commit to a bulk order.',
   qc: 'Book a quality inspection|Our inspectors check the goods at the factory, with photos and video, before anything ships.',
@@ -33,7 +34,7 @@ const HEAD: Record<RequestType, string> = {
 /** ADDON-36 (H2): dropshipping is an onboarding, not a quote request. */
 /** ADDON-44-C (audit 11): 3PL has its own steps — Octopus quotes warehousing, not suppliers. */
 const THREEPL_STEPS = ['Submitted|You get a reference number right away.', 'Rates sent|Octopus sends storage, pick-and-pack and shipping rates for your goods.', 'Accepted|You accept the rates in My account › 3PL warehouse.', 'Send your first inbound notice|Tell us what is coming: cartons, SKUs and arrival date.', 'Goods received and counted|We check and count every carton and put it on your stock list.', 'Live|Orders ship from your stock and you follow everything in your account.'];
-const DROPSHIP_STEPS = 'Create your account|Free, takes two minutes.;Choose products|Pick from the dropship catalogue of verified factories.;Connect your store|Shopify or WooCommerce — store connection coming soon; upload orders as a sheet meanwhile.;Top up your wallet|Product, shipping and fulfilment are paid from it per order. Top up by bank transfer.;We pack and ship|Packed under your brand, tracked to your customer.';
+const DROPSHIP_STEPS = 'Create your account|Free, takes two minutes.;Choose products|Pick from the dropship catalogue of verified factories.;Connect your store|Coming soon: Shopify and WooCommerce store connection.;Top up your wallet|Product, shipping and fulfilment are paid from it per order. Top up by bank transfer.;We pack and ship|Packed under your brand, tracked to your customer.';
 
 const FALLBACK: Record<RequestType, string> = {
   sourcing: 'Product sourcing|Find a product we don’t list yet', '3pl': '3PL service|Warehousing and fulfillment', dropship: 'Dropshipping|Ship straight to your customers',
@@ -130,10 +131,10 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_300px] items-start">
         <section className="card p-6 sm:p-8 space-y-6 min-w-0" aria-label="Request form">
-          {mode === 'guest' && (
+          {mode === 'guest' && type !== 'dropship' && (
             <div id="req-locked"><Notice tone="blue"><strong>{loginT}.</strong> {loginB} <Link href={loginHref} className="underline font-semibold">Sign in or create an account</Link>.</Notice></div>
           )}
-          {mode === 'no-org' && (
+          {mode === 'no-org' && type !== 'dropship' && (
             <div id="req-locked"><Notice tone="amber">Please <Link href="/onboarding" className="underline font-semibold">complete your company profile</Link> before submitting requests.</Notice></div>
           )}
           {product && (
@@ -154,14 +155,24 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
               <p className="text-[12px] text-muted mt-2">Wrong details? Update them in <Link href="/account" className="underline">your account</Link>.</p>
             </div>
           )}
+          {type === 'dropship' ? (
+            // 20 Nov 2026: dropship onboarding is not open yet — honest Coming soon + launch sign-up (migration 203)
+            <div id="notify" className="scroll-mt-28 space-y-3" data-testid="dropship-coming-soon">
+              <div className="flex items-center gap-2"><span className="pill bg-warn-bg text-warn">Coming soon</span><h2 className="text-xl font-semibold">Get notified when dropshipping launches</h2></div>
+              <p className="text-[15px] text-black">We are finishing store connection (Shopify and WooCommerce) and dropship ordering. Leave your email and we will send you one message when you can start.</p>
+              <LaunchNotifyForm feature="dropship" source="request-page" />
+              <p className="text-[13px] text-muted">Want to see the products first? <Link href="/products" className="underline font-semibold">Browse the catalogue</Link>.</p>
+            </div>
+          ) : (
           <RequestForm
             key={type}
             type={type} action={submitRequest} defaults={defaults} productId={product?.id ?? null}
             feeCents={fee} serviceName={svc?.name ?? 'Service fee'}
-            feeLabel={fee > 0 ? `${type === 'sourcing' ? 'RFQ fee' : svc?.name ?? 'Fee'} ${money(fee, svcCurrency)}, charged ${walletEnabled ? 'from your wallet' : 'on your next invoice'} when you submit.` : type === 'dropship' ? 'Dropship setup is free. You pay per order from your wallet once orders flow.' : 'Free to submit.'}
+            feeLabel={fee > 0 ? `${type === 'sourcing' ? 'RFQ fee' : svc?.name ?? 'Fee'} ${money(fee, svcCurrency)}, charged ${walletEnabled ? 'from your wallet' : 'on your next invoice'} when you submit.` : 'Free to submit.'}
             balanceCents={balance} creditCents={credit} walletEnabled={walletEnabled} currency={svcCurrency} mode={mode} loginHref={loginHref}
             warehouses={warehouses} demo={demo}
           />
+          )}
           {type === '3pl' && (
             <div id="rates" className="scroll-mt-28 rounded-[12px] border border-line bg-pearl p-4 text-[14px]" data-testid="3pl-rates">
               <div className="flex items-center gap-2 font-semibold text-ink">3PL rates{demo && rates && <ExamplePill />}</div>
@@ -173,7 +184,7 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
         <aside className="space-y-4 min-w-0" aria-label="About your request">
           {next.length > 0 && (
             <section className="rounded-[14px] bg-ink text-white p-7" aria-labelledby="next-h">
-              <h2 id="next-h" className="!text-white text-xl font-semibold">{type === 'dropship' ? 'How dropship setup works' : 'What happens next'}</h2>
+              <h2 id="next-h" className="!text-white text-xl font-semibold">{type === 'dropship' ? 'How dropshipping will work' : 'What happens next'}</h2>
               <ol className="mt-5 relative">
                 {next.map(([t, b], i) => (
                   <li key={i} className="relative pl-10 pb-5 last:pb-0">

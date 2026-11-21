@@ -28,6 +28,8 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
   // created_by is hidden from session reads (migration 195): added with the service role after requireStaff.
   const prices = await withHiddenColumns('service_prices', priceRows, 'created_by');
   const editable = can(s, 'services', 'edit');
+  const { data: launchRows } = await sb.from('launch_signups').select('id, email, source, created_at, notified_at').eq('feature', 'dropship').order('created_at', { ascending: false }).limit(200);
+  const launch = (launchRows ?? []) as { id: string; email: string; source: string | null; created_at: string; notified_at: string | null }[];
   const list = services ?? [];
   const now = new Date().toISOString();
   const byCode = new Map<string, Price[]>();
@@ -176,6 +178,21 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
           </div>
         ) : <Card><EmptyState title="Select a service" /></Card>}
       </div>
+
+      {/* "Notify me when it launches" sign-ups for Coming-soon features (migration 203; staff with Services view only) */}
+      <Card title={`Launch sign-ups · Dropshipping (${launch.length}${launch.length === 200 ? '+' : ''})`} className="mt-6">
+        <p className="px-6 -mt-1 text-sm text-muted">People who asked to be told when dropshipping (store connection and dropship ordering) launches. From the home page and the Request Center.</p>
+        <Table head={['Email', 'Signed up', 'From', 'Notified']} empty={<EmptyState title="No sign-ups yet" />}>
+          {launch.map((l) => (
+            <tr key={l.id}>
+              <td className="td text-sm break-all">{l.email}</td>
+              <td className="td text-sm">{fmtDate(l.created_at, true)}</td>
+              <td className="td text-sm">{l.source === 'home' ? 'Home page' : l.source === 'request-page' ? 'Request Center' : l.source ?? '—'}</td>
+              <td className="td text-sm">{l.notified_at ? fmtDate(l.notified_at, true) : '—'}</td>
+            </tr>
+          ))}
+        </Table>
+      </Card>
     </>
   );
 }
