@@ -323,13 +323,14 @@ update site_settings
    set value = jsonb_set(coalesce(value, '{}'::jsonb), '{amount_minor}', '0'::jsonb) || '{"verified_only": true}'::jsonb
  where key = 'wallet_credit_default';
 
--- Seed an explicit legacy wallet_credit_limits row for the staging seed org 'TEST DATA · Divisions' (is_seed = true)
+-- Seed an explicit legacy wallet_credit_limits row for the staging seed orgs ONLY when site_settings.app_environment = 'staging'
 -- so existing staging seed tests (rls.test.mjs) that spend from the seed buyer's negative wallet continue to pass
--- while all real / newly created organizations have 0 default wallet overdraft.
+-- while all real / live organizations have 0 default wallet overdraft.
 insert into wallet_credit_limits (org_id, limit_minor, currency, note)
 select id, 200000, 'USD', 'Staging seed org legacy wallet credit limit'
   from organizations
  where name in ('TEST DATA · Divisions', 'TEST DATA · Staging buyer (fixtures)')
+   and exists (select 1 from site_settings where key = 'app_environment' and (value #>> '{}') = 'staging')
 on conflict (org_id) do nothing;
 
 -- my_wallet_summary() includes open escrow_holds in on_hold_cents alongside open wallet_holds

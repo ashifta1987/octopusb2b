@@ -43,9 +43,9 @@ const SORTS: [string, string][] = [
 ];
 const SHIPS: [string, string][] = [
   ['', 'All'],
-  ['express', 'Express'],
-  ['standard', 'Standard'],
   ['economy', 'Economy'],
+  ['standard', 'Standard'],
+  ['express', 'Express'],
 ];
 
 export default function Page({ searchParams }: { searchParams: Promise<SP> }) {

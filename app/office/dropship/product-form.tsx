@@ -1003,9 +1003,9 @@ export function DropshipProductForm({
                           className="input !min-h-9"
                           data-testid="route-method"
                         >
-                          <option value="express">Express</option>
-                          <option value="standard">Standard</option>
                           <option value="economy">Economy</option>
+                          <option value="standard">Standard</option>
+                          <option value="express">Express</option>
                         </select>
                       </td>
                       <td className="td">
