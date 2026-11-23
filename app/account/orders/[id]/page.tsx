@@ -13,6 +13,8 @@ import { getSettings, getWalletFunds, orderFactoryMap, DOC_LABEL } from '@/compo
 import { RealtimeRefresh } from '@/components/account/realtime-refresh';
 import { OrderList, type OrderListItem } from '@/components/account/order-list';
 import { PayWalletButton, CancelOrderButton } from '@/components/account/order-actions';
+import { ChooseHowToPay, type EscrowHoldSummary } from '@/components/account/choose-how-to-pay';
+import type { CustomerCreditStatus, PaymentOptionMatrixRow, PaymentProviderSettingRow, PaymentServiceCode } from '@/lib/payments';
 import { dueNow, CANCELLABLE, relTime, nowMs } from '@/components/account/order-utils';
 import { payFromWallet, cancelOrder } from '../actions';
 import { customerCarrierLabel } from '@/lib/carrier-label';
@@ -25,19 +27,72 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
   const s = await requireCustomer(`/account/orders/${id}`);
   if (!s.org) return <Notice tone="amber">Complete your company profile first.</Notice>;
   const sb = await createClient();
-  const { data: o } = await sb.from('orders').select('id, code, org_id, quote_id, rfq_id, status, title, quantity, unit_price_cents, shipping_cents, total_cents, deposit_pct, deposit_cents, paid_cents, incoterm, terms_version_id, delivered_at, claim_visible_until, claim_hidden_until, created_at, updated_at, currency, fx_rate_id, pool_id, pool_pledge_id').eq('id', id).maybeSingle();
+  const { data: o } = await sb.from('orders').select('id, code, org_id, division_id, payment_option, quote_id, rfq_id, status, title, quantity, unit_price_cents, shipping_cents, total_cents, deposit_pct, deposit_cents, paid_cents, incoterm, terms_version_id, delivered_at, claim_visible_until, claim_hidden_until, created_at, updated_at, currency, fx_rate_id, pool_id, pool_pledge_id').eq('id', id).maybeSingle();
   if (!o) notFound();
-  const [{ data: docs }, { data: events }, { data: shipments }, { data: list }, { data: pi }, settings, funds, content] = await Promise.all([
+  const [{ data: docs }, { data: events }, { data: shipments }, { data: list }, { data: pi }, { data: divRow }, { data: holdRow }, { data: resRow }, { data: providerRows }, { data: creditData }, settings, funds, content] = await Promise.all([
     sb.from('documents').select('id, doc_type, number, amount_cents, currency, status, created_at').eq('order_id', id).order('created_at'),
     sb.from('order_events').select('id, kind, title, body, created_at').eq('order_id', id).order('created_at', { ascending: false }),
     sb.from('shipments').select('id, code, service_code, tracking_no, status, weight_kg, parcels, eta, last_event_at, created_at').eq('order_id', id).order('created_at', { ascending: false }),
     sb.from('orders').select('id, code, title, quantity, status, updated_at').eq('org_id', o.org_id).order('updated_at', { ascending: false }).limit(12),
     sb.from('proforma_invoices').select('number').eq('order_id', id).maybeSingle(),
+    o.division_id ? sb.from('divisions').select('code').eq('id', o.division_id).maybeSingle() : Promise.resolve({ data: null }),
+    sb.from('escrow_holds').select('id, amount_cents, released_cents, refunded_cents, currency, release_rule, milestone_label, status, dispute_reason').eq('order_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    sb.from('credit_reservations').select('id, status, net_days, invoice_trigger, amount_cents').eq('order_id', id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    sb.from('payment_provider_settings').select('provider, display_name, enabled, methods, priority, legal_entity_id, fee_mode, fee_bp, fee_fixed_cents').eq('enabled', true).order('priority', { ascending: true }),
+    sb.rpc('get_customer_credit_status', { p_org: o.org_id, p_division: o.division_id ?? null }),
     getSettings(),
     // Orders are paid from the wallet in the ORDER's currency (an old USD order stays payable in USD after a switch).
     getWalletFunds(o.currency as string),
     getSiteContent(),
   ]);
+
+  const divCode = (divRow?.code as string | undefined) ?? 'SRC';
+  const orderService: PaymentServiceCode =
+    divCode === 'DS' ? 'dropship'
+    : divCode === 'MMB' ? 'brand'
+    : divCode === 'POOL' ? 'pools'
+    : divCode === 'TK' ? 'turnkey'
+    : divCode === '3PL' ? 'warehouse'
+    : 'sourcing';
+
+  const [{ data: optionRows }, { data: holdEventRows }] = await Promise.all([
+    sb.from('payment_option_settings').select('service, option, enabled, min_amount_cents, max_amount_cents, release_rule, auto_release_days, pay_later_invoice_trigger').eq('service', orderService),
+    holdRow?.id
+      ? sb.from('escrow_hold_events').select('id, step, title, body, amount_cents, created_at').eq('hold_id', holdRow.id).order('created_at', { ascending: true })
+      : Promise.resolve({ data: [] as { id: string; step: string; title: string; body: string | null; amount_cents: number | null; created_at: string }[] }),
+  ]);
+
+  const existingHold: EscrowHoldSummary | null = holdRow
+    ? {
+        id: holdRow.id as string,
+        amount_cents: Number(holdRow.amount_cents),
+        released_cents: Number(holdRow.released_cents),
+        refunded_cents: Number(holdRow.refunded_cents),
+        currency: (holdRow.currency as string)?.trim() || 'USD',
+        release_rule: holdRow.release_rule as string,
+        milestone_label: holdRow.milestone_label as string,
+        status: holdRow.status as EscrowHoldSummary['status'],
+        dispute_reason: (holdRow.dispute_reason as string | null) ?? null,
+        events: (holdEventRows ?? []).map((ev) => ({
+          id: ev.id as string,
+          step: ev.step as string,
+          title: ev.title as string,
+          body: (ev.body as string | null) ?? null,
+          amount_cents: ev.amount_cents != null ? Number(ev.amount_cents) : null,
+          created_at: ev.created_at as string,
+        })),
+      }
+    : null;
+
+  const creditStatus: CustomerCreditStatus = (creditData as CustomerCreditStatus | null) ?? {
+    eligible: false,
+    reason: 'Ask your account manager to set up credit',
+    credit_limit_cents: 0,
+    unpaid_invoices_cents: 0,
+    reserved_cents: 0,
+    available_cents: 0,
+    net_days: 30,
+  };
   const shipIds = (shipments ?? []).map((x) => x.id as string);
   const { data: tracking } = shipIds.length
     ? await sb.from('tracking_events').select('id, status, description, location, occurred_at').in('shipment_id', shipIds).order('occurred_at', { ascending: false })
@@ -110,39 +165,46 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
             </dl>
           </Card>
 
-          {/* Payment */}
-          {o.status !== 'cancelled' && (due || depositLeft > 0) && (
+          {/* Payment (3 Options: Pay now, Payment protection, Pay later) */}
+          {o.status !== 'cancelled' && (due || depositLeft > 0 || existingHold || resRow) && (
             <Card className="p-6">
-              <h2 className="text-lg font-semibold">{due ? `Pay the ${due.purpose}` : 'Payment'}</h2>
-              {due ? (
-                <p className="text-sm text-muted mt-1">Amount due now: <Money cents={due.amount} currency={cur} className="text-ink" /> · reference <span className="mono">{reference}</span></p>
-              ) : <p className="text-sm text-muted mt-1">The balance invoice is issued before despatch. Nothing is due right now.</p>}
-              {due && (
-                <div className="mt-4 grid gap-4 md:grid-cols-2">
-                  {settings.wallet_enabled ? (
-                    <div className="rounded-[10px] border border-line p-4">
-                      <div className="font-semibold">Pay from {cur} wallet</div>
-                      <p className="text-sm text-muted mt-1">{cur} wallet balance: <Money cents={balance} currency={cur} className="text-ink" />{funds.credit > 0 && <> · credit limit <Money cents={funds.credit} currency={cur} className="text-ink" /></>}</p>
-                      <div className="mt-3"><PayWalletButton orderId={id} amountCents={due.amount} balanceCents={balance} creditCents={funds.credit} currency={cur} purpose={due.purpose} action={payFromWallet} /></div>
-                    </div>
-                  ) : null}
-                  <div className="rounded-[10px] border border-line p-4">
-                    <div className="font-semibold">Bank transfer</div>
-                    <dl className="mt-2 text-sm space-y-1">
-                      {acct ? bankLines(acct).map(([k, v]) => (
-                        <div key={k} className="flex justify-between gap-3"><dt className="text-muted">{k}</dt><dd className={`font-semibold text-right ${/number|SWIFT|code/i.test(k) ? 'mono' : ''}`}>{v}</dd></div>
-                      )) : <>
-                        <div className="flex justify-between gap-3"><dt className="text-muted">Account name</dt><dd className="font-semibold text-right">{company?.legal_name ?? '—'}</dd></div>
-                        <div className="flex justify-between gap-3"><dt className="text-muted">Bank details</dt><dd className="text-right whitespace-pre-line">{bank ?? `Bank transfer in ${cur} is not set up yet — pay from your wallet or contact us.`}</dd></div>
-                      </>}
-                      <div className="flex justify-between gap-3"><dt className="text-muted">Reference</dt><dd className="mono font-semibold">{reference}</dd></div>
-                    </dl>
-                    {acct?.notes && <p className="text-sm mt-2">{acct.notes}</p>}
-                    <p className="text-xs text-muted mt-2">Finance matches your transfer, usually within one business day. Bank charges at both ends are paid by the buyer.</p>
+              <h2 className="text-lg font-semibold mb-3">{due ? `Pay the ${due.purpose}` : 'Payment & protection status'}</h2>
+              <ChooseHowToPay
+                service={orderService}
+                targetType="order"
+                targetId={id}
+                amountCents={due?.amount ?? Math.max(0, balanceDue)}
+                currency={(cur.trim() || 'USD') as 'USD' | 'CNY' | 'HKD'}
+                reference={reference}
+                walletBalanceCents={balance}
+                walletEnabled={Boolean(settings.wallet_enabled)}
+                bankLines={acct ? bankLines(acct) : [['Account name', company?.legal_name ?? 'Shenzhen Octopus Trading Co., Ltd.']]}
+                bankNotes={acct?.notes ?? bank}
+                optionSettings={((optionRows ?? []) as unknown) as PaymentOptionMatrixRow[]}
+                activeProvider={(((providerRows ?? [])[0] ?? null) as unknown) as PaymentProviderSettingRow | null}
+                creditStatus={creditStatus}
+                existingHold={existingHold}
+                existingPayLaterReservation={
+                  resRow
+                    ? {
+                        id: resRow.id as string,
+                        status: resRow.status as string,
+                        net_days: Number(resRow.net_days),
+                        invoice_trigger: resRow.invoice_trigger as string,
+                        amount_cents: Number(resRow.amount_cents),
+                      }
+                    : null
+                }
+              />
+              {due && settings.wallet_enabled && !existingHold && !resRow && (
+                <div className="mt-4 border-t border-line pt-4 flex flex-wrap items-center justify-between gap-3">
+                  <div className="text-xs text-muted">
+                    Quick wallet checkout: {cur} balance <Money cents={balance} currency={cur} className="text-ink" />
+                    {funds.credit > 0 && <> · credit limit <Money cents={funds.credit} currency={cur} className="text-ink" /></>}
                   </div>
+                  <PayWalletButton orderId={id} amountCents={due.amount} balanceCents={balance} creditCents={funds.credit} currency={cur} purpose={due.purpose} action={payFromWallet} />
                 </div>
               )}
-              {!settings.wallet_enabled && due && <p className="text-xs text-muted mt-3">The wallet is switched off — please pay by bank transfer.</p>}
             </Card>
           )}
 

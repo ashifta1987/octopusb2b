@@ -65,6 +65,16 @@ export const HIDDEN_COLUMNS = {
   dropship_seller_profiles: ['review_note', 'reviewed_by'],
   // migration 204: dropship selling countries — who updated/locked the countries stays internal
   dropship_markets: ['updated_by'],
+  // migration 206 & 207: multi-company, payment option settings, checkouts, payment protection & credit terms
+  payment_option_settings: ['updated_by'],
+  payment_provider_settings: ['updated_by'],
+  payment_checkouts: ['created_by', 'provider_fee_cents'],
+  payment_reconciliation_alerts: ['resolved_by', 'resolved_note'],
+  escrow_holds: ['created_by', 'dispute_opened_by', 'dispute_resolved_by'],
+  escrow_hold_events: ['actor_id'],
+  customer_credit_terms: ['approved_by', 'note', 'proposed_at', 'proposed_by'],
+  credit_reservations: ['created_by', 'idempotency_key'],
+  saas_subscriptions: ['created_by'],
 };
 
 // ── Run directly (node scripts/hidden-columns.mjs) to compare this list with the STAGING database grants. ──

@@ -41,6 +41,11 @@ export function StaffShell({ session, nav, counts, moderation, unread = 0, scope
       { href: '/admin/notifications', label: 'Notifications' },
       ...(session.isAdmin || isManager || can(session, 'approvals', 'view') ? [{ href: '/admin/approvals', label: 'Approvals' }] : []),
       ...(can(session, 'wallet', 'approve') ? [{ href: '/admin/finance/transfers', label: 'Bank transfers' }] : []),
+      ...(can(session, 'finance', 'view') ? [
+        { href: '/admin/finance/holds', label: 'Held payments' },
+        { href: '/admin/finance/credit', label: 'Credit terms' },
+        { href: '/admin/finance/receivables', label: 'Receivables & ageing' },
+      ] : []),
     ] },
     // divisions step 4: the legal company and its divisions (company-wide Admin only)
     ...(session.isAdmin ? [{ title: 'Company', items: [{ href: '/admin/company', label: 'Company' }, { href: '/admin/divisions', label: 'Divisions' }, { href: '/admin/staff#divisions', label: 'Staff & divisions' }, { href: '/admin/reports/divisions', label: 'Reports by division' }] }] : []),
