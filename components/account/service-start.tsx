@@ -52,7 +52,6 @@ async function ServiceStartContent({ service }: { service: Exclude<ServiceKey, '
             <span className="pill bg-warn-bg text-warn">Coming soon</span>
             <p className="mt-2 text-[15px]">Dropshipping is launching soon. Leave your email and we tell you once it opens.</p>
             <div className="mt-3 max-w-[560px]"><LaunchNotifyForm feature="dropship" source="account-dropship" defaultEmail={s.email ?? ''} /></div>
-            <Link href="/account/dropship/catalogue" className="btn btn-ghost min-h-11 mt-4" data-testid="browse-catalogue">Browse catalogue</Link>
           </div>
         ) : (
           <div className="mt-6 flex flex-wrap items-center gap-3">

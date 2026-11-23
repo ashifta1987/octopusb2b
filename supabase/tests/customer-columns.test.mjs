@@ -57,7 +57,8 @@ const ALLOW = new Set([
 ]);
 // tables whose rows customers and the public key can never see (RLS), so their columns don't count for the guard
 const NO_CUSTOMER_ROWS = ['suppliers', 'supplier_contacts', 'supplier_name_variants', 'supplier_product_prices', 'supplier_products', 'supplier_switches',
-  'supplier_verifications', 'product_costs', 'payouts', 'source_connections', 'distributor_suppliers', 'finance_approvals', 'import_review_items'];
+  'supplier_verifications', 'product_costs', 'payouts', 'source_connections', 'distributor_suppliers', 'finance_approvals', 'import_review_items',
+  'dropship_products', 'dropship_variants', 'dropship_routes', 'dropship_rates'];
 
 try {
   await db.query('begin');

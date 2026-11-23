@@ -63,6 +63,8 @@ export const HIDDEN_COLUMNS = {
   profiles: ['invited_by'],
   // migration 196: dropship seller brand / return address — the staff review note and reviewer stay internal
   dropship_seller_profiles: ['review_note', 'reviewed_by'],
+  // migration 204: dropship selling countries — who updated/locked the countries stays internal
+  dropship_markets: ['updated_by'],
 };
 
 // ── Run directly (node scripts/hidden-columns.mjs) to compare this list with the STAGING database grants. ──

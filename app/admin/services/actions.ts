@@ -82,3 +82,63 @@ export async function setServiceActive(code: string, active: boolean): Promise<R
   refresh();
   return ok(active ? 'Service is live' : 'Service deactivated');
 }
+
+/** Save Dropshipping minimum margin settings (default %, per-category overrides, supported selling countries). */
+export async function saveDropshipMarginSettings(_prev: Result | null, fd: FormData): Promise<Result> {
+  const g = await guard('services', 'edit');
+  if ('error' in g) return g.error;
+  const defaultPct = Number(str(fd, 'default_min_margin_pct') || '15');
+  if (!Number.isFinite(defaultPct) || defaultPct < 0 || defaultPct > 95) {
+    return fail('Default minimum margin must be between 0 and 95%.');
+  }
+  const defaultBp = Math.round(defaultPct * 100);
+
+  const overridesRaw = str(fd, 'category_overrides');
+  const overrides: Record<string, number> = {};
+  if (overridesRaw) {
+    for (const line of overridesRaw.split('\n')) {
+      const t = line.trim();
+      if (!t) continue;
+      const idx = t.indexOf(':');
+      if (idx <= 0) return fail(`Invalid category override line "${t}" — use "Category: 18"`);
+      const cat = t.slice(0, idx).trim();
+      const pct = Number(t.slice(idx + 1).replace('%', '').trim());
+      if (!cat || !Number.isFinite(pct) || pct < 0 || pct > 95) {
+        return fail(`Invalid percentage for category "${cat}"`);
+      }
+      overrides[cat] = Math.round(pct * 100);
+    }
+  }
+
+  const countriesRaw = str(fd, 'supported_countries');
+  const countries = countriesRaw
+    .split(/[\s,]+/)
+    .map((c) => c.trim().toUpperCase())
+    .filter(Boolean);
+  if (!countries.length || countries.some((c) => !/^[A-Z]{2}$/.test(c))) {
+    return fail('Supported countries must be comma-separated 2-letter ISO codes (e.g. AE, SA, GB, US).');
+  }
+
+  const upserts = [
+    { key: 'dropship.min_margin_bp', value: defaultBp },
+    { key: 'dropship.category_min_margin_bp', value: overrides },
+    { key: 'dropship.supported_countries', value: [...new Set(countries)] },
+  ];
+  for (const row of upserts) {
+    const { error } = await g.sb
+      .from('site_settings')
+      .upsert({ key: row.key, value: row.value, updated_at: new Date().toISOString() });
+    if (error) return fail(error);
+  }
+  await g.sb.from('audit_log').insert({
+    actor_id: g.s.userId,
+    actor_kind: 'staff',
+    action: 'dropship.settings_updated',
+    entity: 'site_settings',
+    entity_id: 'dropship.min_margin_bp',
+    service: 'dropship',
+    details: { min_margin_bp: defaultBp, category_min_margin_bp: overrides, supported_countries: [...new Set(countries)] },
+  });
+  refresh();
+  return ok('Dropshipping margin & countries settings saved');
+}

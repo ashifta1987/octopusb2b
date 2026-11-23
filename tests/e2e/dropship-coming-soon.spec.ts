@@ -143,6 +143,7 @@ test('My account: the Dropshipping tile and tab say Coming soon with the sign-up
   await expect(page.getByTestId('dropship-coming-soon')).toContainText('Coming soon');
   await expect(page.getByRole('main')).not.toContainText('Start Dropshipping');
   await expect(page.getByRole('main')).not.toContainText('upload orders as a sheet');
+  await expect(page.getByTestId('browse-catalogue')).toHaveCount(0);
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/dropship-account-tab-desktop.png`, caret: 'initial' });
   // a signed-in customer without Dropshipping switched on also lands on the sign-up from the old link
   await page.goto('/go/dropship');

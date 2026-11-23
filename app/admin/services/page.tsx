@@ -8,7 +8,8 @@ import { ActionForm, RunButton } from '@/components/admin/client';
 import { money, fmtDate, CURRENCIES, asCurrency as asCur, type Currency } from '@/lib/format';
 import { getCurrencyContext } from '@/lib/currency';
 import { cn } from '@/lib/cn';
-import { updateService, addPrice, createService, setServiceActive } from './actions';
+import { updateService, addPrice, createService, setServiceActive, saveDropshipMarginSettings } from './actions';
+import { dropshipSettings } from '@/lib/dropship';
 import { nowMs } from '@/components/admin/server';
 
 export const metadata = { title: 'Services & charges' };
@@ -30,6 +31,10 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
   const editable = can(s, 'services', 'edit');
   const { data: launchRows } = await sb.from('launch_signups').select('id, email, source, created_at, notified_at').eq('feature', 'dropship').order('created_at', { ascending: false }).limit(200);
   const launch = (launchRows ?? []) as { id: string; email: string; source: string | null; created_at: string; notified_at: string | null }[];
+  const dsCfg = await dropshipSettings();
+  const dsOverridesText = Object.entries(dsCfg.categoryMinMarginBp)
+    .map(([k, bp]) => `${k}: ${(bp / 100).toFixed(1)}`)
+    .join('\n');
   const list = services ?? [];
   const now = new Date().toISOString();
   const byCode = new Map<string, Price[]>();
@@ -178,6 +183,57 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
           </div>
         ) : <Card><EmptyState title="Select a service" /></Card>}
       </div>
+
+      {/* Dropshipping minimum margin & supported countries (migration 204; decision 3 & 6) */}
+      <Card title="Dropshipping · minimum margin & supported countries" className="mt-6">
+        <p className="px-6 -mt-1 text-sm text-muted">
+          Staff routes below the minimum margin show a warning on the Dropshipping catalogue editor (non-blocking). Category overrides are optional; empty categories use the default percentage.
+        </p>
+        <ActionForm
+          action={saveDropshipMarginSettings}
+          className="px-6 py-4 grid gap-4 sm:grid-cols-3 items-start"
+          submitLabel="Save Dropshipping settings"
+        >
+          <Field label="Default minimum margin (%)" htmlFor="ds-min-margin" hint="e.g. 15 for 15%">
+            <input
+              id="ds-min-margin"
+              name="default_min_margin_pct"
+              inputMode="decimal"
+              className="input mono"
+              defaultValue={(dsCfg.minMarginBp / 100).toFixed(1)}
+              disabled={!editable}
+            />
+          </Field>
+          <Field
+            label="Category overrides (optional)"
+            htmlFor="ds-cat-overrides"
+            hint='One "Category: %" per line (empty = use default)'
+          >
+            <textarea
+              id="ds-cat-overrides"
+              name="category_overrides"
+              rows={3}
+              className="input font-mono text-xs"
+              defaultValue={dsOverridesText}
+              placeholder={'Electronics: 18\nLighting: 16'}
+              disabled={!editable}
+            />
+          </Field>
+          <Field
+            label="Supported selling countries (ISO-2)"
+            htmlFor="ds-sup-countries"
+            hint="Countries merchants may pick from"
+          >
+            <input
+              id="ds-sup-countries"
+              name="supported_countries"
+              className="input mono text-xs"
+              defaultValue={dsCfg.supportedCountries.join(', ')}
+              disabled={!editable}
+            />
+          </Field>
+        </ActionForm>
+      </Card>
 
       {/* "Notify me when it launches" sign-ups for Coming-soon features (migration 203; staff with Services view only) */}
       <Card title={`Launch sign-ups · Dropshipping (${launch.length}${launch.length === 200 ? '+' : ''})`} className="mt-6">

@@ -46,6 +46,7 @@ export const OFFICE_NAV: NavSection[] = [
       { href: '/office', label: 'Queues', area: 'dashboard' },
       { href: '/office/kyc', label: 'KYC review', area: 'customers' },
       { href: '/office/products', label: 'Moderation', area: 'products', action: 'approve' },
+      { href: '/office/dropship', label: 'Dropshipping catalogue', area: 'dashboard' },
       { href: '/office/rfqs', label: 'RFQs & quotes', area: 'requests' },
       { href: '/office/services', label: 'Service requests', area: 'requests' },
       { href: '/office/orders', label: 'Orders', area: 'orders' },

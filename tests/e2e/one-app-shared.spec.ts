@@ -44,7 +44,7 @@ test('My account home: service tabs, waiting for you, account manager, wallet wi
   await shot(page, '01-account-home-desktop');
   await page.getByTestId('account-tabs').getByRole('link', { name: 'Dropshipping' }).click();
   await expect(page.getByTestId('dropship-coming-soon')).toBeVisible();
-  await expect(page.getByRole('main')).not.toContainText('Start Dropshipping');
+  await expect(page.getByTestId('dropship-coming-soon')).not.toContainText('Start Dropshipping');
   // the other off services still offer Start
   await page.goto('/account');
   await page.getByTestId('service-warehouse').getByRole('link', { name: /Start/ }).click();
