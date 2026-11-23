@@ -251,26 +251,32 @@ create table if not exists saas_plans (
   billing_interval text not null check (billing_interval in ('monthly', 'annual')),
   price_cents bigint not null check (price_cents > 0),
   currency char(3) not null default 'USD' check (currency in ('USD', 'CNY', 'HKD')),
-  active boolean not null default true,
+  active boolean not null default false,
+  is_test boolean not null default false,
   sort_order integer not null default 10,
   created_at timestamptz not null default now()
 );
 
 alter table saas_plans enable row level security;
 revoke all on saas_plans from public, anon, authenticated;
-grant select on saas_plans to anon, authenticated;
+grant select (code, service, division_id, name, description, billing_interval, price_cents, currency, active, sort_order, created_at) on saas_plans to anon, authenticated;
 grant all on saas_plans to service_role;
 
 drop policy if exists saas_plans_read on saas_plans;
 create policy saas_plans_read on saas_plans for select to anon, authenticated using (true);
 
-insert into saas_plans (code, service, division_id, name, description, billing_interval, price_cents, currency, active, sort_order)
-values
-  ('dropship_growth_monthly', 'dropship',  division_id_of('DS'),  'Dropshipping Growth (Monthly)', 'Unlimited import list, automated order fulfilment & branded packing slips', 'monthly', 4900,  'USD', true, 10),
-  ('dropship_growth_annual',  'dropship',  division_id_of('DS'),  'Dropshipping Growth (Annual)',  'Annual plan (2 months free) · unlimited import list & fulfilment',          'annual',  49000, 'USD', true, 20),
-  ('sourcing_pro_monthly',    'sourcing',  division_id_of('SRC'), 'Sourcing Pro (Monthly)',        'Dedicated sourcing manager, priority factory quotes & tariff review',       'monthly', 9900,  'USD', true, 30),
-  ('warehouse_pro_monthly',   'warehouse', division_id_of('3PL'), '3PL Warehouse Pro (Monthly)',   ' WMS dashboard, SKU barcode receiving & priority pick/pack SLA',            'monthly', 7900,  'USD', true, 40)
-on conflict (code) do nothing;
+-- Seed 4 test plans ONLY when site_settings.app_environment = 'staging' (marked is_test = true, active = false).
+-- On live (production), 0 rows are inserted; real plans are created by the owner.
+insert into saas_plans (code, service, division_id, name, description, billing_interval, price_cents, currency, active, is_test, sort_order)
+select v.code, v.service, v.division_id, v.name, v.description, v.billing_interval, v.price_cents, v.currency, false, true, v.sort_order
+  from (values
+    ('dropship_growth_monthly', 'dropship',  division_id_of('DS'),  'TEST · Dropshipping Growth (Monthly)', 'Unlimited import list, automated order fulfilment & branded packing slips', 'monthly', 4900::bigint,  'USD'::char(3), 10),
+    ('dropship_growth_annual',  'dropship',  division_id_of('DS'),  'TEST · Dropshipping Growth (Annual)',  'Annual plan (2 months free) · unlimited import list & fulfilment',          'annual',  49000::bigint, 'USD'::char(3), 20),
+    ('sourcing_pro_monthly',    'sourcing',  division_id_of('SRC'), 'TEST · Sourcing Pro (Monthly)',        'Dedicated sourcing manager, priority factory quotes & tariff review',       'monthly', 9900::bigint,  'USD'::char(3), 30),
+    ('warehouse_pro_monthly',   'warehouse', division_id_of('3PL'), 'TEST · 3PL Warehouse Pro (Monthly)',   'WMS dashboard, SKU barcode receiving & priority pick/pack SLA',             'monthly', 7900::bigint,  'USD'::char(3), 40)
+  ) as v(code, service, division_id, name, description, billing_interval, price_cents, currency, sort_order)
+ where exists (select 1 from site_settings where key = 'app_environment' and (value #>> '{}') = 'staging')
+on conflict (code) do update set active = false, is_test = true;
 
 create table if not exists saas_subscriptions (
   id uuid primary key default gen_random_uuid(),

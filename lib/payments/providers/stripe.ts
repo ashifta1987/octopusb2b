@@ -1,4 +1,4 @@
-import crypto from 'node:crypto';
+import Stripe from 'stripe';
 import type {
   CreateCheckoutInput,
   CreateCheckoutOutput,
@@ -9,22 +9,35 @@ import type {
   VerifiedWebhookEvent,
 } from '../types';
 
-const STRIPE_API_BASE = 'https://api.stripe.com/v1';
 const REPLAY_TOLERANCE_SECONDS = 300;
 
-function getStripeSecretKey(): string {
-  const key = process.env.STRIPE_SECRET_KEY ?? '';
-  if (!key) {
+export function validateStripeEnvironmentKeys(
+  secretKey = process.env.STRIPE_SECRET_KEY ?? '',
+  pubKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '',
+  appEnv = process.env.APP_ENVIRONMENT ?? '',
+): void {
+  if (!secretKey) {
     throw new Error('STRIPE_NOT_CONFIGURED: set STRIPE_SECRET_KEY in environment variables');
   }
-  if (process.env.APP_ENVIRONMENT === 'staging' && key.startsWith('sk_live_')) {
-    throw new Error('STRIPE_LIVE_KEY_REFUSED_ON_STAGING: never use sk_live_ keys on staging');
+  // Staging guard: refuse live keys on staging
+  if (appEnv === 'staging' && (secretKey.startsWith('sk_live_') || pubKey.startsWith('pk_live_'))) {
+    throw new Error('STRIPE_LIVE_KEY_REFUSED_ON_STAGING: never use sk_live_ or pk_live_ keys on staging');
   }
-  return key;
+  // Reverse production guard: on production (or any non-staging environment), refuse Stripe test keys (sk_test_ / pk_test_)
+  if (appEnv !== 'staging' && (secretKey.startsWith('sk_test_') || pubKey.startsWith('pk_test_'))) {
+    throw new Error('STRIPE_TEST_KEY_REFUSED_ON_PRODUCTION: never use sk_test_ or pk_test_ keys on production');
+  }
+}
+
+function getStripeClient(): Stripe {
+  const secretKey = (process.env.STRIPE_SECRET_KEY ?? '').trim();
+  const pubKey = (process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '').trim();
+  validateStripeEnvironmentKeys(secretKey, pubKey, process.env.APP_ENVIRONMENT ?? '');
+  return new Stripe(secretKey);
 }
 
 function getStripeWebhookSecret(): string {
-  const secret = process.env.STRIPE_WEBHOOK_SECRET ?? '';
+  const secret = (process.env.STRIPE_WEBHOOK_SECRET ?? '').trim();
   if (!secret) {
     throw new Error('STRIPE_WEBHOOK_SECRET_NOT_CONFIGURED');
   }
@@ -35,101 +48,98 @@ export const stripeProviderAdapter: PaymentProviderAdapter = {
   name: 'stripe',
 
   isConfigured(): boolean {
-    const key = process.env.STRIPE_SECRET_KEY ?? '';
-    if (!key) return false;
-    if (process.env.APP_ENVIRONMENT === 'staging' && key.startsWith('sk_live_')) return false;
-    return true;
+    const key = (process.env.STRIPE_SECRET_KEY ?? '').trim();
+    const pub = (process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '').trim();
+    const wh = (process.env.STRIPE_WEBHOOK_SECRET ?? '').trim();
+    if (!key || !wh) return false;
+    try {
+      validateStripeEnvironmentKeys(key, pub, process.env.APP_ENVIRONMENT ?? '');
+      return true;
+    } catch {
+      return false;
+    }
   },
 
   async createCheckout(input: CreateCheckoutInput): Promise<CreateCheckoutOutput> {
-    const secretKey = getStripeSecretKey();
-    const params = new URLSearchParams();
-    params.set('mode', 'payment');
-    params.set('success_url', input.returnUrl);
-    params.set('cancel_url', input.cancelUrl);
-    params.set('client_reference_id', input.checkoutId);
-    params.set('metadata[checkout_id]', input.checkoutId);
-    params.set('metadata[org_id]', input.orgId);
-    params.set('metadata[service]', input.service);
-    params.set('metadata[payment_option]', input.paymentOption);
-    params.set('line_items[0][quantity]', '1');
-    params.set('line_items[0][price_data][currency]', input.currency.toLowerCase());
-    params.set('line_items[0][price_data][unit_amount]', String(input.amountCents));
-    params.set('line_items[0][price_data][product_data][name]', input.description);
-    if (input.savePaymentMethod) {
-      params.set('payment_intent_data[setup_future_usage]', 'off_session');
+    const stripe = getStripeClient();
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: 'payment',
+        success_url: input.returnUrl,
+        cancel_url: input.cancelUrl,
+        client_reference_id: input.checkoutId,
+        metadata: {
+          checkout_id: input.checkoutId,
+          org_id: input.orgId,
+          service: input.service,
+          payment_option: input.paymentOption,
+        },
+        line_items: [
+          {
+            quantity: 1,
+            price_data: {
+              currency: input.currency.toLowerCase(),
+              unit_amount: input.amountCents,
+              product_data: {
+                name: input.description,
+              },
+            },
+          },
+        ],
+        ...(input.savePaymentMethod
+          ? { payment_intent_data: { setup_future_usage: 'off_session' } }
+          : {}),
+      },
+      { idempotencyKey: `stripe-chk-${input.checkoutId}` },
+    );
+
+    if (!session.id || !session.url) {
+      throw new Error('STRIPE_CHECKOUT_FAILED: missing session id or url');
     }
 
-    const res = await fetch(`${STRIPE_API_BASE}/checkout/sessions`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${secretKey}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Idempotency-Key': `stripe-chk-${input.checkoutId}`,
-      },
-      body: params.toString(),
-    });
-    const data = (await res.json()) as { id?: string; url?: string; error?: { message?: string } };
-    if (!res.ok || !data.id || !data.url) {
-      throw new Error(`STRIPE_CHECKOUT_FAILED: ${data.error?.message ?? res.statusText}`);
-    }
     return {
       provider: 'stripe',
-      providerSessionId: data.id,
-      redirectUrl: data.url,
+      providerSessionId: session.id,
+      redirectUrl: session.url,
     };
   },
 
   async verifyWebhook(rawBody: string, headers: Headers): Promise<VerifiedWebhookEvent> {
+    const stripe = getStripeClient();
     const secret = getStripeWebhookSecret();
     const sigHeader = headers.get('stripe-signature') ?? '';
-    const items = sigHeader.split(',').map((s) => s.trim().split('='));
-    const tItem = items.find(([k]) => k === 't');
-    const v1Items = items.filter(([k]) => k === 'v1').map(([, v]) => v ?? '');
-    const ts = Number(tItem?.[1]);
-    if (!Number.isFinite(ts) || v1Items.length === 0) {
+    if (!sigHeader) {
       throw new Error('STRIPE_SIGNATURE_MISSING');
     }
-    const nowSec = Math.floor(Date.now() / 1000);
-    if (Math.abs(nowSec - ts) > REPLAY_TOLERANCE_SECONDS) {
-      throw new Error('STRIPE_TIMESTAMP_OUT_OF_TOLERANCE');
-    }
 
-    const expected = crypto
-      .createHmac('sha256', secret)
-      .update(`${ts}.${rawBody}`)
-      .digest('hex');
-    const expectedBuf = Buffer.from(expected, 'utf8');
-    const matched = v1Items.some((sig) => {
-      const buf = Buffer.from(sig, 'utf8');
-      return buf.length === expectedBuf.length && crypto.timingSafeEqual(buf, expectedBuf);
-    });
-    if (!matched) {
-      throw new Error('STRIPE_SIGNATURE_INVALID');
-    }
+    // Official Stripe SDK constructEvent on the raw request body
+    const evt = stripe.webhooks.constructEvent(rawBody, sigHeader, secret, REPLAY_TOLERANCE_SECONDS);
 
-    const evt = JSON.parse(rawBody) as {
+    const obj = (evt.data?.object ?? {}) as unknown as {
       id?: string;
-      type?: string;
-      data?: {
-        object?: {
-          id?: string;
-          client_reference_id?: string;
-          metadata?: Record<string, string>;
-          amount_total?: number;
-          amount_received?: number;
-          currency?: string;
-          payment_intent?: string;
-          customer?: string;
-          payment_method?: string;
-        };
-      };
+      client_reference_id?: string | null;
+      metadata?: Record<string, string>;
+      amount_total?: number | null;
+      amount_received?: number | null;
+      currency?: string | null;
+      payment_intent?: string | { id?: string } | null;
+      customer?: string | { id?: string } | null;
+      payment_method?: string | { id?: string } | null;
     };
 
-    const obj = evt.data?.object ?? {};
     const checkoutId = obj.metadata?.checkout_id ?? obj.client_reference_id ?? '';
     const amountCents = Number(obj.amount_total ?? obj.amount_received ?? 0);
     const currency = String(obj.currency ?? 'USD').toUpperCase() as 'USD' | 'CNY' | 'HKD';
+    const paymentIntentId =
+      typeof obj.payment_intent === 'string'
+        ? obj.payment_intent
+        : obj.payment_intent?.id ?? obj.id ?? '';
+    const customerId =
+      typeof obj.customer === 'string' ? obj.customer : obj.customer?.id ?? null;
+    const pmId =
+      typeof obj.payment_method === 'string'
+        ? obj.payment_method
+        : obj.payment_method?.id ?? null;
 
     return {
       provider: 'stripe',
@@ -141,52 +151,39 @@ export const stripeProviderAdapter: PaymentProviderAdapter = {
       checkoutId,
       amountCents,
       currency,
-      providerPaymentId: String(obj.payment_intent ?? obj.id ?? ''),
-      providerCustomerId: obj.customer ? String(obj.customer) : null,
-      providerPaymentMethodId: obj.payment_method ? String(obj.payment_method) : null,
+      providerPaymentId: String(paymentIntentId),
+      providerCustomerId: customerId ? String(customerId) : null,
+      providerPaymentMethodId: pmId ? String(pmId) : null,
       rawPayload: evt as unknown as Record<string, unknown>,
     };
   },
 
   async getPayment(providerPaymentId: string): Promise<PaymentStatusOutput> {
-    const secretKey = getStripeSecretKey();
-    const res = await fetch(`${STRIPE_API_BASE}/payment_intents/${encodeURIComponent(providerPaymentId)}`, {
-      headers: { Authorization: `Bearer ${secretKey}` },
-    });
-    const data = (await res.json()) as { status?: string; amount?: number; currency?: string };
+    const stripe = getStripeClient();
+    const pi = await stripe.paymentIntents.retrieve(providerPaymentId);
     return {
       provider: 'stripe',
       providerPaymentId,
-      status: data.status === 'succeeded' ? 'succeeded' : 'pending',
-      amountCents: Number(data.amount ?? 0),
-      currency: String(data.currency ?? 'USD').toUpperCase() as 'USD' | 'CNY' | 'HKD',
+      status: pi.status === 'succeeded' ? 'succeeded' : 'pending',
+      amountCents: Number(pi.amount ?? 0),
+      currency: String(pi.currency ?? 'USD').toUpperCase() as 'USD' | 'CNY' | 'HKD',
     };
   },
 
   async refund(input: RefundInput): Promise<RefundOutput> {
-    const secretKey = getStripeSecretKey();
-    const params = new URLSearchParams();
-    params.set('payment_intent', input.providerPaymentId);
-    params.set('amount', String(input.amountCents));
-    params.set('metadata[reason]', input.reason);
-
-    const res = await fetch(`${STRIPE_API_BASE}/refunds`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${secretKey}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Idempotency-Key': input.idempotencyKey,
+    const stripe = getStripeClient();
+    const re = await stripe.refunds.create(
+      {
+        payment_intent: input.providerPaymentId,
+        amount: input.amountCents,
+        metadata: { reason: input.reason },
       },
-      body: params.toString(),
-    });
-    const data = (await res.json()) as { id?: string; status?: string; error?: { message?: string } };
-    if (!res.ok || !data.id) {
-      throw new Error(`STRIPE_REFUND_FAILED: ${data.error?.message ?? res.statusText}`);
-    }
+      { idempotencyKey: input.idempotencyKey },
+    );
     return {
       provider: 'stripe',
-      providerRefundId: data.id,
-      status: data.status === 'succeeded' ? 'succeeded' : 'pending',
+      providerRefundId: re.id,
+      status: re.status === 'succeeded' ? 'succeeded' : 'pending',
     };
   },
 };

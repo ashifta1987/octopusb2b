@@ -30,12 +30,14 @@ export function SaasPlansPanel({
   creditEligible,
   creditAvailableCents,
   netDays,
+  hasOnlineProvider = false,
 }: {
   plans: SaasPlanRow[];
   subscriptions: SaasSubscriptionRow[];
   creditEligible: boolean;
   creditAvailableCents: number;
   netDays: number;
+  hasOnlineProvider?: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -123,15 +125,17 @@ export function SaasPlansPanel({
               </div>
 
               <div className="mt-4 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  disabled={pending}
-                  onClick={() => handleSubscribe(p.code, 'pay_now', 'card')}
-                  data-testid={`saas-pay-online-${p.code}`}
-                  className="inline-flex min-h-10 items-center rounded-lg bg-accent px-3.5 py-2 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-50"
-                >
-                  Pay now (Online)
-                </button>
+                {hasOnlineProvider && (
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => handleSubscribe(p.code, 'pay_now', 'card')}
+                    data-testid={`saas-pay-online-${p.code}`}
+                    className="inline-flex min-h-10 items-center rounded-lg bg-accent px-3.5 py-2 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                  >
+                    Pay now (Online)
+                  </button>
+                )}
                 <button
                   type="button"
                   disabled={pending}

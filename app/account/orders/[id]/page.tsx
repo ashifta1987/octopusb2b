@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { serviceName } from '@/lib/service-names';
 import { getCompanyBankAccount } from '@/components/account/bank-data';
@@ -14,14 +15,20 @@ import { RealtimeRefresh } from '@/components/account/realtime-refresh';
 import { OrderList, type OrderListItem } from '@/components/account/order-list';
 import { PayWalletButton, CancelOrderButton } from '@/components/account/order-actions';
 import { ChooseHowToPay, type EscrowHoldSummary } from '@/components/account/choose-how-to-pay';
-import type { CustomerCreditStatus, PaymentOptionMatrixRow, PaymentProviderSettingRow, PaymentServiceCode } from '@/lib/payments';
+import {
+  resolveActiveOnlineProvider,
+  type CustomerCreditStatus,
+  type PaymentOptionMatrixRow,
+  type PaymentProviderSettingRow,
+  type PaymentServiceCode,
+} from '@/lib/payments';
 import { dueNow, CANCELLABLE, relTime, nowMs } from '@/components/account/order-utils';
 import { payFromWallet, cancelOrder } from '../actions';
 import { customerCarrierLabel } from '@/lib/carrier-label';
 
 export const metadata = { title: 'Order' };
 
-export default async function OrderDetail({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ created?: string }> }) {
+async function OrderDetailContent({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ created?: string }> }) {
   const { id } = await params;
   const { created } = await searchParams;
   const s = await requireCustomer(`/account/orders/${id}`);
@@ -181,7 +188,7 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
                 bankLines={acct ? bankLines(acct) : [['Account name', company?.legal_name ?? 'Shenzhen Octopus Trading Co., Ltd.']]}
                 bankNotes={acct?.notes ?? bank}
                 optionSettings={((optionRows ?? []) as unknown) as PaymentOptionMatrixRow[]}
-                activeProvider={(((providerRows ?? [])[0] ?? null) as unknown) as PaymentProviderSettingRow | null}
+                activeProvider={resolveActiveOnlineProvider(((providerRows ?? []) as unknown) as PaymentProviderSettingRow[])}
                 creditStatus={creditStatus}
                 existingHold={existingHold}
                 existingPayLaterReservation={
@@ -267,5 +274,13 @@ export default async function OrderDetail({ params, searchParams }: { params: Pr
         </div>
       </div>
     </>
+  );
+}
+
+export default function OrderDetail(props: { params: Promise<{ id: string }>; searchParams: Promise<{ created?: string }> }) {
+  return (
+    <Suspense fallback={<div className="min-h-[60vh]" aria-busy="true" />}>
+      <OrderDetailContent {...props} />
+    </Suspense>
   );
 }

@@ -103,7 +103,7 @@ export const PAYMENT_PROVIDER_ENV_VARS: Record<
 > = {
   mock: {
     envVars: ['PAYMENT_MOCK_WEBHOOK_SECRET'],
-    notes: 'Staging sandbox only (refused on production). Falls back to a staging-only HMAC secret derived from BACKUP_CALLBACK_SECRET when unset on staging.',
+    notes: 'Staging sandbox only (works ONLY when APP_ENVIRONMENT === "staging" and PAYMENT_MOCK_WEBHOOK_SECRET is set; never derived from any other secret).',
   },
   stripe: {
     envVars: [
@@ -111,7 +111,7 @@ export const PAYMENT_PROVIDER_ENV_VARS: Record<
       'STRIPE_SECRET_KEY',
       'STRIPE_WEBHOOK_SECRET',
     ],
-    notes: 'Use test keys (pk_test_..., sk_test_...) on staging/Vercel Preview; never sk_live_ on staging.',
+    notes: 'Staging refuses sk_live_/pk_live_; production refuses sk_test_/pk_test_. Uses official Stripe SDK constructEvent on raw body.',
   },
   airwallex: {
     envVars: [
@@ -120,6 +120,6 @@ export const PAYMENT_PROVIDER_ENV_VARS: Record<
       'AIRWALLEX_WEBHOOK_SECRET',
       'AIRWALLEX_ENV',
     ],
-    notes: 'Set AIRWALLEX_ENV=demo on staging/Vercel Preview and AIRWALLEX_ENV=prod on production.',
+    notes: 'Staging requires AIRWALLEX_ENV=demo (refuses prod); production requires AIRWALLEX_ENV=prod (refuses demo). Verifies raw body with crypto.timingSafeEqual.',
   },
 };

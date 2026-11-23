@@ -11,17 +11,31 @@ import type {
 
 const REPLAY_TOLERANCE_MS = 5 * 60 * 1000;
 
-function getAirwallexBaseUrl(): string {
-  const env = (process.env.AIRWALLEX_ENV ?? 'demo').toLowerCase();
-  if (process.env.APP_ENVIRONMENT === 'staging' && env === 'prod') {
-    throw new Error('AIRWALLEX_PROD_REFUSED_ON_STAGING: set AIRWALLEX_ENV=demo on staging');
+export function validateAirwallexEnvironment(
+  awxEnv = (process.env.AIRWALLEX_ENV ?? '').trim().toLowerCase(),
+  appEnv = process.env.APP_ENVIRONMENT ?? '',
+): 'demo' | 'prod' {
+  if (appEnv === 'staging') {
+    if (awxEnv === 'prod') {
+      throw new Error('AIRWALLEX_PROD_REFUSED_ON_STAGING: set AIRWALLEX_ENV=demo on staging');
+    }
+    return 'demo';
   }
-  return env === 'prod' ? 'https://api.airwallex.com' : 'https://api-demo.airwallex.com';
+  // Reverse production guard: on production (or any non-staging environment), refuse AIRWALLEX_ENV=demo
+  if (awxEnv !== 'prod') {
+    throw new Error('AIRWALLEX_DEMO_REFUSED_ON_PRODUCTION: set AIRWALLEX_ENV=prod on production');
+  }
+  return 'prod';
+}
+
+function getAirwallexBaseUrl(): string {
+  const mode = validateAirwallexEnvironment();
+  return mode === 'prod' ? 'https://api.airwallex.com' : 'https://api-demo.airwallex.com';
 }
 
 async function getAirwallexBearerToken(): Promise<string> {
-  const clientId = process.env.AIRWALLEX_CLIENT_ID ?? '';
-  const apiKey = process.env.AIRWALLEX_API_KEY ?? '';
+  const clientId = (process.env.AIRWALLEX_CLIENT_ID ?? '').trim();
+  const apiKey = (process.env.AIRWALLEX_API_KEY ?? '').trim();
   if (!clientId || !apiKey) {
     throw new Error('AIRWALLEX_NOT_CONFIGURED: set AIRWALLEX_CLIENT_ID and AIRWALLEX_API_KEY');
   }
@@ -45,12 +59,16 @@ export const airwallexProviderAdapter: PaymentProviderAdapter = {
   name: 'airwallex',
 
   isConfigured(): boolean {
-    const clientId = process.env.AIRWALLEX_CLIENT_ID ?? '';
-    const apiKey = process.env.AIRWALLEX_API_KEY ?? '';
-    const env = (process.env.AIRWALLEX_ENV ?? 'demo').toLowerCase();
-    if (!clientId || !apiKey) return false;
-    if (process.env.APP_ENVIRONMENT === 'staging' && env === 'prod') return false;
-    return true;
+    const clientId = (process.env.AIRWALLEX_CLIENT_ID ?? '').trim();
+    const apiKey = (process.env.AIRWALLEX_API_KEY ?? '').trim();
+    const wh = (process.env.AIRWALLEX_WEBHOOK_SECRET ?? '').trim();
+    if (!clientId || !apiKey || !wh) return false;
+    try {
+      validateAirwallexEnvironment();
+      return true;
+    } catch {
+      return false;
+    }
   },
 
   async createCheckout(input: CreateCheckoutInput): Promise<CreateCheckoutOutput> {
@@ -89,7 +107,8 @@ export const airwallexProviderAdapter: PaymentProviderAdapter = {
   },
 
   async verifyWebhook(rawBody: string, headers: Headers): Promise<VerifiedWebhookEvent> {
-    const secret = process.env.AIRWALLEX_WEBHOOK_SECRET ?? '';
+    validateAirwallexEnvironment();
+    const secret = (process.env.AIRWALLEX_WEBHOOK_SECRET ?? '').trim();
     if (!secret) {
       throw new Error('AIRWALLEX_WEBHOOK_SECRET_NOT_CONFIGURED');
     }
@@ -103,6 +122,7 @@ export const airwallexProviderAdapter: PaymentProviderAdapter = {
       throw new Error('AIRWALLEX_TIMESTAMP_OUT_OF_TOLERANCE');
     }
 
+    // HMAC-SHA256 on `${timestamp}${rawBody}` compared with crypto.timingSafeEqual
     const expected = crypto
       .createHmac('sha256', secret)
       .update(`${timestamp}${rawBody}`)

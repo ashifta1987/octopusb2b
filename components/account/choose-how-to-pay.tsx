@@ -521,33 +521,35 @@ export function ChooseHowToPay({
       {/* Selected Option Action Panel */}
       {selected === 'pay_now' && payNowEnabled && (
         <div className="rounded-xl border border-line bg-surface p-4 space-y-4" data-testid="panel-pay_now">
-          <div className="grid gap-4 md:grid-cols-3">
-            {/* 1. Online Aggregator */}
-            <div className="rounded-xl border border-line bg-canvas p-4 flex flex-col justify-between">
-              <div>
-                <div className="text-sm font-semibold text-ink">
-                  Pay online ({activeProvider?.display_name ?? 'Card & Local Rails'})
-                </div>
-                <p className="mt-1 text-xs text-muted">
-                  Instant confirmation via signature-verified webhook.
-                </p>
-                {surchargeCents > 0 && (
-                  <p className="mt-2 text-xs text-amber-900" data-testid="checkout-surcharge-line">
-                    Includes {money(surchargeCents, currency)} aggregator surcharge · Total{' '}
-                    <strong>{money(onlineTotalCents, currency)}</strong>
+          <div className={`grid gap-4 ${activeProvider ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+            {/* 1. Online Aggregator — ONLY shown when an online provider is enabled & configured */}
+            {activeProvider && (
+              <div className="rounded-xl border border-line bg-canvas p-4 flex flex-col justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-ink">
+                    Pay online ({activeProvider.display_name})
+                  </div>
+                  <p className="mt-1 text-xs text-muted">
+                    Instant confirmation via signature-verified webhook.
                   </p>
-                )}
+                  {surchargeCents > 0 && (
+                    <p className="mt-2 text-xs text-amber-900" data-testid="checkout-surcharge-line">
+                      Includes {money(surchargeCents, currency)} aggregator surcharge · Total{' '}
+                      <strong>{money(onlineTotalCents, currency)}</strong>
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() => handleOnlineCheckout('pay_now', 'card')}
+                  data-testid="pay-now-online-btn"
+                  className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                >
+                  {pending ? 'Opening checkout…' : `Pay ${money(onlineTotalCents, currency)} online`}
+                </button>
               </div>
-              <button
-                type="button"
-                disabled={pending || !activeProvider}
-                onClick={() => handleOnlineCheckout('pay_now', 'card')}
-                data-testid="pay-now-online-btn"
-                className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-50"
-              >
-                {pending ? 'Opening checkout…' : `Pay ${money(onlineTotalCents, currency)} online`}
-              </button>
-            </div>
+            )}
 
             {/* 2. Wallet Balance */}
             {walletEnabled && (
@@ -604,28 +606,30 @@ export function ChooseHowToPay({
             </p>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-xl border border-line bg-canvas p-4 flex flex-col justify-between">
-              <div>
-                <div className="text-sm font-semibold text-ink">
-                  Fund Payment protection online ({activeProvider?.display_name ?? 'Card & Local Rails'})
+          <div className={`grid gap-4 ${activeProvider && walletEnabled ? 'md:grid-cols-2' : 'md:grid-cols-1'}`}>
+            {activeProvider && (
+              <div className="rounded-xl border border-line bg-canvas p-4 flex flex-col justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-ink">
+                    Fund Payment protection online ({activeProvider.display_name})
+                  </div>
+                  <p className="mt-1 text-xs text-muted">
+                    Held until {milestoneText}.
+                  </p>
                 </div>
-                <p className="mt-1 text-xs text-muted">
-                  Held until {milestoneText}.
-                </p>
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() => handleOnlineCheckout('payment_protection', 'card')}
+                  data-testid="protection-online-btn"
+                  className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                >
+                  {pending
+                    ? 'Opening checkout…'
+                    : `Pay & Hold ${money(onlineTotalCents, currency)} online`}
+                </button>
               </div>
-              <button
-                type="button"
-                disabled={pending || !activeProvider}
-                onClick={() => handleOnlineCheckout('payment_protection', 'card')}
-                data-testid="protection-online-btn"
-                className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-50"
-              >
-                {pending
-                  ? 'Opening checkout…'
-                  : `Pay & Hold ${money(onlineTotalCents, currency)} online`}
-              </button>
-            </div>
+            )}
 
             {walletEnabled && (
               <div className="rounded-xl border border-line bg-canvas p-4 flex flex-col justify-between">

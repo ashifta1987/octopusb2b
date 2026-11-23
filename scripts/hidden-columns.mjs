@@ -74,6 +74,7 @@ export const HIDDEN_COLUMNS = {
   escrow_hold_events: ['actor_id'],
   customer_credit_terms: ['approved_by', 'note', 'proposed_at', 'proposed_by'],
   credit_reservations: ['created_by', 'idempotency_key'],
+  saas_plans: ['is_test'],
   saas_subscriptions: ['created_by'],
 };
 

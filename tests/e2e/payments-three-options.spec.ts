@@ -289,11 +289,16 @@ test('3. Sourcing order · Option 3 (Pay later Net 30 reserves credit at confirm
   expect(invAfter![0].due_at).toBeTruthy();
   expect(Number(invAfter![0].credit_terms_days)).toBe(30);
 
-  // SaaS subscription on /account/invoices
-  await page.goto('/account/invoices');
-  await expect(page.getByTestId('saas-plans-panel')).toBeVisible();
-  await page.getByTestId('saas-pay-wallet-dropship_growth_monthly').click();
-  await expect(page.getByTestId('saas-sub-notice')).toContainText('Subscription active', { timeout: 20_000 });
+  // SaaS subscription on /account/invoices (activate one test plan for the duration of this test)
+  await a.from('saas_plans').update({ active: true }).eq('code', 'dropship_growth_monthly');
+  try {
+    await page.goto('/account/invoices');
+    await expect(page.getByTestId('saas-plans-panel')).toBeVisible();
+    await page.getByTestId('saas-pay-wallet-dropship_growth_monthly').click();
+    await expect(page.getByTestId('saas-sub-notice')).toContainText('Subscription active', { timeout: 20_000 });
+  } finally {
+    await a.from('saas_plans').update({ active: false }).eq('code', 'dropship_growth_monthly');
+  }
 });
 
 test('4. Finance screens: Payment settings matrix, Credit terms, Receivables & ageing, and Reports by division Held sub-line', async ({ browser }) => {

@@ -11,15 +11,18 @@ import type {
 
 const REPLAY_TOLERANCE_SECONDS = 300; // 5 minutes
 
-export function getMockWebhookSecret(): string {
-  if (process.env.APP_ENVIRONMENT === 'production') {
-    throw new Error('MOCK_PROVIDER_FORBIDDEN_IN_PRODUCTION');
+export function assertExactStagingEnvironment(): void {
+  if (process.env.APP_ENVIRONMENT !== 'staging') {
+    throw new Error('MOCK_PROVIDER_REQUIRES_STAGING_ENV');
   }
-  const secret =
-    process.env.PAYMENT_MOCK_WEBHOOK_SECRET ||
-    (process.env.BACKUP_CALLBACK_SECRET
-      ? `mock_wh_${process.env.BACKUP_CALLBACK_SECRET}`
-      : 'staging-only-mock-webhook-secret-octopus-b2b');
+}
+
+export function getMockWebhookSecret(): string {
+  assertExactStagingEnvironment();
+  const secret = (process.env.PAYMENT_MOCK_WEBHOOK_SECRET ?? '').trim();
+  if (!secret) {
+    throw new Error('PAYMENT_MOCK_WEBHOOK_SECRET_NOT_CONFIGURED');
+  }
   return secret;
 }
 
@@ -36,13 +39,15 @@ export const mockProviderAdapter: PaymentProviderAdapter = {
   name: 'mock',
 
   isConfigured(): boolean {
-    return process.env.APP_ENVIRONMENT !== 'production';
+    return (
+      process.env.APP_ENVIRONMENT === 'staging' &&
+      Boolean((process.env.PAYMENT_MOCK_WEBHOOK_SECRET ?? '').trim())
+    );
   },
 
   async createCheckout(input: CreateCheckoutInput): Promise<CreateCheckoutOutput> {
-    if (process.env.APP_ENVIRONMENT === 'production') {
-      throw new Error('MOCK_PROVIDER_FORBIDDEN_IN_PRODUCTION');
-    }
+    assertExactStagingEnvironment();
+    getMockWebhookSecret();
     const providerSessionId = `mock_sess_${input.checkoutId.replace(/-/g, '')}`;
     return {
       provider: 'mock',
@@ -52,9 +57,8 @@ export const mockProviderAdapter: PaymentProviderAdapter = {
   },
 
   async verifyWebhook(rawBody: string, headers: Headers): Promise<VerifiedWebhookEvent> {
-    if (process.env.APP_ENVIRONMENT === 'production') {
-      throw new Error('MOCK_PROVIDER_FORBIDDEN_IN_PRODUCTION');
-    }
+    assertExactStagingEnvironment();
+    const secret = getMockWebhookSecret();
     const sigHeader = headers.get('x-mock-signature') ?? '';
     const parts = Object.fromEntries(
       sigHeader.split(',').map((kv) => {
@@ -71,7 +75,6 @@ export const mockProviderAdapter: PaymentProviderAdapter = {
     if (Math.abs(nowSec - ts) > REPLAY_TOLERANCE_SECONDS) {
       throw new Error('WEBHOOK_TIMESTAMP_OUT_OF_TOLERANCE');
     }
-    const secret = getMockWebhookSecret();
     const expected = crypto
       .createHmac('sha256', secret)
       .update(`${ts}.${rawBody}`)
@@ -107,6 +110,7 @@ export const mockProviderAdapter: PaymentProviderAdapter = {
   },
 
   async getPayment(providerPaymentId: string): Promise<PaymentStatusOutput> {
+    assertExactStagingEnvironment();
     return {
       provider: 'mock',
       providerPaymentId,
@@ -117,9 +121,7 @@ export const mockProviderAdapter: PaymentProviderAdapter = {
   },
 
   async refund(input: RefundInput): Promise<RefundOutput> {
-    if (process.env.APP_ENVIRONMENT === 'production') {
-      throw new Error('MOCK_PROVIDER_FORBIDDEN_IN_PRODUCTION');
-    }
+    assertExactStagingEnvironment();
     return {
       provider: 'mock',
       providerRefundId: `mock_re_${crypto.createHash('sha256').update(input.idempotencyKey).digest('hex').slice(0, 16)}`,

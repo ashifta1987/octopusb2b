@@ -311,14 +311,48 @@ try {
      && heldAfterRelease === heldBeforeHold && revAfterRelease === revBeforeHold + 150000,
     `6.5 Second Finance approver releases hold: issues exactly ONE tax invoice (${invAfterRelease[0]?.number}) and recognizes revenue on release`);
 
-  // ── 7. Refunds always issue a CN-[div]-[year]-[seq] credit note ──
+  // ── 7. Refunds: CN-[div]-[year]-[seq] credit note ONLY when an OCT- tax invoice exists; pre-invoice refunds reverse ledger only (no CN-) ──
   const refundRes = (await one(
     `select issue_payment_refund($1, $2, 20000, 'Damaged unit partial refund', 'wallet', 'ref-cn-test-1') as r`,
     [orgA, invAfterRelease[0].id]
   )).r;
   const cnDoc = await one(`select number, doc_type, amount_cents, original_document_id from documents where id = $1`, [refundRes.credit_note_id]);
   ok(cnDoc && /^CN-DS-/.test(cnDoc.number) && Number(cnDoc.amount_cents) === 20000 && cnDoc.original_document_id === invAfterRelease[0].id,
-    `7.1 Refund issues a CN- credit note (${cnDoc?.number}) linked to the original OCT- invoice`);
+    `7.1 Refund against an OCT- tax invoice issues a CN- credit note (${cnDoc?.number}) linked to the original invoice`);
+
+  // 7.2 Pre-release Payment protection refund (no OCT- invoice yet) refunds through ledger reversal ONLY (no CN- issued)
+  await db.query('reset role');
+  const orderProtNoInv = (await one(
+    `insert into orders (org_id, division_id, title, status, quantity, unit_price_cents, shipping_cents, total_cents, deposit_cents, paid_cents, deposit_pct, currency, is_seed)
+     values ($1, $2, 'TEST · Pre-Release Hold Refund ($300)', 'pi_issued', 10, 3000, 0, 30000, 30000, 0, 100, 'USD', true)
+     returning id`,
+    [orgA, divDS]
+  )).id;
+  await as(custA);
+  const preHoldId = (await one(`select (pay_with_protection_wallet('dropship', 'order', $1, 30000, 'USD', 'prot-pre-ref-1') ->> 'hold_id')::uuid as id`, [orderProtNoInv])).id;
+  await as(finApprover, 'aal2');
+  const preHoldRef = (await one(`select finance_act_on_escrow_hold($1, 'refund', 30000, 'Cancelled before milestone release', 'wallet') as r`, [preHoldId])).r;
+  await db.query('reset role');
+  const cnCountForPreHold = Number((await one(`select count(*) as n from documents where order_id = $1 and doc_type = 'credit_note'`, [orderProtNoInv])).n);
+  ok(preHoldRef.status === 'refunded' && preHoldRef.credit_note_id === null && cnCountForPreHold === 0,
+    '7.2 Payment protection refund before release has no tax invoice and refunds via ledger reversal ONLY (0 CN- credit notes)');
+
+  // 7.3 Pre-invoice deposit refund on a part-paid proforma_invoice refunds via ledger reversal ONLY (no CN- issued)
+  const pfDepositId = (await one(
+    `insert into documents (org_id, division_id, doc_type, number, amount_cents, paid_cents, currency, status, is_seed)
+     values ($1, $2, 'proforma_invoice', 'PF-TEST-DEPREF-1', 40000, 10000, 'USD', 'part_paid', true)
+     returning id`,
+    [orgA, divSRC]
+  )).id;
+  await as(finApprover, 'aal2');
+  const depRefRes = (await one(
+    `select issue_payment_refund($1, $2, 10000, 'Order cancelled before full payment / before tax invoice', 'wallet', 'ref-dep-no-cn-1') as r`,
+    [orgA, pfDepositId]
+  )).r;
+  await db.query('reset role');
+  const cnCountForPf = Number((await one(`select count(*) as n from documents where original_document_id = $1 and doc_type = 'credit_note'`, [pfDepositId])).n);
+  ok(depRefRes.credit_note_id === null && depRefRes.journal_id !== null && cnCountForPf === 0,
+    '7.3 Pre-invoice proforma deposit refund reverses ledger without issuing a CN- credit note');
 
   // ── 8. Failed pool refunds everyone automatically to their wallet ──
   await db.query('reset role');
@@ -348,7 +382,12 @@ try {
   ok(Number(poolFailRes.refunded_holds) === 1 && walAfterPoolFail === walBeforePoolFail + 15000,
     '8.1 Failed pool automatically refunds held participant deposits back to their wallet (+15,000 cents)');
 
-  // ── 9. SaaS subscription & Dropshipping weekly statement ──
+  // ── 9. SaaS subscription (seeded plans are is_test=true, active=false by default; activating one allows checkout) & Dropshipping weekly statement ──
+  await db.query('reset role');
+  const seededPlans = await all(`select code, active, is_test from saas_plans`);
+  ok(seededPlans.length === 4 && seededPlans.every((p) => p.is_test === true && p.active === false),
+    '9.0 Seeded SaaS plans are marked is_test = true and active = false so test offers never appear as live plans');
+  await db.query(`update saas_plans set active = true where code = 'dropship_growth_monthly'`);
   await as(custA);
   const saasSub = (await one(`select subscribe_saas_plan($1, 'dropship_growth_monthly', 'pay_now', 'wallet', 'saas-sub-test-1') as r`, [orgA])).r;
   const stmt = (await one(`select generate_dropship_weekly_statement($1) as r`, [orgA])).r;

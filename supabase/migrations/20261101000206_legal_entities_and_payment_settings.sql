@@ -334,7 +334,7 @@ create policy payment_provider_settings_write on payment_provider_settings for a
 
 insert into payment_provider_settings (provider, display_name, enabled, methods, priority, fee_mode, fee_bp, fee_fixed_cents)
 values
-  ('mock',      'Mock Aggregator (Staging Sandbox)', true,  array['card', 'local_transfer'], 1,  'absorb', 290, 30),
+  ('mock',      'Mock Aggregator (Staging Sandbox)', (select (value #>> '{}') = 'staging' from site_settings where key = 'app_environment'), array['card', 'local_transfer'], 1,  'absorb', 290, 30),
   ('stripe',    'Stripe (Cards)',                    false, array['card'],                   10, 'absorb', 290, 30),
   ('airwallex', 'Airwallex (Cards & Local Rails)',   false, array['card', 'local_transfer'], 20, 'absorb', 250, 20)
 on conflict (provider) do nothing;

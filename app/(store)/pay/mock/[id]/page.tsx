@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { MockCheckoutClient } from './client';
 
 async function MockCheckoutContent({ params }: { params: Promise<{ id: string }> }) {
-  if (process.env.APP_ENVIRONMENT === 'production') {
+  if (process.env.APP_ENVIRONMENT !== 'staging') {
     notFound();
   }
   const { id } = await params;

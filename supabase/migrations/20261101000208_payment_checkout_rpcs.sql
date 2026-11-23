@@ -1098,7 +1098,7 @@ end $$;
 revoke all on function decide_escrow_hold_approval(uuid, boolean, text) from public, anon;
 grant execute on function decide_escrow_hold_approval(uuid, boolean, text) to authenticated, service_role;
 
--- ───────── 5. Refunds always issue a CN-[div]-[year]-[seq] credit note ─────────
+-- ───────── 5. Refunds: CN-[div]-[year]-[seq] credit note when an OCT- tax invoice exists; ledger reversal only (no CN-) for pre-invoice deposit / proforma / hold refunds ─────────
 create or replace function issue_payment_refund(
   p_org uuid,
   p_invoice_id uuid,
@@ -1111,7 +1111,7 @@ language plpgsql security definer set search_path = public as $$
 declare
   v_uid uuid := auth.uid();
   inv documents;
-  v_key text := coalesce(nullif(btrim(coalesce(p_idempotency_key, '')), ''), 'cn-refund:' || p_invoice_id::text || ':' || p_amount_cents::text);
+  v_key text := coalesce(nullif(btrim(coalesce(p_idempotency_key, '')), ''), 'cn-refund:' || coalesce(p_invoice_id::text, p_org::text) || ':' || p_amount_cents::text);
   v_existing_j uuid;
   v_cn_id uuid;
   v_cn_no text;
@@ -1131,10 +1131,59 @@ begin
   end if;
 
   select * into inv from documents where id = p_invoice_id for update;
-  if inv.id is null or inv.doc_type <> 'commercial_invoice' then
-    raise exception 'INVOICE_REQUIRED: a refund must reference an issued commercial_invoice';
+  if inv.id is null then
+    raise exception 'DOCUMENT_NOT_FOUND';
   end if;
   if inv.org_id <> p_org then raise exception 'ORG_MISMATCH'; end if;
+
+  v_credit_acct := case when coalesce(p_destination, 'wallet') = 'wallet'
+    then wallet_account(inv.org_id, inv.currency)
+    else cash_account(inv.currency)
+  end;
+
+  -- Case A: Pre-invoice deposit / proforma refund (doc_type = 'proforma_invoice', no OCT- tax invoice exists yet):
+  -- Refund through ledger reversal ONLY (no CN- credit note is issued because no tax invoice exists).
+  if inv.doc_type = 'proforma_invoice' then
+    if exists (select 1 from documents where from_proforma_id = inv.id and doc_type = 'commercial_invoice' and coalesce(status, '') not in ('void', 'cancelled')) then
+      raise exception 'PROFORMA_ALREADY_INVOICED: refund against the issued commercial_invoice instead';
+    end if;
+    if p_amount_cents is null or p_amount_cents <= 0 or p_amount_cents > coalesce(inv.paid_cents, 0) then
+      raise exception 'INVALID_AMOUNT: proforma paid % cents, requested refund % cents', coalesce(inv.paid_cents, 0), p_amount_cents;
+    end if;
+
+    v_j := post_journal(
+      'Deposit refund (pre-invoice) · Proforma ' || inv.number || ' · ' || btrim(p_reason),
+      jsonb_build_array(
+        jsonb_build_object('account', receivable_account(inv.org_id, inv.currency), 'debit', p_amount_cents, 'credit', 0, 'org', inv.org_id),
+        jsonb_build_object('account', v_credit_acct, 'debit', 0, 'credit', p_amount_cents, 'org', case when coalesce(p_destination, 'wallet') = 'wallet' then inv.org_id::text else '' end)
+      ),
+      v_key,
+      'refunds',
+      'document',
+      inv.id
+    );
+    update journals set division_id = inv.division_id where id = v_j;
+    update ledger_entries set division_id = inv.division_id where journal_id = v_j;
+
+    update documents
+       set paid_cents = greatest(0, coalesce(paid_cents, 0) - p_amount_cents),
+           status = case when greatest(0, coalesce(paid_cents, 0) - p_amount_cents) = 0 then 'awaiting_payment' else 'part_paid' end
+     where id = inv.id;
+
+    perform write_audit(
+      'payment.deposit_refund_no_invoice',
+      'documents',
+      inv.id::text,
+      jsonb_build_object('proforma', inv.number, 'amount_cents', p_amount_cents, 'destination', coalesce(p_destination, 'wallet'), 'reason', p_reason)
+    );
+
+    return jsonb_build_object('credit_note_id', null, 'credit_note_number', null, 'journal_id', v_j, 'repeated', false);
+  end if;
+
+  -- Case B: Invoiced refund (doc_type = 'commercial_invoice') → ALWAYS issues a CN-[div]-[year]-[seq] credit note linked to the OCT- tax invoice
+  if inv.doc_type <> 'commercial_invoice' then
+    raise exception 'INVOICE_REQUIRED: a credit note refund must reference an issued commercial_invoice (or proforma_invoice for pre-invoice deposit reversal)';
+  end if;
 
   select coalesce(sum(amount_cents), 0)::bigint into v_already_credited
     from documents
@@ -1160,11 +1209,6 @@ begin
     )
   )
   returning id into v_cn_id;
-
-  v_credit_acct := case when coalesce(p_destination, 'wallet') = 'wallet'
-    then wallet_account(inv.org_id, inv.currency)
-    else cash_account(inv.currency)
-  end;
 
   v_j := post_journal(
     'Refund · Credit note ' || v_cn_no || ' (for ' || inv.number || ') · ' || btrim(p_reason),
@@ -1306,11 +1350,13 @@ begin
     raise exception 'AMOUNT_OUT_OF_RANGE';
   end if;
 
-  -- Pick enabled provider supporting p_method_kind (preferring p_preferred_provider if enabled, else by priority)
+  -- Pick enabled provider supporting p_method_kind (preferring p_preferred_provider if enabled, else by priority).
+  -- Fail closed on environment: 'mock' is ONLY eligible when site_settings.app_environment = 'staging' exactly.
   select * into prov
     from payment_provider_settings
    where enabled
      and (p_method_kind = any(methods) or 'card' = any(methods))
+     and (provider <> 'mock' or exists (select 1 from site_settings where key = 'app_environment' and (value #>> '{}') = 'staging'))
    order by (provider = p_preferred_provider) desc, priority asc
    limit 1;
 
@@ -1671,6 +1717,9 @@ begin
   if auth.uid() is not null and not (is_staff() and can('finance', 'view')) then
     raise exception 'FORBIDDEN';
   end if;
+  if not pg_try_advisory_xact_lock(hashtext('cron:run_payment_reconciliation')) then
+    return jsonb_build_object('skipped', true, 'reason', 'lock_held');
+  end if;
 
   for s in select * from payment_settlements where not reconciled for update loop
     v_checked := v_checked + 1;
@@ -1711,6 +1760,9 @@ declare
   v_stage text;
   v_days_diff int;
 begin
+  if not pg_try_advisory_xact_lock(hashtext('cron:run_credit_and_saas_overdue_check')) then
+    return jsonb_build_object('skipped', true, 'reason', 'lock_held');
+  end if;
   -- 1. Expire unpaid ('pending') pool pledges older than v_exp_min
   for pl in
     select * from pool_pledges
@@ -1845,6 +1897,18 @@ begin
 
   v_stmt_no := 'STMT-DS-' || to_char(p_to at time zone 'UTC', 'YYYYMMDD') || '-' || substr(replace(p_org::text, '-', ''), 1, 6);
 
+  select id into v_stmt_id from documents where org_id = p_org and doc_type = 'statement' and number = v_stmt_no limit 1;
+  if v_stmt_id is not null then
+    return jsonb_build_object(
+      'statement_id', v_stmt_id,
+      'number', v_stmt_no,
+      'invoice_count', jsonb_array_length(v_items),
+      'total_cents', v_total,
+      'unpaid_cents', v_unpaid,
+      'repeated', true
+    );
+  end if;
+
   insert into documents (
     org_id, division_id, doc_type, number, amount_cents, paid_cents, currency, status, data
   )
@@ -1961,3 +2025,55 @@ begin
 end $$;
 revoke all on function subscribe_saas_plan(uuid, text, text, text, text) from public, anon;
 grant execute on function subscribe_saas_plan(uuid, text, text, text, text) to authenticated, service_role;
+
+-- Weekly batch runner for Dropshipping Pay-later statements (called by pg_cron every Monday 01:15 UTC)
+create or replace function run_weekly_dropship_statements() returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_div uuid := division_id_of('DS');
+  v_from timestamptz := date_trunc('week', now() at time zone 'UTC') - interval '7 days';
+  v_to timestamptz := date_trunc('week', now() at time zone 'UTC');
+  v_org uuid;
+  v_generated int := 0;
+begin
+  if not pg_try_advisory_xact_lock(hashtext('cron:run_weekly_dropship_statements')) then
+    return jsonb_build_object('skipped', true, 'reason', 'lock_held');
+  end if;
+  for v_org in
+    select distinct org_id
+      from documents
+     where division_id = v_div
+       and doc_type = 'commercial_invoice'
+       and payment_option = 'pay_later'
+       and coalesce(status, '') not in ('void', 'cancelled')
+       and created_at >= v_from
+       and created_at <= v_to
+  loop
+    perform generate_dropship_weekly_statement(v_org, v_from, v_to);
+    v_generated := v_generated + 1;
+  end loop;
+  return jsonb_build_object('statements_generated', v_generated, 'period_from', v_from, 'period_to', v_to);
+end $$;
+revoke all on function run_weekly_dropship_statements() from public, anon, authenticated;
+grant execute on function run_weekly_dropship_statements() to service_role;
+
+-- Schedule payment reconciliation, credit/SaaS overdue checks, and weekly Dropshipping statements in pg_cron (single source of truth — not in vercel.json so they never double-run)
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    if exists (select 1 from cron.job where jobname = 'octopus-payment-reconciliation') then
+      perform cron.unschedule('octopus-payment-reconciliation');
+    end if;
+    perform cron.schedule('octopus-payment-reconciliation', '50 0 * * *', 'select public.run_payment_reconciliation()');
+
+    if exists (select 1 from cron.job where jobname = 'octopus-credit-overdue') then
+      perform cron.unschedule('octopus-credit-overdue');
+    end if;
+    perform cron.schedule('octopus-credit-overdue', '55 0 * * *', 'select public.run_credit_and_saas_overdue_check()');
+
+    if exists (select 1 from cron.job where jobname = 'octopus-dropship-weekly-statements') then
+      perform cron.unschedule('octopus-dropship-weekly-statements');
+    end if;
+    perform cron.schedule('octopus-dropship-weekly-statements', '15 1 * * 1', 'select public.run_weekly_dropship_statements()');
+  end if;
+end $$;

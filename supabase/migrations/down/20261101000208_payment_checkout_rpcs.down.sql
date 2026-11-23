@@ -1,4 +1,20 @@
 -- Down migration for 20261101000208_payment_checkout_rpcs.sql
+do $$
+begin
+  if exists (select 1 from pg_extension where extname = 'pg_cron') then
+    if exists (select 1 from cron.job where jobname = 'octopus-dropship-weekly-statements') then
+      perform cron.unschedule('octopus-dropship-weekly-statements');
+    end if;
+    if exists (select 1 from cron.job where jobname = 'octopus-credit-overdue') then
+      perform cron.unschedule('octopus-credit-overdue');
+    end if;
+    if exists (select 1 from cron.job where jobname = 'octopus-payment-reconciliation') then
+      perform cron.unschedule('octopus-payment-reconciliation');
+    end if;
+  end if;
+end $$;
+
+drop function if exists run_weekly_dropship_statements();
 drop function if exists subscribe_saas_plan(uuid, text, text, text, text);
 drop function if exists generate_dropship_weekly_statement(uuid, timestamptz, timestamptz);
 drop function if exists run_credit_and_saas_overdue_check();

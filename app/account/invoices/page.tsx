@@ -9,7 +9,7 @@ import { DOC_LABEL } from '@/components/account/data';
 import { getAmountsDue } from '@/lib/core/amounts-due';
 import { PayProformaButton } from '@/components/account/pay-proforma-button';
 import { SaasPlansPanel, type SaasPlanRow, type SaasSubscriptionRow } from '@/components/account/saas-plans-panel';
-import type { CustomerCreditStatus } from '@/lib/payments';
+import { resolveActiveOnlineProvider, type CustomerCreditStatus, type PaymentProviderSettingRow } from '@/lib/payments';
 import crypto from 'node:crypto';
 
 const SVC: Record<string, string> = { sourcing: 'Sourcing', dropship: 'Dropshipping', warehouse: '3PL warehouse', brand: 'Make My Brand', wallet: 'Wallet top-up' };
@@ -29,12 +29,13 @@ async function InvoicesPageContent() {
   const s = await requireCustomer('/account/invoices');
   const sb = await createClient();
   const due = await getAmountsDue(s.org!.id);
-  const [{ data }, { data: saasPlans }, { data: saasSubs }, { data: creditData }] = await Promise.all([
+  const [{ data }, { data: saasPlans }, { data: saasSubs }, { data: creditData }, { data: providerRows }] = await Promise.all([
     sb.from('documents').select('id, doc_type, number, amount_cents, currency, status, due_at, payment_option, data, created_at, orders(code)')
       .eq('org_id', s.org!.id).in('doc_type', ['proforma_invoice', 'commercial_invoice', 'receipt', 'credit_note', 'statement']).order('created_at', { ascending: false }).limit(200),
     sb.from('saas_plans').select('code, service, name, description, billing_interval, price_cents, currency').eq('active', true).order('sort_order', { ascending: true }),
     sb.from('saas_subscriptions').select('id, plan_code, status, payment_option, current_period_start, current_period_end').eq('org_id', s.org!.id).order('created_at', { ascending: false }),
     sb.rpc('get_customer_credit_status', { p_org: s.org!.id, p_division: null }),
+    sb.from('payment_provider_settings').select('provider, display_name, enabled, methods, priority, legal_entity_id, fee_mode, fee_bp, fee_fixed_cents').eq('enabled', true).order('priority', { ascending: true }),
   ]);
   const credit = (creditData as CustomerCreditStatus | null) ?? {
     eligible: false,
@@ -77,13 +78,16 @@ async function InvoicesPageContent() {
           ))}
         </Table>
       </Card>
-      <SaasPlansPanel
-        plans={((saasPlans ?? []) as unknown) as SaasPlanRow[]}
-        subscriptions={((saasSubs ?? []) as unknown) as SaasSubscriptionRow[]}
-        creditEligible={Boolean(credit.eligible)}
-        creditAvailableCents={Number(credit.available_cents ?? 0)}
-        netDays={Number(credit.net_days ?? 30)}
-      />
+      {((saasPlans ?? []).length > 0 || (saasSubs ?? []).length > 0) && (
+        <SaasPlansPanel
+          plans={((saasPlans ?? []) as unknown) as SaasPlanRow[]}
+          subscriptions={((saasSubs ?? []) as unknown) as SaasSubscriptionRow[]}
+          creditEligible={Boolean(credit.eligible)}
+          creditAvailableCents={Number(credit.available_cents ?? 0)}
+          netDays={Number(credit.net_days ?? 30)}
+          hasOnlineProvider={Boolean(resolveActiveOnlineProvider(((providerRows ?? []) as unknown) as PaymentProviderSettingRow[]))}
+        />
+      )}
     </div>
   );
 }
