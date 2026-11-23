@@ -64,6 +64,28 @@ export async function setService(orgId: string, fd: FormData): Promise<Result> {
   return ok(undefined, 'Service updated');
 }
 
+export async function saveCustomerDropshipMarkets(orgId: string, fd: FormData): Promise<Result> {
+  if (!(await staff())) return fail('Please sign in again.');
+  const raw = String(fd.get('countries') ?? '');
+  const countries = raw
+    .split(/[\s,]+/)
+    .map((c) => c.trim().toUpperCase())
+    .filter(Boolean);
+  const lock = fd.get('locked_by_staff') === 'on' || fd.get('locked_by_staff') === 'true';
+  if (!countries.length || countries.some((c) => !/^[A-Z]{2}$/.test(c))) {
+    return fail('Enter at least one 2-letter ISO country code (e.g. AE, GB).');
+  }
+  const sb = await createClient();
+  const { error } = await sb.rpc('set_dropship_markets', {
+    p_countries: [...new Set(countries)],
+    p_org_id: orgId,
+    p_lock: lock,
+  });
+  if (error) return err(error);
+  revalidatePath(`/admin/customers/${orgId}`);
+  return ok(undefined, lock ? 'Selling countries saved and locked' : 'Selling countries saved');
+}
+
 export async function assignManager(orgId: string, fd: FormData): Promise<Result> {
   const s = await staff();
   if (!s) return fail('Please sign in again.');

@@ -19,10 +19,11 @@ test('3PL form has its own steps and follow-up section', async ({ page }) => {
   await expect(page.getByText(/Matched suppliers send/)).toHaveCount(0);
 });
 
-test('dropship form: one platform list and its own follow-up section', async ({ page }) => {
+// 20 Nov 2026: dropship onboarding is "Coming soon" with a launch sign-up instead of the setup form (tests/e2e/dropship-coming-soon.spec.ts)
+test('dropship request page: Coming soon + launch sign-up, no setup form', async ({ page }) => {
   await page.goto('/request/dropship');
-  await expect(page.getByText(/follow the request in My account › Dropshipping/)).toBeVisible();
-  const opts = await page.locator('select[name="store_platform"] option').allTextContents();
-  expect(opts.filter((o) => !/select/i.test(o))).toEqual(['Shopify', 'WooCommerce', 'Upload a sheet']);
+  await expect(page.getByTestId('dropship-coming-soon')).toContainText('Coming soon');
+  await expect(page.getByTestId('launch-notify-dropship')).toBeVisible();
+  await expect(page.locator('select[name="store_platform"]')).toHaveCount(0);
 });
 

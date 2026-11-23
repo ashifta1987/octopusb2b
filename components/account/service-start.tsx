@@ -3,12 +3,13 @@ import { PageSkeleton } from '@/components/shell/skeletons';
 import Link from 'next/link';
 import { requireCustomer } from '@/lib/auth';
 import { getAccountContext, serviceOn, type ServiceKey } from '@/lib/core/account';
+import { LaunchNotifyForm } from '@/components/store/launch-notify-form';
 
 const COPY: Record<Exclude<ServiceKey, 'sourcing'>, { title: string; lead: string; points: string[] }> = {
   dropship: {
     title: 'Dropshipping',
-    lead: 'Sell products from verified suppliers in your own store. Each order is paid from your wallet, packed and shipped to your customer under your store name.',
-    points: ['Pick products from the Octopus catalogue of verified suppliers', 'Store connection: coming soon — upload orders as a sheet meanwhile', 'Express, Standard or Economy shipping, with tracking for your customer'],
+    lead: 'Sell products from verified suppliers in your own store. Each order will be paid from your wallet, packed and shipped to your customer under your store name.',
+    points: ['Pick products from the Octopus catalogue of verified suppliers', 'Coming soon: Shopify and WooCommerce store connection', 'Express, Standard or Economy shipping, with tracking for your customer'],
   },
   warehouse: {
     title: '3PL warehouse',
@@ -45,11 +46,17 @@ async function ServiceStartContent({ service }: { service: Exclude<ServiceKey, '
             <p className="mt-5 text-[15px] text-muted">Your account manager is setting this up for your company{st.plan ? ` (plan: ${st.plan})` : ''}. You will see it here as soon as it is running.</p>
             {service === 'dropship' && <Link href="/account/dropship/catalogue" className="btn btn-primary min-h-11 mt-4" data-testid="browse-catalogue">Browse catalogue</Link>}
           </>
+        ) : service === 'dropship' ? (
+          // Dropshipping is not open yet (20–21 Nov 2026): Coming soon + launch sign-up instead of "Start Dropshipping"
+          <div className="mt-6" id="notify" data-testid="dropship-coming-soon">
+            <span className="pill bg-warn-bg text-warn">Coming soon</span>
+            <p className="mt-2 text-[15px]">Dropshipping is launching soon. Leave your email and we tell you once it opens.</p>
+            <div className="mt-3 max-w-[560px]"><LaunchNotifyForm feature="dropship" source="account-dropship" defaultEmail={s.email ?? ''} /></div>
+          </div>
         ) : (
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link href={`/account/support?topic=${service}`} className="btn btn-primary min-h-11">Start {c.title}</Link>
             <span className="text-[14px] text-muted">{ctx.manager ? `${ctx.manager.name}, your account manager,` : 'Your account manager'} switches it on and explains the prices.</span>
-            {service === 'dropship' && <Link href="/account/dropship/catalogue" className="btn btn-ghost min-h-11" data-testid="browse-catalogue">Browse catalogue</Link>}
           </div>
         )}
       </section>

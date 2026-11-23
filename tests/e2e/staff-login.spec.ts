@@ -61,8 +61,12 @@ test.describe('Staff login — invite → set password → 2FA → workspace', (
     await admin.from('profiles').upsert({ id: userId, full_name: 'E2E Staff', email });
     await admin.from('user_roles').insert({ user_id: userId, role_code: 'operations' });
 
-    // 1. invite link → set password
-    await page.goto(link!.properties!.action_link);
+    // 1. invite link → set password (use token_hash on local BASE when Supabase Auth strips localhost redirectTo)
+    const targetUrl =
+      link!.properties?.hashed_token && /^https?:\/\/localhost[:/]/.test(BASE)
+        ? `/staff/set-password?token_hash=${encodeURIComponent(link!.properties.hashed_token)}&type=invite`
+        : link!.properties!.action_link;
+    await page.goto(targetUrl);
     await page.waitForURL(/\/staff\/set-password/);
     await page.getByLabel('New password').fill(`${PASSWORD}x1`);
     await page.getByLabel('Repeat password').fill(`${PASSWORD}x1`);

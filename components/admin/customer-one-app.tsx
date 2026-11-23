@@ -4,20 +4,21 @@ import { ActionForm } from '@/components/backoffice/action-form';
 import { money, fmtDate } from '@/lib/format';
 import type { Session } from '@/lib/auth';
 import { can } from '@/lib/auth';
-import { setService, saveCustomerLimits } from '@/app/admin/one-app-actions';
+import { setService, saveCustomerLimits, saveCustomerDropshipMarkets } from '@/app/admin/one-app-actions';
 
 const SERVICES: [string, string][] = [['sourcing', 'Sourcing'], ['dropship', 'Dropshipping'], ['warehouse', '3PL warehouse'], ['brand', 'Make My Brand']];
 
 /** ADDON-41 41-B — on the customer page: services switched on, wallet reference/balance, and the customer limits set by the account manager. */
 export async function CustomerOneApp({ orgId, session }: { orgId: string; session: Session }) {
   const sb = await createClient();
-  const [{ data: org }, { data: svcs }, { data: lim }, { data: am }, { data: ceiling }, { data: holds }] = await Promise.all([
+  const [{ data: org }, { data: svcs }, { data: lim }, { data: am }, { data: ceiling }, { data: holds }, { data: dsMarkets }] = await Promise.all([
     sb.from('organizations').select('wallet_reference').eq('id', orgId).maybeSingle(),
     sb.from('company_services').select('service, status, plan, started_at, updated_at').eq('org_id', orgId),
     sb.from('customer_limits').select('max_order_cents, max_month_cents, min_margin_pct, set_at').eq('org_id', orgId).maybeSingle(),
     sb.from('account_managers').select('staff_user_id').eq('org_id', orgId).maybeSingle(),
     sb.from('manager_limits').select('max_amount_cents, min_margin_pct').eq('manager_user_id', session.userId).maybeSingle(),
     sb.from('wallet_holds').select('amount_cents').eq('org_id', orgId).eq('status', 'open'),
+    sb.from('dropship_markets').select('country, locked_by_staff').eq('org_id', orgId).order('country'),
   ]);
   const st = new Map((svcs ?? []).map((r) => [r.service as string, r]));
   const isMine = am?.staff_user_id === session.userId;
@@ -48,6 +49,34 @@ export async function CustomerOneApp({ orgId, session }: { orgId: string; sessio
             );
           })}
           {!canServices && <p className="text-sm text-muted">Only the customer&apos;s account manager or a customer admin can switch services.</p>}
+          <ActionForm
+            action={saveCustomerDropshipMarkets.bind(null, orgId)}
+            submitLabel="Save selling countries"
+            submitClass="btn btn-ghost btn-sm min-h-10"
+            className="rounded-[10px] border border-line p-3 space-y-2 mt-3"
+          >
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted">
+              Dropshipping selling countries (ISO-2)
+            </div>
+            <input
+              name="countries"
+              defaultValue={(dsMarkets ?? []).map((m) => String(m.country).trim()).join(', ')}
+              placeholder="AE, SA, GB"
+              disabled={!canServices}
+              className="input mono text-sm"
+              data-testid="am-dropship-markets"
+            />
+            <label className="inline-flex items-center gap-2 text-xs text-muted cursor-pointer">
+              <input
+                type="checkbox"
+                name="locked_by_staff"
+                defaultChecked={Boolean((dsMarkets ?? []).some((m) => m.locked_by_staff))}
+                disabled={!canServices}
+                className="accent-ink"
+              />
+              Lock selling countries (merchant cannot change them)
+            </label>
+          </ActionForm>
         </div>
       </Card>
       <Card title="Customer limits">

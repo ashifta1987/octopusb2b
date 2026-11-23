@@ -41,12 +41,28 @@ export function StaffShell({ session, nav, counts, moderation, unread = 0, scope
       { href: '/admin/notifications', label: 'Notifications' },
       ...(session.isAdmin || isManager || can(session, 'approvals', 'view') ? [{ href: '/admin/approvals', label: 'Approvals' }] : []),
       ...(can(session, 'wallet', 'approve') ? [{ href: '/admin/finance/transfers', label: 'Bank transfers' }] : []),
+      ...(can(session, 'finance', 'view') ? [
+        { href: '/admin/finance/holds', label: 'Held payments' },
+        { href: '/admin/finance/credit', label: 'Credit terms' },
+        { href: '/admin/finance/receivables', label: 'Receivables & ageing' },
+      ] : []),
     ] },
     // divisions step 4: the legal company and its divisions (company-wide Admin only)
     ...(session.isAdmin ? [{ title: 'Company', items: [{ href: '/admin/company', label: 'Company' }, { href: '/admin/divisions', label: 'Divisions' }, { href: '/admin/staff#divisions', label: 'Staff & divisions' }, { href: '/admin/reports/divisions', label: 'Reports by division' }] }] : []),
     ...(seesCustomers ? [{ title: 'Customers', items: [{ href: '/admin/customers', label: 'All customers' }, { href: '/admin/brand-projects', label: 'Brand projects' }, ...(session.isAdmin || isManager ? [{ href: '/admin/approvals#limits', label: 'Approval limits' }] : [])] }] : []),
   ];
-  const rest = nav.map((s) => ({ ...s, items: s.items.filter((i) => !i.area || can(session, i.area, i.action ?? 'view')) })).filter((s) => s.items.length);
+  const inDs = Boolean(scope?.options.some((d) => d.code === 'DS'));
+  const canOpenDropship = session.isAdmin || session.roles.includes('finance') || session.roles.includes('support') || inDs;
+  const rest = nav
+    .map((s) => ({
+      ...s,
+      items: s.items.filter((i) =>
+        i.href === '/office/dropship'
+          ? canOpenDropship
+          : !i.area || can(session, i.area, i.action ?? 'view'),
+      ),
+    }))
+    .filter((s) => s.items.length);
 
   return (
     <div className="min-h-screen bg-pearl">

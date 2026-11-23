@@ -18,6 +18,9 @@ const SQL_JOBS: Record<string, string> = {
   'terms-publish': 'job_publish_scheduled_terms',
   certificates: 'job_certificate_expiry',
   cleanup: 'job_cleanup',
+  'payment-reconciliation': 'run_payment_reconciliation',
+  'credit-overdue': 'run_credit_and_saas_overdue_check',
+  'dropship-weekly-statements': 'run_weekly_dropship_statements',
 };
 
 /** Shipments in transit with no carrier event for 12 h → ask the carrier adapter again (sandbox: no-op). */

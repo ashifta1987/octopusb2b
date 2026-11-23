@@ -32,8 +32,10 @@ try {
   if (!org) throw new Error('staging test data missing — run scripts/seed-division-test-data.mjs');
   const shp = (await one(`select id, org_id from shipments where code = 'TEST-SHP-1'`));
   await db.query(`insert into tracking_events(shipment_id, org_id, status, description) values ($1, $2, 'in_transit', 'TEST tracking event')`, [shp.id, shp.org_id]);
+  const hasV2 = !!(await one(`select 1 x from information_schema.columns where table_schema='public' and table_name='dropship_products' and column_name='id'`));
+  const pkCol = hasV2 ? 'id' : 'product_id';
   const totals = await one(`select (select count(*) from dropship_products)::int p, (select count(*) from dropship_variants)::int v, (select count(*) from dropship_rates)::int r,
-                                   (select count(*) from turnkey_projects where status <> 'archived')::int tk, (select product_id from dropship_products limit 1) pid`);
+                                   (select count(*) from turnkey_projects where status <> 'archived')::int tk, (select ${pkCol} from dropship_products limit 1) pid`);
 
   const ds = await user('fix-ds@example.com', 'operations', [['DS', 'staff']]);
   const mmb = await user('fix-mmb@example.com', 'operations', [['MMB', 'staff']]);
@@ -41,6 +43,8 @@ try {
   const fin = await user('fix-finance@example.com', 'finance');
   const cust = await user('fix-cust@example.com');
   await db.query(`insert into org_members(org_id, user_id, member_role) values ($1, $2, 'owner')`, [org, cust]);
+  await db.query(`insert into company_services(org_id, service, status) values ($1, 'dropship', 'on') on conflict (org_id, service) do update set status = 'on'`, [org]);
+  if (hasV2) await db.query(`insert into dropship_markets(org_id, country) values ($1, 'AE') on conflict do nothing`, [org]);
 
   // ── logged-out visitor (public key) ──
   await asAnon();
@@ -66,7 +70,7 @@ try {
     const r = await tryq(`select count(*)::int n from ${t}`);
     ok(!r.err && r.rows[0].n === 0, `customer: ${t} — no direct rows (${r.err ? r.err.slice(0, 50) : r.rows[0].n})`);
   }
-  const cat = await tryq(`select * from dropship_catalogue('AE')`);
+  const cat = await tryq(hasV2 ? `select * from get_dropship_catalogue('AE')` : `select * from dropship_catalogue('AE')`);
   const keys = Object.keys(cat.rows[0] ?? {});
   ok(!cat.err && cat.rows.length > 0, `customer: dropship catalogue function still works (${cat.err ? cat.err.slice(0, 60) : cat.rows.length + ' products'})`);
   ok(!keys.some((k) => /supplier|cost|margin|markup|contact|note/.test(k)), `customer: catalogue has no supplier/cost/margin/contact fields (${keys.join(',')})`);
@@ -76,13 +80,13 @@ try {
   ok((await all(`select 1 from dropship_products`)).length === totals.p, `DS staff: all ${totals.p} dropship products`);
   ok((await all(`select 1 from dropship_variants`)).length === totals.v, `DS staff: all ${totals.v} variants`);
   ok((await all(`select 1 from dropship_rates`)).length === totals.r, `DS staff: all ${totals.r} rates`);
-  ok((await tryq(`update dropship_products set weight_g = weight_g where product_id = $1`, [totals.pid])).n === 1, 'DS staff: can edit a dropship product');
+  ok((await tryq(`update dropship_products set weight_g = weight_g where ${pkCol} = $1`, [totals.pid])).n === 1, 'DS staff: can edit a dropship product');
   ok((await tryq(`update dropship_variants set sort = sort where product_id = $1`, [totals.pid])).n >= 0 && !(await tryq(`update dropship_variants set sort = sort where product_id = $1`, [totals.pid])).err, 'DS staff: can edit its variants');
 
   // ── another division: nothing ──
   await as(mmb);
   ok((await all(`select 1 from dropship_products`)).length === 0 && (await all(`select 1 from dropship_variants`)).length === 0 && (await all(`select 1 from dropship_rates`)).length === 0, 'MMB staff: no dropship products / variants / rates');
-  ok((await tryq(`update dropship_products set weight_g = weight_g where product_id = $1`, [totals.pid])).n === 0, 'MMB staff: cannot edit a dropship product (0 rows)');
+  ok((await tryq(`update dropship_products set weight_g = weight_g where ${pkCol} = $1`, [totals.pid])).n === 0, 'MMB staff: cannot edit a dropship product (0 rows)');
 
   // ── company-wide ──
   await as(fin);

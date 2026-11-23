@@ -35,15 +35,23 @@ async function DivisionReport({ searchParams }: { searchParams: Promise<{ months
   const includeTest = isStaging() && sp.test === '1';
   const since = new Date(); since.setUTCDate(1); since.setUTCHours(0, 0, 0, 0); since.setUTCMonth(since.getUTCMonth() - (months - 1));
   const sb = await createClient();
-  const [scope, ctx, res] = await Promise.all([
+  const [scope, ctx, res, heldRes] = await Promise.all([
     getDivisionScope(s), getCurrencyContext(),
     sb.rpc('division_report', { p_from: months ? since.toISOString() : null, p_to: null, p_include_test: includeTest }),
+    sb.rpc('held_payment_protection_by_division', { p_from: months ? since.toISOString() : null, p_to: null, p_include_test: includeTest }),
   ]);
   if (res.error) throw new Error(`Could not load the division report: ${res.error.message}`);
+  const heldByDiv = new Map<string, { count: number; cents: number }>(
+    ((heldRes.data ?? []) as { division_code: string; held_count: number; held_converted_minor: number }[]).map((h) => [
+      h.division_code,
+      { count: Number(h.held_count ?? 0), cents: Number(h.held_converted_minor ?? 0) },
+    ]),
+  );
   let rows = (res.data ?? []) as Row[];
   if (!scope.all) rows = rows.filter((r) => r.division_code === scope.division.code);   // header switcher: one division
   const divs = rows.filter((r) => r.line === 'division');
   const extra = rows.filter((r) => r.line !== 'division');
+  const totalHeld = divs.reduce((acc, r) => acc + (heldByDiv.get(r.division_code ?? '')?.cents ?? 0), 0);
   const total = rows.reduce((a, r) => ({ rev: a.rev + Number(r.revenue_converted_minor), ord: a.ord + r.orders_count, val: a.val + Number(r.orders_converted_minor), work: a.work + r.open_work, pipe: a.pipe + Number(r.pipeline_converted_minor ?? 0), pipeN: a.pipeN + (r.pipeline_count ?? 0), dep: a.dep + Number(r.deposits_converted_minor ?? 0) }), { rev: 0, ord: 0, val: 0, work: 0, pipe: 0, pipeN: 0, dep: 0 });
   const max = Math.max(1, ...rows.map((r) => Number(r.revenue_converted_minor)));
   const byCur = (m: Record<string, number>) => Object.entries(m ?? {}).filter(([, v]) => Number(v) !== 0);
@@ -77,14 +85,17 @@ async function DivisionReport({ searchParams }: { searchParams: Promise<{ months
       <Card title="Revenue, orders and open work" action={<span className="text-xs text-muted">Open work is live (today), not limited to the period</span>}>
         <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Division report">
           <table className="w-full border-collapse min-w-[860px]" data-testid="division-report">
-            <thead><tr><th className="th">Division</th><th className="th">Revenue</th><th className="th text-right">Pipeline (proformas)</th><th className="th text-right">Customer deposits</th><th className="th text-right">Orders</th><th className="th text-right">Order value</th><th className="th">Open work</th></tr></thead>
+            <thead><tr><th className="th">Division</th><th className="th">Revenue</th><th className="th text-right">Pipeline (proformas)</th><th className="th text-right">Customer deposits</th><th className="th text-right">Held (payment protection)</th><th className="th text-right">Orders</th><th className="th text-right">Order value</th><th className="th">Open work</th></tr></thead>
             <tbody>
-              {divs.map((r) => (
+              {divs.map((r) => {
+                const held = heldByDiv.get(r.division_code ?? '') ?? { count: 0, cents: 0 };
+                return (
                 <tr key={r.division_code} data-testid={`report-row-${r.division_code}`}>
                   <td className="td"><div className="font-semibold">{r.division_name}</div><div className="mono text-xs text-muted">{r.division_code}</div></td>
                   {revCell(r)}
                   <td className="td text-right" data-testid={`pipeline-${r.division_code ?? r.line}`}><div className="mono">{money(Number(r.pipeline_converted_minor ?? 0), ctx.currency)}</div>{(r.pipeline_count ?? 0) > 0 && <div className="text-xs text-muted">{r.pipeline_count} proforma{r.pipeline_count === 1 ? '' : 's'}</div>}</td>
                   <td className="td text-right mono" data-testid={`deposits-${r.division_code ?? r.line}`}>{money(Number(r.deposits_converted_minor ?? 0), ctx.currency)}</td>
+                  <td className="td text-right mono" data-testid={`held-protection-${r.division_code ?? r.line}`}>{money(held.cents, ctx.currency)}{held.count > 0 && <div className="text-xs text-muted">{held.count} hold{held.count === 1 ? '' : 's'}</div>}</td>
                   <td className="td text-right mono">{r.orders_count.toLocaleString()}</td>
                   <td className="td text-right mono">{money(Number(r.orders_converted_minor), ctx.currency)}</td>
                   <td className="td">
@@ -92,13 +103,15 @@ async function DivisionReport({ searchParams }: { searchParams: Promise<{ months
                     <div className="flex flex-wrap gap-1 mt-1">{Object.entries(r.open_detail ?? {}).map(([k, v]) => <span key={k} className="text-xs rounded-full bg-pearl px-2 py-0.5">{WORK_LABEL[k] ?? humanize(k)} {v}</span>)}</div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
               {extra.map((r) => (
                 <tr key={r.line} data-testid={`report-row-${r.line}`} className="bg-pearl/40">
                   <td className="td"><div className="font-semibold">{r.division_name}</div><div className="text-xs text-muted">{r.line === 'advertising' ? 'Ad clicks · company-wide' : 'Not tied to a division'}</div></td>
                   {revCell(r)}
                   {r.line === 'company' ? (<td className="td text-right" data-testid={`pipeline-${r.division_code ?? r.line}`}><div className="mono">{money(Number(r.pipeline_converted_minor ?? 0), ctx.currency)}</div>{(r.pipeline_count ?? 0) > 0 && <div className="text-xs text-muted">{r.pipeline_count} proforma{r.pipeline_count === 1 ? '' : 's'}</div>}</td>) : <td className="td text-right text-muted">—</td>}
                   {r.line === 'company' ? (<td className="td text-right mono" data-testid={`deposits-${r.division_code ?? r.line}`}>{money(Number(r.deposits_converted_minor ?? 0), ctx.currency)}</td>) : <td className="td text-right text-muted">—</td>}
+                  <td className="td text-right text-muted">—</td>
                   <td className="td text-right text-muted">—</td><td className="td text-right text-muted">—</td><td className="td text-muted">—</td>
                 </tr>
               ))}
@@ -108,6 +121,7 @@ async function DivisionReport({ searchParams }: { searchParams: Promise<{ months
                   <td className="td font-bold mono">{money(total.rev, ctx.currency)}</td>
                   <td className="td text-right mono text-muted" title="Not included in the company total">{money(total.pipe, ctx.currency)}<div className="text-xs">{total.pipeN} proforma{total.pipeN === 1 ? '' : 's'} · not in total</div></td>
                   <td className="td text-right mono text-muted" title="Not included in the company total" data-testid="deposits-total">{money(total.dep, ctx.currency)}<div className="text-xs">not in total</div></td>
+                  <td className="td text-right mono text-muted" title="Held liability — not revenue until released and invoiced" data-testid="held-protection-total">{money(totalHeld, ctx.currency)}<div className="text-xs">liability · not in total</div></td>
                   <td className="td text-right font-bold mono">{total.ord.toLocaleString()}</td>
                   <td className="td text-right font-bold mono">{money(total.val, ctx.currency)}</td>
                   <td className="td font-bold">{total.work}</td>

@@ -26,7 +26,7 @@ else {
     const sup = await one(`select id from suppliers where code = 'OCT-1132'`);
     // a LIVE product, so the test pool also opens on the storefront (/pool/POOL-9900001)
     const prod = await one(`select id, title from products where supplier_id = $1 and status = 'live' and archived_at is null order by created_at limit 1`, [sup.id]);
-    const dsProd = await one(`select product_id id from dropship_products limit 1`);
+    const dsProd = await one(`select id from dropship_products limit 1`);
     const tkProject = await one(`select project_id id from turnkey_projects order by sort_rank limit 1`);
     const W = `wallet_account('${org}', 'USD')`;
     const J = (memo, idem, stream, refType, refId, amount, revenueStream) => db.query(
@@ -61,7 +61,7 @@ else {
     T.j_brand = await J('TEST brand proforma', 'test-div-brand', 'brand', 'document', T.brand_doc, 200000);
     // DS: dropship service request + import list + dropship order + order journal
     T.sr_dropship = (await one(`insert into service_requests(org_id, service_code, details, fee_minor, currency, status, is_seed) values ($1, 'dropship', '{"test":true}', 0, 'USD', 'paid', true) returning id`, [org])).id;
-    if (dsProd) await db.query(`insert into dropship_import_list(org_id, product_id) values ($1, $2) on conflict do nothing`, [org, dsProd.id]);
+    if (dsProd) await db.query(`insert into dropship_import_list(org_id, product_id) values ($1, $2) on conflict on constraint dropship_import_list_unique do nothing`, [org, dsProd.id]);
     T.order_dropship = (await one(`insert into orders(code, org_id, title, quantity, unit_price_cents, total_cents, deposit_cents, status, currency, is_seed, division_id) values ('TEST-ORD-DS', $1, 'TEST order · dropship', 20, 900, 18000, 18000, 'confirmed', 'USD', true, division_id_of('DS')) returning id`, [org])).id;
     T.j_dropship_order = await J('TEST dropship order', 'test-div-dsorder', 'orders', 'order', T.order_dropship, 18000, 'dropship');
     // TK: turnkey lead + turnkey order + order journal
