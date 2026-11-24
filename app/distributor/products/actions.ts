@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { after } from 'next/server';
 import { runHsClassification } from '@/lib/hs/server';
 import { createClient } from '@/lib/supabase/server';
+import { can } from '@/lib/auth';
 import { slugify, toCents, asCurrency } from '@/lib/format';
 import { actionSession, fail, ok, type Result } from '@/components/backoffice/server-utils';
 import { productSchema, draftSchema, type ProductFormValues } from '@/components/backoffice/product-schema';
@@ -74,8 +75,11 @@ function columns(v: ProductFormValues) {
  * `mode = 'full'` validates everything. Returns the product id.
  */
 export async function saveProduct(id: string | null, values: ProductFormValues, mode: 'draft' | 'full' = 'full'): Promise<Result<{ id: string }>> {
-  const g = await actionSession('products', id ? 'edit' : 'create');
+  const g = await actionSession();
   if ('error' in g) return fail(g.error);
+  if (!can(g.s, 'products', id ? 'edit' : 'create') && !g.s.roles.includes('supplier')) {
+    return fail('You do not have permission to do this.');
+  }
   if (mode === 'full') {
     const p = productSchema.safeParse(values);
     if (!p.success) return fail(p.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).slice(0, 3).join('; '));
@@ -94,16 +98,10 @@ export async function saveProduct(id: string | null, values: ProductFormValues, 
     const { data: cur } = await sb.from('products').select('status').eq('id', pid).maybeSingle();
     if (!cur) return fail('Product not found or not editable.');
     if (mode === 'draft' && !['draft', 'rejected'].includes(cur.status)) return fail('Autosave only runs on drafts.');
-    const { hs_code: nextHsCode, ...productCols } = cols;
+    const { hs_code: _nextHsCode, ...productCols } = cols;
     const { error, data } = await sb.from('products').update(productCols).eq('id', pid).select('id');
     if (error) return fail(skuDbError(error.message) ?? error);
     if (!data?.length) return fail('You cannot edit this product.');
-    const { error: hsErr } = await sb.rpc('set_product_item_hs', {
-      p_product_id: pid,
-      p_hs_code: nextHsCode,
-      p_origin_country: cols.origin_country,
-    });
-    if (hsErr) return fail(hsErr);
   } else {
     const slug = `${slugify(cols.title).slice(0, 80)}-${Math.random().toString(36).slice(2, 8)}`;
     const sku = (values.sku ?? '').trim().toUpperCase();
@@ -111,6 +109,35 @@ export async function saveProduct(id: string | null, values: ProductFormValues, 
     if (error) return fail(skuDbError(error.message) ?? error);
     pid = data.id as string;
   }
+
+  // Step 2a: Write structured physical data, origin, HS code & restricted flags to item_master via the shared RPC
+  const { data: imRow, error: imLookupErr } = await sb
+    .from('item_master')
+    .select('id')
+    .eq('sourcing_product_id', pid!)
+    .maybeSingle();
+  if (imLookupErr) return fail(imLookupErr);
+  if (!imRow?.id) return fail('Item master record not found for this product.');
+
+  const intOrNull = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) && n > 0 ? Math.round(n) : null);
+  const numOrNull = (n: unknown) => (typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : null);
+
+  const { error: imErr } = await sb.rpc('update_dropship_item_master', {
+    p_item_id: imRow.id as string,
+    p_hs_code: cols.hs_code,
+    p_origin_country: cols.origin_country,
+    p_weight_g: intOrNull(values.weight_g),
+    p_box_l_cm: numOrNull(values.box_l_cm),
+    p_box_w_cm: numOrNull(values.box_w_cm),
+    p_box_h_cm: numOrNull(values.box_h_cm),
+    p_has_battery: Boolean(values.has_battery),
+    p_has_liquid: Boolean(values.has_liquid),
+    p_has_magnet: Boolean(values.has_magnet),
+    p_has_powder: Boolean(values.has_powder),
+    p_is_fragile: Boolean(values.is_fragile),
+  });
+  if (imErr) return fail(imErr);
+
   const ce = await replaceChildren(sb, pid!, values);
   if (ce) return fail(ce);
   if (mode === 'draft') return ok({ id: pid! }, 'Draft saved'); // no route refresh while typing

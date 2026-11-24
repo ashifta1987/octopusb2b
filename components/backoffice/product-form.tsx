@@ -16,9 +16,12 @@ export type FormTag = { id: string; name: string; kind: string };
 export type FormCert = { id: string; supplier_id: string; name: string; issuer: string | null; status: string; expires_at: string | null };
 
 export function ProductForm({
-  productId: initialId, status, initial, hsInfo, suppliers, categories, tags, certificates, countries, aiMode, saveAction, submitAction,
+  productId: initialId, status, initial, hsInfo, legacyPackaging, suppliers, categories, tags, certificates, countries, aiMode, saveAction, submitAction,
 }: {
-  productId: string | null; status: string; initial: ProductFormValues; hsInfo?: { status: string | null; source: string | null; note: string | null } | null; suppliers: FormSupplier[]; categories: FormCategory[];
+  productId: string | null; status: string; initial: ProductFormValues;
+  hsInfo?: { status: string | null; source: string | null; note: string | null; verified?: boolean } | null;
+  legacyPackaging?: { netWeight: string | null; colourBoxMm: string | null } | null;
+  suppliers: FormSupplier[]; categories: FormCategory[];
   tags: FormTag[]; certificates: FormCert[]; countries: Record<string, string>; aiMode: 'live' | 'mock';
   saveAction: (id: string | null, v: ProductFormValues, mode: 'draft' | 'full') => Promise<Result>;
   submitAction: (id: string, to: 'submitted') => Promise<Result>;
@@ -401,14 +404,22 @@ export function ProductForm({
         </section>
 
         {/* Shipping & customs */}
-        <section className="card p-6">
-          <h2 className="text-lg font-semibold mb-4">Shipping &amp; customs</h2>
+        <section className="card p-6 space-y-5" data-testid="pf-shipping-customs">
+          <div>
+            <h2 className="text-lg font-semibold">Shipping &amp; customs</h2>
+            <p className="text-xs text-muted mt-1">Structured weight, package dimensions, origin and restricted-goods flags are stored in the item master and used for live parcel quotes.</p>
+          </div>
           <div className="grid sm:grid-cols-3 gap-4">
             <div>
               <label htmlFor="pf-hs" className="label">HS code</label>
               <input id="pf-hs" className="input mono" {...register('hs_code')} placeholder="Leave blank to detect automatically" />
               {hsInfo?.status === 'suggested' && <p className="text-xs mt-1 text-warn" data-testid="hs-suggested">Suggested by {hsInfo.source === 'ai' ? 'the AI classifier' : 'a product-type rule'} — check it. Typing a code here makes it a manual (confirmed) code.</p>}
-              {hsInfo?.status === 'confirmed' && hsInfo.source && <p className="text-xs mt-1 text-ok">Confirmed ({hsInfo.source === 'sheet' ? 'from the import sheet' : hsInfo.source === 'manual' ? 'entered manually' : 'product-type rule'})</p>}
+              {hsInfo?.status === 'confirmed' && hsInfo.source && (
+                <p className="text-xs mt-1 text-ok">
+                  Confirmed ({hsInfo.source === 'sheet' ? 'from the import sheet' : hsInfo.source === 'manual' ? 'entered manually' : 'product-type rule'})
+                  {hsInfo.verified ? ' · verified by staff' : ''}
+                </p>
+              )}
               {hsInfo?.status === 'missing' && hsInfo.note && <p className="text-xs mt-1 text-bad">{hsInfo.note}</p>}
               {!hsInfo && <p className="text-xs mt-1 text-muted">Blank = a 4-digit heading is detected automatically after saving.</p>}
             </div>
@@ -424,6 +435,135 @@ export function ProductForm({
               <select id="pf-inc" className="input" {...register('incoterm')}>{INCOTERMS.map((i) => <option key={i}>{i}</option>)}</select>
             </div>
           </div>
+
+          {/* Step 2a: Structured item_master weight & box dimensions (cm) */}
+          <div className="grid sm:grid-cols-5 gap-4">
+            <div>
+              <label htmlFor="pf-weight-g" className="label">Weight (g)</label>
+              <input
+                id="pf-weight-g"
+                data-testid="pf-weight-g"
+                type="number"
+                min={1}
+                step={1}
+                className="input mono"
+                placeholder="e.g. 820"
+                {...register('weight_g', { setValueAs: (v) => (v === '' || v == null || Number.isNaN(Number(v)) ? null : Math.round(Number(v))) })}
+              />
+              {err(errors.weight_g)}
+            </div>
+            <div>
+              <label htmlFor="pf-box-l" className="label">Box length (cm)</label>
+              <input
+                id="pf-box-l"
+                data-testid="pf-box-l"
+                type="number"
+                min={0.1}
+                step="0.1"
+                className="input mono"
+                placeholder="L"
+                {...register('box_l_cm', { setValueAs: (v) => (v === '' || v == null || Number.isNaN(Number(v)) ? null : Number(v)) })}
+              />
+              {err(errors.box_l_cm)}
+            </div>
+            <div>
+              <label htmlFor="pf-box-w" className="label">Box width (cm)</label>
+              <input
+                id="pf-box-w"
+                data-testid="pf-box-w"
+                type="number"
+                min={0.1}
+                step="0.1"
+                className="input mono"
+                placeholder="W"
+                {...register('box_w_cm', { setValueAs: (v) => (v === '' || v == null || Number.isNaN(Number(v)) ? null : Number(v)) })}
+              />
+              {err(errors.box_w_cm)}
+            </div>
+            <div>
+              <label htmlFor="pf-box-h" className="label">Box height (cm)</label>
+              <input
+                id="pf-box-h"
+                data-testid="pf-box-h"
+                type="number"
+                min={0.1}
+                step="0.1"
+                className="input mono"
+                placeholder="H"
+                {...register('box_h_cm', { setValueAs: (v) => (v === '' || v == null || Number.isNaN(Number(v)) ? null : Number(v)) })}
+              />
+              {err(errors.box_h_cm)}
+            </div>
+            <div>
+              <span className="label">Billed weight (est.)</span>
+              <div className="input flex items-center bg-pearl mono text-sm" data-testid="pf-billed-weight">
+                {(() => {
+                  const wg = Number(watch('weight_g') ?? 0);
+                  const bl = Number(watch('box_l_cm') ?? 0);
+                  const bw = Number(watch('box_w_cm') ?? 0);
+                  const bh = Number(watch('box_h_cm') ?? 0);
+                  if (!(wg > 0 && bl > 0 && bw > 0 && bh > 0)) return '—';
+                  const volG = Math.ceil(((bl * bw * bh) / 5000) * 1000);
+                  const billed = Math.ceil(Math.max(wg, volG) / 100) * 100;
+                  return `${billed.toLocaleString()} g`;
+                })()}
+              </div>
+              <p className="text-xs text-muted mt-1">Divisor 5,000 · 100 g step</p>
+            </div>
+          </div>
+
+          {/* Step 2a: Restricted goods & packaging flags */}
+          <fieldset>
+            <legend className="label">Restricted goods &amp; packaging flags</legend>
+            <div className="flex flex-wrap gap-5 mt-1">
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" data-testid="pf-flag-battery" {...register('has_battery')} /> Battery
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" data-testid="pf-flag-liquid" {...register('has_liquid')} /> Liquid
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" data-testid="pf-flag-magnet" {...register('has_magnet')} /> Magnet
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" data-testid="pf-flag-powder" {...register('has_powder')} /> Powder
+              </label>
+              <label className="inline-flex items-center gap-2 text-sm">
+                <input type="checkbox" data-testid="pf-flag-fragile" {...register('is_fragile')} /> Fragile (protective packaging)
+              </label>
+            </div>
+          </fieldset>
+
+          {/* Step 2a: Legacy read-only net_weight & colour_box_mm display */}
+          {(productId || legacyPackaging?.netWeight || legacyPackaging?.colourBoxMm) && (
+            <div className="rounded-[10px] border border-line bg-pearl p-4" data-testid="pf-legacy-packaging">
+              <div className="text-xs font-semibold text-muted mb-2">Imported sheet fields (read-only legacy values)</div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="pf-legacy-net-weight" className="label text-xs">Legacy net_weight</label>
+                  <input
+                    id="pf-legacy-net-weight"
+                    data-testid="pf-legacy-net-weight"
+                    readOnly
+                    aria-readonly="true"
+                    value={legacyPackaging?.netWeight || '—'}
+                    className="input bg-white/70 text-muted mono text-sm cursor-default"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="pf-legacy-colour-box" className="label text-xs">Legacy colour_box_mm</label>
+                  <input
+                    id="pf-legacy-colour-box"
+                    data-testid="pf-legacy-colour-box"
+                    readOnly
+                    aria-readonly="true"
+                    value={legacyPackaging?.colourBoxMm || '—'}
+                    className="input bg-white/70 text-muted mono text-sm cursor-default"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Certificates & services */}

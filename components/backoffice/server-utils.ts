@@ -23,15 +23,21 @@ export type SupplierRow = {
   supplier_switches: { portal_login: boolean; product_upload: boolean; rfq_replies: boolean; listings_live: boolean; ai_tools: boolean } | null;
 };
 
-/** Suppliers a distributor manages (admins see all). RLS also restricts this to assigned suppliers. */
+/** Suppliers a distributor, supplier, or product staff member manages (admins & products:view see all). */
 export async function getManagedSuppliers(s: Session): Promise<SupplierRow[]> {
   const sb = await createClient();
   let q = sb.from('suppliers')
     .select('id, code, legal_name, country, city, supplier_type, contact_name, contact_email, contact_phone, verified, main_categories, supplier_switches(portal_login, product_upload, rfq_replies, listings_live, ai_tools)')
     .is('archived_at', null).order('code');
-  if (!s.isAdmin) {
-    const { data: links } = await sb.from('distributor_suppliers').select('supplier_id').eq('distributor_id', s.userId);
-    const ids = (links ?? []).map((l) => l.supplier_id as string);
+  if (!s.isAdmin && !can(s, 'products', 'view')) {
+    const [{ data: links }, { data: own }] = await Promise.all([
+      sb.from('distributor_suppliers').select('supplier_id').eq('distributor_id', s.userId),
+      sb.from('suppliers').select('id').eq('user_id', s.userId),
+    ]);
+    const ids = Array.from(new Set([
+      ...(links ?? []).map((l) => l.supplier_id as string),
+      ...(own ?? []).map((o) => o.id as string),
+    ]));
     if (!ids.length) return [];
     q = q.in('id', ids);
   }

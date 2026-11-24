@@ -12,7 +12,10 @@ import { assertStagingOrThrow } from '../../scripts/lib-staging-guard.mjs';
 let dsStaff: TempStaff | null = null;
 let supStaff: TempStaff | null = null;
 let finStaff: TempStaff | null = null;
+let distStaff: TempStaff | null = null;
 const createdProductIds: string[] = [];
+let tempSourcingProd: { id: string; itemId: string; skuNorm: string } | null = null;
+let tempImportSourcingProd: { id: string; itemId: string; skuNorm: string; supplierProductId: string } | null = null;
 
 test.describe.configure({ mode: 'serial' });
 
@@ -39,6 +42,80 @@ test.beforeAll(async () => {
 
   supStaff = await createTempStaff('support');
   finStaff = await createTempStaff('finance');
+  distStaff = await createTempStaff('distributor');
+
+  const { data: octSup } = await admin.from('suppliers').select('id').eq('code', 'OCT-1132').single();
+  const { data: firstCat } = await admin.from('categories').select('id').eq('active', true).eq('level', 1).limit(1).single();
+  await admin
+    .from('distributor_suppliers')
+    .upsert({ distributor_id: distStaff.id, supplier_id: octSup!.id });
+
+  const testSku = `TST2A-${Date.now().toString(36).toUpperCase()}`;
+  const { data: sp } = await admin
+    .from('products')
+    .insert({
+      external_id: testSku,
+      slug: `tst2a-${Date.now()}`,
+      title: 'TEST – Step 2a Sourcing Structured Packaging Bowl',
+      description: 'Food-safe stainless bowl for structured item_master packaging verification during Step 2a E2E.',
+      supplier_id: octSup!.id,
+      category_id: firstCat!.id,
+      status: 'draft',
+      unit: 'pcs',
+      moq: 10,
+      currency: 'USD',
+      min_price_cents: 450,
+      net_weight: '710g',
+      colour_box_mm: '240*180*120mm',
+      is_seed: true,
+    })
+    .select('id, item_id')
+    .single();
+  await admin.from('price_tiers').insert({
+    product_id: sp!.id,
+    min_qty: 10,
+    unit_price_cents: 450,
+    currency: 'USD',
+  });
+  tempSourcingProd = { id: sp!.id as string, itemId: sp!.item_id as string, skuNorm: testSku };
+
+  const impSku = `TST2IMP-${Date.now().toString(36).toUpperCase()}`;
+  const { data: impProd } = await admin
+    .from('products')
+    .insert({
+      external_id: impSku,
+      slug: `tst2imp-${Date.now()}`,
+      title: '000 TEST – Step 2 Import Candidate Stoneware Stand',
+      description: 'Dedicated test Sourcing item for StaffImport E2E.',
+      supplier_id: octSup!.id,
+      category_id: firstCat!.id,
+      status: 'draft',
+      unit: 'pcs',
+      moq: 10,
+      currency: 'USD',
+      min_price_cents: 500,
+      is_seed: true,
+    })
+    .select('id, item_id')
+    .single();
+  const { data: impSp, error: impSpErr } = await admin
+    .from('supplier_products')
+    .insert({
+      supplier_id: octSup!.id,
+      product_id: impProd!.id,
+      status: 'quoted',
+      is_preferred: true,
+    })
+    .select('id')
+    .single();
+  if (impSpErr) throw impSpErr;
+  await admin.from('product_costs').upsert({ product_id: impProd!.id, supplier_cost_cents: 450 });
+  tempImportSourcingProd = {
+    id: impProd!.id as string,
+    itemId: impProd!.item_id as string,
+    skuNorm: impSku,
+    supplierProductId: impSp!.id as string,
+  };
 });
 
 test.afterAll(async () => {
@@ -46,9 +123,22 @@ test.afterAll(async () => {
   for (const pid of createdProductIds) {
     await admin.from('dropship_products').delete().eq('id', pid);
   }
+  if (tempImportSourcingProd) {
+    await admin.from('product_costs').delete().eq('product_id', tempImportSourcingProd.id);
+    await admin.from('supplier_products').delete().eq('id', tempImportSourcingProd.supplierProductId);
+    await admin.from('products').delete().eq('id', tempImportSourcingProd.id);
+    await admin.from('sku_reservations').delete().eq('sku_norm', tempImportSourcingProd.skuNorm);
+    await admin.from('item_master').delete().eq('id', tempImportSourcingProd.itemId);
+  }
+  if (tempSourcingProd) {
+    await admin.from('products').delete().eq('id', tempSourcingProd.id);
+    await admin.from('sku_reservations').delete().eq('sku_norm', tempSourcingProd.skuNorm);
+    await admin.from('item_master').delete().eq('id', tempSourcingProd.itemId);
+  }
   await deleteTempStaff(dsStaff);
   await deleteTempStaff(supStaff);
   await deleteTempStaff(finStaff);
+  await deleteTempStaff(distStaff);
 });
 
 async function checkAxe(page: Page, label: string) {
@@ -169,9 +259,12 @@ test('Correction 6, 7 & StaffImport: >2,000 rows error state, Sourcing item impo
   await page.getByTestId('csv-preview-btn').click();
   await expect(page.getByTestId('csv-global-error')).toContainText('up to 2,000 rows');
 
-  // Import from a verified Sourcing item -> creates draft & redirects to /office/dropship/[id]
+  // Import from our dedicated verified test Sourcing item -> creates draft & redirects to /office/dropship/[id]
   await expect(page.getByTestId('sourcing-import-section')).toBeVisible();
-  const createBtn = page.getByTestId('create-from-sourcing-btn').first();
+  const createBtn = page
+    .getByTestId('sourcing-candidate-row')
+    .filter({ hasText: tempImportSourcingProd!.skuNorm })
+    .getByTestId('create-from-sourcing-btn');
   await expect(createBtn).toBeVisible();
   await createBtn.click();
 
@@ -230,6 +323,68 @@ test('Correction 6, 7 & StaffImport: >2,000 rows error state, Sourcing item impo
 
   await page.getByTestId('publish-btn').click();
   await expect(page.getByTestId('form-message')).toContainText('published to the Dropshipping catalogue');
+
+  await ctx.close();
+});
+
+test('Step 2a: Sourcing product form shows legacy net_weight/colour_box_mm read-only and saves structured item_master fields via update_dropship_item_master', async ({
+  browser,
+}) => {
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const page = await ctx.newPage();
+  await staffLogin(page, distStaff!, `/distributor/products/${tempSourcingProd!.id}/edit`);
+  await page.goto(`/distributor/products/${tempSourcingProd!.id}/edit`);
+
+  await expect(page.getByTestId('pf-shipping-customs')).toBeVisible();
+  const legacyWeight = page.getByTestId('pf-legacy-net-weight');
+  const legacyBox = page.getByTestId('pf-legacy-colour-box');
+  await expect(legacyWeight).toHaveValue('710g');
+  await expect(legacyBox).toHaveValue('240*180*120mm');
+  await expect(legacyWeight).toHaveAttribute('readonly', '');
+  await expect(legacyBox).toHaveAttribute('readonly', '');
+
+  // Enter structured weight, box L/W/H cm, origin, HS code, and restricted flags
+  await page.locator('#pf-hs').fill('3924.10');
+  await page.locator('#pf-origin').selectOption('CN');
+  await page.getByTestId('pf-weight-g').fill('820');
+  await page.getByTestId('pf-box-l').fill('25');
+  await page.getByTestId('pf-box-w').fill('20');
+  await page.getByTestId('pf-box-h').fill('15');
+  await page.getByTestId('pf-flag-battery').check();
+  await page.getByTestId('pf-flag-fragile').check();
+
+  // Volumetric: ceil((25*20*15 / 5000) * 1000) = 1,500 g > 820 g -> 1,500 g
+  await expect(page.getByTestId('pf-billed-weight')).toContainText('1,500 g');
+  await checkAxe(page, '/distributor/products/[id]/edit Step 2a');
+
+  await page.getByRole('button', { name: 'Save product' }).click();
+  await expect(page.getByRole('status').filter({ hasText: /^Saved$/ })).toBeVisible({ timeout: 15_000 });
+
+  const admin = adminClient();
+  const [{ data: im }, { data: prod }] = await Promise.all([
+    admin
+      .from('item_master')
+      .select('hs_code, origin_country, weight_g, box_l_cm, box_w_cm, box_h_cm, has_battery, is_fragile, needs_data')
+      .eq('id', tempSourcingProd!.itemId)
+      .single(),
+    admin
+      .from('products')
+      .select('net_weight, colour_box_mm')
+      .eq('id', tempSourcingProd!.id)
+      .single(),
+  ]);
+
+  expect(im?.hs_code).toBe('3924.10');
+  expect(im?.origin_country?.trim()).toBe('CN');
+  expect(im?.weight_g).toBe(820);
+  expect(Number(im?.box_l_cm)).toBe(25);
+  expect(Number(im?.box_w_cm)).toBe(20);
+  expect(Number(im?.box_h_cm)).toBe(15);
+  expect(im?.has_battery).toBe(true);
+  expect(im?.is_fragile).toBe(true);
+  expect(im?.needs_data).toBe(false);
+  expect(prod?.net_weight).toBe('710g');
+  expect(prod?.colour_box_mm).toBe('240*180*120mm');
 
   await ctx.close();
 });

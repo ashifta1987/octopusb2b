@@ -13,7 +13,7 @@ export default function RedirectLegacyDropshipProductEditorPage({
   );
 }
 
-async function DoRedirect({ params }: { params: Promise<{ id: string }> }) {
+async function DoRedirect({ params }: { params: Promise<{ id: string }> }): Promise<never> {
   const { id } = await params;
-  redirect(`/office/dropship/${encodeURIComponent(id)}`);
+  return redirect(`/office/dropship/${encodeURIComponent(id)}`);
 }

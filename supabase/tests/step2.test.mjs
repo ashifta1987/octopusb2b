@@ -235,7 +235,16 @@ try {
   ok(pubOk.ok === true && pubOk.status === 'active', 'Correction 7: DAP route without duty_rate_entries passes publish_dropship_product');
   await owner();
 
-  // ── 4. Correction 1 & 2: visible_to_org_id Isolation + dropship_price_tiers + DAP "Duties paid by buyer" ──
+  // ── 4. Correction 1 & 2: visible_to_org_id Isolation + dropship_price_tiers (USD only) + DAP "Duties paid by buyer" ──
+  const nonUsdTierErr = (await tryq(`
+    insert into dropship_price_tiers(product_id, min_qty, unit_price_cents, currency)
+    values ($1, 100, 800, 'CNY')
+  `, [importedProd.id])).err;
+  ok(
+    /dropship_price_tiers_currency_check/.test(nonUsdTierErr ?? ''),
+    'Follow-up 2: dropship_price_tiers enforces currency = USD check constraint (rejects CNY)',
+  );
+
   await db.query(`
     insert into dropship_price_tiers(product_id, min_qty, unit_price_cents)
     values ($1, 1, 1200), ($1, 5, 1050), ($1, 20, 900)
@@ -322,6 +331,60 @@ try {
       && supCosts.length === 0
       && supChk.ok === true,
     'Correction 5: Support gets FORBIDDEN on all cost/supplier/Sourcing-model RPCs and 0 rows on dropship_import_jobs, suppliers, and product_costs',
+  );
+
+  // ── 6b. Step 2a: Sourcing product item_master RPC for Staff, Assigned Distributor & Own Supplier (isolation enforced) ──
+  const distUserA = await mkUser('distA', 'distributor');
+  await db.query(`insert into distributor_suppliers(distributor_id, supplier_id) values ($1, $2)`, [distUserA, supVer]);
+
+  // Supplier A updates own Sourcing product's item_master via update_dropship_item_master
+  await as(supUserVer, 'aal1');
+  const supRpcOk = (await one(`
+    select update_dropship_item_master($1, '6912.00.90', 'CN', 780, 24, 16, 12, true, false, false, false, true) r
+  `, [srcProdVer.item_id])).r;
+  const supOtherErr = (await tryq(`
+    select update_dropship_item_master($1, '7013.49', 'CN', 400, 10, 10, 10, false, false, false, false, false)
+  `, [srcProdUnver.item_id])).err;
+  const supDropshipOnlyErr = (await tryq(`
+    select update_dropship_item_master($1, '6912.00', 'CN', 500, 10, 10, 10, false, false, false, false, false)
+  `, [var2.item_id])).err;
+
+  // Assigned Distributor A updates assigned supplier's item_master, blocked on unassigned supplier & standalone dropship item
+  await as(distUserA, 'aal2');
+  const distRpcOk = (await one(`
+    select update_dropship_item_master($1, '6912.00.90', 'CN', 810, 25, 16, 12, true, false, true, false, true) r
+  `, [srcProdVer.item_id])).r;
+  const distOtherErr = (await tryq(`
+    select update_dropship_item_master($1, '7013.49', 'CN', 400, 10, 10, 10, false, false, false, false, false)
+  `, [srcProdUnver.item_id])).err;
+  const distDropshipOnlyErr = (await tryq(`
+    select update_dropship_item_master($1, '6912.00', 'CN', 500, 10, 10, 10, false, false, false, false, false)
+  `, [var2.item_id])).err;
+
+  // Merchant gets FORBIDDEN
+  await as(merchA, 'aal1');
+  const merchImErr = (await tryq(`
+    select update_dropship_item_master($1, '6912.00', 'CN', 500, 10, 10, 10, false, false, false, false, false)
+  `, [srcProdVer.item_id])).err;
+  await owner();
+
+  const legacyUnchanged = await one(`select net_weight, colour_box_mm from products where id = $1`, [srcProdVer.id]);
+  const imAfter2a = await one(`select weight_g, box_l_cm, box_w_cm, box_h_cm, has_battery, has_magnet, is_fragile, needs_data from item_master where id = $1`, [srcProdVer.item_id]);
+
+  ok(
+    supRpcOk.weight_g === 780 && supRpcOk.needs_data === false && supRpcOk.billed_weight_g === 1000
+      && distRpcOk.weight_g === 810 && imAfter2a.weight_g === 810
+      && imAfter2a.has_battery === true && imAfter2a.has_magnet === true && imAfter2a.is_fragile === true
+      && legacyUnchanged.net_weight === '650g' && legacyUnchanged.colour_box_mm === '220*140*110mm',
+    'Step 2a: own supplier and assigned distributor update Sourcing item_master via update_dropship_item_master while legacy net_weight/colour_box_mm remain untouched',
+  );
+  ok(
+    /FORBIDDEN/.test(supOtherErr ?? '')
+      && /FORBIDDEN/.test(supDropshipOnlyErr ?? '')
+      && /FORBIDDEN/.test(distOtherErr ?? '')
+      && /FORBIDDEN/.test(distDropshipOnlyErr ?? '')
+      && /FORBIDDEN/.test(merchImErr ?? ''),
+    'Step 2a: supplier and restricted distributor get FORBIDDEN on other suppliers items and standalone dropship items; merchants get FORBIDDEN',
   );
 
   // ── 7. Ledger & wallet invariant ──

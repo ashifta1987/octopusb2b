@@ -22,6 +22,16 @@ export const productSchema = z.object({
   incoterm: z.string().trim().max(10).nullable(),
   origin_country: z.string().trim().max(2).nullable(),
   hs_code: z.string().trim().max(20).nullable(),
+  /** Step 2a: structured item_master physical & restricted-goods fields (written via update_dropship_item_master). */
+  weight_g: z.number().int('Whole grams').positive('Must be > 0').max(500000, 'Max 500,000 g').nullable().optional(),
+  box_l_cm: z.number().positive('Must be > 0').max(500, 'Max 500 cm').nullable().optional(),
+  box_w_cm: z.number().positive('Must be > 0').max(500, 'Max 500 cm').nullable().optional(),
+  box_h_cm: z.number().positive('Must be > 0').max(500, 'Max 500 cm').nullable().optional(),
+  has_battery: z.boolean().optional(),
+  has_liquid: z.boolean().optional(),
+  has_magnet: z.boolean().optional(),
+  has_powder: z.boolean().optional(),
+  is_fragile: z.boolean().optional(),
   /** One currency per product: all tiers share it (1688 suppliers usually quote CNY). */
   currency: z.enum(['USD', 'CNY']),
   tiers: z.array(tierSchema).min(1, 'Add at least one price tier'),

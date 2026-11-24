@@ -9,12 +9,18 @@ import { supplierAccess, type Access } from '@/lib/distributor/access-rules';
  * empty page or a silent no-op), and so code paths that use the service-role key cannot skip the assignment.
  */
 
-/** Supplier ids assigned to the caller (own rows only — RLS on distributor_suppliers). */
+/** Supplier ids assigned to the caller (own rows only — RLS on distributor_suppliers and suppliers.user_id). */
 export async function assignedSupplierIds(s: Session): Promise<Set<string>> {
   if (s.isAdmin) return new Set();
   const sb = await createClient();
-  const { data } = await sb.from('distributor_suppliers').select('supplier_id').eq('distributor_id', s.userId);
-  return new Set((data ?? []).map((r) => r.supplier_id as string));
+  const [{ data: links }, { data: own }] = await Promise.all([
+    sb.from('distributor_suppliers').select('supplier_id').eq('distributor_id', s.userId),
+    sb.from('suppliers').select('id').eq('user_id', s.userId),
+  ]);
+  return new Set([
+    ...(links ?? []).map((r) => r.supplier_id as string),
+    ...(own ?? []).map((r) => r.id as string),
+  ]);
 }
 
 /** Supplier of a product, read with the service role (supplier_id only — never returned to the caller). */

@@ -184,6 +184,7 @@ set search_path = public
 as $$
 declare
   v_reasons text[] := '{}'::text[];
+  v_saved_claims text;
 begin
   if new.hs_code is distinct from old.hs_code then
     v_reasons := array_append(v_reasons, 'HS code changed');
@@ -201,17 +202,27 @@ begin
   end if;
 
   if coalesce(array_length(v_reasons, 1), 0) > 0 then
-    update public.dropship_products p
-       set needs_review = true,
-           needs_review_reason = 'Item master updated: ' || array_to_string(v_reasons, ', '),
-           updated_at = now()
-     where p.status = 'active'
-       and exists (
-         select 1
-           from public.dropship_variants dv
-          where dv.product_id = p.id
-            and dv.item_id = new.id
-       );
+    -- Cross-division system side-effect: Sourcing staff or assigned distributors updating a shared Sourcing item_master row
+    -- are not members of DS, so clear request.jwt.claims strictly around this internal needs_review flag update and restore it.
+    v_saved_claims := current_setting('request.jwt.claims', true);
+    perform set_config('request.jwt.claims', '', true);
+    begin
+      update public.dropship_products p
+         set needs_review = true,
+             needs_review_reason = 'Item master updated: ' || array_to_string(v_reasons, ', '),
+             updated_at = now()
+       where p.status = 'active'
+         and exists (
+           select 1
+             from public.dropship_variants dv
+            where dv.product_id = p.id
+              and dv.item_id = new.id
+         );
+    exception when others then
+      perform set_config('request.jwt.claims', coalesce(v_saved_claims, ''), true);
+      raise;
+    end;
+    perform set_config('request.jwt.claims', coalesce(v_saved_claims, ''), true);
   end if;
 
   return new;
@@ -289,15 +300,20 @@ declare
   v_after public.item_master;
   v_oc char(2);
 begin
-  if coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role', 'service_role') = 'service_role' then
-    null;
-  elsif not (is_staff() and not distributor_restricted() and (dropship_can_edit(division_id_of('DS')) or can('products', 'edit'))) then
-    raise exception 'FORBIDDEN';
-  end if;
-
   select * into v_cur from public.item_master where id = p_item_id for update;
-  if v_cur.id is null then
-    raise exception 'NOT_FOUND: item_master row % not found', p_item_id;
+
+  if coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role', 'service_role') = 'service_role' then
+    if v_cur.id is null then
+      raise exception 'NOT_FOUND: item_master row % not found', p_item_id;
+    end if;
+  elsif is_staff() and not distributor_restricted() and (dropship_can_edit(division_id_of('DS')) or can('products', 'edit')) then
+    if v_cur.id is null then
+      raise exception 'NOT_FOUND: item_master row % not found', p_item_id;
+    end if;
+  elsif v_cur.id is not null and v_cur.sourcing_product_id is not null and product_is_my_supplier(v_cur.sourcing_product_id) then
+    null;
+  else
+    raise exception 'FORBIDDEN';
   end if;
 
   v_oc := case
@@ -309,8 +325,8 @@ begin
   update public.item_master
      set hs_code = nullif(btrim(coalesce(p_hs_code, '')), ''),
          hs_code_source = case
+           when nullif(btrim(coalesce(p_hs_code, '')), '') is null then null
            when nullif(btrim(coalesce(p_hs_code, '')), '') is distinct from v_cur.hs_code
-                and nullif(btrim(coalesce(p_hs_code, '')), '') is not null
            then 'manual'
            else hs_code_source
          end,

@@ -16,7 +16,7 @@ export function isRestrictedDistributor(s: AccessSubject): boolean {
 export function supplierAccess(s: AccessSubject, assigned: ReadonlySet<string>, supplierId: string | null | undefined): Access {
   if (!supplierId) return 'not_found';
   if (s.isAdmin || s.permissions.has('products:view')) return 'ok';
-  if (s.roles.includes('distributor')) return assigned.has(supplierId) ? 'ok' : 'forbidden';
+  if (s.roles.includes('distributor') || s.roles.includes('supplier')) return assigned.has(supplierId) ? 'ok' : 'forbidden';
   return 'forbidden';
 }
 
