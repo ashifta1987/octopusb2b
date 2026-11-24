@@ -33,3 +33,22 @@ export async function setVip(orgId: string, on: boolean): Promise<Result> {
   revalidatePath('/admin/assistant');
   return ok(on ? 'Marked as VIP — always routed to a human.' : 'VIP flag removed.');
 }
+
+/** Company-wide Admin only: enable or disable Pay later (Net credit terms) eligibility for a customer organization. */
+export async function setOrgCreditEligibleAction(orgId: string, eligible: boolean, reason: string): Promise<Result> {
+  const g = await guard('customers', 'view');
+  if ('error' in g) return g.error;
+  if (!g.s.isAdmin) return fail('FORBIDDEN: Only a company-wide Admin can change Pay-later credit eligibility.');
+  const cleanReason = reason.trim();
+  if (!cleanReason) return fail('REASON_REQUIRED: Provide a reason for changing Pay-later credit eligibility.');
+  const { error } = await g.sb.rpc('set_org_credit_eligible', {
+    p_org: orgId,
+    p_value: Boolean(eligible),
+    p_reason: cleanReason.slice(0, 500),
+  });
+  if (error) return failAt(error, `/admin/customers/${orgId}`);
+  revalidatePath('/admin/customers');
+  revalidatePath(`/admin/customers/${orgId}`);
+  revalidatePath('/admin/finance/credit');
+  return ok(eligible ? 'Pay later credit eligibility enabled.' : 'Pay later credit eligibility disabled.');
+}

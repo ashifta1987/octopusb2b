@@ -93,7 +93,7 @@ async function OrderDetailContent({ params, searchParams }: { params: Promise<{ 
 
   const creditStatus: CustomerCreditStatus = (creditData as CustomerCreditStatus | null) ?? {
     eligible: false,
-    reason: 'Ask your account manager to set up credit',
+    reason: 'CREDIT_NOT_ELIGIBLE',
     credit_limit_cents: 0,
     unpaid_invoices_cents: 0,
     reserved_cents: 0,

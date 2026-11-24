@@ -70,6 +70,8 @@ test.beforeAll(async () => {
     // Fund customer wallet with US$ 2,000.00 (200000 cents) and approve a Net 30 credit limit of US$ 3,000.00 (300000 cents) via two finance users
     await db.query('begin');
     await db.query(`select set_config('request.jwt.claims', '{"role":"service_role"}', true)`);
+    await db.query(`select set_config('octopus.allow_credit_eligible_write', 'true', true)`);
+    await db.query(`update organizations set credit_eligible = true where id = $1`, [org]);
     await db.query(
       `select post_journal('TEST wallet funding (e2e pay3)', jsonb_build_array(
          jsonb_build_object('account', cash_account('USD'), 'debit', 200000, 'credit', 0),
@@ -326,4 +328,67 @@ test('4. Finance screens: Payment settings matrix, Credit terms, Receivables & a
   await expect(fp.getByTestId('held-protection-total')).toBeVisible();
 
   await finCtx.close();
+});
+
+test('5. S0-fix · Non-eligible customer never sees Pay later card or "Ask your account manager" copy; Admin can toggle credit_eligible with reason', async ({ page, browser }) => {
+  const db = pgClient();
+  await db.connect();
+  try {
+    await assertStagingOrThrow(db);
+    await db.query('begin');
+    await db.query(`select set_config('octopus.allow_credit_eligible_write', 'true', true)`);
+    await db.query(`update organizations set credit_eligible = false where id = $1`, [cust!.orgId]);
+    await db.query('commit');
+  } finally {
+    await db.end();
+  }
+
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  // Create a fresh deposit_pending order to inspect ChooseHowToPay when credit_eligible = false
+  const a = adminClient();
+  const { data: divSRC } = await a.from('divisions').select('id').eq('code', 'SRC').single();
+  const { data: ordRow } = await a
+    .from('orders')
+    .insert({
+      org_id: cust!.orgId,
+      division_id: divSRC!.id,
+      status: 'deposit_pending',
+      title: 'TEST · Non-eligible Pay Later Check',
+      quantity: 10,
+      unit_price_cents: 500,
+      shipping_cents: 0,
+      total_cents: 5000,
+      deposit_pct: 100,
+      deposit_cents: 5000,
+      paid_cents: 0,
+      currency: 'USD',
+      is_seed: true,
+    })
+    .select('id')
+    .single();
+
+  await customerLogin(page, cust!, `/account/orders/${ordRow!.id}`);
+  await page.goto(`/account/orders/${ordRow!.id}`);
+
+  await expect(page.getByTestId('choose-how-to-pay')).toBeVisible();
+  await expect(page.getByTestId('option-card-pay_now')).toBeVisible();
+  await expect(page.getByTestId('option-card-payment_protection')).toBeVisible();
+  await expect(page.getByTestId('option-card-pay_later')).toHaveCount(0);
+  expect(await page.getByTestId('choose-how-to-pay').innerText()).not.toMatch(/Ask your account manager to set up credit/i);
+
+  // Admin toggles credit_eligible back ON from /admin/customers/[id] with a required reason
+  const adminStaff = await createTempStaff('admin');
+  const admCtx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  try {
+    const ap = await admCtx.newPage();
+    await staffLogin(ap, adminStaff, `/admin/customers/${cust!.orgId}`);
+    await ap.goto(`/admin/customers/${cust!.orgId}`);
+    await expect(ap.getByTestId('org-credit-eligible-card')).toBeVisible();
+    await ap.getByTestId('credit-eligible-reason-input').fill('Approved for Net 30 testing');
+    await ap.getByTestId('credit-eligible-toggle-btn').click();
+    await expect(ap.getByTestId('credit-eligible-notice')).toContainText('Pay later credit eligibility enabled', { timeout: 15_000 });
+  } finally {
+    await admCtx.close();
+    await deleteTempStaff(adminStaff);
+  }
 });

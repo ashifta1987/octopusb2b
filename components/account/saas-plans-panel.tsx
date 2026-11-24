@@ -68,8 +68,9 @@ export function SaasPlansPanel({
         <div>
           <h2 className="text-lg font-semibold text-ink">SaaS Plans &amp; Recurring Subscriptions</h2>
           <p className="text-xs text-muted">
-            Subscribe with Pay now (online card / wallet) or Pay later (Net {netDays} credit terms). Payment protection
-            is switched off by default for SaaS subscriptions.
+            {creditEligible
+              ? `Subscribe with Pay now (online card / wallet) or Pay later (Net ${netDays} credit terms). Payment protection is switched off by default for SaaS subscriptions.`
+              : 'Subscribe with Pay now (online card / wallet). Payment protection is switched off by default for SaaS subscriptions.'}
           </p>
         </div>
       </div>
@@ -145,20 +146,22 @@ export function SaasPlansPanel({
                 >
                   Pay now (Wallet)
                 </button>
-                <button
-                  type="button"
-                  disabled={pending || !canPayLater}
-                  onClick={() => handleSubscribe(p.code, 'pay_later', 'wallet')}
-                  data-testid={`saas-pay-later-${p.code}`}
-                  title={
-                    canPayLater
-                      ? `Bill on Net ${netDays} credit terms`
-                      : 'Ask your account manager to set up credit'
-                  }
-                  className="inline-flex min-h-10 items-center rounded-lg border border-line bg-surface px-3.5 py-2 text-xs font-semibold text-ink hover:bg-canvas disabled:opacity-40"
-                >
-                  Pay later (Net {netDays})
-                </button>
+                {creditEligible && (
+                  <button
+                    type="button"
+                    disabled={pending || !canPayLater}
+                    onClick={() => handleSubscribe(p.code, 'pay_later', 'wallet')}
+                    data-testid={`saas-pay-later-${p.code}`}
+                    title={
+                      canPayLater
+                        ? `Bill on Net ${netDays} credit terms`
+                        : 'Insufficient available credit'
+                    }
+                    className="inline-flex min-h-10 items-center rounded-lg border border-line bg-surface px-3.5 py-2 text-xs font-semibold text-ink hover:bg-canvas disabled:opacity-40"
+                  >
+                    Pay later (Net {netDays})
+                  </button>
+                )}
               </div>
             </div>
           );

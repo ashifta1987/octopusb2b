@@ -109,7 +109,10 @@ export async function priceTrial(input: { toCountry: string; fromCountry: string
   try {
     const rates = await getCarrier().priceTrial({ fromCountry: input.fromCountry || 'CN', toCountry: input.toCountry || 'US', weightKg: input.weightKg, parcels: Math.round(input.parcels) });
     return ok(rates);
-  } catch (e) { return fail((e as Error).message); }
+  } catch (e) {
+    const msg = (e as Error).message;
+    return fail(msg === 'Carrier not connected' ? 'Carrier not connected' : msg);
+  }
 }
 
 export async function createShipment(orderId: string, input: { service: string; rateCents: number; weightKg: number; parcels: number; days?: string }): Promise<Result<{ trackingNo: string; labelUrl: string }>> {
@@ -124,7 +127,10 @@ export async function createShipment(orderId: string, input: { service: string; 
   let res;
   try {
     res = await carrier.createShipment({ orderCode: o.code, toCountry: org?.country ?? 'US', toCity: org?.city ?? undefined, weightKg: input.weightKg, parcels: input.parcels, service: input.service });
-  } catch (e) { return fail(`YunExpress: ${(e as Error).message}`); }
+  } catch (e) {
+    const msg = (e as Error).message;
+    return fail(msg === 'Carrier not connected' ? 'Carrier not connected' : `YunExpress: ${msg}`);
+  }
   const { error } = await sb.from('shipments').insert({
     order_id: o.id, org_id: o.org_id, carrier_code: carrier.code, service_code: input.service, tracking_no: res.trackingNo, label_url: res.labelUrl,
     status: 'label_ready', weight_kg: input.weightKg, parcels: input.parcels, rate_cents: Math.round(input.rateCents), currency: CARRIER_RATE_CURRENCY, last_event_at: new Date().toISOString(),
@@ -153,7 +159,7 @@ const NEXT_SHIP: Record<string, { status: string; text: string; loc: string }> =
 export async function simulateTracking(shipmentId: string, kind: 'next' | 'exception'): Promise<Result> {
   const g = await actionSession('orders', 'edit');
   if ('error' in g) return fail(g.error);
-  if (getCarrier().mode !== 'sandbox') return fail('Simulation is only available in sandbox mode.');
+  if (process.env.APP_ENVIRONMENT !== 'staging' || getCarrier().mode !== 'sandbox') return fail('Carrier not connected');
   const sb = await createClient();
   const { data: s } = await sb.from('shipments').select('id, org_id, order_id, status, tracking_no').eq('id', shipmentId).maybeSingle();
   if (!s) return fail('Shipment not found');

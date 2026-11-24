@@ -84,8 +84,24 @@ else {
 }
 await ensureDropshipPrintData();
 await ensureInvoiceSamples();
+await ensureStagingCreditEligible();
 await report();
 await db.end();
+
+// Step S0-fix (Rule S2): Mark the staging test org ("TEST DATA · Divisions") credit_eligible = true in the staging
+// seed script (guarded by assertStagingDatabase), NEVER in migration 209.
+async function ensureStagingCreditEligible() {
+  const org = (await one(`select id from organizations where name = $1`, [ORG]))?.id;
+  if (!org) return;
+  if (!(await one(`select 1 x from information_schema.columns where table_schema = 'public' and table_name = 'organizations' and column_name = 'credit_eligible'`))) return;
+  await db.query('begin');
+  try {
+    await db.query(`select set_config('octopus.allow_credit_eligible_write', 'true', true)`);
+    await db.query(`update organizations set credit_eligible = true where id = $1`, [org]);
+    await db.query('commit');
+    console.log(`✔ staging credit_eligible: "${ORG}" marked credit_eligible = true (in staging seed script only)`);
+  } catch (e) { await db.query('rollback'); console.error('✘ staging credit_eligible:', e.message); process.exitCode = 1; }
+}
 
 // Dropship label + packing slip test data (migration 196). Idempotent, runs every time (also when the organisation
 // already exists): an APPROVED seller profile with an obviously fake brand + return address, and one DS shipment with a

@@ -36,7 +36,7 @@ export function CreditTermsClient({
   currentUserId,
 }: {
   terms: StaffCreditTermRow[];
-  orgs: { id: string; name: string; kyc_status: string }[];
+  orgs: { id: string; name: string; kyc_status: string; credit_eligible?: boolean }[];
   divisions: { id: string; code: string; name: string }[];
   currentUserId: string;
 }) {
@@ -122,7 +122,7 @@ export function CreditTermsClient({
             >
               {orgs.map((o) => (
                 <option key={o.id} value={o.id}>
-                  {o.name} (KYC: {o.kyc_status})
+                  {o.name} (KYC: {o.kyc_status}{o.credit_eligible ? ' · Credit eligible' : ''})
                 </option>
               ))}
             </select>

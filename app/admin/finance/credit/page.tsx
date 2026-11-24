@@ -18,7 +18,7 @@ async function CreditPageContent() {
           'id, org_id, division_id, credit_limit_cents, currency, net_days, status, overdue_blocked, proposed_by, approved_by, note, updated_at, organizations(name, kyc_status), divisions(code)',
         )
         .order('updated_at', { ascending: false }),
-      sb.from('organizations').select('id, name, kyc_status').order('name', { ascending: true }).limit(200),
+      sb.from('organizations').select('id, name, kyc_status, credit_eligible').order('name', { ascending: true }).limit(200),
       sb.from('divisions').select('id, code, name').order('sort_order', { ascending: true }),
       sb
         .from('documents')
@@ -69,7 +69,7 @@ async function CreditPageContent() {
       />
       <CreditTermsClient
         terms={rows}
-        orgs={((orgs ?? []) as unknown) as { id: string; name: string; kyc_status: string }[]}
+        orgs={((orgs ?? []) as unknown) as { id: string; name: string; kyc_status: string; credit_eligible: boolean }[]}
         divisions={((divisions ?? []) as unknown) as { id: string; code: string; name: string }[]}
         currentUserId={s.userId}
       />

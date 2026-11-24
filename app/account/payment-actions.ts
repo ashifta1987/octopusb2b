@@ -43,7 +43,10 @@ export async function startOnlineCheckoutAction(input: {
   });
 
   if (error) {
-    return { ok: false, error: error.message };
+    return {
+      ok: false,
+      error: /CREDIT_NOT_ELIGIBLE/.test(error.message) ? 'CREDIT_NOT_ELIGIBLE' : error.message,
+    };
   }
 
   const res = data as {
@@ -142,13 +145,15 @@ export async function confirmPayLaterAction(input: {
   if (error) {
     return {
       ok: false,
-      error: /CREDIT_LIMIT_EXCEEDED/.test(error.message)
-        ? 'This order exceeds your available credit limit.'
-        : /KYC_NOT_VERIFIED/.test(error.message)
-          ? 'Pay later requires verified company KYC.'
-          : /CREDIT_OVERDUE_BLOCKED/.test(error.message)
-            ? 'Pay-later is paused because an invoice is overdue past the grace period.'
-            : error.message,
+      error: /CREDIT_NOT_ELIGIBLE/.test(error.message)
+        ? 'CREDIT_NOT_ELIGIBLE'
+        : /CREDIT_LIMIT_EXCEEDED/.test(error.message)
+          ? 'This order exceeds your available credit limit.'
+          : /KYC_NOT_VERIFIED/.test(error.message)
+            ? 'Pay later requires verified company KYC.'
+            : /CREDIT_OVERDUE_BLOCKED/.test(error.message)
+              ? 'Pay-later is paused because an invoice is overdue past the grace period.'
+              : error.message,
     };
   }
 
@@ -180,7 +185,10 @@ export async function openPaymentProtectionDisputeAction(input: {
   });
 
   if (error) {
-    return { ok: false, error: error.message };
+    return {
+      ok: false,
+      error: /CREDIT_NOT_ELIGIBLE/.test(error.message) ? 'CREDIT_NOT_ELIGIBLE' : error.message,
+    };
   }
 
   if (input.orderId) revalidatePath(`/account/orders/${input.orderId}`);
@@ -207,7 +215,10 @@ export async function subscribeSaasPlanAction(input: {
   });
 
   if (error) {
-    return { ok: false, error: error.message };
+    return {
+      ok: false,
+      error: /CREDIT_NOT_ELIGIBLE/.test(error.message) ? 'CREDIT_NOT_ELIGIBLE' : error.message,
+    };
   }
 
   const res = data as {

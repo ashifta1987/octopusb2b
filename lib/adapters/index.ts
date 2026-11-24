@@ -21,11 +21,29 @@ export interface CarrierAdapter {
   parseWebhook(body: unknown, headers: Headers): Promise<TrackingEvent[]>;
 }
 
-/** YunExpress adapter. Sandbox mode returns deterministic test data until YUNEXPRESS_APP_ID/KEY are configured (open decision #8). */
+/** YunExpress adapter. Sandbox mode returns deterministic test data ONLY on staging (process.env.APP_ENVIRONMENT === 'staging').
+ *  Anywhere else without live YunExpress credentials, all carrier calls fail closed with "Carrier not connected". */
 export class YunExpressAdapter implements CarrierAdapter {
   readonly code = 'yunexpress';
-  readonly mode: 'sandbox' | 'live' = process.env.YUNEXPRESS_APP_ID && process.env.YUNEXPRESS_MODE === 'live' ? 'live' : 'sandbox';
+  readonly mode: 'sandbox' | 'live';
+  constructor() {
+    const hasLiveKeys = Boolean(
+      (process.env.YUNEXPRESS_APP_ID || process.env.YUNEXPRESS_CUSTOMER_NO) &&
+      process.env.YUNEXPRESS_MODE === 'live' &&
+      process.env.YUNEXPRESS_SANDBOX !== 'true'
+    );
+    this.mode = hasLiveKeys ? 'live' : 'sandbox';
+  }
+  private assertConnectedOrStaging() {
+    if (process.env.APP_ENVIRONMENT === 'production' && (this.mode !== 'live' || process.env.YUNEXPRESS_SANDBOX === 'true')) {
+      throw new Error('Carrier not connected');
+    }
+    if (this.mode !== 'live' && process.env.APP_ENVIRONMENT !== 'staging') {
+      throw new Error('Carrier not connected');
+    }
+  }
   async priceTrial(i: RateRequest): Promise<RateQuote[]> {
+    this.assertConnectedOrStaging();
     const base = Math.max(1, i.weightKg) * 100;
     return [
       { carrier: 'YunExpress', service: 'Global Direct Line (standard)', priceCents: Math.round(base * 6.2), days: '8–12' },
@@ -34,12 +52,20 @@ export class YunExpressAdapter implements CarrierAdapter {
     ];
   }
   async createShipment(i: ShipmentRequest): Promise<ShipmentResult> {
+    this.assertConnectedOrStaging();
     const trackingNo = 'YT' + (Date.now().toString().slice(-10) + Math.floor(Math.random() * 1e4)).padStart(14, '0');
     return { trackingNo, labelUrl: `/api/labels/${trackingNo}?order=${encodeURIComponent(i.orderCode)}` };
   }
-  async getLabel(trackingNo: string) { return `/api/labels/${trackingNo}`; }
-  async cancel() {}
-  async subscribeTracking() {}
+  async getLabel(trackingNo: string) {
+    this.assertConnectedOrStaging();
+    return `/api/labels/${trackingNo}`;
+  }
+  async cancel() {
+    this.assertConnectedOrStaging();
+  }
+  async subscribeTracking() {
+    this.assertConnectedOrStaging();
+  }
   async parseWebhook(body: unknown): Promise<TrackingEvent[]> {
     const b = body as { events?: { id: string; tracking_no: string; status: string; description: string; location?: string; time: string }[] };
     return (b.events ?? []).map((e) => ({ providerEventId: e.id, trackingNo: e.tracking_no, status: e.status, description: e.description, location: e.location, occurredAt: e.time }));

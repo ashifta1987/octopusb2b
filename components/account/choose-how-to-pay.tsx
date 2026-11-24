@@ -124,12 +124,16 @@ export function ChooseHowToPay({
   const payNowEnabled = isOptionEnabled(payNowCfg);
   const protEnabled = isOptionEnabled(protCfg);
   const laterMatrixEnabled = isOptionEnabled(laterCfg);
+  // Rule A3 & S4: Hide the Pay later option completely unless the organization has active Pay-later eligibility
+  const showPayLaterOption = laterMatrixEnabled && Boolean(creditStatus.eligible);
 
   const defaultTab: PaymentOptionCode = payNowEnabled
     ? 'pay_now'
     : protEnabled
       ? 'payment_protection'
-      : 'pay_later';
+      : showPayLaterOption
+        ? 'pay_later'
+        : 'pay_now';
 
   const [selected, setSelected] = useState<PaymentOptionCode>(defaultTab);
 
@@ -147,15 +151,13 @@ export function ChooseHowToPay({
   );
 
   const payLaterAllowed =
-    laterMatrixEnabled && creditStatus.eligible && creditStatus.available_cents >= amountCents;
+    showPayLaterOption && creditStatus.available_cents >= amountCents;
 
-  const payLaterDisabledReason = !laterMatrixEnabled
-    ? 'Not enabled for this service'
-    : !creditStatus.eligible
-      ? creditStatus.reason ?? 'Ask your account manager to set up credit'
-      : creditStatus.available_cents < amountCents
-        ? `Insufficient available credit (${money(creditStatus.available_cents, currency)} available)`
-        : null;
+  const payLaterDisabledReason = !showPayLaterOption
+    ? 'Not eligible for Pay later'
+    : creditStatus.available_cents < amountCents
+      ? `Insufficient available credit (${money(creditStatus.available_cents, currency)} available)`
+      : null;
 
   function handleOnlineCheckout(option: 'pay_now' | 'payment_protection', methodKind: 'card' | 'local_transfer' = 'card') {
     setError(null);
@@ -429,8 +431,8 @@ export function ChooseHowToPay({
         </div>
       )}
 
-      {/* Three mobile-first option cards */}
-      <div className="grid gap-3 md:grid-cols-3">
+      {/* Mobile-first option cards (3 cards for credit-eligible customers, 2 cards otherwise) */}
+      <div className={`grid gap-3 ${showPayLaterOption ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
         {payNowEnabled && (
           <button
             type="button"
@@ -485,7 +487,7 @@ export function ChooseHowToPay({
           </button>
         )}
 
-        {laterMatrixEnabled && (
+        {showPayLaterOption && (
           <button
             type="button"
             onClick={() => setSelected('pay_later')}
@@ -499,7 +501,7 @@ export function ChooseHowToPay({
             <div>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-semibold text-ink">
-                  3. Pay later {creditStatus.eligible ? `(Net ${creditStatus.net_days})` : ''}
+                  3. Pay later (Net {creditStatus.net_days})
                 </span>
                 <span className="font-mono text-xs font-semibold text-ink">{money(amountCents, currency)}</span>
               </div>
@@ -510,9 +512,8 @@ export function ChooseHowToPay({
               </p>
             </div>
             <div className="mt-3 text-[11px] font-medium text-ink">
-              {creditStatus.eligible
-                ? `Available credit: ${money(creditStatus.available_cents, currency)} of ${money(creditStatus.credit_limit_cents, currency)}`
-                : 'Ask your account manager to set up credit'}
+              Available credit: {money(creditStatus.available_cents, currency)} of{' '}
+              {money(creditStatus.credit_limit_cents, currency)}
             </div>
           </button>
         )}
@@ -656,7 +657,7 @@ export function ChooseHowToPay({
         </div>
       )}
 
-      {selected === 'pay_later' && laterMatrixEnabled && (
+      {selected === 'pay_later' && showPayLaterOption && (
         <div className="rounded-xl border border-line bg-surface p-4 space-y-4" data-testid="panel-pay_later">
           {payLaterAllowed ? (
             <div className="flex flex-wrap items-center justify-between gap-4">

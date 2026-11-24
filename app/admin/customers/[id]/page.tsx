@@ -8,6 +8,7 @@ import { Card, EmptyState, PageHeader, Stat, StatusBadge } from '@/components/ui
 import { ToggleSetting } from '@/components/admin/client';
 import { loadAssistantSettings, loadWorkload } from '@/components/admin/assistant/data';
 import { ReassignButton } from '@/components/admin/assistant/reassign-form';
+import { CreditEligibleToggle } from '@/components/admin/credit-eligible-toggle';
 import { COUNTRY_NAMES, fmtDate, humanize } from '@/lib/format';
 import { setVip } from '../actions';
 
@@ -19,7 +20,7 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
   const s = await requireStaffOrManager(`/admin/customers/${id}`, ['customers', 'view']); // managers: RLS shows only their own customers
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const sb = await createClient();
-  const { data: org } = await sb.from('organizations').select('id, name, buyer_code, country, city, business_type, registration_no, website, kyc_status, created_at').eq('id', id).maybeSingle();
+  const { data: org } = await sb.from('organizations').select('id, name, buyer_code, country, city, business_type, registration_no, website, kyc_status, credit_eligible, created_at').eq('id', id).maybeSingle();
   if (!org) notFound();
   const canReassign = s.isAdmin || can(s, 'assistant', 'reassign');
   const path = `/admin/customers/${id}`;
@@ -134,6 +135,10 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
               {s.isAdmin ? <ToggleSetting checked={isVip} label="VIP customer" onToggle={setVip.bind(null, id)} showText /> : <span className="text-sm font-semibold">{isVip ? 'VIP' : 'Not VIP'}</span>}
             </div>
             {!s.isAdmin && <p className="text-xs text-muted mt-2">Admin only.</p>}
+          </Card>
+
+          <Card title="Pay later credit eligibility">
+            <CreditEligibleToggle orgId={id} initialEligible={Boolean(org.credit_eligible)} isAdmin={s.isAdmin} />
           </Card>
 
           <Card title="Assignment history">
