@@ -1,19 +1,35 @@
 -- Down migration for 20261101000212_i2_store_orders_handoffs_and_outbox.sql
 
--- 1. Drop I2 triggers on shipments & drop I2 functions
+-- 1. Unschedule I2 pg_cron job, drop I2 triggers, and drop I2 functions
+do $$
+begin
+  if to_regnamespace('cron') is not null then
+    if exists (select 1 from cron.job where jobname = 'octopus-dropship-domain-events') then
+      perform cron.unschedule('octopus-dropship-domain-events');
+    end if;
+  end if;
+end $$;
+
 drop trigger if exists trg_shipments_emit_dropship_domain_event on public.shipments;
 drop function if exists public.shipments_emit_dropship_event();
 
 drop trigger if exists trg_shipments_dropship_token on public.shipments;
 drop function if exists public.set_shipment_dropship_token();
 
+drop trigger if exists trg_tickets_set_division on public.tickets;
+drop function if exists public.set_ticket_division();
+
+drop trigger if exists trg_store_orders_sync_merchant_status on public.store_orders;
+drop function if exists public.sync_store_order_merchant_status();
+
 drop function if exists public.get_dropship_orders_report(uuid, timestamptz, timestamptz);
 drop function if exists public.get_public_dropship_tracking(text);
+drop function if exists public.get_store_order_escrow_info(uuid);
 drop function if exists public.create_store_order_shipment(uuid, text, text, text, numeric, bigint, shipment_status);
 drop function if exists public.receive_sourcing_handoff_at_3pl(uuid, text);
 drop function if exists public.cancel_store_order(uuid, text);
 drop function if exists public.mark_store_order_paid(uuid, uuid, uuid);
-drop function if exists public.create_dropship_store_order(uuid, text, text, text, text, text, text, jsonb, text, text, numeric, text, text, jsonb, boolean);
+drop function if exists public.create_dropship_store_order(uuid, text, text, text, text, text, jsonb, text, text, numeric, text, text, jsonb, boolean);
 drop function if exists public.process_dropship_domain_events(integer);
 drop function if exists public.emit_dropship_domain_event(text, text, uuid, text, jsonb, uuid, boolean);
 drop function if exists public.resolve_dropship_status_mapping(text, text);
@@ -29,9 +45,15 @@ as $function$
                   case when r.order_id is null then division_id_of(division_code_for_service(r.service_code)) end) $function$;
 
 -- 3. Remove any store_order shipments, unlink tickets, and drop new columns/constraints on tickets, shipments, and warehouse_stock_movements
-update public.tickets set store_order_id = null where store_order_id is not null;
+update public.tickets set store_order_id = null, rfq_id = null, division_id = null
+ where store_order_id is not null or rfq_id is not null or division_id is not null;
+alter table public.tickets drop constraint if exists tickets_link_at_most_one_check;
 alter table public.tickets drop constraint if exists tickets_order_xor_check;
 drop index if exists public.tickets_store_order_id_idx;
+drop index if exists public.tickets_rfq_id_idx;
+drop index if exists public.tickets_division_id_idx;
+alter table public.tickets drop column if exists division_id;
+alter table public.tickets drop column if exists rfq_id;
 alter table public.tickets drop column if exists store_order_id;
 
 delete from public.tracking_events where shipment_id in (select id from public.shipments where store_order_id is not null);

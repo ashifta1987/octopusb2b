@@ -1,23 +1,23 @@
 -- 20261101000212_i2_store_orders_handoffs_and_outbox.sql
--- Phase 1 · Step I2: Store orders core, cross-division handoffs, DB-only domain_events outbox,
--- status_mappings with target column, shipments & tickets store_order_id links, public tracking token,
+-- Phase 1 · Step I2: Store orders core, cross-division handoffs, DB-only domain_events outbox + pg_cron,
+-- status_mappings with target column, shipments & tickets links, public tracking token,
 -- internal_charge_rules (seeded inactive, null rates), and duty_rate_entries.de_minimis_applies_to.
 --
 -- Rules implemented:
---  · Item 18: status_mappings with target ('order' | 'request' | 'brand_project' | 'ticket'). Only order-affecting
---    sources ('3pl_shipment', '3pl_stock', 'sourcing_po') map to target='order' + staff_stage; rfqs -> 'request',
---    brand_projects -> 'brand_project', tickets -> 'ticket'.
+--  · Item 18 & Review 3: status_mappings with target ('order' | 'request' | 'brand_project' | 'ticket'), covering
+--    store_order_stage -> merchant_status, division_handoff, escrow_hold, 3pl_shipment, 3pl_stock, sourcing_po,
+--    sourcing_rfq (-> 'request'), mmb_brand_project (-> 'brand_project'), and support_ticket (-> 'ticket').
 --  · Item 19: store_orders.fx_rate_to_usd nullable, NO default 1; required (> 0) when buyer_currency <> 'USD'.
---  · Item 20: shipments.tracking_token generated via extensions.gen_random_bytes; /t/[token] serves ONLY shipments
---    with store_order_id IS NOT NULL (and never exposes buyer address/phone). Adds store_order_id FK on
---    warehouse_stock_movements, shipments (with parent XOR check), and tickets.
---  · Item 21: domain_events outbox — SQL consumers do DB-only work (3PL stock reserve/release/pick, DS status update,
---    escrow clock start). External pushes marked for the app worker in Step 5/7; supplier-verification pause in Step 11.
+--  · Item 20 & Review 1: shipments.tracking_token via extensions.gen_random_bytes; /t/[token] serves ONLY store_order
+--    shipments. tickets adds store_order_id, rfq_id, and division_id with "at most one" link check (0 or 1 link).
+--  · Item 21 & Review 4–5: domain_events DB-only SQL consumer + pg_cron ('10 seconds'), exponential retry/backoff
+--    (1m/5m/30m/2h -> dead at 5 attempts), duplicate idempotency_key no-op, fast_ship stock shortage -> on_hold
+--    (hold_reason='stock_shortage', no error), label_ready stays 'processing', picked_up -> 'shipped', delivered sets
+--    store_orders.delivered_at and Finance's escrow_holds.auto_release_at (no second copy on store_orders).
 --  · Item 22: internal_charge_rules seeded inactive (active = false) with NULL rates.
---  · Item 23: RLS on store_orders & store_order_items (merchant org members + DS/Finance/Support staff only);
---    buyer address/phone never returned on /t/[token] or in get_dropship_orders_report().
---  · Item 24: duty_rate_entries.de_minimis_applies_to ('duty' | 'duty_and_tax') — below threshold: duty = 0, and
---    import tax as configured per country ('duty' charges tax_bp; 'duty_and_tax' charges 0 tax as well).
+--  · Item 23 & Review 6: store_orders has NO buyer_email (PII columns: buyer_name, buyer_phone, shipping_address only);
+--    RLS restricts store_orders/items to merchant org + DS/Finance staff; 0 buyer PII on /t/[token] or reports.
+--  · Item 24: duty_rate_entries.de_minimis_applies_to ('duty' | 'duty_and_tax').
 --
 -- Down: supabase/migrations/down/20261101000212_i2_store_orders_handoffs_and_outbox.down.sql
 
@@ -420,11 +420,15 @@ end $$;
 comment on function public.get_dropship_order_quote(jsonb, text, text, text, text, numeric, text) is
   'Order-level 4-part quote engine. Processing fee is charged ONCE per order (first + extra*(total_qty-1) + packaging). Combined parcel billed weight = max(sum(actual weight_g), ceil((sum(box_volume_cm3)/divisor)*1000)) rounded up to 100 g step (pack-station re-weigh corrects later within 50 g / 10% tolerance). Duty base: catalogue/product quotes use Octopus product price and mark duties_status = ''estimate''; order quotes use the buyer''s paid item price converted to USD cents at the locked FX rate. Below de_minimis_cents: duty = 0, import tax per de_minimis_applies_to (''duty'' charges tax_bp; ''duty_and_tax'' charges 0). Final customs valuation rule is set in Step 6b.';
 
--- ───────── 2. Item 18: status_mappings with target ('order' | 'request' | 'brand_project' | 'ticket') ─────────
+-- ───────── 2. Item 18 & Review 3: status_mappings with target ('order' | 'request' | 'brand_project' | 'ticket') ─────────
 create table if not exists public.status_mappings (
   id uuid primary key default gen_random_uuid(),
   source_domain text not null check (
-    source_domain in ('3pl_shipment', '3pl_stock', 'sourcing_po', 'sourcing_rfq', 'mmb_brand_project', 'support_ticket')
+    source_domain in (
+      'store_order_stage', 'division_handoff', 'escrow_hold',
+      '3pl_shipment', '3pl_stock', 'sourcing_po',
+      'sourcing_rfq', 'mmb_brand_project', 'support_ticket'
+    )
   ),
   source_status text not null check (btrim(source_status) <> ''),
   target text not null check (target in ('order', 'request', 'brand_project', 'ticket')),
@@ -437,16 +441,15 @@ create table if not exists public.status_mappings (
   unique (source_domain, source_status),
   constraint status_mappings_domain_target_check check (
     (
-      source_domain in ('3pl_shipment', '3pl_stock', 'sourcing_po')
+      source_domain in ('store_order_stage', 'division_handoff', 'escrow_hold', '3pl_shipment', '3pl_stock', 'sourcing_po')
       and target = 'order'
       and staff_stage is not null
       and staff_stage in (
-        'new', 'address_hold', 'awaiting_payment', 'stock_reserved', 'awaiting_procurement',
-        'ready_to_pick', 'packed', 'shipped', 'in_transit', 'delivered', 'exception', 'cancelled', 'returned'
+        'unpaid', 'on_hold', 'paid_to_assign', 'sourcing', 'packing',
+        'handed_over', 'delivered', 'cancelled', 'refunded', 'exception'
       )
       and merchant_status in (
-        'awaiting_payment', 'processing', 'awaiting_stock', 'packed', 'in_transit',
-        'out_for_delivery', 'delivered', 'issue', 'cancelled', 'returned'
+        'awaiting_payment', 'on_hold', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'
       )
     )
     or (source_domain = 'sourcing_rfq' and target = 'request' and staff_stage is null)
@@ -459,7 +462,7 @@ create table if not exists public.status_mappings (
 );
 
 comment on table public.status_mappings is
-  'Cross-division white-label status translation table. Only order-affecting sources map to target=''order'' + staff_stage; rfqs->''request'', brand_projects->''brand_project'', tickets->''ticket''.';
+  'Cross-division white-label status translation table. Order-affecting domains map to target=''order'' + canonical staff_stage/merchant_status; rfqs->''request'', brand_projects->''brand_project'', tickets->''ticket''.';
 
 alter table public.status_mappings enable row level security;
 revoke all on public.status_mappings from public, anon, authenticated;
@@ -473,59 +476,90 @@ create policy status_mappings_staff_read on public.status_mappings
 
 insert into public.status_mappings (source_domain, source_status, target, merchant_status, merchant_label, staff_stage, triggers_escrow_clock, sort)
 values
-  -- 3PL shipment_status enum -> target = 'order'
-  ('3pl_shipment', 'draft',            'order', 'processing',       'Preparing shipment',   'ready_to_pick', false, 10),
-  ('3pl_shipment', 'priced',           'order', 'processing',       'Preparing shipment',   'ready_to_pick', false, 20),
-  ('3pl_shipment', 'created',          'order', 'packed',           'Packed at warehouse',  'packed',        false, 30),
-  ('3pl_shipment', 'label_ready',      'order', 'packed',           'Ready for dispatch',   'packed',        false, 40),
-  ('3pl_shipment', 'picked_up',        'order', 'in_transit',       'Handed to carrier',    'shipped',       false, 50),
-  ('3pl_shipment', 'in_transit',       'order', 'in_transit',       'In transit',           'in_transit',    false, 60),
-  ('3pl_shipment', 'out_for_delivery', 'order', 'out_for_delivery', 'Out for delivery',     'in_transit',    false, 70),
-  ('3pl_shipment', 'delivered',        'order', 'delivered',        'Delivered',            'delivered',     true,  80),
-  ('3pl_shipment', 'exception',        'order', 'issue',            'Delivery exception',   'exception',     false, 90),
-  ('3pl_shipment', 'returned',         'order', 'returned',         'Returned',             'returned',      false, 100),
+  -- 1) Canonical store_orders.staff_stage -> merchant_status (Review item 3)
+  ('store_order_stage', 'unpaid',         'order', 'awaiting_payment', 'Awaiting payment', 'unpaid',         false, 10),
+  ('store_order_stage', 'on_hold',        'order', 'on_hold',          'On hold',          'on_hold',        false, 20),
+  ('store_order_stage', 'paid_to_assign', 'order', 'processing',       'Processing',       'paid_to_assign', false, 30),
+  ('store_order_stage', 'sourcing',       'order', 'processing',       'Processing',       'sourcing',       false, 40),
+  ('store_order_stage', 'packing',        'order', 'processing',       'Processing',       'packing',        false, 50),
+  ('store_order_stage', 'handed_over',    'order', 'shipped',          'Shipped',          'handed_over',    false, 60),
+  ('store_order_stage', 'delivered',      'order', 'delivered',        'Delivered',        'delivered',      true,  70),
+  ('store_order_stage', 'cancelled',      'order', 'cancelled',        'Cancelled',        'cancelled',      false, 80),
+  ('store_order_stage', 'refunded',       'order', 'refunded',         'Refunded',         'refunded',       false, 90),
+  ('store_order_stage', 'exception',      'order', 'on_hold',          'On hold',          'exception',      false, 100),
 
-  -- 3PL warehouse stock lifecycle -> target = 'order'
-  ('3pl_stock', 'reserved',            'order', 'processing',       'Stock reserved',       'stock_reserved',       false, 110),
-  ('3pl_stock', 'picked',              'order', 'packed',           'Picked & packed',      'packed',               false, 120),
-  ('3pl_stock', 'released',            'order', 'cancelled',        'Cancelled',            'cancelled',            false, 130),
-  ('3pl_stock', 'shortage',            'order', 'awaiting_stock',   'Replenishing stock',   'awaiting_procurement', false, 140),
+  -- 2) division_handoffs (dropship_handoffs.status) -> target = 'order'
+  ('division_handoff', 'pending',               'order', 'processing', 'Processing',  'paid_to_assign', false, 110),
+  ('division_handoff', 'reserved',              'order', 'processing', 'Processing',  'packing',        false, 120),
+  ('division_handoff', 'ordered_from_supplier', 'order', 'processing', 'Processing',  'sourcing',       false, 130),
+  ('division_handoff', 'in_transit_to_3pl',     'order', 'processing', 'Processing',  'sourcing',       false, 140),
+  ('division_handoff', 'received_at_3pl',       'order', 'processing', 'Processing',  'packing',        false, 150),
+  ('division_handoff', 'ready_to_pick',         'order', 'processing', 'Processing',  'packing',        false, 160),
+  ('division_handoff', 'packed',                'order', 'processing', 'Processing',  'packing',        false, 170),
+  ('division_handoff', 'shipped',               'order', 'shipped',    'Shipped',     'handed_over',    false, 180),
+  ('division_handoff', 'cancelled',             'order', 'cancelled',  'Cancelled',   'cancelled',      false, 190),
+  ('division_handoff', 'exception',             'order', 'on_hold',    'On hold',     'exception',      false, 200),
 
-  -- Sourcing PO / procurement handoff -> target = 'order' (white-labelled: never exposes factory/supplier names)
-  ('sourcing_po', 'pending_procurement',   'order', 'awaiting_stock', 'Preparing stock',      'awaiting_procurement', false, 210),
-  ('sourcing_po', 'ordered_from_supplier', 'order', 'awaiting_stock', 'Inbound to warehouse', 'awaiting_procurement', false, 220),
-  ('sourcing_po', 'in_transit_to_3pl',     'order', 'awaiting_stock', 'Arriving at warehouse','awaiting_procurement', false, 230),
-  ('sourcing_po', 'received_at_3pl',       'order', 'processing',     'Ready to pack',        'ready_to_pick',        false, 240),
-  ('sourcing_po', 'qc_failed',             'order', 'issue',          'Quality check hold',   'exception',            false, 250),
-  ('sourcing_po', 'cancelled',             'order', 'cancelled',      'Cancelled',            'cancelled',            false, 260),
+  -- 3) Finance escrow_holds.status -> target = 'order'
+  ('escrow_hold', 'held',               'order', 'processing', 'Payment protected',  'paid_to_assign', false, 210),
+  ('escrow_hold', 'partially_released', 'order', 'delivered',  'Partially settled',  'delivered',      false, 220),
+  ('escrow_hold', 'disputed',           'order', 'on_hold',    'Payment on hold',    'exception',      false, 230),
+  ('escrow_hold', 'released',           'order', 'delivered',  'Settled',            'delivered',      false, 240),
+  ('escrow_hold', 'refunded',           'order', 'refunded',   'Refunded',           'refunded',       false, 250),
 
-  -- Sourcing rfq_status enum -> target = 'request' (NEVER order!)
-  ('sourcing_rfq', 'draft',      'request', 'draft',     'Draft request',       null, false, 310),
-  ('sourcing_rfq', 'submitted',  'request', 'submitted', 'Request submitted',   null, false, 320),
-  ('sourcing_rfq', 'assigned',   'request', 'reviewing', 'Sourcing in progress',null, false, 330),
-  ('sourcing_rfq', 'quoting',    'request', 'reviewing', 'Preparing quote',     null, false, 340),
-  ('sourcing_rfq', 'quoted',     'request', 'quoted',    'Quote ready',         null, false, 350),
-  ('sourcing_rfq', 'accepted',   'request', 'accepted',  'Quote accepted',      null, false, 360),
-  ('sourcing_rfq', 'expired',    'request', 'expired',   'Quote expired',       null, false, 370),
-  ('sourcing_rfq', 'cancelled',  'request', 'cancelled', 'Request cancelled',   null, false, 380),
+  -- 4) 3PL shipment_status enum -> target = 'order' (label_ready stays 'processing'; picked_up -> 'shipped'; delivered -> 'delivered')
+  ('3pl_shipment', 'draft',            'order', 'processing', 'Preparing shipment',  'packing',     false, 310),
+  ('3pl_shipment', 'priced',           'order', 'processing', 'Preparing shipment',  'packing',     false, 320),
+  ('3pl_shipment', 'created',          'order', 'processing', 'Packed at warehouse', 'packing',     false, 330),
+  ('3pl_shipment', 'label_ready',      'order', 'processing', 'Label ready',         'packing',     false, 340),
+  ('3pl_shipment', 'picked_up',        'order', 'shipped',    'Handed to carrier',   'handed_over', false, 350),
+  ('3pl_shipment', 'in_transit',       'order', 'shipped',    'In transit',          'handed_over', false, 360),
+  ('3pl_shipment', 'out_for_delivery', 'order', 'shipped',    'Out for delivery',    'handed_over', false, 370),
+  ('3pl_shipment', 'delivered',        'order', 'delivered',  'Delivered',           'delivered',   true,  380),
+  ('3pl_shipment', 'exception',        'order', 'on_hold',    'Delivery exception',  'exception',   false, 390),
+  ('3pl_shipment', 'returned',         'order', 'on_hold',    'Returned',            'exception',   false, 400),
 
-  -- Make-My-Brand brand_projects status -> target = 'brand_project' (NEVER order!)
-  ('mmb_brand_project', 'submitted',  'brand_project', 'submitted',  'Brief submitted',     null, false, 410),
-  ('mmb_brand_project', 'proof',      'brand_project', 'artwork',    'Artwork proof ready', null, false, 420),
-  ('mmb_brand_project', 'sample',     'brand_project', 'sampling',   'Sample in progress',  null, false, 430),
-  ('mmb_brand_project', 'quoted',     'brand_project', 'quoted',     'Production quoted',   null, false, 440),
-  ('mmb_brand_project', 'production', 'brand_project', 'production', 'In production',       null, false, 450),
-  ('mmb_brand_project', 'stocked',    'brand_project', 'stocked',    'Stocked at warehouse',null, false, 460),
-  ('mmb_brand_project', 'closed',     'brand_project', 'closed',     'Closed',              null, false, 470),
+  -- 5) 3PL warehouse stock lifecycle -> target = 'order'
+  ('3pl_stock', 'reserved', 'order', 'processing', 'Stock reserved', 'packing',   false, 410),
+  ('3pl_stock', 'picked',   'order', 'processing', 'Picked & packed','packing',   false, 420),
+  ('3pl_stock', 'released', 'order', 'cancelled',  'Cancelled',      'cancelled', false, 430),
+  ('3pl_stock', 'shortage', 'order', 'on_hold',    'On hold',        'on_hold',   false, 440),
 
-  -- Support ticket_status enum -> target = 'ticket' (NEVER order!)
-  ('support_ticket', 'new',              'ticket', 'open',            'Ticket received',      null, false, 510),
-  ('support_ticket', 'open',             'ticket', 'open',            'In progress',          null, false, 520),
-  ('support_ticket', 'waiting_customer', 'ticket', 'action_needed',   'Waiting for your reply',null, false, 530),
-  ('support_ticket', 'waiting_internal', 'ticket', 'open',            'Under review',         null, false, 540),
-  ('support_ticket', 'resolved',         'ticket', 'resolved',        'Resolved',             null, false, 550),
-  ('support_ticket', 'closed',           'ticket', 'closed',          'Closed',               null, false, 560),
-  ('support_ticket', 'reopened',         'ticket', 'open',            'Reopened',             null, false, 570)
+  -- 6) Sourcing PO / procurement -> target = 'order'
+  ('sourcing_po', 'pending_procurement',   'order', 'processing', 'Processing',  'sourcing',  false, 510),
+  ('sourcing_po', 'ordered_from_supplier', 'order', 'processing', 'Processing',  'sourcing',  false, 520),
+  ('sourcing_po', 'in_transit_to_3pl',     'order', 'processing', 'Processing',  'sourcing',  false, 530),
+  ('sourcing_po', 'received_at_3pl',       'order', 'processing', 'Processing',  'packing',   false, 540),
+  ('sourcing_po', 'qc_failed',             'order', 'on_hold',    'On hold',     'exception', false, 550),
+  ('sourcing_po', 'cancelled',             'order', 'cancelled',  'Cancelled',   'cancelled', false, 560),
+
+  -- 7) Sourcing rfq_status enum -> target = 'request' (NEVER order!)
+  ('sourcing_rfq', 'draft',     'request', 'draft',     'Draft request',        null, false, 610),
+  ('sourcing_rfq', 'submitted', 'request', 'submitted', 'Request submitted',    null, false, 620),
+  ('sourcing_rfq', 'assigned',  'request', 'reviewing', 'Sourcing in progress', null, false, 630),
+  ('sourcing_rfq', 'quoting',   'request', 'reviewing', 'Preparing quote',      null, false, 640),
+  ('sourcing_rfq', 'quoted',    'request', 'quoted',    'Quote ready',          null, false, 650),
+  ('sourcing_rfq', 'accepted',  'request', 'accepted',  'Quote accepted',       null, false, 660),
+  ('sourcing_rfq', 'expired',   'request', 'expired',   'Quote expired',        null, false, 670),
+  ('sourcing_rfq', 'cancelled', 'request', 'cancelled', 'Request cancelled',    null, false, 680),
+
+  -- 8) Make-My-Brand brand_projects status (6 active stages + terminal 'closed') -> target = 'brand_project'
+  ('mmb_brand_project', 'submitted',  'brand_project', 'submitted',  'Brief submitted',      null, false, 710),
+  ('mmb_brand_project', 'proof',      'brand_project', 'artwork',    'Artwork proof ready',  null, false, 720),
+  ('mmb_brand_project', 'sample',     'brand_project', 'sampling',   'Sample in progress',   null, false, 730),
+  ('mmb_brand_project', 'quoted',     'brand_project', 'quoted',     'Production quoted',    null, false, 740),
+  ('mmb_brand_project', 'production', 'brand_project', 'production', 'In production',        null, false, 750),
+  ('mmb_brand_project', 'stocked',    'brand_project', 'stocked',    'Stocked at warehouse', null, false, 760),
+  ('mmb_brand_project', 'closed',     'brand_project', 'closed',     'Closed',               null, false, 770),
+
+  -- 9) Support ticket_status enum -> target = 'ticket'
+  ('support_ticket', 'new',              'ticket', 'open',          'Ticket received',        null, false, 810),
+  ('support_ticket', 'open',             'ticket', 'open',          'In progress',            null, false, 820),
+  ('support_ticket', 'waiting_customer', 'ticket', 'action_needed', 'Waiting for your reply', null, false, 830),
+  ('support_ticket', 'waiting_internal', 'ticket', 'open',          'Under review',           null, false, 840),
+  ('support_ticket', 'resolved',         'ticket', 'resolved',      'Resolved',               null, false, 850),
+  ('support_ticket', 'closed',           'ticket', 'closed',        'Closed',                 null, false, 860),
+  ('support_ticket', 'reopened',         'ticket', 'open',          'Reopened',               null, false, 870)
 on conflict (source_domain, source_status) do nothing;
 
 create or replace function public.resolve_dropship_status_mapping(
@@ -566,7 +600,7 @@ end $$;
 revoke all on function public.resolve_dropship_status_mapping(text, text) from public, anon;
 grant execute on function public.resolve_dropship_status_mapping(text, text) to authenticated, service_role;
 
--- ───────── 3. Item 19 & 23: store_orders, store_order_items, and dropship_handoffs ─────────
+-- ───────── 3. Item 19, 23, Review 5 & 6: store_orders (NO buyer_email, NO escrow_release_at), store_order_items, & dropship_handoffs ─────────
 create sequence if not exists public.seq_store_order
   as bigint
   start with 100001
@@ -597,8 +631,8 @@ create table if not exists public.store_orders (
   channel text not null check (channel in ('shopify', 'woocommerce', 'csv', 'manual', 'api')),
   external_order_id text check (external_order_id is null or btrim(external_order_id) <> ''),
   external_order_name text,
+  -- Review 6: Level 2 buyer shipping data ONLY (buyer_name, buyer_phone, shipping_address) — NO buyer_email!
   buyer_name text not null check (btrim(buyer_name) <> ''),
-  buyer_email text,
   buyer_phone text,
   shipping_address jsonb not null check (jsonb_typeof(shipping_address) = 'object'),
   destination_country char(2) not null check (destination_country ~ '^[A-Z]{2}$'),
@@ -621,19 +655,17 @@ create table if not exists public.store_orders (
   wallet_hold_id uuid references public.wallet_holds(id) on delete set null,
   escrow_hold_id uuid references public.escrow_holds(id) on delete set null,
   merchant_status text not null default 'awaiting_payment' check (
-    merchant_status in (
-      'awaiting_payment', 'processing', 'awaiting_stock', 'packed', 'in_transit',
-      'out_for_delivery', 'delivered', 'issue', 'cancelled', 'returned'
-    )
+    merchant_status in ('awaiting_payment', 'on_hold', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded')
   ),
-  staff_stage text not null default 'awaiting_payment' check (
+  staff_stage text not null default 'unpaid' check (
     staff_stage in (
-      'new', 'address_hold', 'awaiting_payment', 'stock_reserved', 'awaiting_procurement',
-      'ready_to_pick', 'packed', 'shipped', 'in_transit', 'delivered', 'exception', 'cancelled', 'returned'
+      'unpaid', 'on_hold', 'paid_to_assign', 'sourcing', 'packing',
+      'handed_over', 'delivered', 'cancelled', 'refunded', 'exception'
     )
   ),
+  hold_reason text,
+  -- Review 5: store_orders keeps ONLY delivered_at; Finance owns escrow release date on escrow_holds.auto_release_at
   delivered_at timestamptz,
-  escrow_release_at timestamptz,
   cancelled_at timestamptz,
   cancel_reason text,
   division_id uuid not null default division_id_of('DS') references public.divisions(id) on delete restrict,
@@ -665,6 +697,28 @@ create index if not exists store_orders_created_by_idx on public.store_orders (c
 comment on column public.store_orders.fx_rate_to_usd is
   'Locked FX multiplier to USD at order import/checkout. Nullable (no default 1) when buyer_currency = USD; required (> 0) when buyer_currency <> USD.';
 
+-- Keep store_orders.merchant_status strictly derived from store_orders.staff_stage via status_mappings ('store_order_stage')
+create or replace function public.sync_store_order_merchant_status()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_map jsonb;
+begin
+  v_map := public.resolve_dropship_status_mapping('store_order_stage', new.staff_stage);
+  if v_map is not null then
+    new.merchant_status := v_map ->> 'merchant_status';
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists trg_store_orders_sync_merchant_status on public.store_orders;
+create trigger trg_store_orders_sync_merchant_status
+  before insert or update of staff_stage on public.store_orders
+  for each row execute function public.sync_store_order_merchant_status();
+
 create table if not exists public.store_order_items (
   id uuid primary key default gen_random_uuid(),
   store_order_id uuid not null references public.store_orders(id) on delete cascade,
@@ -688,18 +742,18 @@ create index if not exists store_order_items_product_idx on public.store_order_i
 create index if not exists store_order_items_variant_idx on public.store_order_items (variant_id);
 create index if not exists store_order_items_item_idx on public.store_order_items (item_id);
 
--- Item 23: RLS on store_orders & store_order_items (merchant org members + DS staff roles only; column grants hide internal fields)
+-- Item 23: RLS on store_orders & store_order_items (merchant org members + DS/Finance staff; column grants hide internal fields)
 alter table public.store_orders enable row level security;
 alter table public.store_order_items enable row level security;
 
 revoke all on public.store_orders from public, anon, authenticated;
 grant select (
   id, order_number, org_id, channel, external_order_id, external_order_name,
-  buyer_name, buyer_email, buyer_phone, shipping_address, destination_country,
+  buyer_name, buyer_phone, shipping_address, destination_country,
   buyer_currency, fx_rate_to_usd, shipping_method, incoterm, billed_weight_g,
   product_cents, processing_cents, shipping_cents, duties_cents, total_cents,
   payment_state, wallet_hold_id, escrow_hold_id, merchant_status,
-  delivered_at, escrow_release_at, cancelled_at, cancel_reason, division_id,
+  delivered_at, cancelled_at, cancel_reason, division_id,
   created_at, updated_at
 ) on public.store_orders to authenticated;
 grant all on public.store_orders to service_role;
@@ -826,7 +880,7 @@ create policy dropship_handoffs_staff_read on public.dropship_handoffs
     )
   );
 
--- ───────── 4. Item 21: domain_events & DB-only SQL consumer (zero external HTTP calls) ─────────
+-- ───────── 4. Item 21 & Review 4: domain_events (retry/backoff + dead-letter + duplicate-key no-op + pg_cron) ─────────
 create table if not exists public.domain_events (
   id uuid primary key default gen_random_uuid(),
   event_type text not null check (btrim(event_type) <> ''),
@@ -834,20 +888,25 @@ create table if not exists public.domain_events (
   aggregate_id uuid not null,
   idempotency_key text not null unique check (btrim(idempotency_key) <> ''),
   payload jsonb not null default '{}'::jsonb,
-  db_status text not null default 'pending' check (db_status in ('pending', 'processed', 'failed')),
+  db_status text not null default 'pending' check (db_status in ('pending', 'retry', 'processed', 'dead')),
   external_status text not null default 'not_applicable' check (
     external_status in ('not_applicable', 'pending', 'dispatched', 'done', 'dead')
   ),
   attempts integer not null default 0 check (attempts >= 0),
   last_error text,
+  available_at timestamptz not null default now(),
   division_id uuid references public.divisions(id) on delete restrict,
   trace_id text,
   created_at timestamptz not null default now(),
   processed_at timestamptz
 );
 
-create index if not exists domain_events_db_pending_idx on public.domain_events (db_status, created_at) where db_status = 'pending';
-create index if not exists domain_events_ext_pending_idx on public.domain_events (external_status, created_at) where external_status = 'pending';
+create index if not exists domain_events_db_due_idx
+  on public.domain_events (available_at, created_at)
+  where db_status in ('pending', 'retry');
+create index if not exists domain_events_ext_pending_idx
+  on public.domain_events (external_status, created_at)
+  where external_status = 'pending';
 create index if not exists domain_events_agg_idx on public.domain_events (aggregate_type, aggregate_id);
 create index if not exists domain_events_division_idx on public.domain_events (division_id);
 
@@ -860,7 +919,7 @@ create table if not exists public.domain_event_consumptions (
 );
 
 comment on table public.domain_events is
-  'Dropship & cross-division domain event outbox. SQL consumers perform DB-only work (stock reserve/release/pick, status_mappings updates, escrow clock start). External store/webhook pushes run in the app worker (Steps 5/7); supplier-verification pause is added in Step 11.';
+  'Dropship & cross-division domain event outbox. SQL consumers perform DB-only work with 5-attempt exponential retry/backoff (1m/5m/30m/2h -> dead) and duplicate idempotency_key no-ops. External pushes run in the app worker (Steps 5/7); supplier-verification pause is added in Step 11.';
 
 alter table public.domain_events enable row level security;
 alter table public.domain_event_consumptions enable row level security;
@@ -878,6 +937,7 @@ create policy domain_event_consumptions_staff_read on public.domain_event_consum
   for select to authenticated
   using (is_staff() and not distributor_restricted());
 
+-- Duplicate idempotency_key is a strict NO-OP (never resets a processed/retry/dead event)
 create or replace function public.emit_dropship_domain_event(
   p_event_type text,
   p_aggregate_type text,
@@ -893,6 +953,7 @@ security definer
 set search_path = public
 as $$
 declare
+  v_key text := btrim(p_idempotency_key);
   v_id uuid;
 begin
   insert into public.domain_events (
@@ -903,20 +964,25 @@ begin
     payload,
     db_status,
     external_status,
+    available_at,
     division_id
   ) values (
     btrim(p_event_type),
     btrim(p_aggregate_type),
     p_aggregate_id,
-    btrim(p_idempotency_key),
+    v_key,
     coalesce(p_payload, '{}'::jsonb),
     'pending',
     case when coalesce(p_needs_external_push, false) then 'pending' else 'not_applicable' end,
+    now(),
     p_division_id
   )
-  on conflict (idempotency_key) do update
-    set idempotency_key = excluded.idempotency_key
+  on conflict (idempotency_key) do nothing
   returning id into v_id;
+
+  if v_id is null then
+    select id into v_id from public.domain_events where idempotency_key = v_key;
+  end if;
 
   return v_id;
 end $$;
@@ -924,7 +990,7 @@ end $$;
 revoke all on function public.emit_dropship_domain_event(text, text, uuid, text, jsonb, uuid, boolean) from public, anon;
 grant execute on function public.emit_dropship_domain_event(text, text, uuid, text, jsonb, uuid, boolean) to authenticated, service_role;
 
--- ───────── 5. Item 20: shipments (store_order_id + XOR check + tracking_token via extensions.gen_random_bytes) & tickets link ─────────
+-- ───────── 5. Item 20 & Review 1: shipments (store_order_id + tracking_token) & tickets (store_order_id + rfq_id + division_id + at-most-one) ─────────
 alter table public.shipments alter column order_id drop not null;
 alter table public.shipments
   add column if not exists store_order_id uuid references public.store_orders(id) on delete restrict,
@@ -947,7 +1013,6 @@ alter table public.shipments
 create index if not exists shipments_store_order_id_idx on public.shipments (store_order_id);
 grant select (store_order_id, tracking_token) on public.shipments to anon, authenticated;
 
--- Update division_of_shipment(r shipments) so dropship store_orders shipments inherit store_orders.division_id ('DS')
 create or replace function public.division_of_shipment(r shipments)
 returns uuid
 language sql
@@ -962,7 +1027,6 @@ as $$
   )
 $$;
 
--- Automatically mint cryptographic tracking_token via extensions.gen_random_bytes(18) ONLY for store_order shipments
 create or replace function public.set_shipment_dropship_token()
 returns trigger
 language plpgsql
@@ -985,18 +1049,67 @@ create trigger trg_shipments_dropship_token
   before insert or update of store_order_id, tracking_token on public.shipments
   for each row execute function public.set_shipment_dropship_token();
 
--- Link support tickets optionally to store_orders (XOR with wholesale order_id)
+-- Review 1: tickets adds store_order_id, rfq_id, and division_id, with "at most one" link check (0 or 1 link allowed)
 alter table public.tickets
-  add column if not exists store_order_id uuid references public.store_orders(id) on delete set null;
+  add column if not exists store_order_id uuid references public.store_orders(id) on delete set null,
+  add column if not exists rfq_id uuid references public.rfqs(id) on delete set null,
+  add column if not exists division_id uuid references public.divisions(id) on delete restrict;
 
 alter table public.tickets drop constraint if exists tickets_order_xor_check;
+alter table public.tickets drop constraint if exists tickets_link_at_most_one_check;
 alter table public.tickets
-  add constraint tickets_order_xor_check check (not (order_id is not null and store_order_id is not null));
+  add constraint tickets_link_at_most_one_check check (
+    num_nonnulls(order_id, store_order_id, rfq_id) <= 1
+  );
+
+-- Backfill division_id on existing order-linked tickets (general unlinked tickets stay NULL = company-wide)
+update public.tickets t
+   set division_id = o.division_id
+  from public.orders o
+ where t.order_id = o.id
+   and t.division_id is null;
+
+create or replace function public.set_ticket_division()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.division_id is not null and (
+    tg_op = 'INSERT'
+    or (
+      new.order_id is not distinct from old.order_id
+      and new.store_order_id is not distinct from old.store_order_id
+      and new.rfq_id is not distinct from old.rfq_id
+    )
+  ) then
+    return new;
+  end if;
+
+  if new.order_id is not null then
+    new.division_id := (select division_id from public.orders where id = new.order_id);
+  elsif new.store_order_id is not null then
+    new.division_id := (select division_id from public.store_orders where id = new.store_order_id);
+  elsif new.rfq_id is not null then
+    new.division_id := (select division_id from public.rfqs where id = new.rfq_id);
+  else
+    new.division_id := null;
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists trg_tickets_set_division on public.tickets;
+create trigger trg_tickets_set_division
+  before insert or update of order_id, store_order_id, rfq_id, division_id on public.tickets
+  for each row execute function public.set_ticket_division();
 
 create index if not exists tickets_store_order_id_idx on public.tickets (store_order_id);
-grant select (store_order_id) on public.tickets to anon, authenticated;
+create index if not exists tickets_rfq_id_idx on public.tickets (rfq_id);
+create index if not exists tickets_division_id_idx on public.tickets (division_id);
+grant select (store_order_id, rfq_id, division_id) on public.tickets to anon, authenticated;
 
--- ───────── 6. Item 21: DB-only SQL consumer process_dropship_domain_events() ─────────
+-- ───────── 6. Item 21 & Review 4–5: DB-only SQL consumer process_dropship_domain_events() + pg_cron ─────────
 create or replace function public.process_dropship_domain_events(p_limit integer default 100)
 returns jsonb
 language plpgsql
@@ -1006,25 +1119,29 @@ as $$
 declare
   ev public.domain_events;
   v_processed integer := 0;
-  v_failed integer := 0;
+  v_retried integer := 0;
+  v_dead integer := 0;
   v_so public.store_orders;
   v_it record;
   v_ws public.warehouse_stock;
   v_avail integer;
-  v_all_reserved boolean;
+  v_shortage boolean;
+  v_has_sourcing boolean;
   v_map jsonb;
   v_ship public.shipments;
   v_ho public.dropship_handoffs;
-  v_sp_id uuid;
+  v_deliv_at timestamptz;
+  v_next_attempt integer;
+  v_backoff interval;
   v_prev_role text;
 begin
-  -- Run internal stock/handoff movements with service_role bypass inside SECURITY DEFINER, restoring caller claim cleanly
   v_prev_role := coalesce(current_setting('request.jwt.claims', true), '');
 
   for ev in
     select *
       from public.domain_events
-     where db_status = 'pending'
+     where db_status in ('pending', 'retry')
+       and available_at <= now()
      order by created_at asc
      limit greatest(1, least(coalesce(p_limit, 100), 500))
      for update skip locked
@@ -1043,26 +1160,51 @@ begin
 
       perform set_config('request.jwt.claims', '', true);
 
-      if ev.event_type = 'store_order.paid' then
+      if ev.event_type = 'domain_event.test_poison' then
+        raise exception 'SIMULATED_OUTBOX_FAILURE: %', coalesce(ev.payload ->> 'reason', 'poison event');
+
+      elsif ev.event_type = 'store_order.paid' then
         select * into v_so from public.store_orders where id = ev.aggregate_id for update;
         if v_so.id is not null and v_so.cancelled_at is null then
-          v_all_reserved := true;
+          -- First check if any fast_ship line has insufficient 3PL stock (Review 4: on_hold + hold_reason='stock_shortage', no error)
+          v_shortage := false;
           for v_it in
-            select soi.*, dv.supplier_product_id
+            select soi.*
               from public.store_order_items soi
-              join public.dropship_variants dv on dv.id = soi.variant_id
              where soi.store_order_id = v_so.id
-             order by soi.created_at asc, soi.id asc
+               and soi.fulfilment_type = 'fast_ship'
           loop
-            if v_it.fulfilment_type = 'fast_ship' then
-              select * into v_ws
-                from public.warehouse_stock
-               where warehouse_id = 'SZ-01' and item_id = v_it.item_id;
-              v_avail := greatest(0, coalesce(v_ws.on_hand_qty, 0) - coalesce(v_ws.reserved_qty, 0));
-              if v_avail >= v_it.qty or exists (
-                select 1 from public.warehouse_stock_movements m
-                 where m.warehouse_id = 'SZ-01' and m.item_id = v_it.item_id and m.store_order_id = v_so.id and m.kind = 'reserve'
-              ) then
+            select * into v_ws
+              from public.warehouse_stock
+             where warehouse_id = 'SZ-01' and item_id = v_it.item_id;
+            v_avail := greatest(0, coalesce(v_ws.on_hand_qty, 0) - coalesce(v_ws.reserved_qty, 0));
+            if v_avail < v_it.qty and not exists (
+              select 1 from public.warehouse_stock_movements m
+               where m.warehouse_id = 'SZ-01' and m.item_id = v_it.item_id and m.store_order_id = v_so.id and m.kind = 'reserve'
+            ) then
+              v_shortage := true;
+              exit;
+            end if;
+          end loop;
+
+          if v_shortage then
+            v_map := public.resolve_dropship_status_mapping('3pl_stock', 'shortage');
+            update public.store_orders
+               set staff_stage = v_map ->> 'staff_stage',
+                   merchant_status = v_map ->> 'merchant_status',
+                   hold_reason = 'stock_shortage',
+                   updated_at = now()
+             where id = v_so.id;
+          else
+            v_has_sourcing := false;
+            for v_it in
+              select soi.*, dv.supplier_product_id
+                from public.store_order_items soi
+                join public.dropship_variants dv on dv.id = soi.variant_id
+               where soi.store_order_id = v_so.id
+               order by soi.created_at asc, soi.id asc
+            loop
+              if v_it.fulfilment_type = 'fast_ship' then
                 perform public.record_warehouse_stock_movement(
                   v_it.item_id, 'reserve', v_it.qty, 'Store order ' || v_so.order_number || ' paid', 'SZ-01', v_so.id
                 );
@@ -1073,36 +1215,29 @@ begin
                 )
                 on conflict do nothing;
               else
-                v_all_reserved := false;
+                v_has_sourcing := true;
                 insert into public.dropship_handoffs (
                   store_order_id, store_order_item_id, handoff_type, from_division_id, to_division_id, supplier_product_id, status
                 ) values (
-                  v_so.id, v_it.id, 'sourcing_procurement', division_id_of('DS'), division_id_of('SRC'), v_it.supplier_product_id, 'pending'
+                  v_so.id, v_it.id, 'sourcing_procurement', division_id_of('DS'), division_id_of('SRC'), v_it.supplier_product_id, 'ordered_from_supplier'
                 )
                 on conflict do nothing;
               end if;
+            end loop;
+
+            if v_has_sourcing then
+              v_map := public.resolve_dropship_status_mapping('division_handoff', 'ordered_from_supplier');
             else
-              v_all_reserved := false;
-              insert into public.dropship_handoffs (
-                store_order_id, store_order_item_id, handoff_type, from_division_id, to_division_id, supplier_product_id, status
-              ) values (
-                v_so.id, v_it.id, 'sourcing_procurement', division_id_of('DS'), division_id_of('SRC'), v_it.supplier_product_id, 'pending'
-              )
-              on conflict do nothing;
+              v_map := public.resolve_dropship_status_mapping('division_handoff', 'reserved');
             end if;
-          end loop;
 
-          if v_all_reserved then
-            v_map := public.resolve_dropship_status_mapping('3pl_stock', 'reserved');
-          else
-            v_map := public.resolve_dropship_status_mapping('sourcing_po', 'pending_procurement');
+            update public.store_orders
+               set staff_stage = v_map ->> 'staff_stage',
+                   merchant_status = v_map ->> 'merchant_status',
+                   hold_reason = null,
+                   updated_at = now()
+             where id = v_so.id;
           end if;
-
-          update public.store_orders
-             set merchant_status = v_map ->> 'merchant_status',
-                 staff_stage = v_map ->> 'staff_stage',
-                 updated_at = now()
-           where id = v_so.id;
         end if;
 
       elsif ev.event_type = 'store_order.cancelled' then
@@ -1134,8 +1269,8 @@ begin
 
           v_map := public.resolve_dropship_status_mapping('3pl_stock', 'released');
           update public.store_orders
-             set merchant_status = v_map ->> 'merchant_status',
-                 staff_stage = v_map ->> 'staff_stage',
+             set staff_stage = v_map ->> 'staff_stage',
+                 merchant_status = v_map ->> 'merchant_status',
                  cancelled_at = coalesce(cancelled_at, now()),
                  updated_at = now()
            where id = v_so.id;
@@ -1147,8 +1282,8 @@ begin
           select * into v_so from public.store_orders where id = v_ship.store_order_id for update;
           v_map := public.resolve_dropship_status_mapping('3pl_shipment', coalesce(ev.payload ->> 'status', v_ship.status::text));
 
-          -- Deduct physical stock ('pick') once parcel is picked_up / in_transit / out_for_delivery / delivered
-          if coalesce(ev.payload ->> 'status', v_ship.status::text) in ('picked_up', 'in_transit', 'out_for_delivery', 'delivered') then
+          -- Physical pick stock movement runs when parcel is packed/label_ready or handed over (idempotent per order+item)
+          if coalesce(ev.payload ->> 'status', v_ship.status::text) in ('label_ready', 'picked_up', 'in_transit', 'out_for_delivery', 'delivered') then
             for v_it in
               select m.warehouse_id, m.item_id, m.qty
                 from public.warehouse_stock_movements m
@@ -1163,36 +1298,39 @@ begin
                  )
             loop
               perform public.record_warehouse_stock_movement(
-                v_it.item_id, 'pick', v_it.qty, 'Shipment ' || v_ship.code || ' dispatched', v_it.warehouse_id, v_so.id
+                v_it.item_id, 'pick', v_it.qty, 'Shipment ' || v_ship.code || ' packed', v_it.warehouse_id, v_so.id
               );
             end loop;
 
             update public.dropship_handoffs
-               set status = 'shipped',
+               set status = case
+                     when coalesce(ev.payload ->> 'status', v_ship.status::text) in ('picked_up', 'in_transit', 'out_for_delivery', 'delivered') then 'shipped'
+                     else 'packed'
+                   end,
                    updated_at = now()
              where store_order_id = v_so.id
                and handoff_type = 'warehouse_pick_pack';
           end if;
 
           if v_map is not null then
+            v_deliv_at := case
+              when (v_map ->> 'triggers_escrow_clock')::boolean then coalesce(v_so.delivered_at, now())
+              else v_so.delivered_at
+            end;
+
             update public.store_orders
-               set merchant_status = v_map ->> 'merchant_status',
-                   staff_stage = v_map ->> 'staff_stage',
-                   delivered_at = case
-                     when (v_map ->> 'triggers_escrow_clock')::boolean then coalesce(delivered_at, now())
-                     else delivered_at
-                   end,
-                   escrow_release_at = case
-                     when (v_map ->> 'triggers_escrow_clock')::boolean then coalesce(escrow_release_at, now() + interval '7 days')
-                     else escrow_release_at
-                   end,
+               set staff_stage = v_map ->> 'staff_stage',
+                   merchant_status = v_map ->> 'merchant_status',
+                   delivered_at = v_deliv_at,
                    updated_at = now()
              where id = v_so.id;
 
-            if (v_map ->> 'triggers_escrow_clock')::boolean and v_so.escrow_hold_id is not null then
+            -- Review 5: Finance owns the escrow release date on escrow_holds.auto_release_at (no second copy on store_orders)
+            if (v_map ->> 'triggers_escrow_clock')::boolean then
               update public.escrow_holds
-                 set release_due_at = coalesce(release_due_at, now() + interval '7 days')
-               where id = v_so.escrow_hold_id
+                 set delivered_at = coalesce(delivered_at, v_deliv_at),
+                     auto_release_at = coalesce(auto_release_at, v_deliv_at + make_interval(days => auto_release_days))
+               where (id = v_so.escrow_hold_id or (target_type = 'dropship_order' and target_id = v_so.id))
                  and status = 'held';
             end if;
           end if;
@@ -1240,8 +1378,8 @@ begin
           ) then
             v_map := public.resolve_dropship_status_mapping('sourcing_po', 'received_at_3pl');
             update public.store_orders
-               set merchant_status = v_map ->> 'merchant_status',
-                   staff_stage = v_map ->> 'staff_stage',
+               set staff_stage = v_map ->> 'staff_stage',
+                   merchant_status = v_map ->> 'merchant_status',
                    updated_at = now()
              where id = v_so.id;
           end if;
@@ -1262,20 +1400,58 @@ begin
       perform set_config('request.jwt.claims', v_prev_role, true);
     exception when others then
       perform set_config('request.jwt.claims', v_prev_role, true);
-      update public.domain_events
-         set db_status = 'failed',
-             attempts = attempts + 1,
-             last_error = left(sqlerrm, 1000)
-       where id = ev.id;
-      v_failed := v_failed + 1;
+      v_next_attempt := ev.attempts + 1;
+      if v_next_attempt >= 5 then
+        update public.domain_events
+           set db_status = 'dead',
+               attempts = v_next_attempt,
+               last_error = left(sqlerrm, 1000)
+         where id = ev.id;
+        perform write_audit(
+          'domain_event.dead_letter',
+          'domain_events',
+          ev.id::text,
+          jsonb_build_object('event_type', ev.event_type, 'attempts', v_next_attempt, 'error', left(sqlerrm, 300))
+        );
+        v_dead := v_dead + 1;
+      else
+        v_backoff := case v_next_attempt
+          when 1 then interval '1 minute'
+          when 2 then interval '5 minutes'
+          when 3 then interval '30 minutes'
+          else interval '2 hours'
+        end;
+        update public.domain_events
+           set db_status = 'retry',
+               attempts = v_next_attempt,
+               available_at = now() + v_backoff,
+               last_error = left(sqlerrm, 1000)
+         where id = ev.id;
+        v_retried := v_retried + 1;
+      end if;
     end;
   end loop;
 
-  return jsonb_build_object('processed', v_processed, 'failed', v_failed);
+  return jsonb_build_object('processed', v_processed, 'retried', v_retried, 'dead', v_dead);
 end $$;
 
 revoke all on function public.process_dropship_domain_events(integer) from public, anon;
 grant execute on function public.process_dropship_domain_events(integer) to authenticated, service_role;
+
+-- Schedule pg_cron worker ('octopus-dropship-domain-events' every 10 seconds; pure DB-only no-op when 0 events pending)
+do $$
+begin
+  if to_regnamespace('cron') is not null then
+    if exists (select 1 from cron.job where jobname = 'octopus-dropship-domain-events') then
+      perform cron.unschedule('octopus-dropship-domain-events');
+    end if;
+    perform cron.schedule(
+      'octopus-dropship-domain-events',
+      '10 seconds',
+      'select public.process_dropship_domain_events(100)'
+    );
+  end if;
+end $$;
 
 -- Trigger on shipments status updates for store_orders -> emit domain_event & run DB-only consumer
 create or replace function public.shipments_emit_dropship_event()
@@ -1310,14 +1486,13 @@ create trigger trg_shipments_emit_dropship_domain_event
   after insert or update of status on public.shipments
   for each row execute function public.shipments_emit_dropship_event();
 
--- ───────── 7. Core store_orders pipeline RPCs + Public tracking & Sanitized reporting RPCs ─────────
+-- ───────── 7. Core store_orders pipeline RPCs + Escrow Join RPC + Public tracking & Sanitized reporting RPCs ─────────
 create or replace function public.create_dropship_store_order(
   p_org_id uuid,
   p_channel text,
   p_external_order_id text,
   p_external_order_name text,
   p_buyer_name text,
-  p_buyer_email text,
   p_buyer_phone text,
   p_shipping_address jsonb,
   p_destination_country text,
@@ -1370,7 +1545,6 @@ begin
     end if;
   end if;
 
-  -- Item 19: fx_rate_to_usd nullable with NO default 1; strictly required when buyer_currency <> 'USD'
   if v_cur !~ '^[A-Z]{3}$' then
     raise exception 'INVALID_CURRENCY: buyer_currency must be a 3-letter ISO code';
   end if;
@@ -1420,7 +1594,6 @@ begin
     external_order_id,
     external_order_name,
     buyer_name,
-    buyer_email,
     buyer_phone,
     shipping_address,
     destination_country,
@@ -1448,7 +1621,6 @@ begin
     v_ext_id,
     nullif(btrim(coalesce(p_external_order_name, '')), ''),
     btrim(p_buyer_name),
-    nullif(btrim(coalesce(p_buyer_email, '')), ''),
     nullif(btrim(coalesce(p_buyer_phone, '')), ''),
     p_shipping_address,
     v_country,
@@ -1467,13 +1639,12 @@ begin
     (v_quote -> 'version_ids' ->> 'duty_rate_version_id')::uuid,
     'unpaid',
     'awaiting_payment',
-    'awaiting_payment',
+    'unpaid',
     coalesce(p_is_test, false),
     v_uid
   )
   returning id, order_number into v_order_id, v_order_no;
 
-  -- Increment used_count on the locked shipping_rate_card
   if (v_quote -> 'version_ids' ->> 'shipping_rate_card_id') is not null then
     update public.shipping_rate_cards
        set used_count = used_count + 1
@@ -1553,12 +1724,72 @@ begin
     'store_order_id', v_order_id,
     'order_number', v_order_no,
     'merchant_status', 'awaiting_payment',
+    'staff_stage', 'unpaid',
     'quote', v_quote
   );
 end $$;
 
-revoke all on function public.create_dropship_store_order(uuid, text, text, text, text, text, text, jsonb, text, text, numeric, text, text, jsonb, boolean) from public, anon;
-grant execute on function public.create_dropship_store_order(uuid, text, text, text, text, text, text, jsonb, text, text, numeric, text, text, jsonb, boolean) to authenticated, service_role;
+revoke all on function public.create_dropship_store_order(uuid, text, text, text, text, text, jsonb, text, text, numeric, text, text, jsonb, boolean) from public, anon;
+grant execute on function public.create_dropship_store_order(uuid, text, text, text, text, text, jsonb, text, text, numeric, text, text, jsonb, boolean) to authenticated, service_role;
+
+-- Review 5: Read escrow release date directly from Finance's escrow_holds row (no duplicate column on store_orders)
+create or replace function public.get_store_order_escrow_info(p_store_order_id uuid)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_is_staff boolean := coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role', 'service_role') = 'service_role'
+    or (v_uid is not null and is_staff() and not distributor_restricted() and (in_division(division_id_of('DS')) or can('finance', 'view')));
+  v_so public.store_orders;
+  v_eh public.escrow_holds;
+  v_eh_map jsonb;
+begin
+  select * into v_so from public.store_orders where id = p_store_order_id;
+  if v_so.id is null then
+    return null;
+  end if;
+  if not v_is_staff and (v_uid is null or v_so.org_id not in (select my_org_ids())) then
+    raise exception 'FORBIDDEN';
+  end if;
+
+  select *
+    into v_eh
+    from public.escrow_holds eh
+   where eh.id = v_so.escrow_hold_id
+      or (eh.target_type = 'dropship_order' and eh.target_id = v_so.id)
+   order by eh.created_at desc
+   limit 1;
+
+  if v_eh.id is null then
+    return jsonb_build_object(
+      'store_order_id', v_so.id,
+      'delivered_at', v_so.delivered_at,
+      'has_escrow_hold', false,
+      'escrow_status', null,
+      'auto_release_at', null
+    );
+  end if;
+
+  v_eh_map := public.resolve_dropship_status_mapping('escrow_hold', v_eh.status);
+
+  return jsonb_build_object(
+    'store_order_id', v_so.id,
+    'delivered_at', v_so.delivered_at,
+    'has_escrow_hold', true,
+    'escrow_hold_id', v_eh.id,
+    'escrow_status', v_eh.status,
+    'merchant_escrow_label', v_eh_map ->> 'merchant_label',
+    'auto_release_days', v_eh.auto_release_days,
+    'auto_release_at', v_eh.auto_release_at
+  );
+end $$;
+
+revoke all on function public.get_store_order_escrow_info(uuid) from public, anon;
+grant execute on function public.get_store_order_escrow_info(uuid) to authenticated, service_role;
 
 create or replace function public.mark_store_order_paid(
   p_store_order_id uuid,
@@ -1592,6 +1823,7 @@ begin
      set payment_state = case when p_escrow_hold_id is not null or p_wallet_hold_id is not null then 'held' else 'paid' end,
          wallet_hold_id = coalesce(p_wallet_hold_id, wallet_hold_id),
          escrow_hold_id = coalesce(p_escrow_hold_id, escrow_hold_id),
+         staff_stage = case when staff_stage = 'unpaid' then 'paid_to_assign' else staff_stage end,
          updated_at = now()
    where id = p_store_order_id;
 
@@ -1612,7 +1844,12 @@ begin
     'dropship.store_order_paid',
     'store_orders',
     v_so.id::text,
-    jsonb_build_object('order_number', v_so.order_number, 'merchant_status', v_so.merchant_status, 'staff_stage', v_so.staff_stage)
+    jsonb_build_object(
+      'order_number', v_so.order_number,
+      'merchant_status', v_so.merchant_status,
+      'staff_stage', v_so.staff_stage,
+      'hold_reason', v_so.hold_reason
+    )
   );
 
   return jsonb_build_object(
@@ -1621,7 +1858,8 @@ begin
     'event_id', v_ev_id,
     'payment_state', v_so.payment_state,
     'merchant_status', v_so.merchant_status,
-    'staff_stage', v_so.staff_stage
+    'staff_stage', v_so.staff_stage,
+    'hold_reason', v_so.hold_reason
   );
 end $$;
 
@@ -1654,7 +1892,7 @@ begin
   if not v_is_staff and v_so.org_id not in (select my_org_ids()) then
     raise exception 'FORBIDDEN';
   end if;
-  if v_so.staff_stage in ('shipped', 'in_transit', 'delivered') then
+  if v_so.staff_stage in ('handed_over', 'delivered') then
     raise exception 'CANNOT_CANCEL_SHIPPED_ORDER';
   end if;
 
@@ -1818,7 +2056,7 @@ grant execute on function public.create_store_order_shipment(uuid, text, text, t
 
 -- Item 20 & 23: Public white-label tracking RPC for /t/[token]
 --  · Serves ONLY shipments with store_order_id IS NOT NULL.
---  · NEVER returns buyer_name, buyer_email, buyer_phone, shipping_address, carrier_code, supplier names, or Octopus branding.
+--  · NEVER returns buyer_name, buyer_phone, shipping_address, carrier_code, supplier names, or Octopus branding.
 create or replace function public.get_public_dropship_tracking(p_token text)
 returns jsonb
 language plpgsql
@@ -1883,7 +2121,7 @@ begin
     'seller_name', coalesce(nullif(btrim(coalesce(v_sp.brand_name, '')), ''), 'Online Store'),
     'destination_country', v_so.destination_country,
     'tracking_no', v_ship.tracking_no,
-    'status', coalesce(v_map ->> 'merchant_status', 'in_transit'),
+    'status', coalesce(v_map ->> 'merchant_status', 'shipped'),
     'status_label', coalesce(v_map ->> 'merchant_label', initcap(replace(v_ship.status::text, '_', ' '))),
     'eta', v_ship.eta,
     'last_event_at', coalesce(v_ship.last_event_at, v_ship.created_at),
@@ -1894,7 +2132,7 @@ end $$;
 revoke all on function public.get_public_dropship_tracking(text) from public;
 grant execute on function public.get_public_dropship_tracking(text) to anon, authenticated, service_role;
 
--- Item 23: Sanitized reporting RPC — NEVER returns buyer_name, buyer_email, buyer_phone, or shipping_address
+-- Item 23: Sanitized reporting RPC — NEVER returns buyer_name, buyer_phone, or shipping_address
 create or replace function public.get_dropship_orders_report(
   p_org_id uuid default null,
   p_from timestamptz default null,
@@ -1919,7 +2157,8 @@ returns table (
   payment_state text,
   merchant_status text,
   created_at timestamptz,
-  delivered_at timestamptz
+  delivered_at timestamptz,
+  escrow_auto_release_at timestamptz
 )
 language plpgsql
 stable
@@ -1959,8 +2198,10 @@ begin
            so.payment_state,
            so.merchant_status,
            so.created_at,
-           so.delivered_at
+           so.delivered_at,
+           eh.auto_release_at as escrow_auto_release_at
       from public.store_orders so
+      left join public.escrow_holds eh on eh.id = so.escrow_hold_id
      where (v_is_staff or so.org_id in (select my_org_ids()))
        and (p_org_id is null or so.org_id = p_org_id)
        and (p_from is null or so.created_at >= p_from)

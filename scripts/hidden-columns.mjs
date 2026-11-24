@@ -77,7 +77,7 @@ export const HIDDEN_COLUMNS = {
   saas_plans: ['is_test'],
   saas_subscriptions: ['created_by'],
   // migration 212: dropship store_orders & store_order_items — internal stage, rate/fee/duty version FKs, item_id, trace/test flags stay internal
-  store_orders: ['actual_pack_weight_g', 'created_by', 'duty_rate_version_id', 'fee_version_id', 'is_test', 'shipping_rate_card_id', 'staff_stage', 'trace_id'],
+  store_orders: ['actual_pack_weight_g', 'created_by', 'duty_rate_version_id', 'fee_version_id', 'hold_reason', 'is_test', 'shipping_rate_card_id', 'staff_stage', 'trace_id'],
   store_order_items: ['item_id'],
 };
 
