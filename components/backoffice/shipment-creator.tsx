@@ -95,7 +95,7 @@ export function ShipmentCreator({ orderId, orderCode, fromCountry, toCountry, de
           <h2 className="text-lg font-semibold">3 · Choose a YunExpress service</h2>
           <span className="text-xs font-semibold rounded-full bg-pearl border border-line px-2 py-1">Price trial · {fromCountry} → {toCountry}</span>
         </div>
-        {!rates ? <p className="text-sm text-muted">Enter the parcel details and get rates.</p> : !rates.length ? <p className="text-sm text-muted">No services available for this route.</p> : (
+        {!rates ? <p className="text-sm text-muted">Enter the parcel details and get rates.</p> : !rates.length ? <p className="text-sm text-muted">No rate set</p> : (
           <fieldset className="space-y-3">
             <legend className="sr-only">Service</legend>
             {rates.map((r, i) => (

@@ -46,13 +46,16 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
   const sp = await searchParams;
   const sb = await createClient();
 
-  const [prodsRes, routesRes, supsRes, linksRes] = await Promise.all([
+  const [prodsRes, varsRes, routesRes, supsRes, linksRes, wsRes] = await Promise.all([
     sb
       .from('dropship_products')
       .select(
-        'id, model_no, title, category, images, weight_g, min_order_qty, stock_status, stock_qty, source_type, status, is_test, updated_at',
+        'id, model_no, title, category, images, weight_g, min_order_qty, source_type, fulfilment_type, status, is_test, updated_at',
       )
       .order('updated_at', { ascending: false }),
+    sb
+      .from('dropship_variants')
+      .select('id, product_id, item_id, supplier_product_id'),
     sb
       .from('dropship_routes')
       .select('product_id, destination_country, shipping_method, landed_price_cents, is_active'),
@@ -66,6 +69,10 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
     staff.canSeeCosts
       ? sb.rpc('dropship_sourcing_links')
       : Promise.resolve({ data: null }),
+    sb
+      .from('warehouse_stock')
+      .select('item_id, on_hand_qty, reserved_qty')
+      .eq('warehouse_id', 'SZ-01'),
   ]);
 
   const sups = (supsRes.data ?? []) as {
@@ -81,6 +88,25 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
     const list = linksByProd.get(pid) ?? [];
     list.push(row);
     linksByProd.set(pid, list);
+  }
+
+  const wsByItem = new Map<string, { on_hand_qty: number; reserved_qty: number }>();
+  for (const w of wsRes.data ?? []) {
+    wsByItem.set(String(w.item_id), {
+      on_hand_qty: Number(w.on_hand_qty ?? 0),
+      reserved_qty: Number(w.reserved_qty ?? 0),
+    });
+  }
+
+  const varsByProd = new Map<string, { item_id: string; supplier_product_id: string | null }[]>();
+  for (const v of varsRes.data ?? []) {
+    const pid = String(v.product_id);
+    const list = varsByProd.get(pid) ?? [];
+    list.push({
+      item_id: String(v.item_id),
+      supplier_product_id: (v.supplier_product_id as string | null) ?? null,
+    });
+    varsByProd.set(pid, list);
   }
 
   const routesByProd = new Map<string, { countries: Set<string>; activeCount: number }>();
@@ -324,8 +350,18 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
                         <span className={`pill ${stTone}`}>{stLabel}</span>
                       </td>
                       <td className="td whitespace-nowrap">
-                        {String(p.stock_status).replace('_', ' ')}
-                        {p.stock_qty != null ? ` (${Number(p.stock_qty)})` : ''}
+                        {(() => {
+                          if (p.fulfilment_type === 'fast_ship') {
+                            const pVars = varsByProd.get(id) ?? [];
+                            const avail = pVars.reduce((sum, v) => {
+                              const ws = wsByItem.get(v.item_id);
+                              return sum + Math.max(0, (ws?.on_hand_qty ?? 0) - (ws?.reserved_qty ?? 0));
+                            }, 0);
+                            const label = avail <= 0 ? 'out' : avail <= 10 ? 'low' : 'in stock';
+                            return `3PL ${label} (${avail})`;
+                          }
+                          return 'Extended (supplier)';
+                        })()}
                       </td>
                       <td className="td whitespace-nowrap">
                         {rtInfo?.activeCount ? `${rtInfo.activeCount} (${countries})` : '0 routes'}

@@ -1,5 +1,6 @@
 import 'server-only';
 import crypto from 'node:crypto';
+import { createAdminClient } from '@/lib/supabase/server';
 import { logEmailDelivery, logIntegration, outboundTraceHeaders, traceAdapter } from './traced';
 
 /* Adapter interfaces (SPEC §7). Business code depends only on these; providers are swappable. */
@@ -21,12 +22,44 @@ export interface CarrierAdapter {
   parseWebhook(body: unknown, headers: Headers): Promise<TrackingEvent[]>;
 }
 
-/** YunExpress adapter. Sandbox mode returns deterministic test data ONLY on staging (process.env.APP_ENVIRONMENT === 'staging').
- *  Anywhere else without live YunExpress credentials, all carrier calls fail closed with "Carrier not connected". */
+export type CarrierRateLoader = (input: RateRequest) => Promise<RateQuote[]>;
+
+async function loadCarrierRateCardsFromDb(input: RateRequest): Promise<RateQuote[]> {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return [];
+  }
+  const weightG = Math.max(1, Math.round((Number(input.weightKg) || 0) * 1000));
+  const parcels = Math.max(1, Math.round(Number(input.parcels) || 1));
+  const { data, error } = await createAdminClient().rpc('quote_carrier_rates', {
+    p_carrier_code: 'yunexpress',
+    p_country: (input.toCountry || '').trim().toUpperCase(),
+    p_weight_g: weightG,
+    p_parcels: parcels,
+  });
+  if (error || !data?.length) return [];
+  return (data as {
+    service_label: string;
+    carrier_service_code: string;
+    price_cents: number;
+    days_min: number;
+    days_max: number;
+  }[]).map((r) => ({
+    carrier: 'YunExpress',
+    service: `${r.service_label} [${r.carrier_service_code}]`,
+    priceCents: Number(r.price_cents),
+    days: `${r.days_min}–${r.days_max}`,
+  }));
+}
+
+/** YunExpress adapter.
+ *  · priceTrial reads versioned 3PL shipping_rate_cards (never hardcoded rates; throws "No rate set" when empty/unmatched).
+ *  · Waybill/label actions allow deterministic sandbox labels ONLY on staging (APP_ENVIRONMENT === 'staging');
+ *    anywhere else without live YunExpress credentials, waybill calls fail closed with "Carrier not connected". */
 export class YunExpressAdapter implements CarrierAdapter {
   readonly code = 'yunexpress';
   readonly mode: 'sandbox' | 'live';
-  constructor() {
+  private readonly loadRates: CarrierRateLoader;
+  constructor(rateLoader?: CarrierRateLoader) {
     const hasLiveKeys = Boolean(
       (process.env.YUNEXPRESS_CUSTOMER_NO || process.env.YUNEXPRESS_APP_ID) &&
       (process.env.YUNEXPRESS_API_SECRET || process.env.YUNEXPRESS_APP_KEY) &&
@@ -34,6 +67,7 @@ export class YunExpressAdapter implements CarrierAdapter {
       process.env.YUNEXPRESS_SANDBOX !== 'true'
     );
     this.mode = hasLiveKeys ? 'live' : 'sandbox';
+    this.loadRates = rateLoader ?? loadCarrierRateCardsFromDb;
   }
   private assertConnectedOrStaging() {
     if (process.env.APP_ENVIRONMENT === 'production' && (this.mode !== 'live' || process.env.YUNEXPRESS_SANDBOX === 'true')) {
@@ -44,16 +78,11 @@ export class YunExpressAdapter implements CarrierAdapter {
     }
   }
   async priceTrial(i: RateRequest): Promise<RateQuote[]> {
-    this.assertConnectedOrStaging();
-    if (process.env.APP_ENVIRONMENT !== 'staging') {
-      throw new Error('Carrier not connected');
+    const quotes = await this.loadRates(i);
+    if (!quotes.length) {
+      throw new Error('No rate set');
     }
-    const base = Math.max(1, i.weightKg) * 100;
-    return [
-      { carrier: 'YunExpress', service: 'Global Direct Line (standard)', priceCents: Math.round(base * 6.2), days: '8–12' },
-      { carrier: 'YunExpress', service: 'Global Express (tracked)', priceCents: Math.round(base * 8.9), days: '5–8' },
-      { carrier: 'YunExpress', service: 'Economy', priceCents: Math.round(base * 4.6), days: '12–20' },
-    ];
+    return quotes;
   }
   async createShipment(i: ShipmentRequest): Promise<ShipmentResult> {
     this.assertConnectedOrStaging();

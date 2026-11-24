@@ -96,11 +96,11 @@ try {
   `);
   const prodRow = await one(`
     insert into dropship_products(legacy_sku, title, description, category, images, specs, weight_g, dimensions_cm,
-      min_order_qty, stock_status, stock_qty, source_type, origin_country, status, is_test)
+      min_order_qty, source_type, origin_country, status, is_test)
     values ('LEGACY-SECRET-204-A', 'TEST – Precision Desk Lamp', 'Aluminium desk lamp with USB-C input', 'Lighting',
       array['https://example.com/dropship-media/00000000-0000-0000-0000-000000000001.webp'],
       '{"Wattage":"12W","Material":"Aluminium"}'::jsonb, 620, '{"l":32,"w":14,"h":8}'::jsonb,
-      1, 'in_stock', 250, 'partner_supplier', 'CN', 'active', false)
+      1, 'partner_supplier', 'CN', 'active', false)
     returning id, model_no
   `);
   const prod = prodRow.id;
@@ -108,8 +108,8 @@ try {
   ok(/^DS-[0-9]{6,}$/.test(prodModelNo), `product auto-assigned DS model_no (${prodModelNo})`);
 
   const varRow = await one(`
-    insert into dropship_variants(product_id, options, legacy_sku, supplier_product_id, price_adjust_cents, stock_status, stock_qty, sort)
-    values ($1, '{"Colour":"Matte Black"}'::jsonb, 'LEGACY-VAR-204-BLK', $2, 0, 'in_stock', 150, 0)
+    insert into dropship_variants(product_id, options, legacy_sku, supplier_product_id, price_adjust_cents, sort)
+    values ($1, '{"Colour":"Matte Black"}'::jsonb, 'LEGACY-VAR-204-BLK', $2, 0, 0)
     returning id, model_no, item_id
   `, [prod, verSp.sp_id]);
   const var1 = varRow.id;
@@ -201,27 +201,35 @@ try {
   await owner();
   await db.query('rollback');
 
-  // ── 7. Down → up identical check (unwinding 210 around 205/204, then re-applying 204, 205, 210) ──
+  // ── 7. Down → up identical check (unwinding later applied migrations around 205/204, then re-applying) ──
   await db.query('begin');
-  await db.query(`delete from dropship_import_list; delete from dropship_routes; delete from dropship_variants; delete from dropship_products; delete from dropship_markets;`);
+  const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
+  const later = await appliedAfter(db, '20261101000205_dropship_catalogue_functions.sql');
   const snap = async () => JSON.stringify({
     pol: await all(`select tablename, policyname, roles, cmd, qual, with_check from pg_policies where schemaname = 'public' and tablename like 'dropship%' order by 1, 2`),
     cols: await all(`select table_name, column_name, data_type from information_schema.columns where table_schema = 'public' and table_name like 'dropship%' order by 1, 2`),
     fn: await all(`select p.oid::regprocedure::text f, p.proacl::text a from pg_proc p where p.pronamespace = 'public'::regnamespace and (p.proname like '%dropship%') order by 1`),
   });
   const after = await snap();
-  await db.query(fs.readFileSync('supabase/migrations/down/20261101000210_i1a_item_master_and_ds_models.down.sql', 'utf8'));
+  await unwind(db, later);
+  await db.query(`
+    delete from dropship_import_list;
+    delete from dropship_routes;
+    delete from dropship_variants;
+    delete from dropship_products;
+    delete from dropship_markets;
+  `);
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000205_dropship_catalogue_functions.down.sql', 'utf8'));
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000204_dropship_catalogue_v2.down.sql', 'utf8'));
   const downHasOld = await one(`select to_regprocedure('public.dropship_catalogue(text)') is not null ok, to_regclass('public.dropship_routes') is null no_routes`);
   ok(downHasOld.ok && downHasOld.no_routes, 'down: restores 183 schema and dropship_catalogue(text)');
   await db.query(fs.readFileSync('supabase/migrations/20261101000204_dropship_catalogue_v2.sql', 'utf8'));
   await db.query(fs.readFileSync('supabase/migrations/20261101000205_dropship_catalogue_functions.sql', 'utf8'));
-  await db.query(fs.readFileSync('supabase/migrations/20261101000210_i1a_item_master_and_ds_models.sql', 'utf8'));
-  ok((await snap()) === after, 'up again (204 + 205 + 210): identical policies, columns and function permissions');
+  await reapply(db, later);
+  ok((await snap()) === after, 'up again (204 + 205 + later): identical policies, columns and function permissions');
 
   // Verify the 204 guard refuses when a row exists in dropship_products on a non-staging environment
-  await db.query(fs.readFileSync('supabase/migrations/down/20261101000210_i1a_item_master_and_ds_models.down.sql', 'utf8'));
+  await unwind(db, later);
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000205_dropship_catalogue_functions.down.sql', 'utf8'));
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000204_dropship_catalogue_v2.down.sql', 'utf8'));
   const anyProd = (await one(`select id from products limit 1`)).id;

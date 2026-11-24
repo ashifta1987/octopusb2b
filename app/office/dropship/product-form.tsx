@@ -16,8 +16,6 @@ type VariantRow = {
   optionsText: string; // "Colour: Black, Size: M"
   supplier_product_id: string;
   price_adjust_cents: number;
-  stock_status: 'in_stock' | 'low' | 'out';
-  stock_qty: string;
 };
 
 type RouteRow = {
@@ -45,9 +43,8 @@ export type InitialProductData = {
   dim_w: string;
   dim_h: string;
   min_order_qty: number;
-  stock_status: 'in_stock' | 'low' | 'out';
-  stock_qty: string;
   source_type: 'own_warehouse' | 'partner_supplier';
+  fulfilment_type: 'fast_ship' | 'extended_catalog';
   default_supplier_product_id: string;
   origin_country: string;
   status: 'draft' | 'active' | 'archived';
@@ -103,10 +100,11 @@ export function DropshipProductForm({
   const [dimW, setDimW] = useState(initial.dim_w);
   const [dimH, setDimH] = useState(initial.dim_h);
   const [moq, setMoq] = useState(initial.min_order_qty);
-  const [stockStatus, setStockStatus] = useState<'in_stock' | 'low' | 'out'>(initial.stock_status);
-  const [stockQty, setStockQty] = useState(initial.stock_qty);
   const [sourceType, setSourceType] = useState<'own_warehouse' | 'partner_supplier'>(
     initial.source_type,
+  );
+  const [fulfilmentType, setFulfilmentType] = useState<'fast_ship' | 'extended_catalog'>(
+    initial.fulfilment_type,
   );
   const [defaultSpId, setDefaultSpId] = useState(initial.default_supplier_product_id);
   const [originCountry, setOriginCountry] = useState(initial.origin_country);
@@ -218,9 +216,8 @@ export function DropshipProductForm({
       weight_g: Number(weightG) || 0,
       dimensions_cm: dims,
       min_order_qty: Number(moq) || 1,
-      stock_status: stockStatus,
-      stock_qty: stockQty.trim() !== '' ? Number(stockQty) : null,
       source_type: sourceType,
+      fulfilment_type: fulfilmentType,
       default_supplier_product_id: defaultSpId || null,
       origin_country: originCountry.trim() ? originCountry.trim().toUpperCase() : null,
       status: targetStatus,
@@ -229,8 +226,6 @@ export function DropshipProductForm({
         options: parseKeyValLines(v.optionsText, ','),
         supplier_product_id: v.supplier_product_id || defaultSpId || null,
         price_adjust_cents: Number(v.price_adjust_cents) || 0,
-        stock_status: v.stock_status,
-        stock_qty: v.stock_qty.trim() !== '' ? Number(v.stock_qty) : null,
       })),
       routes: routes.map((r) => ({
         destination_country: r.destination_country,
@@ -463,25 +458,26 @@ export function DropshipProductForm({
                 />
               </div>
               <div>
-                <label htmlFor="f-stock" className="k block mb-1.5">
-                  Stock status
+                <label htmlFor="f-fulfilment" className="k block mb-1.5">
+                  Stock source
                 </label>
                 <select
-                  id="f-stock"
+                  id="f-fulfilment"
                   disabled={!canEdit}
-                  value={stockStatus}
-                  onChange={(e) =>
-                    setStockStatus(e.target.value as 'in_stock' | 'low' | 'out')
-                  }
+                  value={fulfilmentType}
+                  onChange={(e) => {
+                    const ft = e.target.value as 'fast_ship' | 'extended_catalog';
+                    setFulfilmentType(ft);
+                    setSourceType(ft === 'fast_ship' ? 'own_warehouse' : 'partner_supplier');
+                  }}
                   className="input"
                 >
-                  <option value="in_stock">In stock</option>
-                  <option value="low">Low stock</option>
-                  <option value="out">Out of stock</option>
+                  <option value="fast_ship">Fast ship (3PL warehouse stock)</option>
+                  <option value="extended_catalog">Extended catalogue (Sourcing supplier stock)</option>
                 </select>
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <div>
                 <label htmlFor="f-l" className="k block mb-1">
                   L (cm)
@@ -515,20 +511,6 @@ export function DropshipProductForm({
                   disabled={!canEdit}
                   value={dimH}
                   onChange={(e) => setDimH(e.target.value)}
-                  className="input"
-                />
-              </div>
-              <div>
-                <label htmlFor="f-qty" className="k block mb-1">
-                  Exact qty (staff)
-                </label>
-                <input
-                  id="f-qty"
-                  type="number"
-                  min={0}
-                  disabled={!canEdit}
-                  value={stockQty}
-                  onChange={(e) => setStockQty(e.target.value)}
                   className="input"
                 />
               </div>
@@ -682,8 +664,6 @@ export function DropshipProductForm({
                     optionsText: 'Colour: Default',
                     supplier_product_id: defaultSpId,
                     price_adjust_cents: 0,
-                    stock_status: 'in_stock',
-                    stock_qty: '100',
                   },
                 ])
               }
@@ -704,8 +684,6 @@ export function DropshipProductForm({
                   <th className="th">Options (Key: Value, …)</th>
                   {canSeeCosts && <th className="th">Sourcing supplier product</th>}
                   <th className="th">Price adjust (cents)</th>
-                  <th className="th">Stock status</th>
-                  <th className="th">Qty (staff)</th>
                   {canEdit && <th className="th" />}
                 </tr>
               </thead>
@@ -773,45 +751,6 @@ export function DropshipProductForm({
                           )
                         }
                         className="input mono !min-h-9 w-28"
-                      />
-                    </td>
-                    <td className="td">
-                      <select
-                        disabled={!canEdit}
-                        value={v.stock_status}
-                        onChange={(e) =>
-                          setVariants((prev) =>
-                            prev.map((row, i) =>
-                              i === idx
-                                ? {
-                                    ...row,
-                                    stock_status: e.target.value as 'in_stock' | 'low' | 'out',
-                                  }
-                                : row,
-                            ),
-                          )
-                        }
-                        className="input !min-h-9"
-                      >
-                        <option value="in_stock">In stock</option>
-                        <option value="low">Low</option>
-                        <option value="out">Out</option>
-                      </select>
-                    </td>
-                    <td className="td">
-                      <input
-                        type="number"
-                        min={0}
-                        disabled={!canEdit}
-                        value={v.stock_qty}
-                        onChange={(e) =>
-                          setVariants((prev) =>
-                            prev.map((row, i) =>
-                              i === idx ? { ...row, stock_qty: e.target.value } : row,
-                            ),
-                          )
-                        }
-                        className="input mono !min-h-9 w-24"
                       />
                     </td>
                     {canEdit && (

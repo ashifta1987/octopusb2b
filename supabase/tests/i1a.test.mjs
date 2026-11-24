@@ -304,6 +304,9 @@ try {
     `),
   });
   const beforeRoundTrip = await snap();
+  const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
+  const later = await appliedAfter(db, '20261101000210_i1a_item_master_and_ds_models.sql');
+  await unwind(db, later);
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000210_i1a_item_master_and_ds_models.down.sql', 'utf8'));
   const downState = await one(`
     select to_regclass('public.item_master') is null no_im,
@@ -311,6 +314,7 @@ try {
   `);
   ok(downState.no_im && downState.no_seq, '210.down.sql cleanly removes item_master and seq_ds_model_no');
   await db.query(fs.readFileSync('supabase/migrations/20261101000210_i1a_item_master_and_ds_models.sql', 'utf8'));
+  await reapply(db, later);
   const afterRoundTrip = await snap();
   ok(beforeRoundTrip === afterRoundTrip, '210.down.sql -> 210.sql restores identical columns, policies, and triggers');
   await db.query('rollback');

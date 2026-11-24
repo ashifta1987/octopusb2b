@@ -117,7 +117,7 @@ export function DropshipCsvImportClient() {
             rows={6}
             value={csvText}
             onChange={(e) => setCsvText(e.target.value)}
-            placeholder="import_ref,title,description,category,weight_g,min_order_qty,stock_status,stock_qty,source_type,sourcing_sku,origin_country,specs_json"
+            placeholder="import_ref,title,description,category,weight_g,min_order_qty,source_type,sourcing_sku,origin_country,specs_json"
             className="input font-mono text-[12.5px]"
             data-testid="csv-textarea"
           />

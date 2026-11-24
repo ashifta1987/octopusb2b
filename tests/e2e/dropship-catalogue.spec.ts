@@ -162,8 +162,8 @@ test('staff /office/dropship: DS staff CSV import twice is idempotent, neutralis
   // CSV bulk import: formula prefix "=TEST – Formula Neutralised Lamp" is stripped to "TEST – Formula Neutralised Lamp"
   await dp.goto('/office/dropship/import');
   const csv = [
-    'import_ref,title,description,category,weight_g,min_order_qty,stock_status,stock_qty,source_type,sourcing_sku,origin_country,specs_json',
-    `${csvRef},"=TEST – Formula Neutralised Lamp","+Safe description","Lighting",450,1,in_stock,80,own_warehouse,,, "{""Finish"":""@Matte""}"`,
+    'import_ref,title,description,category,weight_g,min_order_qty,source_type,sourcing_sku,origin_country,specs_json',
+    `${csvRef},"=TEST – Formula Neutralised Lamp","+Safe description","Lighting",450,1,own_warehouse,,, "{""Finish"":""@Matte""}"`,
   ].join('\n');
   await dp.getByTestId('csv-textarea').fill(csv);
   await dp.getByTestId('csv-preview-btn').click();

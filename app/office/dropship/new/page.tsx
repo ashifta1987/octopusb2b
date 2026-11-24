@@ -44,9 +44,8 @@ async function NewDropshipProduct() {
     dim_w: '',
     dim_h: '',
     min_order_qty: 1,
-    stock_status: 'in_stock',
-    stock_qty: '100',
     source_type: 'partner_supplier',
+    fulfilment_type: 'extended_catalog',
     default_supplier_product_id: firstSp?.supplier_product_id ?? '',
     origin_country: '', // Nullable — never defaults to 'CN' (Item 1)
     status: 'draft',

@@ -29,13 +29,13 @@ async function EditDropshipProduct({ params }: { params: Promise<{ id: string }>
     sb
       .from('dropship_products')
       .select(
-        'id, model_no, title, description, category, images, specs, weight_g, dimensions_cm, min_order_qty, stock_status, stock_qty, source_type, origin_country, status',
+        'id, model_no, title, description, category, images, specs, weight_g, dimensions_cm, min_order_qty, source_type, fulfilment_type, origin_country, status',
       )
       .eq('id', id)
       .maybeSingle(),
     sb
       .from('dropship_variants')
-      .select('id, model_no, options, supplier_product_id, price_adjust_cents, stock_status, stock_qty, sort')
+      .select('id, model_no, options, supplier_product_id, price_adjust_cents, sort')
       .eq('product_id', id)
       .order('sort', { ascending: true }),
     sb
@@ -83,10 +83,11 @@ async function EditDropshipProduct({ params }: { params: Promise<{ id: string }>
     dim_w: dims.w != null ? String(dims.w) : '',
     dim_h: dims.h != null ? String(dims.h) : '',
     min_order_qty: Number(p.min_order_qty ?? 1),
-    stock_status: (p.stock_status as 'in_stock' | 'low' | 'out') ?? 'in_stock',
-    stock_qty: p.stock_qty != null ? String(p.stock_qty) : '',
     source_type:
       (p.source_type as 'own_warehouse' | 'partner_supplier') ?? 'partner_supplier',
+    fulfilment_type:
+      (p.fulfilment_type as 'fast_ship' | 'extended_catalog') ??
+      (p.source_type === 'own_warehouse' ? 'fast_ship' : 'extended_catalog'),
     default_supplier_product_id: defaultSpId,
     origin_country: p.origin_country ? String(p.origin_country).trim() : '',
     status: (p.status as 'draft' | 'active' | 'archived') ?? 'draft',
@@ -104,8 +105,6 @@ async function EditDropshipProduct({ params }: { params: Promise<{ id: string }>
         supplier_product_id:
           staff.canSeeCosts && v.supplier_product_id ? String(v.supplier_product_id) : '',
         price_adjust_cents: Number(v.price_adjust_cents ?? 0),
-        stock_status: (v.stock_status as 'in_stock' | 'low' | 'out') ?? 'in_stock',
-        stock_qty: v.stock_qty != null ? String(v.stock_qty) : '',
       };
     }),
     routes: (routesRes.data ?? []).map((r) => ({

@@ -40,26 +40,32 @@ describe('YunExpress adapter mapper', () => {
   it('tolerates an empty body', async () => {
     expect(await (new YunExpressAdapter() as CarrierAdapter).parseWebhook({}, new Headers())).toEqual([]);
   });
-  it('price trial returns USD cents on staging and fails closed elsewhere', async () => {
+  it('price trial reads shipping_rate_cards (throws "No rate set" when empty) and createShipment fails closed outside staging', async () => {
     const prev = process.env.APP_ENVIRONMENT;
     try {
-      delete process.env.APP_ENVIRONMENT;
-      await expect(
-        new YunExpressAdapter().priceTrial({ fromCountry: 'CN', toCountry: 'NL', weightKg: 2, parcels: 1 }),
-      ).rejects.toThrow('Carrier not connected');
-      await expect(
-        new YunExpressAdapter().createShipment({ orderCode: 'ORD-1', toCountry: 'NL', weightKg: 2, parcels: 1, service: 'standard' }),
-      ).rejects.toThrow('Carrier not connected');
-
+      // Empty rate card table (e.g. on live before rate cards are published) -> "No rate set", never 0 or hardcoded
       process.env.APP_ENVIRONMENT = 'production';
       await expect(
-        new YunExpressAdapter().priceTrial({ fromCountry: 'CN', toCountry: 'NL', weightKg: 2, parcels: 1 }),
+        new YunExpressAdapter(async () => []).priceTrial({ fromCountry: 'CN', toCountry: 'NL', weightKg: 2, parcels: 1 }),
+      ).rejects.toThrow('No rate set');
+
+      await expect(
+        new YunExpressAdapter().createShipment({ orderCode: 'ORD-1', toCountry: 'NL', weightKg: 2, parcels: 1, service: 'BKPHR' }),
       ).rejects.toThrow('Carrier not connected');
 
-      process.env.APP_ENVIRONMENT = 'staging';
-      const q = await new YunExpressAdapter().priceTrial({ fromCountry: 'CN', toCountry: 'NL', weightKg: 2, parcels: 1 });
-      expect(q.length).toBeGreaterThan(0);
-      for (const r of q) expect(Number.isInteger(r.priceCents)).toBe(true);
+      // Populated rate card rows -> returns exact integer USD cents
+      const seededAdapter = new YunExpressAdapter(async (req) => [
+        {
+          carrier: 'YunExpress',
+          service: 'YunExpress Priority Direct [BKPHR]',
+          priceCents: 480 + Math.ceil((req.weightKg * 1000) / 100) * 95,
+          days: '3–5',
+        },
+      ]);
+      const q = await seededAdapter.priceTrial({ fromCountry: 'CN', toCountry: 'AE', weightKg: 0.55, parcels: 1 });
+      expect(q).toHaveLength(1);
+      expect(Number.isInteger(q[0].priceCents)).toBe(true);
+      expect(q[0].priceCents).toBe(480 + 6 * 95);
     } finally {
       if (prev === undefined) delete process.env.APP_ENVIRONMENT;
       else process.env.APP_ENVIRONMENT = prev;

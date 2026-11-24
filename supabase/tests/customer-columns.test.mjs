@@ -59,6 +59,7 @@ const ALLOW = new Set([
 const NO_CUSTOMER_ROWS = ['suppliers', 'supplier_contacts', 'supplier_name_variants', 'supplier_product_prices', 'supplier_products', 'supplier_switches',
   'supplier_verifications', 'product_costs', 'payouts', 'source_connections', 'distributor_suppliers', 'finance_approvals', 'import_review_items',
   'dropship_products', 'dropship_variants', 'dropship_routes', 'dropship_rates', 'item_master',
+  'shipping_rate_cards', 'fee_versions', 'duty_rate_versions', 'duty_rate_entries', 'warehouse_stock', 'warehouse_stock_movements',
   'payment_webhook_events', 'payment_settlements', 'payment_reconciliation_alerts', 'escrow_hold_approvals'];
 
 try {

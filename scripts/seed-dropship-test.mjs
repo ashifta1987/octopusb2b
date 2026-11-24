@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Seed 5 clearly fake Dropshipping catalogue v2 products ("TEST – …", is_test = true) with routes to 2 countries (AE, GB)
-// and variants (DS-XXXXXX / DS-XXXXXX-NN model numbers), plus shipping rate-card rows and selling countries on staging test orgs.
-// STAGING ONLY: calls assertStagingOrThrow and refuses to run against live. Idempotent (upserts on legacy_sku).
+// Seed 5 clearly fake Dropshipping catalogue v2 products ("TEST – …", is_test = true) with routes to 2 countries (AE, GB),
+// variants (DS-XXXXXX / DS-XXXXXX-NN model numbers), 3PL shipping_rate_cards, and 3PL warehouse_stock movements on staging.
+// STAGING ONLY: calls assertStagingOrThrow and refuses to run against live. Idempotent.
 // Run: node scripts/seed-dropship-test.mjs
 import { config } from 'dotenv';
 import pg from 'pg';
@@ -17,32 +17,28 @@ await assertStagingOrThrow(db);
 try {
   await db.query('begin');
 
-  // Ensure staff-only shipping rate card has AE and GB rates for express, standard and economy
+  // Ensure versioned 3PL shipping_rate_cards has active AE, GB, and SA lanes (never writes frozen dropship_rates)
   const RATES = [
-    ['AE', 'express', 480, 95, 5.00, 150, 3, 5, true, false],
-    ['AE', 'standard', 320, 70, 5.00, 150, 6, 9, true, false],
-    ['AE', 'economy', 210, 50, 5.00, 150, 10, 15, true, false],
-    ['GB', 'express', 620, 110, 8.00, 180, 4, 6, true, false],
-    ['GB', 'standard', 430, 85, 8.00, 180, 7, 11, true, false],
-    ['GB', 'economy', 290, 60, 8.00, 180, 12, 18, true, false],
-    ['SA', 'express', 520, 100, 5.00, 160, 4, 6, true, false],
-    ['SA', 'standard', 360, 75, 5.00, 160, 7, 10, true, false],
+    ['AE', 'express', 'BKPHR', 'YunExpress Priority Direct', 480, 95, 3, 5, true, false],
+    ['AE', 'standard', 'THZXR', 'YunExpress Standard Direct', 320, 70, 6, 9, true, false],
+    ['AE', 'economy', 'YUN-ECO', 'YunExpress Economy Line', 210, 50, 10, 15, true, false],
+    ['GB', 'express', 'BKPHR', 'YunExpress Priority UK', 620, 110, 4, 6, true, false],
+    ['GB', 'standard', 'THZXR', 'YunExpress Standard UK', 430, 85, 7, 11, true, false],
+    ['GB', 'economy', 'YUN-ECO', 'YunExpress Economy UK', 290, 60, 12, 18, true, false],
+    ['SA', 'express', 'BKPHR', 'YunExpress Priority KSA', 520, 100, 4, 6, true, false],
+    ['SA', 'standard', 'THZXR', 'YunExpress Standard KSA', 360, 75, 7, 10, true, false],
   ];
-  for (const [country, service, base, per100, duty, fee, dmin, dmax, bat, liq] of RATES) {
-    await db.query(`
-      insert into dropship_rates (country, service, ship_base_cents, ship_per_100g_cents, duty_pct, fee_cents, days_min, days_max, allows_battery, allows_liquid, active)
-      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true)
-      on conflict (country, service) do update set
-        ship_base_cents = excluded.ship_base_cents,
-        ship_per_100g_cents = excluded.ship_per_100g_cents,
-        duty_pct = excluded.duty_pct,
-        fee_cents = excluded.fee_cents,
-        days_min = excluded.days_min,
-        days_max = excluded.days_max,
-        allows_battery = excluded.allows_battery,
-        allows_liquid = excluded.allows_liquid,
-        active = true
-    `, [country, service, base, per100, duty, fee, dmin, dmax, bat, liq]);
+  for (const [country, method, svcCode, label, base, per100, dmin, dmax, bat, liq] of RATES) {
+    const ex = (await db.query(
+      `select id from shipping_rate_cards where active and carrier_code = 'yunexpress' and country = $1 and method = $2 limit 1`,
+      [country, method],
+    )).rows[0];
+    if (!ex) {
+      await db.query(
+        `select publish_shipping_rate_card('yunexpress', $1, $2, $3, $4, $5, $6, $7, 30000, 5000, 100, $8, $9, false, false, $10)`,
+        [method, svcCode, country, base, per100, dmin, dmax, bat, liq, label],
+      );
+    }
   }
 
   const imgs = (await db.query(`
@@ -63,12 +59,11 @@ try {
       weight_g: 540,
       dims: { l: 34, w: 13, h: 9 },
       moq: 1,
-      stock: 'in_stock',
-      qty: 320,
       source: 'own_warehouse',
+      fulfilment: 'fast_ship',
       variants: [
-        { ref: 'OCT-DS-TEST-001-BLK', options: { Colour: 'Matte Black' }, adj: 0, stock: 'in_stock', qty: 180 },
-        { ref: 'OCT-DS-TEST-001-SLV', options: { Colour: 'Brushed Silver' }, adj: 100, stock: 'in_stock', qty: 140 },
+        { ref: 'OCT-DS-TEST-001-BLK', options: { Colour: 'Matte Black' }, adj: 0, targetOnHand: 180 },
+        { ref: 'OCT-DS-TEST-001-SLV', options: { Colour: 'Brushed Silver' }, adj: 100, targetOnHand: 140 },
       ],
       routes: [
         { country: 'AE', method: 'express', landed: 2190, ship: 680, duty: 40, min: 3, max: 5, carrier: 'YunExpress Priority', active: true },
@@ -87,12 +82,11 @@ try {
       weight_g: 380,
       dims: { l: 21, w: 9, h: 9 },
       moq: 1,
-      stock: 'in_stock',
-      qty: 500,
       source: 'own_warehouse',
+      fulfilment: 'fast_ship',
       variants: [
-        { ref: 'OCT-DS-TEST-002-NVY', options: { Colour: 'Deep Navy', Size: '600ml' }, adj: 0, stock: 'in_stock', qty: 300 },
-        { ref: 'OCT-DS-TEST-002-SND', options: { Colour: 'Desert Sand', Size: '600ml' }, adj: 0, stock: 'low', qty: 20 },
+        { ref: 'OCT-DS-TEST-002-NVY', options: { Colour: 'Deep Navy', Size: '600ml' }, adj: 0, targetOnHand: 300 },
+        { ref: 'OCT-DS-TEST-002-SND', options: { Colour: 'Desert Sand', Size: '600ml' }, adj: 0, targetOnHand: 8 },
       ],
       routes: [
         { country: 'AE', method: 'express', landed: 1650, ship: 540, duty: 26, min: 3, max: 5, carrier: 'YunExpress Priority', active: true },
@@ -110,11 +104,10 @@ try {
       weight_g: 710,
       dims: { l: 27, w: 23, h: 5 },
       moq: 1,
-      stock: 'in_stock',
-      qty: 190,
       source: 'partner_supplier',
+      fulfilment: 'extended_catalog',
       variants: [
-        { ref: 'OCT-DS-TEST-003-GRY', options: { Colour: 'Space Grey' }, adj: 0, stock: 'in_stock', qty: 190 },
+        { ref: 'OCT-DS-TEST-003-GRY', options: { Colour: 'Space Grey' }, adj: 0, targetOnHand: 0 },
       ],
       routes: [
         { country: 'AE', method: 'standard', landed: 2250, ship: 640, duty: 48, min: 6, max: 9, carrier: 'YunExpress Standard', active: true },
@@ -131,11 +124,10 @@ try {
       weight_g: 120,
       dims: { l: 14, w: 10, h: 2 },
       moq: 2,
-      stock: 'low',
-      qty: 35,
       source: 'own_warehouse',
+      fulfilment: 'fast_ship',
       variants: [
-        { ref: 'OCT-DS-TEST-004-2M', options: { Length: '2m', Colour: 'Charcoal' }, adj: 0, stock: 'low', qty: 35 },
+        { ref: 'OCT-DS-TEST-004-2M', options: { Length: '2m', Colour: 'Charcoal' }, adj: 0, targetOnHand: 8 },
       ],
       routes: [
         { country: 'AE', method: 'express', landed: 990, ship: 390, duty: 12, min: 3, max: 5, carrier: 'YunExpress Priority', active: true },
@@ -152,12 +144,11 @@ try {
       weight_g: 490,
       dims: { l: 32, w: 14, h: 13 },
       moq: 1,
-      stock: 'in_stock',
-      qty: 240,
       source: 'partner_supplier',
+      fulfilment: 'extended_catalog',
       variants: [
-        { ref: 'OCT-DS-TEST-005-WHT', options: { Colour: 'Warm White' }, adj: 0, stock: 'in_stock', qty: 140 },
-        { ref: 'OCT-DS-TEST-005-BLK', options: { Colour: 'Graphite Black' }, adj: 0, stock: 'in_stock', qty: 100 },
+        { ref: 'OCT-DS-TEST-005-WHT', options: { Colour: 'Warm White' }, adj: 0, targetOnHand: 0 },
+        { ref: 'OCT-DS-TEST-005-BLK', options: { Colour: 'Graphite Black' }, adj: 0, targetOnHand: 0 },
       ],
       routes: [
         { country: 'AE', method: 'standard', landed: 1750, ship: 530, duty: 31, min: 6, max: 9, carrier: 'YunExpress Standard', active: true },
@@ -186,47 +177,61 @@ try {
           weight_g = $7,
           dimensions_cm = $8,
           min_order_qty = $9,
-          stock_status = $10,
-          stock_qty = $11,
-          source_type = $12,
+          source_type = $10,
+          fulfilment_type = $11,
           origin_country = 'CN',
           status = 'active',
           is_test = true
         where id = $1
-      `, [prodId, item.title, item.description, item.category, item.img, JSON.stringify(item.specs), item.weight_g, JSON.stringify(item.dims), item.moq, item.stock, item.qty, item.source]);
+      `, [prodId, item.title, item.description, item.category, item.img, JSON.stringify(item.specs), item.weight_g, JSON.stringify(item.dims), item.moq, item.source, item.fulfilment]);
     } else {
       const p = (await db.query(`
         insert into dropship_products (
           legacy_sku, title, description, category, images, specs, weight_g, dimensions_cm,
-          min_order_qty, stock_status, stock_qty, source_type, origin_country, status, is_test
-        ) values ($1,$2,$3,$4,array[$5::text],$6,$7,$8,$9,$10,$11,$12,'CN','active',true)
+          min_order_qty, source_type, fulfilment_type, origin_country, status, is_test
+        ) values ($1,$2,$3,$4,array[$5::text],$6,$7,$8,$9,$10,$11,'CN','active',true)
         returning id
-      `, [item.ref, item.title, item.description, item.category, item.img, JSON.stringify(item.specs), item.weight_g, JSON.stringify(item.dims), item.moq, item.stock, item.qty, item.source])).rows[0];
+      `, [item.ref, item.title, item.description, item.category, item.img, JSON.stringify(item.specs), item.weight_g, JSON.stringify(item.dims), item.moq, item.source, item.fulfilment])).rows[0];
       prodId = p.id;
     }
     if (!firstProdId) firstProdId = prodId;
 
     for (const [idx, v] of item.variants.entries()) {
       const exVar = (await db.query(
-        `select id from dropship_variants where upper(btrim(legacy_sku)) = upper(btrim($1)) limit 1`,
+        `select id, item_id from dropship_variants where upper(btrim(legacy_sku)) = upper(btrim($1)) limit 1`,
         [v.ref],
       )).rows[0];
+      let itemId;
       if (exVar) {
+        itemId = exVar.item_id;
         await db.query(`
           update dropship_variants set
             product_id = $2,
             options = $3,
             price_adjust_cents = $4,
-            stock_status = $5,
-            stock_qty = $6,
-            sort = $7
+            sort = $5
           where id = $1
-        `, [exVar.id, prodId, JSON.stringify(v.options), v.adj, v.stock, v.qty, idx]);
+        `, [exVar.id, prodId, JSON.stringify(v.options), v.adj, idx]);
       } else {
-        await db.query(`
-          insert into dropship_variants (product_id, options, legacy_sku, price_adjust_cents, stock_status, stock_qty, sort)
-          values ($1, $2, $3, $4, $5, $6, $7)
-        `, [prodId, JSON.stringify(v.options), v.ref, v.adj, v.stock, v.qty, idx]);
+        const insVar = (await db.query(`
+          insert into dropship_variants (product_id, options, legacy_sku, price_adjust_cents, sort)
+          values ($1, $2, $3, $4, $5)
+          returning item_id
+        `, [prodId, JSON.stringify(v.options), v.ref, v.adj, idx])).rows[0];
+        itemId = insVar.item_id;
+      }
+
+      if (item.fulfilment === 'fast_ship' && v.targetOnHand > 0 && itemId) {
+        const ws = (await db.query(
+          `select on_hand_qty from warehouse_stock where warehouse_id = 'SZ-01' and item_id = $1`,
+          [itemId],
+        )).rows[0];
+        if (!ws || Number(ws.on_hand_qty) === 0) {
+          await db.query(
+            `select record_warehouse_stock_movement($1, 'inbound', $2, 'Staging test fast-ship stock seed', 'SZ-01', null)`,
+            [itemId, v.targetOnHand],
+          );
+        }
       }
     }
 
@@ -246,7 +251,6 @@ try {
     }
   }
 
-  // Ensure W-10015 and TEST DATA · Divisions have selling countries AE, GB, SA configured
   const dsOrgs = (await db.query(`
     select id from organizations where wallet_reference = 'W-10015' or name = 'TEST DATA · Divisions'
   `)).rows;
@@ -265,7 +269,7 @@ try {
   }
 
   await db.query('commit');
-  console.log(`✔ seeded 5 TEST dropship products (is_test=true, DS-XXXXXX model numbers) with AE & GB routes on staging`);
+  console.log(`✔ seeded 5 TEST dropship products (is_test=true, DS-XXXXXX model numbers, 3PL stock & rate cards) on staging`);
 } catch (e) {
   await db.query('rollback').catch(() => {});
   throw e;

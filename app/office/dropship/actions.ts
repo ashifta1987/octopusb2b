@@ -99,8 +99,6 @@ const VariantInputSchema = z.object({
   options: z.record(z.string(), z.string()),
   supplier_product_id: z.string().uuid().optional().nullable(),
   price_adjust_cents: z.number().int().min(-100_000_000).max(100_000_000),
-  stock_status: z.enum(['in_stock', 'low', 'out']),
-  stock_qty: z.number().int().min(0).max(10_000_000).nullable().optional(),
 });
 
 const RouteInputSchema = z.object({
@@ -132,9 +130,8 @@ const ProductInputSchema = z.object({
     .nullable()
     .optional(),
   min_order_qty: z.number().int().min(1).max(100_000),
-  stock_status: z.enum(['in_stock', 'low', 'out']),
-  stock_qty: z.number().int().min(0).max(10_000_000).nullable().optional(),
   source_type: z.enum(['own_warehouse', 'partner_supplier']),
+  fulfilment_type: z.enum(['fast_ship', 'extended_catalog']).optional(),
   default_supplier_product_id: z.string().uuid().nullable().optional(),
   origin_country: z
     .string()
@@ -223,8 +220,6 @@ export async function saveDropshipProduct(
             options: {} as Record<string, string>,
             supplier_product_id: p.default_supplier_product_id || null,
             price_adjust_cents: 0,
-            stock_status: p.stock_status,
-            stock_qty: p.stock_qty ?? null,
           },
         ];
 
@@ -277,7 +272,7 @@ export async function saveDropshipProduct(
   if (p.id) {
     const { data } = await sb
       .from('dropship_products')
-      .select('id, model_no, title, description, category, images, specs, weight_g, dimensions_cm, min_order_qty, stock_status, stock_qty, source_type, origin_country, status')
+      .select('id, model_no, title, description, category, images, specs, weight_g, dimensions_cm, min_order_qty, source_type, fulfilment_type, origin_country, status')
       .eq('id', p.id)
       .maybeSingle();
     beforeSnap = (data as Record<string, unknown> | null) ?? null;
@@ -288,7 +283,10 @@ export async function saveDropshipProduct(
       ? p.origin_country.trim().toUpperCase()
       : null;
 
-  // Never write octopus_sku or frozen supplier_id / supplier_sku / unit_cost_cents
+  const fulfilmentType =
+    p.fulfilment_type ?? (p.source_type === 'own_warehouse' ? 'fast_ship' : 'extended_catalog');
+
+  // Never write octopus_sku or frozen supplier_id / supplier_sku / unit_cost_cents / stock_status / stock_qty
   const payload = {
     title: p.title.trim(),
     description: p.description?.trim() || null,
@@ -298,9 +296,8 @@ export async function saveDropshipProduct(
     weight_g: p.weight_g,
     dimensions_cm: p.dimensions_cm ?? null,
     min_order_qty: p.min_order_qty,
-    stock_status: p.stock_status,
-    stock_qty: p.stock_qty ?? null,
     source_type: p.source_type,
+    fulfilment_type: fulfilmentType,
     origin_country: cleanOrigin,
     status: p.status,
     ...(isNew ? { created_by: staff.session.userId } : {}),
@@ -347,8 +344,6 @@ export async function saveDropshipProduct(
           options: v.options,
           supplier_product_id: v.supplier_product_id ?? null,
           price_adjust_cents: v.price_adjust_cents,
-          stock_status: v.stock_status,
-          stock_qty: v.stock_qty ?? null,
           sort: idx,
         })
         .eq('id', v.id);
@@ -359,8 +354,6 @@ export async function saveDropshipProduct(
         options: v.options,
         supplier_product_id: v.supplier_product_id ?? null,
         price_adjust_cents: v.price_adjust_cents,
-        stock_status: v.stock_status,
-        stock_qty: v.stock_qty ?? null,
         sort: idx,
       });
       if (iErr) return { ok: false, error: `Variants insert: ${iErr.message}` };
@@ -548,9 +541,8 @@ export type CsvRowPreview = {
   category: string;
   weight_g: number;
   min_order_qty: number;
-  stock_status: 'in_stock' | 'low' | 'out';
-  stock_qty: number | null;
   source_type: 'own_warehouse' | 'partner_supplier';
+  fulfilment_type: 'fast_ship' | 'extended_catalog';
   sourcing_sku: string;
   supplier_product_id: string | null;
   supplier_code: string;
@@ -671,8 +663,6 @@ export async function previewDropshipCsv(csvText: string): Promise<CsvPreviewRes
     const category = cell(r, 'category');
     const weightRaw = cell(r, 'weight_g');
     const moqRaw = cell(r, 'min_order_qty') || '1';
-    const stockStatusRaw = (cell(r, 'stock_status') || 'in_stock').toLowerCase();
-    const stockQtyRaw = cell(r, 'stock_qty');
     const sourceTypeRaw = (cell(r, 'source_type') || 'partner_supplier').toLowerCase();
     const sourcingSku = cell(r, 'sourcing_sku').toUpperCase();
     const originCountryRaw = cell(r, 'origin_country').toUpperCase();
@@ -690,13 +680,6 @@ export async function previewDropshipCsv(csvText: string): Promise<CsvPreviewRes
 
     const min_order_qty = /^\d+$/.test(moqRaw) && Number(moqRaw) >= 1 ? Number(moqRaw) : 0;
     if (min_order_qty < 1) errors.push('min_order_qty must be ≥ 1');
-
-    if (!['in_stock', 'low', 'out'].includes(stockStatusRaw)) {
-      errors.push('stock_status must be in_stock, low or out');
-    }
-    const stock_qty =
-      stockQtyRaw === '' ? null : /^\d+$/.test(stockQtyRaw) ? Number(stockQtyRaw) : -1;
-    if (stock_qty === -1) errors.push('stock_qty must be an integer or blank');
 
     if (!['own_warehouse', 'partner_supplier'].includes(sourceTypeRaw)) {
       errors.push('source_type must be own_warehouse or partner_supplier');
@@ -756,6 +739,9 @@ export async function previewDropshipCsv(csvText: string): Promise<CsvPreviewRes
       errors.push(`White-label guard: contains ${wlHits.join(', ')}`);
     }
 
+    const srcType = (['own_warehouse', 'partner_supplier'].includes(sourceTypeRaw)
+      ? sourceTypeRaw
+      : 'partner_supplier') as 'own_warehouse' | 'partner_supplier';
     previews.push({
       rowNumber,
       import_ref,
@@ -764,13 +750,8 @@ export async function previewDropshipCsv(csvText: string): Promise<CsvPreviewRes
       category,
       weight_g: Math.max(1, weight_g),
       min_order_qty: Math.max(1, min_order_qty),
-      stock_status: (['in_stock', 'low', 'out'].includes(stockStatusRaw)
-        ? stockStatusRaw
-        : 'in_stock') as 'in_stock' | 'low' | 'out',
-      stock_qty: stock_qty !== null && stock_qty >= 0 ? stock_qty : null,
-      source_type: (['own_warehouse', 'partner_supplier'].includes(sourceTypeRaw)
-        ? sourceTypeRaw
-        : 'partner_supplier') as 'own_warehouse' | 'partner_supplier',
+      source_type: srcType,
+      fulfilment_type: srcType === 'own_warehouse' ? 'fast_ship' : 'extended_catalog',
       sourcing_sku: sourcingSku,
       supplier_product_id,
       supplier_code,
@@ -813,7 +794,7 @@ export async function commitDropshipCsv(
   const { data: existingRows } = await sb
     .from('dropship_products')
     .select(
-      'id, model_no, legacy_sku, title, description, category, specs, weight_g, min_order_qty, stock_status, stock_qty, source_type, origin_country, status',
+      'id, model_no, legacy_sku, title, description, category, specs, weight_g, min_order_qty, source_type, fulfilment_type, origin_country, status',
     )
     .in('legacy_sku', refs);
 
@@ -856,9 +837,8 @@ export async function commitDropshipCsv(
       specs: row.specs,
       weight_g: row.weight_g,
       min_order_qty: row.min_order_qty,
-      stock_status: row.stock_status,
-      stock_qty: row.stock_qty,
       source_type: row.source_type,
+      fulfilment_type: row.fulfilment_type,
       origin_country: row.origin_country,
     };
 
@@ -880,8 +860,6 @@ export async function commitDropshipCsv(
         options: {},
         supplier_product_id: row.supplier_product_id,
         price_adjust_cents: 0,
-        stock_status: row.stock_status,
-        stock_qty: row.stock_qty,
         sort: 0,
       });
       if (vErr) return { ok: false, error: `Row ${row.rowNumber} (${row.import_ref}) variant: ${vErr.message}` };
@@ -905,9 +883,8 @@ export async function commitDropshipCsv(
         JSON.stringify(cur.specs ?? {}) === JSON.stringify(next.specs) &&
         Number(cur.weight_g) === next.weight_g &&
         Number(cur.min_order_qty) === next.min_order_qty &&
-        cur.stock_status === next.stock_status &&
-        (cur.stock_qty ?? null) === next.stock_qty &&
         cur.source_type === next.source_type &&
+        cur.fulfilment_type === next.fulfilment_type &&
         curOrigin === next.origin_country &&
         (firstVar?.supplier_product_id ?? null) === (row.supplier_product_id ?? null);
 
@@ -927,8 +904,6 @@ export async function commitDropshipCsv(
           .from('dropship_variants')
           .update({
             supplier_product_id: row.supplier_product_id,
-            stock_status: row.stock_status,
-            stock_qty: row.stock_qty,
           })
           .eq('id', firstVar.id);
         await sb
