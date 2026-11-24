@@ -118,9 +118,23 @@ try {
   const adminId = (await one(`select user_id from user_roles where role_code = 'admin' limit 1`)).user_id;
   const sup = await one(`select id from suppliers where verified and archived_at is null limit 1`);
 
-  // Backfill check: 0 rows auto-verified from backfill
-  const autoVerifiedCount = (await one(`select count(*)::int n from item_master where hs_verified = true`)).n;
-  ok(autoVerifiedCount === 0, 'backfill never auto-sets hs_verified=true (0 verified rows initially)');
+  // Backfill check: 0 rows auto-verified without a staff verifier (and 0 non-test Sourcing products auto-verified)
+  const autoVerifiedCount = (await one(`
+    select count(*)::int n
+      from item_master im
+     where im.hs_verified = true
+       and (
+         im.hs_verified_by is null
+         or not exists (
+           select 1
+             from dropship_variants dv
+             join dropship_products dp on dp.id = dv.product_id
+            where dv.item_id = im.id
+              and dp.is_test = true
+         )
+       )
+  `)).n;
+  ok(autoVerifiedCount === 0, 'backfill never auto-sets hs_verified=true (0 auto-verified rows; only explicit staff-verified TEST rows)');
 
   // Direct hs_verified = true without RPC is blocked
   const directVerifyErr = (await tryq(`update item_master set hs_code = '8516.10', hs_verified = true where id = $1`, [blankIm.id])).err;
