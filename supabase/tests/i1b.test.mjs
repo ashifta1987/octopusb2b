@@ -437,8 +437,14 @@ try {
   ok(/LEGACY_STOCK_FROZEN/.test((await tryq(`update dropship_variants set stock_status = 'out' where id = $1`, [dsVar1.id])).err ?? ''),
     'legacy dropship_variants.stock_status is frozen (LEGACY_STOCK_FROZEN)');
 
-  const ord1 = '00000000-0000-0000-0000-000000000101';
-  const ord2 = '00000000-0000-0000-0000-000000000102';
+  let ord1 = '00000000-0000-0000-0000-000000000101';
+  let ord2 = '00000000-0000-0000-0000-000000000102';
+  let ord3 = '00000000-0000-0000-0000-000000000103';
+  if ((await one(`select to_regclass('public.store_orders') t`)).t) {
+    ord1 = (await one(`insert into store_orders(org_id, channel, buyer_name, shipping_address, destination_country, buyer_currency, shipping_method) values ($1, 'manual', 'Buyer 1', '{"city":"NY"}'::jsonb, 'US', 'USD', 'express') returning id`, [orgM])).id;
+    ord2 = (await one(`insert into store_orders(org_id, channel, buyer_name, shipping_address, destination_country, buyer_currency, shipping_method) values ($1, 'manual', 'Buyer 2', '{"city":"NY"}'::jsonb, 'US', 'USD', 'express') returning id`, [orgM])).id;
+    ord3 = (await one(`insert into store_orders(org_id, channel, buyer_name, shipping_address, destination_country, buyer_currency, shipping_method) values ($1, 'manual', 'Buyer 3', '{"city":"NY"}'::jsonb, 'US', 'USD', 'express') returning id`, [orgM])).id;
+  }
   await as(whStaff, 'aal2');
   await db.query(`select record_warehouse_stock_movement($1, 'inbound', 100, 'PO-001 inbound', 'SZ-01', null)`, [dsVar1.item_id]);
   await db.query(`select record_warehouse_stock_movement($1, 'adjust_in', 15, 'Cycle count gain', 'SZ-01', null)`, [dsVar1.item_id]);
@@ -451,7 +457,7 @@ try {
 
   await db.query(`select record_warehouse_stock_movement($1, 'reserve', 10, 'Order 2 paid', 'SZ-01', $2)`, [dsVar1.item_id, ord2]);
   // Over-reserve beyond available (80) -> INSUFFICIENT_AVAILABLE_STOCK
-  ok(/INSUFFICIENT_AVAILABLE_STOCK/.test((await tryq(`select record_warehouse_stock_movement($1, 'reserve', 85, 'Too big', 'SZ-01', '00000000-0000-0000-0000-000000000103')`, [dsVar1.item_id])).err ?? ''),
+  ok(/INSUFFICIENT_AVAILABLE_STOCK/.test((await tryq(`select record_warehouse_stock_movement($1, 'reserve', 85, 'Too big', 'SZ-01', $2)`, [dsVar1.item_id, ord3])).err ?? ''),
     'reserve exceeding available stock is rejected (INSUFFICIENT_AVAILABLE_STOCK)');
 
   // Pick ord1 (20): on_hand 110 -> 90, reserved 30 -> 10 in one transaction; Cancel/release ord2 (10): on_hand 90, reserved 0

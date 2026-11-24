@@ -76,6 +76,9 @@ export const HIDDEN_COLUMNS = {
   credit_reservations: ['created_by', 'idempotency_key'],
   saas_plans: ['is_test'],
   saas_subscriptions: ['created_by'],
+  // migration 212: dropship store_orders & store_order_items — internal stage, rate/fee/duty version FKs, item_id, trace/test flags stay internal
+  store_orders: ['actual_pack_weight_g', 'created_by', 'duty_rate_version_id', 'fee_version_id', 'is_test', 'shipping_rate_card_id', 'staff_stage', 'trace_id'],
+  store_order_items: ['item_id'],
 };
 
 // ── Run directly (node scripts/hidden-columns.mjs) to compare this list with the STAGING database grants. ──
