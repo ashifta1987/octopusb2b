@@ -38,9 +38,11 @@ export async function updateService(_prev: Result | null, fd: FormData): Promise
 
 /** Change a price = insert a new service_prices row effective now or at a future date (history is kept). */
 export async function addPrice(_prev: Result | null, fd: FormData): Promise<Result> {
-  const g = await guard('services', 'edit');
-  if ('error' in g) return g.error;
   const code = str(fd, 'code');
+  const g = await guard(code === 'dropship_request' ? 'finance' : 'services', 'edit');
+  const gFallback = 'error' in g && code === 'dropship_request' ? await guard('services', 'edit') : g;
+  if ('error' in gFallback) return gFallback.error;
+  const caller = gFallback;
   const cents = toCents(str(fd, 'amount'));
   if (!code) return fail('Missing service');
   const currency = (str(fd, 'currency') || 'USD') as Currency;
@@ -53,7 +55,7 @@ export async function addPrice(_prev: Result | null, fd: FormData): Promise<Resu
     if (Number.isNaN(d.getTime())) return fail('Invalid date');
     if (d.getTime() > Date.now()) effective = d;
   }
-  const { error } = await g.sb.from('service_prices').insert({ service_code: code, amount_minor: cents, currency, effective_from: effective.toISOString(), created_by: g.s.userId });
+  const { error } = await caller.sb.from('service_prices').insert({ service_code: code, amount_minor: cents, currency, effective_from: effective.toISOString(), created_by: caller.s.userId });
   if (error) return fail(error);
   refresh();
   return ok(effective.getTime() > Date.now() + 60_000 ? `${currency} price scheduled` : `${currency} price updated — applies to new requests`);

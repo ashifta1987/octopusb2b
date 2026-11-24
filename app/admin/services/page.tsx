@@ -29,6 +29,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
   // created_by is hidden from session reads (migration 195): added with the service role after requireStaff.
   const prices = await withHiddenColumns('service_prices', priceRows, 'created_by');
   const editable = can(s, 'services', 'edit');
+  const canEditPrice = (code: string) => editable || (code === 'dropship_request' && can(s, 'finance', 'edit'));
   const { data: launchRows } = await sb.from('launch_signups').select('id, email, source, created_at, notified_at').eq('feature', 'dropship').order('created_at', { ascending: false }).limit(200);
   const launch = (launchRows ?? []) as { id: string; email: string; source: string | null; created_at: string; notified_at: string | null }[];
   const dsCfg = await dropshipSettings();
@@ -69,7 +70,15 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
         subtitle="Every paid or free service in one place. Change a price here and it updates on the product page, Request Center and checkout. Prices are kept per currency (USD and CNY); a missing CNY price is converted from USD at the approved rate and marked “converted”. Changes apply to new requests only."
         actions={editable && <Link href="/admin/services?new=1" className="btn btn-primary">+ Add new service</Link>}
       />
-      {!editable && <div className="mb-6"><Notice>You can view prices. Editing needs the Services & charges · edit permission.</Notice></div>}
+      {!editable && (
+        <div className="mb-6">
+          <Notice>
+            {can(s, 'finance', 'edit')
+              ? 'You can view services and update the Dropship product request price.'
+              : 'You can view prices. Editing needs the Services & charges · edit permission.'}
+          </Notice>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
         <Card className="self-start overflow-hidden">
@@ -155,7 +164,7 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
                   );
                 })}
               </div>
-              {editable && (
+              {canEditPrice(selected.code) && (
                 <ActionForm key={'p' + selected.code} action={addPrice} className="px-6 pb-4 grid gap-4 sm:grid-cols-[120px_1fr_1fr_auto] items-end" submitLabel="Set price" confirm="Change this price? It applies to new requests from the effective date." resetOnSuccess inline>
                   <input type="hidden" name="code" value={selected.code} />
                   <Field label="Currency" htmlFor="pr-cur">

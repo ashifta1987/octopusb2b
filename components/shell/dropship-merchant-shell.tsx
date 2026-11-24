@@ -90,14 +90,17 @@ function isMerchantItemActive(
   return pathname === item.href || pathname.startsWith(item.href + '/');
 }
 
-function isPhoneTabActive(tabHref: string, pathname: string): boolean {
+function isPhoneTabActive(tabHref: string, pathname: string, isListParam = false): boolean {
   if (tabHref === '/account/dropship') {
     return pathname === '/account/dropship' || pathname === '/account/dropship/onboarding';
   }
   if (tabHref === '/account/dropship/catalogue') {
     return (
-      pathname === '/account/dropship/catalogue' ||
-      pathname.startsWith('/account/dropship/catalogue/')
+      (pathname === '/account/dropship/catalogue' && !isListParam) ||
+      pathname.startsWith('/account/dropship/catalogue/') ||
+      pathname === '/account/dropship/landed-cost' ||
+      pathname.startsWith('/account/dropship/requests') ||
+      pathname.startsWith('/account/dropship/sample')
     );
   }
   if (tabHref === '/account/dropship/orders') {
@@ -111,6 +114,7 @@ function isPhoneTabActive(tabHref: string, pathname: string): boolean {
   }
   return (
     pathname === '/account/dropship/more' ||
+    (pathname === '/account/dropship/catalogue' && isListParam) ||
     pathname.startsWith('/account/dropship/pricing') ||
     pathname.startsWith('/account/dropship/packing') ||
     pathname.startsWith('/account/dropship/stores') ||
@@ -120,10 +124,7 @@ function isPhoneTabActive(tabHref: string, pathname: string): boolean {
     pathname.startsWith('/account/dropship/support') ||
     pathname.startsWith('/account/dropship/import') ||
     pathname.startsWith('/account/dropship/push') ||
-    pathname.startsWith('/account/dropship/pushed') ||
-    pathname.startsWith('/account/dropship/requests') ||
-    pathname.startsWith('/account/dropship/sample') ||
-    pathname.startsWith('/account/dropship/landed-cost')
+    pathname.startsWith('/account/dropship/pushed')
   );
 }
 
@@ -312,7 +313,7 @@ export function DropshipMerchantShell({
         className="md:hidden fixed inset-x-0 bottom-0 z-40 flex bg-white border-t border-[#E3E7EF] pb-[env(safe-area-inset-bottom)]"
       >
         {PHONE_TABS.map((tab) => {
-          const active = isPhoneTabActive(tab.href, pathname);
+          const active = isPhoneTabActive(tab.href, pathname, isListParam);
           return (
             <Link
               key={tab.href}

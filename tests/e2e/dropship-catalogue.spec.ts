@@ -93,12 +93,13 @@ test('catalogue & route filtering: DS-XXXXXX model numbers, duties-paid label; e
   await expect(cards.first()).toBeVisible();
   await expect(cards.first()).toContainText(/DS-\d{6}/);
   for (const c of (await cards.all()).slice(0, 4)) {
-    await expect(c.getByTestId('verified-badge')).toBeVisible();
-    await expect(c.getByText('Your cost (incl. shipping)')).toBeVisible();
-    await expect(c.getByText(/Includes shipping and duties to United Arab Emirates/)).toBeVisible();
+    await expect(c.getByText('Product', { exact: true })).toBeVisible();
+    await expect(c.getByText('Processing', { exact: true })).toBeVisible();
+    await expect(c.getByText('Shipping', { exact: true })).toBeVisible();
+    await expect(c.getByText('Landed cost', { exact: true })).toBeVisible();
   }
   const html = await page.content();
-  expect(html).not.toMatch(/OCT-113\d|OCT-DS-TEST|Boweijie|Bowijie|Domino|Xintaiwang|YunExpress|\b4PX\b|FACTORY-MDL-|unit_cost_cents|supplier_sku|legacy_sku|sourcing_product_id/i);
+  expect(html).not.toMatch(/OCT-113\d|OCT-DS-TEST|Boweijie|Bowijie|Domino|Xintaiwang|YunExpress|\b4PX\b|FACTORY-MDL-|unit_cost_cents|supplier_sku|legacy_sku|sourcing_product_id|\bSR-\d+/i);
   await shot(page, 'dropship-v2-merchant-catalogue-desktop');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/account/dropship/catalogue?country=AE');
@@ -108,7 +109,7 @@ test('catalogue & route filtering: DS-XXXXXX model numbers, duties-paid label; e
 
   // SA has no active routes on the 5 TEST products → clear empty state
   await page.goto('/account/dropship/catalogue?country=SA');
-  await expect(page.getByTestId('catalogue-empty')).toContainText('No active shipping routes to Saudi Arabia yet');
+  await expect(page.getByTestId('catalogue-empty')).toContainText('No products ship to Saudi Arabia yet');
   await expect(page.getByTestId('catalogue-card')).toHaveCount(0);
 });
 
@@ -121,12 +122,12 @@ test('shipping-method chip filters; add to import list toggles to Added and back
   const first = cards.first();
   await first.getByTestId('import-add').click();
   await expect(first.getByTestId('import-added')).toBeVisible();
-  await expect(page.getByTestId('import-list-link')).toContainText(/Import list \([1-9]\d*\)/);
+  await expect(page.getByTestId('import-list-link')).toContainText(/import list \([1-9]\d*\)/i);
   await first.getByTestId('import-added').click();
   await expect(first.getByTestId('import-add')).toBeVisible();
 });
 
-test('product detail page: DS-XXXXXX-NN variant model number, landed price table per method, profit recalculates, white-label clean', async ({ page }) => {
+test('product detail page: DS-XXXXXX-NN variant model number, 9-column landed cost table, Make it your brand DS link, white-label clean', async ({ page }) => {
   await login(page, '/account/dropship/catalogue?country=AE');
   await page.goto('/account/dropship/catalogue?country=AE');
   await page.getByTestId('catalogue-card').first().getByRole('link').first().click();
@@ -134,14 +135,13 @@ test('product detail page: DS-XXXXXX-NN variant model number, landed price table
   await expect(page.getByTestId('dropship-product')).toContainText(/DS-\d{6}/);
   const rows = page.getByTestId('cost-table').locator('tbody tr');
   expect(await rows.count()).toBeGreaterThan(0);
-  const landed = usd(await rows.first().locator('td').nth(2).innerText());
-  await page.getByTestId('sell-price').fill((landed + 10).toFixed(2));
-  await expect(page.getByTestId('profit')).toHaveText('US$ 10.00');
-  await page.getByRole('button', { name: 'Push to my store' }).click();
-  await expect(page.getByTestId('push-soon')).toContainText('coming soon');
-  await expect(page.getByTestId('make-it-your-brand').getByRole('link')).toHaveAttribute('href', /product=/);
+  const landed = usd(await rows.first().locator('td').nth(7).innerText());
+  expect(landed).toBeGreaterThan(0);
+  await expect(page.getByTestId('shipping-customs-card')).toBeVisible();
+  await expect(page.getByTestId('order-sample-link')).toHaveAttribute('href', /\/account\/dropship\/sample\?product=/);
+  await expect(page.getByTestId('make-it-your-brand').getByRole('link')).toHaveAttribute('href', /\/request\/brand\?model=DS-/);
   const html = await page.content();
-  expect(html).not.toMatch(/OCT-113\d|OCT-DS-TEST|Boweijie|Bowijie|YunExpress|\b4PX\b|FACTORY-MDL-|unit_cost_cents|supplier_sku|legacy_sku|sourcing_product_id/i);
+  expect(html).not.toMatch(/OCT-113\d|OCT-DS-TEST|Boweijie|Bowijie|YunExpress|\b4PX\b|FACTORY-MDL-|unit_cost_cents|supplier_sku|legacy_sku|sourcing_product_id|\bSR-\d+/i);
 });
 
 test('merchant without dropshipping switched on sees "Not switched on yet" and zero catalogue cards', async ({ page }) => {

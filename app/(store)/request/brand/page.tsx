@@ -15,8 +15,9 @@ export const metadata: Metadata = {
   alternates: { canonical: '/request/brand' },
 };
 
-type SP = Promise<{ product?: string }>;
+type SP = Promise<{ product?: string; model?: string; title?: string }>;
 const UUID = /^[0-9a-f-]{36}$/i;
+const DS_MODEL = /^DS-\d{6}(?:-\d{2})?$/i;
 
 export default function Page({ searchParams }: { searchParams: SP }) {
   return (
@@ -31,6 +32,8 @@ async function BrandRequest({ searchParams }: { searchParams: SP }) {
   const sb = createPublicClient();
   // products from verified factories only (product_factory view: no supplier ids) → live products with a photo
   const wanted = sp.product && UUID.test(sp.product) ? sp.product : null;
+  const dsModel = sp.model && DS_MODEL.test(sp.model.trim()) ? sp.model.trim().toUpperCase() : null;
+  const dsTitle = dsModel && sp.title ? sp.title.trim().slice(0, 140) : null;
   const [{ data: cand }, { data: one }] = await Promise.all([
     sb.from('products').select('id, title, image_url').eq('status', 'live').is('archived_at', null).not('image_url', 'is', null).order('featured', { ascending: false }).order('created_at', { ascending: false }).limit(60),
     wanted ? sb.from('products').select('id, title, image_url').eq('id', wanted).eq('status', 'live').maybeSingle() : Promise.resolve({ data: null }),
@@ -42,7 +45,8 @@ async function BrandRequest({ searchParams }: { searchParams: SP }) {
   const chosenOk = !!one && verifiedIds.has(one.id as string);
   const products: BrandProduct[] = [...(chosenOk ? [{ id: one!.id as string, title: one!.title as string, image_url: one!.image_url as string | null }] : []), ...((list ?? []) as BrandProduct[]).filter((p) => p.id !== wanted)].slice(0, 9);
   const mode = !session ? 'guest' : !session.org ? 'no-org' : 'ready';
-  const loginHref = `/login?next=${encodeURIComponent(`/request/brand${chosenOk ? `?product=${wanted}` : ''}`)}`;
+  const qs = chosenOk ? `?product=${wanted}` : dsModel ? `?model=${encodeURIComponent(dsModel)}${dsTitle ? `&title=${encodeURIComponent(dsTitle)}` : ''}` : '';
+  const loginHref = `/login?next=${encodeURIComponent(`/request/brand${qs}`)}`;
   const reply = replyHours(settings);
   const countries = Object.entries(COUNTRY_NAMES).sort((a, b) => a[1].localeCompare(b[1])) as [string, string][];
 
@@ -56,7 +60,15 @@ async function BrandRequest({ searchParams }: { searchParams: SP }) {
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px] items-start">
         <div className="min-w-0 space-y-4">
           {wanted && !chosenOk && <Notice tone="warn">That product is not from a verified supplier, so it cannot be branded. Choose one of these verified products or paste a link.</Notice>}
-          <BrandRequestWizard products={products} methods={brandMethods(settings)} initialProduct={chosenOk ? wanted : null} orgId={session?.org?.id ?? null}
+          {dsModel && (
+            <div data-testid="brand-ds-model-banner">
+              <Notice>
+                Branding Dropship product <b className="mono">{dsModel}</b>{dsTitle ? ` (${dsTitle})` : ''}. Your account manager links this model when preparing your proof and quote.
+              </Notice>
+            </div>
+          )}
+          <BrandRequestWizard products={products} methods={brandMethods(settings)} initialProduct={chosenOk ? wanted : null}
+            initialDsModel={dsModel} initialDsTitle={dsTitle} orgId={session?.org?.id ?? null}
             mode={mode} loginHref={loginHref} countries={countries} />
         </div>
         <aside className="space-y-4 min-w-0">

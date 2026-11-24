@@ -32,14 +32,18 @@ function RadioCard({ name, value, checked, onChange, title, body, extra }: { nam
 }
 
 /** ADDON-44-F board 26 — Make My Brand request: 3 steps, private logo upload, summary, creates MB-xxxx. */
-export function BrandRequestWizard({ products, methods, initialProduct, orgId, mode, loginHref, countries }: {
-  products: BrandProduct[]; methods: MethodOpt[]; initialProduct: string | null; orgId: string | null;
+export function BrandRequestWizard({ products, methods, initialProduct, initialDsModel, initialDsTitle, orgId, mode, loginHref, countries }: {
+  products: BrandProduct[]; methods: MethodOpt[]; initialProduct: string | null;
+  initialDsModel?: string | null; initialDsTitle?: string | null;
+  orgId: string | null;
   mode: 'ready' | 'guest' | 'no-org'; loginHref: string; countries: [string, string][];
 }) {
+  const defaultDsLink = initialDsModel ? `https://www.hostoctopus.com/account/dropship/catalogue?q=${encodeURIComponent(initialDsModel)}` : '';
+  const defaultDsNote = initialDsModel ? `Dropship model no. ${initialDsModel}${initialDsTitle ? ` (${initialDsTitle})` : ''}` : '';
   const [step, setStep] = useState(0);
   const [productId, setProductId] = useState<string | null>(initialProduct);
-  const [link, setLink] = useState('');
-  const [useLink, setUseLink] = useState(false);
+  const [link, setLink] = useState(defaultDsLink);
+  const [useLink, setUseLink] = useState(Boolean(initialDsModel && !initialProduct));
   const [qty, setQty] = useState('');
   const [markets, setMarkets] = useState<string[]>([]);
   const [method, setMethod] = useState('');
@@ -50,7 +54,7 @@ export function BrandRequestWizard({ products, methods, initialProduct, orgId, m
   const [dest, setDest] = useState<'warehouse' | 'bulk' | ''>('');
   const [bulkCountry, setBulkCountry] = useState('');
   const [stores, setStores] = useState<string[]>([]);
-  const [note, setNote] = useState('');
+  const [note, setNote] = useState(defaultDsNote);
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);

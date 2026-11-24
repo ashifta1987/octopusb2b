@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { requireCustomer } from '@/lib/auth';
 import { COUNTRY_NAMES } from '@/lib/format';
 import { getAccountContext, serviceOn } from '@/lib/core/account';
@@ -7,89 +8,92 @@ import {
   getDropshipCatalogue,
   getDropshipCountries,
   dropshipSettings,
+  isDropshipV2UiEnabled,
   importList,
   pickRoute,
   profit,
   suggested,
   days,
-  STOCK_LABEL,
   type ShipType,
 } from '@/lib/dropship';
-import { VerifiedBadge, ShippingTypePill, ExamplePill, Icon, Notice } from '@/components/ds';
-import { CountrySelect, FilterToggle, ImportButton } from '@/components/account/dropship/client';
+import {
+  DsBadge,
+  DsCard,
+  DsEmptyState,
+  DsIcon,
+  DsLinkButton,
+  DsPageHeader,
+  DsSkeleton,
+} from '@/components/dropship-ui';
 import { LaunchNotifyForm } from '@/components/store/launch-notify-form';
 import { addToImportList, removeFromImportList, saveMerchantMarkets } from '../actions';
+import { DsImportSubmitButton, DsQuerySelect } from './catalogue-v2-client';
 
-export const metadata = { title: 'Dropshipping catalogue' };
+export const metadata = { title: 'Find products · Octopus Dropship' };
 
 type SP = {
   q?: string;
   country?: string;
   cat?: string;
   ship?: string;
+  stock?: string;
+  only?: string;
   sort?: string;
   list?: string;
   markets?: string;
   page?: string;
 };
 
-const usd = (c: number) =>
-  `US$ ${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const SORTS: [string, string][] = [
-  ['fastest', 'Fastest delivery'],
-  ['profit', 'Best profit'],
-  ['cost', 'Lowest cost'],
-  ['newest', 'Newest'],
-];
+const usdShort = (c: number) =>
+  `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 const SHIPS: [string, string][] = [
-  ['', 'All'],
+  ['', 'All methods'],
   ['economy', 'Economy'],
   ['standard', 'Standard'],
   ['express', 'Express'],
 ];
 
+const STOCK_TYPES: [string, string][] = [
+  ['', 'All'],
+  ['fast_ship', 'Fast-ship stock'],
+  ['extended_catalog', 'Extended catalog'],
+];
+
 export default function Page({ searchParams }: { searchParams: Promise<SP> }) {
   return (
-    <Suspense fallback={<CatalogueSkeleton />}>
+    <Suspense
+      fallback={
+        <div className="ds-card">
+          <DsSkeleton immediate />
+        </div>
+      }
+    >
       <Catalogue searchParams={searchParams} />
     </Suspense>
   );
 }
 
-function CatalogueSkeleton() {
-  return (
-    <div aria-busy="true" aria-label="Loading the catalogue">
-      <div className="h-8 w-48 bg-line rounded" />
-      <div className="card h-[150px] mt-6" />
-      <div className="mt-6 grid gap-4 grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
-        {Array.from({ length: 8 }, (_, i) => (
-          <div key={i} className="card h-[420px] animate-pulse" />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
   const s = await requireCustomer('/account/dropship/catalogue');
+  if (!s.org) redirect('/account/dropship');
   const sp = await searchParams;
-  const ctx = await getAccountContext(s.org!.id);
+  const [ctx, v2On] = await Promise.all([
+    getAccountContext(s.org.id),
+    isDropshipV2UiEnabled(),
+  ]);
   const on = serviceOn(ctx.services.dropship);
 
-  // Dropshipping not switched on → keep the "not switched on" message, and the function returns zero rows
+  // States-Catalog.html: Account without dropshipping sees "Dropshipping is not switched on" & 0 cards
   if (!on) {
     return (
-      <div className="max-w-[860px]" data-testid="dropship-not-switched-on">
-        <div className="mono text-[11.5px] font-semibold uppercase tracking-[.1em] text-coral-text">
-          Not switched on yet
-        </div>
-        <h1 className="text-[30px] font-extrabold leading-[1.15]">Dropshipping catalogue</h1>
-        <section className="card p-6 mt-5" data-testid="dropship-coming-soon">
-          <span className="pill bg-warn-bg text-warn">Coming soon</span>
-          <p className="mt-2 text-[15px]">
-            Dropshipping is not switched on for {s.org!.name} yet. Leave your email and we will tell you once it opens, or ask your account manager.
+      <div className="max-w-[780px]" data-testid="dropship-not-switched-on">
+        <h1 className="text-[28px] font-bold text-[#1A174A] m-0">Dropshipping is not switched on</h1>
+        <section className="card p-6 mt-4" data-testid="dropship-coming-soon">
+          <p className="m-0 text-[15px] text-[#5B6478]">
+            Dropshipping is not switched on for {s.org.name} yet. Ask your account manager to switch it on, or leave your email to be notified. No products are shown until then.
           </p>
-          <div className="mt-3 max-w-[560px]">
+          <div className="mt-4 max-w-[540px]">
             <LaunchNotifyForm
               feature="dropship"
               source="catalogue-off"
@@ -101,10 +105,14 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
     );
   }
 
+  if (!v2On) {
+    redirect('/account/dropship');
+  }
+
   const [cfg, merchantCountries, list] = await Promise.all([
     dropshipSettings(),
     getDropshipCountries(),
-    importList(s.org!.id),
+    importList(s.org.id),
   ]);
 
   const countries = merchantCountries.map((m) => m.country);
@@ -116,7 +124,7 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
   const fallback =
     cfg.defaultCountry && countries.includes(cfg.defaultCountry)
       ? cfg.defaultCountry
-      : s.org?.country && countries.includes(s.org.country)
+      : s.org.country && countries.includes(s.org.country)
         ? s.org.country
         : countries[0];
   const country =
@@ -124,9 +132,14 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
       ? sp.country.toUpperCase()
       : fallback;
   const countryName = country ? (COUNTRY_NAMES[country] ?? country) : '';
+
   const ship = (
     ['express', 'standard', 'economy'].includes(sp.ship ?? '') ? sp.ship : null
   ) as ShipType | null;
+  const stockFilter =
+    sp.stock === 'fast_ship' || sp.stock === 'extended_catalog' ? sp.stock : '';
+  const onlyForYou = sp.only === '1';
+  const isListOnly = sp.list === '1';
   const pageNum = Math.max(1, Number(sp.page ?? '1') || 1);
 
   const { rows, totalCount } = country
@@ -138,9 +151,8 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
       })
     : { rows: [], totalCount: 0 };
 
-  // Also fetch distinct categories across the country's active products (page 1 without category filter if filtered)
   const allForCats =
-    country && sp.cat
+    country && (sp.cat || sp.q)
       ? (await getDropshipCatalogue({ country, page: 1 })).rows
       : rows;
   const cats = [
@@ -150,414 +162,508 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
         .filter(Boolean),
     ),
   ].sort((a, b) => a.localeCompare(b));
+  const categoryOpts: [string, string][] = [
+    ['', 'All categories'],
+    ...cats.map((c) => [c, c] as [string, string]),
+  ];
 
-  const filtered = rows
-    .filter((r) => sp.list !== '1' || list.has(r.product_id))
+  const onlyForYouCount = rows[0]?.only_for_you_count ?? allForCats[0]?.only_for_you_count ?? 0;
+
+  // Determine country duties mode from active routes (defaults to DDP)
+  const sampleRouteForCountry = rows[0]?.routes?.[0] ?? allForCats[0]?.routes?.[0] ?? null;
+  const countryIncoterm = sampleRouteForCountry?.incoterm ?? 'DDP';
+
+  const mapped = rows
+    .filter((r) => !isListOnly || list.has(r.product_id))
+    .filter((r) => !onlyForYou || r.only_for_you)
+    .filter((r) => !stockFilter || r.fulfilment_type === stockFilter)
     .map((r) => {
       const route = pickRoute(r.routes, ship);
       const sugg = route ? suggested(route.landed_price_cents, cfg.markup) : null;
-      return {
-        r,
-        route,
-        sugg,
-        pr: route && sugg ? profit(sugg, route.landed_price_cents) : null,
-      };
+      const pr = route && sugg ? profit(sugg, route.landed_price_cents) : null;
+      const minBp =
+        (r.category && cfg.categoryMinMarginBp[r.category] != null
+          ? cfg.categoryMinMarginBp[r.category]
+          : cfg.minMarginBp) ?? 1500;
+      const lowMargin = Boolean(pr && pr.bp < minBp);
+      return { r, route, sugg, pr, lowMargin };
     })
-    .filter((x) => !ship || x.route !== null);
+    .filter((x) => x.route !== null);
 
-  const sort = SORTS.some(([k]) => k === sp.sort) ? sp.sort! : 'fastest';
-  filtered.sort((a, b) => {
+  // Default sort in Catalog.html: highest margin after duties (with 'only_for_you' pinned first unless explicit sort)
+  const sort = sp.sort ?? 'margin';
+  mapped.sort((a, b) => {
     if (!a.route || !b.route) return 0;
-    if (sort === 'profit') return (b.pr?.cents ?? 0) - (a.pr?.cents ?? 0);
-    if (sort === 'cost') return a.route.landed_price_cents - b.route.landed_price_cents;
-    if (sort === 'newest') return 0;
-    return (
-      a.route.est_days_min - b.route.est_days_min ||
-      a.route.landed_price_cents - b.route.landed_price_cents
-    );
+    if (a.r.only_for_you !== b.r.only_for_you && !sp.sort) {
+      return a.r.only_for_you ? -1 : 1;
+    }
+    if (sort === 'fastest') {
+      return (
+        a.route.est_days_min - b.route.est_days_min ||
+        a.route.landed_price_cents - b.route.landed_price_cents
+      );
+    }
+    if (sort === 'cost') {
+      return a.route.landed_price_cents - b.route.landed_price_cents;
+    }
+    return (b.pr?.bp ?? 0) - (a.pr?.bp ?? 0) || a.route.landed_price_cents - b.route.landed_price_cents;
   });
 
-  const hasFilters = !!(sp.q || sp.cat || ship || sp.list === '1');
+  const hasFilters = Boolean(sp.q || sp.cat || ship || stockFilter || onlyForYou || isListOnly);
   const totalPages = Math.max(1, Math.ceil(totalCount / 48));
 
-  const href = (patch: Partial<SP>) => {
-    const p = new URLSearchParams(
-      Object.entries({ ...sp, country, ...patch }).filter(([, v]) => v) as [string, string][],
-    );
-    return `/account/dropship/catalogue?${p.toString()}`;
+  const buildHref = (patch: Partial<SP>) => {
+    const merged: Record<string, string | undefined> = {
+      ...sp,
+      country: country ?? undefined,
+      ...patch,
+    };
+    const p = new URLSearchParams();
+    for (const [k, v] of Object.entries(merged)) {
+      if (v) p.set(k, v);
+    }
+    const qs = p.toString();
+    return qs ? `/account/dropship/catalogue?${qs}` : '/account/dropship/catalogue';
   };
 
   const supportedOpts = cfg.supportedCountries
     .map((c) => [c, COUNTRY_NAMES[c] ?? c] as [string, string])
     .sort((a, b) => a[1].localeCompare(b[1]));
 
-  const marketsCard = (
-    <details
-      className="card p-4 sm:p-5 mt-4"
-      open={countries.length === 0 || sp.markets === '1'}
-      data-testid="selling-countries-panel"
-    >
-      <summary className="cursor-pointer font-semibold text-[14.5px] flex flex-wrap items-center justify-between gap-2">
-        <span>
-          Selling countries ({countries.length ? countries.map((c) => COUNTRY_NAMES[c] ?? c).join(', ') : 'none selected'})
-          {lockedByStaff && (
-            <span className="ml-2 pill bg-pearl text-muted border border-line">
-              Locked by account manager
-            </span>
-          )}
-        </span>
-        <span className="text-[13px] text-coral-text font-semibold">
-          {lockedByStaff ? 'View' : 'Change selling countries'}
-        </span>
-      </summary>
-      {lockedByStaff ? (
-        <p className="mt-3 text-[13.5px] text-muted" data-testid="markets-locked-msg">
-          Your account manager has locked your selling countries. Contact your account manager to add or remove a market.
-        </p>
-      ) : (
-        <form action={saveMerchantMarkets} className="mt-3 space-y-3" data-testid="markets-form">
-          <p className="text-[13.5px] text-muted">
-            Pick the countries your store ships to. The catalogue only shows products with active routes and duties-paid prices to these countries.
-          </p>
-          <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
-            {supportedOpts.map(([code, name]) => (
-              <label
-                key={code}
-                className="inline-flex items-center gap-2 text-[13.5px] px-2.5 py-1.5 rounded border border-line bg-white cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  name="countries"
-                  value={code}
-                  defaultChecked={countries.includes(code)}
-                  className="accent-ink"
-                />
-                <span>
-                  {name} <span className="mono text-[11px] text-muted">({code})</span>
-                </span>
-              </label>
-            ))}
-          </div>
-          <button type="submit" className="btn btn-dark min-h-10">
-            Save selling countries
-          </button>
-        </form>
-      )}
-    </details>
-  );
-
-  const filters = (
-    <form
-      action="/account/dropship/catalogue"
-      className="card p-4 sm:p-5"
-      data-testid="catalogue-filters"
-    >
-      <input type="hidden" name="country" value={country ?? ''} />
-      {ship && <input type="hidden" name="ship" value={ship} />}
-      <div className="grid gap-3 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
-        <div>
-          <label htmlFor="q" className="k block mb-1.5">
-            Search the catalogue
-          </label>
-          <input
-            id="q"
-            name="q"
-            defaultValue={sp.q ?? ''}
-            className="input"
-            placeholder="Product name, SKU or category"
-          />
-        </div>
-        <div>
-          <label htmlFor="country" className="k block mb-1.5">
-            Customers in
-          </label>
-          <CountrySelect value={country ?? ''} options={countryOpts} />
-        </div>
-        <div>
-          <label htmlFor="cat" className="k block mb-1.5">
-            Category
-          </label>
-          <select id="cat" name="cat" defaultValue={sp.cat ?? ''} className="input">
-            <option value="">All categories</option>
-            {cats.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label htmlFor="sort" className="k block mb-1.5">
-            Sort by
-          </label>
-          <select id="sort" name="sort" defaultValue={sort} className="input">
-            {SORTS.map(([k, l]) => (
-              <option key={k} value={k}>
-                {l}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-      <div className="mt-3 pt-3 border-t border-line flex flex-wrap items-center justify-between gap-3">
-        <div
-          className="flex flex-wrap items-center gap-1.5"
-          role="group"
-          aria-label="Shipping method"
-        >
-          <span className="k mr-1">Shipping method:</span>
-          {SHIPS.map(([k, l]) => {
-            const onChip = (ship ?? '') === k;
-            return (
-              <Link
-                key={k || 'all'}
-                href={href({ ship: k || undefined, page: undefined })}
-                aria-current={onChip ? 'true' : undefined}
-                className={`inline-flex items-center min-h-9 px-3.5 rounded-full border text-[13.5px] font-medium ${
-                  onChip
-                    ? 'bg-ink text-white border-ink'
-                    : 'border-line-strong bg-white hover:border-ink'
-                }`}
-              >
-                {l}
-              </Link>
-            );
-          })}
-        </div>
-        <div className="flex items-center gap-2">
-          {hasFilters && (
-            <Link
-              href={href({
-                q: undefined,
-                cat: undefined,
-                ship: undefined,
-                list: undefined,
-                sort: undefined,
-                page: undefined,
-              })}
-              className="btn btn-ghost min-h-10"
-            >
-              Clear
-            </Link>
-          )}
-          <button type="submit" className="btn btn-dark min-h-10">
-            Apply
-          </button>
-        </div>
-      </div>
-    </form>
-  );
-
   return (
-    <div data-testid="dropship-catalogue">
-      <div className="k !text-coral-text">Dropshipping</div>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="max-w-[860px]">
-          <h1 className="text-[30px] font-extrabold leading-[1.15]">
-            {sp.list === '1' ? 'Import list' : 'Catalogue'}
-          </h1>
-          <p className="mt-1 text-[14.5px] text-black">
-            Only products available for dropshipping to your markets are shown · Verified suppliers only · Prices include shipping and duties to the country you choose
-          </p>
-        </div>
-        <Link
-          href={href({ list: sp.list === '1' ? undefined : '1', page: undefined })}
-          className="btn btn-ghost"
-          data-testid="import-list-link"
+    <div className="flex flex-col gap-5" data-testid="dropship-catalogue-v2">
+      <DsPageHeader
+        title={isListOnly ? 'Import list' : 'Find products'}
+        subtitle="Prices include shipping and duties to the country you pick. Margins are after duties."
+        icon="search"
+        actions={
+          <>
+            <DsLinkButton
+              href="/account/dropship/requests"
+              variant="secondary"
+              icon="send"
+              testId="request-product-btn"
+            >
+              Request a product
+            </DsLinkButton>
+            <DsLinkButton
+              href={
+                isListOnly
+                  ? buildHref({ list: undefined, page: undefined })
+                  : buildHref({ list: '1', page: undefined })
+              }
+              variant="primary"
+              icon="arrow"
+              testId="import-list-link"
+            >
+              {isListOnly ? 'Browse all products' : `Go to import list (${list.size})`}
+            </DsLinkButton>
+          </>
+        }
+      />
+
+      {/* Filter Bar — matches screens/Catalog.html */}
+      <DsCard testId="catalogue-filters">
+        <form
+          action="/account/dropship/catalogue"
+          className="flex gap-3.5 flex-wrap items-end"
         >
-          <Icon name="doc" size={18} />
-          {sp.list === '1' ? 'Show all products' : `Import list (${list.size})`}
-        </Link>
-      </div>
+          {country && <input type="hidden" name="country" value={country} />}
+          {sp.cat && <input type="hidden" name="cat" value={sp.cat} />}
+          {stockFilter && <input type="hidden" name="stock" value={stockFilter} />}
+          {ship && <input type="hidden" name="ship" value={ship} />}
+          {onlyForYou && <input type="hidden" name="only" value="1" />}
+          {isListOnly && <input type="hidden" name="list" value="1" />}
 
-      {marketsCard}
-
-      {!country ? (
-        <div className="mt-6" data-testid="no-markets-empty">
-          <Notice tone="warn">
-            Choose the countries you sell to above to browse products with routes to your markets.
-          </Notice>
-        </div>
-      ) : (
-        <>
-          <FilterToggle on={hasFilters}>{filters}</FilterToggle>
-
-          <div className="mt-5 flex items-center justify-between gap-3">
-            <p className="text-[14.5px]" data-testid="result-count">
-              <b>
-                {filtered.length} {filtered.length === 1 ? 'product' : 'products'}
-              </b>{' '}
-              for customers in {countryName}
-            </p>
-            {cfg.demo && <ExamplePill />}
-          </div>
-
-          {filtered.length === 0 ? (
-            <div className="card p-8 mt-4 text-center" data-testid="catalogue-empty">
-              <p className="text-[16px] font-semibold">
-                {hasFilters
-                  ? `No products ship to ${countryName} with these filters`
-                  : `No active shipping routes to ${countryName} yet`}
-              </p>
-              <p className="mt-1 text-[13.5px] text-muted">
-                {hasFilters
-                  ? 'Try clearing your search or shipping method filter.'
-                  : 'Switch to another selling country or ask your account manager when routes to this market open.'}
-              </p>
-              {hasFilters && (
+          <div className="flex-[2_1_220px] min-w-0">
+            <label className="ds-label" htmlFor="q">
+              Search
+            </label>
+            <div className="flex gap-2">
+              <input
+                id="q"
+                name="q"
+                defaultValue={sp.q ?? ''}
+                placeholder="Search products or DS model no."
+                className="ds-input w-full"
+              />
+              {sp.q && (
                 <Link
-                  href={href({
-                    q: undefined,
-                    cat: undefined,
-                    ship: undefined,
-                    list: undefined,
-                    sort: undefined,
-                    page: undefined,
-                  })}
-                  className="btn btn-ghost mt-4"
+                  href={buildHref({ q: undefined, page: undefined })}
+                  className="ds-btn ds-btn-secondary shrink-0 no-underline"
                 >
-                  Clear filters
+                  Clear
                 </Link>
               )}
             </div>
-          ) : (
-            <>
-              <ul className="mt-4 grid gap-4 grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
-                {filtered.map(({ r, route, sugg, pr }) => {
-                  if (!route) return null;
-                  const added = list.has(r.product_id);
-                  const savedItem = list.get(r.product_id);
-                  const detail = `/account/dropship/catalogue/${r.product_id}?country=${country}`;
-                  const img = r.images[0] ?? null;
-                  const [stockText, stockTone] = STOCK_LABEL[r.stock_status];
-                  return (
-                    <li
-                      key={r.product_id}
-                      className="card overflow-hidden flex flex-col"
-                      data-testid="catalogue-card"
-                    >
-                      <div className="relative aspect-square bg-pearl">
-                        {img ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={img}
-                            alt={r.title}
-                            loading="lazy"
-                            decoding="async"
-                            className="absolute inset-0 w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center text-muted text-[13px] gap-1.5">
-                            <Icon name="box" size={28} />
-                            Photo coming
-                          </div>
-                        )}
-                        <span className="absolute top-2.5 left-2.5">
-                          <VerifiedBadge />
-                        </span>
-                        <span className={`absolute top-2.5 right-2.5 pill ${stockTone}`}>
-                          {stockText}
-                        </span>
-                      </div>
-                      <div className="p-4 flex flex-col flex-1">
-                        <div className="flex flex-wrap gap-1.5">
-                          <ShippingTypePill type={route.shipping_method} />
-                          <span className="pill bg-pearl text-muted border border-line">
-                            {days(route)}
-                          </span>
-                        </div>
-                        <h2 className="mt-2.5 text-[15.5px] font-bold leading-snug line-clamp-2">
-                          <Link href={detail} className="text-ink hover:text-coral-text">
-                            {r.title}
-                          </Link>
-                        </h2>
-                        <p className="mt-1 text-[12.5px] text-muted">
-                          Model <span className="mono">{r.model_no}</span> · MOQ {r.min_order_qty}
-                          {r.variants.length > 1 ? ` · ${r.variants.length} variants` : ''}
-                        </p>
-                        <dl className="mt-3 pt-3 border-t border-line space-y-1 text-[13.5px] flex-1">
-                          <div className="flex justify-between gap-2">
-                            <dt className="text-muted">Your cost (incl. shipping)</dt>
-                            <dd className="font-semibold tabular-nums whitespace-nowrap">
-                              {usd(route.landed_price_cents)}
-                            </dd>
-                          </div>
-                          <div className="text-[12px] text-muted">
-                            Includes shipping and duties to {countryName}
-                          </div>
-                          {sugg && (
-                            <div className="flex justify-between gap-2 pt-0.5">
-                              <dt className="text-muted">Suggested price</dt>
-                              <dd className="font-bold tabular-nums whitespace-nowrap">
-                                {usd(sugg)}
-                              </dd>
-                            </div>
-                          )}
-                          {pr && (
-                            <div className="flex justify-between gap-2">
-                              <dt className="text-muted">Profit</dt>
-                              <dd className="font-bold text-ok tabular-nums whitespace-nowrap">
-                                {usd(pr.cents)} ({pr.pct}%)
-                              </dd>
-                            </div>
-                          )}
-                          {savedItem?.price_cents && sp.list === '1' && (
-                            <div className="flex justify-between gap-2">
-                              <dt className="text-muted">Saved selling price</dt>
-                              <dd className="font-bold tabular-nums whitespace-nowrap">
-                                {usd(savedItem.price_cents)}
-                              </dd>
-                            </div>
-                          )}
-                        </dl>
-                        <form
-                          action={added ? removeFromImportList : addToImportList}
-                          className="mt-3"
-                        >
-                          <input type="hidden" name="product_id" value={r.product_id} />
-                          <input type="hidden" name="service" value={route.shipping_method} />
-                          {sugg && <input type="hidden" name="price_cents" value={String(sugg)} />}
-                          <ImportButton added={added} />
-                        </form>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
+          </div>
 
-              {totalPages > 1 && (
-                <nav
-                  aria-label="Catalogue pages"
-                  className="mt-6 flex items-center justify-between gap-3"
-                  data-testid="catalogue-pagination"
+          <div className="flex-[1_1_160px] min-w-0">
+            <DsQuerySelect
+              id="cat"
+              name="cat"
+              label="Category"
+              value={sp.cat ?? ''}
+              options={categoryOpts}
+              testId="category-select"
+            />
+          </div>
+
+          <div className="flex-[1_1_170px] min-w-0">
+            <DsQuerySelect
+              id="country"
+              name="country"
+              label="Ships to"
+              value={country ?? ''}
+              options={countryOpts}
+              testId="country-select"
+            />
+          </div>
+
+          <div className="flex-[1_1_220px] min-w-0">
+            <span className="ds-label">Duties</span>
+            <p className="m-0 min-h-[44px] flex items-center flex-wrap gap-1 text-[14px] text-[#1A174A]">
+              <span>
+                {countryIncoterm === 'DAP' ? 'Paid by buyer (DAP)' : 'Included (DDP)'}
+                {countryName ? ` for ${country}` : ''}
+              </span>
+              <span aria-hidden="true">·</span>
+              <Link
+                href="/account/dropship/packing"
+                className="text-[#2A6FD1] hover:underline font-medium"
+              >
+                change in Packing and shipping
+              </Link>
+            </p>
+          </div>
+
+          <div className="flex-[1_1_160px] min-w-0">
+            <DsQuerySelect
+              id="stock"
+              name="stock"
+              label="Stock type"
+              value={stockFilter}
+              options={STOCK_TYPES}
+              testId="stock-type-select"
+            />
+          </div>
+        </form>
+
+        {/* Shipping method filter & selling countries toggle */}
+        <div className="mt-3.5 pt-3 border-t border-[#EEF0F4] flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap" role="group" aria-label="Shipping method">
+            <span className="text-[12.5px] font-semibold text-[#5B6478]">Shipping method:</span>
+            {SHIPS.map(([val, label]) => {
+              const active = (ship ?? '') === val;
+              return (
+                <Link
+                  key={val || '__all_ship'}
+                  href={buildHref({ ship: val || undefined, page: undefined })}
+                  aria-current={active ? 'true' : undefined}
+                  className={`ds-chip no-underline ${
+                    active ? '!bg-[#1A174A] !text-white !border-[#1A174A]' : ''
+                  }`}
                 >
-                  <span className="text-[13.5px] text-muted">
-                    Page {pageNum} of {totalPages} ({totalCount} products)
-                  </span>
-                  <div className="flex gap-2">
-                    {pageNum > 1 && (
-                      <Link
-                        href={href({ page: String(pageNum - 1) })}
-                        className="btn btn-ghost min-h-10"
-                      >
-                        ← Previous
-                      </Link>
-                    )}
-                    {pageNum < totalPages && (
-                      <Link
-                        href={href({ page: String(pageNum + 1) })}
-                        className="btn btn-ghost min-h-10"
-                      >
-                        Next →
-                      </Link>
-                    )}
-                  </div>
-                </nav>
-              )}
-            </>
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+
+          <Link
+            href="/account/dropship/landed-cost"
+            className="text-[13px] font-semibold text-[#2A6FD1] hover:underline inline-flex items-center gap-1 min-h-[36px]"
+          >
+            <DsIcon name="globe" size={15} />
+            <span>Landed cost calculator</span>
+          </Link>
+        </div>
+      </DsCard>
+
+      {/* Selling countries details (when no countries or merchant opens ?markets=1) */}
+      {(countries.length === 0 || sp.markets === '1') && (
+        <DsCard title="Selling countries" icon="globe" testId="selling-countries-panel">
+          {lockedByStaff ? (
+            <p className="m-0 text-[13.5px] text-[#5B6478]" data-testid="markets-locked-msg">
+              Your account manager has locked your selling countries. Contact support to add or remove a market.
+            </p>
+          ) : (
+            <form action={saveMerchantMarkets} className="space-y-3" data-testid="markets-form">
+              <p className="m-0 text-[13.5px] text-[#5B6478]">
+                Pick the countries your store ships to. Only products with active routes to these countries are shown.
+              </p>
+              <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
+                {supportedOpts.map(([code, name]) => (
+                  <label
+                    key={code}
+                    className="inline-flex items-center gap-2 min-h-[44px] text-[13.5px] px-3 py-1.5 rounded-[8px] border border-[#E3E7EF] bg-white cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      name="countries"
+                      value={code}
+                      defaultChecked={countries.includes(code)}
+                      className="accent-[#1A174A] w-4 h-4"
+                    />
+                    <span>
+                      {name} <span className="mono text-[11px] text-[#5B6478]">({code})</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <button type="submit" className="ds-btn ds-btn-primary">
+                Save selling countries
+              </button>
+            </form>
           )}
-        </>
+        </DsCard>
       )}
+
+      {/* Filter Chips Row — All products / Only for you */}
+      <div className="flex gap-2 flex-wrap items-center">
+        <Link
+          href={buildHref({ only: undefined, list: undefined, page: undefined })}
+          aria-current={!onlyForYou && !isListOnly ? 'true' : undefined}
+          className={`ds-chip no-underline ${
+            !onlyForYou && !isListOnly ? '!bg-[#1A174A] !text-white !border-[#1A174A]' : ''
+          }`}
+        >
+          All products
+        </Link>
+        <Link
+          href={buildHref({ only: onlyForYou ? undefined : '1', list: undefined, page: undefined })}
+          aria-current={onlyForYou ? 'true' : undefined}
+          data-testid="filter-only-for-you"
+          className={`ds-chip no-underline ${
+            onlyForYou ? '!bg-[#1A174A] !text-white !border-[#1A174A]' : ''
+          }`}
+        >
+          Only for you ({onlyForYouCount})
+        </Link>
+        <span className="ds-mut text-[13px] ml-auto">
+          Showing {mapped.length} of {totalCount} · sorted by highest margin after duties
+        </span>
+      </div>
+
+      {/* Catalogue Grid or Empty States (States-Catalog.html) */}
+      {mapped.length === 0 ? (
+        <DsCard testId="catalogue-empty">
+          {sp.q ? (
+            <DsEmptyState
+              title={`No results for "${sp.q}"`}
+              description="Check the spelling, or ask Octopus to source it for you."
+              icon="search"
+              actionLabel="Request a product"
+              actionHref="/account/dropship/requests"
+              actionIcon="send"
+            />
+          ) : hasFilters ? (
+            <DsEmptyState
+              title="No matching products"
+              description="Clear a filter, choose another destination country, or request a product."
+              icon="search"
+              actionLabel="Clear filters"
+              actionHref={buildHref({
+                q: undefined,
+                cat: undefined,
+                ship: undefined,
+                stock: undefined,
+                only: undefined,
+                list: undefined,
+                page: undefined,
+              })}
+              actionIcon="refresh"
+            />
+          ) : (
+            <DsEmptyState
+              title={`No products ship to ${countryName || 'this country'} yet`}
+              description={`Try another country, or ask us to source for ${countryName || 'this market'}.`}
+              icon="globe"
+              actionLabel="Request a product"
+              actionHref="/account/dropship/requests"
+              actionIcon="send"
+            />
+          )}
+        </DsCard>
+      ) : (
+        <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(240px,1fr))]">
+          {mapped.map(({ r, route, sugg, pr, lowMargin }) => {
+            if (!route) return null;
+            const added = list.has(r.product_id);
+            const detailHref = `/account/dropship/catalogue/${r.product_id}?country=${country}`;
+            const primaryVar = r.variants[0] ?? null;
+            const productCents = route.product_cents ?? 0;
+            const processingCents = route.processing_cents ?? 0;
+            const shippingCents = route.shipping_cents ?? 0;
+            const dutiesText =
+              route.incoterm === 'DAP'
+                ? 'Paid by buyer'
+                : !route.duties_known || route.duties_cents == null
+                  ? 'Not set'
+                  : usdShort(route.duties_cents);
+
+            return (
+              <article
+                key={r.product_id}
+                data-testid="catalogue-card"
+                className={`ds-card !p-0 flex flex-col overflow-hidden ${
+                  r.only_for_you ? '!border-2 !border-[#0B7A75]' : ''
+                }`}
+              >
+                <Link
+                  href={detailHref}
+                  tabIndex={-1}
+                  aria-hidden="true"
+                  className={`h-[156px] flex items-center justify-center overflow-hidden relative ${
+                    r.only_for_you ? 'bg-[#E3F4F2] text-[#0B6A65]' : 'bg-[#E9EDF5] text-[#5B6478]'
+                  }`}
+                >
+                  {r.images[0] ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={r.images[0]}
+                      alt=""
+                      loading="lazy"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-[13px]">Product image</span>
+                  )}
+                </Link>
+
+                <div className="p-4 flex flex-col gap-2 flex-1">
+                  {/* Top Badges — Stock label ONLY (never a number) */}
+                  <div className="flex gap-1.5 flex-wrap">
+                    {r.only_for_you ? (
+                      <DsBadge tone="ok" testId="badge-only-for-you">
+                        Only for you
+                      </DsBadge>
+                    ) : r.fulfilment_type === 'extended_catalog' ? (
+                      <DsBadge tone="info">Extended catalog</DsBadge>
+                    ) : (
+                      <DsBadge tone="ok">Fast-ship stock</DsBadge>
+                    )}
+
+                    {r.stock_status === 'out' && <DsBadge tone="bad">Out of stock</DsBadge>}
+                    {r.stock_status === 'low' && <DsBadge tone="warn">Low stock</DsBadge>}
+
+                    <DsBadge tone="neutral" testId={`ship-${route.shipping_method}`}>
+                      {days(route)} to {country}
+                    </DsBadge>
+
+                    {lowMargin && <DsBadge tone="warn">Low margin</DsBadge>}
+                  </div>
+
+                  <h2 className="m-0 text-[16px] font-bold leading-snug">
+                    <Link
+                      href={detailHref}
+                      className="text-[#1A174A] hover:text-[#2A6FD1] no-underline"
+                    >
+                      {r.title}
+                    </Link>
+                  </h2>
+
+                  <p className="ds-mut m-0 text-[12px] mono">{r.model_no}</p>
+
+                  {/* Correction 1: REAL RFQ code ONLY (RFQ-YYYY-NNNNNN) */}
+                  {r.sourced_rfq_code && (
+                    <p className="ds-mut m-0 text-[12px]" data-testid="sourced-from-rfq">
+                      Sourced from your request <span className="mono">{r.sourced_rfq_code}</span>
+                    </p>
+                  )}
+
+                  {/* 4-Part Landed Cost Breakdown (Product, Processing, Shipping, Duties, Landed) */}
+                  <div className="border-t border-[#EEF0F4] pt-1.5 text-[13.5px]">
+                    <div className="ds-row">
+                      <span className="ds-mut">Product</span>
+                      <span className="mono">{usdShort(productCents)}</span>
+                    </div>
+                    <div className="ds-row">
+                      <span className="ds-mut">Processing</span>
+                      <span className="mono">{usdShort(processingCents)}</span>
+                    </div>
+                    <div className="ds-row">
+                      <span className="ds-mut">Shipping</span>
+                      <span className="mono">{usdShort(shippingCents)}</span>
+                    </div>
+                    <div className="ds-row">
+                      <span className="ds-mut">
+                        {route.incoterm === 'DAP' ? 'Duties (DAP)' : 'Duties and tax (est.)'}
+                      </span>
+                      <span className="mono">{dutiesText}</span>
+                    </div>
+                    <div className="ds-row font-bold text-[#1A174A]">
+                      <span>Landed cost</span>
+                      <span className="mono">{usdShort(route.landed_price_cents)}</span>
+                    </div>
+                  </div>
+
+                  {sugg != null && (
+                    <div className="ds-row text-[13.5px]">
+                      <span className="ds-mut">Suggested price</span>
+                      <span className="mono">{usdShort(sugg)}</span>
+                    </div>
+                  )}
+
+                  {pr != null && (
+                    <div className="ds-row text-[13.5px]">
+                      <span className="ds-mut">Margin after duties</span>
+                      <DsBadge tone={lowMargin ? 'warn' : 'ok'}>{pr.pct}%</DsBadge>
+                    </div>
+                  )}
+
+                  {r.has_battery && (
+                    <p className="ds-mut m-0 text-[12px]" data-testid="battery-service-note">
+                      Contains a battery: only battery-approved services
+                    </p>
+                  )}
+
+                  <form
+                    action={added ? removeFromImportList : addToImportList}
+                    className="mt-auto pt-1"
+                  >
+                    <input type="hidden" name="product_id" value={r.product_id} />
+                    {primaryVar && <input type="hidden" name="variant_id" value={primaryVar.id} />}
+                    <input type="hidden" name="service" value={route.shipping_method} />
+                    {sugg != null && <input type="hidden" name="price_cents" value={sugg} />}
+                    <DsImportSubmitButton added={added} />
+                  </form>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <nav className="flex items-center justify-between gap-3" aria-label="Catalogue pages">
+          <span className="text-[13px] text-[#5B6478]">
+            Page {pageNum} of {totalPages}
+          </span>
+          <div className="flex gap-2">
+            {pageNum > 1 && (
+              <DsLinkButton
+                href={buildHref({ page: String(pageNum - 1) })}
+                variant="secondary"
+              >
+                Previous
+              </DsLinkButton>
+            )}
+            {pageNum < totalPages && (
+              <DsLinkButton
+                href={buildHref({ page: String(pageNum + 1) })}
+                variant="secondary"
+              >
+                Next
+              </DsLinkButton>
+            )}
+          </div>
+        </nav>
+      )}
+
+      <p className="ds-mut m-0 text-[12px]">
+        Duties come from the Octopus tariff rate table; they are estimates and follow each country&apos;s import rules.
+      </p>
     </div>
   );
 }

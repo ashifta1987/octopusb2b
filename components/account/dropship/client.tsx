@@ -21,6 +21,7 @@ const STOCK_LABEL: Record<StockStatus, [string, string]> = {
   in_stock: ['In stock', 'bg-ok-bg text-ok'],
   low: ['Low stock', 'bg-warn-bg text-warn'],
   out: ['Out of stock', 'bg-bad-bg text-bad'],
+  extended: ['Extended', 'bg-tint text-ink'],
 };
 
 const days = (r: Pick<CatalogueRoute, 'est_days_min' | 'est_days_max'>) =>

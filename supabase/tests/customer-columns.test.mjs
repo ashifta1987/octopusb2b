@@ -61,7 +61,7 @@ const NO_CUSTOMER_ROWS = ['suppliers', 'supplier_contacts', 'supplier_name_varia
   'dropship_products', 'dropship_variants', 'dropship_routes', 'dropship_rates', 'item_master',
   'shipping_rate_cards', 'fee_versions', 'duty_rate_versions', 'duty_rate_entries', 'warehouse_stock', 'warehouse_stock_movements',
   'status_mappings', 'dropship_handoffs', 'domain_events', 'domain_event_consumptions', 'internal_charge_rules',
-  'dropship_price_tiers', 'dropship_import_jobs',
+  'dropship_price_tiers', 'dropship_import_jobs', 'dropship_product_requests',
   'payment_webhook_events', 'payment_settlements', 'payment_reconciliation_alerts', 'escrow_hold_approvals'];
 
 try {
