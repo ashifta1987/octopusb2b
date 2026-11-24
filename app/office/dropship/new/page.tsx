@@ -3,6 +3,7 @@ import { requireDropshipStaff } from '@/lib/dropship-staff';
 import { dropshipSettings } from '@/lib/dropship';
 import { createClient } from '@/lib/supabase/server';
 import { DropshipProductForm, type InitialProductData } from '../product-form';
+import type { SourcingSupplierProductOption } from '../actions';
 
 export const metadata = { title: 'Add Dropshipping product · Back office' };
 
@@ -17,28 +18,22 @@ export default function Page() {
 async function NewDropshipProduct() {
   const staff = await requireDropshipStaff(true);
   const sb = await createClient();
-  const [cfg, supsRes, catsRes] = await Promise.all([
+  const [cfg, spsRes, catsRes] = await Promise.all([
     dropshipSettings(),
-    sb
-      .from('suppliers')
-      .select('id, code, legal_name, verified')
-      .eq('verified', true)
-      .is('archived_at', null)
-      .order('code'),
+    sb.rpc('list_sourcing_supplier_products', { p_limit: 500 }),
     sb.from('categories').select('name').order('name'),
   ]);
 
-  const suppliers = (supsRes.data ?? []) as {
-    id: string;
-    code: string;
-    legal_name: string;
-    verified: boolean;
-  }[];
+  const supplierProducts = ((spsRes.data ?? []) as SourcingSupplierProductOption[]).map((sp) => ({
+    ...sp,
+    unit_cost_cents: Number(sp.unit_cost_cents ?? 0),
+  }));
   const categories = (catsRes.data ?? []).map((c) => String(c.name));
+  const firstSp = supplierProducts.find((s) => s.unit_cost_cents > 0) ?? supplierProducts[0];
 
   const initial: InitialProductData = {
     id: null,
-    octopus_sku: '',
+    model_no: null,
     title: '',
     description: '',
     category: categories[0] ?? 'Lighting',
@@ -48,14 +43,12 @@ async function NewDropshipProduct() {
     dim_l: '',
     dim_w: '',
     dim_h: '',
-    unit_cost_cents: 650,
     min_order_qty: 1,
     stock_status: 'in_stock',
     stock_qty: '100',
     source_type: 'partner_supplier',
-    supplier_id: suppliers[0]?.id ?? '',
-    supplier_sku: '',
-    origin_country: 'CN',
+    default_supplier_product_id: firstSp?.supplier_product_id ?? '',
+    origin_country: '', // Nullable — never defaults to 'CN' (Item 1)
     status: 'draft',
     variants: [],
     routes: [
@@ -76,7 +69,7 @@ async function NewDropshipProduct() {
   return (
     <DropshipProductForm
       initial={initial}
-      suppliers={suppliers}
+      supplierProducts={supplierProducts}
       categories={categories}
       supportedCountries={cfg.supportedCountries}
       canEdit={staff.canEdit}

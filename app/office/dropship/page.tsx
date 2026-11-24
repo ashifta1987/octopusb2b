@@ -9,6 +9,21 @@ export const metadata = { title: 'Dropshipping catalogue · Back office' };
 
 type SP = { q?: string; status?: string; supplier?: string };
 
+type SourcingLinkRow = {
+  variant_id: string;
+  product_id: string;
+  supplier_product_id: string | null;
+  sourcing_product_id: string | null;
+  sourcing_sku: string | null;
+  sourcing_title: string | null;
+  supplier_id: string | null;
+  supplier_code: string | null;
+  supplier_name: string | null;
+  supplier_verified: boolean;
+  supplier_model: string | null;
+  unit_cost_cents: number | null;
+};
+
 const usd = (c: number) =>
   `US$ ${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -31,11 +46,11 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
   const sp = await searchParams;
   const sb = await createClient();
 
-  const [prodsRes, routesRes, supsRes] = await Promise.all([
+  const [prodsRes, routesRes, supsRes, linksRes] = await Promise.all([
     sb
       .from('dropship_products')
       .select(
-        'id, octopus_sku, title, category, images, weight_g, unit_cost_cents, min_order_qty, stock_status, stock_qty, source_type, supplier_id, supplier_sku, status, is_test, updated_at',
+        'id, model_no, title, category, images, weight_g, min_order_qty, stock_status, stock_qty, source_type, status, is_test, updated_at',
       )
       .order('updated_at', { ascending: false }),
     sb
@@ -43,10 +58,13 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
       .select('product_id, destination_country, shipping_method, landed_price_cents, is_active'),
     staff.canSeeCosts
       ? sb
-        .from('suppliers')
-        .select('id, code, legal_name, verified')
-        .is('archived_at', null)
-        .order('code')
+          .from('suppliers')
+          .select('id, code, legal_name, verified')
+          .is('archived_at', null)
+          .order('code')
+      : Promise.resolve({ data: null }),
+    staff.canSeeCosts
+      ? sb.rpc('dropship_sourcing_links')
       : Promise.resolve({ data: null }),
   ]);
 
@@ -56,7 +74,14 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
     legal_name: string;
     verified: boolean;
   }[];
-  const supById = new Map(sups.map((s) => [s.id, s]));
+
+  const linksByProd = new Map<string, SourcingLinkRow[]>();
+  for (const row of (linksRes.data ?? []) as SourcingLinkRow[]) {
+    const pid = String(row.product_id);
+    const list = linksByProd.get(pid) ?? [];
+    list.push(row);
+    linksByProd.set(pid, list);
+  }
 
   const routesByProd = new Map<string, { countries: Set<string>; activeCount: number }>();
   for (const r of routesRes.data ?? []) {
@@ -76,12 +101,16 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
   const supplierFilter = staff.canSeeCosts && sp.supplier ? sp.supplier : '';
 
   const rows = (prodsRes.data ?? []).filter((p) => {
+    const pid = String(p.id);
     if (statusFilter && p.status !== statusFilter) return false;
-    if (supplierFilter && p.supplier_id !== supplierFilter) return false;
+    if (supplierFilter) {
+      const linked = linksByProd.get(pid) ?? [];
+      if (!linked.some((l) => l.supplier_id === supplierFilter)) return false;
+    }
     if (q) {
       const match =
         String(p.title ?? '').toLowerCase().includes(q) ||
-        String(p.octopus_sku ?? '').toLowerCase().includes(q) ||
+        String(p.model_no ?? '').toLowerCase().includes(q) ||
         String(p.category ?? '').toLowerCase().includes(q);
       if (!match) return false;
     }
@@ -146,7 +175,7 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
             id="ds-q"
             name="q"
             defaultValue={sp.q ?? ''}
-            placeholder="Title, Octopus SKU or category"
+            placeholder="Title, DS model no. or category"
             className="input"
           />
         </div>
@@ -214,14 +243,14 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
               <thead>
                 <tr className="border-b border-line text-left">
                   {staff.canEdit && <th className="th w-10">Select</th>}
-                  <th className="th">Octopus SKU</th>
+                  <th className="th">Model no.</th>
                   <th className="th">Product</th>
                   <th className="th">Status</th>
                   <th className="th">Stock</th>
                   <th className="th">Active routes</th>
                   {staff.canSeeCosts && (
                     <>
-                      <th className="th text-right">Unit cost</th>
+                      <th className="th text-right">Sourcing cost</th>
                       <th className="th">Supplier (staff only)</th>
                     </>
                   )}
@@ -237,7 +266,8 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
                   ];
                   const rtInfo = routesByProd.get(id);
                   const countries = rtInfo ? [...rtInfo.countries].sort().join(', ') : 'None';
-                  const sup = p.supplier_id ? supById.get(p.supplier_id as string) : null;
+                  const prodLinks = linksByProd.get(id) ?? [];
+                  const primaryLink = prodLinks.find((l) => l.supplier_product_id) ?? null;
                   const imgs = Array.isArray(p.images) ? (p.images as string[]) : [];
                   return (
                     <tr
@@ -257,7 +287,7 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
                         </td>
                       )}
                       <td className="td mono font-semibold whitespace-nowrap">
-                        {p.octopus_sku as string}
+                        {p.model_no as string}
                         {p.is_test && (
                           <span className="ml-1.5 pill bg-warn-bg text-warn">TEST</span>
                         )}
@@ -306,21 +336,25 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
                             className="td text-right tabular-nums font-semibold whitespace-nowrap"
                             data-testid="staff-unit-cost"
                           >
-                            {usd(Number(p.unit_cost_cents ?? 0))}
+                            {primaryLink && primaryLink.unit_cost_cents != null
+                              ? usd(Number(primaryLink.unit_cost_cents))
+                              : 'Not linked'}
                           </td>
                           <td className="td text-[12.5px]" data-testid="staff-supplier">
-                            {sup ? (
+                            {primaryLink?.supplier_code ? (
                               <div>
-                                <span className="mono font-semibold">{sup.code}</span> ·{' '}
-                                {sup.legal_name}
-                                {p.supplier_sku ? (
+                                <span className="mono font-semibold">{primaryLink.supplier_code}</span> ·{' '}
+                                {primaryLink.supplier_name}
+                                {primaryLink.sourcing_sku ? (
                                   <div className="text-muted mono">
-                                    Mfr SKU: {p.supplier_sku as string}
+                                    Sourcing: {primaryLink.sourcing_sku}
                                   </div>
                                 ) : null}
                               </div>
-                            ) : (
+                            ) : p.source_type === 'own_warehouse' ? (
                               <span className="text-muted">Own warehouse</span>
+                            ) : (
+                              <span className="text-muted">Unlinked</span>
                             )}
                           </td>
                         </>

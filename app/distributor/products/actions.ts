@@ -94,9 +94,16 @@ export async function saveProduct(id: string | null, values: ProductFormValues, 
     const { data: cur } = await sb.from('products').select('status').eq('id', pid).maybeSingle();
     if (!cur) return fail('Product not found or not editable.');
     if (mode === 'draft' && !['draft', 'rejected'].includes(cur.status)) return fail('Autosave only runs on drafts.');
-    const { error, data } = await sb.from('products').update(cols).eq('id', pid).select('id');
+    const { hs_code: nextHsCode, ...productCols } = cols;
+    const { error, data } = await sb.from('products').update(productCols).eq('id', pid).select('id');
     if (error) return fail(skuDbError(error.message) ?? error);
     if (!data?.length) return fail('You cannot edit this product.');
+    const { error: hsErr } = await sb.rpc('set_product_item_hs', {
+      p_product_id: pid,
+      p_hs_code: nextHsCode,
+      p_origin_country: cols.origin_country,
+    });
+    if (hsErr) return fail(hsErr);
   } else {
     const slug = `${slugify(cols.title).slice(0, 80)}-${Math.random().toString(36).slice(2, 8)}`;
     const sku = (values.sku ?? '').trim().toUpperCase();

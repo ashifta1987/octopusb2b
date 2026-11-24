@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/server';
 import { classifyProducts, normType, type AiClassify, type HsProduct, type HsResult, type HsStore, type HsType } from './classify';
 import { HS_DEFAULT_MODEL, HS_SCHEMA, HS_SYSTEM_PROMPT } from './prompt';
 
-/** Server side of HS detection: Supabase store, OpenAI classifier (strict JSON schema), runners for imports / forms / cron. */
+/** Server side of HS detection: Supabase store (writes item_master, which one-way syncs to products), OpenAI classifier, runners. */
 
 type Sb = ReturnType<typeof createAdminClient>;
 
@@ -23,6 +23,18 @@ export function openAiClassifier(): AiClassify | null {
     });
     return JSON.parse(r.choices[0]?.message?.content ?? '{}');
   };
+}
+
+async function productItemMap(sb: Sb, productIds: string[]): Promise<Map<string, string>> {
+  const uniq = [...new Set(productIds.filter(Boolean))];
+  const map = new Map<string, string>();
+  for (let i = 0; i < uniq.length; i += 500) {
+    const { data } = await sb.from('products').select('id, item_id').in('id', uniq.slice(i, i + 500));
+    for (const r of data ?? []) {
+      if (r.id && r.item_id) map.set(String(r.id), String(r.item_id));
+    }
+  }
+  return map;
 }
 
 export function supabaseHsStore(sb: Sb): HsStore {
@@ -44,30 +56,43 @@ export function supabaseHsStore(sb: Sb): HsStore {
       return { ...(data as HsType), confidence: data.confidence == null ? null : Number(data.confidence) };
     },
     async save(results) {
+      const itemByProd = await productItemMap(sb, results.map((r) => r.product_id));
       for (const r of results) {
-        // only products that still have no code; the guard_hs_code trigger also refuses to overwrite sheet / manual codes
-        await sb.from('products').update({
-          hs_code: r.heading, hs_code_source: r.source, hs_code_status: r.status, hs_code_confidence: r.confidence,
-          hs_product_type_id: r.type_id, hs_code_note: r.note, hs_classify_pending: false,
-        }).eq('id', r.product_id).is('hs_code', null);
+        const itemId = itemByProd.get(r.product_id);
+        if (!itemId) continue;
+        // item_master is the sole HS writer (hs_verified is NEVER set by rule/AI); guard_item_master protects sheet/manual codes
+        await sb.from('item_master').update({
+          hs_code: r.heading,
+          hs_code_source: r.source,
+          hs_code_status: r.status,
+          hs_code_confidence: r.confidence,
+          hs_product_type_id: r.type_id,
+          hs_code_note: r.note,
+          hs_classify_pending: false,
+        }).eq('id', itemId).is('hs_code', null);
       }
     },
   };
 }
 
-/** Product fields for the classifier. */
+/** Product fields for the classifier (reads authoritative HS code & source from item_master). */
 export async function loadHsProducts(sb: Sb, ids: string[]): Promise<HsProduct[]> {
   if (!ids.length) return [];
   const out: HsProduct[] = [];
   for (let i = 0; i < ids.length; i += 200) {
     const { data } = await sb.from('products')
-      .select('id, title, hs_code, hs_code_source, specification_raw, categories(name), product_specs(name, value)')
+      .select('id, title, specification_raw, categories(name), product_specs(name, value), item_master!products_item_id_fkey(hs_code, hs_code_source)')
       .in('id', ids.slice(i, i + 200));
     for (const p of data ?? []) {
       const specs = (p.product_specs ?? []) as { name: string; value: string }[];
       const cat = (Array.isArray(p.categories) ? p.categories[0] : p.categories) as { name?: string } | null;
+      const im = (Array.isArray(p.item_master) ? p.item_master[0] : p.item_master) as { hs_code?: string | null; hs_code_source?: string | null } | null;
       out.push({
-        id: p.id as string, title: p.title as string, category: cat?.name ?? null, hs_code: p.hs_code as string | null, hs_code_source: p.hs_code_source as string | null,
+        id: p.id as string,
+        title: p.title as string,
+        category: cat?.name ?? null,
+        hs_code: (im?.hs_code as string | null) ?? null,
+        hs_code_source: (im?.hs_code_source as string | null) ?? null,
         specs: [p.specification_raw, ...specs.map((s) => `${s.name}: ${s.value}`)].filter(Boolean).join('; ').slice(0, 2000) || null,
         material: specs.find((s) => /material/i.test(s.name))?.value ?? null,
       });
@@ -88,15 +113,24 @@ export async function runHsClassification(ids?: string[], store?: HsStore) {
   try {
     let target = ids;
     if (!target) {
-      const { data } = await sb.from('products').select('id').eq('hs_classify_pending', true).limit(500);
-      target = (data ?? []).map((r) => r.id as string);
+      const { data } = await sb
+        .from('item_master')
+        .select('sourcing_product_id')
+        .eq('hs_classify_pending', true)
+        .not('sourcing_product_id', 'is', null)
+        .limit(500);
+      target = (data ?? []).map((r) => r.sourcing_product_id as string).filter(Boolean);
     }
     const prods = (await loadHsProducts(sb, target)).filter((p) => !p.hs_code);
     if (!prods.length) return { classified: 0, aiCalls: 0, deferred: 0 };
     const s = await settings(sb);
     const r = await classifyProducts(prods, store ?? supabaseHsStore(sb), { ai: s.aiEnabled ? openAiClassifier() : null, minConfidence: s.min, maxCalls: s.maxCalls });
-    // products over the cost cap stay queued for the next run (cron)
-    if (r.deferred.length) await sb.from('products').update({ hs_classify_pending: true }).in('id', r.deferred);
+    // products over the cost cap stay queued on item_master for the next run (cron)
+    if (r.deferred.length) {
+      const itemByProd = await productItemMap(sb, r.deferred);
+      const itemIds = [...itemByProd.values()];
+      if (itemIds.length) await sb.from('item_master').update({ hs_classify_pending: true }).in('id', itemIds);
+    }
     return { classified: r.results.length, aiCalls: r.aiCalls, deferred: r.deferred.length, aiErrors: r.aiErrors };
   } catch (e) {
     console.error('[hs] classification failed', e);
@@ -104,17 +138,26 @@ export async function runHsClassification(ids?: string[], store?: HsStore) {
   }
 }
 
-/** Mark products as waiting for classification (bulk imports call this, then run in the background). */
+/** Mark products' item_master rows as waiting for classification (bulk imports call this, then run in the background). */
 export async function queueHsClassification(ids: string[]) {
   if (!ids.length) return;
   const sb = createAdminClient();
-  for (let i = 0; i < ids.length; i += 500) await sb.from('products').update({ hs_classify_pending: true }).in('id', ids.slice(i, i + 500)).is('hs_code', null);
+  const itemByProd = await productItemMap(sb, ids);
+  const itemIds = [...itemByProd.values()];
+  for (let i = 0; i < itemIds.length; i += 500) {
+    await sb.from('item_master').update({ hs_classify_pending: true }).in('id', itemIds.slice(i, i + 500)).is('hs_code', null);
+  }
 }
 
 /** Backfill preview: what every product without an HS code would receive. Writes proposals only (and caches AI types). */
 export async function previewHsBackfill() {
   const sb = createAdminClient();
-  const { data } = await sb.from('products').select('id').is('hs_code', null).is('archived_at', null).limit(2000);
+  const { data } = await sb
+    .from('products')
+    .select('id, item_master!products_item_id_fkey!inner(hs_code)')
+    .is('item_master.hs_code', null)
+    .is('archived_at', null)
+    .limit(2000);
   const ids = (data ?? []).map((r) => r.id as string);
   const prods = await loadHsProducts(sb, ids);
   const real = supabaseHsStore(sb);
@@ -129,7 +172,7 @@ export async function previewHsBackfill() {
   return { products: prods.length, proposals: proposals.length, aiCalls: r.aiCalls, deferred: r.deferred.length };
 }
 
-/** Apply the reviewed proposals (owner approval). Sheet / manual codes are protected by the trigger. */
+/** Apply the reviewed proposals (owner approval). Sheet / manual codes are protected by guard_item_master. */
 export async function applyHsBackfill(actorId: string) {
   const sb = createAdminClient();
   const { data } = await sb.from('hs_backfill_proposals').select('*');

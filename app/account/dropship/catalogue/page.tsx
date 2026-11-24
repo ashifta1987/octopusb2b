@@ -472,7 +472,7 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
                           </Link>
                         </h2>
                         <p className="mt-1 text-[12.5px] text-muted">
-                          SKU <span className="mono">{r.octopus_sku}</span> · MOQ {r.min_order_qty}
+                          Model <span className="mono">{r.model_no}</span> · MOQ {r.min_order_qty}
                           {r.variants.length > 1 ? ` · ${r.variants.length} variants` : ''}
                         </p>
                         <dl className="mt-3 pt-3 border-t border-line space-y-1 text-[13.5px] flex-1">

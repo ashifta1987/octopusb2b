@@ -4,6 +4,7 @@ import { requireDropshipStaff } from '@/lib/dropship-staff';
 import { dropshipSettings } from '@/lib/dropship';
 import { createClient } from '@/lib/supabase/server';
 import { DropshipProductForm, type InitialProductData } from '../product-form';
+import type { SourcingSupplierProductOption } from '../actions';
 
 export const metadata = { title: 'Edit Dropshipping product · Back office' };
 
@@ -23,27 +24,28 @@ async function EditDropshipProduct({ params }: { params: Promise<{ id: string }>
   if (!UUID.test(id)) notFound();
 
   const sb = await createClient();
-  const [cfg, prodRes, varsRes, routesRes, supsRes, catsRes] = await Promise.all([
+  const [cfg, prodRes, varsRes, routesRes, spsRes, catsRes] = await Promise.all([
     dropshipSettings(),
-    sb.from('dropship_products').select('*').eq('id', id).maybeSingle(),
+    sb
+      .from('dropship_products')
+      .select(
+        'id, model_no, title, description, category, images, specs, weight_g, dimensions_cm, min_order_qty, stock_status, stock_qty, source_type, origin_country, status',
+      )
+      .eq('id', id)
+      .maybeSingle(),
     sb
       .from('dropship_variants')
-      .select('*')
+      .select('id, model_no, options, supplier_product_id, price_adjust_cents, stock_status, stock_qty, sort')
       .eq('product_id', id)
       .order('sort', { ascending: true }),
     sb
       .from('dropship_routes')
-      .select('*')
+      .select('destination_country, shipping_method, landed_price_cents, est_shipping_cents, est_duties_cents, est_days_min, est_days_max, carrier, is_active')
       .eq('product_id', id)
       .order('destination_country', { ascending: true })
       .order('shipping_method', { ascending: true }),
     staff.canSeeCosts
-      ? sb
-          .from('suppliers')
-          .select('id, code, legal_name, verified')
-          .eq('verified', true)
-          .is('archived_at', null)
-          .order('code')
+      ? sb.rpc('list_sourcing_supplier_products', { p_limit: 500 })
       : Promise.resolve({ data: null }),
     sb.from('categories').select('name').order('name'),
   ]);
@@ -51,12 +53,10 @@ async function EditDropshipProduct({ params }: { params: Promise<{ id: string }>
   const p = prodRes.data;
   if (!p) notFound();
 
-  const suppliers = (supsRes.data ?? []) as {
-    id: string;
-    code: string;
-    legal_name: string;
-    verified: boolean;
-  }[];
+  const supplierProducts = ((spsRes.data ?? []) as SourcingSupplierProductOption[]).map((sp) => ({
+    ...sp,
+    unit_cost_cents: Number(sp.unit_cost_cents ?? 0),
+  }));
   const categories = (catsRes.data ?? []).map((c) => String(c.name));
   const specsObj =
     p.specs && typeof p.specs === 'object' ? (p.specs as Record<string, string>) : {};
@@ -64,10 +64,15 @@ async function EditDropshipProduct({ params }: { params: Promise<{ id: string }>
     .map(([k, v]) => `${k}: ${v}`)
     .join('\n');
   const dims = (p.dimensions_cm ?? {}) as { l?: number; w?: number; h?: number };
+  const varRows = varsRes.data ?? [];
+  const defaultSpId =
+    staff.canSeeCosts && varRows[0]?.supplier_product_id
+      ? String(varRows[0].supplier_product_id)
+      : '';
 
   const initial: InitialProductData = {
     id: p.id as string,
-    octopus_sku: String(p.octopus_sku),
+    model_no: String(p.model_no),
     title: String(p.title),
     description: p.description ? String(p.description) : '',
     category: p.category ? String(p.category) : '',
@@ -77,28 +82,27 @@ async function EditDropshipProduct({ params }: { params: Promise<{ id: string }>
     dim_l: dims.l != null ? String(dims.l) : '',
     dim_w: dims.w != null ? String(dims.w) : '',
     dim_h: dims.h != null ? String(dims.h) : '',
-    unit_cost_cents: staff.canSeeCosts ? Number(p.unit_cost_cents ?? 0) : 0,
     min_order_qty: Number(p.min_order_qty ?? 1),
     stock_status: (p.stock_status as 'in_stock' | 'low' | 'out') ?? 'in_stock',
     stock_qty: p.stock_qty != null ? String(p.stock_qty) : '',
     source_type:
       (p.source_type as 'own_warehouse' | 'partner_supplier') ?? 'partner_supplier',
-    supplier_id: staff.canSeeCosts && p.supplier_id ? String(p.supplier_id) : '',
-    supplier_sku: staff.canSeeCosts && p.supplier_sku ? String(p.supplier_sku) : '',
-    origin_country: String(p.origin_country ?? 'CN').trim(),
+    default_supplier_product_id: defaultSpId,
+    origin_country: p.origin_country ? String(p.origin_country).trim() : '',
     status: (p.status as 'draft' | 'active' | 'archived') ?? 'draft',
-    variants: (varsRes.data ?? []).map((v) => {
+    variants: varRows.map((v) => {
       const opts =
         v.options && typeof v.options === 'object'
           ? (v.options as Record<string, string>)
           : {};
       return {
         id: v.id as string,
-        octopus_sku: String(v.octopus_sku),
+        model_no: String(v.model_no),
         optionsText: Object.entries(opts)
           .map(([k, val]) => `${k}: ${val}`)
           .join(', '),
-        cost_cents: staff.canSeeCosts ? Number(v.cost_cents ?? 0) : 0,
+        supplier_product_id:
+          staff.canSeeCosts && v.supplier_product_id ? String(v.supplier_product_id) : '',
         price_adjust_cents: Number(v.price_adjust_cents ?? 0),
         stock_status: (v.stock_status as 'in_stock' | 'low' | 'out') ?? 'in_stock',
         stock_qty: v.stock_qty != null ? String(v.stock_qty) : '',
@@ -120,7 +124,7 @@ async function EditDropshipProduct({ params }: { params: Promise<{ id: string }>
   return (
     <DropshipProductForm
       initial={initial}
-      suppliers={suppliers}
+      supplierProducts={supplierProducts}
       categories={categories}
       supportedCountries={cfg.supportedCountries}
       canEdit={staff.canEdit}

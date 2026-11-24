@@ -4,23 +4,24 @@ import { createTempStaff, deleteTempStaff, staffLogin, type TempStaff } from './
 import { assertStagingOrThrow } from '../../scripts/lib-staging-guard.mjs';
 
 /**
- * Dropshipping catalogue v2 (migrations 204 & 205, STAGING ONLY):
+ * Dropshipping catalogue v2 + Step I1a (DS-XXXXXX model numbers, item_master, Sourcing cost link; STAGING ONLY):
  *  1. Merchant catalogue & product detail:
+ *      · DS model number (DS-XXXXXX) displayed, never legacy_sku / octopus_sku / supplier / cost;
  *      · landed price labelled "Includes shipping and duties to [country]";
  *      · shipping method chip filters; add/remove import list works in integer cents;
- *      · page HTML and RPC responses contain NO supplier name, supplier code, carrier name, cost or margin fields.
+ *      · page HTML and RPC responses contain NO supplier name, supplier code, carrier name, cost, margin, legacy_sku or item_id.
  *  2. Route filtering: a country with no active route for a product does not show it (or shows clear empty state).
  *  3. Eligibility: a merchant without dropshipping switched on sees the "not switched on" notice and zero catalogue cards.
  *  4. Staff screens (/office/dropship):
- *      · DS division staff can create/edit products, see margin warnings, reject white-label violations, and run CSV
- *        bulk import twice idempotently with formula cells (=, +, -, @) neutralised;
+ *      · DS division staff can create/edit products, run CSV bulk import twice idempotently with formula cells (=, +, -, @)
+ *        neutralised, and auto-assign DS-XXXXXX model numbers;
  *      · Support staff can open /office/dropship read-only and NEVER see unit cost, margin, supplier or carrier.
  */
 let user: { id: string; email: string; password: string; org: string } | null = null;
 let noDsBuyer: TempCustomer | null = null;
 let dsStaff: TempStaff | null = null;
 let supStaff: TempStaff | null = null;
-const csvSku = `TEST-CSV-${Date.now()}`;
+const csvRef = `TEST-CSV-${Date.now()}`;
 
 test.describe.configure({ mode: 'serial' });
 
@@ -37,7 +38,6 @@ test.beforeAll(async () => {
   if (error) throw error;
   await admin.from('profiles').upsert({ id: data.user!.id, full_name: 'E2E Dropship', email });
   await admin.from('org_members').insert({ org_id: org!.id, user_id: data.user!.id, member_role: 'buyer' });
-  // Ensure W-10015 has AE, GB, SA markets unlocked
   for (const c of ['AE', 'GB', 'SA']) {
     await admin.from('dropship_markets').upsert({ org_id: org!.id, country: c, locked_by_staff: false });
   }
@@ -52,7 +52,17 @@ test.beforeAll(async () => {
 
 test.afterAll(async () => {
   const admin = adminClient();
-  await admin.from('dropship_products').delete().eq('octopus_sku', csvSku.toUpperCase());
+  const { data: createdProd } = await admin
+    .from('dropship_products')
+    .select('id')
+    .eq('legacy_sku', csvRef.toUpperCase())
+    .maybeSingle();
+  if (createdProd?.id) {
+    const { data: vars } = await admin.from('dropship_variants').select('item_id').eq('product_id', createdProd.id);
+    await admin.from('dropship_products').delete().eq('id', createdProd.id);
+    const itemIds = (vars ?? []).map((v) => String(v.item_id)).filter(Boolean);
+    if (itemIds.length) await admin.from('item_master').delete().in('id', itemIds);
+  }
   if (user) {
     await admin.from('dropship_import_list').delete().eq('added_by', user.id);
     await admin.from('org_members').delete().eq('user_id', user.id);
@@ -76,18 +86,19 @@ const shot = async (page: Page, name: string) => {
 };
 const usd = (s: string) => Number(s.replace(/[^\d.-]/g, ''));
 
-test('catalogue & route filtering: verified cards with duties-paid label; empty state when no routes to country; white-label clean in HTML', async ({ page }) => {
+test('catalogue & route filtering: DS-XXXXXX model numbers, duties-paid label; empty state when no routes to country; white-label clean in HTML', async ({ page }) => {
   await login(page, '/account/dropship/catalogue?country=AE');
   await page.goto('/account/dropship/catalogue?country=AE');
   const cards = page.getByTestId('catalogue-card');
   await expect(cards.first()).toBeVisible();
+  await expect(cards.first()).toContainText(/DS-\d{6}/);
   for (const c of (await cards.all()).slice(0, 4)) {
     await expect(c.getByTestId('verified-badge')).toBeVisible();
     await expect(c.getByText('Your cost (incl. shipping)')).toBeVisible();
     await expect(c.getByText(/Includes shipping and duties to United Arab Emirates/)).toBeVisible();
   }
   const html = await page.content();
-  expect(html).not.toMatch(/OCT-113\d|Boweijie|Bowijie|Domino|Xintaiwang|YunExpress|\b4PX\b|FACTORY-MDL-|unit_cost_cents|supplier_sku/i);
+  expect(html).not.toMatch(/OCT-113\d|OCT-DS-TEST|Boweijie|Bowijie|Domino|Xintaiwang|YunExpress|\b4PX\b|FACTORY-MDL-|unit_cost_cents|supplier_sku|legacy_sku|sourcing_product_id/i);
   await shot(page, 'dropship-v2-merchant-catalogue-desktop');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/account/dropship/catalogue?country=AE');
@@ -115,11 +126,12 @@ test('shipping-method chip filters; add to import list toggles to Added and back
   await expect(first.getByTestId('import-add')).toBeVisible();
 });
 
-test('product detail page: landed price table per method, profit recalculates, push = coming soon, white-label clean in page source', async ({ page }) => {
+test('product detail page: DS-XXXXXX-NN variant model number, landed price table per method, profit recalculates, white-label clean', async ({ page }) => {
   await login(page, '/account/dropship/catalogue?country=AE');
   await page.goto('/account/dropship/catalogue?country=AE');
   await page.getByTestId('catalogue-card').first().getByRole('link').first().click();
   await expect(page.getByTestId('dropship-product')).toBeVisible();
+  await expect(page.getByTestId('dropship-product')).toContainText(/DS-\d{6}/);
   const rows = page.getByTestId('cost-table').locator('tbody tr');
   expect(await rows.count()).toBeGreaterThan(0);
   const landed = usd(await rows.first().locator('td').nth(2).innerText());
@@ -129,7 +141,7 @@ test('product detail page: landed price table per method, profit recalculates, p
   await expect(page.getByTestId('push-soon')).toContainText('coming soon');
   await expect(page.getByTestId('make-it-your-brand').getByRole('link')).toHaveAttribute('href', /product=/);
   const html = await page.content();
-  expect(html).not.toMatch(/OCT-113\d|Boweijie|Bowijie|YunExpress|\b4PX\b|FACTORY-MDL-|unit_cost_cents|supplier_sku/i);
+  expect(html).not.toMatch(/OCT-113\d|OCT-DS-TEST|Boweijie|Bowijie|YunExpress|\b4PX\b|FACTORY-MDL-|unit_cost_cents|supplier_sku|legacy_sku|sourcing_product_id/i);
 });
 
 test('merchant without dropshipping switched on sees "Not switched on yet" and zero catalogue cards', async ({ page }) => {
@@ -139,7 +151,7 @@ test('merchant without dropshipping switched on sees "Not switched on yet" and z
   await expect(page.getByTestId('catalogue-card')).toHaveCount(0);
 });
 
-test('staff /office/dropship: DS staff CSV import twice is idempotent & neutralises formulas; Support hides cost, margin & supplier', async ({ browser }) => {
+test('staff /office/dropship: DS staff CSV import twice is idempotent, neutralises formulas & assigns DS-XXXXXX; Support hides cost & supplier', async ({ browser }) => {
   const dsCtx = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   const dp = await dsCtx.newPage();
   await staffLogin(dp, dsStaff!, '/office/dropship');
@@ -150,8 +162,8 @@ test('staff /office/dropship: DS staff CSV import twice is idempotent & neutrali
   // CSV bulk import: formula prefix "=TEST – Formula Neutralised Lamp" is stripped to "TEST – Formula Neutralised Lamp"
   await dp.goto('/office/dropship/import');
   const csv = [
-    'octopus_sku,title,description,category,weight_g,unit_cost_cents,min_order_qty,stock_status,stock_qty,source_type,supplier_code,supplier_sku,origin_country,specs_json',
-    `${csvSku},"=TEST – Formula Neutralised Lamp","+Safe description","Lighting",450,700,1,in_stock,80,partner_supplier,OCT-1132,INTERNAL-SKU-88,CN,"{""Finish"":""@Matte""}"`,
+    'import_ref,title,description,category,weight_g,min_order_qty,stock_status,stock_qty,source_type,sourcing_sku,origin_country,specs_json',
+    `${csvRef},"=TEST – Formula Neutralised Lamp","+Safe description","Lighting",450,1,in_stock,80,own_warehouse,,, "{""Finish"":""@Matte""}"`,
   ].join('\n');
   await dp.getByTestId('csv-textarea').fill(csv);
   await dp.getByTestId('csv-preview-btn').click();
@@ -159,7 +171,7 @@ test('staff /office/dropship: DS staff CSV import twice is idempotent & neutrali
   await expect(dp.getByTestId('csv-preview-row').first()).toContainText('TEST – Formula Neutralised Lamp');
   await expect(dp.getByTestId('csv-preview-row').first()).not.toContainText('=TEST');
 
-  // First import: 1 created (as Draft)
+  // First import: 1 created (as Draft, with auto DS-XXXXXX model_no and blank/null origin_country)
   await dp.getByTestId('csv-commit-btn').click();
   await expect(dp.getByTestId('csv-import-message')).toContainText('1 created (as Draft), 0 updated, 0 unchanged');
 
@@ -168,12 +180,13 @@ test('staff /office/dropship: DS staff CSV import twice is idempotent & neutrali
   await expect(dp.getByTestId('csv-import-message')).toContainText('0 created (as Draft), 0 updated, 1 unchanged');
   await dsCtx.close();
 
-  // Re-open DS staff to screenshot the list and edit form
+  // Re-open DS staff to verify DS-XXXXXX model number on list and edit form
   const dsCtx2 = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   const dp2 = await dsCtx2.newPage();
   await staffLogin(dp2, dsStaff!, '/office/dropship');
   await dp2.goto('/office/dropship');
   await expect(dp2.getByTestId('staff-dropship-list')).toBeVisible();
+  await expect(dp2.getByTestId('staff-product-row').first()).toContainText(/DS-\d{6}/);
   await shot(dp2, 'dropship-v2-staff-list-desktop');
   await dp2.getByTestId('staff-product-row').first().getByRole('link').first().click();
   await expect(dp2.getByTestId('dropship-product-form')).toBeVisible();

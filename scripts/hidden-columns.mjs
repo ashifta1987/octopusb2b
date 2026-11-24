@@ -8,7 +8,7 @@ export const HIDDEN_COLUMNS = {
   products: ['supplier_id', 'rejection_reason', 'created_by', 'is_seed', 'external_id', 'factory_model', 'specification_raw',
     'selling_points_raw', 'size_notes', 'import_notes', 'markup_pct', 'sell_price_mode', 'sku_norm', 'listing_status',
     'moderation_hold', 'moderation_hold_reason', 'hs_code_source', 'hs_code_confidence', 'hs_code_status', 'hs_product_type_id',
-    'hs_classify_pending', 'hs_code_note', 'archived_by_supplier_from'],
+    'hs_classify_pending', 'hs_code_note', 'archived_by_supplier_from', 'item_id'],
   product_media: ['storage_path', 'source_file_name', 'sha256'],
   certificates: ['supplier_id', 'number', 'storage_path'],
   pools: ['supplier_id', 'starter_user_id', 'starter_org_id', 'po_document_id', 'trace_id', 'is_seed'],

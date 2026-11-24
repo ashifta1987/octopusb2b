@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Seed 5 clearly fake Dropshipping catalogue v2 products ("TEST – …", is_test = true) with routes to 2 countries (AE, GB)
-// and variants, plus shipping rate-card rows and selling countries on staging test orgs.
-// STAGING ONLY: calls assertStagingOrThrow and refuses to run against live. Idempotent (upserts on octopus_sku).
+// and variants (DS-XXXXXX / DS-XXXXXX-NN model numbers), plus shipping rate-card rows and selling countries on staging test orgs.
+// STAGING ONLY: calls assertStagingOrThrow and refuses to run against live. Idempotent (upserts on legacy_sku).
 // Run: node scripts/seed-dropship-test.mjs
 import { config } from 'dotenv';
 import pg from 'pg';
@@ -16,9 +16,6 @@ await assertStagingOrThrow(db);
 
 try {
   await db.query('begin');
-
-  const sup = (await db.query(`select id from suppliers where verified and archived_at is null order by code limit 1`)).rows[0];
-  if (!sup) throw new Error('No verified supplier found on staging');
 
   // Ensure staff-only shipping rate card has AE and GB rates for express, standard and economy
   const RATES = [
@@ -48,7 +45,6 @@ try {
     `, [country, service, base, per100, duty, fee, dmin, dmax, bat, liq]);
   }
 
-  // Pick safe public image URLs that do NOT come from /import/ paths
   const imgs = (await db.query(`
     select url from product_media
      where kind = 'image' and url is not null and url not like '%/import/%'
@@ -58,7 +54,7 @@ try {
 
   const ITEMS = [
     {
-      sku: 'OCT-DS-TEST-001',
+      ref: 'OCT-DS-TEST-001',
       title: 'TEST – Cordless LED Desk Lamp',
       description: 'TEST dropship product (staging only). Rechargeable aluminium desk lamp with 3 colour temperatures and touch dimmer. Ships in plain unbranded packaging.',
       category: 'Lighting',
@@ -66,15 +62,13 @@ try {
       specs: { Material: 'Anodised aluminium', Battery: '4000 mAh USB-C', Brightness: '450 lm', ColourTemp: '3000K / 4500K / 6000K' },
       weight_g: 540,
       dims: { l: 34, w: 13, h: 9 },
-      cost: 780,
       moq: 1,
       stock: 'in_stock',
       qty: 320,
       source: 'own_warehouse',
-      supSku: 'FACTORY-MDL-LAMP-01',
       variants: [
-        { sku: 'OCT-DS-TEST-001-BLK', options: { Colour: 'Matte Black' }, cost: 780, adj: 0, stock: 'in_stock', qty: 180 },
-        { sku: 'OCT-DS-TEST-001-SLV', options: { Colour: 'Brushed Silver' }, cost: 810, adj: 100, stock: 'in_stock', qty: 140 },
+        { ref: 'OCT-DS-TEST-001-BLK', options: { Colour: 'Matte Black' }, adj: 0, stock: 'in_stock', qty: 180 },
+        { ref: 'OCT-DS-TEST-001-SLV', options: { Colour: 'Brushed Silver' }, adj: 100, stock: 'in_stock', qty: 140 },
       ],
       routes: [
         { country: 'AE', method: 'express', landed: 2190, ship: 680, duty: 40, min: 3, max: 5, carrier: 'YunExpress Priority', active: true },
@@ -84,7 +78,7 @@ try {
       ],
     },
     {
-      sku: 'OCT-DS-TEST-002',
+      ref: 'OCT-DS-TEST-002',
       title: 'TEST – Stainless Steel Insulated Tumbler 600ml',
       description: 'TEST dropship product (staging only). Double-wall vacuum insulated 304 stainless tumbler with leak-resistant flip lid.',
       category: 'Kitchen utensils',
@@ -92,15 +86,13 @@ try {
       specs: { Capacity: '600 ml', Steel: '304 food-grade stainless', Insulation: 'Double-wall vacuum (12h hot / 24h cold)' },
       weight_g: 380,
       dims: { l: 21, w: 9, h: 9 },
-      cost: 520,
       moq: 1,
       stock: 'in_stock',
       qty: 500,
       source: 'own_warehouse',
-      supSku: 'FACTORY-MDL-TMB-600',
       variants: [
-        { sku: 'OCT-DS-TEST-002-NVY', options: { Colour: 'Deep Navy', Size: '600ml' }, cost: 520, adj: 0, stock: 'in_stock', qty: 300 },
-        { sku: 'OCT-DS-TEST-002-SND', options: { Colour: 'Desert Sand', Size: '600ml' }, cost: 520, adj: 0, stock: 'low', qty: 20 },
+        { ref: 'OCT-DS-TEST-002-NVY', options: { Colour: 'Deep Navy', Size: '600ml' }, adj: 0, stock: 'in_stock', qty: 300 },
+        { ref: 'OCT-DS-TEST-002-SND', options: { Colour: 'Desert Sand', Size: '600ml' }, adj: 0, stock: 'low', qty: 20 },
       ],
       routes: [
         { country: 'AE', method: 'express', landed: 1650, ship: 540, duty: 26, min: 3, max: 5, carrier: 'YunExpress Priority', active: true },
@@ -109,7 +101,7 @@ try {
       ],
     },
     {
-      sku: 'OCT-DS-TEST-003',
+      ref: 'OCT-DS-TEST-003',
       title: 'TEST – Ergonomic Laptop Riser Stand',
       description: 'TEST dropship product (staging only). Foldable CNC-machined alloy laptop stand with non-slip silicone pads for 11–16 inch notebooks.',
       category: 'Electronics',
@@ -117,14 +109,12 @@ try {
       specs: { Compatibility: '11–16 inch laptops', LoadCapacity: '10 kg', Finish: 'Sandblasted alloy' },
       weight_g: 710,
       dims: { l: 27, w: 23, h: 5 },
-      cost: 950,
       moq: 1,
       stock: 'in_stock',
       qty: 190,
       source: 'partner_supplier',
-      supSku: 'FACTORY-MDL-STD-16',
       variants: [
-        { sku: 'OCT-DS-TEST-003-GRY', options: { Colour: 'Space Grey' }, cost: 950, adj: 0, stock: 'in_stock', qty: 190 },
+        { ref: 'OCT-DS-TEST-003-GRY', options: { Colour: 'Space Grey' }, adj: 0, stock: 'in_stock', qty: 190 },
       ],
       routes: [
         { country: 'AE', method: 'standard', landed: 2250, ship: 640, duty: 48, min: 6, max: 9, carrier: 'YunExpress Standard', active: true },
@@ -132,7 +122,7 @@ try {
       ],
     },
     {
-      sku: 'OCT-DS-TEST-004',
+      ref: 'OCT-DS-TEST-004',
       title: 'TEST – Braided USB-C 100W PD Fast Charge Cable (2m)',
       description: 'TEST dropship product (staging only). Nylon-braided USB-C to USB-C 100W Power Delivery cable with E-Marker chip.',
       category: 'Cables & wires',
@@ -140,14 +130,12 @@ try {
       specs: { Length: '2.0 m', MaxPower: '100W (20V/5A)', Jacket: 'Double-braided nylon' },
       weight_g: 120,
       dims: { l: 14, w: 10, h: 2 },
-      cost: 240,
       moq: 2,
       stock: 'low',
       qty: 35,
       source: 'own_warehouse',
-      supSku: 'FACTORY-MDL-CBL-100W',
       variants: [
-        { sku: 'OCT-DS-TEST-004-2M', options: { Length: '2m', Colour: 'Charcoal' }, cost: 240, adj: 0, stock: 'low', qty: 35 },
+        { ref: 'OCT-DS-TEST-004-2M', options: { Length: '2m', Colour: 'Charcoal' }, adj: 0, stock: 'low', qty: 35 },
       ],
       routes: [
         { country: 'AE', method: 'express', landed: 990, ship: 390, duty: 12, min: 3, max: 5, carrier: 'YunExpress Priority', active: true },
@@ -155,7 +143,7 @@ try {
       ],
     },
     {
-      sku: 'OCT-DS-TEST-005',
+      ref: 'OCT-DS-TEST-005',
       title: 'TEST – Modular ABS Cable Organiser Box',
       description: 'TEST dropship product (staging only). Under-desk power strip and cable management box with ventilated bamboo-look lid.',
       category: 'Storage bins',
@@ -163,17 +151,14 @@ try {
       specs: { Material: 'Flame-retardant ABS', EntrySlots: '6 directional slots', Ventilation: 'Bottom + side slots' },
       weight_g: 490,
       dims: { l: 32, w: 14, h: 13 },
-      cost: 610,
       moq: 1,
       stock: 'in_stock',
       qty: 240,
       source: 'partner_supplier',
-      supSku: 'FACTORY-MDL-BOX-32',
       variants: [
-        { sku: 'OCT-DS-TEST-005-WHT', options: { Colour: 'Warm White' }, cost: 610, adj: 0, stock: 'in_stock', qty: 140 },
-        { sku: 'OCT-DS-TEST-005-BLK', options: { Colour: 'Graphite Black' }, cost: 610, adj: 0, stock: 'in_stock', qty: 100 },
+        { ref: 'OCT-DS-TEST-005-WHT', options: { Colour: 'Warm White' }, adj: 0, stock: 'in_stock', qty: 140 },
+        { ref: 'OCT-DS-TEST-005-BLK', options: { Colour: 'Graphite Black' }, adj: 0, stock: 'in_stock', qty: 100 },
       ],
-      // Deliberately routed to AE and GB, NOT SA — so testing SA (or a route-filtered country) shows route filtering
       routes: [
         { country: 'AE', method: 'standard', landed: 1750, ship: 530, duty: 31, min: 6, max: 9, carrier: 'YunExpress Standard', active: true },
         { country: 'GB', method: 'economy', landed: 1850, ship: 590, duty: 49, min: 11, max: 16, carrier: '4PX Economy', active: true },
@@ -183,47 +168,66 @@ try {
 
   let firstProdId = null;
   for (const item of ITEMS) {
-    const p = (await db.query(`
-      insert into dropship_products (
-        octopus_sku, title, description, category, images, specs, weight_g, dimensions_cm,
-        unit_cost_cents, min_order_qty, stock_status, stock_qty, source_type, supplier_id, supplier_sku,
-        origin_country, status, is_test
-      ) values ($1,$2,$3,$4,array[$5::text],$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,'CN','active',true)
-      on conflict ((upper(btrim(octopus_sku)))) do update set
-        title = excluded.title,
-        description = excluded.description,
-        category = excluded.category,
-        images = excluded.images,
-        specs = excluded.specs,
-        weight_g = excluded.weight_g,
-        dimensions_cm = excluded.dimensions_cm,
-        unit_cost_cents = excluded.unit_cost_cents,
-        min_order_qty = excluded.min_order_qty,
-        stock_status = excluded.stock_status,
-        stock_qty = excluded.stock_qty,
-        source_type = excluded.source_type,
-        supplier_id = excluded.supplier_id,
-        supplier_sku = excluded.supplier_sku,
-        status = 'active',
-        is_test = true
-      returning id
-    `, [item.sku, item.title, item.description, item.category, item.img, JSON.stringify(item.specs), item.weight_g,
-        JSON.stringify(item.dims), item.cost, item.moq, item.stock, item.qty, item.source, sup.id, item.supSku])).rows[0];
-    if (!firstProdId) firstProdId = p.id;
+    const existing = (await db.query(
+      `select id from dropship_products where upper(btrim(legacy_sku)) = upper(btrim($1)) limit 1`,
+      [item.ref],
+    )).rows[0];
+
+    let prodId;
+    if (existing) {
+      prodId = existing.id;
+      await db.query(`
+        update dropship_products set
+          title = $2,
+          description = $3,
+          category = $4,
+          images = array[$5::text],
+          specs = $6,
+          weight_g = $7,
+          dimensions_cm = $8,
+          min_order_qty = $9,
+          stock_status = $10,
+          stock_qty = $11,
+          source_type = $12,
+          origin_country = 'CN',
+          status = 'active',
+          is_test = true
+        where id = $1
+      `, [prodId, item.title, item.description, item.category, item.img, JSON.stringify(item.specs), item.weight_g, JSON.stringify(item.dims), item.moq, item.stock, item.qty, item.source]);
+    } else {
+      const p = (await db.query(`
+        insert into dropship_products (
+          legacy_sku, title, description, category, images, specs, weight_g, dimensions_cm,
+          min_order_qty, stock_status, stock_qty, source_type, origin_country, status, is_test
+        ) values ($1,$2,$3,$4,array[$5::text],$6,$7,$8,$9,$10,$11,$12,'CN','active',true)
+        returning id
+      `, [item.ref, item.title, item.description, item.category, item.img, JSON.stringify(item.specs), item.weight_g, JSON.stringify(item.dims), item.moq, item.stock, item.qty, item.source])).rows[0];
+      prodId = p.id;
+    }
+    if (!firstProdId) firstProdId = prodId;
 
     for (const [idx, v] of item.variants.entries()) {
-      await db.query(`
-        insert into dropship_variants (product_id, options, octopus_sku, cost_cents, price_adjust_cents, stock_status, stock_qty, sort)
-        values ($1, $2, $3, $4, $5, $6, $7, $8)
-        on conflict ((upper(btrim(octopus_sku)))) do update set
-          product_id = excluded.product_id,
-          options = excluded.options,
-          cost_cents = excluded.cost_cents,
-          price_adjust_cents = excluded.price_adjust_cents,
-          stock_status = excluded.stock_status,
-          stock_qty = excluded.stock_qty,
-          sort = excluded.sort
-      `, [p.id, JSON.stringify(v.options), v.sku, v.cost, v.adj, v.stock, v.qty, idx]);
+      const exVar = (await db.query(
+        `select id from dropship_variants where upper(btrim(legacy_sku)) = upper(btrim($1)) limit 1`,
+        [v.ref],
+      )).rows[0];
+      if (exVar) {
+        await db.query(`
+          update dropship_variants set
+            product_id = $2,
+            options = $3,
+            price_adjust_cents = $4,
+            stock_status = $5,
+            stock_qty = $6,
+            sort = $7
+          where id = $1
+        `, [exVar.id, prodId, JSON.stringify(v.options), v.adj, v.stock, v.qty, idx]);
+      } else {
+        await db.query(`
+          insert into dropship_variants (product_id, options, legacy_sku, price_adjust_cents, stock_status, stock_qty, sort)
+          values ($1, $2, $3, $4, $5, $6, $7)
+        `, [prodId, JSON.stringify(v.options), v.ref, v.adj, v.stock, v.qty, idx]);
+      }
     }
 
     for (const r of item.routes) {
@@ -238,7 +242,7 @@ try {
           est_days_max = excluded.est_days_max,
           carrier = excluded.carrier,
           is_active = excluded.is_active
-      `, [p.id, r.country, r.method, r.landed, r.ship, r.duty, r.min, r.max, r.carrier, r.active]);
+      `, [prodId, r.country, r.method, r.landed, r.ship, r.duty, r.min, r.max, r.carrier, r.active]);
     }
   }
 
@@ -261,7 +265,7 @@ try {
   }
 
   await db.query('commit');
-  console.log(`✔ seeded 5 TEST dropship products (is_test=true) with AE & GB routes on staging`);
+  console.log(`✔ seeded 5 TEST dropship products (is_test=true, DS-XXXXXX model numbers) with AE & GB routes on staging`);
 } catch (e) {
   await db.query('rollback').catch(() => {});
   throw e;

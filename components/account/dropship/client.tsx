@@ -112,7 +112,7 @@ export function CountrySelect({
 
 function variantLabel(v: CatalogueVariant) {
   const entries = Object.entries(v.options ?? {});
-  return entries.length ? entries.map(([, val]) => val).join(' / ') : v.octopus_sku;
+  return entries.length ? entries.map(([, val]) => val).join(' / ') : v.model_no;
 }
 
 /** Product detail buy box: variant selector + stock status, route selector (method only, never carrier), and live "Your price" box. */
@@ -236,7 +236,7 @@ export function DropshipBuyBox({
               </div>
               {variant && (
                 <p className="mt-2.5 text-[13px] text-muted">
-                  SKU <span className="mono">{variant.octopus_sku}</span> · {stockText}
+                  Model <span className="mono">{variant.model_no}</span> · {stockText}
                 </p>
               )}
             </div>

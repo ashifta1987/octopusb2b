@@ -24,7 +24,7 @@ export type CatalogueRoute = {
 
 export type CatalogueVariant = {
   id: string;
-  octopus_sku: string;
+  model_no: string;
   options: Record<string, string>;
   price_adjust_cents: number;
   stock_status: StockStatus;
@@ -32,7 +32,7 @@ export type CatalogueVariant = {
 
 export type CatalogueRow = {
   product_id: string;
-  octopus_sku: string;
+  model_no: string;
   title: string;
   description: string | null;
   category: string | null;
@@ -186,7 +186,7 @@ export async function getDropshipCatalogue(params: {
   if (error) throw new Error(`Could not load the catalogue: ${error.message}`);
   const rows = ((data ?? []) as Record<string, unknown>[]).map((r) => ({
     product_id: String(r.product_id),
-    octopus_sku: String(r.octopus_sku),
+    model_no: String(r.model_no),
     title: String(r.title),
     description: r.description ? String(r.description) : null,
     category: r.category ? String(r.category) : null,
@@ -199,7 +199,7 @@ export async function getDropshipCatalogue(params: {
     variants: Array.isArray(r.variants)
       ? (r.variants as Record<string, unknown>[]).map((v) => ({
           id: String(v.id),
-          octopus_sku: String(v.octopus_sku),
+          model_no: String(v.model_no),
           options: (v.options && typeof v.options === 'object' ? v.options : {}) as Record<string, string>,
           price_adjust_cents: Number(v.price_adjust_cents ?? 0),
           stock_status: (v.stock_status as StockStatus) ?? 'in_stock',
@@ -230,7 +230,7 @@ export async function getDropshipProduct(id: string, country: string): Promise<D
   const r = data as Record<string, unknown>;
   return {
     product_id: String(r.product_id),
-    octopus_sku: String(r.octopus_sku),
+    model_no: String(r.model_no),
     title: String(r.title),
     description: r.description ? String(r.description) : null,
     category: r.category ? String(r.category) : null,
@@ -243,7 +243,7 @@ export async function getDropshipProduct(id: string, country: string): Promise<D
     variants: Array.isArray(r.variants)
       ? (r.variants as Record<string, unknown>[]).map((v) => ({
           id: String(v.id),
-          octopus_sku: String(v.octopus_sku),
+          model_no: String(v.model_no),
           options: (v.options && typeof v.options === 'object' ? v.options : {}) as Record<string, string>,
           price_adjust_cents: Number(v.price_adjust_cents ?? 0),
           stock_status: (v.stock_status as StockStatus) ?? 'in_stock',

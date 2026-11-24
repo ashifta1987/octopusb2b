@@ -1,5 +1,5 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -7,20 +7,14 @@ import {
   uploadDropshipImage,
   estimateRouteFromRateCard,
   type ProductInput,
+  type SourcingSupplierProductOption,
 } from './actions';
-
-type SupplierOption = {
-  id: string;
-  code: string;
-  legal_name: string;
-  verified: boolean;
-};
 
 type VariantRow = {
   id?: string | null;
-  octopus_sku: string;
+  model_no?: string | null;
   optionsText: string; // "Colour: Black, Size: M"
-  cost_cents: number;
+  supplier_product_id: string;
   price_adjust_cents: number;
   stock_status: 'in_stock' | 'low' | 'out';
   stock_qty: string;
@@ -40,7 +34,7 @@ type RouteRow = {
 
 export type InitialProductData = {
   id?: string | null;
-  octopus_sku: string;
+  model_no?: string | null;
   title: string;
   description: string;
   category: string;
@@ -50,13 +44,11 @@ export type InitialProductData = {
   dim_l: string;
   dim_w: string;
   dim_h: string;
-  unit_cost_cents: number;
   min_order_qty: number;
   stock_status: 'in_stock' | 'low' | 'out';
   stock_qty: string;
   source_type: 'own_warehouse' | 'partner_supplier';
-  supplier_id: string;
-  supplier_sku: string;
+  default_supplier_product_id: string;
   origin_country: string;
   status: 'draft' | 'active' | 'archived';
   variants: VariantRow[];
@@ -80,7 +72,7 @@ function parseKeyValLines(text: string, sep = '\n'): Record<string, string> {
 
 export function DropshipProductForm({
   initial,
-  suppliers,
+  supplierProducts,
   categories,
   supportedCountries,
   canEdit,
@@ -89,7 +81,7 @@ export function DropshipProductForm({
   categoryMinMarginBp,
 }: {
   initial: InitialProductData;
-  suppliers: SupplierOption[];
+  supplierProducts: SourcingSupplierProductOption[];
   categories: string[];
   supportedCountries: string[];
   canEdit: boolean;
@@ -101,7 +93,6 @@ export function DropshipProductForm({
   const [pending, startTransition] = useTransition();
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
-  const [sku, setSku] = useState(initial.octopus_sku);
   const [title, setTitle] = useState(initial.title);
   const [description, setDescription] = useState(initial.description);
   const [category, setCategory] = useState(initial.category);
@@ -111,22 +102,31 @@ export function DropshipProductForm({
   const [dimL, setDimL] = useState(initial.dim_l);
   const [dimW, setDimW] = useState(initial.dim_w);
   const [dimH, setDimH] = useState(initial.dim_h);
-  const [unitCostCents, setUnitCostCents] = useState(initial.unit_cost_cents);
   const [moq, setMoq] = useState(initial.min_order_qty);
   const [stockStatus, setStockStatus] = useState<'in_stock' | 'low' | 'out'>(initial.stock_status);
   const [stockQty, setStockQty] = useState(initial.stock_qty);
   const [sourceType, setSourceType] = useState<'own_warehouse' | 'partner_supplier'>(
     initial.source_type,
   );
-  const [supplierId, setSupplierId] = useState(initial.supplier_id);
-  const [supplierSku, setSupplierSku] = useState(initial.supplier_sku);
+  const [defaultSpId, setDefaultSpId] = useState(initial.default_supplier_product_id);
   const [originCountry, setOriginCountry] = useState(initial.origin_country);
   const [status, setStatus] = useState<'draft' | 'active' | 'archived'>(initial.status);
   const [variants, setVariants] = useState<VariantRow[]>(initial.variants);
   const [routes, setRoutes] = useState<RouteRow[]>(initial.routes);
   const [uploading, setUploading] = useState(false);
 
-  // Effective minimum margin (in basis points): category override if present, otherwise company-wide default
+  const spById = useMemo(
+    () => new Map(supplierProducts.map((sp) => [sp.supplier_product_id, sp])),
+    [supplierProducts],
+  );
+
+  // Authoritative unit cost comes from Sourcing (never stored on dropship_products / dropship_variants)
+  const effectiveUnitCostCents = useMemo(() => {
+    const firstVarSp = variants.find((v) => v.supplier_product_id)?.supplier_product_id;
+    const sp = spById.get(firstVarSp || defaultSpId);
+    return Number(sp?.unit_cost_cents ?? 0);
+  }, [variants, defaultSpId, spById]);
+
   const effectiveMinMarginBp =
     category && categoryMinMarginBp[category] != null
       ? categoryMinMarginBp[category]
@@ -164,7 +164,7 @@ export function DropshipProductForm({
     if (!r) return;
     const est = await estimateRouteFromRateCard({
       weight_g: weightG,
-      unit_cost_cents: unitCostCents,
+      unit_cost_cents: effectiveUnitCostCents,
       country: r.destination_country,
       method: r.shipping_method,
     });
@@ -175,8 +175,7 @@ export function DropshipProductForm({
       });
       return;
     }
-    // Pre-fill estimated shipping, duties, days and a suggested landed price that meets effectiveMinMarginBp
-    const baseCost = unitCostCents + est.est_shipping_cents + est.est_duties_cents;
+    const baseCost = effectiveUnitCostCents + est.est_shipping_cents + est.est_duties_cents;
     const suggestedLanded = Math.max(
       baseCost + 100,
       Math.ceil((baseCost * 10000) / Math.max(1000, 10000 - effectiveMinMarginBp)),
@@ -211,7 +210,6 @@ export function DropshipProductForm({
 
     const payload: ProductInput = {
       id: initial.id ?? null,
-      octopus_sku: sku,
       title,
       description: description || null,
       category: category || null,
@@ -219,20 +217,17 @@ export function DropshipProductForm({
       specs: parseKeyValLines(specsText, '\n'),
       weight_g: Number(weightG) || 0,
       dimensions_cm: dims,
-      unit_cost_cents: Number(unitCostCents) || 0,
       min_order_qty: Number(moq) || 1,
       stock_status: stockStatus,
       stock_qty: stockQty.trim() !== '' ? Number(stockQty) : null,
       source_type: sourceType,
-      supplier_id: supplierId || null,
-      supplier_sku: supplierSku || null,
-      origin_country: originCountry || 'CN',
+      default_supplier_product_id: defaultSpId || null,
+      origin_country: originCountry.trim() ? originCountry.trim().toUpperCase() : null,
       status: targetStatus,
       variants: variants.map((v) => ({
         id: v.id ?? null,
-        octopus_sku: v.octopus_sku,
         options: parseKeyValLines(v.optionsText, ','),
-        cost_cents: Number(v.cost_cents) || 0,
+        supplier_product_id: v.supplier_product_id || defaultSpId || null,
         price_adjust_cents: Number(v.price_adjust_cents) || 0,
         stock_status: v.stock_status,
         stock_qty: v.stock_qty.trim() !== '' ? Number(v.stock_qty) : null,
@@ -257,8 +252,8 @@ export function DropshipProductForm({
           ok: true,
           text:
             targetStatus === 'active'
-              ? 'Product published to the Dropshipping catalogue.'
-              : 'Product saved.',
+              ? `Product ${res.model_no} published to the Dropshipping catalogue.`
+              : `Product ${res.model_no} saved.`,
         });
         if (!initial.id) router.push(`/office/dropship/${res.id}`);
         else router.refresh();
@@ -276,7 +271,7 @@ export function DropshipProductForm({
             ← Back to Dropshipping catalogue
           </Link>
           <h1 className="text-[28px] font-extrabold mt-1">
-            {initial.id ? `Edit ${initial.octopus_sku}` : 'Add Dropshipping product'}
+            {initial.id ? `Edit ${initial.model_no}` : 'Add Dropshipping product'}
           </h1>
         </div>
         {canEdit && (
@@ -340,17 +335,16 @@ export function DropshipProductForm({
 
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
-            <label htmlFor="f-sku" className="k block mb-1.5">
-              Octopus SKU *
+            <label htmlFor="f-model" className="k block mb-1.5">
+              DS model number (immutable)
             </label>
             <input
-              id="f-sku"
-              disabled={!canEdit}
-              value={sku}
-              onChange={(e) => setSku(e.target.value)}
-              placeholder="OCT-DS-1001"
-              className="input mono"
-              data-testid="input-octopus-sku"
+              id="f-model"
+              disabled
+              readOnly
+              value={initial.model_no ?? 'Auto-assigned on save (DS-XXXXXX)'}
+              className="input mono bg-pearl text-muted"
+              data-testid="input-model-no"
             />
           </div>
           <div className="sm:col-span-2">
@@ -406,7 +400,7 @@ export function DropshipProductForm({
           </div>
           <div>
             <label htmlFor="f-origin" className="k block mb-1.5">
-              Origin country (ISO-2)
+              Origin country (ISO-2, optional)
             </label>
             <input
               id="f-origin"
@@ -414,6 +408,7 @@ export function DropshipProductForm({
               disabled={!canEdit}
               value={originCountry}
               onChange={(e) => setOriginCountry(e.target.value.toUpperCase())}
+              placeholder="Leave blank if unknown"
               className="input mono"
             />
           </div>
@@ -542,32 +537,19 @@ export function DropshipProductForm({
         </div>
       </section>
 
-      {/* 2. Staff-only cost & supplier (hidden from Support) */}
+      {/* 2. Staff-only Sourcing link & read-only cost (hidden from Support) */}
       {canSeeCosts && (
         <section className="card p-5 space-y-4" data-testid="staff-cost-supplier-section">
           <div className="flex items-center justify-between gap-2">
             <h2 className="text-[18px] font-bold">
-              Supplier &amp; unit cost (Staff only — never shown to merchants or Support)
+              Sourcing supplier &amp; cost link (Staff only — never shown to merchants or Support)
             </h2>
             <span className="pill bg-warn-bg text-warn">Internal</span>
           </div>
-          <div className="grid gap-4 sm:grid-cols-4">
-            <div>
-              <label htmlFor="f-cost" className="k block mb-1.5">
-                Unit cost (US$ cents) *
-              </label>
-              <input
-                id="f-cost"
-                type="number"
-                min={0}
-                disabled={!canEdit}
-                value={unitCostCents}
-                onChange={(e) => setUnitCostCents(Math.round(Number(e.target.value) || 0))}
-                className="input mono"
-                data-testid="input-unit-cost-cents"
-              />
-              <div className="text-[12px] text-muted mt-1">{usd(unitCostCents)}</div>
-            </div>
+          <p className="text-[13px] text-muted">
+            Supplier identity and unit cost come directly from Sourcing (<span className="mono">supplier_products</span>). They are never duplicated onto Dropship tables.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-3">
             <div>
               <label htmlFor="f-source" className="k block mb-1.5">
                 Source type
@@ -586,44 +568,36 @@ export function DropshipProductForm({
               </select>
             </div>
             <div>
-              <label htmlFor="f-supplier" className="k block mb-1.5">
-                Verified supplier
+              <label htmlFor="f-sp" className="k block mb-1.5">
+                Linked Sourcing supplier product
               </label>
               <select
-                id="f-supplier"
+                id="f-sp"
                 disabled={!canEdit}
-                value={supplierId}
-                onChange={(e) => setSupplierId(e.target.value)}
+                value={defaultSpId}
+                onChange={(e) => setDefaultSpId(e.target.value)}
                 className="input"
-                data-testid="input-supplier"
+                data-testid="input-supplier-product"
               >
-                <option value="">— Select supplier —</option>
-                {suppliers.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.code} · {s.legal_name}
+                <option value="">— Not linked —</option>
+                {supplierProducts.map((sp) => (
+                  <option key={sp.supplier_product_id} value={sp.supplier_product_id}>
+                    {sp.supplier_code} · {sp.sourcing_sku ?? sp.sourcing_title} ({usd(sp.unit_cost_cents)})
                   </option>
                 ))}
               </select>
             </div>
             <div>
-              <label htmlFor="f-supsku" className="k block mb-1.5">
-                Supplier SKU (internal)
-              </label>
-              <input
-                id="f-supsku"
-                disabled={!canEdit}
-                value={supplierSku}
-                onChange={(e) => setSupplierSku(e.target.value)}
-                placeholder="Factory model / SKU"
-                className="input mono"
-                data-testid="input-supplier-sku"
-              />
+              <div className="k block mb-1.5">Read-only Sourcing unit cost</div>
+              <div className="input mono bg-pearl flex items-center" data-testid="readonly-sourcing-cost">
+                {effectiveUnitCostCents > 0 ? usd(effectiveUnitCostCents) : 'Not linked'}
+              </div>
             </div>
           </div>
         </section>
       )}
 
-      {/* 3. Images (up to 10, 5 MB each, jpg/png/webp magic-byte checked, EXIF stripped, UUID filename) */}
+      {/* 3. Images */}
       <section className="card p-5 space-y-4" data-testid="images-section">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -693,7 +667,7 @@ export function DropshipProductForm({
           <div>
             <h2 className="text-[18px] font-bold">Variants ({variants.length})</h2>
             <p className="text-[13px] text-muted">
-              Options (e.g. &ldquo;Colour: Matte Black, Size: Large&rdquo;), unique Octopus SKU, staff cost and merchant price adjustment.
+              Each variant receives an immutable <span className="mono">DS-XXXXXX-NN</span> model number (never reused if deleted) and its own <span className="mono">item_master</span> unit.
             </p>
           </div>
           {canEdit && (
@@ -703,9 +677,10 @@ export function DropshipProductForm({
                 setVariants((prev) => [
                   ...prev,
                   {
-                    octopus_sku: `${sku || 'OCT-DS'}-V${prev.length + 1}`,
+                    id: null,
+                    model_no: null,
                     optionsText: 'Colour: Default',
-                    cost_cents: unitCostCents,
+                    supplier_product_id: defaultSpId,
                     price_adjust_cents: 0,
                     stock_status: 'in_stock',
                     stock_qty: '100',
@@ -725,9 +700,9 @@ export function DropshipProductForm({
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="border-b border-line text-left">
-                  <th className="th">Variant Octopus SKU</th>
+                  <th className="th">Variant model no.</th>
                   <th className="th">Options (Key: Value, …)</th>
-                  {canSeeCosts && <th className="th">Cost (cents)</th>}
+                  {canSeeCosts && <th className="th">Sourcing supplier product</th>}
                   <th className="th">Price adjust (cents)</th>
                   <th className="th">Stock status</th>
                   <th className="th">Qty (staff)</th>
@@ -736,20 +711,9 @@ export function DropshipProductForm({
               </thead>
               <tbody>
                 {variants.map((v, idx) => (
-                  <tr key={idx} className="border-b border-line">
-                    <td className="td">
-                      <input
-                        disabled={!canEdit}
-                        value={v.octopus_sku}
-                        onChange={(e) =>
-                          setVariants((prev) =>
-                            prev.map((row, i) =>
-                              i === idx ? { ...row, octopus_sku: e.target.value } : row,
-                            ),
-                          )
-                        }
-                        className="input mono !min-h-9"
-                      />
+                  <tr key={v.id ?? `new-${idx}`} className="border-b border-line">
+                    <td className="td mono text-muted whitespace-nowrap">
+                      {v.model_no ?? 'Auto (-NN on save)'}
                     </td>
                     <td className="td">
                       <input
@@ -768,22 +732,27 @@ export function DropshipProductForm({
                     </td>
                     {canSeeCosts && (
                       <td className="td">
-                        <input
-                          type="number"
-                          min={0}
+                        <select
                           disabled={!canEdit}
-                          value={v.cost_cents}
+                          value={v.supplier_product_id}
                           onChange={(e) =>
                             setVariants((prev) =>
                               prev.map((row, i) =>
                                 i === idx
-                                  ? { ...row, cost_cents: Math.round(Number(e.target.value) || 0) }
+                                  ? { ...row, supplier_product_id: e.target.value }
                                   : row,
                               ),
                             )
                           }
-                          className="input mono !min-h-9 w-28"
-                        />
+                          className="input !min-h-9 min-w-[220px]"
+                        >
+                          <option value="">— Use default / unlinked —</option>
+                          {supplierProducts.map((sp) => (
+                            <option key={sp.supplier_product_id} value={sp.supplier_product_id}>
+                              {sp.supplier_code} · {sp.sourcing_sku ?? sp.sourcing_title} ({usd(sp.unit_cost_cents)})
+                            </option>
+                          ))}
+                        </select>
                       </td>
                     )}
                     <td className="td">
@@ -866,7 +835,7 @@ export function DropshipProductForm({
         )}
       </section>
 
-      {/* 5. Routes table (country × method → landed price, days, carrier, active, margin + minimum margin warning) */}
+      {/* 5. Routes table */}
       <section className="card p-5 space-y-4" data-testid="routes-section">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
@@ -897,7 +866,7 @@ export function DropshipProductForm({
                   {
                     destination_country: supportedCountries[0] ?? 'AE',
                     shipping_method: 'express',
-                    landed_price_cents: Math.max(1500, unitCostCents * 2),
+                    landed_price_cents: Math.max(1500, effectiveUnitCostCents * 2),
                     est_shipping_cents: 500,
                     est_duties_cents: 50,
                     est_days_min: 3,
@@ -944,7 +913,7 @@ export function DropshipProductForm({
                 {routes.map((r, idx) => {
                   const marginCents =
                     r.landed_price_cents -
-                    unitCostCents -
+                    effectiveUnitCostCents -
                     r.est_shipping_cents -
                     r.est_duties_cents;
                   const marginBp =

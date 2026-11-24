@@ -172,7 +172,7 @@ async function Detail({
                   <span className={`pill ${stockTone}`} data-testid="product-stock-status">
                     {stockText}
                   </span>
-                  <Pill tone="neutral">SKU {p.octopus_sku}</Pill>
+                  <Pill tone="neutral">Model {p.model_no}</Pill>
                   <Pill tone="neutral">MOQ {p.min_order_qty}</Pill>
                 </div>
               </div>

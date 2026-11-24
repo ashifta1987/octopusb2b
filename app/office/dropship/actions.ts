@@ -13,9 +13,7 @@ const MAX_INPUT_PIXELS = 40_000_000;     // 40 MP decompression-bomb limit
 /** Inspect magic bytes (not file extension) for JPEG, PNG or WebP. */
 export async function detectImageMime(buf: Uint8Array): Promise<'image/jpeg' | 'image/png' | 'image/webp' | null> {
   if (buf.byteLength < 12) return null;
-  // JPEG: FF D8 FF
   if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'image/jpeg';
-  // PNG: 89 50 4E 47 0D 0A 1A 0A
   if (
     buf[0] === 0x89 &&
     buf[1] === 0x50 &&
@@ -28,7 +26,6 @@ export async function detectImageMime(buf: Uint8Array): Promise<'image/jpeg' | '
   ) {
     return 'image/png';
   }
-  // WebP: "RIFF" .... "WEBP"
   if (
     buf[0] === 0x52 &&
     buf[1] === 0x49 &&
@@ -85,11 +82,22 @@ export async function checkWhiteLabelStrings(texts: string[]): Promise<string[]>
   );
 }
 
+export type SourcingSupplierProductOption = {
+  supplier_product_id: string;
+  sourcing_product_id: string;
+  sourcing_sku: string | null;
+  sourcing_title: string;
+  supplier_id: string;
+  supplier_code: string;
+  supplier_name: string;
+  supplier_model: string | null;
+  unit_cost_cents: number;
+};
+
 const VariantInputSchema = z.object({
   id: z.string().uuid().optional().nullable(),
-  octopus_sku: z.string().trim().min(2).max(80),
   options: z.record(z.string(), z.string()),
-  cost_cents: z.number().int().min(0).max(100_000_000),
+  supplier_product_id: z.string().uuid().optional().nullable(),
   price_adjust_cents: z.number().int().min(-100_000_000).max(100_000_000),
   stock_status: z.enum(['in_stock', 'low', 'out']),
   stock_qty: z.number().int().min(0).max(10_000_000).nullable().optional(),
@@ -109,7 +117,6 @@ const RouteInputSchema = z.object({
 
 const ProductInputSchema = z.object({
   id: z.string().uuid().optional().nullable(),
-  octopus_sku: z.string().trim().min(2, 'Octopus SKU is required').max(80),
   title: z.string().trim().min(3, 'Title is required').max(200),
   description: z.string().trim().max(5000).nullable().optional(),
   category: z.string().trim().max(120).nullable().optional(),
@@ -124,14 +131,18 @@ const ProductInputSchema = z.object({
     })
     .nullable()
     .optional(),
-  unit_cost_cents: z.number().int().min(0).max(100_000_000),
   min_order_qty: z.number().int().min(1).max(100_000),
   stock_status: z.enum(['in_stock', 'low', 'out']),
   stock_qty: z.number().int().min(0).max(10_000_000).nullable().optional(),
   source_type: z.enum(['own_warehouse', 'partner_supplier']),
-  supplier_id: z.string().uuid().nullable().optional(),
-  supplier_sku: z.string().trim().max(120).nullable().optional(),
-  origin_country: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/),
+  default_supplier_product_id: z.string().uuid().nullable().optional(),
+  origin_country: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .refine((v) => v === '' || /^[A-Z]{2}$/.test(v), 'Origin country must be blank or a 2-letter ISO code')
+    .nullable()
+    .optional(),
   status: z.enum(['draft', 'active', 'archived']),
   variants: z.array(VariantInputSchema).max(50),
   routes: z.array(RouteInputSchema).max(100),
@@ -161,10 +172,10 @@ async function writeAudit(params: {
   });
 }
 
-/** Save (create or update) a dropship product, its variants and routes, with white-label and publish guards. */
+/** Save (create or update) a dropship product, its variants (in place so DS-XXXXXX-NN model_no is never reused), item_master, and routes. */
 export async function saveDropshipProduct(
   raw: ProductInput,
-): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+): Promise<{ ok: true; id: string; model_no: string } | { ok: false; error: string }> {
   const staff = await requireDropshipStaff(true);
   const parsed = ProductInputSchema.safeParse(raw);
   if (!parsed.success) {
@@ -184,28 +195,13 @@ export async function saveDropshipProduct(
     }
   }
 
-  // White-label guard: title, description, specs, variant options, octopus_sku and generated alt text
+  // White-label guard: title, description, specs, variant options, and generated alt text
   const candidateTexts: string[] = [
-    p.octopus_sku,
     p.title,
     p.description ?? '',
     ...Object.entries(p.specs).flatMap(([k, v]) => [k, v]),
-    ...p.variants.flatMap((v) => [
-      v.octopus_sku,
-      ...Object.entries(v.options).flatMap(([k, val]) => [k, val]),
-    ]),
+    ...p.variants.flatMap((v) => Object.entries(v.options).flatMap(([k, val]) => [k, val])),
   ];
-  // Also ensure octopus_sku never matches supplier_sku
-  if (
-    p.supplier_sku &&
-    p.supplier_sku.trim().length >= 3 &&
-    p.octopus_sku.toLowerCase().includes(p.supplier_sku.trim().toLowerCase())
-  ) {
-    return {
-      ok: false,
-      error: 'White-label guard: Octopus SKU must not contain the supplier SKU.',
-    };
-  }
   const wlHits = await checkWhiteLabelStrings(candidateTexts);
   if (wlHits.length > 0) {
     return {
@@ -214,7 +210,27 @@ export async function saveDropshipProduct(
     };
   }
 
-  // Publish guard (draft → active): title, at least 1 image, a cost > 0, and at least 1 active route
+  // Ensure every product has at least 1 variant row (Item 4)
+  const effectiveVariants =
+    p.variants.length > 0
+      ? p.variants.map((v) => ({
+          ...v,
+          supplier_product_id: v.supplier_product_id || p.default_supplier_product_id || null,
+        }))
+      : [
+          {
+            id: null,
+            options: {} as Record<string, string>,
+            supplier_product_id: p.default_supplier_product_id || null,
+            price_adjust_cents: 0,
+            stock_status: p.stock_status,
+            stock_qty: p.stock_qty ?? null,
+          },
+        ];
+
+  const sb = await createClient();
+
+  // Validate linked Sourcing supplier_products when publishing
   if (p.status === 'active') {
     if (!p.title.trim()) {
       return { ok: false, error: 'Cannot publish: product must have a title.' };
@@ -222,37 +238,58 @@ export async function saveDropshipProduct(
     if (p.images.length < 1) {
       return { ok: false, error: 'Cannot publish: add at least 1 product image before publishing.' };
     }
-    if (p.unit_cost_cents <= 0) {
-      return { ok: false, error: 'Cannot publish: unit cost must be greater than US$ 0.00.' };
-    }
     if (!p.routes.some((r) => r.is_active)) {
       return { ok: false, error: 'Cannot publish: add at least 1 active shipping route before publishing.' };
     }
-    if (p.supplier_id) {
-      const sb = await createClient();
-      const { data: sup } = await sb
-        .from('suppliers')
-        .select('verified, archived_at')
-        .eq('id', p.supplier_id)
-        .maybeSingle();
-      if (!sup || !sup.verified || sup.archived_at) {
-        return { ok: false, error: 'Cannot publish: selected supplier is not verified or is archived.' };
+
+    const spIds = [...new Set(effectiveVariants.map((v) => v.supplier_product_id).filter((x): x is string => !!x))];
+    if (p.source_type === 'partner_supplier' && spIds.length === 0) {
+      return {
+        ok: false,
+        error: 'Cannot publish: link at least one variant to a verified Sourcing supplier product.',
+      };
+    }
+    if (spIds.length > 0) {
+      const { data: sps } = await sb.rpc('list_sourcing_supplier_products', { p_limit: 1000 });
+      const byId = new Map(
+        ((sps ?? []) as SourcingSupplierProductOption[]).map((x) => [x.supplier_product_id, x]),
+      );
+      for (const spId of spIds) {
+        const hit = byId.get(spId);
+        if (!hit) {
+          return {
+            ok: false,
+            error: 'Cannot publish: linked Sourcing supplier product is not from a verified active supplier.',
+          };
+        }
+        if (Number(hit.unit_cost_cents ?? 0) <= 0) {
+          return {
+            ok: false,
+            error: 'Cannot publish: linked Sourcing supplier product has no cost > US$ 0.00.',
+          };
+        }
       }
-    } else if (p.source_type === 'partner_supplier') {
-      return { ok: false, error: 'Cannot publish: select a verified supplier for partner-supplier products.' };
     }
   }
 
-  const sb = await createClient();
   const isNew = !p.id;
-  let beforeSnap: unknown = null;
+  let beforeSnap: Record<string, unknown> | null = null;
   if (p.id) {
-    const { data } = await sb.from('dropship_products').select('*').eq('id', p.id).maybeSingle();
-    beforeSnap = data;
+    const { data } = await sb
+      .from('dropship_products')
+      .select('id, model_no, title, description, category, images, specs, weight_g, dimensions_cm, min_order_qty, stock_status, stock_qty, source_type, origin_country, status')
+      .eq('id', p.id)
+      .maybeSingle();
+    beforeSnap = (data as Record<string, unknown> | null) ?? null;
   }
 
+  const cleanOrigin =
+    p.origin_country && /^[A-Z]{2}$/.test(p.origin_country.trim().toUpperCase())
+      ? p.origin_country.trim().toUpperCase()
+      : null;
+
+  // Never write octopus_sku or frozen supplier_id / supplier_sku / unit_cost_cents
   const payload = {
-    octopus_sku: p.octopus_sku.trim().toUpperCase(),
     title: p.title.trim(),
     description: p.description?.trim() || null,
     category: p.category?.trim() || null,
@@ -260,44 +297,94 @@ export async function saveDropshipProduct(
     specs: p.specs,
     weight_g: p.weight_g,
     dimensions_cm: p.dimensions_cm ?? null,
-    unit_cost_cents: p.unit_cost_cents,
     min_order_qty: p.min_order_qty,
     stock_status: p.stock_status,
     stock_qty: p.stock_qty ?? null,
     source_type: p.source_type,
-    supplier_id: p.supplier_id || null,
-    supplier_sku: p.supplier_sku?.trim() || null,
-    origin_country: p.origin_country.toUpperCase(),
+    origin_country: cleanOrigin,
     status: p.status,
     ...(isNew ? { created_by: staff.session.userId } : {}),
   };
 
   let prodId = p.id ?? '';
+  let modelNo = String(beforeSnap?.model_no ?? '');
   if (isNew) {
-    const { data, error } = await sb.from('dropship_products').insert(payload).select('id').single();
+    const { data, error } = await sb
+      .from('dropship_products')
+      .insert(payload)
+      .select('id, model_no')
+      .single();
     if (error) return { ok: false, error: error.message };
     prodId = data.id as string;
+    modelNo = data.model_no as string;
   } else {
     const { error } = await sb.from('dropship_products').update(payload).eq('id', prodId);
     if (error) return { ok: false, error: error.message };
   }
 
-  // Replace variants and routes for this product
-  await sb.from('dropship_variants').delete().eq('product_id', prodId);
-  if (p.variants.length > 0) {
-    const { error: vErr } = await sb.from('dropship_variants').insert(
-      p.variants.map((v, idx) => ({
+  // Update variants IN PLACE so existing variant model_no (DS-XXXXXX-NN) and item_id are preserved,
+  // and deleted variant numbers are never reused.
+  const { data: existingVars } = await sb
+    .from('dropship_variants')
+    .select('id, item_id, model_no')
+    .eq('product_id', prodId);
+  const existingById = new Map((existingVars ?? []).map((v) => [String(v.id), v]));
+  const keptIds = new Set(
+    effectiveVariants.map((v) => v.id).filter((x): x is string => !!x && existingById.has(x)),
+  );
+  const removedIds = [...existingById.keys()].filter((id) => !keptIds.has(id));
+  if (removedIds.length > 0) {
+    const { error: delErr } = await sb.from('dropship_variants').delete().in('id', removedIds);
+    if (delErr) return { ok: false, error: `Variants delete: ${delErr.message}` };
+  }
+
+  for (let idx = 0; idx < effectiveVariants.length; idx++) {
+    const v = effectiveVariants[idx];
+    if (v.id && existingById.has(v.id)) {
+      const { error: uErr } = await sb
+        .from('dropship_variants')
+        .update({
+          options: v.options,
+          supplier_product_id: v.supplier_product_id ?? null,
+          price_adjust_cents: v.price_adjust_cents,
+          stock_status: v.stock_status,
+          stock_qty: v.stock_qty ?? null,
+          sort: idx,
+        })
+        .eq('id', v.id);
+      if (uErr) return { ok: false, error: `Variants update: ${uErr.message}` };
+    } else {
+      const { error: iErr } = await sb.from('dropship_variants').insert({
         product_id: prodId,
-        octopus_sku: v.octopus_sku.trim().toUpperCase(),
         options: v.options,
-        cost_cents: v.cost_cents,
+        supplier_product_id: v.supplier_product_id ?? null,
         price_adjust_cents: v.price_adjust_cents,
         stock_status: v.stock_status,
         stock_qty: v.stock_qty ?? null,
         sort: idx,
-      })),
-    );
-    if (vErr) return { ok: false, error: `Variants: ${vErr.message}` };
+      });
+      if (iErr) return { ok: false, error: `Variants insert: ${iErr.message}` };
+    }
+  }
+
+  // Sync authoritative physical fields onto each variant's item_master row (Item 6)
+  const { data: currentVars } = await sb
+    .from('dropship_variants')
+    .select('item_id')
+    .eq('product_id', prodId);
+  const itemIds = (currentVars ?? []).map((v) => String(v.item_id)).filter(Boolean);
+  if (itemIds.length > 0) {
+    const dims = p.dimensions_cm ?? null;
+    await sb
+      .from('item_master')
+      .update({
+        origin_country: cleanOrigin,
+        weight_g: p.weight_g,
+        box_l_cm: dims?.l && dims.l > 0 ? dims.l : null,
+        box_w_cm: dims?.w && dims.w > 0 ? dims.w : null,
+        box_h_cm: dims?.h && dims.h > 0 ? dims.h : null,
+      })
+      .in('id', itemIds);
   }
 
   await sb.from('dropship_routes').delete().eq('product_id', prodId);
@@ -333,14 +420,14 @@ export async function saveDropshipProduct(
     action,
     entityId: prodId,
     before: beforeSnap,
-    after: { ...payload, variants_count: p.variants.length, routes_count: p.routes.length },
-    details: { octopus_sku: payload.octopus_sku, status: payload.status },
+    after: { ...payload, model_no: modelNo, variants_count: effectiveVariants.length, routes_count: p.routes.length },
+    details: { model_no: modelNo, status: payload.status },
   });
 
   revalidatePath('/office/dropship');
   revalidatePath(`/office/dropship/${prodId}`);
   revalidatePath('/account/dropship/catalogue');
-  return { ok: true, id: prodId };
+  return { ok: true, id: prodId, model_no: modelNo };
 }
 
 /** Upload an image to dropship-media: verify magic bytes, strip EXIF with sharp, rename to random UUID. */
@@ -366,7 +453,6 @@ export async function uploadDropshipImage(
     };
   }
 
-  // White-label check on generated alt text (derived from product title)
   const alt = title || 'Product image';
   const wlHits = await checkWhiteLabelStrings([alt]);
   if (wlHits.length > 0) {
@@ -453,23 +539,23 @@ export async function estimateRouteFromRateCard(params: {
   };
 }
 
-// ───────── CSV Bulk Import (preview & commit, upsert on octopus_sku, max 2,000 rows, no image URLs, stays Draft) ─────────
+// ───────── CSV Bulk Import (preview & commit, idempotent on import_ref / legacy_sku, auto-assigns DS-XXXXXX model_no) ─────────
 export type CsvRowPreview = {
   rowNumber: number;
-  octopus_sku: string;
+  import_ref: string;
   title: string;
   description: string;
   category: string;
   weight_g: number;
-  unit_cost_cents: number;
   min_order_qty: number;
   stock_status: 'in_stock' | 'low' | 'out';
   stock_qty: number | null;
   source_type: 'own_warehouse' | 'partner_supplier';
+  sourcing_sku: string;
+  supplier_product_id: string | null;
   supplier_code: string;
-  supplier_id: string | null;
-  supplier_sku: string;
-  origin_country: string;
+  unit_cost_cents: number;
+  origin_country: string | null;
   specs: Record<string, string>;
   errors: string[];
 };
@@ -548,7 +634,6 @@ export async function previewDropshipCsv(csvText: string): Promise<CsvPreviewRes
     };
   }
 
-  // Reject any image URL column in the CSV (we never fetch files from outside sites)
   if (headers.some((h) => /image|photo|img_url|picture/i.test(h))) {
     return {
       totalRows: dataRows.length,
@@ -561,12 +646,12 @@ export async function previewDropshipCsv(csvText: string): Promise<CsvPreviewRes
   }
 
   const sb = await createClient();
-  const { data: sups } = await sb
-    .from('suppliers')
-    .select('id, code, legal_name, verified, archived_at');
-  const supByCode = new Map(
-    (sups ?? []).map((s) => [String(s.code).toUpperCase().trim(), s]),
-  );
+  const { data: sps } = await sb.rpc('list_sourcing_supplier_products', { p_limit: 1000 });
+  const spList = (sps ?? []) as SourcingSupplierProductOption[];
+  const spBySku = new Map<string, SourcingSupplierProductOption>();
+  for (const sp of spList) {
+    if (sp.sourcing_sku) spBySku.set(sp.sourcing_sku.toUpperCase().trim(), sp);
+  }
 
   const idx = (name: string) => headers.indexOf(name);
   const cell = (r: string[], name: string) => {
@@ -580,34 +665,28 @@ export async function previewDropshipCsv(csvText: string): Promise<CsvPreviewRes
     const rowNumber = i + 2;
     const errors: string[] = [];
 
-    const octopus_sku = cell(r, 'octopus_sku').toUpperCase();
+    const import_ref = cell(r, 'import_ref').toUpperCase();
     const title = cell(r, 'title');
     const description = cell(r, 'description');
     const category = cell(r, 'category');
     const weightRaw = cell(r, 'weight_g');
-    const costRaw = cell(r, 'unit_cost_cents');
     const moqRaw = cell(r, 'min_order_qty') || '1';
     const stockStatusRaw = (cell(r, 'stock_status') || 'in_stock').toLowerCase();
     const stockQtyRaw = cell(r, 'stock_qty');
     const sourceTypeRaw = (cell(r, 'source_type') || 'partner_supplier').toLowerCase();
-    const supplierCode = cell(r, 'supplier_code').toUpperCase();
-    const supplierSku = cell(r, 'supplier_sku');
-    const originCountry = (cell(r, 'origin_country') || 'CN').toUpperCase();
+    const sourcingSku = cell(r, 'sourcing_sku').toUpperCase();
+    const originCountryRaw = cell(r, 'origin_country').toUpperCase();
     const specsRaw = cell(r, 'specs_json');
 
-    if (!octopus_sku || octopus_sku.length < 2) errors.push('octopus_sku is required');
+    if (!import_ref || import_ref.length < 2) errors.push('import_ref is required');
     if (!title || title.length < 3) errors.push('title is required (min 3 chars)');
 
-    // Reject external URLs in any cell
     if (r.some((c) => /https?:\/\/\S+\.(jpg|jpeg|png|webp|gif)/i.test(c))) {
       errors.push('External image URLs are not allowed in CSV cells');
     }
 
     const weight_g = /^\d+$/.test(weightRaw) ? Number(weightRaw) : 0;
     if (weight_g <= 0) errors.push('weight_g must be a positive integer');
-
-    const unit_cost_cents = /^\d+$/.test(costRaw) ? Number(costRaw) : -1;
-    if (unit_cost_cents < 0) errors.push('unit_cost_cents must be a non-negative integer (US$ cents)');
 
     const min_order_qty = /^\d+$/.test(moqRaw) && Number(moqRaw) >= 1 ? Number(moqRaw) : 0;
     if (min_order_qty < 1) errors.push('min_order_qty must be ≥ 1');
@@ -623,18 +702,30 @@ export async function previewDropshipCsv(csvText: string): Promise<CsvPreviewRes
       errors.push('source_type must be own_warehouse or partner_supplier');
     }
 
-    let supplier_id: string | null = null;
-    if (supplierCode) {
-      const s = supByCode.get(supplierCode);
-      if (!s) errors.push(`supplier_code ${supplierCode} not found`);
-      else if (!s.verified || s.archived_at) errors.push(`supplier ${supplierCode} is not verified or is archived`);
-      else supplier_id = s.id as string;
+    let supplier_product_id: string | null = null;
+    let supplier_code = '';
+    let unit_cost_cents = 0;
+    if (sourcingSku) {
+      const sp = spBySku.get(sourcingSku);
+      if (!sp) {
+        errors.push(`sourcing_sku ${sourcingSku} not found on a verified active supplier`);
+      } else {
+        supplier_product_id = sp.supplier_product_id;
+        supplier_code = sp.supplier_code;
+        unit_cost_cents = Number(sp.unit_cost_cents ?? 0);
+      }
     } else if (sourceTypeRaw === 'partner_supplier') {
-      errors.push('supplier_code is required for partner_supplier products');
+      errors.push('sourcing_sku is required for partner_supplier products');
     }
 
-    if (!/^[A-Z]{2}$/.test(originCountry)) {
-      errors.push('origin_country must be a 2-letter ISO code (e.g. CN)');
+    // Item 1: origin_country is nullable with NO 'CN' default; blank = null
+    let origin_country: string | null = null;
+    if (originCountryRaw !== '') {
+      if (!/^[A-Z]{2}$/.test(originCountryRaw)) {
+        errors.push('origin_country must be blank or a 2-letter ISO code');
+      } else {
+        origin_country = originCountryRaw;
+      }
     }
 
     let specs: Record<string, string> = {};
@@ -656,16 +747,7 @@ export async function previewDropshipCsv(csvText: string): Promise<CsvPreviewRes
       }
     }
 
-    if (
-      supplierSku &&
-      supplierSku.length >= 3 &&
-      octopus_sku.toLowerCase().includes(supplierSku.toLowerCase())
-    ) {
-      errors.push('White-label guard: octopus_sku must not contain supplier_sku');
-    }
-
     const wlHits = await checkWhiteLabelStrings([
-      octopus_sku,
       title,
       description,
       ...Object.entries(specs).flatMap(([k, v]) => [k, v]),
@@ -676,12 +758,11 @@ export async function previewDropshipCsv(csvText: string): Promise<CsvPreviewRes
 
     previews.push({
       rowNumber,
-      octopus_sku,
+      import_ref,
       title,
       description,
       category,
       weight_g: Math.max(1, weight_g),
-      unit_cost_cents: Math.max(0, unit_cost_cents),
       min_order_qty: Math.max(1, min_order_qty),
       stock_status: (['in_stock', 'low', 'out'].includes(stockStatusRaw)
         ? stockStatusRaw
@@ -690,10 +771,11 @@ export async function previewDropshipCsv(csvText: string): Promise<CsvPreviewRes
       source_type: (['own_warehouse', 'partner_supplier'].includes(sourceTypeRaw)
         ? sourceTypeRaw
         : 'partner_supplier') as 'own_warehouse' | 'partner_supplier',
-      supplier_code: supplierCode,
-      supplier_id,
-      supplier_sku: supplierSku,
-      origin_country: /^[A-Z]{2}$/.test(originCountry) ? originCountry : 'CN',
+      sourcing_sku: sourcingSku,
+      supplier_product_id,
+      supplier_code,
+      unit_cost_cents,
+      origin_country,
       specs,
       errors,
     });
@@ -708,7 +790,7 @@ export async function previewDropshipCsv(csvText: string): Promise<CsvPreviewRes
   };
 }
 
-/** Commit a validated CSV bulk import: idempotent upsert on octopus_sku; imported products stay Draft until images are added. */
+/** Commit a validated CSV bulk import: idempotent upsert on legacy_sku (import_ref); auto-assigns DS-XXXXXX model_no. */
 export async function commitDropshipCsv(
   csvText: string,
 ): Promise<
@@ -727,16 +809,37 @@ export async function commitDropshipCsv(
   }
 
   const sb = await createClient();
-  const skus = preview.rows.map((r) => r.octopus_sku);
+  const refs = preview.rows.map((r) => r.import_ref);
   const { data: existingRows } = await sb
     .from('dropship_products')
     .select(
-      'id, octopus_sku, title, description, category, specs, weight_g, unit_cost_cents, min_order_qty, stock_status, stock_qty, source_type, supplier_id, supplier_sku, origin_country, status',
+      'id, model_no, legacy_sku, title, description, category, specs, weight_g, min_order_qty, stock_status, stock_qty, source_type, origin_country, status',
     )
-    .in('octopus_sku', skus);
+    .in('legacy_sku', refs);
 
-  const bySku = new Map(
-    (existingRows ?? []).map((r) => [String(r.octopus_sku).toUpperCase(), r]),
+  const existingIds = (existingRows ?? []).map((r) => String(r.id));
+  const { data: existingVars } = existingIds.length
+    ? await sb
+        .from('dropship_variants')
+        .select('id, product_id, item_id, supplier_product_id, sort')
+        .in('product_id', existingIds)
+        .order('sort', { ascending: true })
+    : { data: [] };
+
+  const firstVarByProd = new Map<string, { id: string; item_id: string; supplier_product_id: string | null }>();
+  for (const v of existingVars ?? []) {
+    const pid = String(v.product_id);
+    if (!firstVarByProd.has(pid)) {
+      firstVarByProd.set(pid, {
+        id: String(v.id),
+        item_id: String(v.item_id),
+        supplier_product_id: (v.supplier_product_id as string | null) ?? null,
+      });
+    }
+  }
+
+  const byRef = new Map(
+    (existingRows ?? []).map((r) => [String(r.legacy_sku).toUpperCase(), r]),
   );
 
   let created = 0;
@@ -744,21 +847,18 @@ export async function commitDropshipCsv(
   let unchanged = 0;
 
   for (const row of preview.rows) {
-    const cur = bySku.get(row.octopus_sku);
+    const cur = byRef.get(row.import_ref);
     const next = {
-      octopus_sku: row.octopus_sku,
+      legacy_sku: row.import_ref,
       title: row.title,
       description: row.description || null,
       category: row.category || null,
       specs: row.specs,
       weight_g: row.weight_g,
-      unit_cost_cents: row.unit_cost_cents,
       min_order_qty: row.min_order_qty,
       stock_status: row.stock_status,
       stock_qty: row.stock_qty,
       source_type: row.source_type,
-      supplier_id: row.supplier_id,
-      supplier_sku: row.supplier_sku || null,
       origin_country: row.origin_country,
     };
 
@@ -768,35 +868,48 @@ export async function commitDropshipCsv(
         .insert({
           ...next,
           images: [],
-          status: 'draft', // Imported products stay Draft until images are added in the form
+          status: 'draft',
           created_by: staff.session.userId,
         })
-        .select('id')
+        .select('id, model_no')
         .single();
-      if (error) return { ok: false, error: `Row ${row.rowNumber} (${row.octopus_sku}): ${error.message}` };
+      if (error) return { ok: false, error: `Row ${row.rowNumber} (${row.import_ref}): ${error.message}` };
+
+      const { error: vErr } = await sb.from('dropship_variants').insert({
+        product_id: ins.id as string,
+        options: {},
+        supplier_product_id: row.supplier_product_id,
+        price_adjust_cents: 0,
+        stock_status: row.stock_status,
+        stock_qty: row.stock_qty,
+        sort: 0,
+      });
+      if (vErr) return { ok: false, error: `Row ${row.rowNumber} (${row.import_ref}) variant: ${vErr.message}` };
+
       created++;
       await writeAudit({
         actorId: staff.session.userId,
         action: 'dropship.csv_imported',
         entityId: ins.id as string,
-        after: { ...next, status: 'draft' },
-        details: { octopus_sku: row.octopus_sku, op: 'create' },
+        after: { ...next, model_no: ins.model_no, supplier_product_id: row.supplier_product_id, status: 'draft' },
+        details: { model_no: ins.model_no, import_ref: row.import_ref, op: 'create' },
       });
     } else {
+      const curId = String(cur.id);
+      const firstVar = firstVarByProd.get(curId);
+      const curOrigin = cur.origin_country ? String(cur.origin_country).trim() : null;
       const same =
         cur.title === next.title &&
         (cur.description ?? null) === next.description &&
         (cur.category ?? null) === next.category &&
         JSON.stringify(cur.specs ?? {}) === JSON.stringify(next.specs) &&
         Number(cur.weight_g) === next.weight_g &&
-        Number(cur.unit_cost_cents) === next.unit_cost_cents &&
         Number(cur.min_order_qty) === next.min_order_qty &&
         cur.stock_status === next.stock_status &&
         (cur.stock_qty ?? null) === next.stock_qty &&
         cur.source_type === next.source_type &&
-        (cur.supplier_id ?? null) === next.supplier_id &&
-        (cur.supplier_sku ?? null) === next.supplier_sku &&
-        String(cur.origin_country).trim() === next.origin_country;
+        curOrigin === next.origin_country &&
+        (firstVar?.supplier_product_id ?? null) === (row.supplier_product_id ?? null);
 
       if (same) {
         unchanged++;
@@ -806,16 +919,35 @@ export async function commitDropshipCsv(
       const { error } = await sb
         .from('dropship_products')
         .update(next)
-        .eq('id', cur.id as string);
-      if (error) return { ok: false, error: `Row ${row.rowNumber} (${row.octopus_sku}): ${error.message}` };
+        .eq('id', curId);
+      if (error) return { ok: false, error: `Row ${row.rowNumber} (${row.import_ref}): ${error.message}` };
+
+      if (firstVar) {
+        await sb
+          .from('dropship_variants')
+          .update({
+            supplier_product_id: row.supplier_product_id,
+            stock_status: row.stock_status,
+            stock_qty: row.stock_qty,
+          })
+          .eq('id', firstVar.id);
+        await sb
+          .from('item_master')
+          .update({
+            origin_country: row.origin_country,
+            weight_g: row.weight_g,
+          })
+          .eq('id', firstVar.item_id);
+      }
+
       updated++;
       await writeAudit({
         actorId: staff.session.userId,
         action: 'dropship.csv_imported',
-        entityId: cur.id as string,
+        entityId: curId,
         before: cur,
-        after: next,
-        details: { octopus_sku: row.octopus_sku, op: 'update' },
+        after: { ...next, supplier_product_id: row.supplier_product_id },
+        details: { model_no: cur.model_no, import_ref: row.import_ref, op: 'update' },
       });
     }
   }

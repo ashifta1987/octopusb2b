@@ -60,7 +60,7 @@ export function DropshipCsvImportClient() {
           </Link>
           <h1 className="text-[28px] font-extrabold mt-1">CSV bulk import</h1>
           <p className="text-[14px] text-muted mt-1">
-            Upsert on <span className="mono">octopus_sku</span> (running the same file twice changes nothing). Max 2,000 rows per file. No image URLs allowed; imported products stay <b>Draft</b> until photos are added in the form.
+            Idempotent upsert on <span className="mono">import_ref</span> (stored staff-only; each new product receives an immutable <span className="mono">DS-XXXXXX</span> model number). Max 2,000 rows per file. No image URLs allowed; imported products stay <b>Draft</b> until photos are added in the form.
           </p>
         </div>
         <a
@@ -117,7 +117,7 @@ export function DropshipCsvImportClient() {
             rows={6}
             value={csvText}
             onChange={(e) => setCsvText(e.target.value)}
-            placeholder="octopus_sku,title,description,category,weight_g,unit_cost_cents,min_order_qty,stock_status,stock_qty,source_type,supplier_code,supplier_sku,origin_country,specs_json"
+            placeholder="import_ref,title,description,category,weight_g,min_order_qty,stock_status,stock_qty,source_type,sourcing_sku,origin_country,specs_json"
             className="input font-mono text-[12.5px]"
             data-testid="csv-textarea"
           />
@@ -159,12 +159,12 @@ export function DropshipCsvImportClient() {
                 <thead>
                   <tr className="border-b border-line text-left">
                     <th className="th">Row</th>
-                    <th className="th">Octopus SKU</th>
+                    <th className="th">Import ref (staff)</th>
                     <th className="th">Title (sanitised)</th>
                     <th className="th">Category</th>
                     <th className="th text-right">Weight</th>
-                    <th className="th text-right">Unit cost</th>
-                    <th className="th">Supplier</th>
+                    <th className="th text-right">Sourcing cost</th>
+                    <th className="th">Sourcing link</th>
                     <th className="th">Validation</th>
                   </tr>
                 </thead>
@@ -176,12 +176,14 @@ export function DropshipCsvImportClient() {
                       data-testid="csv-preview-row"
                     >
                       <td className="td mono">{r.rowNumber}</td>
-                      <td className="td mono font-semibold">{r.octopus_sku}</td>
+                      <td className="td mono font-semibold">{r.import_ref}</td>
                       <td className="td">{r.title}</td>
                       <td className="td">{r.category || '—'}</td>
                       <td className="td text-right tabular-nums">{r.weight_g} g</td>
-                      <td className="td text-right tabular-nums">{usd(r.unit_cost_cents)}</td>
-                      <td className="td mono">{r.supplier_code || r.source_type}</td>
+                      <td className="td text-right tabular-nums">
+                        {r.unit_cost_cents > 0 ? usd(r.unit_cost_cents) : '—'}
+                      </td>
+                      <td className="td mono">{r.sourcing_sku || r.source_type}</td>
                       <td className="td">
                         {r.errors.length === 0 ? (
                           <span className="pill bg-ok-bg text-ok">Valid (Draft)</span>
