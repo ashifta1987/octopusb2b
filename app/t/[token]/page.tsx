@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { notFound } from 'next/navigation';
 import { isDropshipV2UiEnabled } from '@/lib/dropship';
 import { DsPageHeader } from '@/components/dropship-ui';
+import { dsInter } from '@/components/dropship-ui/font';
 
 export const metadata = {
   title: 'Track your parcel',
@@ -13,7 +14,7 @@ async function Guarded() {
     notFound();
   }
   return (
-    <div className="ds-v2 min-h-screen p-6">
+    <div className={`${dsInter.variable} ds-v2 min-h-screen p-6`}>
       <div className="max-w-[760px] mx-auto">
         <DsPageHeader
           title="Track your parcel"
@@ -27,7 +28,7 @@ async function Guarded() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<div className="ds-v2 min-h-screen p-6">Loading…</div>}>
+    <Suspense fallback={<div className={`${dsInter.variable} ds-v2 min-h-screen p-6`}>Loading…</div>}>
       <Guarded />
     </Suspense>
   );

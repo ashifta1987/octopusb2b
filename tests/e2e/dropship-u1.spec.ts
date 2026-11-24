@@ -216,6 +216,28 @@ test('Staff UI kit (/office/dropship/ui-kit), role-filtered Staff shell at 1280p
   await dsPage.goto('/admin/finance/saas');
   await expect(dsPage).toHaveURL(/\/forbidden/);
   await dsCtx.close();
+
+  // Verify non-Dropship pages (/ , /products, /admin) never request Inter font files
+  const fontUrls: string[] = [];
+  const onReq = (req: import('@playwright/test').Request) => {
+    const u = req.url();
+    if (u.includes('.woff2')) fontUrls.push(u);
+  };
+  page.on('request', onReq);
+  for (const nonDsPath of ['/', '/products', '/admin']) {
+    fontUrls.length = 0;
+    await page.goto(nonDsPath);
+    await page.waitForLoadState('networkidle');
+    const html = await page.content();
+    expect(html.includes('--font-ds-inter'), `${nonDsPath} html must not set --font-ds-inter`).toBe(
+      false,
+    );
+    const computedFont = await page.evaluate(() =>
+      getComputedStyle(document.body).getPropertyValue('--font-ds-inter'),
+    );
+    expect(computedFont.trim(), `${nonDsPath} must not have --font-ds-inter on body`).toBe('');
+  }
+  page.off('request', onReq);
 });
 
 test('Merchant shell gating, /account/dropship/wallet inside shell, 1280px & 390px + More page + axe check', async ({
@@ -225,7 +247,10 @@ test('Merchant shell gating, /account/dropship/wallet inside shell, 1280px & 390
   // 1. Non-enabled customer sees today's AccountShell + Coming soon, and is redirected from sub-routes
   const offCtx = await browser.newContext({ viewport: { width: 1280, height: 1000 } });
   const offPage = await offCtx.newPage();
-  await customerLogin(offPage, nonEnabledBuyer!, '/account/dropship');
+  await customerLogin(offPage, nonEnabledBuyer!, '/account');
+  await offPage.goto('/account');
+  const acctHtml = await offPage.content();
+  expect(acctHtml.includes('--font-ds-inter'), '/account must not set --font-ds-inter').toBe(false);
   await offPage.goto('/account/dropship');
   await expect(offPage.getByTestId('dropship-merchant-shell')).toHaveCount(0);
   await expect(offPage.getByTestId('account-tabs')).toBeVisible();

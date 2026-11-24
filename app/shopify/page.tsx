@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { isDropshipV2UiEnabled } from '@/lib/dropship';
 import { DsPageHeader } from '@/components/dropship-ui';
+import { dsInter } from '@/components/dropship-ui/font';
 
 export const metadata = {
   title: 'Octopus Dropship · Shopify App',
@@ -13,7 +14,7 @@ async function Guarded() {
     redirect('/request/dropship#notify');
   }
   return (
-    <div className="ds-v2 min-h-screen p-6">
+    <div className={`${dsInter.variable} ds-v2 min-h-screen p-6`}>
       <div className="max-w-[1240px] mx-auto">
         <DsPageHeader
           title="Octopus Dropship for Shopify"
@@ -27,7 +28,7 @@ async function Guarded() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<div className="ds-v2 min-h-screen p-6">Loading…</div>}>
+    <Suspense fallback={<div className={`${dsInter.variable} ds-v2 min-h-screen p-6`}>Loading…</div>}>
       <Guarded />
     </Suspense>
   );

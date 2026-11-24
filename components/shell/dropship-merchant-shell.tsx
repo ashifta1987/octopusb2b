@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { DsIcon, DsTopBar, type DsIconName } from '@/components/dropship-ui';
+import { dsInter } from '@/components/dropship-ui/font';
 
 export type MerchantNavItem = {
   href: string;
@@ -154,7 +155,7 @@ export function DropshipMerchantShell({
   return (
     <div
       data-testid="dropship-merchant-shell"
-      className="ds-v2 min-h-screen flex flex-col md:flex-row bg-[#F4F6F9] text-[#1A174A]"
+      className={`${dsInter.variable} ds-v2 min-h-screen flex flex-col md:flex-row bg-[#F4F6F9] text-[#1A174A]`}
     >
       {/* Phone Top Header (below 768px) — matches mobile/M_Dashboard.html */}
       <header
