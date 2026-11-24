@@ -1,6 +1,9 @@
 import 'server-only';
+import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getSiteContent } from '@/lib/content';
+import { requireCustomer } from '@/lib/auth';
+import { getAccountContext, isStaging, serviceOn } from '@/lib/core/account';
 
 /**
  * Dropshipping catalogue v2 (migrations 204 & 205).
@@ -100,8 +103,42 @@ export async function dropshipSettings() {
     minMarginBp: Number.isFinite(minMarginBp) && minMarginBp >= 0 ? Math.round(minMarginBp) : 1500,
     categoryMinMarginBp: catMargin,
     supportedCountries,
+    v2Ui:
+      typeof settings['dropship_v2_ui'] === 'boolean'
+        ? (settings['dropship_v2_ui'] as boolean)
+        : isStaging(),
     demo: settings['demo.addon44'] === true,
   };
+}
+
+/**
+ * Step U1 Rule 1: Is the Dropship design v2 UI switched on?
+ * Default: OFF on live, ON on staging (unless explicitly set in site_settings.dropship_v2_ui).
+ */
+export async function isDropshipV2UiEnabled(): Promise<boolean> {
+  const { settings } = await getSiteContent();
+  if (typeof settings['dropship_v2_ui'] === 'boolean') {
+    return settings['dropship_v2_ui'] as boolean;
+  }
+  return isStaging();
+}
+
+/**
+ * Server-side guard for /account/dropship/* placeholder/v2 sub-routes:
+ * Any customer whose organization does not have dropship switched on ('on'/'trial')
+ * OR when dropship_v2_ui is OFF is redirected to /account/dropship ("Coming soon").
+ */
+export async function requireDropshipV2Merchant(next = '/account/dropship') {
+  const s = await requireCustomer(next);
+  if (!s.org) redirect('/account/dropship');
+  const [ctx, v2On] = await Promise.all([
+    getAccountContext(s.org.id),
+    isDropshipV2UiEnabled(),
+  ]);
+  if (!v2On || !serviceOn(ctx.services.dropship)) {
+    redirect('/account/dropship');
+  }
+  return { session: s, ctx };
 }
 
 /** Suggested retail = landed_price_cents × markup, rounded up to end in .99 (integer cents; null without a pricing rule). */

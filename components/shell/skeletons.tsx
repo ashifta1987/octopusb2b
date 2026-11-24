@@ -8,7 +8,7 @@ const Bar = ({ w = '100%', h = 14, className = '' }: { w?: string | number; h?: 
 
 export function PageSkeleton({ cards = 2, table = true }: { cards?: number; table?: boolean }) {
   return (
-    <div className="max-w-[1160px]" aria-busy="true" aria-label="Loading">
+    <div className="max-w-[1160px]" role="status" aria-busy="true" aria-label="Loading">
       <Bar w={110} h={11} />
       <Bar w={320} h={34} className="mt-2" />
       <Bar w={520} h={14} className="mt-3 max-w-full" />
@@ -31,7 +31,7 @@ export function PageSkeleton({ cards = 2, table = true }: { cards?: number; tabl
 
 export function AccountShellSkeleton() {
   return (
-    <div className="min-h-screen bg-pearl" aria-busy="true" aria-label="Loading your account">
+    <div className="min-h-screen bg-pearl" role="status" aria-busy="true" aria-label="Loading your account">
       <div className="bg-white">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-3 flex items-center gap-5">
           <Bar w={150} h={44} />

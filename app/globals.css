@@ -141,3 +141,234 @@ h1, h2, h3, h4 { font-family: var(--font-display); color: var(--ink); letter-spa
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+ * Octopus Dropship — design v2 tokens & utility classes (docs/design/dropship-v2/specs/tokens.css)
+ * Scoped under .ds-v2 so existing B2B store/account/staff screens stay untouched.
+ * ─────────────────────────────────────────────────────────────────────────── */
+:root {
+  --ds-navy: #1A174A;
+  --ds-navy-hover: #2E2B66;
+  --ds-blue: #2A6FD1;
+  --ds-blue-hover: #1F5BB0;
+  --ds-logo-blue: #2F7BE0;
+  --ds-teal: #0B7A75;
+  --ds-teal-accent: #5FD3C9;
+  --ds-danger: #B42318;
+  --ds-bg: #F4F6F9;
+  --ds-surface: #FFFFFF;
+  --ds-border: #E3E7EF;
+  --ds-border-strong: #C9D0DD;
+  --ds-muted: #5B6478;
+  --ds-text: #1A174A;
+  --ds-ok-bg: #E3F4F2;
+  --ds-ok-fg: #0B6A65;
+  --ds-warn-bg: #FFF4E0;
+  --ds-warn-fg: #8A5300;
+  --ds-bad-bg: #FDE8E8;
+  --ds-bad-fg: #A8201A;
+  --ds-info-bg: #E6EFFB;
+  --ds-info-fg: #1F5BB0;
+  --ds-neu-bg: #EEF0F4;
+  --ds-neu-fg: #3D4558;
+  --ds-radius-control: 8px;
+  --ds-radius-card: 12px;
+  --ds-touch: 44px;
+  --ds-content-max: 1240px;
+  --ds-font: var(--font-ds-inter), Inter, system-ui, -apple-system, sans-serif;
+}
+
+@layer components {
+  .ds-v2 {
+    font-family: var(--ds-font);
+    color: var(--ds-text);
+    background: var(--ds-bg);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .ds-v2 h1, .ds-v2 h2, .ds-v2 h3, .ds-v2 h4 {
+    font-family: var(--ds-font);
+    color: var(--ds-text);
+    letter-spacing: normal;
+    line-height: 1.25;
+  }
+  .ds-v2 :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #2A6FD1;
+  }
+  .ds-v2 .ds-card {
+    background: #FFFFFF;
+    border: 1px solid #E3E7EF;
+    border-radius: 12px;
+    padding: 20px;
+    box-sizing: border-box;
+    min-width: 0;
+    box-shadow: 0 1px 2px rgba(26, 23, 74, 0.05);
+  }
+  .ds-v2 .ds-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    line-height: 1.4;
+  }
+  .ds-v2 .ds-badge-ok { background: #E3F4F2; color: #0B6A65; }
+  .ds-v2 .ds-badge-warn { background: #FFF4E0; color: #8A5300; }
+  .ds-v2 .ds-badge-bad { background: #FDE8E8; color: #A8201A; }
+  .ds-v2 .ds-badge-info { background: #E6EFFB; color: #1F5BB0; }
+  .ds-v2 .ds-badge-neutral { background: #EEF0F4; color: #3D4558; }
+
+  .ds-v2 .ds-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: 8px;
+    font: 600 14px Inter, system-ui, sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+  }
+  .ds-v2 .ds-btn-primary {
+    background: #2A6FD1;
+    color: #FFFFFF;
+    border: 1px solid #2A6FD1;
+  }
+  .ds-v2 .ds-btn-primary:hover:not(:disabled) {
+    background: #1F5BB0;
+    border-color: #1F5BB0;
+    color: #FFFFFF;
+  }
+  .ds-v2 .ds-btn-secondary {
+    background: #FFFFFF;
+    color: #1A174A;
+    border: 1px solid #C9D0DD;
+  }
+  .ds-v2 .ds-btn-secondary:hover:not(:disabled) {
+    background: #F7F9FC;
+    border-color: #1A174A;
+    color: #1A174A;
+  }
+  .ds-v2 .ds-btn-danger {
+    background: #B42318;
+    color: #FFFFFF;
+    border: 1px solid #B42318;
+  }
+  .ds-v2 .ds-btn-danger:hover:not(:disabled) {
+    background: #911B12;
+    border-color: #911B12;
+    color: #FFFFFF;
+  }
+  .ds-v2 .ds-btn:disabled {
+    background: #EEF0F4;
+    color: #5B6478;
+    border-color: #E3E7EF;
+    cursor: not-allowed;
+  }
+  .ds-v2 .ds-input {
+    min-height: 44px;
+    border: 1px solid #C9D0DD;
+    border-radius: 8px;
+    padding: 0 12px;
+    font: 14px Inter, system-ui, sans-serif;
+    color: #1A174A;
+    background: #FFFFFF;
+    box-sizing: border-box;
+  }
+  .ds-v2 .ds-input:focus {
+    outline: none;
+    border-color: #2A6FD1;
+    box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #2A6FD1;
+  }
+  .ds-v2 .ds-input[aria-invalid="true"] {
+    border-color: #B42318;
+  }
+  .ds-v2 .ds-input:disabled {
+    background: #EEF0F4;
+    color: #5B6478;
+    cursor: not-allowed;
+  }
+  .ds-v2 .ds-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #5B6478;
+    display: block;
+    margin-bottom: 6px;
+  }
+  .ds-v2 .ds-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid #C9D0DD;
+    background: #FFFFFF;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1A174A;
+    cursor: pointer;
+  }
+  .ds-v2 .ds-chip[aria-pressed="true"] {
+    background: #1A174A;
+    color: #FFFFFF;
+    border-color: #1A174A;
+  }
+  .ds-v2 .ds-tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .ds-v2 .ds-tbl th {
+    text-align: left;
+    font-size: 12px;
+    color: #5B6478;
+    font-weight: 600;
+    padding: 10px 12px;
+    border-bottom: 1px solid #E3E7EF;
+    background: #F7F9FC;
+    white-space: nowrap;
+  }
+  .ds-v2 .ds-tbl td {
+    padding: 12px;
+    border-bottom: 1px solid #EEF0F4;
+    vertical-align: middle;
+  }
+  .ds-v2 .ds-tbl tbody tr:hover td {
+    background: #FAFBFD;
+  }
+  .ds-v2 .ds-tbl tbody tr[data-selected="true"] td {
+    background: #F2F7FE;
+  }
+  .ds-v2 .ds-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 14px;
+    padding: 6px 0;
+  }
+  .ds-v2 .ds-mut {
+    color: #5B6478;
+  }
+  .ds-v2 .ds-topic {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    border: 1px solid #E3E7EF;
+    background: #FFFFFF;
+    color: #1A174A;
+    position: relative;
+    text-decoration: none;
+  }
+}
+

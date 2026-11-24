@@ -24,11 +24,11 @@ const COPY: Record<Exclude<ServiceKey, 'sourcing'>, { title: string; lead: strin
 };
 
 /** ADDON-41 — a service tab: Start card while the service is off, or a "being set up" card until its section ships. */
-export function ServiceStart({ service }: { service: Exclude<ServiceKey, 'sourcing'> }) {
-  return <Suspense fallback={<PageSkeleton cards={1} table={false} />}><ServiceStartContent service={service} /></Suspense>;
+export function ServiceStart({ service, hideHeading = false }: { service: Exclude<ServiceKey, 'sourcing'>; hideHeading?: boolean }) {
+  return <Suspense fallback={<PageSkeleton cards={1} table={false} />}><ServiceStartContent service={service} hideHeading={hideHeading} /></Suspense>;
 }
 
-async function ServiceStartContent({ service }: { service: Exclude<ServiceKey, 'sourcing'> }) {
+async function ServiceStartContent({ service, hideHeading }: { service: Exclude<ServiceKey, 'sourcing'>; hideHeading?: boolean }) {
   const s = await requireCustomer(`/account/${service}`);
   const ctx = await getAccountContext(s.org!.id);
   const st = ctx.services[service];
@@ -36,9 +36,13 @@ async function ServiceStartContent({ service }: { service: Exclude<ServiceKey, '
   const on = serviceOn(st);
   return (
     <div className="max-w-[860px]">
-      <div className="mono text-[11.5px] font-semibold uppercase tracking-[.1em] text-coral-text">{on ? 'Switched on' : 'Not switched on yet'}</div>
-      <h1 className="text-[32px] font-extrabold leading-tight">{c.title}</h1>
-      <section className="card p-6 mt-5" data-testid={on ? 'service-setting-up' : 'service-start'}>
+      {!hideHeading && (
+        <>
+          <div className="mono text-[11.5px] font-semibold uppercase tracking-[.1em] text-coral-text">{on ? 'Switched on' : 'Not switched on yet'}</div>
+          <h1 className="text-[32px] font-extrabold leading-tight">{c.title}</h1>
+        </>
+      )}
+      <section className={`card p-6 ${hideHeading ? '' : 'mt-5'}`} data-testid={on ? 'service-setting-up' : 'service-start'}>
         <p className="text-[16px]">{c.lead}</p>
         <ul className="mt-4 space-y-2">{c.points.map((p) => <li key={p} className="flex gap-2.5 text-[15px]"><span aria-hidden className="text-ok font-bold">✓</span>{p}</li>)}</ul>
         {on ? (

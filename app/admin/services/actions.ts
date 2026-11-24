@@ -3,10 +3,13 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod';
 import { toCents, CURRENCIES, type Currency } from '@/lib/format';
 import { guard, fail, ok, str, bool, type Result } from '@/components/admin/server';
+import { createAdminClient } from '@/lib/supabase/server';
 
 function refresh() {
   revalidatePath('/admin/services');
   revalidatePath('/admin/wallet');
+  revalidatePath('/account/dropship', 'layout');
+  revalidatePath('/office/dropship', 'layout');
   revalidateTag('site-content', 'max');
   revalidateTag('service-prices', 'max');
 }
@@ -130,7 +133,7 @@ export async function saveDropshipMarginSettings(_prev: Result | null, fd: FormD
       .upsert({ key: row.key, value: row.value, updated_at: new Date().toISOString() });
     if (error) return fail(error);
   }
-  await g.sb.from('audit_log').insert({
+  await createAdminClient().from('audit_log').insert({
     actor_id: g.s.userId,
     actor_kind: 'staff',
     action: 'dropship.settings_updated',
@@ -141,4 +144,33 @@ export async function saveDropshipMarginSettings(_prev: Result | null, fd: FormD
   });
   refresh();
   return ok('Dropshipping margin & countries settings saved');
+}
+
+/** Toggle the Dropship design v2 UI shell (site_settings.dropship_v2_ui) with an audit log entry. */
+export async function setDropshipV2Ui(_prev: Result | null, fd: FormData): Promise<Result> {
+  const g = await guard('services', 'edit');
+  if ('error' in g) return g.error;
+  const enabled = bool(fd, 'dropship_v2_ui');
+  const { data: before } = await g.sb
+    .from('site_settings')
+    .select('value')
+    .eq('key', 'dropship_v2_ui')
+    .maybeSingle();
+  const { error } = await g.sb
+    .from('site_settings')
+    .upsert({ key: 'dropship_v2_ui', value: enabled, updated_at: new Date().toISOString() });
+  if (error) return fail(error);
+  await createAdminClient().from('audit_log').insert({
+    actor_id: g.s.userId,
+    actor_kind: 'staff',
+    action: 'dropship.v2_ui_toggled',
+    entity: 'site_settings',
+    entity_id: 'dropship_v2_ui',
+    service: 'dropship',
+    before: before ? { dropship_v2_ui: before.value } : null,
+    after: { dropship_v2_ui: enabled },
+    details: { dropship_v2_ui: enabled },
+  });
+  refresh();
+  return ok(enabled ? 'Dropship design v2 UI switched ON' : 'Dropship design v2 UI switched OFF');
 }

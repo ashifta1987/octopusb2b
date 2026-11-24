@@ -12,13 +12,14 @@ import { UnreadBellDot } from '@/components/account/unread-count';
 import { DivisionSwitcher } from './division-switcher';
 import { setDivisionScope } from '@/app/admin/division-scope-actions';
 import type { DivisionScope } from '@/lib/divisions/shared';
+import { StaffShellSwitcher } from './dropship-shell-switcher';
 
 /**
  * ADDON-41 boards 06–08 — staff shell: navy header ("Admin · staff only"), admin tabs, and the side menu
  * (work queue first, then the existing back-office and admin pages the person may open).
  */
-export function StaffShell({ session, nav, counts, moderation, unread = 0, scope, children }: {
-  session: Session; nav: NavSection[]; counts: { queue: number; approvals: number; transfers: number }; moderation?: number | null; unread?: number; scope?: DivisionScope; children: React.ReactNode;
+export function StaffShell({ session, nav, counts, moderation, unread = 0, scope, dropshipV2Ui = false, children }: {
+  session: Session; nav: NavSection[]; counts: { queue: number; approvals: number; transfers: number }; moderation?: number | null; unread?: number; scope?: DivisionScope; dropshipV2Ui?: boolean; children: React.ReactNode;
 }) {
   const name = session.profile?.full_name ?? session.email ?? 'Staff';
   const initials = name.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
@@ -64,7 +65,8 @@ export function StaffShell({ session, nav, counts, moderation, unread = 0, scope
     }))
     .filter((s) => s.items.length);
 
-  return (
+  const staging = isStaging();
+  const defaultShell = (
     <div className="min-h-screen bg-pearl">
       <MaintenanceNotice />
       <header className="bg-ink text-white">
@@ -75,7 +77,7 @@ export function StaffShell({ session, nav, counts, moderation, unread = 0, scope
             <label htmlFor="staff-q" className="sr-only">Search orders by code or title</label>
             <input id="staff-q" name="q" className="input !rounded-[10px] !border-white" placeholder="Search orders by code or title" />
           </form>
-          {isStaging() && <span className="order-2 mono text-[11px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full bg-warn-bg text-warn" data-testid="staging-badge" title="Staging environment: test data, not the live site">Staging</span>}
+          {staging && <span className="order-2 mono text-[11px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full bg-warn-bg text-warn" data-testid="staging-badge" title="Staging environment: test data, not the live site">Staging</span>}
           <div className="ml-auto flex items-center gap-3 [&_summary]:text-white [&_.btn-ghost]:!text-white [&_.btn-ghost]:!bg-transparent [&_.btn-ghost]:!border-white/40 [&_.text-muted]:!text-white/70 [&_summary_.bg-ink]:!bg-coral">
             {/* staff notification inbox (bug 2, 8 Nov 2026): drops at once when one is opened */}
             <Link href="/admin/notifications" data-testid="staff-bell" className="relative w-11 h-11 rounded-[10px] border border-white/40 flex items-center justify-center hover:border-white">
@@ -101,6 +103,23 @@ export function StaffShell({ session, nav, counts, moderation, unread = 0, scope
         <main className="flex-1 min-w-0 px-4 sm:px-8 py-8"><div className="max-w-[1280px] mx-auto">{children}</div></main>
       </div>
     </div>
+  );
+
+  const canSeeSaas = session.isAdmin || session.roles.includes('finance');
+
+  return (
+    <StaffShellSwitcher
+      v2ShellEnabled={dropshipV2Ui}
+      canSeeDropshipItems={canOpenDropship}
+      canSeeSaas={canSeeSaas}
+      userName={name}
+      initials={initials || 'ST'}
+      unreadCount={unread}
+      isStaging={staging}
+      defaultShell={defaultShell}
+    >
+      {children}
+    </StaffShellSwitcher>
   );
 }
 

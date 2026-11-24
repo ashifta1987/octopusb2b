@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { requireDropshipStaff } from '@/lib/dropship-staff';
 import { createClient } from '@/lib/supabase/server';
 import { bulkArchiveDropshipProducts } from './actions';
+import { DsIcon } from '@/components/dropship-ui';
 
 export const metadata = { title: 'Dropshipping catalogue · Back office' };
 
@@ -42,10 +43,10 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
       .select('product_id, destination_country, shipping_method, landed_price_cents, is_active'),
     staff.canSeeCosts
       ? sb
-          .from('suppliers')
-          .select('id, code, legal_name, verified')
-          .is('archived_at', null)
-          .order('code')
+        .from('suppliers')
+        .select('id, code, legal_name, verified')
+        .is('archived_at', null)
+        .order('code')
       : Promise.resolve({ data: null }),
   ]);
 
@@ -91,16 +92,20 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
     <div data-testid="staff-dropship-list">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="mono text-[11.5px] font-semibold uppercase tracking-[.1em] text-coral-text">
-            Dropshipping · DS division
-          </div>
-          <h1 className="text-[28px] sm:text-[32px] font-extrabold leading-tight">
-            Dropshipping catalogue
+          <h1 className="m-0 text-[26px] font-bold leading-tight flex items-center gap-3 flex-wrap text-[#1A174A]">
+            <span
+              data-page-icon=""
+              aria-hidden="true"
+              className="w-10 h-10 rounded-[10px] bg-[#E6EFFB] text-[#2A6FD1] inline-flex items-center justify-center shrink-0"
+            >
+              <DsIcon name="package" size={20} strokeWidth={2} />
+            </span>
+            <span>Dropship products</span>
           </h1>
-          <p className="text-[14.5px] text-muted mt-1">
-            White-label catalogue shown to merchants who have Dropshipping switched on.
+          <p className="text-[14px] text-[#5B6478] mt-1.5 mb-0">
+            /office/dropship · what merchants can buy, and what they must never see.
             {!staff.canEdit && (
-              <span className="ml-2 pill bg-pearl text-muted border border-line">
+              <span className="ml-2 ds-badge ds-badge-neutral">
                 Read-only ({staff.isSupportOnly ? 'Support — cost & supplier hidden' : 'Finance'})
               </span>
             )}
@@ -110,17 +115,19 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
           <div className="flex flex-wrap gap-2.5">
             <Link
               href="/office/dropship/import"
-              className="btn btn-ghost min-h-11"
+              className="ds-btn ds-btn-secondary"
               data-testid="csv-import-link"
             >
-              CSV bulk import
+              <DsIcon name="upload" size={16} />
+              Import products
             </Link>
             <Link
               href="/office/dropship/new"
-              className="btn btn-primary min-h-11"
+              className="ds-btn ds-btn-primary"
               data-testid="add-product-link"
             >
-              + Add product
+              <DsIcon name="plus" size={16} />
+              Add product
             </Link>
           </div>
         )}
@@ -202,8 +209,8 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
             No Dropshipping products match these filters.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-[13.5px]">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Dropship products">
+            <table className="ds-tbl min-w-[760px]">
               <thead>
                 <tr className="border-b border-line text-left">
                   {staff.canEdit && <th className="th w-10">Select</th>}

@@ -3,15 +3,16 @@ import { Logo } from '@/components/ui';
 import { MaintenanceNotice } from '@/components/maintenance-notice';
 import type { Session } from '@/lib/auth';
 import { money } from '@/lib/format';
-import { SERVICES, isStaging, type getAccountContext } from '@/lib/core/account';
+import { SERVICES, isStaging, serviceOn, type getAccountContext } from '@/lib/core/account';
 import { AccountTabs, SectionMenu, type Tab, type MenuSection } from './account-tabs';
 import { UnreadBellDot } from '@/components/account/unread-count';
+import { AccountShellSwitcher } from './dropship-shell-switcher';
 
 type Ctx = Awaited<ReturnType<typeof getAccountContext>>;
 
 /** ADDON-41 board 01 — My account shell: header (search, wallet, notifications, user), service tabs, section menu. */
-export function AccountShell({ session, ctx, newQuotes, mobileBar, children }: {
-  session: Session; ctx: Ctx | null; newQuotes: number; mobileBar?: React.ReactNode; children: React.ReactNode;
+export function AccountShell({ session, ctx, newQuotes, dropshipV2Ui = false, mobileBar, children }: {
+  session: Session; ctx: Ctx | null; newQuotes: number; dropshipV2Ui?: boolean; mobileBar?: React.ReactNode; children: React.ReactNode;
 }) {
   const name = session.profile?.full_name ?? session.email ?? 'You';
   const initials = name.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
@@ -49,8 +50,9 @@ export function AccountShell({ session, ctx, newQuotes, mobileBar, children }: {
     ] }],
   };
   const role = session.org ? `${session.org.name}` : 'Customer';
+  const staging = isStaging();
 
-  return (
+  const defaultShell = (
     <div className="min-h-screen bg-pearl">
       <MaintenanceNotice />
       <header className="bg-white">
@@ -61,7 +63,7 @@ export function AccountShell({ session, ctx, newQuotes, mobileBar, children }: {
             <label htmlFor="acct-q" className="sr-only">Search your requests and orders</label>
             <input id="acct-q" name="q" className="input !rounded-[10px]" placeholder="Search your requests and orders (reference or product)" />
           </form>
-          {isStaging() && <span className="order-2 mono text-[11px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full bg-warn-bg text-warn" data-testid="staging-badge" title="Staging environment: test data, not the live site">Staging</span>}
+          {staging && <span className="order-2 mono text-[11px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full bg-warn-bg text-warn" data-testid="staging-badge" title="Staging environment: test data, not the live site">Staging</span>}
           <div className="order-2 lg:order-3 ml-auto flex items-center gap-3">
             {ctx?.wallet && (
               <Link href="/account/wallet" className="hidden sm:block rounded-[10px] border border-line px-3.5 py-1.5 leading-tight hover:border-ink" data-testid="header-wallet">
@@ -100,6 +102,21 @@ export function AccountShell({ session, ctx, newQuotes, mobileBar, children }: {
       </div>
       {mobileBar}
     </div>
+  );
+
+  const dropshipEnabled = Boolean(ctx?.services?.dropship && serviceOn(ctx.services.dropship));
+
+  return (
+    <AccountShellSwitcher
+      v2ShellEnabled={Boolean(dropshipV2Ui && dropshipEnabled)}
+      userName={name}
+      initials={initials || 'ME'}
+      unreadCount={ctx?.unread ?? 0}
+      isStaging={staging}
+      defaultShell={defaultShell}
+    >
+      {children}
+    </AccountShellSwitcher>
   );
 }
 

@@ -2,12 +2,15 @@ import 'server-only';
 import { redirect } from 'next/navigation';
 import { getSession, type Session } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
+import { isDropshipV2UiEnabled } from '@/lib/dropship';
 
 export type DropshipStaffAccess = {
   session: Session;
   dsDivisionId: string;
+  inDs: boolean;
   canEdit: boolean;       // DS division manager/staff or company-wide admin
   canSeeCosts: boolean;   // DS division member, admin, or finance (NOT support-only)
+  canSeeSaas: boolean;    // company-wide Finance or Admin
   isSupportOnly: boolean;
 };
 
@@ -58,10 +61,30 @@ export async function requireDropshipStaff(
   return {
     session: s,
     dsDivisionId,
+    inDs,
     canEdit,
     canSeeCosts,
+    canSeeSaas: s.isAdmin || isFin,
     isSupportOnly,
   };
+}
+
+/**
+ * Staff guard for Step U1 design v2 placeholder/UI-kit pages (/office/dropship/* placeholders and ui-kit).
+ * Requires dropship_v2_ui to be ON, plus Dropshipping division membership or company-wide admin.
+ */
+export async function requireDropshipV2Staff(
+  needEdit = false,
+  next = '/office/dropship',
+): Promise<DropshipStaffAccess> {
+  const [access, v2On] = await Promise.all([
+    requireDropshipStaff(needEdit, next),
+    isDropshipV2UiEnabled(),
+  ]);
+  if (!v2On) {
+    redirect('/office/dropship');
+  }
+  return access;
 }
 
 /**

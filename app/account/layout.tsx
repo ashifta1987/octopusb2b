@@ -6,18 +6,31 @@ import { AccountBottomBar } from '@/components/account/bottom-bar';
 import { newQuoteCount, usedServices } from '@/components/account/sourcing-data';
 import { getAccountContext } from '@/lib/core/account';
 import { AccountShellSkeleton } from '@/components/shell/skeletons';
+import { isDropshipV2UiEnabled } from '@/lib/dropship';
 
 export const metadata = { title: { default: 'My account', template: '%s · Octopus B2B' } };
 
 async function Shell({ children }: { children: React.ReactNode }) {
   const s = await requireCustomer();
   // ADDON-41 board 01: wallet in the header, service tabs, section menu; Octo assistant bubble on every page (SPEC §20.5)
-  const [newQuotes, used, ctx] = s.org
-    ? await Promise.all([newQuoteCount(s.org.id), usedServices(s.org.id), getAccountContext(s.org.id)])
-    : [0, [] as string[], null];
+  const [newQuotes, used, ctx, dropshipV2Ui] = s.org
+    ? await Promise.all([
+        newQuoteCount(s.org.id),
+        usedServices(s.org.id),
+        getAccountContext(s.org.id),
+        isDropshipV2UiEnabled(),
+      ])
+    : [0, [] as string[], null, false];
   return (
-    <AccountShell session={s} ctx={ctx} newQuotes={newQuotes} mobileBar={<AccountBottomBar newQuotes={newQuotes} used={used} />}>
-      {children}{s.org && <AssistantBubble />}
+    <AccountShell
+      session={s}
+      ctx={ctx}
+      newQuotes={newQuotes}
+      dropshipV2Ui={dropshipV2Ui}
+      mobileBar={<AccountBottomBar newQuotes={newQuotes} used={used} />}
+    >
+      {children}
+      {s.org && <AssistantBubble />}
     </AccountShell>
   );
 }

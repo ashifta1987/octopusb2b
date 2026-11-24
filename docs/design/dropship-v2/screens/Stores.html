@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inside Shopify admin · Octopus Dropship design v2</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap">
+<link rel="stylesheet" href="../specs/tokens.css">
+</head>
+<body>
+
+
+<div style="min-height:1150px;background:#E8EAEE;font-family:Inter,system-ui,sans-serif;color:#1A174A;display:flex;flex-direction:column">
+<div style="background:#2B2F36;color:#FFFFFF;min-height:52px;display:flex;align-items:center;gap:14px;padding:0 20px;font-size:14px;flex-wrap:wrap"><strong>Store admin</strong><span style="color:#C7CBD3">your-store.myshopify.com</span><span style="margin-left:auto;color:#C7CBD3;font-size:12px">Generic frame standing in for Shopify admin</span></div>
+<div style="display:flex;flex-wrap:wrap;flex:1">
+<nav aria-label="Store admin" style="flex:1 1 200px;max-width:100%;background:#F1F2F4;border-right:1px solid #D9DCE1;padding:16px 10px;display:flex;flex-direction:column;gap:2px;font-size:14px;box-sizing:border-box">
+<a href="#" style="min-height:40px;display:flex;align-items:center;padding:0 12px;border-radius:8px;color:#30343B;text-decoration:none">Home</a>
+<a href="#" style="min-height:40px;display:flex;align-items:center;padding:0 12px;border-radius:8px;color:#30343B;text-decoration:none">Orders</a>
+<a href="#" style="min-height:40px;display:flex;align-items:center;padding:0 12px;border-radius:8px;color:#30343B;text-decoration:none">Products</a>
+<a href="#" style="min-height:40px;display:flex;align-items:center;padding:0 12px;border-radius:8px;color:#30343B;text-decoration:none">Customers</a>
+<span style="font-size:12px;color:#5B6478;padding:14px 12px 4px;font-weight:600">Apps</span>
+<a href="#" style="min-height:40px;display:flex;align-items:center;padding:0 12px;border-radius:8px;background:#FFFFFF;color:#1A174A;font-weight:600;text-decoration:none;border:1px solid #D9DCE1">Octopus Dropship</a>
+</nav>
+<main style="flex:999 1 560px;min-width:0;padding:24px 28px 40px;box-sizing:border-box;display:flex;flex-direction:column;gap:18px">
+<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#1A174A;border-radius:12px;padding:12px 16px"><img src="../assets/octopus-dropship-logo-white.png" alt="Octopus Dropship" style="width:150px;height:auto;display:block"><nav aria-label="App" style="display:flex;gap:6px;flex-wrap:wrap;margin-left:auto"><a href="Catalog.html" style="color:#C9D3E3;text-decoration:none;font-size:14px;padding:10px 12px;min-height:44px;box-sizing:border-box">Find products</a><a href="ImportList.html" style="color:#C9D3E3;text-decoration:none;font-size:14px;padding:10px 12px;min-height:44px;box-sizing:border-box">Import list</a><a href="Orders.html" style="color:#C9D3E3;text-decoration:none;font-size:14px;padding:10px 12px;min-height:44px;box-sizing:border-box">Orders</a><a href="#" style="color:#FFFFFF;font-weight:600;text-decoration:none;font-size:14px;padding:10px 12px;min-height:44px;box-sizing:border-box;border-bottom:2px solid #5FD3C9">Settings</a></nav></div>
+<section class="chg" aria-label="What changed"><strong style="font-size:14px;display:inline-flex;align-items:center;gap:6px"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:#B54708"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 16v4M17 18h4"/></svg>What changed</strong><ol>
+<li>The app now works inside Shopify admin (Shopify requires this for App Store apps). The same screens stay at hostoctopus.com.</li>
+<li>Store access renews by itself every hour. If it can't, the merchant sees Reconnect and nothing is lost.</li>
+<li>Octopus becomes a fulfilment location in the store, so orders for Octopus products come to us automatically.</li>
+<li>Merchants see exactly what the app can and can't access, and how long buyer data is kept.</li></ol></section>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">
+<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2 style="display:flex;align-items:center;gap:8px;margin:0;font-size:17px"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:#2A6FD1"><path d="M3 9l1.6-5h14.8L21 9"/><path d="M4 9v11h16V9"/><path d="M3 9h18"/><path d="M9 20v-6h6v6"/></svg>Connection</h2><span class="b ok"><svg class="ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M5 12.5l4.5 4.5L19 7"/></svg>Connected</span></div>
+<div class="row" style="margin-top:10px"><span class="mut">Store</span><span>your-store.myshopify.com</span></div>
+<div class="row"><span class="mut">Access<span class="new">NEW</span></span><span>Renews automatically</span></div>
+<div class="row"><span class="mut">Last renewed</span><span>12 minutes ago</span></div>
+<div class="row"><span class="mut">Last order check<span class="new">NEW</span></span><span>4 minutes ago</span></div>
+<div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap"><button class="btn2" type="button"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>Check now</button><button class="btn2" type="button">Disconnect</button></div></div>
+<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2 style="margin:0;font-size:17px">Fulfilment location<span class="new">NEW</span></h2><span class="b ok"><svg class="ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M5 12.5l4.5 4.5L19 7"/></svg>Active</span></div>
+<p style="margin:10px 0 0;font-size:14px;line-height:1.55">Your store now has a location called <strong>Octopus Dropship</strong>. Products you push are stocked there, and their orders come to Octopus by themselves.</p>
+<div class="row" style="margin-top:8px"><span class="mut">Products stocked here</span><span>412</span></div>
+<div class="row"><span class="mut">Stock updated</span><span>Every hour</span></div></div>
+<div class="card"><h2 style="display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:17px"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:#2A6FD1"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/></svg>What the app can do</h2>
+<ul style="margin:0;padding-left:18px;font-size:14px;line-height:1.7"><li>Create and edit the products you push</li><li>Update stock at the Octopus location</li><li>Read your store's orders, and act only on items supplied by Octopus</li><li>Add tracking and mark those items shipped</li></ul>
+<p class="mut" style="margin:10px 0 0;font-size:13px">It does not ask for your customer list, discounts or themes. Other suppliers' items in an order are ignored and not stored.</p></div>
+<div class="card"><h2 style="display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:17px"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:#2A6FD1"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6l8-3z"/></svg>Buyer data<span class="new">NEW</span></h2>
+<p style="margin:0;font-size:14px;line-height:1.55">Buyer names and addresses are used only to ship the order. They are deleted [N] days after delivery, except what invoices must keep by law.</p>
+<p class="mut" style="margin:10px 0 0;font-size:13px">Data and deletion requests from Shopify are handled automatically.</p></div>
+</div>
+<div class="card" style="border:1px solid #F3D9A4;background:#FFFBF2"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><span class="b warn"><svg class="ic" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M12 3.5L2.5 20h19L12 3.5z"/><path d="M12 10v4.5M12 17.2h.01"/></svg>Example state</span><h2 style="margin:8px 0 4px;font-size:17px">Store access needs renewing</h2><p class="mut" style="margin:0;font-size:14px">Stock and price updates are paused. Orders already paid keep shipping.</p></div><button class="btn" type="button"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>Reconnect</button></div></div>
+<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap"><div><h2 style="display:flex;align-items:center;gap:8px;margin:0 0 4px;font-size:17px"><svg class="ic" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:#2A6FD1"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg>Plan</h2><p class="mut" style="margin:0;font-size:14px">Growth · billed by Shopify on your Shopify bill<span class="new">NEW</span></p></div><a class="btn2" href="Billing.html"><svg class="ic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M4 20h4L19.5 8.5l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>Change plan</a></div></div>
+<section aria-label="Build notes" style="border:1px dashed #9AA3B5;border-radius:12px;padding:16px 18px;background:#FBFCFE;font-size:13px;line-height:1.6;color:#2E3445">
+<strong style="font-size:13px;letter-spacing:.04em;color:#5B6478;display:inline-flex;align-items:center;gap:6px"><svg class="ic" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5"/></svg>BUILD NOTES FOR ANTIGRAVITY</strong>
+<div style="margin-top:6px"><strong>Route:</strong> <code style="font-family:ui-monospace,Menlo,monospace;font-size:12px">/shopify (embedded in Shopify admin)</code></div>
+<div><strong>Data:</strong> store_connections, store_credentials (server only), Shopify session tokens</div>
+<ul style="margin:6px 0 0;padding-left:18px"><li>App Bridge with session tokens; works without third-party cookies.</li><li>Expiring offline token refreshed before expiry; Reconnect on failure.</li><li>Privacy webhooks export or delete buyer data; app/uninstalled pauses sync and deletes tokens.</li></ul></section>
+<p class="mut" style="margin:0;font-size:12px">Sample data for design review only.</p>
+</main>
+</div>
+</div>
+
+
+</body>
+</html>

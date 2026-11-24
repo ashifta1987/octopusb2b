@@ -8,7 +8,7 @@ import { ActionForm, RunButton } from '@/components/admin/client';
 import { money, fmtDate, CURRENCIES, asCurrency as asCur, type Currency } from '@/lib/format';
 import { getCurrencyContext } from '@/lib/currency';
 import { cn } from '@/lib/cn';
-import { updateService, addPrice, createService, setServiceActive, saveDropshipMarginSettings } from './actions';
+import { updateService, addPrice, createService, setServiceActive, saveDropshipMarginSettings, setDropshipV2Ui } from './actions';
 import { dropshipSettings } from '@/lib/dropship';
 import { nowMs } from '@/components/admin/server';
 
@@ -233,6 +233,30 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
             />
           </Field>
         </ActionForm>
+        <div className="px-6 py-4 border-t border-line flex flex-wrap items-center justify-between gap-4" data-testid="dropship-v2-ui-setting">
+          <div>
+            <div className="font-semibold text-[15px]">Dropship design v2 UI shell (<code className="mono text-xs">dropship_v2_ui</code>)</div>
+            <p className="text-xs text-muted mt-0.5">
+              When switched ON, organizations with Dropshipping enabled see the design v2 merchant shell and staff see the v2 back-office shell. Everyone else keeps the Coming soon card. Default: OFF on live, ON on staging.
+            </p>
+          </div>
+          <ActionForm
+            action={setDropshipV2Ui}
+            submitLabel="Save UI switch"
+            hideSubmit={!editable}
+            inline
+          >
+            <label className="inline-flex items-center gap-2 text-sm font-semibold">
+              <input
+                type="checkbox"
+                name="dropship_v2_ui"
+                defaultChecked={dsCfg.v2Ui}
+                disabled={!editable}
+              />
+              Enable Dropship v2 UI ({dsCfg.v2Ui ? 'ON' : 'OFF'})
+            </label>
+          </ActionForm>
+        </div>
       </Card>
 
       {/* "Notify me when it launches" sign-ups for Coming-soon features (migration 203; staff with Services view only) */}
