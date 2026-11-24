@@ -10,8 +10,9 @@
 --  · Item 19: store_orders.fx_rate_to_usd nullable, NO default 1; required (> 0) when buyer_currency <> 'USD'.
 --  · Item 20 & Review 1: shipments.tracking_token via extensions.gen_random_bytes; /t/[token] serves ONLY store_order
 --    shipments. tickets adds store_order_id, rfq_id, and division_id with "at most one" link check (0 or 1 link).
---  · Item 21 & Review 4–5: domain_events DB-only SQL consumer + pg_cron ('10 seconds'), exponential retry/backoff
---    (1m/5m/30m/2h -> dead at 5 attempts), duplicate idempotency_key no-op, fast_ship stock shortage -> on_hold
+--  · Item 21 & Review 4–5: domain_events DB-only SQL consumer + pg_cron ('* * * * *', every 1 minute) + daily
+--    cron.job_run_details 7-day retention cleanup, exponential retry/backoff (1m/5m/30m/2h -> dead at 5 attempts),
+--    duplicate idempotency_key no-op, fast_ship stock shortage -> on_hold
 --    (hold_reason='stock_shortage', no error), label_ready stays 'processing', picked_up -> 'shipped', delivered sets
 --    store_orders.delivered_at and Finance's escrow_holds.auto_release_at (no second copy on store_orders).
 --  · Item 22: internal_charge_rules seeded inactive (active = false) with NULL rates.
@@ -1438,7 +1439,8 @@ end $$;
 revoke all on function public.process_dropship_domain_events(integer) from public, anon;
 grant execute on function public.process_dropship_domain_events(integer) to authenticated, service_role;
 
--- Schedule pg_cron worker ('octopus-dropship-domain-events' every 10 seconds; pure DB-only no-op when 0 events pending)
+-- Schedule pg_cron worker ('octopus-dropship-domain-events' every 1 minute; pure DB-only no-op when 0 events pending)
+-- plus daily 'octopus-cron-history-cleanup' pruning cron.job_run_details older than 7 days.
 do $$
 begin
   if to_regnamespace('cron') is not null then
@@ -1447,8 +1449,17 @@ begin
     end if;
     perform cron.schedule(
       'octopus-dropship-domain-events',
-      '10 seconds',
+      '* * * * *',
       'select public.process_dropship_domain_events(100)'
+    );
+
+    if exists (select 1 from cron.job where jobname = 'octopus-cron-history-cleanup') then
+      perform cron.unschedule('octopus-cron-history-cleanup');
+    end if;
+    perform cron.schedule(
+      'octopus-cron-history-cleanup',
+      '20 2 * * *',
+      'delete from cron.job_run_details where end_time < now() - interval ''7 days'''
     );
   end if;
 end $$;

@@ -1,11 +1,14 @@
 -- Down migration for 20261101000212_i2_store_orders_handoffs_and_outbox.sql
 
--- 1. Unschedule I2 pg_cron job, drop I2 triggers, and drop I2 functions
+-- 1. Unschedule I2 pg_cron jobs, drop I2 triggers, and drop I2 functions
 do $$
 begin
   if to_regnamespace('cron') is not null then
     if exists (select 1 from cron.job where jobname = 'octopus-dropship-domain-events') then
       perform cron.unschedule('octopus-dropship-domain-events');
+    end if;
+    if exists (select 1 from cron.job where jobname = 'octopus-cron-history-cleanup') then
+      perform cron.unschedule('octopus-cron-history-cleanup');
     end if;
   end if;
 end $$;

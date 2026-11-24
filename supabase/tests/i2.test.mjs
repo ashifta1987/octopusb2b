@@ -316,10 +316,17 @@ try {
       from cron.job
      where jobname = 'octopus-dropship-domain-events'
   `);
+  const cleanupJob = await one(`
+    select jobid, jobname, schedule, command, active
+      from cron.job
+     where jobname = 'octopus-cron-history-cleanup'
+  `);
   const noopRun = (await one(`select process_dropship_domain_events(100) r`)).r;
   ok(
-    !!cronJob && cronJob.active === true && cronJob.schedule === '10 seconds' && noopRun.processed === 0 && noopRun.retried === 0 && noopRun.dead === 0,
-    `Review 4: pg_cron '${cronJob?.jobname}' active (${cronJob?.schedule}), 0-event run is a clean no-op (${JSON.stringify(noopRun)})`,
+    !!cronJob && cronJob.active === true && cronJob.schedule === '* * * * *'
+      && !!cleanupJob && cleanupJob.active === true && cleanupJob.schedule === '20 2 * * *' && /job_run_details/.test(cleanupJob.command)
+      && noopRun.processed === 0 && noopRun.retried === 0 && noopRun.dead === 0,
+    `Review 4: pg_cron '${cronJob?.jobname}' active (${cronJob?.schedule}) + daily '${cleanupJob?.jobname}' active (${cleanupJob?.schedule}), 0-event run is a clean no-op`,
   );
 
   // Poison event -> 4 exponential retries (1m, 5m, 30m, 2h) -> 5th attempt transitions to 'dead' + audit_log
