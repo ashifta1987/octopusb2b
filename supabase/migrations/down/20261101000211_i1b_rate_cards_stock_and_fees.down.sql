@@ -2,7 +2,7 @@
 
 -- 1. Drop I1b quote functions & restore dropship_rate_estimate (from 205) and get_dropship_catalogue / get_dropship_product (from 210)
 drop function if exists public.get_dropship_quote(uuid, text, text, integer, text);
-drop function if exists public.get_dropship_order_quote(jsonb, text, text, text);
+drop function if exists public.get_dropship_order_quote(jsonb, text, text, text, text, numeric, text);
 
 create or replace function dropship_rate_estimate(
   p_weight_g integer,

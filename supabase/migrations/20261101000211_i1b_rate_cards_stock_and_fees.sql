@@ -38,11 +38,14 @@ create policy item_master_read on public.item_master
   for select to authenticated
   using (
     (
-      (
-        can('products', 'view')
-        or (is_staff() and (in_division(division_id_of('DS')) or in_division(division_id_of('3PL')) or can('finance', 'view')))
-      )
+      is_staff()
       and not distributor_restricted()
+      and (
+        can('products', 'view')
+        or in_division(division_id_of('DS'))
+        or in_division(division_id_of('3PL'))
+        or can('finance', 'view')
+      )
     )
     or (sourcing_product_id is not null and product_is_my_supplier(sourcing_product_id))
   );
@@ -50,21 +53,28 @@ create policy item_master_read on public.item_master
 create policy item_master_insert on public.item_master
   for insert to authenticated
   with check (
-    (can('products', 'edit') and not distributor_restricted())
-    or dropship_can_edit(division_id_of('DS'))
+    is_staff()
+    and not distributor_restricted()
+    and (can('products', 'edit') or dropship_can_edit(division_id_of('DS')))
   );
 
 create policy item_master_update on public.item_master
   for update to authenticated
   using (
-    dropship_can_edit(division_id_of('DS'))
-    or (can('products', 'edit') and not distributor_restricted())
-    or (sourcing_product_id is not null and product_editable(sourcing_product_id))
+    (
+      is_staff()
+      and not distributor_restricted()
+      and (dropship_can_edit(division_id_of('DS')) or can('products', 'edit'))
+    )
+    or (sourcing_product_id is not null and product_is_my_supplier(sourcing_product_id))
   )
   with check (
-    dropship_can_edit(division_id_of('DS'))
-    or (can('products', 'edit') and not distributor_restricted())
-    or (sourcing_product_id is not null and product_editable(sourcing_product_id))
+    (
+      is_staff()
+      and not distributor_restricted()
+      and (dropship_can_edit(division_id_of('DS')) or can('products', 'edit'))
+    )
+    or (sourcing_product_id is not null and product_is_my_supplier(sourcing_product_id))
   );
 
 -- Also block non-platform callers from relinking sourcing_product_id inside guard_item_master()
@@ -82,7 +92,7 @@ begin
      and new.sourcing_product_id is distinct from old.sourcing_product_id
      and old.sourcing_product_id is not null
      and coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role', 'service_role') <> 'service_role'
-     and not (is_admin() or dropship_can_edit(division_id_of('DS')) or (can('products', 'edit') and not distributor_restricted())) then
+     and not (is_staff() and not distributor_restricted() and (is_admin() or dropship_can_edit(division_id_of('DS')) or can('products', 'edit'))) then
     raise exception 'FORBIDDEN: only platform staff may relink sourcing_product_id';
   end if;
 
@@ -711,7 +721,7 @@ declare
   v_ver integer;
   v_id uuid;
 begin
-  if v_uid is null or not (public.warehouse_can_edit() or can('finance', 'approve')) then
+  if v_uid is null or not (is_staff() and (public.warehouse_can_edit() or can('finance', 'approve'))) then
     raise exception 'FORBIDDEN: only 3PL staff, Finance approvers, or an admin may propose a fee version';
   end if;
 
@@ -774,7 +784,7 @@ declare
   v_target public.fee_versions;
   v_old_id uuid;
 begin
-  if v_uid is null or not (is_admin() or can('finance', 'approve')) then
+  if v_uid is null or not (is_staff() and (is_admin() or can('finance', 'approve'))) then
     raise exception 'FORBIDDEN: only Finance approvers or an admin may activate a fee version';
   end if;
 
@@ -954,7 +964,7 @@ declare
 begin
   if coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role', 'service_role') = 'service_role' then
     null;
-  elsif v_uid is null or not (is_admin() or can('finance', 'approve') or can('products', 'approve')) then
+  elsif v_uid is null or not (is_staff() and (is_admin() or can('finance', 'approve') or can('products', 'approve'))) then
     raise exception 'FORBIDDEN';
   end if;
 
@@ -1001,7 +1011,7 @@ declare
 begin
   if coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role', 'service_role') = 'service_role' then
     null;
-  elsif v_uid is null or not (is_admin() or can('finance', 'approve')) then
+  elsif v_uid is null or not (is_staff() and (is_admin() or can('finance', 'approve'))) then
     raise exception 'FORBIDDEN';
   end if;
 
@@ -1121,7 +1131,7 @@ begin
   if coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role', 'service_role') = 'service_role' then
     null;
   elsif auth.uid() is null or not (
-    (can('products', 'edit') and not distributor_restricted())
+    (is_staff() and can('products', 'edit') and not distributor_restricted())
     or is_my_supplier(v_sp.supplier_id)
   ) then
     raise exception 'FORBIDDEN';
@@ -1890,11 +1900,25 @@ revoke all on function public.get_dropship_product(uuid, text) from public, anon
 grant execute on function public.get_dropship_product(uuid, text) to authenticated, service_role;
 
 -- ───────── 7. Item 13 (C13): Order-level 4-part quote engine & single-product quote preview ─────────
+--Parcel weight rule:
+--  Combined parcel billed weight for a multi-line order = max(Σ actual weight_g, ceil((Σ box_volume_cm3 / divisor) * 1000)),
+--  rounded up to the 100 g step (step_g) — NOT the sum of each item's billed weight.
+--  Pack-station re-weigh corrects actual parcel weight later (tolerance: 50 g / 10%).
+--Duty base rule (final rule set in Step 6b):
+--  · Catalogue / product quote (get_dropship_quote, p_quote_mode = 'catalogue'): uses Octopus product price as the
+--    declared customs value and marks duties_status = 'estimate' (or 'not_known_yet' when no duty entry exists).
+--  · Order quote (get_dropship_order_quote, p_quote_mode = 'order'): uses the buyer's paid item price
+--    (buyer_paid_cents or buyer_unit_price_cents * qty), converted to USD cents at the locked FX rate (p_fx_rate_to_usd,
+--    required when p_buyer_currency <> 'USD'), and marks duties_status = 'known' (falls back to product price with
+--    duties_status = 'estimate' only if buyer paid prices are not supplied yet).
 create or replace function public.get_dropship_order_quote(
   p_lines jsonb,
   p_country text,
   p_method text,
-  p_incoterm text default 'DDP'
+  p_incoterm text default 'DDP',
+  p_buyer_currency text default 'USD',
+  p_fx_rate_to_usd numeric default null,
+  p_quote_mode text default 'order'
 )
 returns jsonb
 language plpgsql
@@ -1910,6 +1934,9 @@ declare
   v_country char(2) := upper(btrim(coalesce(p_country, '')))::char(2);
   v_method text := lower(btrim(coalesce(p_method, '')));
   v_incoterm text := upper(btrim(coalesce(p_incoterm, 'DDP')));
+  v_buyer_currency text := upper(btrim(coalesce(p_buyer_currency, 'USD')));
+  v_quote_mode text := lower(btrim(coalesce(p_quote_mode, 'order')));
+  v_fx numeric;
   v_rc public.shipping_rate_cards;
   v_fv public.fee_versions;
   v_line jsonb;
@@ -1919,19 +1946,28 @@ declare
   v_route public.dropship_routes;
   v_qty integer;
   v_total_qty integer := 0;
-  v_unit_vol_g integer;
-  v_unit_billable_raw_g integer;
-  v_raw_order_weight_g bigint := 0;
+  v_sum_actual_weight_g bigint := 0;
+  v_sum_box_volume_cm3 numeric := 0;
+  v_combined_vol_g bigint := 0;
+  v_raw_parcel_weight_g bigint := 0;
   v_billed_weight_g integer;
   v_unit_prod_cents bigint;
   v_line_prod_cents bigint;
   v_product_cents bigint := 0;
+  v_line_buyer_minor bigint;
+  v_line_declared_usd_cents bigint;
+  v_declared_value_usd_cents bigint := 0;
+  v_all_buyer_prices_supplied boolean := true;
+  v_duty_lines jsonb := '[]'::jsonb;
+  v_dl_elem jsonb;
+  v_elem_decl bigint;
   v_processing_cents bigint;
   v_shipping_cents bigint;
   v_duty_lookup jsonb;
   v_duty_ver_id uuid := null;
   v_duties_known boolean := true;
   v_duties_cents bigint := 0;
+  v_duties_status text;
   v_duty_bp integer;
   v_tax_bp integer;
   v_de_min integer;
@@ -1946,9 +1982,24 @@ begin
     end if;
   end if;
 
-  if v_country !~ '^[A-Z]{2}$' or v_method not in ('economy', 'standard', 'express') or v_incoterm not in ('DDP', 'DAP') then
-    return jsonb_build_object('ok', false, 'code', 'INVALID_INPUT', 'message', 'Invalid country, shipping method, or incoterm');
+  if v_country !~ '^[A-Z]{2}$'
+     or v_method not in ('economy', 'standard', 'express')
+     or v_incoterm not in ('DDP', 'DAP')
+     or v_quote_mode not in ('catalogue', 'order')
+     or v_buyer_currency !~ '^[A-Z]{3}$' then
+    return jsonb_build_object('ok', false, 'code', 'INVALID_INPUT', 'message', 'Invalid country, shipping method, incoterm, currency, or quote mode');
   end if;
+
+  if v_buyer_currency <> 'USD' and (p_fx_rate_to_usd is null or p_fx_rate_to_usd <= 0) then
+    return jsonb_build_object('ok', false, 'code', 'FX_RATE_REQUIRED', 'message', 'Locked FX rate to USD is required when buyer currency is not USD');
+  end if;
+  if p_fx_rate_to_usd is not null and p_fx_rate_to_usd <= 0 then
+    return jsonb_build_object('ok', false, 'code', 'INVALID_FX_RATE', 'message', 'FX rate to USD must be > 0');
+  end if;
+  v_fx := case
+    when v_buyer_currency = 'USD' then coalesce(p_fx_rate_to_usd, 1.0)
+    else p_fx_rate_to_usd
+  end;
 
   if p_lines is null or jsonb_typeof(p_lines) <> 'array' or jsonb_array_length(p_lines) = 0 then
     return jsonb_build_object('ok', false, 'code', 'EMPTY_LINES', 'message', 'At least one order line is required');
@@ -1979,7 +2030,7 @@ begin
     return jsonb_build_object('ok', false, 'code', 'NO_FEE_VERSION', 'message', 'No active processing fee schedule');
   end if;
 
-  -- 3. Evaluate all order lines
+  -- 3. Evaluate all order lines (accumulate Σ actual weight & Σ box volume across the combined parcel)
   for v_line in select * from jsonb_array_elements(p_lines) loop
     v_qty := coalesce((v_line ->> 'qty')::int, 0);
     if v_qty <= 0 then
@@ -2013,9 +2064,8 @@ begin
       return jsonb_build_object('ok', false, 'code', 'RESTRICTED_ITEM', 'message', 'Selected shipping method does not support this item');
     end if;
 
-    v_unit_vol_g := ceil(((v_im.box_l_cm * v_im.box_w_cm * v_im.box_h_cm) / v_rc.volumetric_divisor) * 1000.0)::integer;
-    v_unit_billable_raw_g := greatest(v_im.weight_g, v_unit_vol_g);
-    v_raw_order_weight_g := v_raw_order_weight_g + (v_unit_billable_raw_g::bigint * v_qty::bigint);
+    v_sum_actual_weight_g := v_sum_actual_weight_g + (v_im.weight_g::bigint * v_qty::bigint);
+    v_sum_box_volume_cm3 := v_sum_box_volume_cm3 + ((v_im.box_l_cm * v_im.box_w_cm * v_im.box_h_cm) * v_qty::numeric);
     v_total_qty := v_total_qty + v_qty;
 
     -- Resolve unit product price (explicit product_price_cents when set, else route base product price)
@@ -2038,26 +2088,39 @@ begin
     v_line_prod_cents := v_unit_prod_cents * v_qty::bigint;
     v_product_cents := v_product_cents + v_line_prod_cents;
 
-    if v_incoterm = 'DDP' and v_duties_known then
-      v_duty_lookup := public.lookup_duty_rate(v_country, v_im.hs_code);
-      if v_duty_lookup is null then
-        v_duties_known := false;
-        v_duties_cents := null;
-      else
-        v_duty_ver_id := (v_duty_lookup ->> 'duty_rate_version_id')::uuid;
-        v_duty_bp := (v_duty_lookup ->> 'duty_bp')::int;
-        v_tax_bp := (v_duty_lookup ->> 'tax_bp')::int;
-        v_de_min := (v_duty_lookup ->> 'de_minimis_cents')::int;
-        if v_line_prod_cents <= v_de_min then
-          v_duties_cents := v_duties_cents + round(v_line_prod_cents::numeric * v_tax_bp::numeric / 10000.0)::bigint;
-        else
-          v_duties_cents := v_duties_cents + round(v_line_prod_cents::numeric * (v_duty_bp + v_tax_bp)::numeric / 10000.0)::bigint;
-        end if;
+    -- Duty base per line:
+    --  · catalogue mode -> Octopus product price (estimate)
+    --  · order mode -> buyer's paid item price converted to USD cents at locked FX rate
+    if v_quote_mode = 'catalogue' then
+      v_all_buyer_prices_supplied := false;
+      v_line_declared_usd_cents := v_line_prod_cents;
+    elsif (v_line ? 'buyer_paid_cents') and v_line -> 'buyer_paid_cents' <> 'null'::jsonb then
+      v_line_buyer_minor := (v_line ->> 'buyer_paid_cents')::bigint;
+      if v_line_buyer_minor < 0 then
+        return jsonb_build_object('ok', false, 'code', 'INVALID_INPUT', 'message', 'buyer_paid_cents must be >= 0');
       end if;
+      v_line_declared_usd_cents := round(v_line_buyer_minor::numeric * v_fx)::bigint;
+    elsif (v_line ? 'buyer_unit_price_cents') and v_line -> 'buyer_unit_price_cents' <> 'null'::jsonb then
+      v_line_buyer_minor := (v_line ->> 'buyer_unit_price_cents')::bigint * v_qty::bigint;
+      if v_line_buyer_minor < 0 then
+        return jsonb_build_object('ok', false, 'code', 'INVALID_INPUT', 'message', 'buyer_unit_price_cents must be >= 0');
+      end if;
+      v_line_declared_usd_cents := round(v_line_buyer_minor::numeric * v_fx)::bigint;
+    else
+      v_all_buyer_prices_supplied := false;
+      v_line_declared_usd_cents := v_line_prod_cents;
     end if;
+
+    v_declared_value_usd_cents := v_declared_value_usd_cents + v_line_declared_usd_cents;
+    v_duty_lines := v_duty_lines || jsonb_build_array(
+      jsonb_build_object('hs_code', v_im.hs_code, 'declared_usd_cents', v_line_declared_usd_cents)
+    );
   end loop;
 
-  v_billed_weight_g := (ceil(v_raw_order_weight_g::numeric / v_rc.step_g::numeric)::integer * v_rc.step_g);
+  -- Combined parcel billed weight = max(Σ actual weight, ceil((Σ box volume / divisor) * 1000)), rounded up to step_g (100 g)
+  v_combined_vol_g := ceil((v_sum_box_volume_cm3 / v_rc.volumetric_divisor) * 1000.0)::bigint;
+  v_raw_parcel_weight_g := greatest(v_sum_actual_weight_g, v_combined_vol_g);
+  v_billed_weight_g := (ceil(v_raw_parcel_weight_g::numeric / v_rc.step_g::numeric)::integer * v_rc.step_g);
   if v_billed_weight_g > v_rc.max_weight_g then
     return jsonb_build_object('ok', false, 'code', 'MAX_WEIGHT_EXCEEDED', 'message', 'Order exceeds maximum weight for this shipping method');
   end if;
@@ -2073,6 +2136,34 @@ begin
   if v_incoterm = 'DAP' then
     v_duties_known := true;
     v_duties_cents := 0;
+    v_duties_status := 'known';
+  else
+    for v_dl_elem in select * from jsonb_array_elements(v_duty_lines) loop
+      v_duty_lookup := public.lookup_duty_rate(v_country, v_dl_elem ->> 'hs_code');
+      if v_duty_lookup is null then
+        v_duties_known := false;
+        v_duties_cents := null;
+        exit;
+      end if;
+      v_duty_ver_id := (v_duty_lookup ->> 'duty_rate_version_id')::uuid;
+      v_duty_bp := (v_duty_lookup ->> 'duty_bp')::int;
+      v_tax_bp := (v_duty_lookup ->> 'tax_bp')::int;
+      v_de_min := (v_duty_lookup ->> 'de_minimis_cents')::int;
+      v_elem_decl := (v_dl_elem ->> 'declared_usd_cents')::bigint;
+      if v_declared_value_usd_cents <= v_de_min then
+        v_duties_cents := v_duties_cents + round(v_elem_decl::numeric * v_tax_bp::numeric / 10000.0)::bigint;
+      else
+        v_duties_cents := v_duties_cents + round(v_elem_decl::numeric * (v_duty_bp + v_tax_bp)::numeric / 10000.0)::bigint;
+      end if;
+    end loop;
+
+    if not v_duties_known then
+      v_duties_status := 'not_known_yet';
+    elsif v_quote_mode = 'catalogue' or not v_all_buyer_prices_supplied then
+      v_duties_status := 'estimate';
+    else
+      v_duties_status := 'known';
+    end if;
   end if;
 
   return jsonb_build_object(
@@ -2081,14 +2172,21 @@ begin
     'shipping_method', v_method,
     'incoterm', v_incoterm,
     'total_qty', v_total_qty,
+    'actual_weight_g', v_sum_actual_weight_g,
+    'volumetric_weight_g', v_combined_vol_g,
     'billed_weight_g', v_billed_weight_g,
     'days_min', v_rc.days_min,
     'days_max', v_rc.days_max,
     'product_cents', v_product_cents,
     'processing_cents', v_processing_cents,
     'shipping_cents', v_shipping_cents,
+    'declared_value_usd_cents', v_declared_value_usd_cents,
+    'duty_basis', case
+      when v_quote_mode = 'catalogue' or not v_all_buyer_prices_supplied then 'product_price'
+      else 'buyer_paid_price_usd'
+    end,
     'duties_cents', v_duties_cents,
-    'duties_status', case when v_duties_known then 'known' else 'not_known_yet' end,
+    'duties_status', v_duties_status,
     'duties_label', case when v_duties_known then null else 'not known yet' end,
     'total_known_cents', v_product_cents + v_processing_cents + v_shipping_cents + coalesce(v_duties_cents, 0),
     'total_cents', case
@@ -2103,10 +2201,13 @@ begin
   );
 end $$;
 
-revoke all on function public.get_dropship_order_quote(jsonb, text, text, text) from public, anon;
-grant execute on function public.get_dropship_order_quote(jsonb, text, text, text) to authenticated, service_role;
+comment on function public.get_dropship_order_quote(jsonb, text, text, text, text, numeric, text) is
+  'Order-level 4-part quote engine. Processing fee is charged ONCE per order (first + extra*(total_qty-1) + packaging). Combined parcel billed weight = max(sum(actual weight_g), ceil((sum(box_volume_cm3)/divisor)*1000)) rounded up to 100 g step (pack-station re-weigh corrects later within 50 g / 10% tolerance). Duty base: catalogue/product quotes use Octopus product price and mark duties_status = ''estimate''; order quotes use the buyer''s paid item price converted to USD cents at the locked FX rate. Final customs valuation rule is set in Step 6b.';
 
--- Single-product quote preview: delegates to get_dropship_order_quote for 1 line
+revoke all on function public.get_dropship_order_quote(jsonb, text, text, text, text, numeric, text) from public, anon;
+grant execute on function public.get_dropship_order_quote(jsonb, text, text, text, text, numeric, text) to authenticated, service_role;
+
+-- Single-product catalogue quote preview: uses Octopus product price as declared value and marks duties_status = 'estimate' (final rule set in Step 6b)
 create or replace function public.get_dropship_quote(
   p_variant_id uuid,
   p_country text,
@@ -2124,9 +2225,15 @@ as $$
     jsonb_build_array(jsonb_build_object('variant_id', p_variant_id, 'qty', greatest(1, coalesce(p_qty, 1)))),
     p_country,
     p_method,
-    p_incoterm
+    p_incoterm,
+    'USD',
+    null,
+    'catalogue'
   )
 $$;
+
+comment on function public.get_dropship_quote(uuid, text, text, integer, text) is
+  'Catalogue/product quote preview. Uses Octopus product price as declared customs value and marks duties_status = ''estimate'' (order quotes in get_dropship_order_quote use buyer paid item price converted to USD at locked FX rate; final rule is set in Step 6b).';
 
 revoke all on function public.get_dropship_quote(uuid, text, text, integer, text) from public, anon;
 grant execute on function public.get_dropship_quote(uuid, text, text, integer, text) to authenticated, service_role;

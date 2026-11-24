@@ -79,11 +79,16 @@ try {
   const supUserA = await mkUser('supA', 'supplier');
   const supUserB = await mkUser('supB', 'supplier');
   const distUserA = await mkUser('distA', 'distributor');
-  const merchantUser = await mkUser('merch');
+  const buyerUser = await mkUser('buyer', 'customer');
+  const merchantUser = await mkUser('merch', 'customer');
+  const sourcingStaff = await mkUser('src', 'sourcing_agent');
   const whStaff = await mkUser('wh3pl', 'warehouse', [['3PL', 'staff']]);
   const finUser1 = await mkUser('fin1', 'finance');
   const finUser2 = await mkUser('fin2', 'finance');
   const adminUser = await mkUser('adm', 'admin');
+
+  const orgBuyer = (await one(`insert into organizations(name, country) values ('TEST I1b Buyer', 'US') returning id`)).id;
+  await db.query(`insert into org_members(org_id, user_id, member_role) values ($1, $2, 'owner')`, [orgBuyer, buyerUser]);
 
   const orgM = (await one(`insert into organizations(name, country) values ('TEST I1b Merchant', 'US') returning id`)).id;
   await db.query(`insert into org_members(org_id, user_id, member_role) values ($1, $2, 'owner')`, [orgM, merchantUser]);
@@ -160,6 +165,22 @@ try {
   const distReads = await all(`select id from item_master`);
   ok(distReads.length === 1 && distReads[0].id === prodA.item_id,
     'Restricted distributor assigned only to Supplier A sees ONLY Supplier A item_master (0 of Supplier B, 0 dropship)');
+
+  // Fix 1: Buyer, Dropship merchant, and anon read 0 item_master rows; Sourcing staff reads Sourcing item_master rows
+  await as(buyerUser, 'aal1');
+  ok((await all(`select id from item_master`)).length === 0,
+    'Buyer (customer role) reads 0 item_master rows');
+  await as(merchantUser, 'aal1');
+  ok((await all(`select id from item_master`)).length === 0,
+    'Dropship merchant reads 0 item_master rows');
+  await asAnon();
+  const anonIm = await tryq(`select id from item_master`);
+  ok(!!anonIm.err || anonIm.rows.length === 0,
+    'Anon user reads 0 item_master rows');
+  await as(sourcingStaff, 'aal2');
+  const srcIds = new Set((await all(`select id from item_master`)).map((r) => r.id));
+  ok(srcIds.has(prodA.item_id) && srcIds.has(prodB.item_id),
+    'Sourcing staff (products:view + is_staff) reads Sourcing item_master rows');
   await owner();
 
   // ── 2. Item 11: shipping_rate_cards (method vs carrier_service_code, max_weight_g, 1 active, immutable, "No rate set", dropship_rates frozen) ──
@@ -252,27 +273,140 @@ try {
   ok(dlSpecific.duty_bp === 1000 && dlDefault.duty_bp === 300,
     'lookup_duty_rate picks most specific hs_prefix (851679 -> 1000 bp) and falls back to country default (null -> 300 bp)');
 
-  // Single unit of dsVar1 (product_price_cents = 1200 <= de_minimis 2000): duty = 0, tax = 2% of 1200 = 24 cents
+  // Single unit of dsVar1 in catalogue quote (product_price_cents = 1200 <= de_minimis 2000):
+  // Fix 4: catalogue quote uses Octopus product price as declared value and marks duties_status = 'estimate'
   await as(merchantUser, 'aal1');
   const qBelowDeMin = (await one(`select get_dropship_quote($1, 'US', 'express', 1, 'DDP') q`, [dsVar1.id])).q;
-  ok(qBelowDeMin.ok === true && qBelowDeMin.duties_cents === 24 && qBelowDeMin.version_ids.shipping_rate_card_id === rcV2 && qBelowDeMin.version_ids.fee_version_id === fvSelf && qBelowDeMin.version_ids.duty_rate_version_id === dvId,
-    'below de_minimis_cents (1200 <= 2000) charges 0 customs duty (tax only = 24c) and returns all 3 version_ids');
+  ok(
+    qBelowDeMin.ok === true
+      && qBelowDeMin.duties_cents === 24
+      && qBelowDeMin.duties_status === 'estimate'
+      && qBelowDeMin.duty_basis === 'product_price'
+      && qBelowDeMin.declared_value_usd_cents === 1200
+      && qBelowDeMin.version_ids.shipping_rate_card_id === rcV2
+      && qBelowDeMin.version_ids.fee_version_id === fvSelf
+      && qBelowDeMin.version_ids.duty_rate_version_id === dvId,
+    `catalogue quote uses product price (1200c <= 2000c de_minimis -> 24c tax), marks duties_status='estimate', and returns version_ids`,
+  );
+  await owner();
 
-  // Multi-line order quote (Item 13):
-  //   Line 1: dsVar1 qty = 2 -> product = 2 * 1200 = 2400 (> de_minimis 2000 -> 12% duty+tax = 288c); unit weight max(400, 600)=600g -> 1200g
-  //   Line 2: dsVar2 qty = 3 -> product = 3 * 800 = 2400 (> de_minimis 2000 -> 5% default duty+tax = 120c); unit weight max(300, 240)=300g -> 900g
-  //   Total qty = 5; active fee_version (fvSelf): first=210, extra=55, packaging=30
-  //   Processing MUST charge first (210) + packaging (30) ONCE: 210 + (5 - 1)*55 + 30 = 460 cents!
-  //    Wait: max_weight_g on rcV2 was 2000g, and 1200+900 = 2100g! Let's check qty=2 + qty=2 = 1800g <= 2000g!
-  const orderQuote = (await one(`
+  // Fix 4: Order quote uses buyer's paid item price converted to USD at locked FX rate, and marks duties_status = 'known'
+  await as(merchantUser, 'aal1');
+  const qMissingFx = (await one(`
+    select get_dropship_order_quote($1::jsonb, 'US', 'express', 'DDP', 'EUR', null) q
+  `, [JSON.stringify([{ variant_id: dsVar1.id, qty: 1, buyer_unit_price_cents: 2500 }])])).q;
+  ok(qMissingFx.ok === false && qMissingFx.code === 'FX_RATE_REQUIRED',
+    'order quote with non-USD buyer currency and null FX rate returns FX_RATE_REQUIRED');
+
+  // Buyer paid 2500 EUR cents (€25.00) at locked FX 1.10 -> 2750 USD cents (> 2000 de_minimis -> 10% duty + 2% tax = 12% of 2750 = 330c)
+  const qOrderFx = (await one(`
+    select get_dropship_order_quote($1::jsonb, 'US', 'express', 'DDP', 'EUR', 1.10) q
+  `, [JSON.stringify([{ variant_id: dsVar1.id, qty: 1, buyer_unit_price_cents: 2500 }])])).q;
+  ok(
+    qOrderFx.ok === true
+      && qOrderFx.duty_basis === 'buyer_paid_price_usd'
+      && qOrderFx.declared_value_usd_cents === 2750
+      && qOrderFx.duties_status === 'known'
+      && qOrderFx.duties_cents === 330,
+    `order quote uses buyer paid price converted to USD at locked FX (2500 EURc * 1.10 = 2750 USDc -> 330c duty+tax, duties_status='known')`,
+  );
+  await owner();
+
+  // Fix 2: Order-level fee test with exact numbers (first = 120c, extra = 40c, packaging = 0c)
+  await as(whStaff, 'aal2');
+  const fv120 = (await one(`select propose_fee_version(120, 40, 0, 120, 300, 'Exact 120/40 schedule') id`)).id;
+  await as(finUser1, 'aal2');
+  await db.query(`select activate_fee_version($1, 'Activate 120/40 schedule')`, [fv120]);
+  await as(merchantUser, 'aal1');
+
+  // 1-line qty 1 order -> processing = 120 + 40*0 = 120 cents
+  const q1LineQty1 = (await one(`
+    select get_dropship_order_quote($1::jsonb, 'US', 'express', 'DDP') q
+  `, [JSON.stringify([{ variant_id: dsVar1.id, qty: 1, buyer_unit_price_cents: 1500 }])])).q;
+  ok(q1LineQty1.ok === true && q1LineQty1.total_qty === 1 && q1LineQty1.processing_cents === 120,
+    `1-line qty 1 order charges first=120c once (got ${q1LineQty1.processing_cents}c)`);
+
+  // 2-line order (qty 1 + qty 2, total qty = 3) -> processing = 120 + 40*2 = 200 cents
+  const q2Lines = (await one(`
     select get_dropship_order_quote($1::jsonb, 'US', 'express', 'DDP') q
   `, [JSON.stringify([
-    { variant_id: dsVar1.id, qty: 2 },
-    { variant_id: dsVar2.id, qty: 2 },
+    { variant_id: dsVar1.id, qty: 1, buyer_unit_price_cents: 1500 },
+    { variant_id: dsVar2.id, qty: 2, buyer_unit_price_cents: 1000 },
   ])])).q;
-  // Total qty = 4 -> processing = 210 + (4 - 1)*55 + 30 = 405 cents (if charged twice per line it would have been (210+55+30)*2 = 590!)
-  ok(orderQuote.ok === true && orderQuote.total_qty === 4 && orderQuote.processing_cents === 405,
-    `get_dropship_order_quote charges first-item + packaging fee ONCE per order across 2 lines (got ${orderQuote.processing_cents}c, not 590c)`);
+  ok(q2Lines.ok === true && q2Lines.total_qty === 3 && q2Lines.processing_cents === 200,
+    `2-line order (qty 1 + qty 2) charges processing = 120 + 40*2 = 200c (got ${q2Lines.processing_cents}c)`);
+
+  // 2-order split (Order A: line 1 qty 1 -> 120c; Order B: line 2 qty 2 -> 120 + 40*1 = 160c; sum = 280c -> "first" charged twice)
+  const qSplitA = (await one(`
+    select get_dropship_order_quote($1::jsonb, 'US', 'express', 'DDP') q
+  `, [JSON.stringify([{ variant_id: dsVar1.id, qty: 1, buyer_unit_price_cents: 1500 }])])).q;
+  const qSplitB = (await one(`
+    select get_dropship_order_quote($1::jsonb, 'US', 'express', 'DDP') q
+  `, [JSON.stringify([{ variant_id: dsVar2.id, qty: 2, buyer_unit_price_cents: 1000 }])])).q;
+  ok(
+    qSplitA.processing_cents === 120
+      && qSplitB.processing_cents === 160
+      && (qSplitA.processing_cents + qSplitB.processing_cents) === 280,
+    `2-order split charges "first" (120c) twice: Order A = ${qSplitA.processing_cents}c + Order B = ${qSplitB.processing_cents}c = 280c (vs 200c combined)`,
+  );
+  await owner();
+
+  // Fix 3: Combined parcel billed weight = max(Σ actual weight, ceil(Σ box volume / divisor)), rounded up to 100 g step
+  //   Item H (compact heavy): weight = 820 g, box = 10x10x5 cm = 500 cm³ -> standalone calc_billed_weight_g = 900 g
+  //   Item B (bulky light):   weight = 130 g, box = 20x20x10 cm = 4000 cm³ -> standalone calc_billed_weight_g = 800 g
+  //   Sum of per-item billed weights would be 900 + 800 = 1700 g, whereas combined parcel (qty 1 + qty 1) is:
+  //   Σ actual = 820 + 130 = 950 g; Σ volume = 500 + 4000 = 4500 cm³ -> vol = 900 g; max(950, 900) = 950 g -> 1000 g!
+  const dsProdHeavy = await one(`
+    insert into dropship_products(title, weight_g, dimensions_cm, min_order_qty, source_type, fulfilment_type, product_price_cents, origin_country, status)
+    values ('TEST I1b Heavy Weight', 820, '{"l":10,"w":10,"h":5}'::jsonb, 1, 'own_warehouse', 'fast_ship', 1000, 'CN', 'active')
+    returning id
+  `);
+  const dsVarHeavy = await one(`
+    insert into dropship_variants(product_id, options, price_adjust_cents, sort)
+    values ($1, '{"Type":"Heavy"}'::jsonb, 0, 0) returning id, item_id
+  `, [dsProdHeavy.id]);
+  const dsProdBulky = await one(`
+    insert into dropship_products(title, weight_g, dimensions_cm, min_order_qty, source_type, fulfilment_type, product_price_cents, origin_country, status)
+    values ('TEST I1b Bulky Cushion', 130, '{"l":20,"w":20,"h":10}'::jsonb, 1, 'own_warehouse', 'fast_ship', 900, 'CN', 'active')
+    returning id
+  `);
+  const dsVarBulky = await one(`
+    insert into dropship_variants(product_id, options, price_adjust_cents, sort)
+    values ($1, '{"Type":"Bulky"}'::jsonb, 0, 0) returning id, item_id
+  `, [dsProdBulky.id]);
+  await db.query(`update item_master set hs_code = '851679', hs_code_source = 'manual' where id in ($1, $2)`, [dsVarHeavy.item_id, dsVarBulky.item_id]);
+
+  const bwHeavyAlone = (await one(`select calc_billed_weight_g($1, 5000, 100) w`, [dsVarHeavy.item_id])).w;
+  const bwBulkyAlone = (await one(`select calc_billed_weight_g($1, 5000, 100) w`, [dsVarBulky.item_id])).w;
+  await as(merchantUser, 'aal1');
+  const qCombinedActualWins = (await one(`
+    select get_dropship_order_quote($1::jsonb, 'US', 'express', 'DDP') q
+  `, [JSON.stringify([
+    { variant_id: dsVarHeavy.id, qty: 1, buyer_unit_price_cents: 1500 },
+    { variant_id: dsVarBulky.id, qty: 1, buyer_unit_price_cents: 1500 },
+  ])])).q;
+  ok(
+    bwHeavyAlone === 900
+      && bwBulkyAlone === 800
+      && qCombinedActualWins.actual_weight_g === 950
+      && qCombinedActualWins.volumetric_weight_g === 900
+      && qCombinedActualWins.billed_weight_g === 1000,
+    `combined parcel billed weight = max(Σ actual 950g, Σ vol 900g) -> 1000g (NOT sum of per-item billed weights 900+800=1700g)`,
+  );
+
+  // Volume-dominated combined parcel: 1x Heavy (820g, 500cm³) + 2x Bulky (260g, 8000cm³) -> Σ actual=1080g, Σ vol=8500/5000*1000=1700g -> 1700g
+  const qCombinedVolWins = (await one(`
+    select get_dropship_order_quote($1::jsonb, 'US', 'express', 'DDP') q
+  `, [JSON.stringify([
+    { variant_id: dsVarHeavy.id, qty: 1, buyer_unit_price_cents: 1500 },
+    { variant_id: dsVarBulky.id, qty: 2, buyer_unit_price_cents: 1500 },
+  ])])).q;
+  ok(
+    qCombinedVolWins.actual_weight_g === 1080
+      && qCombinedVolWins.volumetric_weight_g === 1700
+      && qCombinedVolWins.billed_weight_g === 1700,
+    `combined parcel volume-dominated case: max(Σ actual 1080g, Σ vol 1700g) -> 1700g`,
+  );
   await owner();
 
   // Missing box size on item_master -> WEIGHT_SIZE_MISSING (never charges on 0 g)
@@ -355,6 +489,7 @@ try {
   ];
   for (const [label, switchRole] of [
     ['anon', asAnon],
+    ['buyer', () => as(buyerUser, 'aal1')],
     ['merchant', () => as(merchantUser, 'aal1')],
     ['supplier', () => as(supUserA, 'aal1')],
     ['restricted distributor', () => as(distUserA, 'aal2')],
@@ -368,6 +503,31 @@ try {
     ok(leaked.length === 0, `RLS (${label}): 0 rows readable across all 6 I1b tables`);
   }
   await owner();
+
+  // Fix 1 defense-in-depth: even if role_permissions accidentally granted products:view, orders:view, and finance:view to 'customer',
+  // is_staff() still blocks buyer and merchant on item_master AND all 6 I1b tables!
+  await db.query('savepoint sp_perm_test');
+  await db.query(`
+    insert into role_permissions(role_code, area, action)
+    values ('customer', 'products', 'view'),
+           ('customer', 'orders', 'view'),
+           ('customer', 'finance', 'view')
+    on conflict do nothing
+  `);
+  for (const [label, uid] of [['buyer', buyerUser], ['merchant', merchantUser]]) {
+    await as(uid, 'aal2');
+    const imCnt = (await one(`select count(*)::int n from item_master`)).n;
+    const leaked = [];
+    for (const t of NEW_TABLES) {
+      const r = await tryq(`select count(*)::int n from ${t}`);
+      if (!r.err && r.rows[0].n > 0) leaked.push(`${t}(${r.rows[0].n})`);
+    }
+    ok(imCnt === 0 && leaked.length === 0,
+      `Fix 1 is_staff() guard (${label}): 0 rows on item_master and all 6 I1b tables even if customer had products/orders/finance:view`);
+  }
+  await owner();
+  await db.query('rollback to savepoint sp_perm_test');
+  await db.query('release savepoint sp_perm_test');
 
   const ledgerAfter = await one(`
     select coalesce(sum(debit_cents),0)::text d,
