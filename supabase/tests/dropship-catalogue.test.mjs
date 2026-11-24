@@ -121,18 +121,18 @@ try {
            ($1, 'GB', 'standard', 2150, 610, 140, 6, 9, 'SECRET-CARRIER-DHL', false)
   `, [prod]);
 
-  // ── 2. Eligibility gate: zero rows for non-DS org, supplier account, staff account, anon ──
+  // ── 2. Eligibility gate: DROPSHIP_NOT_ENABLED for non-DS org, supplier account, staff account; permission denied for anon ──
   await asAnon();
   ok(/permission denied/.test((await tryq(`select * from get_dropship_catalogue('AE')`)).err ?? ''), 'anon: cannot call get_dropship_catalogue');
 
   await as(noDsBuyer);
-  ok((await all(`select * from get_dropship_catalogue('AE')`)).length === 0, 'customer without dropshipping switched on: 0 rows');
+  ok(/DROPSHIP_NOT_ENABLED/.test((await tryq(`select * from get_dropship_catalogue('AE')`)).err ?? ''), 'customer without dropshipping switched on: refused with DROPSHIP_NOT_ENABLED');
 
   await as(supplierUser);
-  ok((await all(`select * from get_dropship_catalogue('AE')`)).length === 0, 'supplier account (even in a DS-enabled org): 0 rows');
+  ok(/DROPSHIP_NOT_ENABLED/.test((await tryq(`select * from get_dropship_catalogue('AE')`)).err ?? ''), 'supplier account (even in a DS-enabled org): refused with DROPSHIP_NOT_ENABLED');
 
   await as(dsStaff, 'aal2');
-  ok((await all(`select * from get_dropship_catalogue('AE')`)).length === 0, 'staff account in a customer session: 0 rows from merchant RPC');
+  ok(/DROPSHIP_NOT_ENABLED/.test((await tryq(`select * from get_dropship_catalogue('AE')`)).err ?? ''), 'staff account in merchant catalogue RPC: refused with DROPSHIP_NOT_ENABLED');
 
   // ── 3. Route & market filtering ──
   await as(merchantA);

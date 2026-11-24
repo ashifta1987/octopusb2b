@@ -112,7 +112,45 @@ create policy dropship_product_requests_staff_write on public.dropship_product_r
     and (dropship_can_edit(division_id_of('DS')) or in_division(division_id_of('SRC')))
   );
 
--- ───────── 4. Merchant Catalogue & Product Detail RPCs (4-part split, stock labels only, real RFQ code) ─────────
+-- ───────── 4. Merchant Catalogue, Product Detail & Quote RPCs (DB-level DROPSHIP_NOT_ENABLED gate, 4-part split, stock labels only, real RFQ code) ─────────
+create or replace function public.get_dropship_countries()
+returns table (
+  country text,
+  locked_by_staff boolean,
+  has_active_routes boolean
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_org uuid := dropship_merchant_org();
+begin
+  if v_uid is null or v_org is null then
+    raise exception 'DROPSHIP_NOT_ENABLED';
+  end if;
+  return query
+    select m.country::text,
+           m.locked_by_staff,
+           exists (
+             select 1
+               from public.dropship_routes r
+               join public.dropship_products p on p.id = r.product_id and p.status = 'active'
+              where r.destination_country = m.country
+                and r.is_active
+                and (p.visible_to_org_id is null or p.visible_to_org_id = v_org)
+                and public.dropship_product_supplier_eligible(p)
+           ) as has_active_routes
+      from public.dropship_markets m
+     where m.org_id = v_org
+     order by m.country;
+end $$;
+
+revoke all on function public.get_dropship_countries() from public, anon;
+grant execute on function public.get_dropship_countries() to authenticated, service_role;
+
 drop function if exists public.get_dropship_catalogue(text, text, text, integer);
 
 create or replace function public.get_dropship_catalogue(
@@ -159,8 +197,8 @@ declare
   v_only_cnt bigint := 0;
   v_rate jsonb;
 begin
-  if v_org is null or v_uid is null then
-    return;
+  if v_uid is null or v_org is null then
+    raise exception 'DROPSHIP_NOT_ENABLED';
   end if;
 
   v_rate := auth_rate_hit('dropship-cat:' || v_uid::text, 120, 60);
@@ -350,7 +388,10 @@ declare
   v_prod_stock text;
   v_res jsonb;
 begin
-  if v_org is null or v_uid is null or p_product_id is null then
+  if v_uid is null or v_org is null then
+    raise exception 'DROPSHIP_NOT_ENABLED';
+  end if;
+  if p_product_id is null then
     return null;
   end if;
 
@@ -537,6 +578,323 @@ end $$;
 
 revoke all on function public.get_dropship_product(uuid, text) from public, anon;
 grant execute on function public.get_dropship_product(uuid, text) to authenticated, service_role;
+
+create or replace function public.get_dropship_order_quote(
+  p_lines jsonb,
+  p_country text,
+  p_method text,
+  p_incoterm text default 'DDP',
+  p_buyer_currency text default 'USD',
+  p_fx_rate_to_usd numeric default null,
+  p_quote_mode text default 'order'
+)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_is_staff boolean := coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role', 'service_role') = 'service_role'
+    or (v_uid is not null and is_staff() and not distributor_restricted());
+  v_org uuid;
+  v_country char(2) := upper(btrim(coalesce(p_country, '')))::char(2);
+  v_method text := lower(btrim(coalesce(p_method, '')));
+  v_incoterm text := upper(btrim(coalesce(p_incoterm, 'DDP')));
+  v_buyer_currency text := upper(btrim(coalesce(p_buyer_currency, 'USD')));
+  v_quote_mode text := lower(btrim(coalesce(p_quote_mode, 'order')));
+  v_fx numeric;
+  v_rc public.shipping_rate_cards;
+  v_fv public.fee_versions;
+  v_line jsonb;
+  v_var public.dropship_variants;
+  v_prod public.dropship_products;
+  v_im public.item_master;
+  v_route public.dropship_routes;
+  v_qty integer;
+  v_total_qty integer := 0;
+  v_sum_actual_weight_g bigint := 0;
+  v_sum_box_volume_cm3 numeric := 0;
+  v_combined_vol_g bigint := 0;
+  v_raw_parcel_weight_g bigint := 0;
+  v_billed_weight_g integer;
+  v_tier_cents bigint;
+  v_unit_prod_cents bigint;
+  v_line_prod_cents bigint;
+  v_product_cents bigint := 0;
+  v_line_buyer_minor bigint;
+  v_line_declared_usd_cents bigint;
+  v_declared_value_usd_cents bigint := 0;
+  v_all_buyer_prices_supplied boolean := true;
+  v_duty_lines jsonb := '[]'::jsonb;
+  v_dl_elem jsonb;
+  v_elem_decl bigint;
+  v_processing_cents bigint;
+  v_shipping_cents bigint;
+  v_duty_lookup jsonb;
+  v_duty_ver_id uuid := null;
+  v_duties_known boolean := true;
+  v_duties_cents bigint := 0;
+  v_duties_status text;
+  v_duty_bp integer;
+  v_tax_bp integer;
+  v_de_min integer;
+  v_de_min_applies text;
+begin
+  if not v_is_staff then
+    v_org := dropship_merchant_org();
+    if v_uid is null or v_org is null then
+      raise exception 'DROPSHIP_NOT_ENABLED';
+    end if;
+    if not exists (select 1 from public.dropship_markets m where m.org_id = v_org and m.country = v_country) then
+      return jsonb_build_object('ok', false, 'code', 'MARKET_NOT_ENABLED', 'message', 'Destination country is not in your selling countries');
+    end if;
+  end if;
+
+  if v_country !~ '^[A-Z]{2}$'
+     or v_method not in ('economy', 'standard', 'express')
+     or v_incoterm not in ('DDP', 'DAP')
+     or v_quote_mode not in ('catalogue', 'order')
+     or v_buyer_currency !~ '^[A-Z]{3}$' then
+    return jsonb_build_object('ok', false, 'code', 'INVALID_INPUT', 'message', 'Invalid country, shipping method, incoterm, currency, or quote mode');
+  end if;
+
+  if v_buyer_currency <> 'USD' and (p_fx_rate_to_usd is null or p_fx_rate_to_usd <= 0) then
+    return jsonb_build_object('ok', false, 'code', 'FX_RATE_REQUIRED', 'message', 'Locked FX rate to USD is required when buyer currency is not USD');
+  end if;
+  if p_fx_rate_to_usd is not null and p_fx_rate_to_usd <= 0 then
+    return jsonb_build_object('ok', false, 'code', 'INVALID_FX_RATE', 'message', 'FX rate to USD must be > 0');
+  end if;
+  v_fx := case
+    when v_buyer_currency = 'USD' then coalesce(p_fx_rate_to_usd, 1.0)
+    else p_fx_rate_to_usd
+  end;
+
+  if p_lines is null or jsonb_typeof(p_lines) <> 'array' or jsonb_array_length(p_lines) = 0 then
+    return jsonb_build_object('ok', false, 'code', 'EMPTY_LINES', 'message', 'At least one order line is required');
+  end if;
+
+  select *
+    into v_rc
+    from public.shipping_rate_cards rc
+   where rc.active
+     and rc.country = v_country
+     and rc.method = v_method
+   order by rc.base_cents asc, rc.created_at desc
+   limit 1;
+
+  if v_rc.id is null then
+    return jsonb_build_object('ok', false, 'code', 'NO_RATE_SET', 'message', 'No rate set');
+  end if;
+
+  select *
+    into v_fv
+    from public.fee_versions
+   where status = 'active'
+   limit 1;
+
+  if v_fv.id is null then
+    return jsonb_build_object('ok', false, 'code', 'NO_FEE_VERSION', 'message', 'No active processing fee schedule');
+  end if;
+
+  for v_line in select * from jsonb_array_elements(p_lines) loop
+    v_qty := coalesce((v_line ->> 'qty')::int, 0);
+    if v_qty <= 0 then
+      return jsonb_build_object('ok', false, 'code', 'INVALID_QTY', 'message', 'Line quantity must be >= 1');
+    end if;
+
+    select * into v_var from public.dropship_variants where id = (v_line ->> 'variant_id')::uuid;
+    if v_var.id is null then
+      return jsonb_build_object('ok', false, 'code', 'VARIANT_NOT_FOUND', 'message', 'Variant not found');
+    end if;
+
+    select * into v_prod from public.dropship_products where id = v_var.product_id;
+    if v_prod.id is null
+       or (
+         not v_is_staff
+         and (
+           v_prod.status <> 'active'
+           or (v_prod.visible_to_org_id is not null and v_prod.visible_to_org_id <> v_org)
+           or not public.dropship_product_supplier_eligible(v_prod)
+         )
+       ) then
+      return jsonb_build_object('ok', false, 'code', 'PRODUCT_NOT_AVAILABLE', 'message', 'Product is not available');
+    end if;
+
+    select * into v_im from public.item_master where id = v_var.item_id;
+    if public.calc_billed_weight_g(v_im.id, v_rc.volumetric_divisor, v_rc.step_g) is null then
+      return jsonb_build_object(
+        'ok', false,
+        'code', 'WEIGHT_SIZE_MISSING',
+        'needs_data', true,
+        'message', 'Weight/size missing'
+      );
+    end if;
+
+    if (v_im.has_battery and not v_rc.allows_battery)
+       or (v_im.has_liquid and not v_rc.allows_liquid)
+       or (v_im.has_magnet and not v_rc.allows_magnet)
+       or (v_im.has_powder and not v_rc.allows_powder) then
+      return jsonb_build_object('ok', false, 'code', 'RESTRICTED_ITEM', 'message', 'Selected shipping method does not support this item');
+    end if;
+
+    v_sum_actual_weight_g := v_sum_actual_weight_g + (v_im.weight_g::bigint * v_qty::bigint);
+    v_sum_box_volume_cm3 := v_sum_box_volume_cm3 + ((v_im.box_l_cm * v_im.box_w_cm * v_im.box_h_cm) * v_qty::numeric);
+    v_total_qty := v_total_qty + v_qty;
+
+    v_tier_cents := null;
+    select t.unit_price_cents
+      into v_tier_cents
+      from public.dropship_price_tiers t
+     where t.product_id = v_prod.id
+       and t.min_qty <= v_qty
+     order by t.min_qty desc
+     limit 1;
+
+    if v_tier_cents is not null then
+      v_unit_prod_cents := greatest(0, v_tier_cents + v_var.price_adjust_cents);
+    elsif v_prod.product_price_cents is not null then
+      v_unit_prod_cents := greatest(0, v_prod.product_price_cents + v_var.price_adjust_cents);
+    else
+      select * into v_route
+        from public.dropship_routes r
+       where r.product_id = v_prod.id
+         and r.destination_country = v_country
+         and r.shipping_method = v_method
+         and r.is_active
+       limit 1;
+      if v_route.id is null then
+        return jsonb_build_object('ok', false, 'code', 'NO_PRODUCT_PRICE', 'message', 'No product price set for this destination');
+      end if;
+      v_unit_prod_cents := greatest(0, (v_route.landed_price_cents - v_route.est_shipping_cents - v_route.est_duties_cents) + v_var.price_adjust_cents);
+    end if;
+
+    v_line_prod_cents := v_unit_prod_cents * v_qty::bigint;
+    v_product_cents := v_product_cents + v_line_prod_cents;
+
+    if v_quote_mode = 'catalogue' then
+      v_all_buyer_prices_supplied := false;
+      v_line_declared_usd_cents := v_line_prod_cents;
+    elsif (v_line ? 'buyer_paid_cents') and v_line -> 'buyer_paid_cents' <> 'null'::jsonb then
+      v_line_buyer_minor := (v_line ->> 'buyer_paid_cents')::bigint;
+      if v_line_buyer_minor < 0 then
+        return jsonb_build_object('ok', false, 'code', 'INVALID_INPUT', 'message', 'buyer_paid_cents must be >= 0');
+      end if;
+      v_line_declared_usd_cents := round(v_line_buyer_minor::numeric * v_fx)::bigint;
+    elsif (v_line ? 'buyer_unit_price_cents') and v_line -> 'buyer_unit_price_cents' <> 'null'::jsonb then
+      v_line_buyer_minor := (v_line ->> 'buyer_unit_price_cents')::bigint * v_qty::bigint;
+      if v_line_buyer_minor < 0 then
+        return jsonb_build_object('ok', false, 'code', 'INVALID_INPUT', 'message', 'buyer_unit_price_cents must be >= 0');
+      end if;
+      v_line_declared_usd_cents := round(v_line_buyer_minor::numeric * v_fx)::bigint;
+    else
+      v_all_buyer_prices_supplied := false;
+      v_line_declared_usd_cents := v_line_prod_cents;
+    end if;
+
+    v_declared_value_usd_cents := v_declared_value_usd_cents + v_line_declared_usd_cents;
+    v_duty_lines := v_duty_lines || jsonb_build_array(
+      jsonb_build_object('hs_code', v_im.hs_code, 'declared_usd_cents', v_line_declared_usd_cents)
+    );
+  end loop;
+
+  v_combined_vol_g := ceil((v_sum_box_volume_cm3 / v_rc.volumetric_divisor) * 1000.0)::bigint;
+  v_raw_parcel_weight_g := greatest(v_sum_actual_weight_g, v_combined_vol_g);
+  v_billed_weight_g := (ceil(v_raw_parcel_weight_g::numeric / v_rc.step_g::numeric)::integer * v_rc.step_g);
+  if v_billed_weight_g > v_rc.max_weight_g then
+    return jsonb_build_object('ok', false, 'code', 'MAX_WEIGHT_EXCEEDED', 'message', 'Order exceeds maximum weight for this shipping method');
+  end if;
+
+  v_processing_cents := v_fv.pick_pack_first_cents
+    + (greatest(0, v_total_qty - 1)::bigint * v_fv.pick_pack_extra_cents)
+    + v_fv.packaging_cents;
+
+  v_shipping_cents := v_rc.base_cents
+    + ((v_billed_weight_g / v_rc.step_g)::bigint * v_rc.per_100g_cents);
+
+  if v_incoterm = 'DAP' then
+    v_duties_known := true;
+    v_duties_cents := 0;
+    v_duties_status := 'known';
+  else
+    for v_dl_elem in select * from jsonb_array_elements(v_duty_lines) loop
+      v_duty_lookup := public.lookup_duty_rate(v_country, v_dl_elem ->> 'hs_code');
+      if v_duty_lookup is null then
+        v_duties_known := false;
+        v_duties_cents := null;
+        exit;
+      end if;
+      v_duty_ver_id := (v_duty_lookup ->> 'duty_rate_version_id')::uuid;
+      v_duty_bp := (v_duty_lookup ->> 'duty_bp')::int;
+      v_tax_bp := (v_duty_lookup ->> 'tax_bp')::int;
+      v_de_min := (v_duty_lookup ->> 'de_minimis_cents')::int;
+      v_de_min_applies := coalesce(v_duty_lookup ->> 'de_minimis_applies_to', 'duty');
+      v_elem_decl := (v_dl_elem ->> 'declared_usd_cents')::bigint;
+      if v_declared_value_usd_cents <= v_de_min then
+        if v_de_min_applies = 'duty_and_tax' then
+          v_duties_cents := v_duties_cents + 0;
+        else
+          v_duties_cents := v_duties_cents + round(v_elem_decl::numeric * v_tax_bp::numeric / 10000.0)::bigint;
+        end if;
+      else
+        v_duties_cents := v_duties_cents + round(v_elem_decl::numeric * (v_duty_bp + v_tax_bp)::numeric / 10000.0)::bigint;
+      end if;
+    end loop;
+
+    if not v_duties_known then
+      v_duties_status := 'not_known_yet';
+    elsif v_quote_mode = 'catalogue' or not v_all_buyer_prices_supplied then
+      v_duties_status := 'estimate';
+    else
+      v_duties_status := 'known';
+    end if;
+  end if;
+
+  return jsonb_build_object(
+    'ok', true,
+    'country', v_country,
+    'shipping_method', v_method,
+    'incoterm', v_incoterm,
+    'total_qty', v_total_qty,
+    'actual_weight_g', v_sum_actual_weight_g,
+    'volumetric_weight_g', v_combined_vol_g,
+    'billed_weight_g', v_billed_weight_g,
+    'days_min', v_rc.days_min,
+    'days_max', v_rc.days_max,
+    'product_cents', v_product_cents,
+    'processing_cents', v_processing_cents,
+    'shipping_cents', v_shipping_cents,
+    'declared_value_usd_cents', v_declared_value_usd_cents,
+    'duty_basis', case
+      when v_quote_mode = 'catalogue' or not v_all_buyer_prices_supplied then 'product_price'
+      else 'buyer_paid_price_usd'
+    end,
+    'duties_cents', v_duties_cents,
+    'duties_status', v_duties_status,
+    'duties_label', case
+      when v_incoterm = 'DAP' then 'Duties paid by buyer'
+      when v_duties_known then null
+      else 'not known yet'
+    end,
+    'total_known_cents', v_product_cents + v_processing_cents + v_shipping_cents + coalesce(v_duties_cents, 0),
+    'total_cents', case
+      when v_duties_known then v_product_cents + v_processing_cents + v_shipping_cents + v_duties_cents
+      else null
+    end,
+    'version_ids', jsonb_build_object(
+      'shipping_rate_card_id', v_rc.id,
+      'fee_version_id', v_fv.id,
+      'duty_rate_version_id', v_duty_ver_id
+    )
+  );
+end $$;
+
+comment on function public.get_dropship_order_quote(jsonb, text, text, text, text, numeric, text) is
+  'Order-level 4-part quote engine. Enforces DROPSHIP_NOT_ENABLED for non-enabled callers, visible_to_org_id, and dropship_price_tiers volume tiers. Processing fee is charged ONCE per order (first + extra*(total_qty-1) + packaging). Combined parcel billed weight = max(sum(actual weight_g), ceil((sum(box_volume_cm3)/divisor)*1000)) rounded up to 100 g step. DAP returns duties_cents = 0 and duties_label = ''Duties paid by buyer''. Final customs valuation rule is set in Step 6b.';
+
+revoke all on function public.get_dropship_order_quote(jsonb, text, text, text, text, numeric, text) from public, anon;
+grant execute on function public.get_dropship_order_quote(jsonb, text, text, text, text, numeric, text) to authenticated, service_role;
 
 -- ───────── 5. Dropship Product Request RPCs (Corrections 1 & 3) ─────────
 create or replace function public.create_dropship_product_request(
@@ -776,10 +1134,11 @@ security definer
 set search_path = public
 as $$
 declare
+  v_uid uuid := auth.uid();
   v_org uuid := dropship_merchant_org();
 begin
-  if v_org is null then
-    return;
+  if v_uid is null or v_org is null then
+    raise exception 'DROPSHIP_NOT_ENABLED';
   end if;
 
   return query
@@ -1291,10 +1650,11 @@ security definer
 set search_path = public
 as $$
 declare
+  v_uid uuid := auth.uid();
   v_org uuid := dropship_merchant_org();
 begin
-  if v_org is null then
-    return;
+  if v_uid is null or v_org is null then
+    raise exception 'DROPSHIP_NOT_ENABLED';
   end if;
 
   return query
@@ -1336,3 +1696,265 @@ end $$;
 
 revoke all on function public.list_my_dropship_sample_orders(uuid) from public, anon;
 grant execute on function public.list_my_dropship_sample_orders(uuid) to authenticated, service_role;
+
+-- ───────── 7. Weekly STMT-DS Statement includes Paid Sample Orders under Legal Entity (default SZ-OCTOPUS) ─────────
+create or replace function public.generate_dropship_weekly_statement(
+  p_org uuid,
+  p_from timestamptz default (now() - interval '7 days'),
+  p_to timestamptz default now()
+) returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_div uuid := division_id_of('DS');
+  v_entity uuid := current_legal_entity_id(coalesce(p_to, now()));
+  v_items jsonb := '[]'::jsonb;
+  v_samples jsonb := '[]'::jsonb;
+  v_total bigint := 0;
+  v_unpaid bigint := 0;
+  v_stmt_id uuid;
+  v_stmt_no text;
+  v_prev_amount bigint;
+  v_prev_data jsonb;
+  d record;
+  s record;
+begin
+  if auth.uid() is not null and not (p_org in (select my_org_ids()) or (is_staff() and can('finance', 'view'))) then
+    raise exception 'FORBIDDEN';
+  end if;
+
+  for d in
+    select id, number, order_id, amount_cents, paid_cents, currency, status, due_at, created_at
+      from public.documents
+     where org_id = p_org
+       and division_id = v_div
+       and doc_type = 'commercial_invoice'
+       and coalesce(status, '') not in ('void', 'cancelled')
+       and created_at >= p_from
+       and created_at <= p_to
+     order by created_at asc, id asc
+  loop
+    v_items := v_items || jsonb_build_array(jsonb_build_object(
+      'invoice_id', d.id,
+      'number', d.number,
+      'order_id', d.order_id,
+      'amount_cents', d.amount_cents,
+      'paid_cents', d.paid_cents,
+      'balance_cents', greatest(0, d.amount_cents - d.paid_cents),
+      'currency', d.currency,
+      'status', d.status,
+      'due_at', d.due_at,
+      'issued_at', d.created_at
+    ));
+    v_total := v_total + coalesce(d.amount_cents, 0);
+    v_unpaid := v_unpaid + greatest(0, coalesce(d.amount_cents, 0) - coalesce(d.paid_cents, 0));
+  end loop;
+
+  for s in
+    select so.id,
+           so.order_number,
+           so.destination_country::text as destination_country,
+           so.shipping_method,
+           so.incoterm,
+           so.product_cents,
+           so.processing_cents,
+           so.shipping_cents,
+           so.duties_cents,
+           so.total_cents,
+           so.created_at,
+           soi.model_no,
+           soi.title_snapshot,
+           soi.variant_label,
+           coalesce(soi.qty, 1) as qty
+      from public.store_orders so
+      left join lateral (
+        select i.model_no, i.title_snapshot, i.variant_label, i.qty
+          from public.store_order_items i
+         where i.store_order_id = so.id
+         order by i.created_at asc
+         limit 1
+      ) soi on true
+     where so.org_id = p_org
+       and so.kind = 'sample'
+       and so.payment_state = 'paid'
+       and so.cancelled_at is null
+       and so.created_at >= p_from
+       and so.created_at <= p_to
+     order by so.created_at asc, so.id asc
+  loop
+    v_samples := v_samples || jsonb_build_array(jsonb_build_object(
+      'store_order_id', s.id,
+      'order_number', s.order_number,
+      'model_no', s.model_no,
+      'title', s.title_snapshot,
+      'variant_label', s.variant_label,
+      'qty', s.qty,
+      'destination_country', s.destination_country,
+      'shipping_method', s.shipping_method,
+      'incoterm', s.incoterm,
+      'product_cents', s.product_cents,
+      'processing_cents', s.processing_cents,
+      'shipping_cents', s.shipping_cents,
+      'duties_cents', s.duties_cents,
+      'total_cents', s.total_cents,
+      'paid_cents', s.total_cents,
+      'paid_via', 'wallet',
+      'created_at', s.created_at
+    ));
+    v_total := v_total + coalesce(s.total_cents, 0);
+  end loop;
+
+  v_stmt_no := 'STMT-DS-' || to_char(p_to at time zone 'UTC', 'YYYYMMDD') || '-' || substr(replace(p_org::text, '-', ''), 1, 6);
+
+  select id, amount_cents, data
+    into v_stmt_id, v_prev_amount, v_prev_data
+    from public.documents
+   where org_id = p_org
+     and doc_type = 'statement'
+     and number = v_stmt_no
+   limit 1;
+
+  if v_stmt_id is not null then
+    if coalesce(v_prev_amount, -1) = v_total
+       and coalesce((v_prev_data ->> 'invoice_count')::int, -1) = jsonb_array_length(v_items)
+       and coalesce((v_prev_data ->> 'sample_count')::int, -1) = jsonb_array_length(v_samples) then
+      return jsonb_build_object(
+        'statement_id', v_stmt_id,
+        'number', v_stmt_no,
+        'legal_entity_id', v_entity,
+        'invoice_count', jsonb_array_length(v_items),
+        'sample_count', jsonb_array_length(v_samples),
+        'total_cents', v_total,
+        'unpaid_cents', v_unpaid,
+        'repeated', true
+      );
+    end if;
+
+    update public.documents
+       set legal_entity_id = coalesce(legal_entity_id, v_entity),
+           amount_cents = v_total,
+           paid_cents = v_total - v_unpaid,
+           status = case when v_unpaid = 0 then 'paid' else 'awaiting_payment' end,
+           data = coalesce(v_prev_data, '{}'::jsonb) || jsonb_build_object(
+             'service', 'dropship',
+             'period_from', p_from,
+             'period_to', p_to,
+             'invoice_count', jsonb_array_length(v_items),
+             'sample_count', jsonb_array_length(v_samples),
+             'total_cents', v_total,
+             'paid_cents', v_total - v_unpaid,
+             'unpaid_cents', v_unpaid,
+             'invoices', v_items,
+             'sample_orders', v_samples
+           )
+     where id = v_stmt_id;
+
+    delete from public.invoice_lines where document_id = v_stmt_id;
+  else
+    insert into public.documents (
+      org_id, division_id, legal_entity_id, doc_type, number, amount_cents, paid_cents, currency, status, data
+    )
+    values (
+      p_org, v_div, v_entity, 'statement', v_stmt_no, v_total, v_total - v_unpaid, 'USD',
+      case when v_unpaid = 0 then 'paid' else 'awaiting_payment' end,
+      jsonb_build_object(
+        'service', 'dropship',
+        'period_from', p_from,
+        'period_to', p_to,
+        'invoice_count', jsonb_array_length(v_items),
+        'sample_count', jsonb_array_length(v_samples),
+        'total_cents', v_total,
+        'paid_cents', v_total - v_unpaid,
+        'unpaid_cents', v_unpaid,
+        'invoices', v_items,
+        'sample_orders', v_samples
+      )
+    )
+    returning id into v_stmt_id;
+  end if;
+
+  insert into public.invoice_lines (document_id, service, description, qty, unit_cents, amount_cents, ref_type, ref_id)
+  select v_stmt_id,
+         'dropship',
+         'Dropship shipment invoice ' || (inv ->> 'number') || ' (' || coalesce(inv ->> 'status', 'issued') || ')',
+         1,
+         coalesce((inv ->> 'amount_cents')::bigint, 0),
+         coalesce((inv ->> 'amount_cents')::bigint, 0),
+         'document',
+         inv ->> 'invoice_id'
+    from jsonb_array_elements(v_items) inv;
+
+  insert into public.invoice_lines (document_id, service, description, qty, unit_cents, amount_cents, ref_type, ref_id)
+  select v_stmt_id,
+         'dropship',
+         btrim(
+           'Sample order ' || (smp ->> 'order_number')
+           || case when coalesce(smp ->> 'model_no', '') <> '' then ' · ' || (smp ->> 'model_no') else '' end
+           || case when coalesce(smp ->> 'title', '') <> '' then ' ' || (smp ->> 'title') else '' end
+           || case when coalesce(smp ->> 'variant_label', '') <> '' then ' (' || (smp ->> 'variant_label') || ')' else '' end
+           || ' · ' || coalesce(smp ->> 'destination_country', '') || ' ' || coalesce(smp ->> 'incoterm', 'DDP')
+           || ' (Paid via Wallet)'
+         ),
+         greatest(1, coalesce((smp ->> 'qty')::numeric, 1)),
+         case
+           when greatest(1, coalesce((smp ->> 'qty')::int, 1)) > 0
+           then round(coalesce((smp ->> 'total_cents')::numeric, 0) / greatest(1, coalesce((smp ->> 'qty')::numeric, 1)))::bigint
+           else coalesce((smp ->> 'total_cents')::bigint, 0)
+         end,
+         coalesce((smp ->> 'total_cents')::bigint, 0),
+         'store_order',
+         smp ->> 'store_order_id'
+    from jsonb_array_elements(v_samples) smp;
+
+  return jsonb_build_object(
+    'statement_id', v_stmt_id,
+    'number', v_stmt_no,
+    'legal_entity_id', v_entity,
+    'invoice_count', jsonb_array_length(v_items),
+    'sample_count', jsonb_array_length(v_samples),
+    'total_cents', v_total,
+    'unpaid_cents', v_unpaid
+  );
+end $$;
+revoke all on function public.generate_dropship_weekly_statement(uuid, timestamptz, timestamptz) from public, anon;
+grant execute on function public.generate_dropship_weekly_statement(uuid, timestamptz, timestamptz) to authenticated, service_role;
+
+create or replace function public.run_weekly_dropship_statements() returns jsonb
+language plpgsql security definer set search_path = public as $$
+declare
+  v_div uuid := division_id_of('DS');
+  v_from timestamptz := date_trunc('week', now() at time zone 'UTC') - interval '7 days';
+  v_to timestamptz := date_trunc('week', now() at time zone 'UTC');
+  v_org uuid;
+  v_generated int := 0;
+begin
+  if not pg_try_advisory_xact_lock(hashtext('cron:run_weekly_dropship_statements')) then
+    return jsonb_build_object('skipped', true, 'reason', 'lock_held');
+  end if;
+  for v_org in
+    select distinct org_id
+      from (
+        select org_id
+          from public.documents
+         where division_id = v_div
+           and doc_type = 'commercial_invoice'
+           and payment_option = 'pay_later'
+           and coalesce(status, '') not in ('void', 'cancelled')
+           and created_at >= v_from
+           and created_at <= v_to
+        union
+        select org_id
+          from public.store_orders
+         where kind = 'sample'
+           and payment_state = 'paid'
+           and cancelled_at is null
+           and created_at >= v_from
+           and created_at <= v_to
+      ) active_orgs
+  loop
+    perform public.generate_dropship_weekly_statement(v_org, v_from, v_to);
+    v_generated := v_generated + 1;
+  end loop;
+  return jsonb_build_object('statements_generated', v_generated, 'period_from', v_from, 'period_to', v_to);
+end $$;
+revoke all on function public.run_weekly_dropship_statements() from public, anon, authenticated;
+grant execute on function public.run_weekly_dropship_statements() to service_role;

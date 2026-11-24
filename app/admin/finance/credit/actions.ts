@@ -62,8 +62,10 @@ export async function decideCreditTermsAction(formData: FormData): Promise<{ ok:
 
 export async function generateDropshipStatementAction(formData: FormData): Promise<{
   ok: boolean;
+  statementId?: string;
   statementNumber?: string;
   invoiceCount?: number;
+  sampleCount?: number;
   error?: string;
 }> {
   await requireStaff('finance', 'view', '/admin/finance/credit');
@@ -77,10 +79,12 @@ export async function generateDropshipStatementAction(formData: FormData): Promi
 
   if (error) return { ok: false, error: error.message };
   revalidatePath('/admin/finance/credit');
-  const res = data as { number?: string; invoice_count?: number };
+  const res = data as { statement_id?: string; number?: string; invoice_count?: number; sample_count?: number };
   return {
     ok: true,
+    statementId: res?.statement_id,
     statementNumber: res?.number,
     invoiceCount: Number(res?.invoice_count ?? 0),
+    sampleCount: Number(res?.sample_count ?? 0),
   };
 }

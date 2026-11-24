@@ -250,7 +250,8 @@ test.afterAll(async () => {
           )
         ).rows.map((r) => r.item_id as string);
 
-        // Delete store_orders first so store_order_items FK to dropship_products/variants is cleared
+        // Delete statements & store_orders first so FKs are cleared
+        await db.query(`delete from documents where org_id = $1`, [merchant.orgId]);
         await db.query(`delete from store_orders where org_id = $1`, [merchant.orgId]);
         await db.query(`delete from dropship_products where id = any($1)`, [allProdIds]);
 
@@ -499,4 +500,34 @@ test('Sample order: wallet-short ($4.30 cash, $500 credit ignored) & DDP-duty-un
     .eq('store_order_id', so!.id)
     .single();
   expect(Number(soi?.declared_usd_cents)).toBe(Number(so?.product_cents));
+
+  // 4. Follow-up 2: Generate weekly STMT-DS statement and verify sample charge appears on /account/invoices & /api/documents/[id]/pdf under SZ-OCTOPUS!
+  const dbStmt = pgClient();
+  await dbStmt.connect();
+  let stmtId = '';
+  let stmtNo = '';
+  try {
+    const r = (
+      await dbStmt.query(
+        `select public.generate_dropship_weekly_statement($1, now() - interval '1 hour', now() + interval '1 minute') as r`,
+        [merchant!.orgId],
+      )
+    ).rows[0].r as { statement_id: string; number: string; sample_count: number };
+    stmtId = r.statement_id;
+    stmtNo = r.number;
+    expect(r.sample_count).toBe(1);
+  } finally {
+    await dbStmt.end();
+  }
+
+  await page.goto('/account/invoices');
+  await expect(page.locator('main')).toContainText(stmtNo);
+  await expect(page.locator('main')).toContainText('Dropshipping');
+
+  await page.goto(`/api/documents/${stmtId}/pdf`);
+  await expect(page.locator('h1')).toContainText(stmtNo);
+  await expect(page.getByTestId('division-line')).toHaveText('Octopus B2B · Dropshipping');
+  await expect(page.locator('.seller')).toContainText('Shenzhen Octopus Trading Co., Ltd.');
+  await expect(page.locator('.meta')).toContainText('SZ-OCTOPUS');
+  await expect(page.getByTestId('statement-lines')).toContainText(/Sample order DSO-\d+/);
 });

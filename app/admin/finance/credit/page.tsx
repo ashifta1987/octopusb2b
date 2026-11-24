@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { requireStaff } from '@/lib/auth';
 import { createAdminClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui';
-import { CreditTermsClient, type StaffCreditTermRow } from './credit-client';
+import { CreditTermsClient, type StaffCreditTermRow, type StaffDropshipStatementRow } from './credit-client';
 
 export const metadata = { title: 'Credit terms (Pay later)' };
 
@@ -10,7 +10,7 @@ async function CreditPageContent() {
   const s = await requireStaff('finance', 'view', '/admin/finance/credit');
   const sb = createAdminClient();
 
-  const [{ data: terms }, { data: orgs }, { data: divisions }, { data: unpaidDocs }, { data: reservations }] =
+  const [{ data: terms }, { data: orgs }, { data: divisions }, { data: unpaidDocs }, { data: reservations }, { data: dsStatements }] =
     await Promise.all([
       sb
         .from('customer_credit_terms')
@@ -26,6 +26,13 @@ async function CreditPageContent() {
         .eq('doc_type', 'commercial_invoice')
         .not('status', 'in', '("paid","void","cancelled")'),
       sb.from('credit_reservations').select('org_id, division_id, amount_cents').eq('status', 'reserved'),
+      sb
+        .from('documents')
+        .select('id, org_id, number, amount_cents, paid_cents, currency, status, data, created_at, organizations(name), legal_entities(code, legal_name)')
+        .eq('doc_type', 'statement')
+        .like('number', 'STMT-DS-%')
+        .order('created_at', { ascending: false })
+        .limit(25),
     ]);
 
   const rows: StaffCreditTermRow[] = (terms ?? []).map((t) => {
@@ -61,6 +68,25 @@ async function CreditPageContent() {
     };
   });
 
+  const statements: StaffDropshipStatementRow[] = (dsStatements ?? []).map((st) => {
+    const d = (st.data ?? {}) as { invoice_count?: number; sample_count?: number; legal_entity_code?: string; issuer?: string };
+    const ent = st.legal_entities as { code?: string; legal_name?: string } | null;
+    return {
+      id: st.id as string,
+      number: st.number as string,
+      org_name: ((st.organizations as { name?: string } | null)?.name ?? 'Merchant') as string,
+      legal_entity_code: ent?.code ?? d.legal_entity_code ?? 'SZ-OCTOPUS',
+      legal_entity_name: ent?.legal_name ?? d.issuer ?? 'Shenzhen Octopus Trading Co., Ltd.',
+      invoice_count: Number(d.invoice_count ?? 0),
+      sample_count: Number(d.sample_count ?? 0),
+      amount_cents: Number(st.amount_cents ?? 0),
+      paid_cents: Number(st.paid_cents ?? 0),
+      currency: ((st.currency as string) ?? 'USD').trim() || 'USD',
+      status: (st.status as string) ?? 'issued',
+      created_at: st.created_at as string,
+    };
+  });
+
   return (
     <>
       <PageHeader
@@ -69,6 +95,7 @@ async function CreditPageContent() {
       />
       <CreditTermsClient
         terms={rows}
+        statements={statements}
         orgs={((orgs ?? []) as unknown) as { id: string; name: string; kyc_status: string; credit_eligible: boolean }[]}
         divisions={((divisions ?? []) as unknown) as { id: string; code: string; name: string }[]}
         currentUserId={s.userId}

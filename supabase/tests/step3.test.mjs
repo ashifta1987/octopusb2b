@@ -298,15 +298,56 @@ try {
     `Stock is exposed strictly as label enums ('in_stock'|'low'|'out'|'extended')`,
   );
 
+  // ── 5b. Follow-up 1: DB-level DROPSHIP_NOT_ENABLED gate on EVERY Step 3 merchant RPC when called directly ──
+  await owner();
+  const gateProd = await one(`select id from dropship_products where model_no = 'DS-000001'`);
+  const gateVar = await one(`select id from dropship_variants where product_id = $1 order by sort limit 1`, [gateProd.id]);
+
+  const gateCalls = [
+    ['get_dropship_countries', `select * from public.get_dropship_countries()`, []],
+    ['get_dropship_catalogue', `select * from public.get_dropship_catalogue('AE', null, null, 1)`, []],
+    ['get_dropship_product', `select public.get_dropship_product($1, 'AE')`, [gateProd.id]],
+    ['get_dropship_quote', `select public.get_dropship_quote($1, 'AE', 'express', 1, 'DDP')`, [gateVar.id]],
+    [
+      'get_dropship_order_quote',
+      `select public.get_dropship_order_quote($1::jsonb, 'AE', 'express', 'DDP')`,
+      [JSON.stringify([{ variant_id: gateVar.id, qty: 1 }])],
+    ],
+    [
+      'create_dropship_product_request',
+      `select public.create_dropship_product_request('Blocked request', null, null, null, null, array['AE'], false, null, '{}'::text[], 'blocked_req')`,
+      [],
+    ],
+    ['list_my_dropship_requests', `select * from public.list_my_dropship_requests()`, []],
+    ['respond_dropship_request_quote', `select public.respond_dropship_request_quote($1, 'accept')`, [createdReq.rfq_id]],
+    [
+      'create_dropship_sample_order',
+      `select public.create_dropship_sample_order($1, 1, 'AE', 'express', 'No DS', '+971500000099', '{"line1":"1 St"}'::jsonb, 'blocked_smp')`,
+      [gateVar.id],
+    ],
+    ['list_my_dropship_sample_orders', `select * from public.list_my_dropship_sample_orders(null)`, []],
+  ];
+
   await as(nonDsCustomer.user_id);
-  const catNonDs = await all(`select * from public.get_dropship_catalogue('AE', null, null, 1)`);
-  await as(supplierUser.user_id);
-  const catSup = await all(`select * from public.get_dropship_catalogue('AE', null, null, 1)`);
-  await as(dsStaff.user_id);
-  const catStaff = await all(`select * from public.get_dropship_catalogue('AE', null, null, 1)`);
+  const nonDsResults = [];
+  for (const [fnName, sql, params] of gateCalls) {
+    const r = await tryq(sql, params);
+    nonDsResults.push([fnName, r.err ?? 'NO_ERROR']);
+  }
   ok(
-    catNonDs.length === 0 && catSup.length === 0 && catStaff.length === 0,
-    `get_dropship_catalogue returns 0 rows to non-enabled customer (${catNonDs.length}), supplier (${catSup.length}), and staff (${catStaff.length})`,
+    nonDsResults.every(([, err]) => /DROPSHIP_NOT_ENABLED/.test(err)),
+    `Follow-up 1: all ${gateCalls.length} Step 3 merchant RPCs refuse non-enabled customer org directly with DROPSHIP_NOT_ENABLED (${nonDsResults.map(([n]) => n).join(', ')})`,
+  );
+
+  await as(supplierUser.user_id);
+  const supResults = [];
+  for (const [fnName, sql, params] of gateCalls) {
+    const r = await tryq(sql, params);
+    supResults.push([fnName, r.err ?? 'NO_ERROR']);
+  }
+  ok(
+    supResults.every(([, err]) => /DROPSHIP_NOT_ENABLED/.test(err)),
+    `Follow-up 1: all ${gateCalls.length} Step 3 merchant RPCs refuse supplier user directly with DROPSHIP_NOT_ENABLED`,
   );
 
   // ── 6. Correction 4: Sample Order Rules (1–3 qty, DDP missing duty refused, credit limit ignored, wallet cash debit + 3PL stock reserve) ──
@@ -435,6 +476,91 @@ try {
       paidSampleRetry.idempotent === true &&
       paidSampleRetry.store_order_id === paidSample.store_order_id,
     `Paid sample order (${soRow.order_number}): kind='sample', processing=160¢, declared_usd_cents=product_cents (${soiRow.declared_usd_cents}¢), no escrow/hold, wallet cash debited (${soRow.total_cents}¢), 3PL reserved +2, idempotent on retry`,
+  );
+
+  // ── 7. Follow-up 2: Sample charge appears on weekly STMT-DS statement under SZ-OCTOPUS for merchant & accountant ──
+  await as(finUser.user_id);
+  const stmtRes = (
+    await one(
+      `select public.generate_dropship_weekly_statement($1, now() - interval '1 hour', now() + interval '1 minute') as r`,
+      [merchBOrg.id],
+    )
+  ).r;
+  await owner();
+  const stmtDoc = await one(
+    `select d.id, d.number, d.division_id, d.legal_entity_id, d.amount_cents, d.paid_cents, d.status, d.data,
+            le.code as entity_code, le.legal_name as entity_name
+       from public.documents d
+       join public.legal_entities le on le.id = d.legal_entity_id
+      where d.id = $1`,
+    [stmtRes.statement_id],
+  );
+  const stmtLines = await all(
+    `select service, description, qty::int as qty, unit_cents::bigint as unit_cents, amount_cents::bigint as amount_cents, ref_type, ref_id
+       from public.invoice_lines
+      where document_id = $1`,
+    [stmtRes.statement_id],
+  );
+  ok(
+    /^STMT-DS-/.test(stmtDoc.number) &&
+      stmtDoc.legal_entity_id === '00000000-0000-0000-0000-000000000001' &&
+      stmtDoc.entity_code === 'SZ-OCTOPUS' &&
+      stmtDoc.data?.legal_entity_code === 'SZ-OCTOPUS' &&
+      stmtDoc.data?.service === 'dropship' &&
+      Number(stmtDoc.data?.sample_count) === 1 &&
+      Number(stmtDoc.amount_cents) === Number(soRow.total_cents) &&
+      Number(stmtDoc.paid_cents) === Number(soRow.total_cents) &&
+      stmtDoc.status === 'paid' &&
+      stmtLines.length === 1 &&
+      stmtLines[0].service === 'dropship' &&
+      stmtLines[0].ref_type === 'store_order' &&
+      stmtLines[0].ref_id === soRow.id &&
+      stmtLines[0].description.includes(soRow.order_number) &&
+      Number(stmtLines[0].amount_cents) === Number(soRow.total_cents),
+    `Follow-up 2: weekly statement ${stmtDoc.number} issued under ${stmtDoc.entity_code} (${stmtDoc.entity_name}) includes paid sample order ${soRow.order_number} (${soRow.total_cents}¢) in documents.data and invoice_lines`,
+  );
+
+  // Verify RLS: Merchant B & Finance staff both read STMT-DS + invoice_lines; unrelated customer reads 0 rows
+  await as(merchBUid);
+  const merchBStmt = await all(`select id, number, legal_entity_id from documents where id = $1`, [stmtDoc.id]);
+  const merchBStmtLines = await all(`select id, description from invoice_lines where document_id = $1`, [stmtDoc.id]);
+  await as(finUser.user_id);
+  const finStmt = await all(`select id, number, legal_entity_id from documents where id = $1`, [stmtDoc.id]);
+  const finStmtLines = await all(`select id, description from invoice_lines where document_id = $1`, [stmtDoc.id]);
+  await as(nonDsCustomer.user_id);
+  const otherStmt = await all(`select id from documents where id = $1`, [stmtDoc.id]);
+  const otherStmtLines = await all(`select id from invoice_lines where document_id = $1`, [stmtDoc.id]);
+  await owner();
+  ok(
+    merchBStmt.length === 1 &&
+      merchBStmtLines.length === 1 &&
+      finStmt.length === 1 &&
+      finStmtLines.length === 1 &&
+      otherStmt.length === 0 &&
+      otherStmtLines.length === 0,
+    `Follow-up 2: Merchant B and Finance accountant both read ${stmtDoc.number} + sample invoice_line via RLS; unrelated customer reads 0 rows`,
+  );
+
+  // Verify run_weekly_dropship_statements() picks up an org with ONLY a paid sample order in the prior week window!
+  await db.query(
+    `update store_orders
+        set created_at = date_trunc('week', now() at time zone 'UTC') - interval '2 days'
+      where id = $1`,
+    [soRow.id],
+  );
+  const batchRes = (await one(`select public.run_weekly_dropship_statements() as r`)).r;
+  const prevWeekStmt = await all(
+    `select id, number, legal_entity_id, amount_cents, data
+       from documents
+      where org_id = $1 and doc_type = 'statement' and id <> $2`,
+    [merchBOrg.id, stmtDoc.id],
+  );
+  ok(
+    Number(batchRes.statements_generated) >= 1 &&
+      prevWeekStmt.length === 1 &&
+      prevWeekStmt[0].legal_entity_id === '00000000-0000-0000-0000-000000000001' &&
+      Number(prevWeekStmt[0].data?.sample_count) === 1,
+    `Follow-up 2: run_weekly_dropship_statements() cron batch generates ${prevWeekStmt[0]?.number} for orgs with paid sample orders`,
   );
 
   await db.query('set constraints all immediate');

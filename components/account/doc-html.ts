@@ -73,16 +73,43 @@ export type DocBundle = {
 export async function loadDocument(id: string, opts: { staff?: boolean } = {}): Promise<DocBundle | null> {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const sb = await createClient();
-  const { data: doc } = await sb.from('documents').select('id, org_id, doc_type, number, order_id, amount_cents, status, pdf_path, data, created_at, currency, division_id, original_document_id').eq('id', id).maybeSingle();
+  const { data: doc } = await sb
+    .from('documents')
+    .select(
+      'id, org_id, doc_type, number, order_id, amount_cents, paid_cents, status, pdf_path, data, created_at, currency, division_id, legal_entity_id, original_document_id',
+    )
+    .eq('id', id)
+    .maybeSingle();
   if (!doc) return null;
 
-  const [orgR, orderR, companyR, kycR, settingsR] = await Promise.all([
+  const [orgR, orderR, companyR, entityR, kycR, settingsR] = await Promise.all([
     doc.org_id ? sb.from('organizations').select('id, name, country, city, registration_no, website').eq('id', doc.org_id).maybeSingle() : Promise.resolve({ data: null }),
     doc.order_id ? sb.from('orders').select('id, code, title, quantity, unit_price_cents, shipping_cents, total_cents, currency, deposit_pct, deposit_cents, paid_cents, incoterm, rfq_id, quote_id, created_at').eq('id', doc.order_id).maybeSingle() : Promise.resolve({ data: null }),
     sb.from('company_profile').select('legal_name, legal_name_cn, brand, address, address_cn, registration_no, tax_id, contact_person, phone, whatsapp, email, website').eq('id', 1).maybeSingle(),
+    doc.legal_entity_id
+      ? sb
+          .from('legal_entities')
+          .select('id, code, legal_name, legal_name_cn, registration_no, tax_id, address, address_cn')
+          .eq('id', doc.legal_entity_id as string)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
     doc.org_id ? sb.from('kyc_submissions').select('company_name, registration_no, address, contact_name, contact_phone, contact_email').eq('org_id', doc.org_id).order('created_at', { ascending: false }).limit(1).maybeSingle() : Promise.resolve({ data: null }),
     sb.from('site_settings').select('key, value').in('key', ['deposit_pct', 'claim_visible_days', 'claim_hidden_days', 'quote_validity_days']),
   ]);
+  const rawCo = (companyR.data as Row | null) ?? null;
+  const ent = (entityR.data as Row | null) ?? null;
+  const mergedCompany: Row | null = ent
+    ? {
+        ...(rawCo ?? {}),
+        legal_name: ent.legal_name ?? rawCo?.legal_name,
+        legal_name_cn: ent.legal_name_cn ?? rawCo?.legal_name_cn,
+        registration_no: ent.registration_no ?? rawCo?.registration_no,
+        tax_id: ent.tax_id ?? rawCo?.tax_id,
+        address: ent.address ?? rawCo?.address,
+        address_cn: ent.address_cn ?? rawCo?.address_cn,
+        legal_entity_code: ent.code,
+      }
+    : rawCo;
   const order = (orderR.data as Row | null) ?? null;
   const s: Record<string, unknown> = {};
   ((settingsR.data ?? []) as Row[]).forEach((r) => (s[r.key as string] = r.value));
@@ -130,7 +157,7 @@ export async function loadDocument(id: string, opts: { staff?: boolean } = {}): 
     doc: doc as DocBundle['doc'],
     org: (orgR.data as Row | null) ?? null,
     order,
-    company: (companyR.data as Row | null) ?? null,
+    company: mergedCompany,
     kyc: (kycR.data as Row | null) ?? null,
     rfq, quote, supplier, factory, hsCode,
     bank: accountFor(((await sb.from('company_bank_accounts').select(BANK_COLS).eq('active', true)).data ?? []) as BankAccount[], (doc.currency as string | null) ?? (order?.currency as string | undefined)),
@@ -190,6 +217,13 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
   }
   if (type === 'credit_note' && b.originalNumber) meta.push(['Credits invoice', esc(b.originalNumber), true]);
   if (type === 'commercial_invoice' && d.from_proforma) meta.push(['For proforma', esc(d.from_proforma), true]);
+  if (type === 'statement') {
+    if (d.period_from && d.period_to) {
+      meta.push(['Statement period', `${date(d.period_from as string)} – ${date(d.period_to as string)}`]);
+    }
+    const entCode = (co?.legal_entity_code as string | undefined) ?? (d.legal_entity_code as string | undefined);
+    if (entCode) meta.push(['Legal entity', esc(entCode), true]);
+  }
   if (order?.code) meta.push(['Order', esc(order.code), true]);
 
   /* ── bill to ── */
@@ -246,6 +280,20 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
       ${order ? `<div class="kv"><b>Order:</b> <span class="mono">${esc(order.code)}</span> · ${esc(order.title)}</div>` : ''}
       <div class="kv">Credited to your Octopus wallet / account balance.</div>
     </div>`;
+  } else if (type === 'statement' && lines.length > 0) {
+    main += `
+    <table class="items" data-testid="statement-lines">
+      <thead><tr><th style="width:28px">#</th><th>Description</th><th class="r">Qty</th><th class="r">Unit amount</th><th class="r">Amount (${cur})</th></tr></thead>
+      <tbody>
+        ${lines.map((l, i) => `<tr>
+          <td class="mono">${i + 1}</td>
+          <td><b>${esc(l.description ?? itemTitle)}</b></td>
+          <td class="r mono">${l.qty != null ? esc(new Intl.NumberFormat('en-US').format(Number(l.qty))) : '—'}</td>
+          <td class="r mono">${m(l.unit_cents)}</td>
+          <td class="r mono"><b>${m(l.amount_cents)}</b></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>`;
   } else if (!isInvoice && type !== 'confirmation' && !(qty != null && unitPrice != null)) {
     const rows = Object.entries(d).filter(([, v]) => v != null && typeof v !== 'object');
     main += `
@@ -283,7 +331,13 @@ export function renderDocumentHtml(b: DocBundle, opts: { origin: string; print?:
         <div class="row"><span>Duties &amp; import taxes</span><span class="mono">${isF || !incoterm ? `Buyer${incoterm ? ` (${esc(incoterm)})` : ''}` : esc(incoterm)}</span></div>
         <div class="grand"><span class="lbl" style="color:#fff">Total ${cur}</span><span class="amt">${m(total)}</span></div>
       </div>`
-    : `<div class="totals"><div class="grand"><span class="lbl" style="color:#fff">${type === 'credit_note' ? 'Credit' : type === 'receipt' ? 'Received' : 'Amount'} ${cur}</span><span class="amt">${m(doc.amount_cents)}</span></div></div>`;
+    : type === 'statement'
+      ? `<div class="totals">
+          <div class="row"><span>Total charges</span><span class="mono">${m(doc.amount_cents)}</span></div>
+          <div class="row"><span>Paid (Wallet / settled)</span><span class="mono">${m(num((doc as Row).paid_cents) ?? num(d.paid_cents) ?? 0)}</span></div>
+          <div class="grand"><span class="lbl" style="color:#fff">Balance due ${cur}</span><span class="amt">${m(num(d.unpaid_cents) ?? Math.max(0, Number(doc.amount_cents ?? 0) - Number((doc as Row).paid_cents ?? d.paid_cents ?? 0)))}</span></div>
+        </div>`
+      : `<div class="totals"><div class="grand"><span class="lbl" style="color:#fff">${type === 'credit_note' ? 'Credit' : type === 'receipt' ? 'Received' : 'Amount'} ${cur}</span><span class="amt">${m(doc.amount_cents)}</span></div></div>`;
 
   const showTotals = !(type !== 'receipt' && type !== 'credit_note' && !isInvoice && type !== 'confirmation' && doc.amount_cents == null);
 

@@ -29,13 +29,30 @@ export type StaffCreditTermRow = {
   updated_at: string;
 };
 
+export type StaffDropshipStatementRow = {
+  id: string;
+  number: string;
+  org_name: string;
+  legal_entity_code: string;
+  legal_entity_name: string;
+  invoice_count: number;
+  sample_count: number;
+  amount_cents: number;
+  paid_cents: number;
+  currency: string;
+  status: string;
+  created_at: string;
+};
+
 export function CreditTermsClient({
   terms,
+  statements = [],
   orgs,
   divisions,
   currentUserId,
 }: {
   terms: StaffCreditTermRow[];
+  statements?: StaffDropshipStatementRow[];
   orgs: { id: string; name: string; kyc_status: string; credit_eligible?: boolean }[];
   divisions: { id: string; code: string; name: string }[];
   currentUserId: string;
@@ -82,7 +99,9 @@ export function CreditTermsClient({
         setError(res.error ?? 'Could not generate statement.');
         return;
       }
-      setNotice(`Dropshipping weekly statement ${res.statementNumber} generated (${res.invoiceCount} invoices).`);
+      setNotice(
+        `Dropshipping weekly statement ${res.statementNumber} generated (${res.invoiceCount ?? 0} shipment invoices, ${res.sampleCount ?? 0} sample orders).`,
+      );
       router.refresh();
     });
   }
@@ -297,15 +316,18 @@ export function CreditTermsClient({
       {/* Weekly Dropshipping Statement Generator */}
       <section className="card p-5 space-y-3" data-testid="dropship-weekly-statement-card">
         <div>
-          <h2 className="text-base font-semibold text-ink">Dropshipping Pay-Later Weekly Statement</h2>
+          <h2 className="text-base font-semibold text-ink">Dropshipping Weekly Statements (STMT-DS)</h2>
           <p className="text-xs text-muted">
             Dropshipping Pay-later orders issue one <span className="font-mono">OCT-DS-</span> tax invoice per order at
-            shipment, plus a weekly statement listing all shipment invoices for that merchant.
+            shipment, and the weekly <span className="font-mono">STMT-DS-</span> statement consolidates all shipment
+            invoices plus paid sample orders (<span className="font-mono">DSO-…</span>) under the active legal entity
+            (default <span className="font-mono">SZ-OCTOPUS</span>).
           </p>
         </div>
         <form action={handleStatement} className="flex flex-wrap items-center gap-3 text-xs">
           <select
             name="org_id"
+            aria-label="Customer company for statement"
             className="rounded-lg border border-line bg-canvas px-3 py-2 text-xs"
           >
             {orgs.map((o) => (
@@ -323,6 +345,54 @@ export function CreditTermsClient({
             Generate weekly Dropshipping statement
           </button>
         </form>
+        {statements.length > 0 && (
+          <div className="overflow-x-auto pt-2">
+            <table className="w-full text-left text-xs border-collapse" data-testid="ds-statements-table">
+              <thead>
+                <tr className="border-b border-line text-muted uppercase tracking-wider text-[11px]">
+                  <th className="py-2 pr-3">Date</th>
+                  <th className="py-2 pr-3">Statement</th>
+                  <th className="py-2 pr-3">Merchant</th>
+                  <th className="py-2 pr-3">Legal entity</th>
+                  <th className="py-2 pr-3">Lines</th>
+                  <th className="py-2 pr-3">Total</th>
+                  <th className="py-2 pr-3">Status</th>
+                  <th className="py-2 text-right">PDF</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {statements.map((st) => (
+                  <tr key={st.id} data-testid={`ds-statement-row-${st.number}`}>
+                    <td className="py-2 pr-3 whitespace-nowrap">{fmtDate(st.created_at)}</td>
+                    <td className="py-2 pr-3 font-mono font-semibold text-ink whitespace-nowrap">{st.number}</td>
+                    <td className="py-2 pr-3">{st.org_name}</td>
+                    <td className="py-2 pr-3">
+                      <span className="font-mono font-semibold">{st.legal_entity_code}</span>
+                      <span className="text-muted"> · {st.legal_entity_name}</span>
+                    </td>
+                    <td className="py-2 pr-3 font-mono whitespace-nowrap">
+                      {st.invoice_count} inv · {st.sample_count} sample
+                    </td>
+                    <td className="py-2 pr-3 font-mono font-semibold whitespace-nowrap">
+                      {money(st.amount_cents, st.currency)}
+                    </td>
+                    <td className="py-2 pr-3 uppercase text-[11px] font-semibold">{st.status}</td>
+                    <td className="py-2 text-right">
+                      <a
+                        href={`/api/documents/${st.id}/pdf`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded border border-line bg-canvas px-2.5 py-1 text-xs font-semibold text-ink hover:bg-surface"
+                      >
+                        PDF
+                      </a>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </div>
   );
