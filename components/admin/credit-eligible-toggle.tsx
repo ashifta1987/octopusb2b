@@ -30,14 +30,18 @@ export function CreditEligibleToggle({
     }
     startTransition(async () => {
       const res = await setOrgCreditEligibleAction(orgId, nextValue, reason);
-      if ('error' in res && res.error) {
+      if (!res.ok) {
+        if (res.redirect) {
+          router.push(res.redirect);
+          return;
+        }
         setError(res.error);
         return;
       }
       setEligible(nextValue);
       setReason('');
       setNotice(
-        ('notice' in res && res.notice) ||
+        res.message ??
           (nextValue ? 'Pay later credit eligibility enabled.' : 'Pay later credit eligibility disabled.'),
       );
       router.refresh();

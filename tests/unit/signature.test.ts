@@ -40,9 +40,29 @@ describe('YunExpress adapter mapper', () => {
   it('tolerates an empty body', async () => {
     expect(await (new YunExpressAdapter() as CarrierAdapter).parseWebhook({}, new Headers())).toEqual([]);
   });
-  it('price trial returns USD cents', async () => {
-    const q = await new YunExpressAdapter().priceTrial({ fromCountry: 'CN', toCountry: 'NL', weightKg: 2, parcels: 1 });
-    expect(q.length).toBeGreaterThan(0);
-    for (const r of q) expect(Number.isInteger(r.priceCents)).toBe(true);
+  it('price trial returns USD cents on staging and fails closed elsewhere', async () => {
+    const prev = process.env.APP_ENVIRONMENT;
+    try {
+      delete process.env.APP_ENVIRONMENT;
+      await expect(
+        new YunExpressAdapter().priceTrial({ fromCountry: 'CN', toCountry: 'NL', weightKg: 2, parcels: 1 }),
+      ).rejects.toThrow('Carrier not connected');
+      await expect(
+        new YunExpressAdapter().createShipment({ orderCode: 'ORD-1', toCountry: 'NL', weightKg: 2, parcels: 1, service: 'standard' }),
+      ).rejects.toThrow('Carrier not connected');
+
+      process.env.APP_ENVIRONMENT = 'production';
+      await expect(
+        new YunExpressAdapter().priceTrial({ fromCountry: 'CN', toCountry: 'NL', weightKg: 2, parcels: 1 }),
+      ).rejects.toThrow('Carrier not connected');
+
+      process.env.APP_ENVIRONMENT = 'staging';
+      const q = await new YunExpressAdapter().priceTrial({ fromCountry: 'CN', toCountry: 'NL', weightKg: 2, parcels: 1 });
+      expect(q.length).toBeGreaterThan(0);
+      for (const r of q) expect(Number.isInteger(r.priceCents)).toBe(true);
+    } finally {
+      if (prev === undefined) delete process.env.APP_ENVIRONMENT;
+      else process.env.APP_ENVIRONMENT = prev;
+    }
   });
 });

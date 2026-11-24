@@ -1,16 +1,18 @@
 -- 20261101000209_s0_fix_credit_eligible.sql
 -- Step S0-fix (24 Nov 2026) — Schema, functions, triggers and grants ONLY (no data updates):
 --  1. Add organizations.credit_eligible (boolean not null default false).
---  2. Customers must not be able to set credit_eligible themselves:
+--  2. Customers must not be able to set credit_eligible, kyc_status, archived_at, registration_no, etc. themselves:
 --     - Convert table-level UPDATE grant on public.organizations to column-level UPDATE grants for authenticated
---       excluding credit_eligible (and revoke UPDATE on public.organizations from anon).
+--       restricted strictly to plain profile fields: (name, country, city, business_type, website).
+--       Revoke UPDATE on public.organizations from anon.
 --     - Add BEFORE INSERT OR UPDATE trigger trg_guard_org_credit_eligible on public.organizations that rejects
 --       any change to credit_eligible unless current_setting('octopus.allow_credit_eligible_write', true) = 'true'.
---     - Add company-wide admin RPC set_org_credit_eligible(p_org, p_value, p_reason) which sets that session guard,
---       updates organizations.credit_eligible, and writes audit_log ('org.credit_eligible_changed').
+--     - Add company-wide admin RPC set_org_credit_eligible(p_org, p_value, p_reason) which sets that local session guard,
+--       updates organizations.credit_eligible, resets the session guard, and writes audit_log ('org.credit_eligible_changed').
 --  3. Update Pay-later RPCs (get_customer_credit_status, propose_customer_credit_terms, decide_customer_credit_terms,
 --     checkout_pay_later, subscribe_saas_plan) so every Pay-later path enforces organizations.credit_eligible = true
---     and returns/raises CREDIT_NOT_ELIGIBLE (removing all "Ask your account manager to set up credit" copy).
+--     (returning/raising CREDIT_NOT_ELIGIBLE when false, and NO_CREDIT_TERMS when credit_eligible = true with no active terms),
+--     removing all "Ask your account manager to set up credit" copy.
 -- Down: supabase/migrations/down/20261101000209_s0_fix_credit_eligible.down.sql
 
 -- ───────── 1. Column & Privilege Hardening on public.organizations ─────────
@@ -25,18 +27,16 @@ revoke select (credit_eligible) on public.organizations from public, anon;
 grant select (credit_eligible) on public.organizations to authenticated, service_role;
 
 -- UPDATE: replace table-level UPDATE on public.organizations with explicit column-level UPDATE grants for authenticated
--- excluding credit_eligible (and id, created_at, is_seed, buyer_code, wallet_reference).
+-- restricted strictly to plain profile fields (name, country, city, business_type, website).
+-- Excluded from authenticated UPDATE: id, registration_no, kyc_status, created_at, updated_at, archived_at,
+-- buyer_code, is_seed, wallet_reference, credit_eligible.
 revoke update on public.organizations from public, anon, authenticated;
 grant update (
   name,
   country,
   city,
   business_type,
-  registration_no,
-  website,
-  kyc_status,
-  updated_at,
-  archived_at
+  website
 ) on public.organizations to authenticated;
 grant all on public.organizations to service_role;
 
@@ -110,6 +110,8 @@ begin
          updated_at = now()
    where id = p_org;
 
+  perform set_config('octopus.allow_credit_eligible_write', '', true);
+
   perform write_audit(
     'org.credit_eligible_changed',
     'organizations',
@@ -133,7 +135,7 @@ $$;
 revoke all on function public.set_org_credit_eligible(uuid, boolean, text) from public, anon;
 grant execute on function public.set_org_credit_eligible(uuid, boolean, text) to authenticated, service_role;
 
--- ───────── 4. Enforce credit_eligible + CREDIT_NOT_ELIGIBLE across Pay-later RPCs ─────────
+-- ───────── 4. Enforce credit_eligible + CREDIT_NOT_ELIGIBLE / NO_CREDIT_TERMS across Pay-later RPCs ─────────
 
 create or replace function public.propose_customer_credit_terms(
   p_org uuid,
@@ -332,31 +334,31 @@ begin
        and d.due_at + make_interval(days => v_grace) < now()
   ) into v_overdue_past_grace;
 
-  if o.kyc_status <> 'verified' then
-    return jsonb_build_object(
-      'eligible', false,
-      'credit_eligible', true,
-      'reason', 'CREDIT_NOT_ELIGIBLE',
-      'kyc_status', o.kyc_status,
-      'credit_limit_cents', coalesce(t.credit_limit_cents, 0),
-      'unpaid_invoices_cents', v_unpaid,
-      'reserved_cents', v_reserved,
-      'available_cents', 0,
-      'net_days', coalesce(t.net_days, 30)
-    );
-  end if;
-
   if t.id is null or t.credit_limit_cents <= 0 then
     return jsonb_build_object(
       'eligible', false,
       'credit_eligible', true,
-      'reason', 'CREDIT_NOT_ELIGIBLE',
+      'reason', 'NO_CREDIT_TERMS',
       'kyc_status', o.kyc_status,
       'credit_limit_cents', 0,
       'unpaid_invoices_cents', v_unpaid,
       'reserved_cents', v_reserved,
       'available_cents', 0,
       'net_days', 30
+    );
+  end if;
+
+  if o.kyc_status <> 'verified' then
+    return jsonb_build_object(
+      'eligible', false,
+      'credit_eligible', true,
+      'reason', 'KYC_NOT_VERIFIED',
+      'kyc_status', o.kyc_status,
+      'credit_limit_cents', coalesce(t.credit_limit_cents, 0),
+      'unpaid_invoices_cents', v_unpaid,
+      'reserved_cents', v_reserved,
+      'available_cents', 0,
+      'net_days', coalesce(t.net_days, 30)
     );
   end if;
 
@@ -482,7 +484,7 @@ begin
    for update;
 
   if t.id is null or t.credit_limit_cents <= 0 then
-    raise exception 'CREDIT_NOT_ELIGIBLE: No active credit terms';
+    raise exception 'NO_CREDIT_TERMS: No active credit terms';
   end if;
 
   if t.overdue_blocked or exists (

@@ -28,7 +28,8 @@ export class YunExpressAdapter implements CarrierAdapter {
   readonly mode: 'sandbox' | 'live';
   constructor() {
     const hasLiveKeys = Boolean(
-      (process.env.YUNEXPRESS_APP_ID || process.env.YUNEXPRESS_CUSTOMER_NO) &&
+      (process.env.YUNEXPRESS_CUSTOMER_NO || process.env.YUNEXPRESS_APP_ID) &&
+      (process.env.YUNEXPRESS_API_SECRET || process.env.YUNEXPRESS_APP_KEY) &&
       process.env.YUNEXPRESS_MODE === 'live' &&
       process.env.YUNEXPRESS_SANDBOX !== 'true'
     );
@@ -44,6 +45,9 @@ export class YunExpressAdapter implements CarrierAdapter {
   }
   async priceTrial(i: RateRequest): Promise<RateQuote[]> {
     this.assertConnectedOrStaging();
+    if (process.env.APP_ENVIRONMENT !== 'staging') {
+      throw new Error('Carrier not connected');
+    }
     const base = Math.max(1, i.weightKg) * 100;
     return [
       { carrier: 'YunExpress', service: 'Global Direct Line (standard)', priceCents: Math.round(base * 6.2), days: '8–12' },
@@ -53,18 +57,30 @@ export class YunExpressAdapter implements CarrierAdapter {
   }
   async createShipment(i: ShipmentRequest): Promise<ShipmentResult> {
     this.assertConnectedOrStaging();
+    if (process.env.APP_ENVIRONMENT !== 'staging') {
+      throw new Error('Carrier not connected');
+    }
     const trackingNo = 'YT' + (Date.now().toString().slice(-10) + Math.floor(Math.random() * 1e4)).padStart(14, '0');
     return { trackingNo, labelUrl: `/api/labels/${trackingNo}?order=${encodeURIComponent(i.orderCode)}` };
   }
   async getLabel(trackingNo: string) {
     this.assertConnectedOrStaging();
+    if (process.env.APP_ENVIRONMENT !== 'staging') {
+      throw new Error('Carrier not connected');
+    }
     return `/api/labels/${trackingNo}`;
   }
   async cancel() {
     this.assertConnectedOrStaging();
+    if (process.env.APP_ENVIRONMENT !== 'staging') {
+      throw new Error('Carrier not connected');
+    }
   }
   async subscribeTracking() {
     this.assertConnectedOrStaging();
+    if (process.env.APP_ENVIRONMENT !== 'staging') {
+      throw new Error('Carrier not connected');
+    }
   }
   async parseWebhook(body: unknown): Promise<TrackingEvent[]> {
     const b = body as { events?: { id: string; tracking_no: string; status: string; description: string; location?: string; time: string }[] };
@@ -96,10 +112,13 @@ export interface PaymentAdapter {
 export class TestPaymentAdapter implements PaymentAdapter {
   readonly mode = 'test' as const;
   async createIntent(i: { amountCents: number; currency?: string; reference: string }) {
+    if (process.env.APP_ENVIRONMENT !== 'staging') throw new Error('Not available');
     const id = 'pi_test_' + crypto.randomBytes(6).toString('hex');
     return { id, checkoutUrl: `/account/wallet?test_checkout=${id}&ref=${encodeURIComponent(i.reference)}&amount=${i.amountCents}&currency=${i.currency ?? 'USD'}` };
   }
-  async refund() {}
+  async refund() {
+    if (process.env.APP_ENVIRONMENT !== 'staging') throw new Error('Not available');
+  }
   async parseWebhook(rawBody: string, headers: Headers): Promise<PaymentEvent[]> {
     if (!verifySignature(rawBody, headers.get('octopus-signature') ?? headers.get('x-signature'), process.env.PAYMENT_WEBHOOK_SECRET ?? process.env.WEBHOOK_SIGNING_SECRET ?? ''))
       throw new Error('BAD_SIGNATURE');

@@ -525,11 +525,7 @@ revoke update (
   country,
   city,
   business_type,
-  registration_no,
-  website,
-  kyc_status,
-  updated_at,
-  archived_at
+  website
 ) on public.organizations from authenticated;
 
 alter table public.organizations drop column if exists credit_eligible;

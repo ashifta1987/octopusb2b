@@ -1,5 +1,7 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { isStaging } from '@/lib/core/account';
 import { requireDropshipV2Staff } from '@/lib/dropship-staff';
 import { UiKitClient } from './ui-kit-client';
 
@@ -9,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 async function GuardedUiKit() {
+  if (!isStaging()) notFound();
   await requireDropshipV2Staff(false, '/office/dropship/ui-kit');
   return <UiKitClient />;
 }

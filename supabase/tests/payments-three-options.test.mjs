@@ -61,6 +61,7 @@ const makeUser = async (email, role) => {
 try {
   await db.query('begin');
 
+  const adminUser = await makeUser('pay-admin@example.com', 'admin');
   const finMaker = await makeUser('pay-fin-maker@example.com', 'finance');
   const finApprover = await makeUser('pay-fin-approver@example.com', 'finance');
   const custA = await makeUser('pay-custa@example.com');
@@ -73,6 +74,9 @@ try {
     `insert into organizations(name, country, kyc_status, is_seed) values ('TEST · Pay Org B', 'DE', 'not_started', true) returning id`
   )).id;
   await db.query(`insert into org_members(org_id, user_id, member_role) values ($1, $2, 'owner'), ($3, $4, 'owner')`, [orgA, custA, orgB, custB]);
+  await as(adminUser, 'aal2');
+  await db.query(`select set_org_credit_eligible($1, true, 'E2E payment test org')`, [orgA]);
+  await db.query('reset role');
 
   const divSRC = (await one(`select id from divisions where code = 'SRC'`)).id;
   const divDS = (await one(`select id from divisions where code = 'DS'`)).id;
@@ -183,10 +187,10 @@ try {
   ok(approvedTerms.status === 'active', '4.4 Second Finance user activates credit terms');
   await db.query('reset role');
 
-  // Unverified KYC orgB cannot use Pay later even if we tried
+  // Non-eligible / unverified KYC orgB cannot use Pay later
   await as(custB);
   const statusB = (await one(`select get_customer_credit_status($1, $2) as s`, [orgB, divSRC])).s;
-  ok(statusB.eligible === false && /KYC/.test(statusB.reason ?? ''), '4.5 Unverified KYC company is ineligible for Pay later');
+  ok(statusB.eligible === false && statusB.reason === 'CREDIT_NOT_ELIGIBLE', '4.5 Non-eligible / unverified company returns CREDIT_NOT_ELIGIBLE for Pay later');
   await db.query('reset role');
 
   // ── 5. Pay-Later Timing: Reserve at Order Confirmation, Limit Check, Invoice at Shipment, Release on Cancel ──

@@ -6,7 +6,7 @@ import { createAdminClient, createClient } from '@/lib/supabase/server';
 
 export async function confirmMockPaymentAction(formData: FormData) {
   if (process.env.APP_ENVIRONMENT !== 'staging') {
-    return { ok: false, error: 'Mock provider is available on staging only.' };
+    return { ok: false, error: 'Not available' };
   }
 
   const checkoutId = String(formData.get('checkout_id') ?? '').trim();

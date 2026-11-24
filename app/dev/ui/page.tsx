@@ -31,7 +31,7 @@ const K = ({ children }: { children: React.ReactNode }) => <div className="k mb-
 
 /** ADDON-44-B — every shared component in every state. Staging and local only (404 on live). */
 export default function DevUiPage() {
-  if (process.env.NODE_ENV === 'production' && !isStaging()) notFound();
+  if (!isStaging()) notFound();
   return (
     <main className="pb-24">
       <AnnouncementBar text="Make My Brand: your logo on verified products, stocked in our warehouse, shipped worldwide." linkText="See how it works →" href="/make-my-brand" />

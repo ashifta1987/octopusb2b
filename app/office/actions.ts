@@ -155,11 +155,11 @@ const NEXT_SHIP: Record<string, { status: string; text: string; loc: string }> =
   out_for_delivery: { status: 'delivered', text: 'Delivered — signed by consignee', loc: 'Destination city' },
 };
 
-/** Sandbox only: append the next tracking event (or an exception) to a shipment. */
+/** Staging only: append the next tracking event (or an exception) to a shipment. */
 export async function simulateTracking(shipmentId: string, kind: 'next' | 'exception'): Promise<Result> {
+  if (process.env.APP_ENVIRONMENT !== 'staging') return fail('Not available');
   const g = await actionSession('orders', 'edit');
   if ('error' in g) return fail(g.error);
-  if (process.env.APP_ENVIRONMENT !== 'staging' || getCarrier().mode !== 'sandbox') return fail('Carrier not connected');
   const sb = await createClient();
   const { data: s } = await sb.from('shipments').select('id, org_id, order_id, status, tracking_no').eq('id', shipmentId).maybeSingle();
   if (!s) return fail('Shipment not found');

@@ -9,6 +9,7 @@ import { ShipmentCreator } from '@/components/backoffice/shipment-creator';
 import { one } from '@/components/backoffice/server-utils';
 import { fmtDate, COUNTRY_NAMES } from '@/lib/format';
 import { cn } from '@/lib/cn';
+import { isStaging } from '@/lib/core/account';
 import { priceTrial, createShipment, simulateTracking } from '../actions';
 import { getDivisionScope } from '@/lib/divisions/scope';
 
@@ -23,6 +24,9 @@ export default async function Shipping({ searchParams }: { searchParams: Promise
   const { order: selId } = await searchParams;
   const sb = await createClient();
   const carrier = getCarrier();
+  const staging = isStaging();
+  const carrierStatusLabel = carrier.mode === 'live' ? 'Production' : staging ? 'Sandbox mode' : 'Carrier not connected';
+  const carrierDotClass = carrier.mode === 'live' ? 'bg-ok' : staging ? 'bg-warn' : 'bg-bad';
   const [{ data: readyRows }, { data: ships }] = await Promise.all([
     (scope.all ? sb.from('orders').select(READY_COLS) : sb.from('orders').select(READY_COLS).eq('division_id', scope.division.id)).eq('status', 'ready_to_ship').order('updated_at').limit(100),
     (scope.all ? sb.from('shipments').select(SHIP_COLS) : sb.from('shipments').select(SHIP_COLS).eq('division_id', scope.division.id)).order('created_at', { ascending: false }).limit(50),
@@ -46,7 +50,7 @@ export default async function Shipping({ searchParams }: { searchParams: Promise
       <PageHeader title={sel ? `Create shipment with YunExpress · ${sel.code}` : 'Shipping'}
         eyebrow={sel ? <nav aria-label="Breadcrumb" className="text-sm text-muted"><Link href="/office/shipping">Shipping</Link> / {sel.code}</nav> : undefined}
         subtitle={sel ? undefined : 'Paid orders ready to ship, YunExpress price trial and labels, live shipments and exceptions.'}
-        actions={<span className="inline-flex items-center gap-2 card px-4 py-2 text-sm"><span className={cn('w-2 h-2 rounded-full', carrier.mode === 'live' ? 'bg-ok' : 'bg-warn')} aria-hidden /><b>YunExpress</b> · {carrier.mode === 'live' ? 'Production' : 'Sandbox mode'}</span>}
+        actions={<span className="inline-flex items-center gap-2 card px-4 py-2 text-sm" data-testid="carrier-connection-badge"><span className={cn('w-2 h-2 rounded-full', carrierDotClass)} aria-hidden /><b>YunExpress</b> · {carrierStatusLabel}</span>}
       />
 
       {sel ? (
@@ -142,7 +146,7 @@ export default async function Shipping({ searchParams }: { searchParams: Promise
                 <td className="td">
                   <div className="flex flex-wrap gap-2 justify-end">
                     {x.label_url && <a href={x.label_url} target="_blank" rel="noopener" className="btn btn-ghost btn-sm">Label</a>}
-                    {carrier.mode === 'sandbox' && canEdit && !final && <>
+                    {staging && canEdit && !final && <>
                       <RunButton action={simulateTracking.bind(null, x.id, 'next')}>Simulate event</RunButton>
                       {x.status !== 'exception' && <RunButton className="btn btn-ghost btn-sm text-bad" action={simulateTracking.bind(null, x.id, 'exception')}>Exception</RunButton>}
                     </>}
@@ -152,7 +156,7 @@ export default async function Shipping({ searchParams }: { searchParams: Promise
             );
           })}
         </Table>
-        {carrier.mode === 'sandbox' && <p className="px-6 py-3 text-xs text-muted border-t border-line">Sandbox: “Simulate event” appends the next tracking event (picked up → in transit → out for delivery → delivered). Live mode uses YunExpress webhooks with an hourly cron fallback.</p>}
+        {staging && <p className="px-6 py-3 text-xs text-muted border-t border-line">Staging only: “Simulate event” appends the next tracking event (picked up → in transit → out for delivery → delivered). Live mode uses YunExpress webhooks with an hourly cron fallback.</p>}
       </Card>
     </>
   );

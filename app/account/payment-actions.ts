@@ -147,13 +147,15 @@ export async function confirmPayLaterAction(input: {
       ok: false,
       error: /CREDIT_NOT_ELIGIBLE/.test(error.message)
         ? 'CREDIT_NOT_ELIGIBLE'
-        : /CREDIT_LIMIT_EXCEEDED/.test(error.message)
-          ? 'This order exceeds your available credit limit.'
-          : /KYC_NOT_VERIFIED/.test(error.message)
-            ? 'Pay later requires verified company KYC.'
-            : /CREDIT_OVERDUE_BLOCKED/.test(error.message)
-              ? 'Pay-later is paused because an invoice is overdue past the grace period.'
-              : error.message,
+        : /NO_CREDIT_TERMS/.test(error.message)
+          ? 'NO_CREDIT_TERMS'
+          : /CREDIT_LIMIT_EXCEEDED/.test(error.message)
+            ? 'This order exceeds your available credit limit.'
+            : /KYC_NOT_VERIFIED/.test(error.message)
+              ? 'Pay later requires verified company KYC.'
+              : /CREDIT_OVERDUE_BLOCKED/.test(error.message)
+                ? 'Pay-later is paused because an invoice is overdue past the grace period.'
+                : error.message,
     };
   }
 

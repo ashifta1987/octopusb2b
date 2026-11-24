@@ -1,7 +1,9 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { can, requireStaffOrManager } from '@/lib/auth';
 import { CustomerOneApp } from '@/components/admin/customer-one-app';
+import { PageSkeleton } from '@/components/shell/skeletons';
 import { createClient } from '@/lib/supabase/server';
 import { withHiddenColumns } from '@/components/backoffice/hidden-columns';
 import { Card, EmptyState, PageHeader, Stat, StatusBadge } from '@/components/ui';
@@ -15,7 +17,7 @@ import { setVip } from '../actions';
 export const metadata = { title: 'Customer' };
 
 /** Customer detail with the dedicated account-manager card (reassign with reason) and the VIP flag (SPEC §20.3). */
-export default async function CustomerDetail({ params }: { params: Promise<{ id: string }> }) {
+async function CustomerDetailContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const s = await requireStaffOrManager(`/admin/customers/${id}`, ['customers', 'view']); // managers: RLS shows only their own customers
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
@@ -160,5 +162,13 @@ export default async function CustomerDetail({ params }: { params: Promise<{ id:
       </div>
       <CustomerOneApp orgId={id} session={s} />
     </>
+  );
+}
+
+export default function CustomerDetail(props: { params: Promise<{ id: string }> }) {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <CustomerDetailContent {...props} />
+    </Suspense>
   );
 }
