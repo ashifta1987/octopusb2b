@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { pgClient, createTempCustomer, customerLogin, purgeTestOrgs, type TempCustomer } from './helpers/customer';
+import { adminClient, pgClient, createTempCustomer, customerLogin, purgeTestOrgs, type TempCustomer } from './helpers/customer';
 import { createTempStaff, deleteTempStaff, staffLogin, type TempStaff } from './helpers/staff';
 import { assertStagingOrThrow } from '../../scripts/lib-staging-guard.mjs';
 
@@ -139,12 +139,19 @@ test('My account: the Dropshipping tile and tab say Coming soon with the sign-up
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/dropship-account-tile-${tag}.png`, caret: 'initial' });
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.goto('/account/dropship');
-  await expect(page.getByTestId('dropship-coming-soon')).toContainText('Coming soon');
-  await expect(page.getByRole('main')).not.toContainText('Start Dropshipping');
-  await expect(page.getByRole('main')).not.toContainText('upload orders as a sheet');
-  await expect(page.getByTestId('browse-catalogue')).toHaveCount(0);
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/dropship-account-tab-desktop.png`, caret: 'initial' });
+  await adminClient()
+    .from('site_settings')
+    .upsert({ key: 'dropship_v2_ui', value: false, description: 'Coming soon gate test' });
+  try {
+    await page.goto('/account/dropship');
+    await expect(page.getByTestId('dropship-coming-soon')).toContainText('Coming soon');
+    await expect(page.getByRole('main')).not.toContainText('Start Dropshipping');
+    await expect(page.getByRole('main')).not.toContainText('upload orders as a sheet');
+    await expect(page.getByTestId('browse-catalogue')).toHaveCount(0);
+    if (SHOTS) await page.screenshot({ path: `${SHOTS}/dropship-account-tab-desktop.png`, caret: 'initial' });
+  } finally {
+    await adminClient().from('site_settings').delete().eq('key', 'dropship_v2_ui');
+  }
   // a signed-in customer without Dropshipping switched on also lands on the sign-up from the old link
   await page.goto('/go/dropship');
   await expect(page).toHaveURL(/\/request\/dropship#notify$/);

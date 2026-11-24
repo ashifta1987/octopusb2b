@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   if (s?.org) {
     const sb = await createClient();
     const { data } = await sb.from('company_services').select('status').eq('org_id', s.org.id).eq('service', 'dropship').maybeSingle();
-    if (data && ['on', 'trial'].includes(data.status as string)) to = '/account/dropship/catalogue';
+    if (data && data.status === 'on') to = '/account/dropship/catalogue';
   }
   return NextResponse.redirect(new URL(to, req.url));
 }

@@ -104,11 +104,12 @@ export function AccountShell({ session, ctx, newQuotes, dropshipV2Ui = false, mo
     </div>
   );
 
-  const dropshipEnabled = Boolean(ctx?.services?.dropship && serviceOn(ctx.services.dropship));
-
+  // Step 4: When dropship_v2_ui is ON, /account/dropship renders inside DropshipMerchantShell
+  // (Activate for non-enabled orgs, Dashboard/sub-routes for active, paused, and closed merchants).
+  // When dropship_v2_ui is OFF (Live today), non-enabled & enabled customers keep AccountShell + "Coming soon".
   return (
     <AccountShellSwitcher
-      v2ShellEnabled={Boolean(dropshipV2Ui && dropshipEnabled)}
+      v2ShellEnabled={Boolean(dropshipV2Ui && session.org)}
       userName={name}
       initials={initials || 'ME'}
       unreadCount={ctx?.unread ?? 0}

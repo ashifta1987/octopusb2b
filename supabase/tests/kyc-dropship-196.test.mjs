@@ -132,6 +132,8 @@ try {
 
   // ── 196 down → up identical ──
   await db.query('begin');
+  const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
+  const later = await appliedAfter(db, '20261101000214_step3_merchant_catalogue_requests_and_samples.sql');
   const snap = async () => JSON.stringify({
     pol: await all(`select tablename, policyname, roles, cmd, qual, with_check from pg_policies where schemaname = 'public' order by 1, 2`),
     tg: await all(`select table_name, grantee, privilege_type from information_schema.role_table_grants where table_schema = 'public' and grantee in ('anon', 'authenticated', 'service_role') order by 1, 2, 3`),
@@ -141,12 +143,14 @@ try {
   });
   const after = await snap();
   const fn195 = await one(`select md5(prosrc) m from pg_proc where proname = 'review_kyc'`);
+  await unwind(db, later);
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000196_kyc_more_info_dropship_branding.down.sql', 'utf8'));
   ok(!(await one(`select to_regclass('public.dropship_seller_profiles') t`)).t, 'down: table removed');
   const src = (await one(`select prosrc from pg_proc where proname = 'review_kyc'`)).prosrc;
   const m195 = fs.readFileSync('supabase/migrations/20261101000195_customer_safe_reads.sql', 'utf8').match(/create or replace function review_kyc[\s\S]*?as \$\$([\s\S]*?)\$\$;/)[1];
   ok(src === m195 && src !== undefined && fn195.m !== null, 'down: review_kyc is exactly the 195 version again');
   await db.query(fs.readFileSync('supabase/migrations/20261101000196_kyc_more_info_dropship_branding.sql', 'utf8'));
+  await reapply(db, later);
   const again = await snap();
   if (again !== after) { const a = JSON.parse(after), b = JSON.parse(again); for (const key of Object.keys(a)) if (JSON.stringify(a[key]) !== JSON.stringify(b[key])) { const sa = new Set(a[key].map((x) => JSON.stringify(x))); console.log('  diff in', key, b[key].filter((x) => !sa.has(JSON.stringify(x))).slice(0, 5)); } }
   ok(again === after, 'up again: identical policies, grants, functions and triggers');

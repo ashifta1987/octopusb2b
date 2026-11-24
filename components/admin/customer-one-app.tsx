@@ -40,7 +40,10 @@ export async function CustomerOneApp({ orgId, session }: { orgId: string; sessio
                 <div className="grid grid-cols-2 gap-2">
                   <div><label htmlFor={`svc-${k}`} className="label">{label}</label>
                     <select id={`svc-${k}`} name="status" defaultValue={(r?.status as string) ?? 'off'} className="input" disabled={!canServices}>
-                      <option value="off">Off</option><option value="trial">Trial</option><option value="on">On</option><option value="paused">Paused</option>
+                      <option value="off">Off</option>
+                      {k !== 'dropship' && <option value="trial">Trial</option>}
+                      <option value="on">On</option>
+                      <option value="paused">Paused</option>
                     </select></div>
                   <div><label htmlFor={`plan-${k}`} className="label">Plan</label><input id={`plan-${k}`} name="plan" defaultValue={(r?.plan as string) ?? ''} className="input" disabled={!canServices} placeholder="e.g. Growth" /></div>
                 </div>

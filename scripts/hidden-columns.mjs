@@ -79,6 +79,8 @@ export const HIDDEN_COLUMNS = {
   // migration 212: dropship store_orders & store_order_items — internal stage, rate/fee/duty version FKs, item_id, trace/test flags stay internal
   store_orders: ['actual_pack_weight_g', 'created_by', 'duty_rate_version_id', 'fee_version_id', 'hold_reason', 'is_test', 'shipping_rate_card_id', 'staff_stage', 'trace_id'],
   store_order_items: ['item_id'],
+  // migration 215: saas_billing_settings — internal maker-checker proposal/approval columns stay hidden
+  saas_billing_settings: ['approved_at', 'approved_by', 'pending_enabled', 'pending_scheduled_start', 'proposal_reason', 'proposed_at', 'proposed_by'],
 };
 
 // ── Run directly (node scripts/hidden-columns.mjs) to compare this list with the STAGING database grants. ──

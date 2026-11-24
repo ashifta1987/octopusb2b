@@ -55,7 +55,10 @@ export async function saveCustomerLimits(orgId: string, fd: FormData): Promise<R
 
 export async function setService(orgId: string, fd: FormData): Promise<Result> {
   if (!(await staff())) return fail('Please sign in again.');
-  const service = String(fd.get('service') ?? ''); const status = String(fd.get('status') ?? ''); const plan = String(fd.get('plan') ?? '').trim() || null;
+  const service = String(fd.get('service') ?? '');
+  const rawStatus = String(fd.get('status') ?? '');
+  const status = service === 'dropship' && rawStatus === 'trial' ? 'on' : rawStatus;
+  const plan = String(fd.get('plan') ?? '').trim() || null;
   if (!['sourcing', 'dropship', 'warehouse', 'brand'].includes(service) || !['off', 'trial', 'on', 'paused'].includes(status)) return fail('Choose a service and a status.');
   const sb = await createClient();
   const { error } = await sb.rpc('set_company_service', { p_org: orgId, p_service: service, p_status: status, p_plan: plan });

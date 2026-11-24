@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getSiteContent } from '@/lib/content';
 import { requireCustomer } from '@/lib/auth';
-import { getAccountContext, isStaging, serviceOn } from '@/lib/core/account';
+import { getAccountContext, isStaging, dropshipEverEnabled, dropshipOn } from '@/lib/core/account';
 
 /**
  * Dropshipping catalogue v2 + Phase 2 Step 3 (migrations 204, 205, 211–214).
@@ -204,10 +204,10 @@ export async function dropshipSettings() {
   const catMargin: Record<string, number> =
     catMarginRaw && typeof catMarginRaw === 'object' && !Array.isArray(catMarginRaw)
       ? Object.fromEntries(
-          Object.entries(catMarginRaw as Record<string, unknown>)
-            .map(([k, v]) => [k, Math.round(Number(v))])
-            .filter(([, v]) => Number.isFinite(v) && (v as number) >= 0),
-        )
+        Object.entries(catMarginRaw as Record<string, unknown>)
+          .map(([k, v]) => [k, Math.round(Number(v))])
+          .filter(([, v]) => Number.isFinite(v) && (v as number) >= 0),
+      )
       : {};
   const supRaw = settings['dropship.supported_countries'];
   const supportedCountries: string[] = Array.isArray(supRaw)
@@ -241,26 +241,40 @@ export async function dropshipSettings() {
  * Default: OFF on live, ON on staging (unless explicitly set in site_settings.dropship_v2_ui).
  */
 export async function isDropshipV2UiEnabled(): Promise<boolean> {
-  const { settings } = await getSiteContent();
-  if (typeof settings['dropship_v2_ui'] === 'boolean') {
-    return settings['dropship_v2_ui'] as boolean;
+  const sb = await createClient();
+  const { data } = await sb
+    .from('site_settings')
+    .select('value')
+    .eq('key', 'dropship_v2_ui')
+    .maybeSingle();
+  if (typeof data?.value === 'boolean') {
+    return data.value;
   }
   return isStaging();
 }
 
 /**
- * Server-side guard for /account/dropship/* placeholder/v2 sub-routes:
- * Any customer whose organization does not have dropship switched on ('on'/'trial')
- * OR when dropship_v2_ui is OFF is redirected to /account/dropship ("Coming soon").
+ * Server-side guard for /account/dropship/* v2 sub-routes:
+ *  · When dropship_v2_ui is OFF (Live today), redirects to /account/dropship ("Coming soon").
+ *  · Any customer whose organization has NEVER had dropship enabled is redirected to /account/dropship (Activate).
+ *  · Active ('on'), paused ('paused'), and closed ('off' after started_at) merchants can open ongoing views
+ *    (orders in progress, wallet, withdrawals, statements/invoices, support, onboarding, data export),
+ *    while new-activity mutations enforce DROPSHIP_PAUSED in the DB & actions (Step 4 Correction 1).
  */
-export async function requireDropshipV2Merchant(next = '/account/dropship') {
+export async function requireDropshipV2Merchant(
+  next = '/account/dropship',
+  opts: { requireActive?: boolean } = {},
+) {
   const s = await requireCustomer(next);
   if (!s.org) redirect('/account/dropship');
   const [ctx, v2On] = await Promise.all([
     getAccountContext(s.org.id),
     isDropshipV2UiEnabled(),
   ]);
-  if (!v2On || !serviceOn(ctx.services.dropship)) {
+  if (!v2On || !dropshipEverEnabled(ctx.services.dropship)) {
+    redirect('/account/dropship');
+  }
+  if (opts.requireActive && !dropshipOn(ctx.services.dropship)) {
     redirect('/account/dropship');
   }
   return { session: s, ctx };
@@ -439,9 +453,9 @@ export async function getDropshipProduct(id: string, country: string): Promise<D
     variants: mapVariants(r.variants),
     price_tiers: Array.isArray(r.price_tiers)
       ? (r.price_tiers as Record<string, unknown>[]).map((t) => ({
-          min_qty: Number(t.min_qty),
-          unit_price_cents: Number(t.unit_price_cents),
-        }))
+        min_qty: Number(t.min_qty),
+        unit_price_cents: Number(t.unit_price_cents),
+      }))
       : [],
     routes: Array.isArray(r.routes) ? (r.routes as Record<string, unknown>[]).map(mapRoute) : [],
     all_country_routes: Array.isArray(r.all_country_routes)
@@ -580,4 +594,149 @@ export async function importList(orgId: string): Promise<Map<string, ImportItem>
       },
     ]),
   );
+}
+
+export type DropshipAccessRequestSummary = {
+  id: string;
+  store_platform: 'shopify' | 'woocommerce' | 'wix';
+  store_address: string | null;
+  expected_orders_band: string;
+  countries: string[];
+  status: 'pending' | 'approved' | 'rejected';
+  decision_reason: string | null;
+  created_at: string;
+  decided_at: string | null;
+};
+
+export type DropshipAccessState = {
+  org_id: string;
+  org_name: string;
+  org_country: string | null;
+  kyc_status: string;
+  dropship_status: 'on' | 'paused' | 'off';
+  ever_enabled: boolean;
+  status_reason: string | null;
+  supported_countries: string[];
+  saas_billing: { enabled: boolean; trial_days: number; grace_days: number };
+  latest_request: DropshipAccessRequestSummary | null;
+};
+
+export type DropshipSellerProfileRow = {
+  brand_name: string;
+  return_name: string;
+  return_line1: string;
+  return_line2: string | null;
+  return_city: string;
+  return_region: string | null;
+  return_postal_code: string | null;
+  return_country: string;
+  status: 'pending' | 'approved' | 'rejected';
+  customer_message: string | null;
+  reviewed_at: string | null;
+  updated_at: string;
+};
+
+export type DropshipOnboardingState = {
+  org_id: string;
+  org_name: string;
+  org_country: string | null;
+  kyc_status: string;
+  dropship_status: 'on' | 'paused' | 'off';
+  status_reason: string | null;
+  supported_countries: string[];
+  markets: { country: string; locked_by_staff: boolean }[];
+  wallet_balance_cents: number;
+  saas_billing: { enabled: boolean; trial_days: number; grace_days: number };
+  seller_profile: DropshipSellerProfileRow | null;
+  store_address_hint: string | null;
+};
+
+export async function getMyDropshipAccessState(): Promise<DropshipAccessState | null> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc('get_my_dropship_access_state');
+  if (error || !data) return null;
+  const r = data as Record<string, unknown>;
+  const sbRow = (r.saas_billing ?? {}) as Record<string, unknown>;
+  const req = r.latest_request as Record<string, unknown> | null;
+  return {
+    org_id: String(r.org_id),
+    org_name: String(r.org_name ?? ''),
+    org_country: r.org_country ? String(r.org_country) : null,
+    kyc_status: String(r.kyc_status ?? 'not_started'),
+    dropship_status: (r.dropship_status as 'on' | 'paused' | 'off') ?? 'off',
+    ever_enabled: Boolean(r.ever_enabled),
+    status_reason: r.status_reason ? String(r.status_reason) : null,
+    supported_countries: Array.isArray(r.supported_countries)
+      ? (r.supported_countries as string[]).map((c) => String(c).toUpperCase())
+      : ['AE', 'SA', 'GB', 'US', 'DE'],
+    saas_billing: {
+      enabled: Boolean(sbRow.enabled),
+      trial_days: Number(sbRow.trial_days ?? 30),
+      grace_days: Number(sbRow.grace_days ?? 7),
+    },
+    latest_request: req
+      ? {
+        id: String(req.id),
+        store_platform: (req.store_platform as 'shopify' | 'woocommerce' | 'wix') ?? 'shopify',
+        store_address: req.store_address ? String(req.store_address) : null,
+        expected_orders_band: String(req.expected_orders_band ?? 'Under 100'),
+        countries: Array.isArray(req.countries) ? (req.countries as string[]) : [],
+        status: (req.status as 'pending' | 'approved' | 'rejected') ?? 'pending',
+        decision_reason: req.decision_reason ? String(req.decision_reason) : null,
+        created_at: String(req.created_at),
+        decided_at: req.decided_at ? String(req.decided_at) : null,
+      }
+      : null,
+  };
+}
+
+export async function getMyDropshipOnboardingState(): Promise<DropshipOnboardingState> {
+  const sb = await createClient();
+  const { data, error } = await sb.rpc('get_my_dropship_onboarding_state');
+  if (error || !data) {
+    throw new Error(error?.message ?? 'Could not load onboarding state');
+  }
+  const r = data as Record<string, unknown>;
+  const sbRow = (r.saas_billing ?? {}) as Record<string, unknown>;
+  const sp = r.seller_profile as Record<string, unknown> | null;
+  return {
+    org_id: String(r.org_id),
+    org_name: String(r.org_name ?? ''),
+    org_country: r.org_country ? String(r.org_country) : null,
+    kyc_status: String(r.kyc_status ?? 'not_started'),
+    dropship_status: (r.dropship_status as 'on' | 'paused' | 'off') ?? 'off',
+    status_reason: r.status_reason ? String(r.status_reason) : null,
+    supported_countries: Array.isArray(r.supported_countries)
+      ? (r.supported_countries as string[]).map((c) => String(c).toUpperCase())
+      : ['AE', 'SA', 'GB', 'US', 'DE'],
+    markets: Array.isArray(r.markets)
+      ? (r.markets as Record<string, unknown>[]).map((m) => ({
+        country: String(m.country),
+        locked_by_staff: Boolean(m.locked_by_staff),
+      }))
+      : [],
+    wallet_balance_cents: Number(r.wallet_balance_cents ?? 0),
+    saas_billing: {
+      enabled: Boolean(sbRow.enabled),
+      trial_days: Number(sbRow.trial_days ?? 30),
+      grace_days: Number(sbRow.grace_days ?? 7),
+    },
+    seller_profile: sp
+      ? {
+        brand_name: String(sp.brand_name ?? ''),
+        return_name: String(sp.return_name ?? ''),
+        return_line1: String(sp.return_line1 ?? ''),
+        return_line2: sp.return_line2 ? String(sp.return_line2) : null,
+        return_city: String(sp.return_city ?? ''),
+        return_region: sp.return_region ? String(sp.return_region) : null,
+        return_postal_code: sp.return_postal_code ? String(sp.return_postal_code) : null,
+        return_country: String(sp.return_country ?? ''),
+        status: (sp.status as 'pending' | 'approved' | 'rejected') ?? 'pending',
+        customer_message: sp.customer_message ? String(sp.customer_message) : null,
+        reviewed_at: sp.reviewed_at ? String(sp.reviewed_at) : null,
+        updated_at: String(sp.updated_at ?? ''),
+      }
+      : null,
+    store_address_hint: r.store_address_hint ? String(r.store_address_hint) : null,
+  };
 }

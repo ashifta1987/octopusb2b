@@ -244,7 +244,10 @@ test('Merchant shell gating, /account/dropship/wallet inside shell, 1280px & 390
   page,
   browser,
 }) => {
-  // 1. Non-enabled customer sees today's AccountShell + Coming soon, and is redirected from sub-routes
+  // 1a. When dropship_v2_ui is OFF (Live mode), non-enabled customer sees AccountShell + Coming soon, and is redirected from sub-routes
+  await adminClient()
+    .from('site_settings')
+    .upsert({ key: 'dropship_v2_ui', value: false, description: 'U1 off check' });
   const offCtx = await browser.newContext({ viewport: { width: 1280, height: 1000 } });
   const offPage = await offCtx.newPage();
   await customerLogin(offPage, nonEnabledBuyer!, '/account');
@@ -255,6 +258,13 @@ test('Merchant shell gating, /account/dropship/wallet inside shell, 1280px & 390
   await expect(offPage.getByTestId('dropship-merchant-shell')).toHaveCount(0);
   await expect(offPage.getByTestId('account-tabs')).toBeVisible();
   await expect(offPage.getByTestId('dropship-coming-soon')).toBeVisible();
+  await offPage.goto('/account/dropship/orders');
+  await expect(offPage).toHaveURL(/\/account\/dropship$/);
+
+  // 1b. When dropship_v2_ui is ON (Staging mode), non-enabled customer sees Activate ("Start dropshipping") and is redirected from sub-routes
+  await adminClient().from('site_settings').delete().eq('key', 'dropship_v2_ui');
+  await offPage.goto('/account/dropship');
+  await expect(offPage.getByTestId('dropship-activate')).toBeVisible();
   await offPage.goto('/account/dropship/orders');
   await expect(offPage).toHaveURL(/\/account\/dropship$/);
   await offCtx.close();
@@ -353,7 +363,7 @@ test('Merchant shell gating, /account/dropship/wallet inside shell, 1280px & 390
   // Verify every merchant placeholder route loads with its page header
   await page.setViewportSize({ width: 1280, height: 1000 });
   const merchantRoutes: [string, string][] = [
-    ['/account/dropship/onboarding', 'Onboarding'],
+    ['/account/dropship/onboarding', 'Set up Octopus Dropship'],
     ['/account/dropship/landed-cost', 'Landed cost calculator'],
     ['/account/dropship/requests', 'Request a product'],
     ['/account/dropship/sample', 'Order a sample'],

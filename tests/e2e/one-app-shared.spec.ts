@@ -43,8 +43,8 @@ test('My account home: service tabs, waiting for you, account manager, wallet wi
   await expect(drop.getByTestId('launch-notify-privacy')).toContainText("We’ll only use your email to tell you when dropshipping launches.");
   await shot(page, '01-account-home-desktop');
   await page.getByTestId('account-tabs').getByRole('link', { name: 'Dropshipping' }).click();
-  await expect(page.getByTestId('dropship-coming-soon')).toBeVisible();
-  await expect(page.getByTestId('dropship-coming-soon')).not.toContainText('Start Dropshipping');
+  await expect(page.getByTestId('dropship-activate')).toBeVisible();
+  await expect(page.getByTestId('dropship-activate')).not.toContainText('Start Dropshipping');
   // the other off services still offer Start
   await page.goto('/account');
   await page.getByTestId('service-warehouse').getByRole('link', { name: /Start/ }).click();

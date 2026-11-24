@@ -464,7 +464,12 @@ export async function submitDropshipSampleOrderAction(input: {
   });
 
   if (error) {
-    return { ok: false, error: error.message.replace(/^[A-Z_]+:\s*/, '') };
+    const codeMatch = error.message.match(/^([A-Z0-9_]+):?/);
+    return {
+      ok: false,
+      code: codeMatch ? codeMatch[1] : undefined,
+      error: error.message.replace(/^[A-Z0-9_]+:\s*/, ''),
+    };
   }
 
   const res = (data ?? {}) as Record<string, unknown>;
@@ -488,4 +493,132 @@ export async function submitDropshipSampleOrderAction(input: {
     totalCents: Number(res.total_cents ?? 0),
     merchantStatus: String(res.merchant_status ?? 'processing'),
   };
+}
+
+// ───────── Step 4: Access request & Onboarding actions ─────────
+export async function submitDropshipAccessRequestAction(formData: FormData): Promise<{
+  ok: boolean;
+  code?: string;
+  error?: string;
+}> {
+  const s = await requireCustomer('/account/dropship');
+  if (!s.org) return { ok: false, error: 'Complete your company profile first.' };
+
+  const storePlatform = String(formData.get('store_platform') ?? 'shopify').trim().toLowerCase();
+  const storeAddress = String(formData.get('store_address') ?? '').trim() || null;
+  const expectedOrdersBand = String(formData.get('expected_orders_band') ?? 'Under 100').trim();
+  const countries = formData
+    .getAll('countries')
+    .map((c) => String(c).toUpperCase().trim())
+    .filter((c) => /^[A-Z]{2}$/.test(c));
+
+  if (countries.length === 0) {
+    return { ok: false, code: 'COUNTRY_REQUIRED', error: 'Choose at least one selling country.' };
+  }
+
+  const sb = await createClient();
+  const { error } = await sb.rpc('request_dropship_access', {
+    p_store_platform: storePlatform,
+    p_store_address: storeAddress,
+    p_expected_orders_band: expectedOrdersBand,
+    p_countries: countries,
+  });
+
+  if (error) {
+    const codeMatch = error.message.match(/^([A-Z0-9_]+):?/);
+    return {
+      ok: false,
+      code: codeMatch ? codeMatch[1] : undefined,
+      error: error.message.replace(/^[A-Z0-9_]+:\s*/, ''),
+    };
+  }
+
+  revalidatePath('/account/dropship');
+  return { ok: true };
+}
+
+export async function saveOnboardingMarketsAction(formData: FormData): Promise<{
+  ok: boolean;
+  code?: string;
+  error?: string;
+}> {
+  await requireDropshipV2Merchant('/account/dropship/onboarding');
+  const countries = formData
+    .getAll('countries')
+    .map((c) => String(c).toUpperCase().trim())
+    .filter((c) => /^[A-Z]{2}$/.test(c));
+
+  if (countries.length === 0) {
+    return { ok: false, code: 'MARKETS_EMPTY', error: 'Choose at least one selling country.' };
+  }
+
+  const sb = await createClient();
+  const { error } = await sb.rpc('set_dropship_markets', {
+    p_countries: countries,
+    p_org_id: null,
+    p_lock: null,
+  });
+
+  if (error) {
+    const codeMatch = error.message.match(/^([A-Z0-9_]+):?/);
+    return {
+      ok: false,
+      code: codeMatch ? codeMatch[1] : undefined,
+      error: error.message.replace(/^[A-Z0-9_]+:\s*/, ''),
+    };
+  }
+
+  revalidatePath('/account/dropship/onboarding');
+  revalidatePath('/account/dropship/catalogue');
+  revalidatePath('/account/dropship');
+  return { ok: true };
+}
+
+export async function saveDropshipSellerProfileAction(formData: FormData): Promise<{
+  ok: boolean;
+  code?: string;
+  status?: string;
+  error?: string;
+}> {
+  await requireDropshipV2Merchant('/account/dropship/onboarding');
+
+  const brandName = String(formData.get('brand_name') ?? '').trim();
+  const returnName = String(formData.get('return_name') ?? '').trim();
+  const returnLine1 = String(formData.get('return_line1') ?? '').trim();
+  const returnLine2 = String(formData.get('return_line2') ?? '').trim() || null;
+  const returnCity = String(formData.get('return_city') ?? '').trim();
+  const returnRegion = String(formData.get('return_region') ?? '').trim() || null;
+  const returnPostalCode = String(formData.get('return_postal_code') ?? '').trim() || null;
+  const returnCountry = String(formData.get('return_country') ?? '').trim();
+
+  if (!brandName) return { ok: false, error: 'Enter your brand name.' };
+  if (!returnName || !returnLine1 || !returnCity || !returnCountry) {
+    return { ok: false, error: 'Fill in return contact name, street line 1, city and country.' };
+  }
+
+  const sb = await createClient();
+  const { data, error } = await sb.rpc('save_my_dropship_seller_profile', {
+    p_brand_name: brandName,
+    p_return_name: returnName,
+    p_return_line1: returnLine1,
+    p_return_line2: returnLine2,
+    p_return_city: returnCity,
+    p_return_region: returnRegion,
+    p_return_postal_code: returnPostalCode,
+    p_return_country: returnCountry,
+  });
+
+  if (error) {
+    const codeMatch = error.message.match(/^([A-Z0-9_]+):?/);
+    return {
+      ok: false,
+      code: codeMatch ? codeMatch[1] : undefined,
+      error: error.message.replace(/^[A-Z0-9_]+:\s*/, ''),
+    };
+  }
+
+  const res = (data ?? {}) as { status?: string };
+  revalidatePath('/account/dropship/onboarding');
+  revalidatePath('/account/dropship');
+  return { ok: true, status: res.status ?? 'pending' };
 }
