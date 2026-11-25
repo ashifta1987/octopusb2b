@@ -385,13 +385,13 @@ try {
   await db.query(`select record_warehouse_stock_movement($1, 'adjust_in', 30, 'Restore 50 on_hand', 'SZ-01', null)`, [varFast.item_id]);
 
   // ── 6. Review 4 & 5: Full Step-by-Step Pipeline + Duplicate-Key No-op + Finance Escrow Release Date ──
-  // Create a Finance escrow_holds row (target_type = 'dropship_order', auto_release_days = 7, release_rule = 'delivery_plus_days')
+  // Create a Finance escrow_holds row (target_type = 'dropship_order', store_order_id = $2, auto_release_days = 7, release_rule = 'delivery_plus_days')
   const ehRow = await one(`
     insert into escrow_holds (
-      org_id, division_id, service, target_type, target_id, funding_method,
+      org_id, division_id, service, target_type, target_id, store_order_id, funding_method,
       amount_cents, currency, release_rule, milestone_label, auto_release_days, status, idempotency_key
     ) values (
-      $1::uuid, division_id_of('DS'), 'dropship', 'dropship_order', $2::uuid, 'wallet',
+      $1::uuid, division_id_of('DS'), 'dropship', 'dropship_order', $2::uuid, $2::uuid, 'wallet',
       $3::bigint, 'USD', 'delivery_plus_days', 'Parcel delivered + 7 days', 7, 'held', $4::text
     )
     returning id, auto_release_at

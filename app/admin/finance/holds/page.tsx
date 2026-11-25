@@ -14,7 +14,7 @@ async function HoldsPageContent() {
     sb
       .from('escrow_holds')
       .select(
-        'id, org_id, division_id, service, target_type, target_id, order_id, funding_method, amount_cents, released_cents, refunded_cents, currency, release_rule, milestone_label, status, dispute_reason, invoice_id, created_at, organizations(name), divisions(code), orders(code), documents!escrow_holds_invoice_id_fkey(number)',
+        'id, org_id, division_id, service, target_type, target_id, order_id, store_order_id, funding_method, amount_cents, released_cents, refunded_cents, currency, release_rule, milestone_label, status, dispute_reason, invoice_id, created_at, organizations(name), divisions(code), orders(code), store_orders!escrow_holds_store_order_id_fkey(order_number), documents!escrow_holds_invoice_id_fkey(number)',
       )
       .order('created_at', { ascending: false })
       .limit(200),
@@ -36,7 +36,11 @@ async function HoldsPageContent() {
     service: h.service as string,
     target_type: h.target_type as string,
     target_id: h.target_id as string,
-    order_code: ((h.orders as { code?: string } | null)?.code ?? null) as string | null,
+    order_code: (
+      ((h.orders as { code?: string } | null)?.code ??
+        (h.store_orders as { order_number?: string } | null)?.order_number ??
+        null) as string | null
+    ),
     funding_method: h.funding_method as string,
     amount_cents: Number(h.amount_cents),
     released_cents: Number(h.released_cents),

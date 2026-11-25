@@ -59,7 +59,9 @@ export async function startOnlineCheckoutAction(input: {
   };
 
   const adapter = getPaymentProviderAdapter(res.provider);
-  const returnUrl = input.returnUrl || `/account/orders/${input.targetId}`;
+  const defaultReturn =
+    input.targetType === 'dropship_order' ? '/account/dropship/orders' : `/account/orders/${input.targetId}`;
+  const returnUrl = input.returnUrl || defaultReturn;
   const checkoutOut = await adapter.createCheckout({
     checkoutId: res.checkout_id,
     orgId: s.org.id,
@@ -114,6 +116,7 @@ export async function payWithProtectionFromWalletAction(input: {
   }
 
   revalidatePath(`/account/orders/${input.targetId}`);
+  revalidatePath('/account/dropship/orders');
   revalidatePath('/account/orders');
   revalidatePath('/account/invoices');
   revalidatePath('/account/wallet');

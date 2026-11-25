@@ -75,6 +75,7 @@ export async function confirmMockPaymentAction(formData: FormData) {
   }
 
   revalidatePath(`/pay/mock/${chk.id}`);
+  revalidatePath('/account/dropship/orders');
   revalidatePath('/account/orders');
   revalidatePath('/account/invoices');
   revalidatePath('/account/wallet');
@@ -90,8 +91,9 @@ export async function confirmMockPaymentAction(formData: FormData) {
 function getTargetReturnUrl(targetType: string, targetId: string): string {
   switch (targetType) {
     case 'order':
-    case 'dropship_order':
       return `/account/orders/${targetId}`;
+    case 'dropship_order':
+      return '/account/dropship/orders';
     case 'proforma':
       return '/account/invoices';
     case 'wallet_topup':

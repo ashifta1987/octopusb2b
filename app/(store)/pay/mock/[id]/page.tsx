@@ -39,13 +39,15 @@ async function MockCheckoutContent({ params }: { params: Promise<{ id: string }>
       : 'Pay now';
 
   const returnUrl =
-    chk.target_type === 'order' || chk.target_type === 'dropship_order'
+    chk.target_type === 'order'
       ? `/account/orders/${chk.target_id}`
-      : chk.target_type === 'proforma'
-        ? '/account/invoices'
-        : chk.target_type === 'saas_subscription'
-          ? '/account/services'
-          : '/account';
+      : chk.target_type === 'dropship_order'
+        ? '/account/dropship/orders'
+        : chk.target_type === 'proforma'
+          ? '/account/invoices'
+          : chk.target_type === 'saas_subscription'
+            ? '/account/services'
+            : '/account';
 
   return (
     <div className="mx-auto max-w-xl px-4 py-10" data-testid="mock-checkout-page">
