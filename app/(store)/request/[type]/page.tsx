@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { isDropshipV2UiEnabled } from '@/lib/dropship';
+import { isWarehouseOsEnabled } from '@/lib/warehouse';
 import { PublicDropshipPage } from './public-dropship';
 import { block } from '@/lib/content';
 import { getStoreContent } from '@/components/store/currency';
@@ -11,7 +12,7 @@ import { createClient } from '@/lib/supabase/server';
 import { COUNTRY_NAMES, money } from '@/lib/format';
 import { Notice } from '@/components/ui';
 import { getServices, getProductById } from '@/components/store/data';
-import { REQUEST_TYPES, isRequestType, SERVICE_CODE, type RequestType } from '@/components/store/request-schema';
+import { isRequestType, SERVICE_CODE, type RequestType } from '@/components/store/request-schema';
 import { RequestForm } from '@/components/store/request-form';
 import { LaunchNotifyForm } from '@/components/store/launch-notify-form';
 import { AdSlot } from '@/components/store/ad-slot';
@@ -73,6 +74,8 @@ export default function RequestPage({ params, searchParams }: { params: Params; 
 async function Content({ params, searchParams }: { params: Params; searchParams: SP }) {
   const [{ type }, sp] = await Promise.all([params, searchParams]);
   if (!isRequestType(type)) notFound();
+  // Warehouse OS W1: the 3PL request is replaced by the public intro page + Apply form.
+  if (type === '3pl' && (await isWarehouseOsEnabled())) redirect('/3pl');
   // Batch 3 (F-15) + EA-2: once Octopus Dropship is open (dropship_v2_ui ON) there is no "coming soon" request.
   // Signed-in customers go to the app (Activate); signed-out visitors (and staff) see the short public page.
   if (type === 'dropship' && (await isDropshipV2UiEnabled())) {

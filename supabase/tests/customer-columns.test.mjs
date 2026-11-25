@@ -62,7 +62,8 @@ const NO_CUSTOMER_ROWS = ['suppliers', 'supplier_contacts', 'supplier_name_varia
   'shipping_rate_cards', 'fee_versions', 'duty_rate_versions', 'duty_rate_entries', 'warehouse_stock', 'warehouse_stock_movements',
   'status_mappings', 'dropship_handoffs', 'domain_events', 'domain_event_consumptions', 'internal_charge_rules',
   'dropship_price_tiers', 'dropship_import_jobs', 'dropship_product_requests', 'dropship_access_requests',
-  'payment_webhook_events', 'payment_settlements', 'payment_reconciliation_alerts', 'escrow_hold_approvals'];
+  'payment_webhook_events', 'payment_settlements', 'payment_reconciliation_alerts', 'escrow_hold_approvals',
+  'wh_applications']; // W1: 3PL applications are staff-only (policy needs is_staff())
 
 try {
   await db.query('begin');

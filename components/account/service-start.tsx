@@ -57,6 +57,12 @@ async function ServiceStartContent({ service, hideHeading }: { service: Exclude<
             <p className="mt-2 text-[15px]">Dropshipping is launching soon. Leave your email and we tell you once it opens.</p>
             <div className="mt-3 max-w-[560px]"><LaunchNotifyForm feature="dropship" source="account-dropship" defaultEmail={s.email ?? ''} /></div>
           </div>
+        ) : service === 'warehouse' ? (
+          // Warehouse OS W1: 3PL accounts open through the Apply form (staff review, reply within one working day)
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <Link href="/3pl/apply" className="btn btn-primary min-h-11" data-testid="wh-apply-link">Apply for a 3PL account</Link>
+            <span className="text-[14px] text-muted">We review your application and reply within one working day.</span>
+          </div>
         ) : (
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Link href={`/account/support?topic=${service}`} className="btn btn-primary min-h-11">Start {c.title}</Link>

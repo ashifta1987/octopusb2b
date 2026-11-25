@@ -125,7 +125,8 @@ test('W0 packer: no Locations, cannot manage people', async ({ page }) => {
   await expect(page.getByTestId('wh-add-staff')).toHaveCount(0);
   await expect(page.getByText('Only warehouse admins can add or change people.')).toBeVisible();
   await page.goto('/office/warehouse/locations');
-  await expect(page).toHaveURL(/\/office\/warehouse$/);
+  // the admin-only page redirects from inside its Suspense boundary (a client-side redirect): allow time for it
+  await page.waitForURL(/\/office\/warehouse$/, { timeout: 20_000 });
 });
 
 test('W0 client portal: tabs, real overview, warehouses; axe at 1280 and 390', async ({ page }) => {

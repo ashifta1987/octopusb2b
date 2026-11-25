@@ -26,9 +26,15 @@ const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString
 async function Portal() {
   const s = await requireCustomer('/account/warehouse');
   if (!s.org) return <ServiceStart service="warehouse" />;
-  const [ctx, on] = await Promise.all([getAccountContext(s.org.id), isWarehouseOsEnabled()]);
-  if (!on || !serviceOn(ctx.services.warehouse)) return <ServiceStart service="warehouse" />;
   const sb = await createClient();
+  // W1: an approved 3PL application for this email links to the company on first visit (switches the service on).
+  const on = await isWarehouseOsEnabled();
+  if (on) await sb.rpc('wh_claim_my_application');
+  const [ctx, clientRes] = await Promise.all([
+    getAccountContext(s.org.id),
+    on ? sb.from('wh_clients').select('org_id').eq('org_id', s.org.id).eq('status', 'active').maybeSingle() : Promise.resolve({ data: null }),
+  ]);
+  if (!on || !(serviceOn(ctx.services.warehouse) || clientRes.data)) return <ServiceStart service="warehouse" />;
   const weekStart = daysAgo(7);
   const [openRes, shippedRes, whRes] = await Promise.all([
     sb.from('shipments').select('id', { count: 'exact', head: true }).eq('org_id', s.org.id).in('status', ['created', 'label_ready', 'picked_up']),
