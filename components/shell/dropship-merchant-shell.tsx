@@ -129,6 +129,7 @@ function isPhoneTabActive(tabHref: string, pathname: string, isListParam = false
 }
 
 export function DropshipMerchantShell({
+  dropshipEnabled = true,
   userName,
   initials,
   storeName,
@@ -138,6 +139,7 @@ export function DropshipMerchantShell({
   isStaging = false,
   children,
 }: {
+  dropshipEnabled?: boolean;
   userName: string;
   initials: string;
   storeName?: string | null;
@@ -150,7 +152,7 @@ export function DropshipMerchantShell({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const isListParam = searchParams?.get('list') === '1';
-  // Step U1 Rule 5: Store switcher shows "No store connected" until Step 4 connects a real store.
+  // Step U1 Rule 5: Store switcher shows "No store connected" until Step 5 connects a real store.
   const displayStore = storeName || 'No store connected';
 
   return (
@@ -171,14 +173,26 @@ export function DropshipMerchantShell({
             className="w-[120px] h-auto block"
           />
         </Link>
-        <Link
-          href="/account/dropship/stores"
-          data-testid="dropship-store-switcher-mobile"
-          className="ml-auto flex items-center gap-1.5 min-h-[44px] px-2.5 border border-[#3A3775] rounded-[8px] text-white hover:text-white no-underline text-[12px] font-semibold min-w-0 max-w-[165px]"
-        >
-          <DsIcon name="store" size={16} />
-          <span className="truncate">{displayStore}</span>
-        </Link>
+        {dropshipEnabled ? (
+          <Link
+            href="/account/dropship/stores"
+            data-testid="dropship-store-switcher-mobile"
+            className="ml-auto flex items-center gap-1.5 min-h-[44px] px-2.5 border border-[#3A3775] rounded-[8px] text-white hover:text-white no-underline text-[12px] font-semibold min-w-0 max-w-[165px]"
+          >
+            <DsIcon name="store" size={16} />
+            <span className="truncate">{displayStore}</span>
+          </Link>
+        ) : (
+          <div
+            aria-disabled="true"
+            title="Activate dropshipping"
+            data-testid="dropship-store-switcher-mobile"
+            className="ml-auto flex items-center gap-1.5 min-h-[44px] px-2.5 border border-[#3A3775] rounded-[8px] text-[#8F9AC4] bg-[#221F58] cursor-not-allowed select-none text-[12px] font-semibold min-w-0 max-w-[175px]"
+          >
+            <DsIcon name="lock" size={14} className="shrink-0" />
+            <span className="truncate">Activate dropshipping</span>
+          </div>
+        )}
         <Link
           href="/account/notifications"
           aria-label={
@@ -209,17 +223,33 @@ export function DropshipMerchantShell({
             />
           </Link>
 
-          <Link
-            href="/account/dropship/stores"
-            data-testid="dropship-store-switcher"
-            className="flex items-center gap-2.5 min-h-[48px] px-3 mb-1.5 border border-[#3A3775] rounded-[10px] text-white hover:text-white no-underline text-[13px] font-semibold box-border bg-[#221F58]"
-          >
-            <DsIcon name="store" size={18} />
-            <span className="flex flex-col leading-[1.25] min-w-0">
-              <span className="text-[11px] font-medium text-[#C9D3E3]">Store</span>
-              <span className="truncate">{displayStore}</span>
-            </span>
-          </Link>
+          {dropshipEnabled ? (
+            <Link
+              href="/account/dropship/stores"
+              data-testid="dropship-store-switcher"
+              className="flex items-center gap-2.5 min-h-[48px] px-3 mb-1.5 border border-[#3A3775] rounded-[10px] text-white hover:text-white no-underline text-[13px] font-semibold box-border bg-[#221F58]"
+            >
+              <DsIcon name="store" size={18} />
+              <span className="flex flex-col leading-[1.25] min-w-0">
+                <span className="text-[11px] font-medium text-[#C9D3E3]">Store</span>
+                <span className="truncate">{displayStore}</span>
+              </span>
+            </Link>
+          ) : (
+            <div
+              aria-disabled="true"
+              title="Activate dropshipping"
+              data-testid="dropship-store-switcher"
+              className="flex items-center gap-2.5 min-h-[48px] px-3 mb-1.5 border border-[#3A3775] rounded-[10px] text-[#8F9AC4] text-[13px] font-semibold box-border bg-[#221F58] cursor-not-allowed select-none"
+            >
+              <DsIcon name="store" size={18} />
+              <span className="flex flex-col leading-[1.25] min-w-0">
+                <span className="text-[11px] font-medium text-[#8F9AC4]">Store</span>
+                <span className="truncate">Activate dropshipping</span>
+              </span>
+              <DsIcon name="lock" size={14} className="ml-auto shrink-0" />
+            </div>
+          )}
 
           {MERCHANT_GROUPS.map((group) => (
             <div key={group.title} className="contents">
@@ -227,6 +257,24 @@ export function DropshipMerchantShell({
                 {group.title}
               </div>
               {group.items.map((item) => {
+                const isHome = item.href === '/account/dropship';
+                const label = isHome && !dropshipEnabled ? 'Start dropshipping' : item.label;
+                if (!dropshipEnabled && !isHome) {
+                  return (
+                    <span
+                      key={item.href}
+                      aria-disabled="true"
+                      title="Activate dropshipping"
+                      data-testid="locked-nav-item"
+                      className="flex items-center gap-3 px-3 min-h-[44px] rounded-[8px] text-[14px] box-border text-[#8F9AC4] font-medium cursor-not-allowed select-none"
+                    >
+                      <DsIcon name={item.icon} size={18} />
+                      <span>{label}</span>
+                      <DsIcon name="lock" size={14} className="ml-auto shrink-0" />
+                    </span>
+                  );
+                }
+
                 const active = isMerchantItemActive(item, pathname, isListParam);
                 const badgeCount =
                   item.matchQuery === 'list=1'
@@ -247,7 +295,7 @@ export function DropshipMerchantShell({
                     }`}
                   >
                     <DsIcon name={item.icon} size={18} />
-                    <span>{item.label}</span>
+                    <span>{label}</span>
                     {badgeCount > 0 && (
                       <span className="ml-auto bg-[#2A6FD1] text-white rounded-[10px] text-[12px] font-bold px-2 py-0.5">
                         {badgeCount}
@@ -282,8 +330,8 @@ export function DropshipMerchantShell({
               searchAction="/account/dropship/catalogue"
               unreadCount={unreadCount}
               notificationsHref="/account/notifications"
-              helpHref="/account/dropship/support"
-              accountHref="/account/dropship/settings"
+              helpHref={dropshipEnabled ? '/account/dropship/support' : '/account/support'}
+              accountHref={dropshipEnabled ? '/account/dropship/settings' : '/account'}
               backToAccountHref="/account"
               backToAccountLabel="Back to my Octopus account"
               userName={userName}
@@ -313,6 +361,22 @@ export function DropshipMerchantShell({
         className="md:hidden fixed inset-x-0 bottom-0 z-40 flex bg-white border-t border-[#E3E7EF] pb-[env(safe-area-inset-bottom)]"
       >
         {PHONE_TABS.map((tab) => {
+          const isHome = tab.href === '/account/dropship';
+          if (!dropshipEnabled && !isHome) {
+            return (
+              <span
+                key={tab.href}
+                aria-disabled="true"
+                title="Activate dropshipping"
+                data-testid="locked-phone-tab"
+                className="flex-1 min-h-[56px] flex flex-col items-center justify-center gap-0.5 text-[12px] border-t-[3px] font-medium text-[#5B6478] border-transparent cursor-not-allowed select-none"
+              >
+                <DsIcon name="lock" size={18} />
+                <span>{tab.label}</span>
+              </span>
+            );
+          }
+
           const active = isPhoneTabActive(tab.href, pathname, isListParam);
           return (
             <Link

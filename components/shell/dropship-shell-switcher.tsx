@@ -7,6 +7,7 @@ import { DropshipStaffShell } from './dropship-staff-shell';
 
 export function AccountShellSwitcher({
   v2ShellEnabled,
+  dropshipEnabled = true,
   userName,
   initials,
   storeName,
@@ -18,6 +19,7 @@ export function AccountShellSwitcher({
   children,
 }: {
   v2ShellEnabled: boolean;
+  dropshipEnabled?: boolean;
   userName: string;
   initials: string;
   storeName?: string | null;
@@ -32,6 +34,7 @@ export function AccountShellSwitcher({
   if (v2ShellEnabled && pathname?.startsWith('/account/dropship')) {
     return (
       <DropshipMerchantShell
+        dropshipEnabled={dropshipEnabled}
         userName={userName}
         initials={initials}
         storeName={storeName}

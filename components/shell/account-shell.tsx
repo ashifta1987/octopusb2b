@@ -3,7 +3,7 @@ import { Logo } from '@/components/ui';
 import { MaintenanceNotice } from '@/components/maintenance-notice';
 import type { Session } from '@/lib/auth';
 import { money } from '@/lib/format';
-import { SERVICES, isStaging, serviceOn, type getAccountContext } from '@/lib/core/account';
+import { SERVICES, dropshipEverEnabled, isStaging, serviceOn, type getAccountContext } from '@/lib/core/account';
 import { AccountTabs, SectionMenu, type Tab, type MenuSection } from './account-tabs';
 import { UnreadBellDot } from '@/components/account/unread-count';
 import { AccountShellSwitcher } from './dropship-shell-switcher';
@@ -110,6 +110,7 @@ export function AccountShell({ session, ctx, newQuotes, dropshipV2Ui = false, mo
   return (
     <AccountShellSwitcher
       v2ShellEnabled={Boolean(dropshipV2Ui && session.org)}
+      dropshipEnabled={Boolean(ctx && dropshipEverEnabled(ctx.services.dropship))}
       userName={name}
       initials={initials || 'ME'}
       unreadCount={ctx?.unread ?? 0}

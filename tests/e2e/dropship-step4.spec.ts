@@ -118,6 +118,21 @@ test('Unverified org sees "Verify your company first" + /account/kyc link on Act
     'Free while plan fees are off',
   );
 
+  // Locked sidebar nav & store switcher when dropship is not enabled yet
+  const lockedNavItems = page.getByTestId('locked-nav-item');
+  await expect(lockedNavItems).toHaveCount(11);
+  await expect(lockedNavItems.first()).toHaveAttribute('aria-disabled', 'true');
+  await expect(lockedNavItems.first()).toHaveAttribute('title', 'Activate dropshipping');
+  await expect(page.getByTestId('dropship-store-switcher')).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+  await expect(page.getByTestId('dropship-sidebar').getByRole('link', { name: 'Start dropshipping' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+  await expect(page.getByTestId('back-to-octopus-account')).toHaveAttribute('href', '/account');
+
   await checkAxe(page, 'activate-unverified-1280');
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
@@ -129,6 +144,10 @@ test('Unverified org sees "Verify your company first" + /account/kyc link on Act
     'aria-current',
     'page',
   );
+  const lockedPhoneTabs = page.getByTestId('locked-phone-tab');
+  await expect(lockedPhoneTabs).toHaveCount(4);
+  await expect(lockedPhoneTabs.first()).toHaveAttribute('aria-disabled', 'true');
+  await expect(lockedPhoneTabs.first()).toHaveAttribute('title', 'Activate dropshipping');
   await checkAxe(page, 'activate-unverified-390');
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
