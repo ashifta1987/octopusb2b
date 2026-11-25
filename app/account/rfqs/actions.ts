@@ -21,3 +21,17 @@ export async function approveQuote(input: { quoteId: string }): Promise<ActionRe
   revalidatePath('/account/orders');
   return { ok: true, data: data as { order_id: string; order_code: string; pi_number: string } };
 }
+
+const RejectQuote = z.object({ quoteId: z.string().uuid(), reason: z.string().trim().max(500).optional() });
+
+/** Batch 3 (F-11): decline one Sourcing quote → reject_quote RPC (quote status only; no money moves). */
+export async function rejectQuote(input: { quoteId: string; reason?: string }): Promise<ActionResult<{ quote_id: string }>> {
+  const parsed = RejectQuote.safeParse(input);
+  if (!parsed.success) return { ok: false, error: 'Keep the reason under 500 characters.' };
+  const sb = await createClient();
+  const { data, error } = await sb.rpc('reject_quote', { p_quote: parsed.data.quoteId, p_reason: parsed.data.reason || null });
+  if (error) return { ok: false, error: mapDbError(error) };
+  revalidatePath('/account/sourcing');
+  revalidatePath('/account/sourcing/[ref]', 'page');
+  return { ok: true, data: { quote_id: (data as { quote_id: string }).quote_id } };
+}

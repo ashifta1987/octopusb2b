@@ -19,7 +19,7 @@ const REQUIRE = 'A registered Chinese company with a valid business licence (USC
 const STEPS = 'Apply|Send the form below with your licence number and a product sheet.;'
   + 'Review|We check your licence and product range, usually within 3 working days.;'
   + 'Audit|A sourcing lead visits or video-audits the factory.;'
-  + 'Go live|We list your products under your supplier code and start sending RFQs.';
+  + 'Go live|We list your products as a verified factory (buyers see only your country and region, never your company name or code) and start sending RFQs.';
 
 /** ADDON-36 C5 — public supplier recruitment page ("Sell on Octopus B2B"). All copy overridable from the CMS. */
 export default function SuppliersPage() {

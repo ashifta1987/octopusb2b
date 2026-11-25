@@ -21,7 +21,7 @@ try {
   await db.query(`insert into org_members(org_id, user_id, member_role) values ($1,$2,'owner'), ($3,$4,'owner')`, [oA, uA, oB, uB]);
   // A: two unread company notifications + one staff alert about A (user_id = admin, org_id = A, like create_brand_project)
   const n1 = (await one(`insert into notifications(org_id, title, link) values ($1, 'KYC verified', '/account/kyc') returning id`, [oA])).id;
-  const n2 = (await one(`insert into notifications(org_id, title, link) values ($1, '3PL request SR-1 paid', '/account/sourcing/SR-1') returning id`, [oA])).id;
+  const n2 = (await one(`insert into notifications(org_id, title, link) values ($1, '3PL request SRV-1 paid', '/account/sourcing/SRV-1') returning id`, [oA])).id;
   await db.query(`insert into notifications(user_id, org_id, title, link) values ($1, $2, 'New Make My Brand request MB-9', '/admin/customers/x')`, [admin, oA]);
   const nB = (await one(`insert into notifications(org_id, title) values ($1, 'B only') returning id`, [oB])).id;
 

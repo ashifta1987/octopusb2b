@@ -50,7 +50,13 @@ function auditSummary(action: string, details: Record<string, unknown> | null): 
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <Suspense fallback={<div className="card p-6 animate-pulse">Loading product…</div>}>
+    <Suspense
+      fallback={
+        <div className="card p-6 text-ink" role="status">
+          Loading product details… If this takes more than a few seconds, refresh the page or go back to Products.
+        </div>
+      }
+    >
       <EditDropshipProduct params={params} />
     </Suspense>
   );

@@ -2,11 +2,11 @@ import { z } from 'zod';
 import { COUNTRY_NAMES } from '@/lib/format';
 
 /** Request Center (Request.png) — one field config per request type; the SAME zod schema runs in the form and the server action. */
-export const REQUEST_TYPES = ['sourcing', '3pl', 'dropship', 'sample', 'qc', 'certification'] as const;
+export const REQUEST_TYPES = ['sourcing', '3pl', 'dropship', 'sample', 'qc', 'certification', 'factory-audit'] as const;
 export type RequestType = (typeof REQUEST_TYPES)[number];
 export const isRequestType = (t: string): t is RequestType => (REQUEST_TYPES as readonly string[]).includes(t);
 /** Service code charged for each type (`rfq` for sourcing via submit_rfq, else request_service). */
-export const SERVICE_CODE: Record<RequestType, string> = { sourcing: 'rfq', '3pl': '3pl', dropship: 'dropship', sample: 'sample', qc: 'qc', certification: 'certification' };
+export const SERVICE_CODE: Record<RequestType, string> = { sourcing: 'rfq', '3pl': '3pl', dropship: 'dropship', sample: 'sample', qc: 'qc', certification: 'certification', 'factory-audit': 'factory_audit' };
 
 export type Field = {
   name: string; label: string; kind: 'text' | 'textarea' | 'int' | 'money' | 'select' | 'date' | 'country' | 'warehouse';
@@ -74,6 +74,17 @@ export const REQUEST_FIELDS: Record<RequestType, Section[]> = {
       { name: 'inspection_date', label: 'Preferred inspection date', kind: 'date' },
       { name: 'quantity', label: 'Order quantity', kind: 'int' },
       { name: 'factory_location', label: 'Factory location', kind: 'text', placeholder: 'City, country' },
+      notes,
+    ],
+  }],
+  // Batch 3 (F-16): factory audit is its own request type (service factory_audit, priced in Admin › Services)
+  'factory-audit': [{
+    title: 'Factory audit details',
+    fields: [
+      { name: 'product', label: 'Products made at this factory', kind: 'text', required: true, full: true, placeholder: 'e.g. Silicone kitchen tools' },
+      { name: 'audit_type', label: 'Audit type', kind: 'select', required: true, options: ['Factory capability audit', 'Quality system audit', 'Social compliance audit'] },
+      { name: 'factory_location', label: 'Factory location', kind: 'text', required: true, placeholder: 'City, province, country' },
+      { name: 'audit_date', label: 'Preferred audit date', kind: 'date' },
       notes,
     ],
   }],

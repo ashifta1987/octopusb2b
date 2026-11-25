@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { createTempCustomer, customerLogin, purgeTestOrgs, type TempCustomer } from './helpers/customer';
+import { adminClient, createTempCustomer, customerLogin, purgeTestOrgs, type TempCustomer } from './helpers/customer';
 
 /** ADDON-36 · 36-B: request flows keep the visitor's input and show the real fee (live site data, nothing submitted). */
 let C: TempCustomer | null = null;
@@ -57,13 +57,22 @@ test('fee text never shows "Free" together with a charge; each type has its own 
   const row = await page.getByTestId('fee-row').innerText();
   const text = await page.getByTestId('fee-text').innerText();
   if (/Free/.test(row)) expect(text).not.toMatch(/charged/i); else expect(text).toMatch(/RFQ fee .* charged/);
-  await page.goto('/request/dropship');
-  await expect(page.locator('h1')).toHaveText('Dropshipping is coming soon');   // 20 Nov 2026: honest Coming soon
-  await expect(page.getByText('How dropshipping will work')).toBeVisible();
-  await expect(page.getByTestId('fee-row')).toHaveCount(0);                        // no setup form, so no fee row
+  // the Live gate: with dropship_v2_ui OFF, /request/dropship is the honest Coming soon page (Batch 3: with it ON it opens
+  // /account/dropship — covered in batch3.spec.ts)
+  const { data: flag } = await adminClient().from('site_settings').select('value').eq('key', 'dropship_v2_ui');
+  await adminClient().from('site_settings').upsert({ key: 'dropship_v2_ui', value: false, description: 'Coming soon gate test' });
   const heads = new Set<string>();
-  for (const t of ['sourcing', 'dropship', '3pl', 'sample', 'qc', 'certification']) { await page.goto(`/request/${t}`); heads.add(await page.locator('h1').innerText()); }
-  expect(heads.size).toBe(6);
+  try {
+    await page.goto('/request/dropship');
+    await expect(page.locator('h1')).toHaveText('Dropshipping is coming soon');   // 20 Nov 2026: honest Coming soon
+    await expect(page.getByText('How dropshipping will work')).toBeVisible();
+    await expect(page.getByTestId('fee-row')).toHaveCount(0);                        // no setup form, so no fee row
+    for (const t of ['sourcing', 'dropship', '3pl', 'sample', 'qc', 'certification', 'factory-audit']) { await page.goto(`/request/${t}`); heads.add(await page.locator('h1').innerText()); }
+  } finally {
+    if (!flag?.length) await adminClient().from('site_settings').delete().eq('key', 'dropship_v2_ui');
+    else await adminClient().from('site_settings').upsert({ key: 'dropship_v2_ui', value: flag[0].value });
+  }
+  expect(heads.size).toBe(7);
   // home picker, Source tab: the fact line shows the RFQ fee or no fee, never "Free" with a charge
   await page.goto('/?do=source');
   const fact = await page.locator('#picker-source').locator('xpath=..').innerText();

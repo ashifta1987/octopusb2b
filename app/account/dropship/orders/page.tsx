@@ -11,6 +11,7 @@ import { dropshipPausedOrClosed } from '@/lib/core/account';
 import { fmtDate, money } from '@/lib/format';
 import { createClient } from '@/lib/supabase/server';
 import { requireDropshipV2Merchant } from '@/lib/dropship';
+import { merchantStatusLabels, tidyStatus } from '@/lib/status-labels';
 
 export const metadata = { title: 'Orders · Octopus Dropship' };
 
@@ -28,6 +29,7 @@ async function Guarded() {
 
   const dsState = ctx.services.dropship;
   const rows = orders ?? [];
+  const labels = await merchantStatusLabels();
 
   return (
     <div className="flex flex-col gap-5" data-testid="dropship-orders-page">
@@ -94,7 +96,7 @@ async function Guarded() {
                               : 'info'
                         }
                       >
-                        {String(o.merchant_status ?? 'processing').replace(/_/g, ' ')}
+                        {labels[String(o.merchant_status ?? 'processing')] ?? tidyStatus(o.merchant_status as string)}
                       </DsBadge>
                     </td>
                     <td className="whitespace-nowrap">{fmtDate(o.created_at as string)}</td>

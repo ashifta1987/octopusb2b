@@ -20,8 +20,21 @@ const clearRateLimit = async () => {
   const db = pgClient(); await db.connect();
   try { await assertStagingOrThrow(db); await db.query(`delete from auth_rate_limits where bucket like 'launch-signup:%'`); } finally { await db.end(); }
 };
-test.beforeAll(async () => { await assertStagingOrThrow(); await clearRateLimit(); });
+// Batch 3 (F-15): with dropship_v2_ui ON (the staging default) /request/dropship and /go/dropship open the Dropship app,
+// so this file checks the Live gate ("Coming soon") with the flag explicitly OFF, and puts the original value back.
+let originalFlag: { value: unknown }[] | null = null;
+test.beforeAll(async () => {
+  await assertStagingOrThrow();
+  await clearRateLimit();
+  const { data } = await adminClient().from('site_settings').select('value').eq('key', 'dropship_v2_ui');
+  originalFlag = (data ?? []) as { value: unknown }[];
+  await adminClient().from('site_settings').upsert({ key: 'dropship_v2_ui', value: false, description: 'Coming soon gate test' });
+});
 test.afterAll(async () => {
+  if (originalFlag) {
+    if (originalFlag.length === 0) await adminClient().from('site_settings').delete().eq('key', 'dropship_v2_ui');
+    else await adminClient().from('site_settings').upsert({ key: 'dropship_v2_ui', value: originalFlag[0].value });
+  }
   const db = pgClient(); await db.connect();
   try { await assertStagingOrThrow(db); await db.query(`delete from launch_signups where email like 'e2e-launch-%@example.com'`); await db.query(`delete from auth_rate_limits where bucket like 'launch-signup:%'`); } finally { await db.end(); }
   await deleteTempStaff(admin);
@@ -139,19 +152,13 @@ test('My account: the Dropshipping tile and tab say Coming soon with the sign-up
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/dropship-account-tile-${tag}.png`, caret: 'initial' });
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await adminClient()
-    .from('site_settings')
-    .upsert({ key: 'dropship_v2_ui', value: false, description: 'Coming soon gate test' });
-  try {
-    await page.goto('/account/dropship');
-    await expect(page.getByTestId('dropship-coming-soon')).toContainText('Coming soon');
-    await expect(page.getByRole('main')).not.toContainText('Start Dropshipping');
-    await expect(page.getByRole('main')).not.toContainText('upload orders as a sheet');
-    await expect(page.getByTestId('browse-catalogue')).toHaveCount(0);
-    if (SHOTS) await page.screenshot({ path: `${SHOTS}/dropship-account-tab-desktop.png`, caret: 'initial' });
-  } finally {
-    await adminClient().from('site_settings').delete().eq('key', 'dropship_v2_ui');
-  }
+  // dropship_v2_ui is OFF for this whole file (beforeAll)
+  await page.goto('/account/dropship');
+  await expect(page.getByTestId('dropship-coming-soon')).toContainText('Coming soon');
+  await expect(page.getByRole('main')).not.toContainText('Start Dropshipping');
+  await expect(page.getByRole('main')).not.toContainText('upload orders as a sheet');
+  await expect(page.getByTestId('browse-catalogue')).toHaveCount(0);
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/dropship-account-tab-desktop.png`, caret: 'initial' });
   // a signed-in customer without Dropshipping switched on also lands on the sign-up from the old link
   await page.goto('/go/dropship');
   await expect(page).toHaveURL(/\/request\/dropship#notify$/);

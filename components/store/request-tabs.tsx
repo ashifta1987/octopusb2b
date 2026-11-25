@@ -6,7 +6,7 @@ import { REQUEST_TYPES } from './request-schema';
 export const REQUEST_TAB_FALLBACK: Record<string, string> = {
   sourcing: 'Product sourcing|Find a product we don’t list yet', brand: 'Make My Brand|Your logo on verified products', '3pl': '3PL service|Warehousing and fulfillment',
   dropship: 'Dropshipping|Ship straight to your customers', sample: 'Sample request|Check quality before bulk', qc: 'QC inspection|Inspect before it ships',
-  certification: 'Certification|CE, FCC, RoHS and more',
+  certification: 'Certification|CE, FCC, RoHS and more', 'factory-audit': 'Factory audit|Check the factory before you order',
 };
 
 /** Request Center tabs (ADDON-44-F: Make My Brand [NEW] second). Scrolls sideways on phones. */
@@ -14,7 +14,7 @@ export function RequestTabs({ blocks, active, qs = '' }: { blocks: Record<string
   const order = ['sourcing', 'brand', ...REQUEST_TYPES.filter((t) => t !== 'sourcing')];
   return (
     <nav aria-label="Request type" className="mt-8 -mx-4 sm:mx-0">
-      <ul className="flex lg:grid gap-2 lg:grid-cols-7 overflow-x-auto overscroll-x-contain px-4 sm:px-0 pb-1">
+      <ul className="flex lg:grid gap-2 lg:grid-cols-8 overflow-x-auto overscroll-x-contain px-4 sm:px-0 pb-1">
         {order.map((t) => {
           const [title, sub] = parts(blocks, `request.type.${t}`, REQUEST_TAB_FALLBACK[t]);
           const on = t === active;

@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -18,7 +19,7 @@ export const metadata = { title: 'Shipping' };
 const READY_COLS = 'id, code, title, total_cents, currency, incoterm, updated_at, organizations(name, country, city)';
 const SHIP_COLS = 'id, code, tracking_no, status, service_code, currency, label_url, last_event_at, created_at, orders(id, code), tracking_events(status, description, occurred_at)';
 
-export default async function Shipping({ searchParams }: { searchParams: Promise<{ order?: string }> }) {
+async function ShippingContent({ searchParams }: { searchParams: Promise<{ order?: string }> }) {
   const s = await requireStaff('orders', 'view', '/office/shipping');
   const canEdit = can(s, 'orders', 'edit');
   const canSeeRates = s.isAdmin || canEdit || can(s, 'finance', 'view');
@@ -222,5 +223,14 @@ export default async function Shipping({ searchParams }: { searchParams: Promise
         {staging && canEdit && <p className="px-6 py-3 text-xs text-muted border-t border-line">Staging only: “Simulate event” appends the next tracking event (picked up → in transit → out for delivery → delivered). Live mode uses YunExpress webhooks with an hourly cron fallback.</p>}
       </Card>
     </>
+  );
+}
+
+// Batch 3 (F-14): the request-time data loads inside a Suspense boundary (Next 16 Cache Components / instant navigation)
+export default function Shipping(props: Parameters<typeof ShippingContent>[0]) {
+  return (
+    <Suspense fallback={<div className="card p-6 text-ink" role="status">Loading…</div>}>
+      <ShippingContent {...props} />
+    </Suspense>
   );
 }

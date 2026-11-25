@@ -1,7 +1,8 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { isDropshipV2UiEnabled } from '@/lib/dropship';
 import { block } from '@/lib/content';
 import { getStoreContent } from '@/components/store/currency';
 import { getSession } from '@/lib/auth';
@@ -30,6 +31,7 @@ const HEAD: Record<RequestType, string> = {
   sample: 'Order a sample before you buy in bulk|Check quality, packaging and finish in your hands before you commit to a bulk order.',
   qc: 'Book a quality inspection|Our inspectors check the goods at the factory, with photos and video, before anything ships.',
   certification: 'Get your product certified for your market|CE, FCC, RoHS, SASO and more, arranged with accredited labs.',
+  'factory-audit': 'Audit a factory before you order|Our auditors visit the factory and check licences, capacity, quality system and working conditions, with a photo report.',
 };
 /** ADDON-36 (H2): dropshipping is an onboarding, not a quote request. */
 /** ADDON-44-C (audit 11): 3PL has its own steps — Octopus quotes warehousing, not suppliers. */
@@ -39,6 +41,7 @@ const DROPSHIP_STEPS = 'Create your account|Free, takes two minutes.;Choose prod
 const FALLBACK: Record<RequestType, string> = {
   sourcing: 'Product sourcing|Find a product we don’t list yet', '3pl': '3PL service|Warehousing and fulfillment', dropship: 'Dropshipping|Ship straight to your customers',
   sample: 'Sample request|Check quality before bulk', qc: 'QC inspection|Inspect before it ships', certification: 'Certification|CE, FCC, RoHS and more',
+  'factory-audit': 'Factory audit|Check the factory before you order',
 };
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
@@ -61,6 +64,8 @@ export default function RequestPage({ params, searchParams }: { params: Params; 
 async function Content({ params, searchParams }: { params: Params; searchParams: SP }) {
   const [{ type }, sp] = await Promise.all([params, searchParams]);
   if (!isRequestType(type)) notFound();
+  // Batch 3 (F-15): once Octopus Dropship is open (dropship_v2_ui ON) there is no "coming soon" request — go to the app
+  if (type === 'dropship' && (await isDropshipV2UiEnabled())) redirect('/account/dropship');
   const [{ blocks, settings, company, ctx }, services, session, product] = await Promise.all([
     getStoreContent(), getServices(), getSession(), sp.product ? getProductById(sp.product) : Promise.resolve(null),
   ]);

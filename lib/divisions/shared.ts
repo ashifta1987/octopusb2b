@@ -10,7 +10,7 @@ export type DivisionScope = { all: true; division: null; options: Division[] } |
 /** Service / stream word → division code (same mapping as division_code_for_service() in the database). */
 export function divisionCodeForService(service: string | null | undefined): string | null {
   switch ((service ?? '').toLowerCase()) {
-    case 'rfq': case 'sample': case 'qc': case 'certification': case 'sourcing': case 'rfq_fees': return 'SRC';
+    case 'rfq': case 'sample': case 'qc': case 'certification': case 'factory_audit': case 'sourcing': case 'rfq_fees': return 'SRC';
     case '3pl': case 'warehouse': return '3PL';
     case 'dropship': return 'DS';
     case 'brand': return 'MMB';

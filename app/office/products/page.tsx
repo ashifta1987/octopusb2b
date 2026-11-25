@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { requireStaff } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -14,7 +15,7 @@ import { moderateProduct } from '../actions';
 
 export const metadata = { title: 'Product moderation' };
 
-export default async function Moderation({ searchParams }: { searchParams: Promise<{ p?: string }> }) {
+async function ModerationContent({ searchParams }: { searchParams: Promise<{ p?: string }> }) {
   await requireStaff('products', 'approve', '/office/products');
   const { p: selId } = await searchParams;
   const sb = await createClient();
@@ -144,5 +145,14 @@ export default async function Moderation({ searchParams }: { searchParams: Promi
         ) : <Card><EmptyState title="Select a product" /></Card>}
       </div>
     </>
+  );
+}
+
+// Batch 3 (F-14): the request-time data loads inside a Suspense boundary (Next 16 Cache Components / instant navigation)
+export default function Moderation(props: Parameters<typeof ModerationContent>[0]) {
+  return (
+    <Suspense fallback={<div className="card p-6 text-ink" role="status">Loading…</div>}>
+      <ModerationContent {...props} />
+    </Suspense>
   );
 }

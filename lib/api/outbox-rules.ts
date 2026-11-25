@@ -54,7 +54,7 @@ export function notificationFor(e: Pick<OutboxEvent, 'event_type' | 'aggregate_i
   if (t.startsWith('order.')) return { title: `Order ${titleCase(t.slice(6)).toLowerCase()}`, body: `Your order status changed to ${titleCase(t.slice(6)).toLowerCase()}.`, link: `/account/orders/${id}` };
   if (t === 'shipment.tracking') return { title: `Shipment: ${titleCase(String(p.status ?? 'update')).toLowerCase()}`, body: [p.description, p.location].filter(Boolean).join(' · '), link: `/account/orders/${p.order_id ?? ''}` };
   if (t.startsWith('service_request.')) {
-    // 8 Nov 2026: name the service and the request ("3PL request SR-1042 paid") so two requests never look like one event
+    // 8 Nov 2026: name the service and the request ("3PL request SRV-1042 paid") so two requests never look like one event
     const to = titleCase(String(p.to ?? t.split('.')[1])).toLowerCase();
     const what = typeof p.service_name === 'string' && p.service_name ? p.service_name : 'Service request';
     const code = typeof p.code === 'string' && p.code ? p.code : null;

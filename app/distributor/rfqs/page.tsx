@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { requireRole } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { portalProducts, withSuppliers } from '@/components/backoffice/hidden-columns';
@@ -13,7 +14,7 @@ export const metadata = { title: 'RFQs' };
 const OPEN = ['submitted', 'assigned', 'quoting', 'quoted'];
 
 /** Open RFQs — distributors see only city + country of the buyer, never names or contacts (SPEC §3). */
-export default async function DistributorRfqs() {
+async function DistributorRfqsContent() {
   // role check before the service-role read below (the layout guard runs in parallel with the page)
   const s = await requireRole('distributor', '/distributor/rfqs');
   const sb = await createClient();
@@ -46,7 +47,7 @@ export default async function DistributorRfqs() {
 
   return (
     <>
-      <PageHeader title="RFQ replies" subtitle="Open buyer requests. Quote on behalf of your assigned suppliers; the buyer sees only the supplier code and country." />
+      <PageHeader title="RFQ replies" subtitle="Open buyer requests. Quote on behalf of your assigned suppliers; the buyer sees only “Verified factory” and the country/region — never the supplier name or code." />
       {!rfqs?.length ? (
         <Card><EmptyState title="No open RFQs" body="New buyer requests appear here as soon as they are submitted." /></Card>
       ) : (
@@ -99,5 +100,14 @@ export default async function DistributorRfqs() {
         </div>
       )}
     </>
+  );
+}
+
+// Batch 3 (F-14): the request-time data loads inside a Suspense boundary (Next 16 Cache Components / instant navigation)
+export default function DistributorRfqs() {
+  return (
+    <Suspense fallback={<div className="card p-6 text-ink" role="status">Loading…</div>}>
+      <DistributorRfqsContent />
+    </Suspense>
   );
 }

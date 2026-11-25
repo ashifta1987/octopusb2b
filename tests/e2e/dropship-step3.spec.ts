@@ -342,9 +342,9 @@ test('all 5 Step 3 screens: 1280px & 390px axe clean, 0 overflow, 2nd mobile tab
   await expect(page.getByTestId('product-stock-status')).toHaveText('Extended');
   await expect(page.getByTestId('hs-verified-badge')).toHaveText('HS code checked');
   await expect(page.getByTestId('volume-tiers-section')).toContainText('1–9');
-  await expect(page.getByTestId('volume-tiers-section')).toContainText('$12.40');
+  await expect(page.getByTestId('volume-tiers-section')).toContainText('US$ 12.40');
   await expect(page.getByTestId('volume-tiers-section')).toContainText('10 or more');
-  await expect(page.getByTestId('volume-tiers-section')).toContainText('$11.40');
+  await expect(page.getByTestId('volume-tiers-section')).toContainText('US$ 11.40');
 
   // Click "Make it your brand" -> opens /request/brand prefilled with DS-XXXXXX model no.
   await page.getByTestId('make-it-your-brand').getByRole('link').click();
@@ -364,10 +364,10 @@ test('Landed cost calculator: 2-unit combined parcel processing & shipping savin
     `/account/dropship/landed-cost?product=${privateProductId}&country=AE&qty=2`,
   );
 
-  await expect(page.getByTestId('lc-product-cents')).toHaveText('$24.80');
-  await expect(page.getByTestId('lc-processing-cents')).toHaveText('$1.60');
+  await expect(page.getByTestId('lc-product-cents')).toHaveText('US$ 24.80');
+  await expect(page.getByTestId('lc-processing-cents')).toHaveText('US$ 1.60');
   await expect(page.getByTestId('combined-parcel-savings')).toContainText(
-    /Combined parcel saves \$\d+\.\d{2}/,
+    /Combined parcel saves US\$ \d+\.\d{2}/,
   );
   await expect(page.getByTestId('other-countries-table')).toContainText(
     'United Arab Emirates',

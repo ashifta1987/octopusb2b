@@ -6,9 +6,10 @@ import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { DsBadge, DsChip, DsIcon } from '@/components/dropship-ui';
 import type { CatalogueVariant, PriceTier, ShipType, StockStatus } from '@/lib/dropship';
+import { money } from '@/lib/format';
 
-const usdShort = (cents: number) =>
-  `$${(cents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+// Batch 3 (F-16): same US$ format as the rest of the platform (money() → \"US$ 18.00\")
+const usdShort = (cents: number) => money(cents, 'USD');
 
 export function DsImportSubmitButton({ added }: { added: boolean }) {
   const { pending } = useFormStatus();

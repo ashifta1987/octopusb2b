@@ -97,9 +97,46 @@ export async function proxy(request: NextRequest) {
       }
     }
   }
+  // Batch 3 (F-14): real 404 status for unknown / not-yet-open public tracking links
+  const trackingMatch = path.match(/^\/t\/([^/]+)$/);
+  if (trackingMatch) {
+    try {
+      if (await publicTrackingMissing(decodeURIComponent(trackingMatch[1]))) {
+        const url = request.nextUrl.clone();
+        url.pathname = '/t/not-found/404';   // no route matches → Next renders the not-found page with HTTP 404
+        url.search = '';
+        const res = NextResponse.rewrite(url);
+        res.headers.set(TRACE_HEADER, traceId);
+        return res;
+      }
+    } catch {
+      // fall through to the page, which still renders its own not-found UI
+    }
+  }
   const res = await route(request);
   res.headers.set(TRACE_HEADER, traceId);
   return res;
+}
+
+/**
+ * Batch 3 (F-14): public parcel tracking /t/<token> answers with a real HTTP 404 (not a 404 page over 200) when
+ * Octopus Dropship is not open (dropship_v2_ui OFF) or the token is unknown. Same flag rule as isDropshipV2UiEnabled().
+ */
+async function publicTrackingMissing(token: string): Promise<boolean> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !anonKey) return false;
+  const headers = { apikey: anonKey, Authorization: `Bearer ${anonKey}`, 'Content-Type': 'application/json' };
+  const flagRes = await fetch(`${supabaseUrl}/rest/v1/site_settings?select=value&key=eq.dropship_v2_ui`, { headers });
+  if (!flagRes.ok) return false;
+  const rows = (await flagRes.json()) as { value: unknown }[];
+  const on = typeof rows[0]?.value === 'boolean' ? (rows[0].value as boolean) : process.env.APP_ENVIRONMENT === 'staging';
+  if (!on) return true;
+  const rpcRes = await fetch(`${supabaseUrl}/rest/v1/rpc/get_public_dropship_tracking`, {
+    method: 'POST', headers, body: JSON.stringify({ p_token: token }),
+  });
+  if (!rpcRes.ok) return rpcRes.status < 500;
+  return (await rpcRes.json()) == null;
 }
 
 async function route(request: NextRequest) {

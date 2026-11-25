@@ -18,6 +18,7 @@ import {
   submitDropshipProductRequestAction,
   uploadDropshipRequestImageAction,
 } from '../actions';
+import { money } from '@/lib/format';
 
 const CATEGORIES = [
   'Home and kitchen',
@@ -31,8 +32,8 @@ const CATEGORIES = [
 
 const VOLUME_BANDS = ['Under 50', '50 to 200', '200 to 1,000', 'More than 1,000'];
 
-const usdShort = (c: number) =>
-  `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+// Batch 3 (F-16): same US$ format as the rest of the platform (money() → \"US$ 18.00\")
+const usdShort = (c: number) => money(c, 'USD');
 
 function statusToneForRequest(
   merchantStatus: string,

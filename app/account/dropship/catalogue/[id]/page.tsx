@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { COUNTRY_NAMES } from '@/lib/format';
+import { COUNTRY_NAMES, money } from '@/lib/format';
 import {
   getDropshipCountries,
   getDropshipProduct,
@@ -25,8 +25,8 @@ import { ProductDetailHeroClient } from '../catalogue-v2-client';
 export const metadata = { title: 'Product detail · Octopus Dropship' };
 
 const UUID = /^[0-9a-f-]{36}$/i;
-const usdShort = (c: number) =>
-  `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+// Batch 3 (F-16): same US$ format as the rest of the platform (money() → \"US$ 18.00\")
+const usdShort = (c: number) => money(c, 'USD');
 
 export default function Page({
   params,

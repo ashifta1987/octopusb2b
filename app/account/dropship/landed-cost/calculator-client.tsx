@@ -15,9 +15,10 @@ import type {
   ShipType,
 } from '@/lib/dropship';
 import { calculateMerchantLandedCostAction } from '../actions';
+import { money } from '@/lib/format';
 
-const usdShort = (c: number) =>
-  `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+// Batch 3 (F-16): same US$ format as the rest of the platform (money() → \"US$ 18.00\")
+const usdShort = (c: number) => money(c, 'USD');
 
 const SHIP_LABELS: Record<ShipType, string> = {
   express: 'Express',

@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { DsPageHeader } from '@/components/dropship-ui';
+import { DsPageHeader, DsNotice } from '@/components/dropship-ui';
 import { requireDropshipV2Merchant } from '@/lib/dropship';
 
 export const metadata = { title: 'Pushed products · Octopus Dropship' };
@@ -7,11 +7,16 @@ export const metadata = { title: 'Pushed products · Octopus Dropship' };
 async function Guarded() {
   await requireDropshipV2Merchant('/account/dropship/pushed');
   return (
-    <DsPageHeader
-      title="Pushed products"
-      subtitle="Products published to your connected stores and their live stock and price sync status."
-      icon="refresh"
-    />
+    <div className="flex flex-col gap-5">
+      <DsPageHeader
+        title="Pushed products"
+        subtitle="Products published to your connected stores and their live stock and price sync status."
+        icon="refresh"
+      />
+      <DsNotice tone="info" title="Coming soon" testId="planned-notice">
+        Nothing has been pushed yet: store connection arrives with the Octopus Dropship Shopify app (Step 5).
+      </DsNotice>
+    </div>
   );
 }
 

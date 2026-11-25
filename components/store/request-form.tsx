@@ -21,7 +21,7 @@ export type Warehouse = { code: string; city: string; country: string; handles?:
 
 /** Request.png form: React Hook Form + the shared zod schema; submit goes through <ConfirmCharge/> (fee + wallet balance). */
 /** ADDON-44-C (audit 05): each form names its own My account section. */
-const FOLLOW: Partial<Record<RequestType, string>> = { sourcing: 'Sourcing', sample: 'Sourcing', qc: 'Sourcing', certification: 'Sourcing', dropship: 'Dropshipping', '3pl': '3PL warehouse' };
+const FOLLOW: Partial<Record<RequestType, string>> = { sourcing: 'Sourcing', sample: 'Sourcing', qc: 'Sourcing', certification: 'Sourcing', 'factory-audit': 'Sourcing', dropship: 'Dropshipping', '3pl': '3PL warehouse' };
 
 export function RequestForm({ type, action, defaults, productId, feeCents, feeLabel, serviceName, balanceCents, creditCents = 0, walletEnabled, currency, mode, loginHref, warehouses = [], demo = false }: Props) {
   const router = useRouter();

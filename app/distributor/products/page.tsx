@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { getSession, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -11,7 +12,7 @@ import { productStatusView, fmtDate } from '@/lib/format';
 
 const STATUSES = ['draft', 'submitted', 'in_review', 'live', 'rejected', 'paused', 'archived'];
 
-export default async function DistributorProducts({ searchParams }: { searchParams: Promise<{ status?: string; supplier?: string; category?: string; q?: string; page?: string }> }) {
+async function DistributorProductsContent({ searchParams }: { searchParams: Promise<{ status?: string; supplier?: string; category?: string; q?: string; page?: string }> }) {
   const sp = await searchParams;
   const s = (await getSession())!;
   const sb = await createClient();
@@ -154,5 +155,14 @@ export default async function DistributorProducts({ searchParams }: { searchPara
         )}
       </Card>
     </>
+  );
+}
+
+// Batch 3 (F-14): the request-time data loads inside a Suspense boundary (Next 16 Cache Components / instant navigation)
+export default function DistributorProducts(props: Parameters<typeof DistributorProductsContent>[0]) {
+  return (
+    <Suspense fallback={<div className="card p-6 text-ink" role="status">Loading…</div>}>
+      <DistributorProductsContent {...props} />
+    </Suspense>
   );
 }

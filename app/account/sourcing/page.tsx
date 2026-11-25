@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { requireCustomer } from '@/lib/auth';
 import { PageHeader, Card, EmptyState, Notice } from '@/components/ui';
@@ -8,7 +9,7 @@ import { SOURCING_STATUSES, SOURCING_TYPES, STATUS_TONE, TYPE_LABEL, isSourcingT
 export const metadata = { title: 'Product sourcing' };
 
 /** Account › Product sourcing: every request this customer sent from /request/* (sourcing + services), newest first. */
-export default async function SourcingList({ searchParams }: { searchParams: Promise<{ status?: string; type?: string; q?: string }> }) {
+async function SourcingListContent({ searchParams }: { searchParams: Promise<{ status?: string; type?: string; q?: string }> }) {
   const s = await requireCustomer('/account/sourcing');
   if (!s.org) return <Notice tone="amber">Complete your company profile first.</Notice>;
   const sp = await searchParams;
@@ -70,7 +71,7 @@ export default async function SourcingList({ searchParams }: { searchParams: Pro
                       {r.destination && <> · to {COUNTRY_NAMES[r.destination] ?? r.destination}</>}
                     </div>
                   </div>
-                  <div><span className={`inline-flex rounded-full px-2.5 py-1 text-[12px] font-semibold ${STATUS_TONE[r.status]}`}>{r.status}</span></div>
+                  <div><span className={`inline-flex rounded-full px-2.5 py-1 text-[12px] font-semibold ${STATUS_TONE[r.status]}`}>{r.label}</span></div>
                   <div className="text-[13px]">
                     {r.kind === 'rfq' ? <>{r.quotes} quote{r.quotes === 1 ? '' : 's'}{r.newQuotes > 0 && <span className="ml-1.5 inline-flex rounded-full bg-bad text-white text-[11px] font-bold px-1.5" data-testid="row-new-quotes">{r.newQuotes} new</span>}</> : <span className="text-muted">—</span>}
                   </div>
@@ -82,7 +83,16 @@ export default async function SourcingList({ searchParams }: { searchParams: Pro
           </ul>
         )}
       </Card>
-      <p className="text-xs text-muted mt-3">Quotes show the supplier code only. Supplier names and contacts stay with our sourcing team.</p>
+      <p className="text-xs text-muted mt-3">Quotes show a verified factory and its region only (for example “Verified factory · China (Guangdong)”). Supplier names, codes and contacts stay with our sourcing team.</p>
     </>
+  );
+}
+
+// Batch 3 (F-14): the request-time data loads inside a Suspense boundary (Next 16 Cache Components / instant navigation)
+export default function SourcingList(props: Parameters<typeof SourcingListContent>[0]) {
+  return (
+    <Suspense fallback={<div className="card p-6 text-ink" role="status">Loading…</div>}>
+      <SourcingListContent {...props} />
+    </Suspense>
   );
 }

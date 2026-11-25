@@ -278,7 +278,9 @@ test('Merchant shell gating, /account/dropship/wallet inside shell, 1280px & 390
 
   await expect(page.getByTestId('dropship-merchant-shell')).toBeVisible();
   await expect(page.getByTestId('account-tabs')).toHaveCount(0);
-  await expect(page.getByTestId('service-setting-up')).toBeVisible();
+  // Batch 3 (F-15): active merchants see real next steps instead of the legacy "being set up" card
+  await expect(page.getByTestId('dropship-active-start')).toBeVisible();
+  await expect(page.getByTestId('service-setting-up')).toHaveCount(0);
   const sidebar = page.getByTestId('dropship-sidebar');
   await expect(sidebar).toBeVisible();
   await expect(sidebar.getByRole('link', { name: 'Dashboard' })).toHaveAttribute(
@@ -309,7 +311,7 @@ test('Merchant shell gating, /account/dropship/wallet inside shell, 1280px & 390
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/account/dropship');
   await expect(page.getByTestId('dropship-phone-header')).toBeVisible();
-  await expect(page.getByTestId('service-setting-up')).toBeVisible();
+  await expect(page.getByTestId('dropship-active-start')).toBeVisible();
   await expect(page.getByTestId('dropship-store-switcher-mobile')).toContainText(
     'No store connected',
   );

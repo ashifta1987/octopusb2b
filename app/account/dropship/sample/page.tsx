@@ -17,6 +17,7 @@ import {
   requireDropshipV2Merchant,
   type ShipType,
 } from '@/lib/dropship';
+import { merchantStatusLabels } from '@/lib/status-labels';
 import { SampleOrderClient, type SampleProductOption } from './sample-client';
 
 export const metadata = { title: 'Order a sample · Octopus Dropship' };
@@ -46,11 +47,12 @@ async function SamplePage({ searchParams }: { searchParams: Promise<SP> }) {
   const { session: s, ctx } = await requireDropshipV2Merchant('/account/dropship/sample');
   const sp = await searchParams;
 
-  const [cfg, merchantCountries, impList, recentSamples] = await Promise.all([
+  const [cfg, merchantCountries, impList, recentSamples, statusLabels] = await Promise.all([
     dropshipSettings(),
     getDropshipCountries(),
     importList(s.org!.id),
     listMyDropshipSampleOrders(null),
+    merchantStatusLabels(),
   ]);
 
   const merchantCodes = merchantCountries.map((m) => m.country);
@@ -172,6 +174,7 @@ async function SamplePage({ searchParams }: { searchParams: Promise<SP> }) {
         countryOptions={countryOptions}
         recentSamples={recentSamples}
         inImportList={impList.has(activeProd.productId)}
+        statusLabels={statusLabels}
       />
     </div>
   );

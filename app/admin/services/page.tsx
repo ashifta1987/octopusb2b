@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -18,7 +19,7 @@ type Price = { id: string; service_code: string; amount_minor: number; currency:
 type Info = { amount_minor: number | null; currency: string; converted: boolean };
 
 /** Admin → Services & charges (Fees.png). */
-export default async function ServicesPage({ searchParams }: { searchParams: Promise<{ code?: string; new?: string }> }) {
+async function ServicesPageContent({ searchParams }: { searchParams: Promise<{ code?: string; new?: string }> }) {
   const s = await requireStaff('services', 'view', '/admin/services');
   const { code: sel, new: isNew } = await searchParams;
   const sb = await createClient();
@@ -283,5 +284,14 @@ export default async function ServicesPage({ searchParams }: { searchParams: Pro
         </Table>
       </Card>
     </>
+  );
+}
+
+// Batch 3 (F-14): the request-time data loads inside a Suspense boundary (Next 16 Cache Components / instant navigation)
+export default function ServicesPage(props: Parameters<typeof ServicesPageContent>[0]) {
+  return (
+    <Suspense fallback={<div className="card p-6 text-ink" role="status">Loading…</div>}>
+      <ServicesPageContent {...props} />
+    </Suspense>
   );
 }

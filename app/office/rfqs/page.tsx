@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { requireStaff } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -15,7 +16,7 @@ const FILTERS: Record<string, string[]> = {
   open: ['submitted', 'assigned', 'quoting', 'quoted'], to_quote: ['submitted', 'assigned', 'quoting'], accepted: ['accepted'], closed: ['expired', 'cancelled'],
 };
 
-export default async function OfficeRfqs({ searchParams }: { searchParams: Promise<{ f?: string }> }) {
+async function OfficeRfqsContent({ searchParams }: { searchParams: Promise<{ f?: string }> }) {
   const s = await requireStaff('requests', 'view', '/office/rfqs');
   const scope = await getDivisionScope(s);   // divisions step 4: header switcher
   const { f = 'open' } = await searchParams;
@@ -52,5 +53,14 @@ export default async function OfficeRfqs({ searchParams }: { searchParams: Promi
         </Table>
       </Card>
     </>
+  );
+}
+
+// Batch 3 (F-14): the request-time data loads inside a Suspense boundary (Next 16 Cache Components / instant navigation)
+export default function OfficeRfqs(props: Parameters<typeof OfficeRfqsContent>[0]) {
+  return (
+    <Suspense fallback={<div className="card p-6 text-ink" role="status">Loading…</div>}>
+      <OfficeRfqsContent {...props} />
+    </Suspense>
   );
 }

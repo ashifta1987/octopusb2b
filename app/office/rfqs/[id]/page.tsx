@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireStaff, can } from '@/lib/auth';
@@ -13,7 +14,7 @@ import { MessageForm } from '@/components/account/sourcing-forms';
 
 export const metadata = { title: 'RFQ' };
 
-export default async function OfficeRfq({ params }: { params: Promise<{ id: string }> }) {
+async function OfficeRfqContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const s = await requireStaff('requests', 'view', `/office/rfqs/${id}`);
   const sb = await createClient();
@@ -128,5 +129,14 @@ async function RequestThread({ rfqId, code, canReply }: { rfqId: string; code: s
         {canReply ? <MessageForm kind="rfq" id={rfqId} refCode={code} label="Reply to the customer" /> : <p className="text-sm text-muted">You can read the thread; replying needs requests edit permission.</p>}
       </div>
     </Card>
+  );
+}
+
+// Batch 3 (F-14): the request-time data loads inside a Suspense boundary (Next 16 Cache Components / instant navigation)
+export default function OfficeRfq(props: Parameters<typeof OfficeRfqContent>[0]) {
+  return (
+    <Suspense fallback={<div className="card p-6 text-ink" role="status">Loading…</div>}>
+      <OfficeRfqContent {...props} />
+    </Suspense>
   );
 }

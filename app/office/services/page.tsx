@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -19,7 +20,7 @@ const FILTERS: Record<string, string[]> = {
   open: ['requested', 'paid', 'accepted', 'in_progress', 'report_ready'], done: ['completed'], rejected: ['rejected', 'refunded'],
 };
 
-export default async function OfficeServices({ searchParams }: { searchParams: Promise<{ f?: string; r?: string; type?: string }> }) {
+async function OfficeServicesContent({ searchParams }: { searchParams: Promise<{ f?: string; r?: string; type?: string }> }) {
   const s = await requireStaff('requests', 'view', '/office/services');
   const scope = await getDivisionScope(s);   // divisions step 4: header switcher
   const { f = 'open', r: highlight, type } = await searchParams;
@@ -77,5 +78,14 @@ export default async function OfficeServices({ searchParams }: { searchParams: P
         </Table>
       </Card>
     </>
+  );
+}
+
+// Batch 3 (F-14): the request-time data loads inside a Suspense boundary (Next 16 Cache Components / instant navigation)
+export default function OfficeServices(props: Parameters<typeof OfficeServicesContent>[0]) {
+  return (
+    <Suspense fallback={<div className="card p-6 text-ink" role="status">Loading…</div>}>
+      <OfficeServicesContent {...props} />
+    </Suspense>
   );
 }

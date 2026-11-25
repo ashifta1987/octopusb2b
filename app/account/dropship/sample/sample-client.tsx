@@ -24,15 +24,23 @@ import {
   quoteDropshipSampleAction,
   submitDropshipSampleOrderAction,
 } from '../actions';
+import { money } from '@/lib/format';
 
-const usdShort = (c: number) =>
-  `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+// Batch 3 (F-16): same US$ format as the rest of the platform (money() → \"US$ 18.00\")
+const usdShort = (c: number) => money(c, 'USD');
 
 const SHIP_LABELS: Record<ShipType, string> = {
   express: 'Express',
   standard: 'Standard',
   economy: 'Economy',
 };
+
+
+/** "on_hold" → "On hold" when no status_mappings label exists (never shows underscores). */
+function tidyStatus(raw: string | null | undefined): string {
+  const t = String(raw ?? '').replace(/_/g, ' ').trim();
+  return t ? t[0].toUpperCase() + t.slice(1) : '—';
+}
 
 export type SampleProductOption = {
   productId: string;
@@ -57,6 +65,7 @@ export function SampleOrderClient({
   countryOptions,
   recentSamples,
   inImportList,
+  statusLabels = {},
 }: {
   products: SampleProductOption[];
   initialProductId: string;
@@ -72,6 +81,8 @@ export function SampleOrderClient({
   countryOptions: [string, string][];
   recentSamples: DropshipSampleOrderRow[];
   inImportList: boolean;
+  /** merchant_status → label from status_mappings (Batch 3, F-09) */
+  statusLabels?: Record<string, string>;
 }) {
   const router = useRouter();
   const [isQuoting, startQuote] = useTransition();
@@ -693,7 +704,7 @@ export function SampleOrderClient({
                   <span className="flex items-center gap-2">
                     <span className="mono font-semibold">{usdShort(so.total_cents)}</span>
                     <DsBadge tone={so.merchant_status === 'delivered' ? 'ok' : 'info'}>
-                      {so.merchant_status}
+                      {statusLabels[so.merchant_status] ?? tidyStatus(so.merchant_status)}
                     </DsBadge>
                   </span>
                 </div>

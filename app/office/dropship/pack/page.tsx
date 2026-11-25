@@ -1,17 +1,31 @@
 import { Suspense } from 'react';
 import { requireDropshipV2Staff } from '@/lib/dropship-staff';
-import { DsPageHeader } from '@/components/dropship-ui';
+import { DsPageHeader, DsNotice, DsLinkButton } from '@/components/dropship-ui';
 
 export const metadata = { title: 'Pack station · Back office' };
 
 async function Guarded() {
   await requireDropshipV2Staff(false, '/office/dropship/pack');
   return (
-    <DsPageHeader
-      title="Pack station"
-      subtitle="/office/dropship/pack · pick items, add brand insert, weigh parcel and print white-label carrier label."
-      icon="scale"
-    />
+    <div className="flex flex-col gap-5">
+      <DsPageHeader
+        title="Pack station"
+        subtitle="Pick items, add brand insert, weigh parcel and print white-label carrier label."
+        icon="scale"
+      />
+      <DsNotice
+        tone="info"
+        title="Coming soon"
+        testId="planned-notice"
+        action={
+          <DsLinkButton href="/office/shipping" variant="secondary">
+            Open Shipping
+          </DsLinkButton>
+        }
+      >
+        The pack station screen is coming soon. Until then warehouse staff pack and label parcels from Shipping.
+      </DsNotice>
+    </div>
   );
 }
 

@@ -6,10 +6,10 @@
 export const SOURCING_STATUSES = ['Submitted', 'Under review', 'Quoted', 'Accepted', 'Onboarding', 'Active', 'Closed'] as const;
 export type SourcingStatus = (typeof SOURCING_STATUSES)[number];
 
-export const SOURCING_TYPES = ['sourcing', 'dropship', '3pl', 'sample', 'qc', 'certification'] as const;
+export const SOURCING_TYPES = ['sourcing', 'dropship', '3pl', 'sample', 'qc', 'certification', 'factory-audit'] as const;
 export type SourcingType = (typeof SOURCING_TYPES)[number];
 export const TYPE_LABEL: Record<SourcingType, string> = {
-  sourcing: 'Product sourcing', dropship: 'Dropshipping', '3pl': '3PL warehousing', sample: 'Sample', qc: 'QC inspection', certification: 'Certification',
+  sourcing: 'Product sourcing', dropship: 'Dropshipping', '3pl': '3PL warehousing', sample: 'Sample', qc: 'QC inspection', certification: 'Certification', 'factory-audit': 'Factory audit',
 };
 export const isSourcingType = (t: string | undefined): t is SourcingType => !!t && (SOURCING_TYPES as readonly string[]).includes(t);
 
@@ -40,6 +40,7 @@ export function serviceStatus(status: string, type: SourcingType): SourcingStatu
 
 /** service_requests.service_code → request type */
 export function serviceType(code: string): SourcingType {
+  if (code === 'factory_audit') return 'factory-audit';
   return isSourcingType(code) ? code : code === 'warehouse' ? '3pl' : 'sample';
 }
 

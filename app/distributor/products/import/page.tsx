@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { getSession } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -17,7 +18,7 @@ const MODE: Record<string, { label: string; tone: string }> = {
   create: { label: 'Create', tone: 'text-coral-text' }, update: { label: 'Update', tone: 'text-warn' }, unchanged: { label: 'No change', tone: 'text-muted' },
 };
 
-export default async function ImportPage({ searchParams }: { searchParams: Promise<{ job?: string; supplier?: string }> }) {
+async function ImportPageContent({ searchParams }: { searchParams: Promise<{ job?: string; supplier?: string }> }) {
   const { job: jobId, supplier: supplierParam } = await searchParams;
   const s = (await getSession())!;
   const { selected } = await supplierScope(s, supplierParam);   // unassigned code → 404
@@ -181,5 +182,14 @@ export default async function ImportPage({ searchParams }: { searchParams: Promi
         </Table>
       </Card>
     </>
+  );
+}
+
+// Batch 3 (F-14): the request-time data loads inside a Suspense boundary (Next 16 Cache Components / instant navigation)
+export default function ImportPage(props: Parameters<typeof ImportPageContent>[0]) {
+  return (
+    <Suspense fallback={<div className="card p-6 text-ink" role="status">Loading…</div>}>
+      <ImportPageContent {...props} />
+    </Suspense>
   );
 }

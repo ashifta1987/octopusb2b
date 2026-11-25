@@ -1,11 +1,14 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import { rfqStatus, serviceStatus, serviceType, type SourcingStatus, type SourcingType } from '@/lib/sourcing';
+import { sourceStatusLabels } from '@/lib/status-labels';
 
 /** Account › Product sourcing data (RLS client: a customer only ever reads their own organisation's rows). */
 export type SourcingRow = {
   kind: 'rfq' | 'service'; id: string; ref: string; title: string; quantity: number | null; unit: string | null;
-  destination: string | null; type: SourcingType; status: SourcingStatus; raw: string; quotes: number; newQuotes: number;
+  destination: string | null; type: SourcingType; status: SourcingStatus;
+  /** what the customer reads on the pill: status_mappings label for open sourcing requests (F-09), else the step name */
+  label: string; raw: string; quotes: number; newQuotes: number;
   fee: number; currency: string; created_at: string; order: { id: string; code: string; status: string } | null;
 };
 
@@ -15,17 +18,25 @@ type Svc = { id: string; code: string; service_code: string; status: string; det
 const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null);
 const num = (v: unknown) => (v == null || v === '' ? null : Number.isFinite(Number(v)) ? Number(v) : null);
 
+/** Requests without an order show the status_mappings label (e.g. "Quote ready"); once an order exists the step name
+ *  (Active / Closed) describes it. */
+export function rfqLabel(status: SourcingStatus, raw: string, labels: Record<string, string>, hasOrder: boolean): string {
+  return hasOrder ? status : labels[raw] ?? status;
+}
+
 export async function listSourcing(orgId: string): Promise<SourcingRow[]> {
   const sb = await createClient();
   const [{ data: rfqs }, { data: svcs }] = await Promise.all([
     sb.from('rfqs').select('id, code, title, quantity, unit, destination_country, status, fee_minor, currency, created_at, quotes(status), orders(id, code, status)').eq('org_id', orgId).order('created_at', { ascending: false }).limit(500),
     sb.from('service_requests').select('id, code, service_code, status, details, fee_minor, currency, created_at').eq('org_id', orgId).order('created_at', { ascending: false }).limit(500),
   ]);
+  const labels = await sourceStatusLabels('sourcing_rfq');
   const a: SourcingRow[] = ((rfqs ?? []) as unknown as Rfq[]).map((r) => {
     const q = r.quotes ?? []; const order = r.orders?.[0] ?? null;
+    const status = rfqStatus(r.status, order?.status);
     return {
       kind: 'rfq', id: r.id, ref: r.code, title: r.title, quantity: r.quantity, unit: r.unit, destination: r.destination_country, type: 'sourcing',
-      status: rfqStatus(r.status, order?.status), raw: r.status, quotes: q.length, newQuotes: q.filter((x) => x.status === 'sent').length,
+      status, label: rfqLabel(status, r.status, labels, !!order), raw: r.status, quotes: q.length, newQuotes: q.filter((x) => x.status === 'sent').length,
       fee: Number(r.fee_minor ?? 0), currency: r.currency, created_at: r.created_at, order,
     };
   });
@@ -34,7 +45,7 @@ export async function listSourcing(orgId: string): Promise<SourcingRow[]> {
     return {
       kind: 'service', id: s.id, ref: s.code, title: str(d.title) ?? str(d.product) ?? str(d.order_reference) ?? str(d.store_platform) ?? '—',
       quantity: num(d.quantity) ?? num(d.monthly_orders), unit: num(d.monthly_orders) != null && num(d.quantity) == null ? 'orders / month' : null,
-      destination: str(d.destination_country) ?? str(d.warehouse_country) ?? str(d.target_market), type, status: serviceStatus(s.status, type), raw: s.status,
+      destination: str(d.destination_country) ?? str(d.warehouse_country) ?? str(d.target_market), type, status: serviceStatus(s.status, type), label: serviceStatus(s.status, type), raw: s.status,
       quotes: 0, newQuotes: 0, fee: Number(s.fee_minor ?? 0), currency: s.currency, created_at: s.created_at, order: null,
     };
   });

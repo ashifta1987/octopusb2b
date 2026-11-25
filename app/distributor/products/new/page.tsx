@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { forbidden, notFound } from 'next/navigation';
 import { checkSupplierAccess } from '@/lib/distributor/access';
@@ -7,7 +8,7 @@ import { ProductEditor } from '@/components/backoffice/product-editor';
 
 export const metadata = { title: 'Create product' };
 
-export default async function NewProduct({ searchParams }: { searchParams: Promise<{ supplier?: string }> }) {
+async function NewProductContent({ searchParams }: { searchParams: Promise<{ supplier?: string }> }) {
   const { supplier } = await searchParams;
   const s = (await getSession())!;
   // item 3: ?supplier=<id> of a supplier that is not assigned → 403 page
@@ -25,5 +26,14 @@ export default async function NewProduct({ searchParams }: { searchParams: Promi
       />
       <ProductEditor session={s} productId={null} presetSupplier={supplier} />
     </>
+  );
+}
+
+// Batch 3 (F-14): the request-time data loads inside a Suspense boundary (Next 16 Cache Components / instant navigation)
+export default function NewProduct(props: Parameters<typeof NewProductContent>[0]) {
+  return (
+    <Suspense fallback={<div className="card p-6 text-ink" role="status">Loading…</div>}>
+      <NewProductContent {...props} />
+    </Suspense>
   );
 }

@@ -152,7 +152,24 @@ async function DropshipHome() {
           </DsCard>
         </div>
       ) : (
-        <ServiceStart service="dropship" hideHeading />
+        // Batch 3 (F-15): an active merchant gets real next steps, not the old "being set up" card
+        <DsCard title="Next steps" icon="check" testId="dropship-active-start">
+          <p className="ds-mut text-[13px] m-0 mb-3">
+            Find products and order samples now. Connecting your Shopify store arrives with the Octopus Dropship
+            Shopify app (Step 5).
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <DsLinkButton href="/account/dropship/catalogue" variant="primary" icon="search">
+              Find products
+            </DsLinkButton>
+            <DsLinkButton href="/account/dropship/sample" variant="secondary" icon="package">
+              Order a sample
+            </DsLinkButton>
+            <DsLinkButton href="/account/dropship/requests" variant="secondary" icon="file">
+              Request a product
+            </DsLinkButton>
+          </div>
+        </DsCard>
       )}
     </div>
   );

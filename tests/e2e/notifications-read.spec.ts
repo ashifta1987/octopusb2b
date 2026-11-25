@@ -17,7 +17,7 @@ const seed = async (orgId: string) => {
   const admin = adminClient();
   const { error } = await admin.from('notifications').insert([
     { org_id: orgId, title: 'KYC verified', body: 'Your company verification status changed.', link: '/account/kyc', created_at: new Date(Date.now() - 60_000).toISOString() },
-    { org_id: orgId, title: '3PL request SR-E2E paid', body: 'Your 3pl request is now paid.', link: '/account/sourcing', created_at: new Date().toISOString() },
+    { org_id: orgId, title: '3PL request SRV-E2E paid', body: 'Your 3pl request is now paid.', link: '/account/sourcing', created_at: new Date().toISOString() },
   ]);
   if (error) throw error;
 };
@@ -68,7 +68,7 @@ test('desktop 1440: open one → bubble drops at once and stays after reload', a
   await expect(bell(page)).toHaveAttribute('data-unread', '1');
 
   // the second, by clicking the row
-  await page.getByTestId('notification').filter({ hasText: 'SR-E2E' }).locator('p').click();
+  await page.getByTestId('notification').filter({ hasText: 'SRV-E2E' }).locator('p').click();
   await page.waitForURL(/\/account\/sourcing/);
   await expect(bell(page)).toHaveAttribute('data-unread', '0');
   await page.goto('/account/notifications');

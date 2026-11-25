@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireStaff, can } from '@/lib/auth';
@@ -22,7 +23,7 @@ const NEXT: Record<string, string[]> = {
   ready_to_ship: ['shipped'], shipped: ['delivered'], delivered: ['closed', 'disputed'], disputed: ['closed'],
 };
 
-export default async function OfficeOrder({ params }: { params: Promise<{ id: string }> }) {
+async function OfficeOrderContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const s = await requireStaff('orders', 'view', `/office/orders/${id}`);
   const sb = await createClient();
@@ -180,5 +181,14 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
         </div>
       </div>
     </>
+  );
+}
+
+// Batch 3 (F-14): the request-time data loads inside a Suspense boundary (Next 16 Cache Components / instant navigation)
+export default function OfficeOrder(props: Parameters<typeof OfficeOrderContent>[0]) {
+  return (
+    <Suspense fallback={<div className="card p-6 text-ink" role="status">Loading…</div>}>
+      <OfficeOrderContent {...props} />
+    </Suspense>
   );
 }

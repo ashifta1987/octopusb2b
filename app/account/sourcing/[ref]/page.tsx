@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { requireCustomer } from '@/lib/auth';
@@ -12,8 +13,11 @@ import { ApproveQuoteButton } from '@/components/account/approve-quote';
 import { nowMs } from '@/components/account/order-utils';
 import { MessageForm, FileUpload } from '@/components/account/sourcing-forms';
 import { MarkQuotesViewed } from '@/components/account/mark-quotes-viewed';
-import { approveQuote } from '../../rfqs/actions';
+import { approveQuote, rejectQuote } from '../../rfqs/actions';
+import { DeclineQuoteButton } from '@/components/account/decline-quote';
 import { STATUS_TONE, TYPE_LABEL, rfqStatus, serviceStatus, serviceType, timelineStep, type SourcingStatus } from '@/lib/sourcing';
+import { rfqLabel } from '@/components/account/sourcing-data';
+import { sourceStatusLabels } from '@/lib/status-labels';
 
 export const metadata = { title: 'Sourcing request' };
 
@@ -24,7 +28,7 @@ type Quote = {
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** /account/sourcing/[ref] — ref = request code (RFQ-… / SR-…) or id. RLS returns nothing for another customer's request → 404. */
-export default async function SourcingDetail({ params }: { params: Promise<{ ref: string }> }) {
+async function SourcingDetailContent({ params }: { params: Promise<{ ref: string }> }) {
   const { ref: raw } = await params;
   const ref = decodeURIComponent(raw);
   const s = await requireCustomer(`/account/sourcing/${raw}`);
@@ -70,6 +74,7 @@ export default async function SourcingDetail({ params }: { params: Promise<{ ref
   const approvable = (q: (typeof quotes)[number]) => (q.status === 'sent' || q.status === 'viewed') && new Date(q.valid_until).getTime() > now && !order;
   const type = kind === 'rfq' ? 'sourcing' : serviceType(req.service_code as string);
   const status: SourcingStatus = kind === 'rfq' ? rfqStatus(req.status as string, order?.status) : serviceStatus(req.status as string, type);
+  const statusLabel = kind === 'rfq' ? rfqLabel(status, req.status as string, await sourceStatusLabels('sourcing_rfq'), !!order) : status;
   const reached: SourcingStatus = status === 'Closed' ? (quotes.length ? 'Quoted' : 'Submitted') : status;
   const step = timelineStep(status, reached);
   const details = (kind === 'service' ? (req.details ?? {}) : {}) as Record<string, unknown>;
@@ -95,7 +100,7 @@ export default async function SourcingDetail({ params }: { params: Promise<{ ref
         title={(kind === 'rfq' ? req.title : (details.title ?? details.product ?? TYPE_LABEL[type])) as string}
         subtitle={`Sent ${fmtDate(req.created_at as string)}`}
         actions={<>
-          <span className={`inline-flex rounded-full px-3 py-1.5 text-[13px] font-semibold ${STATUS_TONE[status]}`} data-testid="request-status">{status}</span>
+          <span className={`inline-flex rounded-full px-3 py-1.5 text-[13px] font-semibold ${STATUS_TONE[status]}`} data-testid="request-status">{statusLabel}</span>
           {kind === 'rfq' && <RealtimeRefresh channel={`rfq-${id}`} subs={[{ table: 'quotes', event: 'INSERT', filter: `rfq_id=eq.${id}` }, { table: 'quotes', event: 'UPDATE', filter: `rfq_id=eq.${id}` }]} />}
           <Link href="/request/sourcing" className="btn btn-ghost btn-sm">+ New request</Link>
         </>} />
@@ -167,7 +172,8 @@ export default async function SourcingDetail({ params }: { params: Promise<{ ref
                             <div className="flex flex-col gap-2 items-start">
                               {approvable(q)
                                 ? <ApproveQuoteButton quoteId={q.id} quoteCode={q.code} totalCents={q.total} currency={q.currency} depositPct={settings.deposit_pct} termsVersion={terms?.version} action={approveQuote} label="Accept quote" className="btn btn-primary btn-sm" />
-                                : <span className="text-sm text-muted">{q.status === 'approved' ? 'Accepted' : order ? 'Not selected' : 'Not available'}</span>}
+                                : <span className="text-sm text-muted" data-testid={`quote-state-${q.code}`}>{q.status === 'approved' ? 'Accepted' : q.status === 'rejected' ? 'Declined' : order ? 'Not selected' : 'Not available'}</span>}
+                              {approvable(q) && <DeclineQuoteButton quoteId={q.id} quoteCode={q.code} action={rejectQuote} />}
                               <a href="#ask" className="text-sm font-semibold text-coral-text">Ask a question</a>
                             </div>
                           </td>
@@ -248,5 +254,14 @@ async function ProductLink({ id }: { id: string }) {
       <div className="min-w-0"><div className="text-[12px] text-muted">Attached product</div>
         {p.status === 'live' ? <Link href={`/p/${p.slug}`} className="font-semibold hover:text-coral-text">{p.title as string}</Link> : <span className="font-semibold">{p.title as string}</span>}</div>
     </div>
+  );
+}
+
+// Batch 3 (F-14): the request-time data loads inside a Suspense boundary (Next 16 Cache Components / instant navigation)
+export default function SourcingDetail(props: Parameters<typeof SourcingDetailContent>[0]) {
+  return (
+    <Suspense fallback={<div className="card p-6 text-ink" role="status">Loading…</div>}>
+      <SourcingDetailContent {...props} />
+    </Suspense>
   );
 }

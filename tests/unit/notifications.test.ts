@@ -29,9 +29,9 @@ describe('notificationKey — one notification per event', () => {
 
 describe('notification wording', () => {
   it('names the service and the request code, links to the request', () => {
-    const n = notificationFor({ ...paid('e1'), payload: { org_id: ORG, code: 'SR-1042', service_name: '3PL request' } })!;
-    expect(n.title).toBe('3PL request SR-1042 paid');
-    expect(n.link).toBe('/account/sourcing/SR-1042');
+    const n = notificationFor({ ...paid('e1'), payload: { org_id: ORG, code: 'SRV-1042', service_name: '3PL request' } })!;
+    expect(n.title).toBe('3PL request SRV-1042 paid');
+    expect(n.link).toBe('/account/sourcing/SRV-1042');
   });
   it('falls back to the generic wording without details', () => {
     expect(notificationFor(paid('e1'))!.title).toBe('Service request paid');

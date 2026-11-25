@@ -135,7 +135,7 @@ export default async function DistributorHome() {
           <div><b className="text-ink">RFQ replies</b> · quotes can be sent for this supplier</div>
           <div><b className="text-ink">Listings live</b> · supplier&apos;s products can go live to buyers</div>
           <div><b className="text-ink">AI tools</b> · photo enhance, poster maker and SEO fix for this supplier&apos;s products</div>
-          <div className="text-xs">Buyers only ever see the supplier code and country — never the names or contacts above.</div>
+          <div className="text-xs">Buyers only ever see “Verified factory” with the country and region — never the supplier code, names or contacts above.</div>
         </div>
       </Card>
     </>

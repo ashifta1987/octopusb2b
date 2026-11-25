@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -17,7 +18,7 @@ export const metadata = { title: 'Finance & revenue' };
 type Approval = { id: string; kind: string; org_id: string | null; supplier_id: string | null; order_id: string | null; amount_cents: number; currency: string; reason: string; status: string; requested_by: string; approved_by: string | null; created_at: string; decided_at: string | null };
 
 /** Admin → Finance & revenue (Finance.png). */
-export default async function FinancePage({ searchParams }: { searchParams: Promise<{ month?: string }> }) {
+async function FinancePageContent({ searchParams }: { searchParams: Promise<{ month?: string }> }) {
   const s = await requireStaff('finance', 'view', '/admin/finance');
   const { month: mp } = await searchParams;
   const now = new Date();
@@ -320,5 +321,14 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
         </Card>
       </div>
     </>
+  );
+}
+
+// Batch 3 (F-14): the request-time data loads inside a Suspense boundary (Next 16 Cache Components / instant navigation)
+export default function FinancePage(props: Parameters<typeof FinancePageContent>[0]) {
+  return (
+    <Suspense fallback={<div className="card p-6 text-ink" role="status">Loading…</div>}>
+      <FinancePageContent {...props} />
+    </Suspense>
   );
 }

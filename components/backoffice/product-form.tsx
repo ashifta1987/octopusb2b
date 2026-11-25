@@ -226,7 +226,7 @@ export function ProductForm({
             </div>
           </div>
           {uploadBlocked && <p className="mt-3 text-sm text-bad" role="alert">Product upload is switched off for {supplier?.code}. Turn it on in Suppliers to add or edit products.</p>}
-          <p className="text-xs text-muted mt-3">Buyers only ever see the supplier code, never the company name.</p>
+          <p className="text-xs text-muted mt-3">Buyers only ever see “Verified factory” with the country/region — never the supplier code or company name.</p>
         </section>
 
         {/* Basics */}
@@ -625,7 +625,7 @@ export function ProductForm({
               {prices.length ? `${money(Math.round(Math.min(...prices) * 100), cur)}${prices.length > 1 ? `–${money(Math.round(Math.max(...prices) * 100), cur)}` : ''}` : '—'}
               <span className="text-xs text-muted font-normal"> / {watch('unit')}</span>
             </div>
-            <div className="text-xs text-muted">MOQ {watch('moq') || '—'} {watch('unit')} · Supplier {supplier?.code ?? '—'} · {supplier?.country ?? ''}</div>
+            <div className="text-xs text-muted">MOQ {watch('moq') || '—'} {watch('unit')} · Verified factory · {supplier?.country ?? '—'}</div>
           </div>
         </div>
         <div className="card p-4">

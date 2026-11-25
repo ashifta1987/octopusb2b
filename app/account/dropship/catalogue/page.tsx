@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { requireCustomer } from '@/lib/auth';
-import { COUNTRY_NAMES } from '@/lib/format';
+import { COUNTRY_NAMES, money } from '@/lib/format';
 import { getAccountContext, serviceOn } from '@/lib/core/account';
 import {
   getDropshipCatalogue,
@@ -44,8 +44,8 @@ type SP = {
   page?: string;
 };
 
-const usdShort = (c: number) =>
-  `$${(c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+// Batch 3 (F-16): same US$ format as the rest of the platform (money() → \"US$ 18.00\")
+const usdShort = (c: number) => money(c, 'USD');
 
 const SHIPS: [string, string][] = [
   ['', 'All methods'],
@@ -565,7 +565,7 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
 
                   <p className="ds-mut m-0 text-[12px] mono">{r.model_no}</p>
 
-                  {/* Correction 1: REAL RFQ code ONLY (RFQ-YYYY-NNNNNN) */}
+                  {/* Correction 1: REAL RFQ code ONLY (rfqs.code, RFQ-<seq> e.g. RFQ-1358) */}
                   {r.sourced_rfq_code && (
                     <p className="ds-mut m-0 text-[12px]" data-testid="sourced-from-rfq">
                       Sourced from your request <span className="mono">{r.sourced_rfq_code}</span>
