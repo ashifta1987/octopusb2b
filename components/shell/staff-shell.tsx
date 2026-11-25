@@ -18,8 +18,8 @@ import { StaffShellSwitcher } from './dropship-shell-switcher';
  * ADDON-41 boards 06–08 — staff shell: navy header ("Admin · staff only"), admin tabs, and the side menu
  * (work queue first, then the existing back-office and admin pages the person may open).
  */
-export function StaffShell({ session, nav, counts, moderation, unread = 0, scope, dropshipV2Ui = false, canEditDropship = false, children }: {
-  session: Session; nav: NavSection[]; counts: { queue: number; approvals: number; transfers: number }; moderation?: number | null; unread?: number; scope?: DivisionScope; dropshipV2Ui?: boolean; canEditDropship?: boolean; children: React.ReactNode;
+export function StaffShell({ session, nav, counts, moderation, unread = 0, scope, dropshipV2Ui = false, canEditDropship = false, canSeeRates = false, in3pl = false, children }: {
+  session: Session; nav: NavSection[]; counts: { queue: number; approvals: number; transfers: number }; moderation?: number | null; unread?: number; scope?: DivisionScope; dropshipV2Ui?: boolean; canEditDropship?: boolean; canSeeRates?: boolean; in3pl?: boolean; children: React.ReactNode;
 }) {
   const name = session.profile?.full_name ?? session.email ?? 'Staff';
   const initials = name.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
@@ -54,6 +54,8 @@ export function StaffShell({ session, nav, counts, moderation, unread = 0, scope
   ];
   const inDs = Boolean(scope?.options.some((d) => d.code === 'DS'));
   const canOpenDropship = session.isAdmin || can(session, 'finance', 'view') || can(session, 'support', 'edit') || inDs;
+  // EA-1 (design v2): 3PL & Shipping staff work on Shipping rates, Fees and Duty (canSeeRates / in3pl from the layout)
+  const canSeeFeesDuty = canOpenDropship || in3pl;
   const rest = nav
     .map((s) => ({
       ...s,
@@ -111,6 +113,8 @@ export function StaffShell({ session, nav, counts, moderation, unread = 0, scope
     <StaffShellSwitcher
       v2ShellEnabled={dropshipV2Ui}
       canSeeDropshipItems={canOpenDropship}
+      canSeeRates={canSeeRates}
+      canSeeFeesDuty={canSeeFeesDuty}
       canEditDropship={canEditDropship}
       canSeeSaas={canSeeSaas}
       userName={name}

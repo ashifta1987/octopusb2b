@@ -1,0 +1,201 @@
+Turnkey Sourcing App: UI/UX Design in 
+Detail and Project Memory
+Nov 25, 2026  ·  @ASHIF
+What the app is
+The app lets Octopus B2B sell turnkey projects (a full business set-up, sourced and
+shipped from China) and get paid for every service before the work starts. The whole app
+is in English.
+Business: Octopus B2B is a China trading company. It helps clients with layout
+drawing, sourcing, quality control (QC), factory inspection, shipment and handover.
+Clients: mostly from Turkey, buying a complete project such as a gym, laundry,
+vending or robotic cafe.
+Catalogue: 300 projects, each with a photo, shown on the front page.
+Main revenue: paid consultation, QC and factory inspection. Every process is charged
+and paid before work starts.
+Newer services: Visit China with us (guided factory and sourcing trips) and a
+dedicated account manager for each project.
+Price messaging: every price is shown as a starting price, because some
+consultations cost more.
+Supplier details: hidden from clients. The client deals only with Octopus.
+Prices and fee rules
+Every fee is labelled "From $X" and paid before the work starts. Staff set the exact fee per
+client; a fee above 2x the starting fee needs admin approval.
+Service Starting fee Rule
+Consultation From $99 Some consultations cost more
+Layout drawing From $299 3 versions free; each extra version costs
+50% of the drawing fee (from $150)
+Sourcing and quotes From $199
+Turnkey Sourcing App: UI/UX Design in Detail and Project Memory
+Page 1 of 7
+
+The 8-step flow, payment gates and roles
+Every project moves through eight phases, and each paid phase stays locked until the
+client's payment is confirmed.
+1. Enquiry: the client picks a project or requests a new one and fills in the plan.
+2. Consultation: paid first; staff set the exact fee.
+3. Design: layout drawing, 3 free versions, then 50% of the drawing fee per extra
+version.
+4. Sourcing: quotes from suppliers, hidden from the client.
+5. Quote and deposit: the client approves the quote and pays the deposit.
+6. Production and QC: factory audit and inspections, each paid before it starts.
+7. Shipment: booking, tracking and shipping documents.
+8. Handover: final documents, sign-off and optional China visit.
+Service Starting fee Rule
+Factory audit About $250
+Pre-shipment inspection From $249
+Visit China with us From $399 per day Up to 2 people; extra traveller $99 per day
+Dedicated account
+manager
+From $299 per
+project
+Waived above a project value you still need
+to set
+Visa invitation letter $49 Trip extra
+Car and driver $100 per day Trip extra
+Airport pick-up $39 Trip extra
+Hotel help Free Trip extra
+Turnkey Sourcing App: UI/UX Design in Detail and Project Memory
+Page 2 of 7
+
+The flow runs left to right in two rows; only the enquiry is free of a payment gate.
+All 32 screens
+The clickable design is a canvas of 32 boards, grouped here by who uses them and what
+they do.
+project flow · 8 phases, 7 payment gates
+Role What they do
+Admin Approves fees above 2x the starting fee, sees
+reports, manages staff and account managers
+Sourcing team Sets fees, gathers supplier quotes, runs the project
+Account manager One named contact per project, with cover when
+away
+Inspector Uses the phone checklist (Pass, Fail, N/A, photos,
+offline)
+Client Pays, approves, requests changes, downloads
+invoices and reports
+Supplier Never sees the client; works through Octopus only
+Turnkey Sourcing App: UI/UX Design in Detail and Project Memory
+Page 3 of 7
+
+Group Screens What they do
+Front page and
+sign-in
+Catalogue, SignIn Catalogue is the public front page:
+hero, Book a consultation (from
+$99), Visit China with us banner
+(from $399 per day), 300 project
+photo cards with search and
+category chips, project detail pop-
+up, How it works, sample audit and
+inspection reports, FAQ. SignIn is
+the login.
+Client journey NewProject, ClientIntake,
+Consultation, Drawing,
+ChangeRequest, Quote, Payment,
+Orders, Shipping, Handover,
+ClientPortal
+NewProject collects the plan
+when a client requests a new
+project. Drawing shows versions;
+ChangeRequest shows the free-
+versions bar and the $150 paid-
+version preview. Payment, Orders,
+Shipping and Handover follow the
+8 phases. ClientPortal is the
+client's home.
+Services and
+visits
+Services, ChinaVisit, TripManager,
+QC
+Services lists every starting fee
+with photos. ChinaVisit is the
+client's trip request; TripManager
+is staff itinerary, costs, checklist,
+guide and trip report. QC covers
+factory audit and pre-shipment
+inspection.
+Staff operations Main (Dashboard), Project, SetFee,
+AccountManagers, Reports,
+Alerts, Settings
+Dashboard is the staff home.
+SetFee lets staff set the exact fee
+(admin approval above 2x).
+AccountManagers shows load,
+cover when away and unassigned
+projects. Reports shows fees by
+service, funnel, unpaid ageing and
+inspector workload.
+Turnkey Sourcing App: UI/UX Design in Detail and Project Memory
+Page 4 of 7
+
+Look and feel
+The design is clean and navy-and-blue, in English only, with Octopus branding and photos
+of Octopus-uniformed staff.
+Group Screens What they do
+Money and
+documents
+Invoices, Documents Invoices lists PDFs and receipts,
+with VAT placeholders.
+Documents holds drawings,
+reports and shipping papers.
+Phones InspectorMobile, MobileClient Inspector checklist (Pass, Fail,
+N/A, photos, offline) and the
+client's phone view.
+Rules and states Terms, Legal, States Terms and Legal cover China visit
+terms, KVKK and GDPR privacy,
+the independence statement and
+secure passport upload. States
+shows 9 empty, error and waiting
+states.
+Item Choice
+Navy #1A174A (headers, hero, dark banners)
+Blue #2F6FE0 (buttons, links, highlights)
+Light blues #E8F0FD and #7DB0FF
+Page background #F4F7FC
+Borders #E1E6F2 and #D3DAEC
+Muted text #5A6080
+Fonts Outfit for headings, Inter for body
+Staff header Navy, white logo tile, nav: Dashboard, Catalogue,
+Services, Orders, Shipping, Reports, Settings
+Client header White, with the logo
+Turnkey Sourcing App: UI/UX Design in Detail and Project Memory
+Page 5 of 7
+
+Photos: 300 project photos on the catalogue cards; 33 AI-generated Octopus staff-
+scene photos on service steps, the China visit, sign-in, alerts, documents and the
+front page hero and banner.
+Removed on request: team-member portraits, Top 5 picks, Meet the team, Projects
+we have delivered, What our clients say.
+Prices: always shown as "From $X" or "starting from".
+Open placeholders and decisions
+The design still holds placeholders that you need to fill before go-live.
+Project memory and build notes
+The real app is not built yet; you have asked only for design, audits and optimisation so far.
+These are the facts to carry into the build.
+Owner: Ashif, new to software development, learning GitHub, Vercel and Supabase;
+runs Octopus B2B, a China trading company.
+Plan: build the real app later in Antigravity with Next.js, Supabase, Vercel and GitHub.
+Language: English only.
+Suppliers: no supplier details shown to clients.
+Money: every service is paid before work starts; prices shown as starting prices.
+Drawings: 3 free versions, then 50% of the drawing fee per extra version.
+Item Choice
+Layout Atlas-style catalogue layout
+[ACCOUNT MANAGER NAME] and [REPLY TIME] on the account manager screens
+[THRESHOLD]: project value above which the account manager fee is waived
+[VAT RULE] and [INVOICING COMPANY] on invoices
+[COMPANY LEGAL NAME] on terms and legal pages
+Bank details, rates and warranty period
+Space size filter on the catalogue: needs a floor-area value per project, or drop it
+Replace AI-generated staff photos with real ones, or label them, before go-live
+Nothing has been checked by screenshot yet: review every screen by eye
+Turnkey Sourcing App: UI/UX Design in Detail and Project Memory
+Page 6 of 7
+
+New services: Visit China with us and a dedicated account manager per project.
+Branding: Octopus, with an Atlas-style layout.
+Design file: the Claude Design canvas with 32 boards; project list of 300 projects kept
+in a Sheets file.
+Next step, only when you approve the design: a data model (projects, phases,
+payments, fees, versions, trips, invoices, roles) and the Antigravity build prompt.
+Turnkey Sourcing App: UI/UX Design in Detail and Project Memory
+Page 7 of 7

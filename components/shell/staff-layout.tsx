@@ -1,4 +1,4 @@
-import { getSession } from '@/lib/auth';
+import { can, getSession } from '@/lib/auth';
 import { staffLayoutGuard } from '@/lib/staff/guard';
 import { OFFICE_NAV } from '@/lib/nav';
 import { moderationPendingCount } from '@/lib/moderation-count';
@@ -31,10 +31,19 @@ export async function StaffLayoutShell({ next, children }: { next: string; child
         (m) => m.division_id === dsDivId && ['manager', 'staff'].includes(String(m.role)),
       ),
     );
+  // EA-1: Shipping rates follow the database rule (step6b_rate_card_read): admin, Finance, orders editors, 3PL viewers,
+  // or a member of the 3PL & Shipping or Dropship division. Support alone never sees rate cards.
+  const memberCodes = (myDivs.data ?? [])
+    .map((m) => scope.options.find((d) => d.id === m.division_id)?.code)
+    .filter(Boolean) as string[];
+  const canSeeRates =
+    session.isAdmin || can(session, 'finance', 'view') || can(session, 'orders', 'edit') || can(session, 'warehouse', 'view') ||
+    memberCodes.includes('3PL') || memberCodes.includes('DS');
+  const in3pl = memberCodes.includes('3PL');
   const counts = {
     queue: q?.stats.open ?? 0,
     approvals: q?.myApprovals ?? 0,
     transfers: q?.items.filter((i) => i.key.startsWith('tt-')).length ?? 0,
   };
-  return <StaffShell session={session} nav={OFFICE_NAV} counts={counts} moderation={moderation} unread={unread} scope={scope} dropshipV2Ui={dropshipV2Ui} canEditDropship={canEditDropship}>{children}</StaffShell>;
+  return <StaffShell session={session} nav={OFFICE_NAV} counts={counts} moderation={moderation} unread={unread} scope={scope} dropshipV2Ui={dropshipV2Ui} canEditDropship={canEditDropship} canSeeRates={canSeeRates} in3pl={in3pl}>{children}</StaffShell>;
 }

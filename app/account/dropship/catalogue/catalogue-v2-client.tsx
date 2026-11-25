@@ -119,6 +119,8 @@ export function ProductDetailHeroClient({
   added,
   addAction,
   removeAction,
+  showImport = true,
+  showSample = true,
 }: {
   productId: string;
   modelNo: string;
@@ -138,6 +140,9 @@ export function ProductDetailHeroClient({
   added: boolean;
   addAction: (fd: FormData) => Promise<void>;
   removeAction: (fd: FormData) => Promise<void>;
+  /** EA-2: hidden while the Import list / Sample orders features are off */
+  showImport?: boolean;
+  showSample?: boolean;
 }) {
   const firstInStock = variants.find((v) => v.stock_status !== 'out') ?? variants[0] ?? null;
   const [selectedVariantId, setSelectedVariantId] = useState<string | null>(firstInStock?.id ?? null);
@@ -334,24 +339,28 @@ export function ProductDetailHeroClient({
         )}
 
         <div className="flex gap-2.5 flex-wrap items-center pt-1">
-          <form action={added ? removeAction : addAction} className="inline-flex">
-            <input type="hidden" name="product_id" value={productId} />
-            {selectedVariant && <input type="hidden" name="variant_id" value={selectedVariant.id} />}
-            {defaultService && <input type="hidden" name="service" value={defaultService} />}
-            {suggestedPriceCents != null && (
-              <input type="hidden" name="price_cents" value={suggestedPriceCents} />
-            )}
-            <DsImportSubmitButton added={added} />
-          </form>
+          {showImport && (
+            <form action={added ? removeAction : addAction} className="inline-flex">
+              <input type="hidden" name="product_id" value={productId} />
+              {selectedVariant && <input type="hidden" name="variant_id" value={selectedVariant.id} />}
+              {defaultService && <input type="hidden" name="service" value={defaultService} />}
+              {suggestedPriceCents != null && (
+                <input type="hidden" name="price_cents" value={suggestedPriceCents} />
+              )}
+              <DsImportSubmitButton added={added} />
+            </form>
+          )}
 
-          <Link
-            href={sampleHref}
-            data-testid="order-sample-link"
-            className="ds-btn ds-btn-secondary no-underline"
-          >
-            <DsIcon name="package" size={16} />
-            <span>Order a sample</span>
-          </Link>
+          {showSample && (
+            <Link
+              href={sampleHref}
+              data-testid="order-sample-link"
+              className="ds-btn ds-btn-secondary no-underline"
+            >
+              <DsIcon name="package" size={16} />
+              <span>Order a sample</span>
+            </Link>
+          )}
 
           <span data-testid="make-it-your-brand" className="inline-flex">
             <Link

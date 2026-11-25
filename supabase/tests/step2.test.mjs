@@ -133,9 +133,11 @@ try {
   `, [orgA, srcProdVer.id, merchA]);
 
   // Ensure active fee_versions + AE & CA shipping_rate_cards (AE has duty entry; CA intentionally has NO duty entry!)
-  await as(whStaff, 'aal2');
+  // EA-1 (221): staff can no longer publish rate cards directly (two-person import flow); fixtures publish as the service owner
+  await owner();
   await db.query(`select publish_shipping_rate_card('yunexpress', 'express', 'BKPHR', 'CA', 590, 95, 4, 7, 30000, 5000, 100, false, false, false, false, 'YunExpress Canada Direct')`);
   await db.query(`select publish_shipping_rate_card('yunexpress', 'express', 'BKPHR', 'AE', 480, 95, 3, 5, 30000, 5000, 100, true, false, false, false, 'YunExpress UAE Direct')`);
+  await as(whStaff, 'aal2');
   const fvProp = (await one(`select propose_fee_version(100, 40, 20, 120, 300, 'Step 2 test schedule') id`)).id;
   await as(fin1, 'aal2');
   await db.query(`select activate_fee_version($1, 'Step 2 approve')`, [fvProp]);
@@ -143,6 +145,10 @@ try {
   const dvId = (await one(`
     select create_duty_rate_version('Step 2 AE only tariff (CA missing)', $1::jsonb) id
   `, [JSON.stringify([{ country: 'AE', hs_prefix: null, duty_bp: 500, tax_bp: 500, de_minimis_cents: 27000, de_minimis_applies_to: 'duty' }])])).id;
+  // Step 6b (222): duty versions publish only with every entry confirmed (rates + source) and a second person;
+  // fixtures confirm their entries and publish as the database owner (scripts are exempt from the two-person rule only)
+  await owner();
+  await db.query(`update duty_rate_entries set status = 'confirmed', source = coalesce(source, 'Test fixture'), verified_at = now() where version_id = $1`, [dvId]);
   await db.query(`select activate_duty_rate_version($1)`, [dvId]);
   await owner();
 

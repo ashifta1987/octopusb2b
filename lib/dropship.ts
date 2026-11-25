@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getSiteContent } from '@/lib/content';
 import { requireCustomer } from '@/lib/auth';
 import { getAccountContext, isStaging, dropshipEverEnabled, dropshipOn } from '@/lib/core/account';
+import { featureForPath, getDropshipFeatures } from '@/lib/dropship-features';
 
 /**
  * Dropshipping catalogue v2 + Phase 2 Step 3 (migrations 204, 205, 211–214).
@@ -260,6 +261,8 @@ export async function isDropshipV2UiEnabled(): Promise<boolean> {
  *  · Active ('on'), paused ('paused'), and closed ('off' after started_at) merchants can open ongoing views
  *    (orders in progress, wallet, withdrawals, statements/invoices, support, onboarding, data export),
  *    while new-activity mutations enforce DROPSHIP_PAUSED in the DB & actions (Step 4 Correction 1).
+ *  · EA-2: if the feature that owns `next` is OFF (site_settings.dropship_features), redirects to the dashboard.
+ *    Server actions pass their feature path as `next`, so a switched-off action is refused the same way.
  */
 export async function requireDropshipV2Merchant(
   next = '/account/dropship',
@@ -275,6 +278,11 @@ export async function requireDropshipV2Merchant(
     redirect('/account/dropship');
   }
   if (opts.requireActive && !dropshipOn(ctx.services.dropship)) {
+    redirect('/account/dropship');
+  }
+  // EA-2: a feature switched off in the Dropship features list is hidden; its route goes back to the dashboard
+  const feature = featureForPath(next);
+  if (feature && !(await getDropshipFeatures())[feature]) {
     redirect('/account/dropship');
   }
   return { session: s, ctx };

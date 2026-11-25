@@ -194,7 +194,8 @@ try {
   );
 
   // ── 3. Setup rate cards, fees, and Item 24 duty_rate_entries (US has 0 de minimis; GB='duty'; AU='duty_and_tax') ──
-  await as(adminUser, 'aal2');
+  // EA-1 (221): staff can no longer publish rate cards directly (two-person import flow); fixtures publish as the service owner
+  await owner();
   await db.query(`select publish_shipping_rate_card('yunexpress', 'express', 'BKPHR', 'US', 500, 80, 5, 8, 30000, 5000, 100, true, false, false, false, 'US Express')`);
   await db.query(`select publish_shipping_rate_card('yunexpress', 'express', 'BKPHR-GB', 'GB', 550, 85, 5, 9, 30000, 5000, 100, true, false, false, false, 'UK Express')`);
   await db.query(`select publish_shipping_rate_card('yunexpress', 'express', 'BKPHR-AU', 'AU', 520, 82, 5, 9, 30000, 5000, 100, true, false, false, false, 'AU Express')`);
@@ -211,6 +212,10 @@ try {
     { country: 'GB', hs_prefix: '851679', duty_bp: 1000, tax_bp: 200, de_minimis_cents: 2000, de_minimis_applies_to: 'duty' },
     { country: 'AU', hs_prefix: '851679', duty_bp: 1000, tax_bp: 200, de_minimis_cents: 2000, de_minimis_applies_to: 'duty_and_tax' },
   ])])).id;
+  // Step 6b (222): duty versions publish only with every entry confirmed (rates + source) and a second person;
+  // fixtures confirm their entries and publish as the database owner (scripts are exempt from the two-person rule only)
+  await owner();
+  await db.query(`update duty_rate_entries set status = 'confirmed', source = coalesce(source, 'Test fixture'), verified_at = now() where version_id = $1`, [dvId]);
   await db.query(`select activate_duty_rate_version($1)`, [dvId]);
   await owner();
 

@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { DsIcon, DsTopBar, type DsIconName } from '@/components/dropship-ui';
 import { dsInter } from '@/components/dropship-ui/font';
+import { ALL_ON, isEarlyAccess, type DropshipFeatureKey, type DropshipFeatures } from '@/lib/dropship-features-shared';
 
 export type MerchantNavItem = {
   href: string;
@@ -12,6 +13,10 @@ export type MerchantNavItem = {
   icon: DsIconName;
   badge?: number;
   matchQuery?: string;
+  /** EA-2: hidden while this feature is off */
+  feature: DropshipFeatureKey;
+  /** EA-2: only in the early-access menu (EA_Dashboard): "Product requests" sits under Sell */
+  earlyAccessOnly?: boolean;
 };
 
 export type MerchantNavGroup = {
@@ -23,55 +28,70 @@ const MERCHANT_GROUPS: MerchantNavGroup[] = [
   {
     title: 'Sell',
     items: [
-      { href: '/account/dropship', label: 'Dashboard', icon: 'grid' },
-      { href: '/account/dropship/catalogue', label: 'Find products', icon: 'search' },
+      { href: '/account/dropship', label: 'Dashboard', icon: 'grid', feature: 'dashboard' },
+      { href: '/account/dropship/catalogue', label: 'Find products', icon: 'search', feature: 'find' },
+      { href: '/account/dropship/requests', label: 'Product requests', icon: 'file', feature: 'requests', earlyAccessOnly: true },
       {
         href: '/account/dropship/catalogue?list=1',
         label: 'Import list',
         icon: 'list',
         matchQuery: 'list=1',
+        feature: 'import_list',
       },
-      { href: '/account/dropship/orders', label: 'Orders', icon: 'cart' },
+      { href: '/account/dropship/orders', label: 'Orders', icon: 'cart', feature: 'orders' },
     ],
   },
   {
     title: 'Set up',
     items: [
-      { href: '/account/dropship/pricing', label: 'Pricing and sync', icon: 'tag' },
-      { href: '/account/dropship/packing', label: 'Packing and shipping', icon: 'package' },
-      { href: '/account/dropship/stores', label: 'Stores', icon: 'store' },
+      { href: '/account/dropship/pricing', label: 'Pricing and sync', icon: 'tag', feature: 'pricing' },
+      { href: '/account/dropship/packing', label: 'Packing and shipping', icon: 'package', feature: 'packing' },
+      { href: '/account/dropship/stores', label: 'Stores', icon: 'store', feature: 'stores' },
     ],
   },
   {
     title: 'Money',
     items: [
-      { href: '/account/dropship/wallet', label: 'Wallet', icon: 'wallet' },
-      { href: '/account/dropship/billing', label: 'Plan and billing', icon: 'card' },
-      { href: '/account/dropship/reports', label: 'Reports', icon: 'chart' },
+      { href: '/account/dropship/wallet', label: 'Wallet', icon: 'wallet', feature: 'wallet' },
+      { href: '/account/dropship/billing', label: 'Plan and billing', icon: 'card', feature: 'billing' },
+      { href: '/account/dropship/reports', label: 'Reports', icon: 'chart', feature: 'reports' },
     ],
   },
   {
     title: 'Account',
     items: [
-      { href: '/account/dropship/settings', label: 'Settings', icon: 'gear' },
-      { href: '/account/dropship/support', label: 'Support', icon: 'help' },
+      { href: '/account/dropship/settings', label: 'Settings', icon: 'gear', feature: 'settings' },
+      { href: '/account/dropship/support', label: 'Support', icon: 'help', feature: 'support' },
     ],
   },
 ];
 
-const PHONE_TABS: { href: string; label: string; icon: DsIconName }[] = [
-  { href: '/account/dropship', label: 'Home', icon: 'home' },
-  { href: '/account/dropship/catalogue', label: 'Find', icon: 'search' },
-  { href: '/account/dropship/orders', label: 'Orders', icon: 'cart' },
-  { href: '/account/dropship/wallet', label: 'Wallet', icon: 'wallet' },
-  { href: '/account/dropship/more', label: 'More', icon: 'more' },
+type PhoneTab = { href: string; label: string; icon: DsIconName; feature: DropshipFeatureKey };
+const PHONE_TABS: PhoneTab[] = [
+  { href: '/account/dropship', label: 'Home', icon: 'home', feature: 'dashboard' },
+  { href: '/account/dropship/catalogue', label: 'Find', icon: 'search', feature: 'find' },
+  { href: '/account/dropship/orders', label: 'Orders', icon: 'cart', feature: 'orders' },
+  { href: '/account/dropship/wallet', label: 'Wallet', icon: 'wallet', feature: 'wallet' },
+  { href: '/account/dropship/more', label: 'More', icon: 'more', feature: 'dashboard' },
+];
+// EA-2 (mobile/M_EA_Dashboard): Home · Find · Requests · Wallet · More
+const EARLY_ACCESS_TABS: PhoneTab[] = [
+  { href: '/account/dropship', label: 'Home', icon: 'home', feature: 'dashboard' },
+  { href: '/account/dropship/catalogue', label: 'Find', icon: 'search', feature: 'find' },
+  { href: '/account/dropship/requests', label: 'Requests', icon: 'file', feature: 'requests' },
+  { href: '/account/dropship/wallet', label: 'Wallet', icon: 'wallet', feature: 'wallet' },
+  { href: '/account/dropship/more', label: 'More', icon: 'more', feature: 'dashboard' },
 ];
 
 function isMerchantItemActive(
   item: MerchantNavItem,
   pathname: string,
   isListParam: boolean,
+  earlyAccess = false,
 ): boolean {
+  if (earlyAccess && pathname.startsWith('/account/dropship/requests')) {
+    return item.href === '/account/dropship/requests';
+  }
   if (item.matchQuery === 'list=1') {
     return pathname === '/account/dropship/catalogue' && isListParam;
   }
@@ -90,7 +110,13 @@ function isMerchantItemActive(
   return pathname === item.href || pathname.startsWith(item.href + '/');
 }
 
-function isPhoneTabActive(tabHref: string, pathname: string, isListParam = false): boolean {
+function isPhoneTabActive(tabHref: string, pathname: string, isListParam = false, earlyAccess = false): boolean {
+  if (earlyAccess && pathname.startsWith('/account/dropship/requests')) {
+    return tabHref === '/account/dropship/requests';
+  }
+  if (tabHref === '/account/dropship/requests') {
+    return pathname.startsWith('/account/dropship/requests');
+  }
   if (tabHref === '/account/dropship') {
     return pathname === '/account/dropship' || pathname === '/account/dropship/onboarding';
   }
@@ -137,9 +163,11 @@ export function DropshipMerchantShell({
   importListCount = 0,
   ordersCount = 0,
   isStaging = false,
+  features = ALL_ON,
   children,
 }: {
   dropshipEnabled?: boolean;
+  features?: DropshipFeatures;
   userName: string;
   initials: string;
   storeName?: string | null;
@@ -154,6 +182,14 @@ export function DropshipMerchantShell({
   const isListParam = searchParams?.get('list') === '1';
   // Step U1 Rule 5: Store switcher shows "No store connected" until Step 5 connects a real store.
   const displayStore = storeName || 'No store connected';
+  // EA-2: OFF features are hidden (no "coming soon" labels); early access trims the menu and tabs (EA_Dashboard)
+  const earlyAccess = isEarlyAccess(features);
+  const showStore = dropshipEnabled ? features.stores : true;
+  const groups = MERCHANT_GROUPS.map((g) => ({
+    ...g,
+    items: g.items.filter((i) => features[i.feature] && (!i.earlyAccessOnly || earlyAccess)),
+  })).filter((g) => g.items.length > 0);
+  const tabs = (earlyAccess ? EARLY_ACCESS_TABS : PHONE_TABS).filter((t) => features[t.feature]);
 
   return (
     <div
@@ -173,7 +209,7 @@ export function DropshipMerchantShell({
             className="w-[120px] h-auto block"
           />
         </Link>
-        {dropshipEnabled ? (
+        {!showStore ? <span className="ml-auto" /> : dropshipEnabled ? (
           <Link
             href="/account/dropship/stores"
             data-testid="dropship-store-switcher-mobile"
@@ -223,7 +259,7 @@ export function DropshipMerchantShell({
             />
           </Link>
 
-          {dropshipEnabled ? (
+          {!showStore ? null : dropshipEnabled ? (
             <Link
               href="/account/dropship/stores"
               data-testid="dropship-store-switcher"
@@ -251,7 +287,7 @@ export function DropshipMerchantShell({
             </div>
           )}
 
-          {MERCHANT_GROUPS.map((group) => (
+          {groups.map((group) => (
             <div key={group.title} className="contents">
               <div className="px-3 pt-3.5 pb-1.5 text-[11px] font-bold tracking-[0.08em] uppercase text-[#8F9AC4]">
                 {group.title}
@@ -275,7 +311,7 @@ export function DropshipMerchantShell({
                   );
                 }
 
-                const active = isMerchantItemActive(item, pathname, isListParam);
+                const active = isMerchantItemActive(item, pathname, isListParam, earlyAccess);
                 const badgeCount =
                   item.matchQuery === 'list=1'
                     ? importListCount
@@ -307,7 +343,13 @@ export function DropshipMerchantShell({
             </div>
           ))}
 
-          <div className="mt-auto p-3 border border-[#3A3775] rounded-[10px] text-[12px] leading-[1.5] text-[#C9D3E3]">
+          {dropshipEnabled && earlyAccess && (
+            <div className="mt-auto mb-2 px-3 text-[12px] leading-[1.5] text-[#C9D3E3]" data-testid="early-access-note">
+              <div className="text-[11px] font-bold tracking-[0.08em] uppercase text-[#5FD3C9]">Early access</div>
+              <div>Store connection is the next release.</div>
+            </div>
+          )}
+          <div className={`${dropshipEnabled && earlyAccess ? '' : 'mt-auto '}p-3 border border-[#3A3775] rounded-[10px] text-[12px] leading-[1.5] text-[#C9D3E3]`}>
             <div>Part of your Octopus B2B account.</div>
             <Link
               href="/account"
@@ -360,7 +402,7 @@ export function DropshipMerchantShell({
         data-testid="dropship-phone-tabs"
         className="md:hidden fixed inset-x-0 bottom-0 z-40 flex bg-white border-t border-[#E3E7EF] pb-[env(safe-area-inset-bottom)]"
       >
-        {PHONE_TABS.map((tab) => {
+        {tabs.map((tab) => {
           const isHome = tab.href === '/account/dropship';
           if (!dropshipEnabled && !isHome) {
             return (
@@ -377,7 +419,7 @@ export function DropshipMerchantShell({
             );
           }
 
-          const active = isPhoneTabActive(tab.href, pathname, isListParam);
+          const active = isPhoneTabActive(tab.href, pathname, isListParam, earlyAccess);
           return (
             <Link
               key={tab.href}

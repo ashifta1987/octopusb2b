@@ -7,12 +7,13 @@ import { SERVICES, dropshipEverEnabled, isStaging, serviceOn, type getAccountCon
 import { AccountTabs, SectionMenu, type Tab, type MenuSection } from './account-tabs';
 import { UnreadBellDot } from '@/components/account/unread-count';
 import { AccountShellSwitcher } from './dropship-shell-switcher';
+import type { DropshipFeatures } from '@/lib/dropship-features-shared';
 
 type Ctx = Awaited<ReturnType<typeof getAccountContext>>;
 
 /** ADDON-41 board 01 — My account shell: header (search, wallet, notifications, user), service tabs, section menu. */
-export function AccountShell({ session, ctx, newQuotes, dropshipV2Ui = false, mobileBar, children }: {
-  session: Session; ctx: Ctx | null; newQuotes: number; dropshipV2Ui?: boolean; mobileBar?: React.ReactNode; children: React.ReactNode;
+export function AccountShell({ session, ctx, newQuotes, dropshipV2Ui = false, dropshipFeatures, mobileBar, children }: {
+  session: Session; ctx: Ctx | null; newQuotes: number; dropshipV2Ui?: boolean; dropshipFeatures?: DropshipFeatures; mobileBar?: React.ReactNode; children: React.ReactNode;
 }) {
   const name = session.profile?.full_name ?? session.email ?? 'You';
   const initials = name.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
@@ -115,6 +116,7 @@ export function AccountShell({ session, ctx, newQuotes, dropshipV2Ui = false, mo
       initials={initials || 'ME'}
       unreadCount={ctx?.unread ?? 0}
       isStaging={staging}
+      features={dropshipFeatures}
       defaultShell={defaultShell}
     >
       {children}

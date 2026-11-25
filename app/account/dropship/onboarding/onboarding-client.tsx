@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { COUNTRY_NAMES } from '@/lib/format';
+import { COUNTRY_NAMES, money } from '@/lib/format';
 import type { DropshipOnboardingState } from '@/lib/dropship';
 import {
   DsBadge,
@@ -17,29 +17,30 @@ import {
   saveOnboardingMarketsAction,
 } from '../actions';
 
-const STEPS: [number, string][] = [
+const ALL_STEPS: [number, string][] = [
   [1, 'Selling countries'],
   [2, 'Return & brand'],
   [3, 'Plan & wallet'],
   [4, 'Connect store'],
 ];
 
-const usd = (cents: number) =>
-  `$${(cents / 100).toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+// UI rule: money in the merchant's view is always US$ with two decimals
+const usd = (cents: number) => money(cents, 'USD');
 
 export function OnboardingClient({
   state,
   initialStep = 1,
+  storeStep = true,
 }: {
   state: DropshipOnboardingState;
   initialStep?: number;
+  /** EA-2: while store connection is not released, onboarding has 3 steps (no "Connect store") */
+  storeStep?: boolean;
 }) {
   const router = useRouter();
+  const STEPS = storeStep ? ALL_STEPS : ALL_STEPS.slice(0, 3);
   const [step, setStep] = useState<number>(
-    initialStep >= 1 && initialStep <= 4 ? initialStep : 1,
+    initialStep >= 1 && initialStep <= STEPS.length ? initialStep : 1,
   );
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +100,7 @@ export function OnboardingClient({
     <div className="flex flex-col gap-5" data-testid="dropship-onboarding">
       <DsPageHeader
         title="Set up Octopus Dropship"
-        subtitle="4 short steps. You can skip and come back any time."
+        subtitle={`${STEPS.length} short steps. You can skip and come back any time.`}
         icon="list"
         actions={
           <DsLinkButton href="/account/dropship" variant="secondary" icon="arrow">
@@ -470,13 +471,13 @@ export function OnboardingClient({
                           : 'Free while plan fees are off'}
                       </strong>
                       <DsBadge tone="ok">
-                        {state.saas_billing.enabled ? 'Trial' : '$0.00 / mo'}
+                        {state.saas_billing.enabled ? 'Trial' : 'US$ 0.00 / mo'}
                       </DsBadge>
                     </div>
                     <p className="m-0 mt-1 text-[13px] leading-[1.5] text-[#1A174A]">
                       {state.saas_billing.enabled
                         ? `You get ${state.saas_billing.trial_days} days free before any plan charge.`
-                        : 'Plan fees are currently switched off — US$0.00 is charged and no trial has started. Before charging ever starts, you will get a 30-day free trial and approve any plan first.'}
+                        : 'Plan fees are currently switched off — US$ 0.00 is charged and no trial has started. Before charging ever starts, you will get a 30-day free trial and approve any plan first.'}
                     </p>
                   </div>
                 </div>
@@ -513,22 +514,28 @@ export function OnboardingClient({
                     >
                       Top up wallet
                     </DsLinkButton>
-                    <DsButton
-                      type="button"
-                      variant="primary"
-                      icon="arrow"
-                      onClick={() => setStep(4)}
-                      data-testid="onboarding-to-step4-btn"
-                    >
-                      Continue to Connect store
-                    </DsButton>
+                    {storeStep ? (
+                      <DsButton
+                        type="button"
+                        variant="primary"
+                        icon="arrow"
+                        onClick={() => setStep(4)}
+                        data-testid="onboarding-to-step4-btn"
+                      >
+                        Continue to Connect store
+                      </DsButton>
+                    ) : (
+                      <DsLinkButton href="/account/dropship" variant="primary" icon="grid" testId="onboarding-finish-btn">
+                        Go to Dashboard
+                      </DsLinkButton>
+                    )}
                   </div>
                 </div>
               </DsCard>
             </div>
           )}
 
-          {step === 4 && (
+          {storeStep && step === 4 && (
             <DsCard title="4. Connect your Shopify store" icon="store">
               <div
                 className="flex flex-col gap-4"
@@ -654,13 +661,15 @@ export function OnboardingClient({
                 <DsBadge tone="info">Free</DsBadge>
               </li>
 
-              <li className="flex items-start justify-between gap-2">
-                <div>
-                  <strong className="font-semibold text-[#1A174A]">4. Connect store</strong>
-                  <div className="ds-mut text-[13px]">Shopify OAuth (Step 5)</div>
-                </div>
-                <DsBadge tone="neutral">Step 5</DsBadge>
-              </li>
+              {storeStep && (
+                <li className="flex items-start justify-between gap-2">
+                  <div>
+                    <strong className="font-semibold text-[#1A174A]">4. Connect store</strong>
+                    <div className="ds-mut text-[13px]">Shopify OAuth (Step 5)</div>
+                  </div>
+                  <DsBadge tone="neutral">Step 5</DsBadge>
+                </li>
+              )}
             </ol>
           </DsCard>
         </div>

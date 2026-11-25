@@ -32,3 +32,19 @@ export async function quoteDropshipRequestAction(formData: FormData): Promise<Re
   revalidatePath('/office/dropship/requests');
   return { ok: true, message: `Quote sent on ${(data as { rfq_code?: string })?.rfq_code ?? 'the request'}.` };
 }
+
+/** EA-1 (design v2 StaffRequests): decline an open request with a reason (DS edit or Sourcing requests:edit; never Support). */
+export async function declineDropshipRequestAction(rfqId: string, reason: string): Promise<RequestQuoteResult> {
+  await requireDropshipV2Staff(false, '/office/dropship/requests');
+  if (!/^[0-9a-f-]{36}$/i.test(rfqId)) return { ok: false, error: 'Missing request.' };
+  if (!reason.trim()) return { ok: false, code: 'REASON_REQUIRED', error: 'Enter why the request is declined.' };
+  const sb = await createClient();
+  const { data, error } = await sb.rpc('decline_dropship_product_request', { p_rfq_id: rfqId, p_reason: reason.trim() });
+  if (error) {
+    const m = error.message.match(/^([A-Z0-9_]+):?\s*(.*)$/);
+    if (m?.[1] === 'FORBIDDEN') return { ok: false, code: 'FORBIDDEN', error: 'Only Dropshipping or Sourcing staff who can edit requests can decline them.' };
+    return { ok: false, code: m?.[1], error: m?.[2] || error.message };
+  }
+  revalidatePath('/office/dropship/requests');
+  return { ok: true, message: `${(data as { rfq_code?: string })?.rfq_code ?? 'The request'} declined.` };
+}

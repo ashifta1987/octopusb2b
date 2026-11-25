@@ -193,6 +193,8 @@ try {
     'quote_carrier_rates returns 0 rows when no rate card exists for country');
 
   // Publish v1 & v2 on US express ('BKPHR') -> v1 deactivated, v2 active (only 1 active row)
+  // EA-1 (221): staff can no longer publish rate cards directly (two-person import flow); fixtures publish as the service owner
+  await owner();
   const rcV1 = (await one(`select publish_shipping_rate_card('yunexpress', 'express', 'BKPHR', 'US', 500, 80, 5, 8, 2000, 5000, 100, true, false, false, false, 'US Direct Express') id`)).id;
   const rcV2 = (await one(`select publish_shipping_rate_card('yunexpress', 'express', 'BKPHR', 'US', 550, 90, 5, 8, 2000, 5000, 100, true, false, false, false, 'US Direct Express v2') id`)).id;
   await owner();
@@ -264,6 +266,10 @@ try {
     { country: 'US', hs_prefix: '8516', duty_bp: 500, tax_bp: 200, de_minimis_cents: 2000 },
     { country: 'US', hs_prefix: '8516.79', duty_bp: 1000, tax_bp: 200, de_minimis_cents: 2000 },
   ])])).id;
+  // Step 6b (222): duty versions publish only with every entry confirmed (rates + source) and a second person;
+  // fixtures confirm their entries and publish as the database owner (scripts are exempt from the two-person rule only)
+  await owner();
+  await db.query(`update duty_rate_entries set status = 'confirmed', source = coalesce(source, 'Test fixture'), verified_at = now() where version_id = $1`, [dvId]);
   await db.query(`select activate_duty_rate_version($1)`, [dvId]);
   await owner();
 

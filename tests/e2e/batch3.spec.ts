@@ -147,11 +147,15 @@ test('B3-4 unbuilt merchant pages say what is coming', async ({ page }) => {
 test('B3-5 Dropship staff quote a merchant product request', async ({ page }) => {
   await staffLogin(page, dsStaff!, '/office/dropship/requests');
   await page.goto('/office/dropship/requests');
+  // EA-1 (design v2 StaffRequests): the row opens a detail panel with the quote form
+  await page.getByTestId('request-filter-new').click();
   const row = page.getByTestId(`staff-request-row-${dsReqCode}`);
   await expect(row).toBeVisible();
-  await row.getByLabel(`Landed price for ${dsReqCode}`).fill('18.50');
-  await row.getByRole('button', { name: /Send quote/ }).click();
-  await expect(row).toContainText(`Quote sent on ${dsReqCode}`);
+  await row.getByRole('button', { name: `Open ${dsReqCode}` }).click();
+  const detail = page.getByTestId(`request-detail-${dsReqCode}`);
+  await detail.getByLabel('Landed price per unit (US$)').fill('18.50');
+  await detail.getByRole('button', { name: /Send quote/ }).click();
+  await expect(detail).toContainText(`Quote sent on ${dsReqCode}`);
   const db = pgClient();
   await db.connect();
   try {

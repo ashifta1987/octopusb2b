@@ -11,7 +11,7 @@ export type StaffDropshipNavItem = {
   label: string;
   icon: DsIconName;
   matchPrefix: string;
-  role: 'dropship' | 'dropship_edit' | 'saas';
+  role: 'dropship' | 'dropship_edit' | 'saas' | 'rates' | 'fees_duty';
 };
 
 /**
@@ -19,16 +19,19 @@ export type StaffDropshipNavItem = {
  * - "Product editor" is removed from the staff menu; the editor opens from a product row (/office/dropship/[id] or /office/dropship/new).
  * - "Pack station" opens the fulfilment queue filtered to packing (/office/dropship/queue?status=packing) or /office/dropship/pack/[order].
  * - Dropship division staff and company-wide admins see the Dropship items; "Finance: SaaS billing" shows only to company-wide Finance and admins.
+ * EA-1 (design v2 staff menu): adds "Shipping rates" and moves "Product requests" up. 3PL & Shipping staff also see Duty,
+ * Shipping rates and Fees; Support never sees Shipping rates. "Product editor" stays out of the menu (U1 rule above).
  */
 const STAFF_ITEMS: StaffDropshipNavItem[] = [
   { href: '/office/dropship', label: 'Products', icon: 'package', matchPrefix: '/office/dropship', role: 'dropship' },
   { href: '/office/dropship/import', label: 'Import products', icon: 'upload', matchPrefix: '/office/dropship/import', role: 'dropship_edit' },
-  { href: '/office/dropship/compliance', label: 'Duty, tax and customs', icon: 'globe', matchPrefix: '/office/dropship/compliance', role: 'dropship' },
+  { href: '/office/dropship/requests', label: 'Product requests', icon: 'file', matchPrefix: '/office/dropship/requests', role: 'dropship' },
+  { href: '/office/dropship/compliance', label: 'Duty, tax and customs', icon: 'globe', matchPrefix: '/office/dropship/compliance', role: 'fees_duty' },
+  { href: '/office/dropship/rates', label: 'Shipping rates', icon: 'truck', matchPrefix: '/office/dropship/rates', role: 'rates' },
   { href: '/office/dropship/queue', label: 'Fulfilment queue', icon: 'list', matchPrefix: '/office/dropship/queue', role: 'dropship' },
   { href: '/office/dropship/queue?status=packing', label: 'Pack station', icon: 'scale', matchPrefix: '/office/dropship/pack', role: 'dropship' },
   { href: '/office/dropship/merchants', label: 'Merchants', icon: 'users', matchPrefix: '/office/dropship/merchants', role: 'dropship' },
-  { href: '/office/dropship/requests', label: 'Product requests', icon: 'file', matchPrefix: '/office/dropship/requests', role: 'dropship' },
-  { href: '/office/dropship/fees', label: 'Fees and plans', icon: 'percent', matchPrefix: '/office/dropship/fees', role: 'dropship' },
+  { href: '/office/dropship/fees', label: 'Fees and plans', icon: 'percent', matchPrefix: '/office/dropship/fees', role: 'fees_duty' },
   { href: '/office/dropship/health', label: 'System health', icon: 'activity', matchPrefix: '/office/dropship/health', role: 'dropship' },
   { href: '/admin/finance/saas', label: 'Finance: SaaS billing', icon: 'card', matchPrefix: '/admin/finance/saas', role: 'saas' },
 ];
@@ -36,6 +39,7 @@ const STAFF_ITEMS: StaffDropshipNavItem[] = [
 const NON_CATALOG_PREFIXES = [
   '/office/dropship/import',
   '/office/dropship/compliance',
+  '/office/dropship/rates',
   '/office/dropship/queue',
   '/office/dropship/pack',
   '/office/dropship/merchants',
@@ -65,6 +69,8 @@ export function DropshipStaffShell({
   unreadCount = 0,
   isStaging = false,
   canSeeDropshipItems = true,
+  canSeeRates = false,
+  canSeeFeesDuty = false,
   canEditDropship = false,
   canSeeSaas = false,
   children,
@@ -74,6 +80,8 @@ export function DropshipStaffShell({
   unreadCount?: number;
   isStaging?: boolean;
   canSeeDropshipItems?: boolean;
+  canSeeRates?: boolean;
+  canSeeFeesDuty?: boolean;
   canEditDropship?: boolean;
   canSeeSaas?: boolean;
   children: ReactNode;
@@ -83,6 +91,10 @@ export function DropshipStaffShell({
   const visibleItems = STAFF_ITEMS.filter((item) =>
     item.role === 'saas'
       ? canSeeSaas
+      : item.role === 'rates'
+        ? canSeeRates
+        : item.role === 'fees_duty'
+          ? canSeeFeesDuty || canSeeDropshipItems
       : item.role === 'dropship_edit'
         ? canSeeDropshipItems && canEditDropship
         : canSeeDropshipItems,

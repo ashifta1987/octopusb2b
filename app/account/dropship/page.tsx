@@ -15,6 +15,9 @@ import {
 } from '@/lib/core/account';
 import { getMyDropshipAccessState, isDropshipV2UiEnabled } from '@/lib/dropship';
 import { ActivateClient } from './activate-client';
+import { EarlyAccessDashboard } from './ea-dashboard';
+import { getDropshipFeatures } from '@/lib/dropship-features';
+import { isEarlyAccess } from '@/lib/dropship-features-shared';
 
 export const metadata = { title: 'Dropshipping' };
 
@@ -47,6 +50,12 @@ async function DropshipHome() {
 
   const isActive = dropshipOn(dsState);
   const isPausedOrClosed = dropshipPausedOrClosed(dsState);
+  const features = await getDropshipFeatures();
+
+  // EA-2: while store connection is not released, active merchants get the early-access dashboard (EA_Dashboard)
+  if (isActive && isEarlyAccess(features)) {
+    return <EarlyAccessDashboard orgId={s.org.id} orgName={s.org.name} features={features} />;
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -118,14 +127,16 @@ async function DropshipHome() {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
           data-testid="paused-merchant-links"
         >
-          <DsCard title="Orders in progress" icon="cart">
-            <p className="ds-mut text-[13px] m-0 mb-3">
-              Paid orders already in progress continue through packing, shipping and delivery.
-            </p>
-            <DsLinkButton href="/account/dropship/orders" variant="secondary" icon="cart">
-              View orders
-            </DsLinkButton>
-          </DsCard>
+          {features.orders && (
+            <DsCard title="Orders in progress" icon="cart">
+              <p className="ds-mut text-[13px] m-0 mb-3">
+                Paid orders already in progress continue through packing, shipping and delivery.
+              </p>
+              <DsLinkButton href="/account/dropship/orders" variant="secondary" icon="cart">
+                View orders
+              </DsLinkButton>
+            </DsCard>
+          )}
           <DsCard title="Wallet & withdrawals" icon="wallet">
             <p className="ds-mut text-[13px] m-0 mb-3">
               View your USD wallet balance, ledger movements and withdrawal requests.
@@ -162,9 +173,11 @@ async function DropshipHome() {
             <DsLinkButton href="/account/dropship/catalogue" variant="primary" icon="search">
               Find products
             </DsLinkButton>
-            <DsLinkButton href="/account/dropship/sample" variant="secondary" icon="package">
-              Order a sample
-            </DsLinkButton>
+            {features.samples && (
+              <DsLinkButton href="/account/dropship/sample" variant="secondary" icon="package">
+                Order a sample
+              </DsLinkButton>
+            )}
             <DsLinkButton href="/account/dropship/requests" variant="secondary" icon="file">
               Request a product
             </DsLinkButton>

@@ -66,6 +66,7 @@ export const OFFICE_NAV: NavSection[] = [
       { href: '/admin/finance/receivables', label: 'Receivables & ageing', area: 'finance' },
       { href: '/admin/wallet', label: 'Wallets & payments', area: 'wallet' },
       { href: '/admin/settings/payment', label: 'Payment settings', area: 'finance', action: 'edit' },
+      { href: '/admin/settings/dropship', label: 'Dropship features', area: 'staff', action: 'edit' },
       { href: '/admin/currency', label: 'Currency', area: 'finance' },
       { href: '/admin/services', label: 'Services & charges', area: 'services' },
       { href: '/admin/pools', label: 'Group buying', area: 'orders' },

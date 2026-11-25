@@ -102,7 +102,8 @@ try {
   await db.query(`insert into carriers(code, name, active) values ('yunexpress', 'YunExpress', true) on conflict (code) do nothing`);
 
   // Ensure rate card, fee version, duty version, mock payment provider, and dropship options
-  await as(adminUid, 'aal2');
+  // EA-1 (221): staff can no longer publish rate cards directly (two-person import flow); fixtures publish as the service owner
+  await owner();
   await db.query(`select publish_shipping_rate_card('yunexpress', 'express', 'BKPHR', 'US', 500, 80, 5, 8, 30000, 5000, 100, true, false, false, false, 'B2 US Express')`);
   await as(fin1, 'aal2');
   const fvId = (await one(`select propose_fee_version(120, 40, 0, 100, 250, 'B2 fee schedule') id`)).id;
@@ -115,6 +116,10 @@ try {
       [JSON.stringify([{ country: 'US', hs_prefix: '851679', duty_bp: 1000, tax_bp: 0, de_minimis_cents: 0, de_minimis_applies_to: 'duty' }])],
     )
   ).id;
+  // Step 6b (222): duty versions publish only with every entry confirmed (rates + source) and a second person;
+  // fixtures confirm their entries and publish as the database owner (scripts are exempt from the two-person rule only)
+  await owner();
+  await db.query(`update duty_rate_entries set status = 'confirmed', source = coalesce(source, 'Test fixture'), verified_at = now() where version_id = $1`, [dvId]);
   await db.query(`select activate_duty_rate_version($1)`, [dvId]);
   await owner();
 

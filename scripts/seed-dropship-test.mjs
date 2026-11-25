@@ -82,6 +82,8 @@ try {
         ]),
       ],
     )).rows[0].id;
+    // Step 6b (222): entries must be confirmed (rates + source) before a version can be published
+    await db.query(`update duty_rate_entries set status = 'confirmed', source = coalesce(source, 'Staging seed'), verified_at = now() where version_id = $1`, [dvId]);
     await db.query(`select activate_duty_rate_version($1)`, [dvId]);
   }
 

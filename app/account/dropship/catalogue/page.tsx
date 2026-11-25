@@ -27,6 +27,7 @@ import {
 } from '@/components/dropship-ui';
 import { LaunchNotifyForm } from '@/components/store/launch-notify-form';
 import { addToImportList, removeFromImportList, saveMerchantMarkets } from '../actions';
+import { getDropshipFeatures } from '@/lib/dropship-features';
 import { DsImportSubmitButton, DsQuerySelect } from './catalogue-v2-client';
 
 export const metadata = { title: 'Find products · Octopus Dropship' };
@@ -108,6 +109,10 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
   if (!v2On) {
     redirect('/account/dropship');
   }
+  // EA-2: the import list is its own feature; while it is off the catalogue has no list and no import buttons
+  const features = await getDropshipFeatures();
+  if (!features.find) redirect('/account/dropship');
+  if (sp.list === '1' && !features.import_list) redirect('/account/dropship/catalogue');
 
   const [cfg, merchantCountries, list] = await Promise.all([
     dropshipSettings(),
@@ -238,14 +243,17 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
         icon="search"
         actions={
           <>
-            <DsLinkButton
-              href="/account/dropship/requests"
-              variant="secondary"
-              icon="send"
-              testId="request-product-btn"
-            >
-              Request a product
-            </DsLinkButton>
+            {features.requests && (
+              <DsLinkButton
+                href="/account/dropship/requests"
+                variant="secondary"
+                icon="send"
+                testId="request-product-btn"
+              >
+                Request a product
+              </DsLinkButton>
+            )}
+            {features.import_list && (
             <DsLinkButton
               href={
                 isListOnly
@@ -258,6 +266,7 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
             >
               {isListOnly ? 'Browse all products' : `Go to import list (${list.size})`}
             </DsLinkButton>
+            )}
           </>
         }
       />
@@ -618,16 +627,18 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
                     </p>
                   )}
 
-                  <form
-                    action={added ? removeFromImportList : addToImportList}
-                    className="mt-auto pt-1"
-                  >
-                    <input type="hidden" name="product_id" value={r.product_id} />
-                    {primaryVar && <input type="hidden" name="variant_id" value={primaryVar.id} />}
-                    <input type="hidden" name="service" value={route.shipping_method} />
-                    {sugg != null && <input type="hidden" name="price_cents" value={sugg} />}
-                    <DsImportSubmitButton added={added} />
-                  </form>
+                  {features.import_list && (
+                    <form
+                      action={added ? removeFromImportList : addToImportList}
+                      className="mt-auto pt-1"
+                    >
+                      <input type="hidden" name="product_id" value={r.product_id} />
+                      {primaryVar && <input type="hidden" name="variant_id" value={primaryVar.id} />}
+                      <input type="hidden" name="service" value={route.shipping_method} />
+                      {sugg != null && <input type="hidden" name="price_cents" value={sugg} />}
+                      <DsImportSubmitButton added={added} />
+                    </form>
+                  )}
                 </div>
               </article>
             );

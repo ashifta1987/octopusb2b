@@ -5,7 +5,7 @@ import { requireDropshipV2Merchant } from '@/lib/dropship';
 export const metadata = { title: 'Product editor · Octopus Dropship' };
 
 async function Guarded() {
-  await requireDropshipV2Merchant('/account/dropship');
+  await requireDropshipV2Merchant('/account/dropship/import');
   return (
     <div className="flex flex-col gap-5">
       <DsPageHeader

@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { DropshipMerchantShell } from './dropship-merchant-shell';
 import { DropshipStaffShell } from './dropship-staff-shell';
+import type { DropshipFeatures } from '@/lib/dropship-features-shared';
 
 export function AccountShellSwitcher({
   v2ShellEnabled,
@@ -15,11 +16,13 @@ export function AccountShellSwitcher({
   importListCount,
   ordersCount,
   isStaging,
+  features,
   defaultShell,
   children,
 }: {
   v2ShellEnabled: boolean;
   dropshipEnabled?: boolean;
+  features?: DropshipFeatures;
   userName: string;
   initials: string;
   storeName?: string | null;
@@ -42,6 +45,7 @@ export function AccountShellSwitcher({
         importListCount={importListCount}
         ordersCount={ordersCount}
         isStaging={isStaging}
+        features={features}
       >
         {children}
       </DropshipMerchantShell>
@@ -53,6 +57,8 @@ export function AccountShellSwitcher({
 export function StaffShellSwitcher({
   v2ShellEnabled,
   canSeeDropshipItems,
+  canSeeRates = false,
+  canSeeFeesDuty = false,
   canEditDropship = false,
   canSeeSaas,
   userName,
@@ -64,6 +70,8 @@ export function StaffShellSwitcher({
 }: {
   v2ShellEnabled: boolean;
   canSeeDropshipItems: boolean;
+  canSeeRates?: boolean;
+  canSeeFeesDuty?: boolean;
   canEditDropship?: boolean;
   canSeeSaas: boolean;
   userName: string;
@@ -86,6 +94,8 @@ export function StaffShellSwitcher({
         unreadCount={unreadCount}
         isStaging={isStaging}
         canSeeDropshipItems={canSeeDropshipItems}
+        canSeeRates={canSeeRates}
+        canSeeFeesDuty={canSeeFeesDuty}
         canEditDropship={canEditDropship}
         canSeeSaas={canSeeSaas}
       >

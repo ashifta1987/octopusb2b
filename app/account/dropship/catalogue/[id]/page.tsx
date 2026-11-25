@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { COUNTRY_NAMES, money } from '@/lib/format';
 import {
   getDropshipCountries,
@@ -20,6 +20,7 @@ import {
   DsTableCard,
 } from '@/components/dropship-ui';
 import { addToImportList, removeFromImportList } from '../../actions';
+import { getDropshipFeatures } from '@/lib/dropship-features';
 import { ProductDetailHeroClient } from '../catalogue-v2-client';
 
 export const metadata = { title: 'Product detail · Octopus Dropship' };
@@ -56,6 +57,8 @@ async function Detail({
   searchParams: Promise<{ country?: string }>;
 }) {
   const { session: s } = await requireDropshipV2Merchant('/account/dropship/catalogue');
+  const features = await getDropshipFeatures();
+  if (!features.product_detail) redirect('/account/dropship/catalogue');
   const [{ id }, sp] = await Promise.all([params, searchParams]);
   if (!UUID.test(id)) notFound();
 
@@ -149,6 +152,8 @@ async function Detail({
         added={list.has(p.product_id)}
         addAction={addToImportList}
         removeAction={removeFromImportList}
+        showImport={features.import_list}
+        showSample={features.samples}
       />
 
       {/* Landed cost by country — 9 columns matching ProductDetail.html */}

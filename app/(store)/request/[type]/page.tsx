@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { isDropshipV2UiEnabled } from '@/lib/dropship';
+import { PublicDropshipPage } from './public-dropship';
 import { block } from '@/lib/content';
 import { getStoreContent } from '@/components/store/currency';
 import { getSession } from '@/lib/auth';
@@ -47,6 +48,14 @@ const FALLBACK: Record<RequestType, string> = {
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { type } = await params;
   if (!isRequestType(type)) return { title: 'Request Center', robots: { index: false } };
+  if (type === 'dropship' && (await isDropshipV2UiEnabled())) {
+    // EA-2 public page (indexable)
+    return {
+      title: 'Dropshipping, early access',
+      description: 'Sell Octopus products in your store. See the full landed cost to each country, pay from one wallet, and ship under your brand.',
+      alternates: { canonical: '/request/dropship' },
+    };
+  }
   const { blocks } = await getStoreContent();
   const [title, sub] = parts(blocks, `request.type.${type}`, FALLBACK[type]);
   return { title: `${title} · Request Center`, description: `${sub}. ${block(blocks, 'request.subtitle')}`.slice(0, 160), alternates: { canonical: `/request/${type}` } };
@@ -64,8 +73,13 @@ export default function RequestPage({ params, searchParams }: { params: Params; 
 async function Content({ params, searchParams }: { params: Params; searchParams: SP }) {
   const [{ type }, sp] = await Promise.all([params, searchParams]);
   if (!isRequestType(type)) notFound();
-  // Batch 3 (F-15): once Octopus Dropship is open (dropship_v2_ui ON) there is no "coming soon" request — go to the app
-  if (type === 'dropship' && (await isDropshipV2UiEnabled())) redirect('/account/dropship');
+  // Batch 3 (F-15) + EA-2: once Octopus Dropship is open (dropship_v2_ui ON) there is no "coming soon" request.
+  // Signed-in customers go to the app (Activate); signed-out visitors (and staff) see the short public page.
+  if (type === 'dropship' && (await isDropshipV2UiEnabled())) {
+    const who = await getSession();
+    if (who && !who.isStaff) redirect('/account/dropship');
+    return <PublicDropshipPage />;
+  }
   const [{ blocks, settings, company, ctx }, services, session, product] = await Promise.all([
     getStoreContent(), getServices(), getSession(), sp.product ? getProductById(sp.product) : Promise.resolve(null),
   ]);

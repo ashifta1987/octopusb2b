@@ -124,3 +124,50 @@ export function computeRouteMargin(params: {
   const belowMin = marginBp < params.minMarginBp;
   return { marginCents, marginBp, marginPct, belowMin };
 }
+
+export type FeesRatesDutyAccess = {
+  session: Session;
+  canReadRates: boolean;    // rate cards: 3PL & Shipping, Dropship, Finance (view), admin — never Support (Batch 1)
+  canEditRates: boolean;    // propose / approve rate cards: 3PL & Shipping editors, Dropship editors, admin (design v2)
+  canProposeFee: boolean;   // 3PL editors + Finance approvers + admin
+  canApproveFee: boolean;   // Finance approvers + admin (a different person from the proposer)
+  canEditDuty: boolean;     // Dropship editors + Finance / Products approvers + admin
+  canPublishDuty: boolean;  // Dropship editors + Finance approvers + admin (a different person from the preparer)
+  readOnly: boolean;        // e.g. Support: sees fees and duty, changes nothing
+};
+
+/**
+ * Release 1 · EA-1 guard for /office/dropship/fees, /office/dropship/rates and /office/dropship/compliance. Open to
+ * 3PL & Shipping, Dropship, Finance, Support (read-only; no rate cards) and admin. The same rules are enforced again in
+ * every database function.
+ */
+export async function requireFeesRatesDutyStaff(next: string): Promise<FeesRatesDutyAccess> {
+  const s = await getSession();
+  if (!s) redirect(`/staff/login?next=${encodeURIComponent(next)}`);
+  if (!s.isStaff) redirect('/login');
+  if (s.aal !== 'aal2') redirect(`/staff/verify?next=${encodeURIComponent(next)}`);
+  if (!(await isDropshipV2UiEnabled())) redirect('/office/dropship');
+  const sb = await createClient();
+  const [read, rates, rateEdit, whEdit, dutyEdit, dutyPublish] = await Promise.all([
+    sb.rpc('step6b_staff_read'),
+    sb.rpc('step6b_rate_card_read'),
+    sb.rpc('rate_card_can_edit'),
+    sb.rpc('warehouse_can_edit'),
+    sb.rpc('step6b_duty_edit'),
+    sb.rpc('step6b_duty_publish'),
+  ]);
+  if (!read.data) redirect('/forbidden');
+  const finApprove = can(s, 'finance', 'approve');
+  const access: FeesRatesDutyAccess = {
+    session: s,
+    canReadRates: Boolean(rates.data),
+    canEditRates: Boolean(rateEdit.data),
+    canProposeFee: Boolean(whEdit.data) || finApprove,
+    canApproveFee: s.isAdmin || finApprove,
+    canEditDuty: Boolean(dutyEdit.data),
+    canPublishDuty: Boolean(dutyPublish.data),
+    readOnly: false,
+  };
+  access.readOnly = !access.canEditRates && !access.canProposeFee && !access.canApproveFee && !access.canEditDuty && !access.canPublishDuty;
+  return access;
+}

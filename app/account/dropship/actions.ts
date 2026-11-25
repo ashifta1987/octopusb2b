@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import sharp from 'sharp';
 import { z } from 'zod';
 import { requireCustomer } from '@/lib/auth';
+import { getDropshipFeatures } from '@/lib/dropship-features';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import {
   getDropshipOrderQuote,
@@ -52,6 +53,8 @@ const MarketsSchema = z.object({
 
 export async function addToImportList(formData: FormData) {
   const s = await requireCustomer('/account/dropship/catalogue');
+  // EA-2: refused while the Import list feature is off (the button is hidden too)
+  if (!(await getDropshipFeatures()).import_list) throw new Error('The import list is not available yet.');
   const rawVariant = String(formData.get('variant_id') ?? '').trim();
   const rawService = String(formData.get('service') ?? '').trim();
   const rawPriceCents = String(formData.get('price_cents') ?? '').trim();

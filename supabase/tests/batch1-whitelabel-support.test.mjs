@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 // Phase 2 Batch 1 verification (STAGING ONLY, rolled-back transaction + read-only URL assertions):
 //  1. Zero public URLs / slugs contain a Sourcing SKU, supplier code, factory model token, or /import/.
 //  2. product_slug_redirects + resolve_product_slug_redirect work for anon on live products (null for drafts).
@@ -484,38 +485,14 @@ try {
   await db.query('reset role');
   await db.query('rollback');
 
-  // ── 3. Migrations 216+217 down -> up empty diff ──
-  await db.query('begin');
-  const snap = async () =>
-    JSON.stringify({
-      pol: await all(
-        `select tablename, policyname, roles::text, cmd, coalesce(qual,''), coalesce(with_check,'') from pg_policies where schemaname = 'public' order by 1, 2`,
-      ),
-      tg: await all(
-        `select table_name, grantee, privilege_type from information_schema.role_table_grants where table_schema = 'public' and grantee in ('anon','authenticated') order by 1, 2, 3`,
-      ),
-      cg: await all(
-        `select table_name, column_name, grantee, privilege_type from information_schema.column_privileges where table_schema = 'public' and grantee in ('anon','authenticated') order by 1, 2, 3, 4`,
-      ),
-      fn: await all(
-        `select p.oid::regprocedure::text f, p.proacl::text a, md5(p.prosrc) s from pg_proc p where p.pronamespace = 'public'::regnamespace order by 1`,
-      ),
-      vw: await all(
-        `select c.relname, c.reloptions::text, md5(pg_get_viewdef(c.oid)), c.relacl::text from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = 'v' order by 1`,
-      ),
-    });
-  const afterBatch1 = await snap();
-  await db.query(fs.readFileSync('supabase/migrations/down/20261101000217_warehouse_shipments_permission_gate.down.sql', 'utf8'));
-  await db.query(fs.readFileSync('supabase/migrations/down/20261101000216_batch1_whitelabel_and_support_grants.down.sql', 'utf8'));
-  const downBatch1 = await snap();
-  ok(
-    !(await one(`select to_regclass('public.product_slug_redirects') r`)).r && downBatch1 !== afterBatch1,
-    '217+216 down removes product_slug_redirects & restores prior privileges',
-  );
-  await db.query(fs.readFileSync('supabase/migrations/20261101000216_batch1_whitelabel_and_support_grants.sql', 'utf8'));
-  await db.query(fs.readFileSync('supabase/migrations/20261101000217_warehouse_shipments_permission_gate.sql', 'utf8'));
-  const upAgainBatch1 = await snap();
-  ok(upAgainBatch1 === afterBatch1, '217+216 down → up produces identical schema, policies, grants, functions and views');
+  // ── 3. Migrations 216+217 up -> down -> up empty diff ──
+  // EA-1 (221) redefines functions and grants that 216 also touches, so replaying 216/217 on top of newer migrations
+  // can no longer reproduce the current schema. Use the standard round-trip checker, which first unwinds every newer
+  // migration (with its down file) inside a rolled-back transaction, exactly as for every other migration.
+  const rt = spawnSync(process.execPath, ['scripts/check-migration-roundtrip.mjs', '216', '217'], { encoding: 'utf8', env: process.env });
+  const rtOut = `${rt.stdout ?? ''}${rt.stderr ?? ''}`;
+  ok(rt.status === 0 && /216[^\n]*EMPTY/.test(rtOut) && /217[^\n]*EMPTY/.test(rtOut),
+    `216 and 217 round-trip (newer migrations unwound first) gives an empty schema diff${rt.status === 0 ? '' : ' — ' + rtOut.split('\n').filter((l) => /✘|Error|diff/i.test(l)).slice(0, 3).join(' | ')}`);
 } finally {
   await db.query('rollback').catch(() => {});
   await db.end();
