@@ -34,14 +34,14 @@ test('a customer submits a sourcing request and sees it in Product sourcing', as
   if (await confirm.isVisible().catch(() => false)) await confirm.click();
   await page.waitForURL(/\/account\/sourcing\/[0-9a-f-]{36}$/, { timeout: 60_000 });
   rfqId = page.url().split('/').pop()!;
-  await expect(page.getByTestId('request-status')).toHaveText(/Submitted/);
+  await expect(page.getByTestId('request-status')).toHaveText('Request submitted');   // Batch 3: status_mappings label
   await expect(page.getByTestId('timeline')).toBeVisible();
   await page.goto('/account/sourcing');
   const row = page.getByTestId('sourcing-list').locator('a').first();
   await expect(row).toContainText('E2E handheld fan');
   ref = (await row.getAttribute('data-ref'))!;
   expect(ref).toMatch(/^RFQ-/);
-  await expect(row).toContainText('Submitted');
+  await expect(row).toContainText('Request submitted');
 });
 
 test('a quote added by staff appears with a badge, and accepting it creates the order', async ({ page }) => {

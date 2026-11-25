@@ -414,7 +414,7 @@ test('Request a product: free request ($0 charged), real RFQ code, staff landed 
   const quotedRow = page
     .getByTestId('request-row')
     .filter({ hasText: 'Silicone baking mats E2E' });
-  await expect(quotedRow).toContainText('Landed $16.50 to United Arab Emirates');
+  await expect(quotedRow).toContainText('Landed US$ 16.50 to United Arab Emirates');
   await quotedRow.getByTestId('accept-request-quote').click();
 
   await expect(quotedRow.getByTestId('request-draft-model')).toContainText(
@@ -436,7 +436,7 @@ test('Sample order: wallet-short ($4.30 cash, $500 credit ignored) & DDP-duty-un
 
   // 1. Wallet cash is $4.30 (< total, even though org has $500 credit limit!) -> disabled + "Not enough in your wallet" + Add funds link
   await expect(page.getByTestId('sample-wallet-short-notice')).toContainText(
-    'You have $4.30.',
+    'You have US$ 4.30.',
   );
   await expect(page.getByTestId('sample-add-funds-link')).toHaveAttribute(
     'href',

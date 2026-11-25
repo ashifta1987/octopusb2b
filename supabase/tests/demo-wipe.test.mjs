@@ -125,12 +125,21 @@ try {
 } catch (e) {
   ok(false, 'unexpected: ' + e.message);
 } finally {
-  await db.query('rollback');
-  for (const r of seqSnapshot) {
-    if (r.last_value == null) await db.query(`select setval($1, 1, false)`, [r.sequencename]);
-    else await db.query(`select setval($1, $2, true)`, [r.sequencename, r.last_value]);
+  await db.query('rollback').catch(() => {});
+  // sequences are not transactional: put them back even if the connection above dropped (a lost connection once
+  // left seq_rfq / seq_journal / seq_service_request reset on staging) — use a fresh connection for the restore
+  const fix = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+  await fix.connect();
+  try {
+    await assertStagingDatabase(fix);
+    for (const r of seqSnapshot) {
+      if (r.last_value == null) await fix.query(`select setval($1, 1, false)`, [r.sequencename]);
+      else await fix.query(`select setval($1, $2, true)`, [r.sequencename, r.last_value]);
+    }
+    const still = (await fix.query(`select (select count(*) from products) p, (select count(*) from auth.users) u`)).rows[0];
+    ok(Number(still.p) > 0 && Number(still.u) > 1, `rolled back — production data untouched (${still.p} products, ${still.u} users)`);
+  } finally {
+    await fix.end();
+    await db.end().catch(() => {});
   }
-  const still = await one(`select (select count(*) from products) p, (select count(*) from auth.users) u`);
-  ok(Number(still.p) > 0 && Number(still.u) > 1, `rolled back — production data untouched (${still.p} products, ${still.u} users)`);
-  await db.end();
 }
