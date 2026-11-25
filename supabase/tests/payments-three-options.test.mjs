@@ -12,11 +12,12 @@
 //  9. Every refund creates a CN- credit note and balanced reversing ledger entries.
 // 10. Failed pool (fail_pool_and_refund_all) refunds everyone automatically to their wallet.
 // 11. RLS: Customer A cannot see Customer B's payment_checkouts, escrow_holds, customer_credit_terms, credit_reservations, customer_payment_methods, or saas_subscriptions.
-// 12. Down → up for 208, 207, 206 restores identical schema, policies, grants, and function ACLs.
+// 12. Down → up for 208, 207, 206 (later migrations 209+ unwound first and re-applied after) restores identical schema, policies, grants, and function ACLs.
 // Run: node --env-file=.env.staging supabase/tests/payments-three-options.test.mjs
 import { config } from 'dotenv';
 import pg from 'pg';
 import fs from 'node:fs';
+import { appliedAfter, unwind, reapply } from './lib-later-migrations.mjs';
 
 config({ path: '.env.staging', quiet: true, override: true });
 if (process.env.APP_ENVIRONMENT !== 'staging' || !process.env.DATABASE_URL) {
@@ -418,7 +419,10 @@ try {
   await db.query('rollback');
 
   // ── 11. Down → Up round-trip for 208, 207, 206 ──
+  // Later migrations (209 … newest, e.g. 218's escrow_holds.store_order_id) build on the 206–208 objects, so they are
+  // unwound first (newest first, with their own down files) and re-applied afterwards, all in this rolled-back transaction.
   await db.query('begin');
+  const later = await appliedAfter(db, '20261101000208_payment_checkout_rpcs.sql');
   const snap = async () => JSON.stringify({
     pol: await all(`select tablename, policyname, roles, cmd, qual, with_check from pg_policies where schemaname = 'public' order by 1, 2`),
     tg: await all(`select table_name, grantee, privilege_type from information_schema.role_table_grants where table_schema = 'public' and grantee in ('anon', 'authenticated') order by 1, 2, 3`),
@@ -426,15 +430,20 @@ try {
     fn: await all(`select p.oid::regprocedure::text f, p.proacl::text a from pg_proc p where p.pronamespace = 'public'::regnamespace order by 1`),
   });
   const before = await snap();
+  await unwind(db, later);
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000208_payment_checkout_rpcs.down.sql', 'utf8'));
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000207_payment_protection_and_credit_terms.down.sql', 'utf8'));
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000206_legal_entities_and_payment_settings.down.sql', 'utf8'));
   const hasLegalEntitiesDown = (await one(`select to_regclass('public.legal_entities') as t`)).t;
-  ok(hasLegalEntitiesDown === null, '11.1 Down migrations 208 → 207 → 206 cleanly remove new payment & legal_entities tables');
+  ok(
+    hasLegalEntitiesDown === null,
+    `11.1 Down migrations (${later.length} later unwound: ${later.map((f) => f.slice(8, 14)).join(', ') || 'none'}) then 208 → 207 → 206 cleanly remove new payment & legal_entities tables`,
+  );
 
   await db.query(fs.readFileSync('supabase/migrations/20261101000206_legal_entities_and_payment_settings.sql', 'utf8'));
   await db.query(fs.readFileSync('supabase/migrations/20261101000207_payment_protection_and_credit_terms.sql', 'utf8'));
   await db.query(fs.readFileSync('supabase/migrations/20261101000208_payment_checkout_rpcs.sql', 'utf8'));
+  await reapply(db, later);
   const after = await snap();
   if (after !== before) {
     const a = JSON.parse(before), b = JSON.parse(after);
@@ -446,7 +455,7 @@ try {
       }
     }
   }
-  ok(after === before, '11.2 Up migrations 206 → 207 → 208 restore identical policies, table grants, column grants, and function ACLs');
+  ok(after === before, '11.2 Up migrations 206 → 207 → 208 (+ later re-applied) restore identical policies, table grants, column grants, and function ACLs');
 } catch (e) {
   ok(false, 'unexpected error: ' + e.message);
 } finally {
