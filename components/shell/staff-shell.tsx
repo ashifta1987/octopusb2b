@@ -117,6 +117,7 @@ export function StaffShell({ session, nav, counts, moderation, unread = 0, scope
       canSeeFeesDuty={canSeeFeesDuty}
       canEditDropship={canEditDropship}
       canSeeSaas={canSeeSaas}
+      isAdmin={session.isAdmin}
       userName={name}
       initials={initials || 'ST'}
       unreadCount={unread}

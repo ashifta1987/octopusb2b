@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { DropshipMerchantShell } from './dropship-merchant-shell';
 import { DropshipStaffShell } from './dropship-staff-shell';
+import { WarehouseStaffShell } from './warehouse-staff-shell';
 import type { DropshipFeatures } from '@/lib/dropship-features-shared';
 
 export function AccountShellSwitcher({
@@ -61,6 +62,7 @@ export function StaffShellSwitcher({
   canSeeFeesDuty = false,
   canEditDropship = false,
   canSeeSaas,
+  isAdmin = false,
   userName,
   initials,
   unreadCount,
@@ -74,6 +76,7 @@ export function StaffShellSwitcher({
   canSeeFeesDuty?: boolean;
   canEditDropship?: boolean;
   canSeeSaas: boolean;
+  isAdmin?: boolean;
   userName: string;
   initials: string;
   unreadCount: number;
@@ -82,6 +85,14 @@ export function StaffShellSwitcher({
   children: ReactNode;
 }) {
   const pathname = usePathname();
+  // Warehouse OS (W0): its own staff shell and left menu
+  if (pathname === '/office/warehouse' || pathname?.startsWith('/office/warehouse/')) {
+    return (
+      <WarehouseStaffShell userName={userName} initials={initials} unreadCount={unreadCount} isStaging={isStaging} isAdmin={isAdmin}>
+        {children}
+      </WarehouseStaffShell>
+    );
+  }
   if (
     v2ShellEnabled &&
     (pathname?.startsWith('/office/dropship') ||

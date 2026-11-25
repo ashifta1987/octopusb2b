@@ -1,126 +1,54 @@
-/** Turnkey Projects (ADDON-31) — pure helpers shared by server pages, client islands and tests. */
+/** Turnkey Sourcing (design: docs/design/turnkey-v2) — pure helpers shared by server pages, client islands and tests. */
 
-export const TURNKEY_CATEGORIES = ['self-service', 'food', 'leisure', 'small-factory', 'infrastructure', 'fit-out'] as const;
-export type TurnkeyCategory = (typeof TURNKEY_CATEGORIES)[number];
-export const TURNKEY_STATUSES = ['register-interest', 'live', 'archived'] as const;
-export type TurnkeyStatus = (typeof TURNKEY_STATUSES)[number];
-export const LEAD_STATUSES = ['new', 'contacted', 'quoted', 'won', 'lost'] as const;
-export type LeadStatus = (typeof LEAD_STATUSES)[number];
-export const REGIONS = ['MENA', 'Africa', 'Europe', 'Indian subcontinent', 'SEA', 'Americas'] as const;
-
-export const CATEGORY_LABEL: Record<TurnkeyCategory, string> = {
+/** The 6 ADDON-31 category codes still on the first 25 projects; anything else is shown as typed (owner's sheet). */
+const LEGACY_CATEGORY_LABEL: Record<string, string> = {
   'self-service': 'Self-service & automated', food: 'Food & hospitality', leisure: 'Leisure & sport',
   'small-factory': 'Small factories', infrastructure: 'Infrastructure', 'fit-out': 'Fit-out',
 };
-/** Short pill text on cards (Atlas design). */
-export const CATEGORY_PILL: Record<TurnkeyCategory, string> = {
-  'self-service': 'Self-service', food: 'Food', leisure: 'Leisure', 'small-factory': 'Small factory', infrastructure: 'Infra', 'fit-out': 'Fit-out',
-};
-export const CATEGORY_PILL_CLASS: Record<TurnkeyCategory, string> = {
-  'self-service': 'bg-tint text-coral-text', food: 'bg-bad-bg text-bad', leisure: 'bg-ok-bg text-ok',
-  'small-factory': 'bg-warn-bg text-warn', infrastructure: 'bg-cyan-bg text-cyan', 'fit-out': 'bg-violet-bg text-violet',
-};
+export const categoryLabel = (c: string) => LEGACY_CATEGORY_LABEL[c] ?? c;
 
-export type TurnkeyProject = {
-  project_id: string; title: string; category: TurnkeyCategory; short_reason: string | null;
-  starting_budget_usd: number | null; budget_unit: string | null; lead_time_days: number | null;
-  best_markets: string[]; factory_hub_ids: string[]; hub_label: string | null; status: TurnkeyStatus;
-  is_starter_pick: boolean; starter_rank: number | null; sort_rank: number; hero_image_path: string | null; hero_image_alt?: string | null;
-  overview_md: string | null; highlights: string[]; earn: { label: string; value: string; note: string }[];
-  four_tests: Record<string, unknown>; seo_title: string | null; seo_description: string | null;
+export type TkProject = {
+  project_id: string; title: string; category: string; short_reason: string | null; starting_budget_usd: number | null;
+  budget_unit: string | null; hero_image_path: string | null; hero_image_alt: string | null; floor_area_m2: number | null; sort_rank: number;
 };
-export type TurnkeyHub = { hub_id: string; name: string; province: string | null; lat: number | null; lng: number | null; known_for: string | null; sort_rank: number };
-export type TurnkeyEquipment = { line_id: string; sort_order: number; group_label: string | null; name: string; quantity: number; unit: string | null; spec_md: string | null; budget_usd: number | null };
-export type TurnkeyPackage = {
-  package_id: string; project_id: string; tier_name: string; tier_rank: number; tier_label: string | null; starting_budget_usd: number | null;
-  /** staff-only (hidden from customers, migration 195) — present only on admin reads */
-  starting_budget_notes?: string | null; capacity_label: string | null; items_count: number | null; space_label: string | null; container_label: string | null;
-  lead_time_days: number | null; monthly_revenue_low: number | null; monthly_revenue_high: number | null; payback_months_low: number | null;
-  payback_months_high: number | null; summary_md: string | null; is_active: boolean; equipment: TurnkeyEquipment[];
+export const TK_PROJECT_COLUMNS = 'project_id, title, category, short_reason, starting_budget_usd, budget_unit, hero_image_path, hero_image_alt, floor_area_m2, sort_rank';
+
+export type TkService = {
+  code: string; name: string; from_cents: number; unit: 'project' | 'day' | 'version' | 'item' | 'trip' | 'free'; approx: boolean;
+  rule_text: string | null; group_code: 'core' | 'qc' | 'visit' | 'trip_extra' | 'manager'; photo_path: string | null; sort: number;
 };
-/** Customer-safe column lists (migration 195 revokes is_seed / starting_budget_notes / supplier_* / notes from anon + authenticated). */
-export const TURNKEY_PROJECT_COLUMNS = 'project_id, title, category, short_reason, starting_budget_usd, budget_unit, lead_time_days, best_markets, factory_hub_ids, hub_label, status, '
-  + 'is_starter_pick, starter_rank, sort_rank, hero_image_path, hero_image_alt, overview_md, highlights, earn, four_tests, seo_title, seo_description';
-export const TURNKEY_PACKAGE_COLUMNS = 'package_id, project_id, tier_name, tier_rank, tier_label, starting_budget_usd, capacity_label, items_count, space_label, container_label, '
-  + 'lead_time_days, monthly_revenue_low, monthly_revenue_high, payback_months_low, payback_months_high, summary_md, is_active';
-export const TURNKEY_EQUIPMENT_COLUMNS = 'line_id, sort_order, group_label, name, quantity, unit, spec_md, budget_usd';
-export type TurnkeySource = { sort_order: number; region_label: string; title: string; description: string | null };
 
 const nf = new Intl.NumberFormat('en-US');
-/** 38000 → "$38 k"; 1100 → "$1.1 k"; 800 → "$800" */
-export function kUsd(n: number | null | undefined) {
-  if (n == null) return null;
-  if (n < 1000) return `$${nf.format(n)}`;
-  const k = n / 1000;
-  return `$${Number.isInteger(k) ? k : k.toFixed(1).replace(/\.0$/, '')} k`;
+/** Every turnkey price is a starting price: "From $99", "About $250", "Free". Cents in, whole dollars out when exact. */
+export function fromPrice(cents: number, approx = false): string {
+  if (cents === 0) return 'Free';
+  const usd = cents / 100;
+  const amount = `$${Number.isInteger(usd) ? nf.format(usd) : usd.toFixed(2)}`;
+  return approx ? `About ${amount}` : `From ${amount}`;
 }
-export const usd = (n: number | null | undefined) => (n == null ? null : `$${nf.format(n)}`);
-/** "From $22 k/court" */
-export function fromLabel(p: Pick<TurnkeyProject, 'starting_budget_usd' | 'budget_unit'>) {
-  const k = kUsd(p.starting_budget_usd);
-  return k ? `From ${k}${p.budget_unit ? `/${p.budget_unit}` : ''}` : null;
-}
-export function rangeLabel(lo: number | null, hi: number | null, unit: (n: number) => string) {
-  if (lo == null && hi == null) return null;
-  if (lo != null && hi != null) return `${unit(lo)} – ${unit(hi)}`;
-  return unit((lo ?? hi)!);
-}
-export const paybackLabel = (k: Pick<TurnkeyPackage, 'payback_months_low' | 'payback_months_high'>) =>
-  k.payback_months_low != null && k.payback_months_high != null ? `${k.payback_months_low}–${k.payback_months_high} months` : k.payback_months_low != null ? `${k.payback_months_low} months` : null;
-export const equipmentTotal = (k: Pick<TurnkeyPackage, 'equipment'>) => k.equipment.reduce((s, e) => s + (e.budget_usd ?? 0), 0);
+export const UNIT_SUFFIX: Record<TkService['unit'], string> = { project: ' per project', day: ' per day', version: ' per version', item: '', trip: ' per trip', free: '' };
+export const servicePrice = (s: Pick<TkService, 'from_cents' | 'approx' | 'unit'>) => `${fromPrice(s.from_cents, s.approx)}${s.from_cents ? UNIT_SUFFIX[s.unit] : ''}`;
 
-/** Approximate lat/lng → position (%) inside the Atlas map box (China, roughly 18–45°N, 98–126°E). Not geo-accurate by design. */
-/** Map positions from design/TurnkeyAtlas.dc.html (stylised, not geo-accurate); Jinan added between Qingdao and Zhengzhou. */
-const MAP_POS: Record<string, { left: number; top: number }> = {
-  'CN-LN-SY': { left: 30, top: 18 }, 'CN-SD-QD': { left: 52, top: 26 }, 'CN-SD-JN': { left: 42, top: 30 }, 'CN-HA-ZZ': { left: 34, top: 40 },
-  'CN-JS-ZJG': { left: 54, top: 44 }, 'CN-ZJ-NB': { left: 62, top: 52 }, 'CN-ZJ-WZ': { left: 56, top: 60 }, 'CN-FJ-RA': { left: 50, top: 66 },
-  'CN-GD-CZ': { left: 46, top: 74 }, 'CN-GD-FS': { left: 26, top: 76 }, 'CN-GD-GZ': { left: 33, top: 70 }, 'CN-GD-SZ': { left: 38, top: 82 },
-};
-export function hubPosition(h: Pick<TurnkeyHub, 'lat' | 'lng'> & { hub_id?: string }) {
-  if (h.hub_id && MAP_POS[h.hub_id]) return MAP_POS[h.hub_id];
-  const lat = Number(h.lat ?? 30), lng = Number(h.lng ?? 115);
-  const x = ((lng - 98) / (126 - 98)) * 100;
-  const y = ((45 - lat) / (45 - 18)) * 100;
-  return { left: Math.min(94, Math.max(6, x)), top: Math.min(90, Math.max(8, y)) };
-}
+/** "From $22,000" for a project's starting budget (whole US dollars), or null when not set. */
+export const projectFrom = (p: Pick<TkProject, 'starting_budget_usd' | 'budget_unit'>) =>
+  p.starting_budget_usd == null ? null : `From $${nf.format(p.starting_budget_usd)}${p.budget_unit ? ` ${p.budget_unit}` : ''}`;
 
-export type AtlasSort = 'budget' | 'lead' | 'hub';
-export function filterProjects(projects: TurnkeyProject[], opts: { category?: string | null; hub?: string | null; sort?: AtlasSort }) {
-  let list = projects.filter((p) => p.status !== 'archived');
-  if (opts.category) list = list.filter((p) => p.category === opts.category);
-  if (opts.hub) list = list.filter((p) => p.factory_hub_ids.includes(opts.hub!));
-  const sort = opts.sort ?? 'budget';
-  const live = (p: TurnkeyProject) => (p.status === 'live' ? 0 : 1);
-  return [...list].sort((a, b) => {
-    if (sort === 'lead') return (a.lead_time_days ?? 1e9) - (b.lead_time_days ?? 1e9) || a.sort_rank - b.sort_rank;
-    if (sort === 'hub') return (a.hub_label ?? '~').localeCompare(b.hub_label ?? '~') || a.sort_rank - b.sort_rank;
-    return live(a) - live(b) || (a.starting_budget_usd ?? 1e12) - (b.starting_budget_usd ?? 1e12) || a.sort_rank - b.sort_rank;
-  });
-}
+/** 8 phases, 7 payment gates (only the enquiry is free). */
+export const TK_PHASES: { n: number; name: string; what: string; paid: boolean }[] = [
+  { n: 1, name: 'Enquiry', what: 'Pick a project or ask for a new one and tell us your plan.', paid: false },
+  { n: 2, name: 'Consultation', what: 'Paid first. We set the exact fee with you.', paid: true },
+  { n: 3, name: 'Design', what: 'Layout drawing: 3 versions free, then 50% of the drawing fee per extra version.', paid: true },
+  { n: 4, name: 'Sourcing', what: 'We collect quotes from factories. You deal only with us.', paid: true },
+  { n: 5, name: 'Quote and deposit', what: 'Approve the quote and pay the deposit.', paid: true },
+  { n: 6, name: 'Production and QC', what: 'Factory audit and inspections, each paid before it starts.', paid: true },
+  { n: 7, name: 'Shipment', what: 'Booking, tracking and shipping documents.', paid: true },
+  { n: 8, name: 'Handover', what: 'Final documents, sign-off and an optional China visit.', paid: true },
+];
 
-/** Problems with the starter-pick set (unit-tested; the DB enforces the same with a unique index + check). */
-export function starterPickProblems(projects: Pick<TurnkeyProject, 'project_id' | 'is_starter_pick' | 'starter_rank' | 'status'>[]) {
-  const picks = projects.filter((p) => p.is_starter_pick && p.status !== 'archived');
-  const problems: string[] = [];
-  const ranks = picks.map((p) => p.starter_rank);
-  if (ranks.some((r) => r == null || r < 1 || r > 5)) problems.push('Starter ranks must be 1–5.');
-  if (new Set(ranks).size !== ranks.length) problems.push('Starter ranks must be unique.');
-  if (picks.length > 5) problems.push('At most five starter picks.');
-  return problems;
+/** Public storage URL for a project photo path (https links pass through). */
+export function tkImageUrl(path: string | null, supabaseUrl: string | undefined): string | null {
+  if (!path) return null;
+  if (/^https:\/\//.test(path)) return path;
+  if (path.startsWith('/')) return path;
+  return supabaseUrl ? `${supabaseUrl}/storage/v1/object/public/site-media/${path.replace(/^\/+/, '')}` : null;
 }
-
-/** four_tests: {equipment_share: 0..1 | null, ships_in_container, simple_revenue, non_expert_buyer: boolean} */
-export function validFourTests(v: unknown): v is { equipment_share: number | null; ships_in_container: boolean; simple_revenue: boolean; non_expert_buyer: boolean } {
-  if (!v || typeof v !== 'object' || Array.isArray(v)) return false;
-  const o = v as Record<string, unknown>;
-  const share = o.equipment_share;
-  return (share === null || share === undefined || (typeof share === 'number' && share >= 0 && share <= 1))
-    && ['ships_in_container', 'simple_revenue', 'non_expert_buyer'].every((k) => typeof o[k] === 'boolean');
-}
-
-/** WhatsApp deep link with the reference number prefilled. */
-export function waLink(number: string | null | undefined, text: string) {
-  const digits = (number ?? '').replace(/\D/g, '');
-  return digits ? `https://wa.me/${digits}?text=${encodeURIComponent(text)}` : null;
-}
-

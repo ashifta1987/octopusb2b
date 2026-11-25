@@ -51,3 +51,4 @@ docs/qa/2026-11-01-trace/state.json
 
 # one-off local scripts (never committed)
 *.tmp.mjs
+.q.mjs

@@ -127,8 +127,8 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
       : Promise.resolve({ data: null }),
     sb
       .from('warehouse_stock')
-      .select('item_id, on_hand_qty, reserved_qty')
-      .eq('warehouse_id', 'SZ-01'),
+      // W0: stock labels count every warehouse (was the single hard-coded 'SZ-01')
+      .select('item_id, on_hand_qty, reserved_qty'),
     staff.canSeeCosts
       ? sb
           .from('shipping_rate_cards')
@@ -192,9 +192,11 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
 
   const wsByItem = new Map<string, { on_hand_qty: number; reserved_qty: number }>();
   for (const w of wsRes.data ?? []) {
+    // summed across warehouses (multi-warehouse, W0)
+    const prev = wsByItem.get(String(w.item_id));
     wsByItem.set(String(w.item_id), {
-      on_hand_qty: Number(w.on_hand_qty ?? 0),
-      reserved_qty: Number(w.reserved_qty ?? 0),
+      on_hand_qty: (prev?.on_hand_qty ?? 0) + Number(w.on_hand_qty ?? 0),
+      reserved_qty: (prev?.reserved_qty ?? 0) + Number(w.reserved_qty ?? 0),
     });
   }
 

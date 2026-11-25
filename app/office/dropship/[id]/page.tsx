@@ -115,8 +115,8 @@ async function EditDropshipProduct({ params }: { params: Promise<{ id: string }>
     sb.from('categories').select('name').order('name'),
     sb
       .from('warehouse_stock')
-      .select('item_id, on_hand_qty, reserved_qty')
-      .eq('warehouse_id', 'SZ-01'),
+      // W0: stock labels count every warehouse (was the single hard-coded 'SZ-01')
+      .select('item_id, on_hand_qty, reserved_qty'),
     staff.canSeeCosts
       ? sb
           .from('shipping_rate_cards')
@@ -238,9 +238,11 @@ async function EditDropshipProduct({ params }: { params: Promise<{ id: string }>
 
   const wsByItem = new Map<string, { on_hand: number; reserved: number }>();
   for (const w of wsRes.data ?? []) {
+    // summed across warehouses (multi-warehouse, W0)
+    const prev = wsByItem.get(String(w.item_id));
     wsByItem.set(String(w.item_id), {
-      on_hand: Number(w.on_hand_qty ?? 0),
-      reserved: Number(w.reserved_qty ?? 0),
+      on_hand: (prev?.on_hand ?? 0) + Number(w.on_hand_qty ?? 0),
+      reserved: (prev?.reserved ?? 0) + Number(w.reserved_qty ?? 0),
     });
   }
 

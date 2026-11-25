@@ -9,7 +9,7 @@ import { activeSwitchBanner } from '@/components/store/currency';
 import { CurrencySwitchBanner } from '@/components/store/currency-banner';
 import { getHomeLiveData } from '@/components/store/home/live-data';
 import { AnnouncementBar } from '@/components/store/home/top';
-import { getTurnkeyCatalogue } from '@/lib/turnkey/data';
+import { getTurnkeyCatalogue } from '@/lib/turnkey/catalogue';
 import { getCategoryCounts } from '@/components/store/data';
 import { stockedCategories } from '@/lib/category-stock';
 import { ServiceLinks } from '@/components/store/service-links';

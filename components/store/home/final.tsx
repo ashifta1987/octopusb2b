@@ -9,8 +9,8 @@ import { getSiteMedia, slot, type SiteImage } from '@/lib/media';
 import { getStoreContent } from '@/components/store/currency';
 import { getFeatured, listOpenPools, listProducts, getServices, type CardProduct, type PoolCard } from '@/components/store/data';
 import { unitOne } from '@/components/store/product-card';
-import { getTurnkeyCatalogue } from '@/lib/turnkey/data';
-import { CATEGORY_PILL, TURNKEY_CATEGORIES } from '@/lib/turnkey/format';
+import { getTurnkeyCatalogue } from '@/lib/turnkey/catalogue';
+import { categoryLabel } from '@/lib/turnkey/format';
 import { JsonLd, SITE_URL } from '@/components/store/seo';
 import { copy } from './shared';
 import { IllCard, Photo, FloatingCard, InsetPhoto, HeroFeather, OctoButton, NumEyebrow, Ticks, StepRow, Band } from './brand-ui';
@@ -277,8 +277,9 @@ function RestOfHome({ blocks, M, pools, poolsOn, turnkey, ready, countries, seco
   blocks: Blocks; M: Record<string, SiteImage>; pools: PoolCard[]; poolsOn: boolean; turnkey: Awaited<ReturnType<typeof getTurnkeyCatalogue>>['projects']; ready: CardProduct[];
   countries?: string | number; second?: { city: string; country: string; handles?: string }; demo: boolean; hours?: { start?: string; end?: string }; legal: string | null;
 }) {
-  const tkCounts = TURNKEY_CATEGORIES.map((c) => ({ c, n: turnkey.filter((p) => p.category === c).length })).filter((x) => x.n);
-  const tk5 = [...turnkey].sort((a, b) => Number(b.is_starter_pick) - Number(a.is_starter_pick) || (a.starter_rank ?? 99) - (b.starter_rank ?? 99) || a.sort_rank - b.sort_rank).slice(0, 5);
+  // Turnkey v2: category chips by project count (no "top picks" — removed on request)
+  const tkCounts = [...turnkey.reduce((m, p) => m.set(p.category, (m.get(p.category) ?? 0) + 1), new Map<string, number>())]
+    .sort((a, b) => b[1] - a[1]).slice(0, 8).map(([c]) => c);
   const faq = [1, 2, 3, 4, 5, 6, 7].map((n) => copy(blocks, `home3.faq.${n}`, [
     'What does Octopus do?|Octopus B2B gives you one account for buying from China: dropshipping, Make My Brand, product sourcing, MOQ pools, Turnkey Projects, and 3PL warehousing with worldwide shipping. One US dollar wallet and one account manager cover all of them.',
     'Are the factories verified?|Yes. Dropshipping and Make My Brand use only products Octopus lists directly, from verified suppliers, and our sourcing team matches you only with verified factories.',
@@ -334,23 +335,13 @@ function RestOfHome({ blocks, M, pools, poolsOn, turnkey, ready, countries, seco
           <div className="grid gap-10 lg:grid-cols-2 items-center">
             <div>
               <NumEyebrow n={5}>Turnkey Projects</NumEyebrow>
-              <H2 id="tk-h">Open a complete business, delivered in one container.</H2>
-              <Lead>A ready business set-up: we source every machine, fit-out and spare from verified factories, ship it in one container and help you open.</Lead>
-              <ul className="mt-4 flex flex-wrap gap-2">{tkCounts.map(({ c }) => <li key={c}><Link href={`/turnkey/atlas?category=${c}`} className="pill bg-white border border-line text-ink min-h-9 !text-[12px]">{CATEGORY_PILL[c]}</Link></li>)}</ul>
-              <Btns><Link href="/turnkey" className="btn btn-primary min-h-[52px]">See all {turnkey.length} businesses <Arrow /></Link><Link href="/contact?topic=turnkey" className="btn btn-ghost min-h-[52px]">Talk to us about a project</Link></Btns>
+              <H2 id="tk-h">Your complete business, set up from China.</H2>
+              <Lead>Layout drawing, sourcing, quality control, factory inspection, shipping and handover. You deal only with us, and every service is paid before the work starts.</Lead>
+              <ul className="mt-4 flex flex-wrap gap-2">{tkCounts.map((c) => <li key={c}><span className="pill bg-white border border-line text-ink min-h-9 !text-[12px]">{categoryLabel(c)}</span></li>)}</ul>
+              <Btns><Link href="/turnkey" className="btn btn-primary min-h-[52px]">See all {turnkey.length} projects <Arrow /></Link><Link href="/turnkey/services" className="btn btn-ghost min-h-[52px]">Services and starting fees</Link></Btns>
             </div>
-            <IllCard img={M.turnkey} chip="Machines, fit-out and spares in one container" />
+            <IllCard img={M.turnkey} chip="Consultation, sourcing, QC and shipping" />
           </div>
-          <ul className="mt-10 flex lg:grid lg:grid-cols-5 gap-3 overflow-x-auto snap-x -mx-4 px-4 lg:mx-0 lg:px-0 pb-1">
-            {tk5.map((p) => (
-              <li key={p.project_id} className="shrink-0 w-[240px] lg:w-auto snap-start">
-                <Link href={`/turnkey/${p.project_id}`} className="card p-4 block h-full hover:border-coral-text">
-                  <div className="font-bold text-ink">{p.title}</div>
-                  {p.short_reason && <p className="mt-1 text-[13.5px] text-muted line-clamp-2">{p.short_reason}</p>}
-                </Link>
-              </li>
-            ))}
-          </ul>
         </Band>
       )}
 
@@ -358,7 +349,7 @@ function RestOfHome({ blocks, M, pools, poolsOn, turnkey, ready, countries, seco
       <Band id="warehousing" white label="3PL and shipping">
         <NumEyebrow n={6}>3PL &amp; shipping</NumEyebrow>
         <H2 id="3pl-h">Stored in China. Delivered worldwide.</H2>
-        <Lead>Stock in our Shenzhen warehouse, dispatched the same or next working day and delivered worldwide with tracking.</Lead>
+        <Lead>Stock in our Foshan warehouse, dispatched the same or next working day and delivered worldwide with tracking.</Lead>
         <ul className="mt-7 flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 overflow-x-auto snap-x -mx-4 px-4 md:mx-0 md:px-0 pb-1" data-testid="3pl-strip">
           {([[M.s1, 'Received and stored', 'We count your bulk order and shelve it by SKU.'], [M.s2, 'Picked, scanned, packed', 'Every order is scanned, so your stock count stays live.'], [M.s3, 'Dispatched worldwide', 'Same or next working day, with tracking to the door.'], [M.s4, 'Returns checked', 'We inspect each return and restock it or report it to you.']] as [SiteImage, string, string][]).map(([im, t, b], i) => (
             <li key={t} className="shrink-0 w-[260px] md:w-auto snap-start">

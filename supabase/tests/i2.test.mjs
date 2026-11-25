@@ -496,7 +496,8 @@ try {
   await owner();
   const srcHandoff = await one(`select id from dropship_handoffs where store_order_id = $1`, [extOrder.store_order_id]);
   await as(srcStaff, 'aal2');
-  await db.query(`select receive_sourcing_handoff_at_3pl($1, 'SZ-01')`, [srcHandoff.id]);
+  // W0 (223): SZ-01 is a legacy location; handoffs are received at an active warehouse (the default, Foshan)
+  await db.query(`select receive_sourcing_handoff_at_3pl($1, null)`, [srcHandoff.id]);
   await owner();
   const extAfterRecv = await one(`select staff_stage, merchant_status from store_orders where id = $1`, [extOrder.store_order_id]);
   ok(
