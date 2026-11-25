@@ -22,8 +22,7 @@ export async function printableShipment<T extends { division_id: string | null }
   const canPrintRole =
     s.isAdmin ||
     can(s, 'orders', 'edit') ||
-    can(s, 'warehouse', 'view') ||
-    can(s, 'suppliers', 'view');
+    can(s, 'warehouse', 'view');
   const sb = createAdminClient(); // permission checked above
   const { data: divs } = await sb.from('divisions').select('id, code').in('code', ['3PL', 'DS']);
   const idOf = (c: string) => divs?.find((d) => d.code === c)?.id ?? null;

@@ -53,22 +53,14 @@ export function StaffShell({ session, nav, counts, moderation, unread = 0, scope
     ...(seesCustomers ? [{ title: 'Customers', items: [{ href: '/admin/customers', label: 'All customers' }, { href: '/admin/brand-projects', label: 'Brand projects' }, ...(session.isAdmin || isManager ? [{ href: '/admin/approvals#limits', label: 'Approval limits' }] : [])] }] : []),
   ];
   const inDs = Boolean(scope?.options.some((d) => d.code === 'DS'));
-  const canOpenDropship = session.isAdmin || session.roles.includes('finance') || session.roles.includes('support') || inDs;
-  const canOpenShipping =
-    session.isAdmin ||
-    can(session, 'orders', 'edit') ||
-    can(session, 'warehouse', 'view') ||
-    can(session, 'finance', 'view') ||
-    can(session, 'suppliers', 'view');
+  const canOpenDropship = session.isAdmin || can(session, 'finance', 'view') || can(session, 'support', 'edit') || inDs;
   const rest = nav
     .map((s) => ({
       ...s,
       items: s.items.filter((i) =>
         i.href === '/office/dropship'
           ? canOpenDropship
-          : i.href === '/office/shipping'
-            ? canOpenShipping
-            : !i.area || can(session, i.area, i.action ?? 'view'),
+          : !i.area || can(session, i.area, i.action ?? 'view'),
       ),
     }))
     .filter((s) => s.items.length);
@@ -113,7 +105,7 @@ export function StaffShell({ session, nav, counts, moderation, unread = 0, scope
     </div>
   );
 
-  const canSeeSaas = session.isAdmin || session.roles.includes('finance');
+  const canSeeSaas = session.isAdmin || can(session, 'finance', 'view');
 
   return (
     <StaffShellSwitcher

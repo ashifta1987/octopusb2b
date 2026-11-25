@@ -254,7 +254,6 @@ try {
     'supplier_switches',
     'supplier_verifications',
     'shipping_rate_cards',
-    'carriers',
     'warehouse_shipments',
     'payouts',
     'finance_approvals',
@@ -289,8 +288,21 @@ try {
     }
     ok(
       rowLeaks.length === 0,
-      `${label}: 0 rows readable in ${BLOCKED_TABLES_SUPPORT.length} supplier/cost/rate/carrier tables${rowLeaks.length ? ' — ROWS IN: ' + rowLeaks.join(', ') : ''}`,
+      `${label}: 0 rows readable in ${BLOCKED_TABLES_SUPPORT.length} supplier/cost/rate tables${rowLeaks.length ? ' — ROWS IN: ' + rowLeaks.join(', ') : ''}`,
     );
+  }
+
+  await as(editorUid, 'aal2');
+  const editorCarriers = await tryq(`select 1 from public.carriers limit 1`);
+  ok(!editorCarriers.err && editorCarriers.rows.length === 0, 'content_editor (aal2): 0 rows readable in carriers');
+
+  for (const [label, uid] of [
+    ['support (aal2)', supportUid],
+    ['qc_coordinator (aal2)', qcUid],
+  ]) {
+    await as(uid, 'aal2');
+    const cr = await tryq(`select code, name from public.carriers limit 1`);
+    ok(!cr.err && cr.rows.length > 0, `${label}: can read non-sensitive carrier metadata (name)`);
   }
 
   await as(supportUid, 'aal2');
@@ -300,6 +312,10 @@ try {
     ['list_sourcing_supplier_products()', `select 1 from public.list_sourcing_supplier_products(5) limit 1`],
     ['list_sourcing_candidates_for_dropship()', `select 1 from public.list_sourcing_candidates_for_dropship(5) limit 1`],
     ['quote_carrier_rates()', `select 1 from public.quote_carrier_rates('yunexpress', 'US', 500, 1) limit 1`],
+    [
+      'get_shipment_rates()',
+      `select 1 from public.get_shipment_rates(array['00000000-0000-0000-0000-000000000000'::uuid]) limit 1`,
+    ],
   ]) {
     const r = await tryq(sql);
     if (!/FORBIDDEN|permission denied/i.test(r.err ?? '')) rpcLeaks.push(`${name} -> ${r.err || `${r.rows.length} rows`}`);
@@ -342,24 +358,126 @@ try {
     `support (aal2) ALL-tables sweep (${sensitiveCols.length} sensitive columns scanned): 0 unexpected readable values${sweepLeaks.length ? ' — LEAKED: ' + sweepLeaks.join(', ') : ''}`,
   );
 
-  // Authorized roles keep working cleanly
+  // Authorized roles & division/permission boundaries on supplier tables and shipment RPCs
+  await db.query('reset role');
+  const anyOrd = await one(`select id, org_id from public.orders limit 1`);
+  let testOrgId = anyOrd?.org_id;
+  let testOrdId = anyOrd?.id;
+  if (!testOrdId) {
+    const o = await one(`select id from public.organizations limit 1`);
+    testOrgId = o.id;
+    testOrdId = (
+      await one(
+        `insert into public.orders (org_id, division_id, code, title, quantity, unit_price_cents, total_cents, deposit_cents, currency)
+         values ($1, division_id_of('SRC'), 'B1-TEST-ORD', 'B1 Test Order', 1, 1000, 1000, 300, 'USD')
+         returning id`,
+        [testOrgId],
+      )
+    ).id;
+  }
+  const srcShp = (
+    await one(
+      `insert into public.shipments (code, order_id, org_id, carrier_code, tracking_no, rate_cents, currency, status, division_id)
+       values ('B1-TEST-SHP-SRC', $1, $2, 'yunexpress', 'YT-B1-SRC', 4100, 'USD', 'in_transit', division_id_of('SRC'))
+       returning id`,
+      [testOrdId, testOrgId],
+    )
+  ).id;
+  const dsShp = (
+    await one(
+      `insert into public.shipments (code, order_id, org_id, carrier_code, tracking_no, rate_cents, currency, status, division_id)
+       values ('B1-TEST-SHP-DS', $1, $2, 'yunexpress', 'YT-B1-DS', 5200, 'USD', 'in_transit', division_id_of('DS'))
+       returning id`,
+      [testOrdId, testOrgId],
+    )
+  ).id;
+  const shpArr = `array['${srcShp}'::uuid, '${dsShp}'::uuid]`;
+
+  const qcSrcUid = await mkUser('b1-qc-src@example.com', 'qc_coordinator', 'SRC', 'staff');
+  const opsSrcUid = await mkUser('b1-ops-src@example.com', 'operations', 'SRC', 'staff');
+  const warehouseUid = await mkUser('b1-warehouse@example.com', 'warehouse', '3PL', 'warehouse');
+  const adminUid = await mkUser('b1-admin@example.com', 'admin');
+  const custUid = await mkUser('b1-cust@example.com', 'customer');
+
   await as(sourcingUid, 'aal2');
   ok(
     (await all(`select id from public.suppliers limit 1`)).length > 0,
     'sourcing_agent (aal2): can read suppliers (allowed)',
   );
-  await as(financeUid, 'aal2');
+
+  await as(supportUid, 'aal2');
+  const supCarriers = await tryq(`select shipment_id, carrier_name from public.get_shipment_carriers(${shpArr})`);
+  const supRates = await tryq(`select 1 from public.get_shipment_rates(${shpArr})`);
   ok(
-    !(await tryq(`select count(*) from public.shipping_rate_cards`)).err &&
-      !(await tryq(`select count(*) from public.supplier_products`)).err,
-    'finance (aal2): can read shipping_rate_cards and supplier_products',
+    !supCarriers.err && supCarriers.rows.length === 2 && supCarriers.rows.every((r) => !!r.carrier_name),
+    'support (aal2): get_shipment_carriers() returns carrier_name across divisions',
   );
+  ok(/FORBIDDEN/i.test(supRates.err ?? ''), 'support (aal2): get_shipment_rates() raises FORBIDDEN');
+
+  await as(qcSrcUid, 'aal2');
+  const qcCarriers = await tryq(`select shipment_id, carrier_name from public.get_shipment_carriers(${shpArr})`);
+  const qcRates = await tryq(`select 1 from public.get_shipment_rates(${shpArr})`);
+  ok(
+    !qcCarriers.err && qcCarriers.rows.length === 1 && qcCarriers.rows[0].shipment_id === srcShp,
+    'qc_coordinator (aal2, SRC): get_shipment_carriers() is division-scoped to SRC only',
+  );
+  ok(/FORBIDDEN/i.test(qcRates.err ?? ''), 'qc_coordinator (aal2, SRC): get_shipment_rates() raises FORBIDDEN');
+
+  await as(warehouseUid, 'aal2');
+  const whCarriers = await tryq(`select shipment_id, carrier_name from public.get_shipment_carriers(${shpArr})`);
+  const whRates = await tryq(`select 1 from public.get_shipment_rates(${shpArr})`);
+  ok(
+    !whCarriers.err && whCarriers.rows.length === 2,
+    'warehouse (aal2, 3PL): get_shipment_carriers() succeeds across all divisions',
+  );
+  ok(/FORBIDDEN/i.test(whRates.err ?? ''), 'warehouse (aal2, 3PL): get_shipment_rates() raises FORBIDDEN');
+
+  await as(opsSrcUid, 'aal2');
+  const opsSrcRates = await tryq(`select shipment_id, rate_cents from public.get_shipment_rates(${shpArr})`);
+  ok(
+    !opsSrcRates.err && opsSrcRates.rows.length === 1 && opsSrcRates.rows[0].shipment_id === srcShp && Number(opsSrcRates.rows[0].rate_cents) === 4100,
+    'operations (aal2, SRC): get_shipment_rates() returns SRC rate only',
+  );
+
   await as(opsUid, 'aal2');
+  const opsDsRates = await tryq(`select shipment_id, rate_cents from public.get_shipment_rates(${shpArr})`);
   ok(
     !(await tryq(`select 1 from public.dropship_sourcing_links() limit 1`)).err &&
-      !(await tryq(`select 1 from public.quote_carrier_rates('yunexpress', 'US', 500, 1) limit 1`)).err,
-    'DS operations (aal2): dropship_sourcing_links() and quote_carrier_rates() work',
+      !(await tryq(`select 1 from public.quote_carrier_rates('yunexpress', 'US', 500, 1) limit 1`)).err &&
+      !opsDsRates.err &&
+      opsDsRates.rows.length === 1 &&
+      opsDsRates.rows[0].shipment_id === dsShp &&
+      Number(opsDsRates.rows[0].rate_cents) === 5200,
+    'DS operations (aal2): dropship_sourcing_links(), quote_carrier_rates(), and get_shipment_rates() (DS only) work',
   );
+
+  await as(financeUid, 'aal2');
+  const finRates = await tryq(`select shipment_id, rate_cents from public.get_shipment_rates(${shpArr}) order by rate_cents`);
+  ok(
+    !(await tryq(`select count(*) from public.shipping_rate_cards`)).err &&
+      !(await tryq(`select count(*) from public.supplier_products`)).err &&
+      !finRates.err &&
+      finRates.rows.length === 2,
+    'finance (aal2): can read shipping_rate_cards, supplier_products, and company-wide get_shipment_rates()',
+  );
+
+  await as(adminUid, 'aal2');
+  const admRates = await tryq(`select shipment_id from public.get_shipment_rates(${shpArr})`);
+  ok(!admRates.err && admRates.rows.length === 2, 'admin (aal2): get_shipment_rates() succeeds across all divisions');
+
+  for (const [label, fn] of [
+    ['content_editor (aal2)', () => as(editorUid, 'aal2')],
+    ['customer', () => as(custUid, 'aal1')],
+    ['anon', () => asAnon()],
+  ]) {
+    await fn();
+    const rc = await tryq(`select 1 from public.get_shipment_carriers(${shpArr})`);
+    const rr = await tryq(`select 1 from public.get_shipment_rates(${shpArr})`);
+    ok(
+      /FORBIDDEN|permission denied/i.test(rc.err ?? '') && /FORBIDDEN|permission denied/i.test(rr.err ?? ''),
+      `${label}: both get_shipment_carriers() and get_shipment_rates() fail with FORBIDDEN`,
+    );
+  }
 
   await db.query('reset role');
   await db.query('rollback');

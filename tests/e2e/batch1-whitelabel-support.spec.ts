@@ -18,14 +18,17 @@ test.describe.configure({ mode: 'serial' });
 
 let supportStaff: TempStaff | null = null;
 let sourcingStaff: TempStaff | null = null;
+let financeStaff: TempStaff | null = null;
 let customer: TempCustomer | null = null;
 let targetDoc: { id: string; org_id: string; sup_code: string; sup_name: string } | null = null;
+let targetOrderId: string | null = null;
 let targetTracking: string | null = null;
 
 test.beforeAll(async () => {
   await assertStagingOrThrow();
   supportStaff = await createTempStaff('support');
   sourcingStaff = await createTempStaff('operations');
+  financeStaff = await createTempStaff('finance');
   customer = await createTempCustomer('b1cust');
 
   const db = pgClient();
@@ -75,24 +78,51 @@ test.beforeAll(async () => {
         )
       ).rows[0] as { id: string };
 
+      targetOrderId = tempOrder.id;
+      const tracking = `YT-E2E-B1-${stamp}`;
+      const tempShipment = (
+        await db.query(
+          `insert into public.shipments (
+             code, order_id, org_id, carrier_code, tracking_no,
+             label_url, status, rate_cents, currency, division_id
+           ) values (
+             $1, $2, $3, 'yunexpress', $4,
+             $5, 'in_transit', 4800, 'USD', division_id_of('SRC')
+           ) returning id`,
+          [`E2E-SHP-B1-${stamp}`, tempOrder.id, customer.orgId, tracking, `/api/labels/${tracking}`],
+        )
+      ).rows[0] as { id: string };
+
+      await db.query(
+        `insert into public.tracking_events (
+           shipment_id, org_id, status, description, location, occurred_at
+         ) values (
+           $1, $2, 'in_transit', 'Departed Shenzhen hub — E2E test', 'Shenzhen', now()
+         )`,
+        [tempShipment.id, customer.orgId],
+      );
+
       targetDoc = {
         id: tempDoc.id,
         org_id: customer.orgId,
         sup_code: sup.code,
         sup_name: sup.legal_name,
       };
+      targetTracking = tracking;
     }
 
-    targetTracking =
-      (
-        await db.query(`
-          select tracking_no
-            from public.shipments
-           where tracking_no is not null
-           order by created_at desc
-           limit 1
-        `)
-      ).rows[0]?.tracking_no ?? null;
+    if (!targetTracking) {
+      targetTracking =
+        (
+          await db.query(`
+            select tracking_no
+              from public.shipments
+             where tracking_no is not null
+             order by created_at desc
+             limit 1
+          `)
+        ).rows[0]?.tracking_no ?? null;
+    }
   } finally {
     await db.end();
   }
@@ -112,7 +142,7 @@ test.afterAll(async () => {
     customer?.orgId ? [customer.orgId] : [],
     customer?.id ? [customer.id] : [],
   );
-  for (const t of [supportStaff, sourcingStaff]) {
+  for (const t of [supportStaff, sourcingStaff, financeStaff]) {
     if (!t) continue;
     try {
       await deleteTempStaff(t);
@@ -162,15 +192,78 @@ test('PDF route gates supplier details on supplier/cost permission (sourcing sta
   await ctxCust.close();
 });
 
-test('support staff cannot open /office/shipping or /api/labels/[tracking]', async ({ page }) => {
-  await staffLogin(page, supportStaff!, '/office/support');
-  await page.goto('/office/shipping');
-  await expect(page).toHaveURL(/\/forbidden/);
+test('support gets read-only tracking on /office/shipping and /office/orders/[id] without rates/labels/supplier; shipping & finance see rates via RPC', async ({
+  browser,
+}) => {
+  expect(targetOrderId && targetTracking && targetDoc, 'Expected temp order, shipment, tracking event, and doc').toBeTruthy();
 
-  if (targetTracking) {
-    const res = await page.request.get(`/api/labels/${encodeURIComponent(targetTracking)}`);
-    expect(res.status()).toBe(403);
-  }
+  // 1. support (aal2): read-only shipment tracking, events, carrier; NO Ready to ship, rates, labels, or supplier details
+  const ctxSup = await browser.newContext();
+  const pageSup = await ctxSup.newPage();
+  await staffLogin(pageSup, supportStaff!, '/office/support');
+  const resShip = await pageSup.goto('/office/shipping');
+  expect(resShip?.status()).toBe(200);
+  await expect(pageSup.getByRole('heading', { name: /Shipping tracking/i })).toBeVisible();
+  const row = pageSup.locator('tr', { hasText: targetTracking! });
+  await expect(row).toBeVisible();
+  await expect(row.getByText('YunExpress')).toBeVisible();
+  await expect(row.getByText('In transit', { exact: true })).toBeVisible();
+
+  const eventsSummary = row.locator('summary', { hasText: /All events/i });
+  if (await eventsSummary.count()) await eventsSummary.first().click();
+  await expect(row.locator('details li', { hasText: 'Departed Shenzhen hub — E2E test' })).toBeVisible();
+
+  await expect(pageSup.getByRole('heading', { name: /Ready to ship/i })).toHaveCount(0);
+  await expect(pageSup.locator('a[href^="/api/labels/"]')).toHaveCount(0);
+  const shipBodySup = await pageSup.locator('main').innerText();
+  expect(shipBodySup).not.toContain('48.00');
+  expect(shipBodySup).not.toContain('Ready to ship');
+  expect(shipBodySup).not.toContain(targetDoc!.sup_code);
+  expect(shipBodySup).not.toContain(targetDoc!.sup_name);
+
+  // Filtered ?order= view
+  const resShipOrder = await pageSup.goto(`/office/shipping?order=${targetOrderId}`);
+  expect(resShipOrder?.status()).toBe(200);
+  await expect(pageSup.locator('main').getByText(targetTracking!)).toBeVisible();
+
+  // Direct label endpoint remains 403
+  const labelRes = await pageSup.request.get(`/api/labels/${encodeURIComponent(targetTracking!)}`);
+  expect(labelRes.status()).toBe(403);
+
+  // Order detail view: shows tracking & carrier, hides Print label and supplier details
+  const resOrd = await pageSup.goto(`/office/orders/${targetOrderId}`);
+  expect(resOrd?.status()).toBe(200);
+  await expect(pageSup.locator('main').getByText(targetTracking!)).toBeVisible();
+  await expect(pageSup.locator('main').getByText('YunExpress').first()).toBeVisible();
+  await expect(pageSup.getByRole('link', { name: /Print label/i })).toHaveCount(0);
+  const ordBodySup = await pageSup.locator('main').innerText();
+  expect(ordBodySup).not.toContain(targetDoc!.sup_code);
+  expect(ordBodySup).not.toContain(targetDoc!.sup_name);
+  await ctxSup.close();
+
+  // 2. sourcingStaff (operations in SRC: orders:edit) -> sees rate via get_shipment_rates(), carrier, Label, and Ready to ship
+  const ctxSrc = await browser.newContext();
+  const pageSrc = await ctxSrc.newPage();
+  await staffLogin(pageSrc, sourcingStaff!, '/office/shipping');
+  const rowSrc = pageSrc.locator('tr', { hasText: targetTracking! });
+  await expect(rowSrc).toBeVisible();
+  await expect(rowSrc.getByText('48.00')).toBeVisible();
+  await expect(rowSrc.getByText('YunExpress')).toBeVisible();
+  await expect(rowSrc.getByRole('link', { name: /^Label$/i })).toBeVisible();
+  await expect(pageSrc.locator('main').getByText(/Ready to ship/i).first()).toBeVisible();
+  await ctxSrc.close();
+
+  // 3. financeStaff (finance: finance:view) -> sees rate via get_shipment_rates() & carrier, without Simulate event or Label
+  const ctxFin = await browser.newContext();
+  const pageFin = await ctxFin.newPage();
+  await staffLogin(pageFin, financeStaff!, '/office/shipping');
+  const rowFin = pageFin.locator('tr', { hasText: targetTracking! });
+  await expect(rowFin).toBeVisible();
+  await expect(rowFin.getByText('48.00')).toBeVisible();
+  await expect(rowFin.getByText('YunExpress')).toBeVisible();
+  await expect(pageFin.getByRole('button', { name: /Simulate event/i })).toHaveCount(0);
+  await expect(pageFin.locator('a[href^="/api/labels/"]')).toHaveCount(0);
+  await ctxFin.close();
 });
 
 test('public Sourcing slugs return 301 to clean slug, canonical points to new slug, images have zero SKU/factory tokens, sitemap is clean', async ({

@@ -11,9 +11,65 @@
 //   node scripts/migrate-public-sourcing-urls.mjs --env .env.live --allow-live [--dry-run] [--delete-old]
 
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import pg from 'pg';
+
+const execFileAsync = promisify(execFile);
+
+async function fetchVerify(url, opts = {}) {
+  const manual = opts.redirect === 'manual';
+  const attemptFetch = async () => {
+    if (!verifyBaseUrl || !new URL(verifyBaseUrl).hostname.endsWith('.vercel.app')) {
+      return fetch(url, opts);
+    }
+    const hdrPath = path.join(os.tmpdir(), `vc-hdr-${crypto.randomUUID()}.txt`);
+    try {
+      const curlArgs = ['--silent', '--show-error', '--dump-header', hdrPath];
+      if (!manual) curlArgs.push('--location');
+      const { stdout } = await execFileAsync('vercel', ['curl', url, '--', ...curlArgs], {
+        maxBuffer: 15 * 1024 * 1024,
+      });
+      const rawHdr = await fs.promises.readFile(hdrPath, 'utf8');
+      const blocks = rawHdr
+        .trim()
+        .split(/\r?\n\r?\n/)
+        .filter((b) => /^HTTP\/\S+\s+\d{3}/i.test(b));
+      const lastBlock = blocks[blocks.length - 1] || '';
+      const lines = lastBlock.split(/\r?\n/);
+      const statusMatch = lines[0]?.match(/^HTTP\/\S+\s+(\d{3})/i);
+      const status = statusMatch ? Number(statusMatch[1]) : 0;
+      const headers = new Map();
+      for (const line of lines.slice(1)) {
+        const idx = line.indexOf(':');
+        if (idx > 0) headers.set(line.slice(0, idx).trim().toLowerCase(), line.slice(idx + 1).trim());
+      }
+      return {
+        status,
+        ok: status >= 200 && status < 300,
+        headers: { get: (k) => headers.get(k.toLowerCase()) ?? null },
+        text: async () => stdout,
+      };
+    } finally {
+      await fs.promises.unlink(hdrPath).catch(() => {});
+    }
+  };
+  let res;
+  try {
+    res = await attemptFetch();
+  } catch {
+    await new Promise((r) => setTimeout(r, 500));
+    return attemptFetch();
+  }
+  if (res.status === 0 || res.status >= 500) {
+    await new Promise((r) => setTimeout(r, 500));
+    res = await attemptFetch();
+  }
+  return res;
+}
 import { createClient } from '@supabase/supabase-js';
 import { cleanProductSlug, extractForbiddenSlugTokens } from '../lib/slug.ts';
 import {
@@ -35,6 +91,8 @@ const envFile = argVal('--env') || '.env.local';
 const allowLive = argv.includes('--allow-live');
 const dryRun = argv.includes('--dry-run');
 const deleteOld = argv.includes('--delete-old');
+const copyAllImportObjects = argv.includes('--copy-all-import-objects');
+const privateBackupBucket = argVal('--private-backup-bucket');
 const verifyBaseUrl = (argVal('--verify-url') || '').replace(/\/+$/, '');
 const explicitBackupDir = argVal('--backup-dir');
 
@@ -309,17 +367,90 @@ if (dryRun) {
   process.exit(0);
 }
 
-// Ensure target bucket `product-media` exists and is public
+// Ensure target bucket `product-media` exists and is public, and private backup bucket exists if requested
 const { data: buckets } = await sb.storage.listBuckets();
 if (!buckets?.some((b) => b.id === 'product-media')) {
   const { error: bErr } = await sb.storage.createBucket('product-media', { public: true });
   if (bErr) throw new Error(`createBucket product-media failed: ${bErr.message}`);
 }
+if (privateBackupBucket && !buckets?.some((b) => b.id === privateBackupBucket)) {
+  const { error: pbErr } = await sb.storage.createBucket(privateBackupBucket, { public: false });
+  if (pbErr) throw new Error(`createBucket ${privateBackupBucket} failed: ${pbErr.message}`);
+}
 
-// 1. BACKUP FIRST (referenced leaky URLs + any additional target storage leaky objects)
+// 1. BACKUP FIRST (every target storage leaky object -> local + optional PRIVATE bucket, plus referenced URLs)
 fs.mkdirSync(filesBackupDir, { recursive: true });
 
+const backedTargetOrphans = [];
+const copiedImportObjects = [];
+const privateBackupObjects = [];
+
+for (const obj of storageImportObjects) {
+  const { data, error } = await sb.storage.from(obj.bucket_id).download(obj.name);
+  if (error || !data) {
+    throw new Error(`Failed backing up target storage object ${obj.bucket_id}/${obj.name}: ${error?.message || 'empty'}`);
+  }
+  const buf = Buffer.from(await data.arrayBuffer());
+  if (buf.byteLength === 0) {
+    throw new Error(`Downloaded 0 bytes for ${obj.bucket_id}/${obj.name}`);
+  }
+  const sha = crypto.createHash('sha256').update(buf).digest('hex');
+  const ext = ((obj.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg').replace(/^jpeg$/, 'jpg');
+  const contentType = MIME_BY_EXT[ext] || 'image/jpeg';
+
+  const relDest = path.join(filesBackupDir, 'target-storage-orphans', obj.bucket_id, obj.name.replace(/[^a-zA-Z0-9._/-]/g, '_'));
+  fs.mkdirSync(path.dirname(relDest), { recursive: true });
+  fs.writeFileSync(relDest, buf);
+
+  if (privateBackupBucket) {
+    const pbKey = obj.name;
+    const { error: upErr } = await sb.storage.from(privateBackupBucket).upload(pbKey, buf, {
+      contentType,
+      upsert: true,
+    });
+    if (upErr) {
+      throw new Error(`Private backup upload to ${privateBackupBucket}/${pbKey} failed: ${upErr.message}`);
+    }
+    privateBackupObjects.push({ bucket: privateBackupBucket, name: pbKey, sha256: sha, bytes: buf.byteLength });
+  }
+
+  const refUrl = `${TARGET_SUPABASE_URL}/storage/v1/object/public/${obj.bucket_id}/${obj.name}`;
+  const linkedEntry = urlToMeta.get(refUrl);
+  if (linkedEntry) {
+    linkedEntry.bytes = buf.byteLength;
+    linkedEntry.sha256 = sha;
+    linkedEntry.backupFile = relDest;
+  }
+
+  if (copyAllImportObjects) {
+    const newKey = `products/${crypto.randomUUID()}.${ext}`;
+    const up = await sb.storage.from(obj.bucket_id).upload(newKey, buf, {
+      contentType,
+      upsert: false,
+    });
+    if (up.error) {
+      throw new Error(`Copy to ${obj.bucket_id}/${newKey} failed: ${up.error.message}`);
+    }
+    const { data: pub } = sb.storage.from(obj.bucket_id).getPublicUrl(newKey);
+    copiedImportObjects.push({
+      sourceBucket: obj.bucket_id,
+      sourcePath: obj.name,
+      newKey,
+      newUrl: pub.publicUrl,
+      sha256: sha,
+      bytes: buf.byteLength,
+    });
+    if (linkedEntry) {
+      linkedEntry.newKey = newKey;
+      linkedEntry.newUrl = pub.publicUrl;
+    }
+  }
+
+  backedTargetOrphans.push({ bucket: obj.bucket_id, name: obj.name, backupFile: relDest });
+}
+
 for (const entry of urlToMeta.values()) {
+  if (entry.newUrl) continue; // Already backed up and copied above via storageImportObjects
   const res = await fetch(entry.oldUrl);
   if (!res.ok) {
     throw new Error(`Backup download failed (${res.status}) for ${entry.oldUrl}`);
@@ -338,24 +469,9 @@ for (const entry of urlToMeta.values()) {
   entry._buf = buf;
 }
 
-// Back up any unreferenced leaky objects sitting in target storage.objects too
-const backedTargetOrphans = [];
-for (const obj of storageImportObjects) {
-  const relDest = path.join(filesBackupDir, 'target-storage-orphans', obj.bucket_id, obj.name.replace(/[^a-zA-Z0-9._/-]/g, '_'));
-  if (!fs.existsSync(relDest)) {
-    const { data, error } = await sb.storage.from(obj.bucket_id).download(obj.name);
-    if (error || !data) {
-      throw new Error(`Failed backing up target storage object ${obj.bucket_id}/${obj.name}: ${error?.message || 'empty'}`);
-    }
-    const buf = Buffer.from(await data.arrayBuffer());
-    fs.mkdirSync(path.dirname(relDest), { recursive: true });
-    fs.writeFileSync(relDest, buf);
-  }
-  backedTargetOrphans.push({ bucket: obj.bucket_id, name: obj.name, backupFile: relDest });
-}
-
-// 2. COPY TO RANDOM UUID PATHS ON TARGET STORAGE ONLY
+// 2. COPY REMAINING REFERENCED IMAGES TO RANDOM UUID PATHS ON TARGET STORAGE ONLY
 for (const entry of urlToMeta.values()) {
+  if (entry.newUrl) continue;
   const newKey = `products/${crypto.randomUUID()}.${entry.ext}`;
   const contentType = MIME_BY_EXT[entry.ext] || 'image/jpeg';
   const up = await sb.storage.from(entry.bucket).upload(newKey, entry._buf, {
@@ -432,44 +548,113 @@ try {
   throw err;
 }
 
-// 4. VERIFY EVERY NEW IMAGE RETURNS HTTP 200 BEFORE ANY DELETION
+// 4. VERIFY EVERY NEW IMAGE + ALL LIVE PRODUCT IMAGES RETURN HTTP 200 BEFORE ANY DELETION
 const imageChecks = [];
-for (const entry of urlToMeta.values()) {
-  const r = await fetch(entry.newUrl);
+const allVerifyUrls = new Set([
+  ...[...urlToMeta.values()].map((e) => e.newUrl),
+  ...copiedImportObjects.map((c) => c.newUrl),
+]);
+for (const newUrl of allVerifyUrls) {
+  const r = await fetch(newUrl);
   const ct = r.headers.get('content-type') || '';
   if (!r.ok || !ct.startsWith('image/')) {
-    throw new Error(`New image verification failed (${r.status}, ${ct}) for ${entry.newUrl}`);
+    throw new Error(`New image verification failed (${r.status}, ${ct}) for ${newUrl}`);
   }
-  imageChecks.push({ newUrl: entry.newUrl, status: r.status, contentType: ct });
+  imageChecks.push({ newUrl, status: r.status, contentType: ct });
+}
+
+const liveImgRows = (
+  await db.query(`
+    select distinct img_url from (
+      select p.image_url as img_url
+        from public.products p
+       where p.status = 'live'
+         and p.archived_at is null
+         and p.image_url is not null
+      union
+      select pm.url as img_url
+        from public.product_media pm
+        join public.products p on p.id = pm.product_id
+       where p.status = 'live'
+         and p.archived_at is null
+         and pm.url is not null
+    ) t
+    order by img_url
+  `)
+).rows;
+const allLiveImageChecks = [];
+for (let i = 0; i < liveImgRows.length; i += 8) {
+  const batch = liveImgRows.slice(i, i + 8);
+  await Promise.all(
+    batch.map(async ({ img_url: u }) => {
+      const r = await fetch(u);
+      const ct = r.headers.get('content-type') || '';
+      if (!r.ok || !ct.startsWith('image/')) {
+        throw new Error(`Live product image verification failed (${r.status}, ${ct}) for ${u}`);
+      }
+      allLiveImageChecks.push({ url: u, status: r.status, contentType: ct });
+    }),
+  );
 }
 
 // Optional live HTTP page + 301 + canonical + sitemap checks when `--verify-url` is supplied
 const routeChecks = [];
+const allLivePageChecks = [];
 if (verifyBaseUrl) {
-  const smRes = await fetch(`${verifyBaseUrl}/sitemap.xml`);
+  const smRes = await fetchVerify(`${verifyBaseUrl}/sitemap.xml`);
   if (!smRes.ok) throw new Error(`Sitemap check failed (${smRes.status})`);
   const smXml = await smRes.text();
-  for (const s of slugUpdates.filter((x) => x.status === 'live')) {
+  if (/cn-gd-bwj/i.test(smXml)) {
+    throw new Error('Sitemap still contains cn-gd-bwj');
+  }
+  const liveSlugUpdates = slugUpdates.filter((x) => x.status === 'live');
+  for (const s of liveSlugUpdates) {
     if (smXml.includes(`/p/${s.oldSlug}</loc>`)) {
       throw new Error(`Sitemap still contains old slug /p/${s.oldSlug}`);
     }
     if (!smXml.includes(`/p/${s.newSlug}</loc>`)) {
       throw new Error(`Sitemap missing new slug /p/${s.newSlug}`);
     }
-    const rOld = await fetch(`${verifyBaseUrl}/p/${s.oldSlug}`, { redirect: 'manual' });
-    const loc = rOld.headers.get('location') || '';
-    if (rOld.status !== 301 || !loc.endsWith(`/p/${s.newSlug}`)) {
-      throw new Error(`301 redirect check failed for /p/${s.oldSlug}: got ${rOld.status} -> ${loc}`);
-    }
-    const rNew = await fetch(`${verifyBaseUrl}/p/${s.newSlug}`);
-    const html = await rNew.text();
-    if (rNew.status !== 200 || !html.includes(`/p/${s.newSlug}`)) {
-      throw new Error(`New product page check failed (${rNew.status}) for /p/${s.newSlug}`);
-    }
-    if (/\/import\/|CN-GD-BWJ/i.test(html)) {
-      throw new Error(`Rendered HTML for /p/${s.newSlug} still contains /import/ or CN-GD-BWJ`);
-    }
-    routeChecks.push({ oldSlug: s.oldSlug, newSlug: s.newSlug, redirectStatus: rOld.status, newStatus: rNew.status });
+  }
+  for (let i = 0; i < liveSlugUpdates.length; i += 6) {
+    const batch = liveSlugUpdates.slice(i, i + 6);
+    await Promise.all(
+      batch.map(async (s) => {
+        const rOld = await fetchVerify(`${verifyBaseUrl}/p/${s.oldSlug}`, { redirect: 'manual' });
+        const loc = rOld.headers.get('location') || '';
+        if (rOld.status !== 301 || !loc.endsWith(`/p/${s.newSlug}`)) {
+          throw new Error(`301 redirect check failed for /p/${s.oldSlug}: got ${rOld.status} -> ${loc}`);
+        }
+        routeChecks.push({ oldSlug: s.oldSlug, newSlug: s.newSlug, redirectStatus: rOld.status });
+      }),
+    );
+  }
+
+  // Verify ALL live non-archived product pages return HTTP 200 and clean image URLs
+  const liveSlugs = (
+    await db.query(`
+      select id, slug, image_url
+        from public.products
+       where status = 'live'
+         and archived_at is null
+       order by slug
+    `)
+  ).rows;
+  for (let i = 0; i < liveSlugs.length; i += 8) {
+    const batch = liveSlugs.slice(i, i + 8);
+    await Promise.all(
+      batch.map(async (p) => {
+        const r = await fetchVerify(`${verifyBaseUrl}/p/${encodeURIComponent(p.slug)}`);
+        const html = await r.text();
+        if (r.status !== 200) {
+          throw new Error(`Live product page /p/${p.slug} returned ${r.status}`);
+        }
+        if (/\/import\/|CN-GD-BWJ/i.test(html)) {
+          throw new Error(`Rendered HTML for /p/${p.slug} still contains /import/ or CN-GD-BWJ`);
+        }
+        allLivePageChecks.push({ slug: p.slug, status: r.status });
+      }),
+    );
   }
 }
 
@@ -519,17 +704,25 @@ const manifest = {
   backupDir,
   summary: {
     migratedUniqueImages: urlToMeta.size,
+    copiedAllImportObjectsCount: copiedImportObjects.length,
+    privateBackupObjectsCount: privateBackupObjects.length,
     updatedProductImageRows: updatedProductsImages.length,
     updatedProductMediaRows: updatedMediaRows.length,
     updatedDropshipProductRows: updatedDropshipImages.length,
     migratedSlugs: slugUpdates.length,
     migratedLiveSlugs: slugUpdates.filter((s) => s.status === 'live').length,
     verifiedNewImages200: imageChecks.length,
-    verifiedRoutes301And200: routeChecks.length,
+    verifiedAllLiveProductImages200: allLiveImageChecks.length,
+    verifiedRedirect301Count: routeChecks.length,
+    verifiedAllLiveProductPages200: allLivePageChecks.length,
     deletedFromTargetStorage: deletedFromTargetStorage.length,
     skippedCrossProjectDeletes: skippedCrossProjectDeletes.length,
     backedUpTargetOrphans: backedTargetOrphans.length,
   },
+  privateBackupBucket,
+  privateBackupObjects,
+  copiedImportObjects,
+  allLivePageChecksCount: allLivePageChecks.length,
   images: [...urlToMeta.values()].map((e) => ({
     oldUrl: e.oldUrl,
     oldBucket: e.bucket,

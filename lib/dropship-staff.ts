@@ -1,6 +1,6 @@
 import 'server-only';
 import { redirect } from 'next/navigation';
-import { getSession, type Session } from '@/lib/auth';
+import { can, getSession, type Session } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { isDropshipV2UiEnabled } from '@/lib/dropship';
 
@@ -40,8 +40,8 @@ export async function requireDropshipStaff(
   const dsDivisionId = dsDiv?.id as string;
   const dsMembership = (myDivs ?? []).find((m) => m.division_id === dsDivisionId);
   const inDs = Boolean(dsMembership);
-  const isFin = s.roles.includes('finance');
-  const isSup = s.roles.includes('support');
+  const isFin = can(s, 'finance', 'view');
+  const isSup = can(s, 'support', 'edit');
   const isCompanyWide = s.isAdmin || isFin || isSup;
 
   if (!inDs && !isCompanyWide) {

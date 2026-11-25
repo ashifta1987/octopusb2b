@@ -30,18 +30,30 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
     .select('id, code, title, status, quantity, unit_price_cents, shipping_cents, total_cents, deposit_cents, deposit_pct, paid_cents, currency, incoterm, created_at, delivered_at, claim_visible_until, claim_hidden_until, organizations(id, name, country, city, kyc_status), quotes(code), rfqs(code)')
     .eq('id', id).maybeSingle();
   if (!oRow) notFound();
-  // suppliers(...) embed went through orders.supplier_id (hidden, migration 195): supplier_id via service role after requireStaff
-  const [o] = await withSuppliers(sb, 'orders', [oRow], 'code, legal_name, country');
-  const [{ data: events }, { data: docs }, { data: pays }, { data: ships }] = await Promise.all([
+  const canSeeSuppliers = s.isAdmin || can(s, 'suppliers', 'view') || can(s, 'finance', 'view');
+  const canEdit = can(s, 'orders', 'edit');
+  const canDownloadLabels = s.isAdmin || canEdit || can(s, 'warehouse', 'view');
+  const canPay = can(s, 'finance', 'approve');
+  // suppliers(...) embed went through orders.supplier_id (hidden, migration 195): load only when caller holds supplier/finance permission
+  const [o] = canSeeSuppliers
+    ? await withSuppliers(sb, 'orders', [oRow], 'code, legal_name, country')
+    : [{ ...oRow, supplier_id: null as string | null, suppliers: null as { code: string; legal_name: string; country: string } | null }];
+  const [{ data: events }, { data: docs }, { data: pays }, { data: shipsRaw }] = await Promise.all([
     sb.from('order_events').select('id, kind, title, body, created_at').eq('order_id', id).order('created_at'),
     sb.from('documents').select('id, doc_type, number, amount_cents, currency, status, created_at').eq('order_id', id).order('created_at'),
     sb.from('payments').select('id, purpose, method, amount_cents, currency, reference, status, created_at').eq('order_id', id).order('created_at'),
     sb.from('shipments').select('id, code, tracking_no, status, service_code, label_url, created_at, divisions(code)').eq('order_id', id).order('created_at'),
   ]);
+  const shipIds = (shipsRaw ?? []).map((sh) => sh.id as string);
+  const { data: carrierRows } = shipIds.length ? await sb.rpc('get_shipment_carriers', { p_ids: shipIds }) : { data: [] as { shipment_id: string; carrier_name: string | null }[] };
+  const carrierMap = new Map<string, string | null>((carrierRows ?? []).map((r: { shipment_id: string; carrier_name: string | null }) => [r.shipment_id, r.carrier_name]));
+  const ships = (shipsRaw ?? []).map((sh) => ({
+    ...sh,
+    label_url: canDownloadLabels ? sh.label_url : null,
+    carrier_name: carrierMap.get(sh.id) ?? null,
+  }));
   const org = one(o.organizations as unknown as { id: string; name: string; country: string | null; city: string | null; kyc_status: string } | null);
-  const sup = one(o.suppliers as unknown as { code: string; legal_name: string; country: string } | null);
-  const canEdit = can(s, 'orders', 'edit');
-  const canPay = can(s, 'finance', 'approve');
+  const sup = canSeeSuppliers ? one(o.suppliers as unknown as { code: string; legal_name: string; country: string } | null) : null;
   // record_payment is a money action with step-up (SPEC §17.3): show "Confirm with your code" when the code is already stale
   const payFresh = canPay ? (await sb.rpc('mfa_fresh')).data as boolean | null : null;
   const outstanding = o.total_cents - o.paid_cents;
@@ -53,7 +65,7 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
       <PageHeader
         eyebrow={<nav aria-label="Breadcrumb" className="text-sm text-muted"><Link href="/office/orders">Orders</Link> / {o.code}</nav>}
         title={`${o.code} · ${o.title}`}
-        subtitle={`${org?.name ?? ''} · ${[org?.city, org?.country].filter(Boolean).join(', ')} · supplier ${sup?.code ?? '—'} · created ${fmtDate(o.created_at)}`}
+        subtitle={[org?.name ?? '', [org?.city, org?.country].filter(Boolean).join(', '), canSeeSuppliers ? `supplier ${sup?.code ?? '—'}` : null, `created ${fmtDate(o.created_at)}`].filter(Boolean).join(' · ')}
         actions={<StatusBadge status={o.status} />}
       />
       <div className="card p-6 mb-6"><OrderProgress status={o.status} /></div>
@@ -69,7 +81,7 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
               <div><dt className="text-sm text-muted">Outstanding</dt><dd><Money cents={outstanding} currency={o.currency} className={outstanding > 0 ? 'text-warn' : 'text-ok'} /></dd></div>
               <div><dt className="text-sm text-muted">Incoterm</dt><dd className="font-semibold">{o.incoterm ?? '—'}</dd></div>
               <div><dt className="text-sm text-muted">Quote / RFQ</dt><dd className="mono text-sm">{one(o.quotes as unknown as { code: string } | null)?.code ?? '—'} · {one(o.rfqs as unknown as { code: string } | null)?.code ?? '—'}</dd></div>
-              <div><dt className="text-sm text-muted">Supplier</dt><dd className="text-sm"><span className="mono">{sup?.code}</span> · {sup?.legal_name}</dd></div>
+              {canSeeSuppliers && <div><dt className="text-sm text-muted">Supplier</dt><dd className="text-sm"><span className="mono">{sup?.code}</span> · {sup?.legal_name}</dd></div>}
               {o.delivered_at && <div className="sm:col-span-3 text-sm text-muted">Delivered {fmtDate(o.delivered_at)} · visible-defect claims until {fmtDate(o.claim_visible_until)} · hidden-defect claims until {fmtDate(o.claim_hidden_until)}</div>}
             </dl>
           </Card>
@@ -153,11 +165,11 @@ export default async function OfficeOrder({ params }: { params: Promise<{ id: st
               <ul className="px-6 pb-6 space-y-2">
                 {ships.map((sh) => (
                   <li key={sh.id} className="border border-line rounded-[10px] px-4 py-2 text-sm">
-                    <div className="flex justify-between gap-2"><span className="mono font-semibold">{sh.tracking_no}</span><StatusBadge status={sh.status} /></div>
-                    <div className="text-muted">{sh.code} · {sh.service_code}</div>
-                    {sh.label_url && <a href={sh.label_url} target="_blank" rel="noopener" className="text-coral-text font-semibold text-xs">Print label</a>}
+                    <div className="flex justify-between gap-2"><span className="mono font-semibold">{sh.tracking_no ?? sh.code}</span><StatusBadge status={sh.status} /></div>
+                    <div className="text-muted">{[sh.carrier_name, sh.code, sh.service_code].filter(Boolean).join(' · ')}</div>
+                    {canDownloadLabels && sh.label_url && <a href={sh.label_url} target="_blank" rel="noopener" className="text-coral-text font-semibold text-xs">Print label</a>}
                     {/* dropship parcels: packing slip with the seller's brand + approved return address (migration 196) */}
-                    {sh.tracking_no && one(sh.divisions as unknown as { code: string } | null)?.code === 'DS' && (
+                    {canDownloadLabels && sh.tracking_no && one(sh.divisions as unknown as { code: string } | null)?.code === 'DS' && (
                       <a href={`/api/packing-slips/${encodeURIComponent(sh.tracking_no)}`} target="_blank" rel="noopener" className="ml-3 text-coral-text font-semibold text-xs">Packing slip</a>
                     )}
                   </li>

@@ -106,7 +106,7 @@ const CARRIER_RATE_CURRENCY = 'USD';
 export async function priceTrial(input: { toCountry: string; fromCountry: string; weightKg: number; parcels: number }): Promise<Result<RateQuote[]>> {
   const g = await actionSession('orders', 'view');
   if ('error' in g) return fail(g.error);
-  if (!(g.s.isAdmin || can(g.s, 'orders', 'edit') || can(g.s, 'warehouse', 'view') || can(g.s, 'finance', 'view') || can(g.s, 'suppliers', 'view'))) {
+  if (!(g.s.isAdmin || can(g.s, 'orders', 'edit') || can(g.s, 'finance', 'view'))) {
     return fail('Forbidden');
   }
   if (!(input.weightKg > 0) || !(input.parcels > 0)) return fail('Enter the weight and number of pieces.');

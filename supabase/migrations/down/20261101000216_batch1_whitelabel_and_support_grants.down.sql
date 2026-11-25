@@ -1,5 +1,9 @@
 -- Down migration for 20261101000216_batch1_whitelabel_and_support_grants.sql
 
+-- 0. Remove Batch 1 shipment rate/carrier RPCs
+drop function if exists public.get_shipment_carriers(uuid[]);
+drop function if exists public.get_shipment_rates(uuid[]);
+
 -- 1. Restore quote_carrier_rates (from 211)
 create or replace function public.quote_carrier_rates(
   p_carrier_code text,

@@ -324,7 +324,7 @@ create policy carriers_read on public.carriers
     is_staff()
     and (
       is_admin()
-      or can('orders', 'edit')
+      or can('orders', 'view')
       or can('warehouse', 'view')
       or can('finance', 'view')
       or can('suppliers', 'view')
@@ -435,3 +435,85 @@ end $$;
 
 revoke all on function public.quote_carrier_rates(text, text, integer, integer) from public, anon;
 grant execute on function public.quote_carrier_rates(text, text, integer, integer) to authenticated, service_role;
+
+-- ───────── 5. Permission-gated RPCs for shipment rates and carriers ─────────
+create or replace function public.get_shipment_rates(p_ids uuid[])
+returns table (
+  shipment_id uuid,
+  rate_cents bigint,
+  currency text
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  v_is_service boolean := coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role', 'service_role') = 'service_role';
+begin
+  if not v_is_service and not (
+    staff_aal_ok()
+    and not distributor_restricted()
+    and (
+      is_admin()
+      or can('orders', 'edit')
+      or can('finance', 'view')
+    )
+  ) then
+    raise exception 'FORBIDDEN';
+  end if;
+
+  return query
+    select s.id as shipment_id,
+           s.rate_cents,
+           s.currency::text as currency
+      from public.shipments s
+     where s.id = any(coalesce(p_ids, '{}'))
+       and (v_is_service or in_division(s.division_id));
+end $$;
+
+revoke all on function public.get_shipment_rates(uuid[]) from public, anon;
+grant execute on function public.get_shipment_rates(uuid[]) to authenticated, service_role;
+
+create or replace function public.get_shipment_carriers(p_ids uuid[])
+returns table (
+  shipment_id uuid,
+  carrier_code text,
+  carrier_name text
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  v_is_service boolean := coalesce(nullif(current_setting('request.jwt.claims', true), '')::jsonb ->> 'role', 'service_role') = 'service_role';
+begin
+  if not v_is_service and not (
+    staff_aal_ok()
+    and not distributor_restricted()
+    and (
+      is_admin()
+      or can('orders', 'view')
+      or can('warehouse', 'view')
+    )
+  ) then
+    raise exception 'FORBIDDEN';
+  end if;
+
+  return query
+    select s.id as shipment_id,
+           s.carrier_code::text as carrier_code,
+           coalesce(c.name, initcap(replace(s.carrier_code, '_', ' ')))::text as carrier_name
+      from public.shipments s
+      left join public.carriers c on lower(btrim(c.code)) = lower(btrim(s.carrier_code))
+     where s.id = any(coalesce(p_ids, '{}'))
+       and (
+         v_is_service
+         or in_division(s.division_id)
+         or in_division(division_id_of('3PL'), array['warehouse', 'manager'])
+       );
+end $$;
+
+revoke all on function public.get_shipment_carriers(uuid[]) from public, anon;
+grant execute on function public.get_shipment_carriers(uuid[]) to authenticated, service_role;
