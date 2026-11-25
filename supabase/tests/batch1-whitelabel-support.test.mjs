@@ -417,11 +417,13 @@ try {
   await as(qcSrcUid, 'aal2');
   const qcCarriers = await tryq(`select shipment_id, carrier_name from public.get_shipment_carriers(${shpArr})`);
   const qcRates = await tryq(`select 1 from public.get_shipment_rates(${shpArr})`);
+  const qcWhView = await tryq(`select 1 from public.warehouse_shipments limit 1`);
   ok(
     !qcCarriers.err && qcCarriers.rows.length === 1 && qcCarriers.rows[0].shipment_id === srcShp,
     'qc_coordinator (aal2, SRC): get_shipment_carriers() is division-scoped to SRC only',
   );
   ok(/FORBIDDEN/i.test(qcRates.err ?? ''), 'qc_coordinator (aal2, SRC): get_shipment_rates() raises FORBIDDEN');
+  ok(!qcWhView.err && qcWhView.rows.length === 0, 'qc_coordinator (aal2, SRC): 0 rows readable in warehouse_shipments');
 
   await as(warehouseUid, 'aal2');
   const whCarriers = await tryq(`select shipment_id, carrier_name from public.get_shipment_carriers(${shpArr})`);
@@ -482,7 +484,7 @@ try {
   await db.query('reset role');
   await db.query('rollback');
 
-  // ── 3. Migration 216 up -> down -> up empty diff ──
+  // ── 3. Migrations 216+217 down -> up empty diff ──
   await db.query('begin');
   const snap = async () =>
     JSON.stringify({
@@ -502,16 +504,18 @@ try {
         `select c.relname, c.reloptions::text, md5(pg_get_viewdef(c.oid)), c.relacl::text from pg_class c where c.relnamespace = 'public'::regnamespace and c.relkind = 'v' order by 1`,
       ),
     });
-  const after216 = await snap();
+  const afterBatch1 = await snap();
+  await db.query(fs.readFileSync('supabase/migrations/down/20261101000217_warehouse_shipments_permission_gate.down.sql', 'utf8'));
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000216_batch1_whitelabel_and_support_grants.down.sql', 'utf8'));
-  const down216 = await snap();
+  const downBatch1 = await snap();
   ok(
-    !(await one(`select to_regclass('public.product_slug_redirects') r`)).r && down216 !== after216,
-    '216 down removes product_slug_redirects & restores prior privileges',
+    !(await one(`select to_regclass('public.product_slug_redirects') r`)).r && downBatch1 !== afterBatch1,
+    '217+216 down removes product_slug_redirects & restores prior privileges',
   );
   await db.query(fs.readFileSync('supabase/migrations/20261101000216_batch1_whitelabel_and_support_grants.sql', 'utf8'));
-  const upAgain216 = await snap();
-  ok(upAgain216 === after216, '216 down → up produces identical schema, policies, grants, functions and views');
+  await db.query(fs.readFileSync('supabase/migrations/20261101000217_warehouse_shipments_permission_gate.sql', 'utf8'));
+  const upAgainBatch1 = await snap();
+  ok(upAgainBatch1 === afterBatch1, '217+216 down → up produces identical schema, policies, grants, functions and views');
 } finally {
   await db.query('rollback').catch(() => {});
   await db.end();
