@@ -1,6 +1,7 @@
 'use server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { z } from 'zod';
+import { can } from '@/lib/auth';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { getCarrier, type RateQuote } from '@/lib/adapters';
 import { toCents, money } from '@/lib/format';
@@ -105,6 +106,9 @@ const CARRIER_RATE_CURRENCY = 'USD';
 export async function priceTrial(input: { toCountry: string; fromCountry: string; weightKg: number; parcels: number }): Promise<Result<RateQuote[]>> {
   const g = await actionSession('orders', 'view');
   if ('error' in g) return fail(g.error);
+  if (!(g.s.isAdmin || can(g.s, 'orders', 'edit') || can(g.s, 'warehouse', 'view') || can(g.s, 'finance', 'view') || can(g.s, 'suppliers', 'view'))) {
+    return fail('Forbidden');
+  }
   if (!(input.weightKg > 0) || !(input.parcels > 0)) return fail('Enter the weight and number of pieces.');
   try {
     const rates = await getCarrier().priceTrial({ fromCountry: input.fromCountry || 'CN', toCountry: input.toCountry || 'US', weightKg: input.weightKg, parcels: Math.round(input.parcels) });

@@ -1,7 +1,8 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { withSuppliers } from '@/components/backoffice/hidden-columns';
+import { withHiddenColumns, withSuppliers } from '@/components/backoffice/hidden-columns';
 import { getCarrier } from '@/lib/adapters';
 import { Card, PageHeader, StatusBadge, Table, EmptyState, Money } from '@/components/ui';
 import { RunButton } from '@/components/backoffice/action-form';
@@ -16,10 +17,13 @@ import { getDivisionScope } from '@/lib/divisions/scope';
 export const metadata = { title: 'Shipping' };
 
 const READY_COLS = 'id, code, title, total_cents, currency, incoterm, updated_at, organizations(name, country, city)';
-const SHIP_COLS = 'id, code, tracking_no, status, service_code, rate_cents, currency, label_url, last_event_at, created_at, orders(id, code), tracking_events(status, description, occurred_at)';
+const SHIP_COLS = 'id, code, tracking_no, status, service_code, currency, label_url, last_event_at, created_at, orders(id, code), tracking_events(status, description, occurred_at)';
 
 export default async function Shipping({ searchParams }: { searchParams: Promise<{ order?: string }> }) {
   const s = await requireStaff('orders', 'view', '/office/shipping');
+  if (!(s.isAdmin || can(s, 'orders', 'edit') || can(s, 'warehouse', 'view') || can(s, 'finance', 'view') || can(s, 'suppliers', 'view'))) {
+    redirect('/forbidden');
+  }
   const scope = await getDivisionScope(s);   // divisions step 4: header switcher
   const { order: selId } = await searchParams;
   const sb = await createClient();
@@ -27,10 +31,12 @@ export default async function Shipping({ searchParams }: { searchParams: Promise
   const staging = isStaging();
   const carrierStatusLabel = carrier.mode === 'live' ? 'Production' : staging ? 'Sandbox mode' : 'Carrier not connected';
   const carrierDotClass = carrier.mode === 'live' ? 'bg-ok' : staging ? 'bg-warn' : 'bg-bad';
-  const [{ data: readyRows }, { data: ships }] = await Promise.all([
+  const [{ data: readyRows }, { data: shipsRaw }] = await Promise.all([
     (scope.all ? sb.from('orders').select(READY_COLS) : sb.from('orders').select(READY_COLS).eq('division_id', scope.division.id)).eq('status', 'ready_to_ship').order('updated_at').limit(100),
     (scope.all ? sb.from('shipments').select(SHIP_COLS) : sb.from('shipments').select(SHIP_COLS).eq('division_id', scope.division.id)).order('created_at', { ascending: false }).limit(50),
   ]);
+  // shipments.rate_cents is hidden from anon/authenticated (migration 216): merge server-side after shipping permission check
+  const ships = await withHiddenColumns<(typeof shipsRaw extends (infer R)[] | null ? R : never), { rate_cents: number | null }>('shipments', shipsRaw, 'rate_cents');
   // suppliers(...) embed went through orders.supplier_id (hidden, migration 195): supplier_id via service role after requireStaff
   const ready = await withSuppliers(sb, 'orders', readyRows, 'code, legal_name, country, city');
   const sel = (ready ?? []).find((o) => o.id === selId);
@@ -115,11 +121,12 @@ export default async function Shipping({ searchParams }: { searchParams: Promise
           <ul className="px-6 pb-6 space-y-2">
             {exceptions.map((x) => {
               const last = ((x.tracking_events ?? []) as { status: string; description: string | null; occurred_at: string }[]).sort((a, b) => b.occurred_at.localeCompare(a.occurred_at))[0];
+              const exOrd = one(x.orders as unknown as { id: string; code: string } | null);
               return (
                 <li key={x.id} className="flex flex-wrap items-center gap-3 rounded-[10px] border border-bad/40 bg-bad-bg px-4 py-3 text-sm">
                   <StatusBadge status="exception" />
                   <span className="mono font-semibold">{x.tracking_no}</span>
-                  <Link href={`/office/orders/${one(x.orders as unknown as { id: string } | null)?.id}`} className="mono text-coral-text">{one(x.orders as unknown as { code: string } | null)?.code}</Link>
+                  {exOrd?.id ? <Link href={`/office/orders/${exOrd.id}`} className="mono text-coral-text">{exOrd.code}</Link> : <span className="text-muted">—</span>}
                   <span className="text-muted">{last?.description ?? ''} · {fmtDate(x.last_event_at, true)}</span>
                 </li>
               );
@@ -137,7 +144,7 @@ export default async function Shipping({ searchParams }: { searchParams: Promise
             return (
               <tr key={x.id}>
                 <td className="td mono text-sm">{x.code}</td>
-                <td className="td mono text-sm"><Link href={`/office/orders/${ord?.id}`} className="text-coral-text">{ord?.code}</Link></td>
+                <td className="td mono text-sm">{ord?.id ? <Link href={`/office/orders/${ord.id}`} className="text-coral-text">{ord.code}</Link> : <span className="text-muted">—</span>}</td>
                 <td className="td mono text-sm">{x.tracking_no ?? '—'}</td>
                 <td className="td text-sm">{x.service_code ?? '—'}</td>
                 <td className="td"><Money cents={x.rate_cents} currency={x.currency} /></td>

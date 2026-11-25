@@ -8,7 +8,7 @@ export const HIDDEN_COLUMNS = {
   products: ['supplier_id', 'rejection_reason', 'created_by', 'is_seed', 'external_id', 'factory_model', 'specification_raw',
     'selling_points_raw', 'size_notes', 'import_notes', 'markup_pct', 'sell_price_mode', 'sku_norm', 'listing_status',
     'moderation_hold', 'moderation_hold_reason', 'hs_code_source', 'hs_code_confidence', 'hs_code_status', 'hs_product_type_id',
-    'hs_classify_pending', 'hs_code_note', 'archived_by_supplier_from', 'item_id'],
+    'hs_classify_pending', 'hs_code_note', 'archived_by_supplier_from', 'item_id', 'sku'],
   product_media: ['storage_path', 'source_file_name', 'sha256'],
   certificates: ['supplier_id', 'number', 'storage_path'],
   pools: ['supplier_id', 'starter_user_id', 'starter_org_id', 'po_document_id', 'trace_id', 'is_seed'],
@@ -46,7 +46,7 @@ export const HIDDEN_COLUMNS = {
   kyc_submissions: ['reviewer_id', 'internal_note', 'trace_id'],
   wallet_topups: ['confirmed_by', 'received_note', 'trace_id', 'is_seed'],
   wallet_credit_limits: ['note', 'set_by'],
-  shipments: ['carrier_code', 'trace_id', 'is_seed'],
+  shipments: ['carrier_code', 'rate_cents', 'trace_id', 'is_seed'],
   tracking_events: ['provider_event_id', 'trace_id'],
   order_events: ['created_by', 'trace_id'],
   payments: ['matched_by', 'provider_event_id', 'trace_id', 'is_seed'],
@@ -81,6 +81,13 @@ export const HIDDEN_COLUMNS = {
   store_order_items: ['item_id'],
   // migration 215: saas_billing_settings — internal maker-checker proposal/approval columns stay hidden
   saas_billing_settings: ['approved_at', 'approved_by', 'pending_enabled', 'pending_scheduled_start', 'proposal_reason', 'proposed_at', 'proposed_by'],
+  // migration 216: batch 1 — cost/supplier/SKU/carrier columns revoked from anon & authenticated (and support)
+  dropship_products: ['unit_cost_cents', 'supplier_id', 'supplier_sku', 'octopus_sku', 'legacy_sku'],
+  dropship_variants: ['cost_cents', 'supplier_product_id', 'octopus_sku', 'legacy_sku'],
+  dropship_routes: ['carrier'],
+  dropship_handoffs: ['supplier_product_id'],
+  dropship_rates: ['ship_base_cents', 'ship_per_100g_cents'],
+  shipping_rate_cards: ['carrier_code', 'carrier_service_code'],
 };
 
 // ── Run directly (node scripts/hidden-columns.mjs) to compare this list with the STAGING database grants. ──

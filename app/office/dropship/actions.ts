@@ -813,8 +813,9 @@ export async function uploadDropshipBatchImages(formData: FormData): Promise<
   if (files.length > 100) return { ok: false, error: 'Upload up to 100 image files per batch.' };
 
   const sb = await createClient();
+  const admin = createAdminClient();
   const [{ data: prods }, { data: links }] = await Promise.all([
-    sb.from('dropship_products').select('id, model_no, legacy_sku, images'),
+    admin.from('dropship_products').select('id, model_no, legacy_sku, images'),
     sb.rpc('dropship_sourcing_links'),
   ]);
 
@@ -836,7 +837,6 @@ export async function uploadDropshipBatchImages(formData: FormData): Promise<
     }
   }
 
-  const admin = createAdminClient();
   const touchedIds = new Set<string>();
   let matchedFiles = 0;
   let unmatchedFiles = 0;
@@ -1219,9 +1219,10 @@ export async function previewDropshipCsv(
   }
 
   const sb = await createClient();
+  const admin = createAdminClient();
   const [{ data: candidates }, { data: existingProds }] = await Promise.all([
     sb.rpc('list_sourcing_candidates_for_dropship', { p_limit: 500 }),
-    sb.from('dropship_products').select('id, model_no, legacy_sku, title, description, category, weight_g, min_order_qty, source_type, fulfilment_type, origin_country'),
+    admin.from('dropship_products').select('id, model_no, legacy_sku, title, description, category, weight_g, min_order_qty, source_type, fulfilment_type, origin_country'),
   ]);
 
   const candList = (candidates ?? []) as SourcingCandidateOption[];
@@ -1515,7 +1516,7 @@ export async function commitDropshipCsv(
     .single();
   if (jobErr) return { ok: false, error: jobErr.message };
 
-  const { data: existingRows } = await sb
+  const { data: existingRows } = await admin
     .from('dropship_products')
     .select(
       'id, model_no, legacy_sku, title, description, category, specs, weight_g, dimensions_cm, min_order_qty, source_type, fulfilment_type, origin_country, has_battery, has_liquid, status',
@@ -1524,7 +1525,7 @@ export async function commitDropshipCsv(
 
   const existingIds = (existingRows ?? []).map((r) => String(r.id));
   const { data: existingVars } = existingIds.length
-    ? await sb
+    ? await admin
         .from('dropship_variants')
         .select('id, product_id, item_id, supplier_product_id, options, sort')
         .in('product_id', existingIds)

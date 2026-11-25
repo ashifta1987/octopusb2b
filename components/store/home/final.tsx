@@ -228,11 +228,11 @@ async function DropPreview({ demo, photo }: { demo: boolean; photo: SiteImage })
   let rows: Row[] = [];
   if (demo) {
     try {
-      const sb = createAdminClient();
+      const admin = createAdminClient();
       const [{ data: dp }, { data: rates }, { data: mk }] = await Promise.all([
-        sb.from('dropship_products').select('unit_cents, weight_g, has_battery, products!inner(title, image_url, status)').eq('enabled', true).eq('products.status', 'live').not('products.image_url', 'is', null).limit(3),
-        sb.from('dropship_rates').select('service, ship_base_cents, ship_per_100g_cents, duty_pct, fee_cents, days_min, days_max').eq('country', 'AE').eq('active', true),
-        sb.from('site_settings').select('value').eq('key', 'dropship.markup').maybeSingle(),
+        admin.from('dropship_products').select('unit_cents, weight_g, has_battery, products!inner(title, image_url, status)').eq('enabled', true).eq('products.status', 'live').not('products.image_url', 'is', null).limit(3),
+        admin.from('dropship_rates').select('service, ship_base_cents, ship_per_100g_cents, duty_pct, fee_cents, days_min, days_max').eq('country', 'AE').eq('active', true),
+        admin.from('site_settings').select('value').eq('key', 'dropship.markup').maybeSingle(),
       ]);
       const markup = Number(mk?.value) || 2.5;
       const order = ['express', 'standard', 'economy'];

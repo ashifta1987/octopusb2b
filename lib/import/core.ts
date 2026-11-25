@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { unzipSync } from 'fflate';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { parseWorkbook } from './parse-workbook.ts';
@@ -58,7 +59,7 @@ export async function computeDiff(admin: SupabaseClient, batch: StagingBatch): P
   const [{ data: sps }, { data: prices }, { data: media }, { data: review }] = await Promise.all([
     sup && pids.length ? admin.from('supplier_products').select('product_id, supplier_model, moq, exclusive_channels, exclusivity_flag, status').eq('supplier_id', sup.id).in('product_id', pids) : Promise.resolve({ data: [] }),
     sup && pids.length ? admin.from('supplier_product_prices').select('product_id, incoterm, moq_tier_min, variant_label, price_minor, currency, valid_from, valid_to').eq('supplier_id', sup.id).in('product_id', pids) : Promise.resolve({ data: [] }),
-    pids.length ? admin.from('product_media').select('product_id, url').in('product_id', pids) : Promise.resolve({ data: [] }),
+    pids.length ? admin.from('product_media').select('product_id, url, source_file_name').in('product_id', pids) : Promise.resolve({ data: [] }),
     ids.length ? admin.from('import_review_items').select('external_id, issue').in('external_id', ids) : Promise.resolve({ data: [] }),
   ]);
 
@@ -116,7 +117,13 @@ export async function computeDiff(admin: SupabaseClient, batch: StagingBatch): P
   }
 
   const imgDiff: TableDiff = { create: 0, update: 0, skip: 0 };
-  const mediaKeys = new Set((media ?? []).map((m) => `${extById.get(m.product_id as string)}|${String(m.url).split('/').pop()}`));
+  const mediaKeys = new Set<string>();
+  for (const m of media ?? []) {
+    const extId = extById.get(m.product_id as string);
+    const base = String(m.url).split('/').pop();
+    if (base) mediaKeys.add(`${extId}|${base}`);
+    if (m.source_file_name) mediaKeys.add(`${extId}|${m.source_file_name}`);
+  }
   for (const i of batch.images) { if (mediaKeys.has(`${i.external_id}|${i.file}`)) imgDiff.skip++; else imgDiff.create++; }
 
   const known = new Set((review ?? []).map((r) => `${r.external_id}|${r.issue}`));
@@ -158,19 +165,22 @@ export async function commitImport(sb: SupabaseClient, input: { runId: string; a
     if (input.zip && batch.images.length) {
       const settings = await loadImportSettings(sb);
       const files = readZip(input.zip, settings);
-      const done = new Map<string, string>();   // a photo used by several rows is stored once (ADDON-29)
+      const done = new Map<string, { url: string; storage_path: string }>();   // a photo used by several rows is stored once (ADDON-29)
       for (const img of batch.images) {
-        if (done.has(img.file)) { img.url = done.get(img.file); continue; }
+        const prev = done.get(img.file);
+        if (prev) { img.url = prev.url; img.storage_path = prev.storage_path; continue; }
         const bytes = files.get(img.file);
         if (!bytes) continue;
-        const key = `import/${batch.supplier.external_id}/${img.file}`;
+        const ext = (img.file.split('.').pop() ?? 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+        const key = `products/${randomUUID()}.${ext}`;
         const type = /\.png$/i.test(img.file) ? 'image/png' : /\.webp$/i.test(img.file) ? 'image/webp' : /\.avif$/i.test(img.file) ? 'image/avif' : 'image/jpeg';
-        const up = await sb.storage.from('product-media').upload(key, bytes, { contentType: type, upsert: true });
+        const up = await sb.storage.from('product-media').upload(key, bytes, { contentType: type, upsert: false });
         if (up.error) throw new Error(`image ${img.file}: ${up.error.message}`);
         uploaded.push(key);
         img.url = sb.storage.from('product-media').getPublicUrl(key).data.publicUrl;
+        img.storage_path = key;
         img.bytes = bytes.byteLength;
-        done.set(img.file, img.url);
+        done.set(img.file, { url: img.url, storage_path: key });
       }
       await sb.from('import_runs').update({ staging: batch }).eq('id', input.runId);
     }

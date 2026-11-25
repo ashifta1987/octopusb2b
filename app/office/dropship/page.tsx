@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { requireDropshipStaff } from '@/lib/dropship-staff';
 import { dropshipSettings } from '@/lib/dropship';
 import { createClient } from '@/lib/supabase/server';
+import { hiddenColumnsByIds } from '@/components/backoffice/hidden-columns';
 import { bulkArchiveDropshipProducts, type PublishChecklistResult } from './actions';
 import { DsIcon } from '@/components/dropship-ui';
 import {
@@ -100,7 +101,7 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
       .order('updated_at', { ascending: false }),
     sb
       .from('dropship_variants')
-      .select('id, product_id, item_id, supplier_product_id, price_adjust_cents, sort')
+      .select('id, product_id, item_id, price_adjust_cents, sort')
       .order('sort', { ascending: true }),
     sb
       .from('item_master')
@@ -128,10 +129,12 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
       .from('warehouse_stock')
       .select('item_id, on_hand_qty, reserved_qty')
       .eq('warehouse_id', 'SZ-01'),
-    sb
-      .from('shipping_rate_cards')
-      .select('country, method, base_cents, per_100g_cents, step_g, volumetric_divisor, max_weight_g')
-      .eq('active', true),
+    staff.canSeeCosts
+      ? sb
+          .from('shipping_rate_cards')
+          .select('country, method, base_cents, per_100g_cents, step_g, volumetric_divisor, max_weight_g')
+          .eq('active', true)
+      : Promise.resolve({ data: [] }),
     sb
       .from('fee_versions')
       .select('pick_pack_first_cents, packaging_cents')
@@ -195,6 +198,14 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
     });
   }
 
+  const varSupMap = staff.canSeeCosts
+    ? await hiddenColumnsByIds<{ id: string; supplier_product_id: string | null }>(
+        'dropship_variants',
+        (varsRes.data ?? []).map((v) => String(v.id)),
+        'supplier_product_id',
+      )
+    : new Map<string, { id: string; supplier_product_id: string | null }>();
+
   const varsByProd = new Map<string, { id: string; item_id: string; supplier_product_id: string | null }[]>();
   for (const v of varsRes.data ?? []) {
     const pid = String(v.product_id);
@@ -202,7 +213,7 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
     list.push({
       id: String(v.id),
       item_id: String(v.item_id),
-      supplier_product_id: (v.supplier_product_id as string | null) ?? null,
+      supplier_product_id: staff.canSeeCosts ? (varSupMap.get(String(v.id))?.supplier_product_id ?? null) : null,
     });
     varsByProd.set(pid, list);
   }

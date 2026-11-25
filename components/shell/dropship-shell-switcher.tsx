@@ -53,6 +53,7 @@ export function AccountShellSwitcher({
 export function StaffShellSwitcher({
   v2ShellEnabled,
   canSeeDropshipItems,
+  canEditDropship = false,
   canSeeSaas,
   userName,
   initials,
@@ -63,6 +64,7 @@ export function StaffShellSwitcher({
 }: {
   v2ShellEnabled: boolean;
   canSeeDropshipItems: boolean;
+  canEditDropship?: boolean;
   canSeeSaas: boolean;
   userName: string;
   initials: string;
@@ -84,6 +86,7 @@ export function StaffShellSwitcher({
         unreadCount={unreadCount}
         isStaging={isStaging}
         canSeeDropshipItems={canSeeDropshipItems}
+        canEditDropship={canEditDropship}
         canSeeSaas={canSeeSaas}
       >
         {children}

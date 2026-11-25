@@ -1,11 +1,13 @@
 'use server';
+import { randomUUID } from 'node:crypto';
 import { skuDbError } from '@/lib/sku';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { after } from 'next/server';
 import { runHsClassification } from '@/lib/hs/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { can } from '@/lib/auth';
-import { slugify, toCents, asCurrency } from '@/lib/format';
+import { toCents, asCurrency } from '@/lib/format';
+import { cleanProductSlug } from '@/lib/slug';
 import { actionSession, fail, ok, type Result } from '@/components/backoffice/server-utils';
 import { productSchema, draftSchema, type ProductFormValues } from '@/components/backoffice/product-schema';
 import { checkProductAccess, checkSupplierAccess } from '@/lib/distributor/access';
@@ -103,7 +105,7 @@ export async function saveProduct(id: string | null, values: ProductFormValues, 
     if (error) return fail(skuDbError(error.message) ?? error);
     if (!data?.length) return fail('You cannot edit this product.');
   } else {
-    const slug = `${slugify(cols.title).slice(0, 80)}-${Math.random().toString(36).slice(2, 8)}`;
+    const slug = cleanProductSlug(cols.title, [values.sku]);
     const sku = (values.sku ?? '').trim().toUpperCase();
     const { data, error } = await sb.from('products').insert({ ...cols, ...(sku ? { external_id: sku } : {}), slug, status: 'draft', created_by: g.s.userId }).select('id').single();
     if (error) return fail(skuDbError(error.message) ?? error);
@@ -170,4 +172,40 @@ export async function transitionProduct(id: string, to: 'submitted' | 'paused' |
   revalidatePath('/distributor/products');
   revalidateTag('products', 'max');
   return ok(undefined, to === 'submitted' ? 'Submitted for moderation' : 'Updated');
+}
+
+const IMAGE_MIME_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/jpg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/avif': 'avif',
+  'image/gif': 'gif',
+};
+
+/** Signed upload to product-media under a pure random UUID key (never supplierId, SKU or raw filename). */
+export async function createProductMediaUpload(
+  supplierId: string,
+  fileName: string,
+  contentType: string,
+): Promise<Result<{ path: string; token: string; publicUrl: string }>> {
+  const g = await actionSession();
+  if ('error' in g) return fail(g.error);
+  if (!can(g.s, 'products', 'create') && !can(g.s, 'products', 'edit') && !g.s.roles.includes('supplier')) {
+    return fail('You do not have permission to upload product photos.');
+  }
+  if (!supplierId || (await checkSupplierAccess(g.s, supplierId)) !== 'ok') {
+    return fail(FORBIDDEN_MESSAGE);
+  }
+  const mime = (contentType || '').toLowerCase().split(';')[0].trim();
+  const rawExt = (fileName.split('.').pop() ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const ext = IMAGE_MIME_EXT[mime] ?? (['jpg', 'jpeg', 'png', 'webp', 'avif', 'gif'].includes(rawExt) ? (rawExt === 'jpeg' ? 'jpg' : rawExt) : null);
+  if (!ext) return fail('Use a JPG, PNG, WebP, AVIF or GIF image.');
+
+  const path = `products/${randomUUID()}.${ext}`;
+  const admin = createAdminClient();
+  const { data, error } = await admin.storage.from('product-media').createSignedUploadUrl(path);
+  if (error || !data) return fail('Could not start image upload.');
+  const publicUrl = admin.storage.from('product-media').getPublicUrl(path).data.publicUrl;
+  return ok({ path: data.path, token: data.token, publicUrl });
 }

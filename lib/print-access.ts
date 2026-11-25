@@ -17,19 +17,33 @@ export async function printableShipment<T extends { division_id: string | null }
   const s = await getSession();
   if (!s) return { res: new Response(msg.signIn, { status: 401 }) };
   if (!s.isStaff || !can(s, 'orders', 'view')) return { res: new Response(msg.forbidden, { status: 403 }) };
+  const user = await createClient();
+  const { data: myDivRows } = await user.from('division_members').select('division_id, role').eq('user_id', s.userId);
+  const canPrintRole =
+    s.isAdmin ||
+    can(s, 'orders', 'edit') ||
+    can(s, 'warehouse', 'view') ||
+    can(s, 'suppliers', 'view');
   const sb = createAdminClient(); // permission checked above
+  const { data: divs } = await sb.from('divisions').select('id, code').in('code', ['3PL', 'DS']);
+  const idOf = (c: string) => divs?.find((d) => d.code === c)?.id ?? null;
+  const dsId = idOf('DS');
+  const tplId = idOf('3PL');
+  const hasExplicitDiv = (myDivRows ?? []).some(
+    (m) => m.division_id === dsId || m.division_id === tplId,
+  );
+  if (!canPrintRole && !hasExplicitDiv) {
+    return { res: new Response(msg.forbidden, { status: 403 }) };
+  }
   const { data: sh } = await sb.from('shipments').select(columns).eq('tracking_no', tracking).maybeSingle();
   if (!sh) return { res: new Response(msg.notFound, { status: 404 }) };
   const row = sh as unknown as T;
-  const { data: divs } = await sb.from('divisions').select('id, code').in('code', ['3PL', 'DS']);
-  const idOf = (c: string) => divs?.find((d) => d.code === c)?.id ?? null;
-  const user = await createClient();
   const [{ data: own }, { data: warehouse }] = await Promise.all([
     user.rpc('in_division', { p_division: row.division_id }),
-    user.rpc('in_division', { p_division: idOf('3PL'), p_roles: ['warehouse', 'manager'] }),
+    user.rpc('in_division', { p_division: tplId, p_roles: ['warehouse', 'manager'] }),
   ]);
   if (!own && !warehouse) return { res: new Response(msg.notFound, { status: 404 }) };
-  return { sb, sh: row, dsDivisionId: idOf('DS') };
+  return { sb, sh: row, dsDivisionId: dsId };
 }
 
 /** The seller's brand + return address, only when Dropshipping staff have APPROVED it (migration 196). */

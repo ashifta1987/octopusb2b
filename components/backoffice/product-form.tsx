@@ -7,6 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/cn';
 import { money, CURRENCIES, CURRENCY_PREFIX, asCurrency } from '@/lib/format';
+import { createProductMediaUpload } from '@/app/distributor/products/actions';
 import { productSchema, INCOTERMS, UNITS, type ProductFormValues } from './product-schema';
 
 type Result = { ok: boolean; error?: string; message?: string; data?: { id: string } };
@@ -111,7 +112,7 @@ export function ProductForm({
     router.push('/distributor/products?status=submitted');
   }), () => setSaveState({ tone: 'bad', text: 'Fix the highlighted fields before submitting' }));
 
-  /* ── image upload to public bucket product-media ── */
+  /* ── image upload to public bucket product-media (random UUID keys only) ── */
   async function upload(files: FileList | null) {
     if (!files?.length || !supplierId) { if (!supplierId) setAiNote('Choose a supplier before uploading photos.'); return; }
     setUploading(true);
@@ -119,10 +120,12 @@ export function ProductForm({
     const urls: string[] = [];
     for (const f of Array.from(files)) {
       if (!f.type.startsWith('image/')) continue;
-      const path = `${supplierId}/${crypto.randomUUID()}-${f.name.replace(/[^a-zA-Z0-9.]+/g, '-').toLowerCase()}`;
-      const { error } = await sb.storage.from('product-media').upload(path, f, { contentType: f.type });
+      const prep = await createProductMediaUpload(supplierId, f.name, f.type);
+      if (!prep.ok) { setAiNote(`Upload failed: ${prep.error}`); continue; }
+      if (!prep.data) { setAiNote('Upload failed: missing upload target'); continue; }
+      const { error } = await sb.storage.from('product-media').uploadToSignedUrl(prep.data.path, prep.data.token, f, { contentType: f.type });
       if (error) { setAiNote(`Upload failed: ${error.message}`); continue; }
-      urls.push(sb.storage.from('product-media').getPublicUrl(path).data.publicUrl);
+      urls.push(prep.data.publicUrl);
     }
     setValue('images', [...getValues('images'), ...urls], { shouldDirty: true });
     setUploading(false);

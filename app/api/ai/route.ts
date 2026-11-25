@@ -1,7 +1,8 @@
+import { randomUUID } from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getSession, can } from '@/lib/auth';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { getAiAdapter } from '@/lib/adapters/ai';
 import { checkProductAccess } from '@/lib/distributor/access';
 
@@ -73,13 +74,15 @@ export async function POST(req: Request) {
       const r = await ai.enhancePhoto(input.image_url, p);
       let url = r.image_url;
       if (url.startsWith('data:')) {
-        // store generated image in the public product-media bucket instead of returning base64
+        // store generated image in the public product-media bucket under an opaque UUID path (no supplierId in URL)
         const [meta, b64] = url.split(',');
         const type = meta.match(/data:(.*?);/)?.[1] ?? 'image/png';
-        const path = `${supplier_id}/ai-${job.id}.png`;
-        const up = await sb.storage.from('product-media').upload(path, Buffer.from(b64, 'base64'), { contentType: type, upsert: true });
+        const ext = /jpeg|jpg/i.test(type) ? 'jpg' : /webp/i.test(type) ? 'webp' : 'png';
+        const path = `products/${randomUUID()}.${ext}`;
+        const admin = createAdminClient();
+        const up = await admin.storage.from('product-media').upload(path, Buffer.from(b64, 'base64'), { contentType: type, upsert: false });
         if (up.error) throw new Error(up.error.message);
-        url = sb.storage.from('product-media').getPublicUrl(path).data.publicUrl;
+        url = admin.storage.from('product-media').getPublicUrl(path).data.publicUrl;
       }
       output = { image_url: url, note: r.note };
     }

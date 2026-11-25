@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { requireDropshipStaff } from '@/lib/dropship-staff';
 import { dropshipSettings } from '@/lib/dropship';
 import { createAdminClient, createClient } from '@/lib/supabase/server';
+import { withHiddenColumns } from '@/components/backoffice/hidden-columns';
 import {
   DropshipProductForm,
   type DutyEntryHint,
@@ -86,13 +87,13 @@ async function EditDropshipProduct({ params }: { params: Promise<{ id: string }>
       .maybeSingle(),
     sb
       .from('dropship_variants')
-      .select('id, model_no, options, item_id, supplier_product_id, price_adjust_cents, sort')
+      .select('id, model_no, options, item_id, price_adjust_cents, sort')
       .eq('product_id', id)
       .order('sort', { ascending: true }),
     sb
       .from('dropship_routes')
       .select(
-        'destination_country, shipping_method, incoterm, landed_price_cents, est_shipping_cents, est_duties_cents, est_days_min, est_days_max, carrier, is_active',
+        'id, destination_country, shipping_method, incoterm, landed_price_cents, est_shipping_cents, est_duties_cents, est_days_min, est_days_max, is_active',
       )
       .eq('product_id', id)
       .order('destination_country', { ascending: true })
@@ -110,12 +111,14 @@ async function EditDropshipProduct({ params }: { params: Promise<{ id: string }>
       .from('warehouse_stock')
       .select('item_id, on_hand_qty, reserved_qty')
       .eq('warehouse_id', 'SZ-01'),
-    sb
-      .from('shipping_rate_cards')
-      .select(
-        'country, method, base_cents, per_100g_cents, step_g, volumetric_divisor, max_weight_g, allows_battery, allows_liquid, allows_magnet, allows_powder',
-      )
-      .eq('active', true),
+    staff.canSeeCosts
+      ? sb
+          .from('shipping_rate_cards')
+          .select(
+            'country, method, base_cents, per_100g_cents, step_g, volumetric_divisor, max_weight_g, allows_battery, allows_liquid, allows_magnet, allows_powder',
+          )
+          .eq('active', true)
+      : Promise.resolve({ data: [] }),
     sb
       .from('fee_versions')
       .select('pick_pack_first_cents, packaging_cents')
@@ -139,7 +142,12 @@ async function EditDropshipProduct({ params }: { params: Promise<{ id: string }>
   const p = prodRes.data;
   if (!p) notFound();
 
-  const varRows = varsRes.data ?? [];
+  const varRows = staff.canSeeCosts
+    ? await withHiddenColumns('dropship_variants', varsRes.data ?? [], 'supplier_product_id')
+    : (varsRes.data ?? []).map((v) => ({ ...v, supplier_product_id: null as string | null }));
+  const routeRows = staff.canSeeCosts
+    ? await withHiddenColumns('dropship_routes', routesRes.data ?? [], 'carrier')
+    : (routesRes.data ?? []).map((r) => ({ ...r, carrier: null as string | null }));
   const itemIds = [...new Set(varRows.map((v) => String(v.item_id)).filter(Boolean))];
 
   const [itemsRes, dutyEntriesRes, importJobRes] = await Promise.all([
@@ -359,7 +367,7 @@ async function EditDropshipProduct({ params }: { params: Promise<{ id: string }>
         available_qty: Math.max(0, onHand - reserved),
       };
     }),
-    routes: (routesRes.data ?? []).map((r) => ({
+    routes: routeRows.map((r) => ({
       destination_country: String(r.destination_country).trim(),
       shipping_method: r.shipping_method as 'express' | 'standard' | 'economy',
       incoterm: (r.incoterm === 'DAP' ? 'DAP' : 'DDP') as 'DDP' | 'DAP',

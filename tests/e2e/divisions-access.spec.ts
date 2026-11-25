@@ -78,7 +78,10 @@ test('3PL warehouse: every division\'s shipments, pick/pack/ship fields only —
   const row = (await sb.from('warehouse_shipments').select('*').eq('id', ids.shp)).data?.[0];
   expect(row?.division).toBe('SRC');
   expect(Object.keys(row ?? {}).some((c) => /price|rate|cents|total|payment|margin|cost|deposit/.test(c))).toBe(false);
-  expect((await sb.from('shipments').select('rate_cents').eq('id', ids.shp)).data).toEqual([]);
+  expect((await sb.from('shipments').select('id').eq('id', ids.shp)).data).toEqual([]);
+  const shipRate = await sb.from('shipments').select('rate_cents').eq('id', ids.shp);
+  expect(shipRate.data).toBeNull();
+  expect(shipRate.error?.code).toBe('42501');
   expect((await sb.from('orders').select('unit_price_cents').eq('org_id', ids.org)).data).toEqual([]);
   expect((await sb.from('payments').select('amount_cents').eq('org_id', ids.org)).data).toEqual([]);
   expect((await sb.rpc('warehouse_update_shipment', { p_id: ids.shp, p_status: 'label_ready', p_tracking_no: 'TEST-TRK-E2E' })).error).toBeNull();

@@ -1,17 +1,17 @@
-import { createClient } from '@/lib/supabase/server';
+import { getSession, can } from '@/lib/auth';
 import { loadDocument, renderDocumentHtml } from '@/components/account/doc-html';
-import { isStaffUser } from '@/lib/staff/server';
-
 
 /** Print-ready HTML for a document the signed-in user can read (RLS). `?print=1` opens the print dialog. */
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const sb = await createClient();
-  const { data: claims } = await sb.auth.getClaims();
-  if (!claims?.claims?.sub) return text(401, 'Please sign in to view this document.');
+  const session = await getSession();
+  if (!session) return text(401, 'Please sign in to view this document.');
 
-  // Supplier codes are internal: staff copies show them, customer copies show only the factory label (19 Nov 2026).
-  const showSupplier = await isStaffUser(claims.claims.sub as string).catch(() => false);
+  // Supplier codes/countries require explicit supplier or finance/cost permission on an aal2 staff session (never support).
+  const showSupplier =
+    session.isStaff &&
+    session.aal === 'aal2' &&
+    (can(session, 'suppliers', 'view') || can(session, 'finance', 'view'));
   const bundle = await loadDocument(id, { staff: showSupplier });
   if (!bundle) return text(404, 'Document not found.');
 

@@ -1,6 +1,6 @@
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { portalProducts } from '@/components/backoffice/hidden-columns';
+import { hiddenColumnsByIds, portalProducts } from '@/components/backoffice/hidden-columns';
 import { Card, PageHeader, Table, StatusBadge, EmptyState, Notice, Stat } from '@/components/ui';
 import { RunButton } from '@/components/admin/client';
 import { confirmHsType, runBackfillPreview, applyBackfill } from './actions';
@@ -18,8 +18,13 @@ export default async function HsCodesPage() {
     sb.from('hs_product_types').select('id, name, type_key, heading, confirmed, source, confidence, reason, keywords').order('name'),
     // HS columns are hidden from plain products reads (migration 195): portal_products() returns them for staff with products:view
     portalProducts(sb).select('hs_product_type_id, hs_code_status, hs_code_source').is('archived_at', null).limit(10000),
-    sb.from('hs_backfill_proposals').select('product_id, heading, source, status, confidence, note, products(sku, title), hs_product_types(name)').order('status'),
+    sb.from('hs_backfill_proposals').select('product_id, heading, source, status, confidence, note, products(title), hs_product_types(name)').order('status'),
   ]);
+  const skusById = await hiddenColumnsByIds<{ id: string; sku: string | null }>(
+    'products',
+    (props ?? []).map((p) => p.product_id as string),
+    'sku',
+  );
   const use = new Map<string, { total: number; suggested: number }>();
   for (const p of prods ?? []) { if (!p.hs_product_type_id) continue; const u = use.get(p.hs_product_type_id as string) ?? { total: 0, suggested: 0 }; u.total++; if (p.hs_code_status === 'suggested') u.suggested++; use.set(p.hs_product_type_id as string, u); }
   const count = (st: string) => (prods ?? []).filter((p) => p.hs_code_status === st).length;
@@ -71,11 +76,12 @@ export default async function HsCodesPage() {
         {(props ?? []).length > 0 ? (
           <Table head={['Product', 'Would receive', 'Type', 'Status', 'Note']}>
             {(props ?? []).map((p) => {
-              const prod = (Array.isArray(p.products) ? p.products[0] : p.products) as { sku: string; title: string } | null;
+              const prod = (Array.isArray(p.products) ? p.products[0] : p.products) as { title: string } | null;
+              const sku = skusById.get(p.product_id as string)?.sku ?? null;
               const ty = (Array.isArray(p.hs_product_types) ? p.hs_product_types[0] : p.hs_product_types) as { name: string } | null;
               return (
                 <tr key={p.product_id as string} data-testid="hs-proposal">
-                  <td className="td text-sm"><span className="mono text-xs">{prod?.sku}</span><div>{prod?.title}</div></td>
+                  <td className="td text-sm"><span className="mono text-xs">{sku}</span><div>{prod?.title}</div></td>
                   <td className="td mono font-semibold">{(p.heading as string) ?? '—'}</td>
                   <td className="td text-sm">{ty?.name ?? '—'}{p.source === 'ai' && p.confidence != null ? <span className="text-muted"> · AI {Math.round(Number(p.confidence) * 100)}%</span> : null}</td>
                   <td className="td"><StatusBadge status={p.status as string} label={p.status === 'confirmed' ? 'Confirmed' : p.status === 'suggested' ? 'Suggested' : 'Missing'} tone={p.status === 'confirmed' ? 'green' : p.status === 'suggested' ? 'amber' : 'red'} /></td>

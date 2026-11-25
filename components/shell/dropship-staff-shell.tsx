@@ -11,7 +11,7 @@ export type StaffDropshipNavItem = {
   label: string;
   icon: DsIconName;
   matchPrefix: string;
-  role: 'dropship' | 'saas';
+  role: 'dropship' | 'dropship_edit' | 'saas';
 };
 
 /**
@@ -22,7 +22,7 @@ export type StaffDropshipNavItem = {
  */
 const STAFF_ITEMS: StaffDropshipNavItem[] = [
   { href: '/office/dropship', label: 'Products', icon: 'package', matchPrefix: '/office/dropship', role: 'dropship' },
-  { href: '/office/dropship/import', label: 'Import products', icon: 'upload', matchPrefix: '/office/dropship/import', role: 'dropship' },
+  { href: '/office/dropship/import', label: 'Import products', icon: 'upload', matchPrefix: '/office/dropship/import', role: 'dropship_edit' },
   { href: '/office/dropship/compliance', label: 'Duty, tax and customs', icon: 'globe', matchPrefix: '/office/dropship/compliance', role: 'dropship' },
   { href: '/office/dropship/queue', label: 'Fulfilment queue', icon: 'list', matchPrefix: '/office/dropship/queue', role: 'dropship' },
   { href: '/office/dropship/queue?status=packing', label: 'Pack station', icon: 'scale', matchPrefix: '/office/dropship/pack', role: 'dropship' },
@@ -63,6 +63,7 @@ export function DropshipStaffShell({
   unreadCount = 0,
   isStaging = false,
   canSeeDropshipItems = true,
+  canEditDropship = false,
   canSeeSaas = false,
   children,
 }: {
@@ -71,13 +72,18 @@ export function DropshipStaffShell({
   unreadCount?: number;
   isStaging?: boolean;
   canSeeDropshipItems?: boolean;
+  canEditDropship?: boolean;
   canSeeSaas?: boolean;
   children: ReactNode;
 }) {
   const pathname = usePathname();
   const isFinanceSaas = pathname.startsWith('/admin/finance/saas');
   const visibleItems = STAFF_ITEMS.filter((item) =>
-    item.role === 'saas' ? canSeeSaas : canSeeDropshipItems,
+    item.role === 'saas'
+      ? canSeeSaas
+      : item.role === 'dropship_edit'
+        ? canSeeDropshipItems && canEditDropship
+        : canSeeDropshipItems,
   );
 
   return (

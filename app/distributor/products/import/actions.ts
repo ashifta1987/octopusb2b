@@ -1,13 +1,14 @@
 'use server';
 import ExcelJS from 'exceljs';
 import { unzipSync } from 'fflate';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { redirect } from 'next/navigation';
 import { after } from 'next/server';
 import { queueHsClassification, runHsClassification } from '@/lib/hs/server';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { createClient, createAdminClient } from '@/lib/supabase/server';
-import { slugify, toCents } from '@/lib/format';
+import { toCents } from '@/lib/format';
+import { cleanProductSlug } from '@/lib/slug';
 import { actionSession, fail, ok, getManagedSuppliers, type Result } from '@/components/backoffice/server-utils';
 import { IMPORT_COLUMNS, type ImportData, type ImportImage } from '@/components/backoffice/import-columns';
 import { SKU_ERRORS, normalizeSku, skuDbError, skuProblem } from '@/lib/sku';
@@ -297,18 +298,19 @@ export async function importValidRows(jobId: string): Promise<Result> {
     const buf = await zipBytes(job.zip_path);
     if (buf) files = unzipSync(buf, { filter: (f) => want.has(f.name) });
   }
-  const uploaded = new Map<string, string>(); // sha → public url (same photo stored once, linked to every product)
+  const uploaded = new Map<string, { url: string; key: string }>(); // sha → public url & key (same photo stored once, linked to every product)
   const upload = async (path: string) => {
     const bytes = files[path]; if (!bytes) return null;
     const sha = createHash('sha256').update(bytes).digest('hex');
     if (!uploaded.has(sha)) {
-      const ext = (path.split('.').pop() ?? 'jpg').toLowerCase();
-      const key = `products/sha/${sha}.${ext}`;
+      const ext = (path.split('.').pop() ?? 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+      const key = `products/${randomUUID()}.${ext}`;
       const up = await admin.storage.from('product-media').upload(key, bytes, { contentType: MIME[ext] ?? 'application/octet-stream', upsert: false });
       if (up.error && !/exists|duplicate/i.test(up.error.message)) return null;
-      uploaded.set(sha, admin.storage.from('product-media').getPublicUrl(key).data.publicUrl);
+      uploaded.set(sha, { url: admin.storage.from('product-media').getPublicUrl(key).data.publicUrl, key });
     }
-    return { sha, url: uploaded.get(sha)!, key: `products/sha/${sha}.${(path.split('.').pop() ?? 'jpg').toLowerCase()}` };
+    const entry = uploaded.get(sha)!;
+    return { sha, url: entry.url, key: entry.key };
   };
   let created = 0, updated = 0, skipped = 0; const failures: string[] = []; const savedIds: string[] = [];
   for (const r of rows ?? []) {
@@ -322,7 +324,7 @@ export async function importValidRows(jobId: string): Promise<Result> {
     }
     const mode = d.mode === 'update' ? 'update' : 'create';
     const { data: pid, error } = await sb.rpc('import_product_row', { p: {
-      mode, product_id: d.product_id, sku: d.sku, slug: `${slugify(d.title).slice(0, 80)}-${Math.random().toString(36).slice(2, 8)}`,
+      mode, product_id: d.product_id, sku: d.sku, slug: cleanProductSlug(d.title, [d.sku]),
       title: d.title, description: d.description, supplier_id: d.supplier_id, category_id: d.category_id, unit: d.unit || 'pcs', moq: d.moq ?? 1,
       lead_time_days: d.lead_time_days, incoterm: d.incoterm ?? (mode === 'create' ? 'FOB' : null), origin_country: d.origin_country, hs_code: d.hs_code,
       currency: d.currency === 'CNY' ? 'CNY' : 'USD', octopus_dropship: d.octopus_dropship, ready_to_ship: d.ready_to_ship, tiers: d.tiers, images,

@@ -62,6 +62,41 @@ export async function proxy(request: NextRequest) {
     res.headers.set(TRACE_HEADER, traceId);
     return res;
   }
+  // Batch 1 (F-04): Permanent HTTP 301 redirects for legacy /p/<old-slug> → clean white-label slug
+  if (path.startsWith('/p/')) {
+    const rest = path.slice(3);
+    if (rest && !rest.includes('/')) {
+      try {
+        const decoded = decodeURIComponent(rest);
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+        if (supabaseUrl && anonKey && decoded) {
+          const rpcRes = await fetch(`${supabaseUrl}/rest/v1/rpc/resolve_product_slug_redirect`, {
+            method: 'POST',
+            headers: {
+              apikey: anonKey,
+              Authorization: `Bearer ${anonKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ p_old_slug: decoded }),
+          });
+          if (rpcRes.ok) {
+            const newSlug = (await rpcRes.json()) as string | null;
+            if (typeof newSlug === 'string' && newSlug && newSlug !== decoded) {
+              const url = request.nextUrl.clone();
+              url.pathname = `/p/${encodeURIComponent(newSlug)}`;
+              const res = NextResponse.redirect(url, 301);
+              res.headers.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+              res.headers.set(TRACE_HEADER, traceId);
+              return res;
+            }
+          }
+        }
+      } catch {
+        // Fall through cleanly to Next.js page route if redirect lookup fails transiently
+      }
+    }
+  }
   const res = await route(request);
   res.headers.set(TRACE_HEADER, traceId);
   return res;

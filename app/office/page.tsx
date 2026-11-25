@@ -34,13 +34,14 @@ export default async function OfficeQueues() {
   const scope = await getDivisionScope(s);   // divisions step 4: header switcher
   const sb = await createClient();
   const soon = new Date(nowMs() + 4 * 36e5).toISOString();
+  const canOpenShipping = s.isAdmin || can(s, 'orders', 'edit') || can(s, 'warehouse', 'view') || can(s, 'finance', 'view') || can(s, 'suppliers', 'view');
   const [kyc, prods, rfqs, srv, ships, tickets] = await Promise.all([
     can(s, 'customers') ? sb.from('kyc_submissions').select('id, company_name, status, submitted_at, organizations(name, country)', { count: 'exact' }).in('status', ['submitted', 'in_review']).order('submitted_at').limit(6) : null,
     // supplier embed goes through products.supplier_id (hidden, migration 195): portal_products() keeps it readable for staff
     can(s, 'products', 'approve') ? portalProducts(sb, { count: 'exact' }).select('id, title, status, updated_at, suppliers!products_supplier_id_fkey(code)').in('status', ['submitted', 'in_review']).order('updated_at').limit(6) : null,
     can(s, 'requests') ? (scope.all ? sb.from('rfqs').select(RFQ_COLS, { count: 'exact' }) : sb.from('rfqs').select(RFQ_COLS, { count: 'exact' }).eq('division_id', scope.division.id)).eq('status', 'submitted').order('created_at').limit(6) : null,
     can(s, 'requests') ? (scope.all ? sb.from('service_requests').select(SR_COLS, { count: 'exact' }) : sb.from('service_requests').select(SR_COLS, { count: 'exact' }).eq('division_id', scope.division.id)).in('status', ['requested', 'paid']).order('created_at').limit(6) : null,
-    can(s, 'orders') ? (scope.all ? sb.from('shipments').select(SHIP_COLS, { count: 'exact' }) : sb.from('shipments').select(SHIP_COLS, { count: 'exact' }).eq('division_id', scope.division.id)).eq('status', 'exception').order('last_event_at').limit(6) : null,
+    canOpenShipping ? (scope.all ? sb.from('shipments').select(SHIP_COLS, { count: 'exact' }) : sb.from('shipments').select(SHIP_COLS, { count: 'exact' }).eq('division_id', scope.division.id)).eq('status', 'exception').order('last_event_at').limit(6) : null,
     can(s, 'support') ? sb.from('tickets').select('id, code, subject, priority, status, sla_due_at', { count: 'exact' }).lt('sla_due_at', soon).not('status', 'in', '(resolved,closed)').order('sla_due_at').limit(6) : null,
   ]);
 

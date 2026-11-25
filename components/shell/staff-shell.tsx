@@ -18,8 +18,8 @@ import { StaffShellSwitcher } from './dropship-shell-switcher';
  * ADDON-41 boards 06–08 — staff shell: navy header ("Admin · staff only"), admin tabs, and the side menu
  * (work queue first, then the existing back-office and admin pages the person may open).
  */
-export function StaffShell({ session, nav, counts, moderation, unread = 0, scope, dropshipV2Ui = false, children }: {
-  session: Session; nav: NavSection[]; counts: { queue: number; approvals: number; transfers: number }; moderation?: number | null; unread?: number; scope?: DivisionScope; dropshipV2Ui?: boolean; children: React.ReactNode;
+export function StaffShell({ session, nav, counts, moderation, unread = 0, scope, dropshipV2Ui = false, canEditDropship = false, children }: {
+  session: Session; nav: NavSection[]; counts: { queue: number; approvals: number; transfers: number }; moderation?: number | null; unread?: number; scope?: DivisionScope; dropshipV2Ui?: boolean; canEditDropship?: boolean; children: React.ReactNode;
 }) {
   const name = session.profile?.full_name ?? session.email ?? 'Staff';
   const initials = name.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
@@ -54,13 +54,21 @@ export function StaffShell({ session, nav, counts, moderation, unread = 0, scope
   ];
   const inDs = Boolean(scope?.options.some((d) => d.code === 'DS'));
   const canOpenDropship = session.isAdmin || session.roles.includes('finance') || session.roles.includes('support') || inDs;
+  const canOpenShipping =
+    session.isAdmin ||
+    can(session, 'orders', 'edit') ||
+    can(session, 'warehouse', 'view') ||
+    can(session, 'finance', 'view') ||
+    can(session, 'suppliers', 'view');
   const rest = nav
     .map((s) => ({
       ...s,
       items: s.items.filter((i) =>
         i.href === '/office/dropship'
           ? canOpenDropship
-          : !i.area || can(session, i.area, i.action ?? 'view'),
+          : i.href === '/office/shipping'
+            ? canOpenShipping
+            : !i.area || can(session, i.area, i.action ?? 'view'),
       ),
     }))
     .filter((s) => s.items.length);
@@ -111,6 +119,7 @@ export function StaffShell({ session, nav, counts, moderation, unread = 0, scope
     <StaffShellSwitcher
       v2ShellEnabled={dropshipV2Ui}
       canSeeDropshipItems={canOpenDropship}
+      canEditDropship={canEditDropship}
       canSeeSaas={canSeeSaas}
       userName={name}
       initials={initials || 'ST'}

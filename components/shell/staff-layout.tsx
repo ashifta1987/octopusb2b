@@ -16,15 +16,25 @@ export async function StaffLayoutShell({ next, children }: { next: string; child
   const scope = await getDivisionScope(session);
   // staff notification inbox count (bug 2, 8 Nov 2026): same source and rule as the customer bell — unread = read_at empty
   const unreadQ = sb.rpc('my_notifications', undefined, { count: 'exact', head: true }).is('read_at', null);
-  const [moderation, q, unread, dropshipV2Ui] = await Promise.all([
+  const [moderation, q, unread, dropshipV2Ui, myDivs] = await Promise.all([
     moderationPendingCount(), getWorkQueue(session, scope).catch(() => null),
     (scope.all ? unreadQ : unreadQ.eq('division_id', scope.division.id)).then((r) => r.count ?? 0, () => 0),
     isDropshipV2UiEnabled(),
+    sb.from('division_members').select('division_id, role').eq('user_id', session.userId),
   ]);
+  const dsDivId = scope.options.find((d) => d.code === 'DS')?.id ?? null;
+  const canEditDropship =
+    session.isAdmin ||
+    Boolean(
+      dsDivId &&
+      (myDivs.data ?? []).some(
+        (m) => m.division_id === dsDivId && ['manager', 'staff'].includes(String(m.role)),
+      ),
+    );
   const counts = {
     queue: q?.stats.open ?? 0,
     approvals: q?.myApprovals ?? 0,
     transfers: q?.items.filter((i) => i.key.startsWith('tt-')).length ?? 0,
   };
-  return <StaffShell session={session} nav={OFFICE_NAV} counts={counts} moderation={moderation} unread={unread} scope={scope} dropshipV2Ui={dropshipV2Ui}>{children}</StaffShell>;
+  return <StaffShell session={session} nav={OFFICE_NAV} counts={counts} moderation={moderation} unread={unread} scope={scope} dropshipV2Ui={dropshipV2Ui} canEditDropship={canEditDropship}>{children}</StaffShell>;
 }

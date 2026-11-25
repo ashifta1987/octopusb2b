@@ -43,12 +43,17 @@ export async function exportSupplierWorkbookData(admin: SupabaseClient, supplier
   const ids = (prods ?? []).map((p) => p.id as string);
   const [{ data: prices }, { data: media }] = await Promise.all([
     ids.length ? admin.from('supplier_product_prices').select('product_id, incoterm, moq_tier_min, variant_label, price_minor').eq('supplier_id', supplierId).eq('is_superseded', false).in('product_id', ids).order('created_at') : Promise.resolve({ data: [] }),
-    ids.length ? admin.from('product_media').select('product_id, url, sort').in('product_id', ids).order('sort') : Promise.resolve({ data: [] }),
+    ids.length ? admin.from('product_media').select('product_id, url, sort, source_file_name').in('product_id', ids).order('sort') : Promise.resolve({ data: [] }),
   ]);
   const priceBy = new Map<string, PriceRow[]>();
   (prices ?? []).forEach((p) => priceBy.set(p.product_id as string, [...(priceBy.get(p.product_id as string) ?? []), { ...(p as PriceRow), price_minor: Number(p.price_minor) }]));
   const imgBy = new Map<string, string>();
-  (media ?? []).forEach((m) => { if (!imgBy.has(m.product_id as string)) imgBy.set(m.product_id as string, decodeURIComponent(String(m.url).split('/').pop() ?? '')); });
+  (media ?? []).forEach((m) => {
+    if (!imgBy.has(m.product_id as string)) {
+      const name = (m.source_file_name as string | null) || decodeURIComponent(String(m.url).split('/').pop() ?? '');
+      imgBy.set(m.product_id as string, name);
+    }
+  });
 
   const flags = (links ?? []).map((l) => l.exclusivity_flag as string | null).filter(Boolean) as string[];
   const flag = flags.length ? [...flags].sort((a, b) => flags.filter((x) => x === b).length - flags.filter((x) => x === a).length)[0] : null;

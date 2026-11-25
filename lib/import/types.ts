@@ -49,7 +49,7 @@ export type StagedProduct = {
   specs: StagedSpec[];
 };
 
-export type StagedImage = { external_id: string; file: string; sort: number; role: 'primary' | 'gallery'; url?: string; bytes?: number };
+export type StagedImage = { external_id: string; file: string; sort: number; role: 'primary' | 'gallery'; url?: string; storage_path?: string; bytes?: number };
 
 export type ReviewKind = 'note' | 'outlier' | 'needs_quote' | 'in_development' | 'identity';
 export type StagedReview = { external_id: string; kind: ReviewKind; issue: string; evidence: string | null };
