@@ -67,7 +67,7 @@ function hsSourceLabel(src: string | null): string {
 
 export default function Page({ searchParams }: { searchParams: Promise<SP> }) {
   return (
-    <Suspense fallback={<div className="card p-6 animate-pulse">Loading Dropshipping catalogue…</div>}>
+    <Suspense fallback={<div className="card p-6 text-ink" role="status">Loading Dropshipping catalogue…</div>}>
       <StaffDropshipList searchParams={searchParams} />
     </Suspense>
   );

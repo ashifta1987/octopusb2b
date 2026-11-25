@@ -125,6 +125,10 @@ try {
   if (has194) await db.query(fs.readFileSync('supabase/migrations/20261101000194_division_access_fixes.sql', 'utf8'));
   await reapply(db, later);
   const after = await counts();
+  // audit rows whose division only a LATER division_of_audit() can derive (e.g. 204's dropship entities): 190's backfill
+  // runs with 190's function, and later migrations only redefine the function for new rows — so after down → up those
+  // rows come back empty too (rolled-back test; nothing is ever really taken down)
+  const laterOnlyAudit = Number((await one(`select count(*) n from audit_log a where division_id is null and division_of_audit(a) is not null`)).n);
   // Migration 204 drops and recreates dropship_products / dropship_import_list empty; if 204 was unwound and re-applied,
   // those test rows are empty after down → up until re-seeded
   const dropshipRebuilt = later.includes('20261101000204_dropship_catalogue_v2.sql');
@@ -136,7 +140,7 @@ try {
     shipments: before.shipments - explicitShipments,
     notifications: before.notifications - explicitNotifs,
     ...(before.documents != null ? { documents: before.documents - explicitDocs } : {}),
-    ...(before.audit_log != null ? { audit_log: before.audit_log - explicitAudit } : {}),
+    ...(before.audit_log != null ? { audit_log: before.audit_log - explicitAudit - laterOnlyAudit } : {}),
     ...(dropshipRebuilt ? { dropship_products: 0, dropship_import_list: 0 } : {}),
   };
   if (JSON.stringify(expected) !== JSON.stringify(after)) console.log('  before', JSON.stringify(before), '\n  expected', JSON.stringify(expected), '\n  after ', JSON.stringify(after));

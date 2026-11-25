@@ -71,6 +71,12 @@ export function ProductForm({
   /* ── autosave drafts (debounced) ── */
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const idRef = useRef(productId);
+  // Each save (autosave or manual) takes a sequence number; only the newest one may update the status line, so a
+  // late autosave can never overwrite "Saved" after the user pressed Save.
+  const saveSeq = useRef(0);
+  const cancelPendingAutosave = () => {
+    if (timer.current) { clearTimeout(timer.current); timer.current = null; }
+  };
   useEffect(() => { idRef.current = productId; }, [productId]);
   useEffect(() => {
     if (!editable) return;
@@ -78,11 +84,14 @@ export function ProductForm({
       if (type !== 'change' && type !== undefined) return;
       if (timer.current) clearTimeout(timer.current);
       timer.current = setTimeout(async () => {
+        timer.current = null;
         const vals = getValues();
         if (!vals.title?.trim() || !vals.supplier_id) return;
         if (suppliers.find((s) => s.id === vals.supplier_id)?.product_upload === false) return;
+        const seq = ++saveSeq.current;
         setSaveState({ tone: 'muted', text: 'Saving draft…' });
         const r = await saveAction(idRef.current, vals, 'draft');
+        if (seq !== saveSeq.current) return;
         if (r.ok && r.data?.id) {
           if (!idRef.current) {
             idRef.current = r.data.id;
@@ -97,7 +106,10 @@ export function ProductForm({
   }, [watch, getValues, saveAction, editable, suppliers]);
 
   const onSave = handleSubmit((v) => start(async () => {
+    cancelPendingAutosave();
+    const seq = ++saveSeq.current;
     const r = await saveAction(productId, v, 'full');
+    if (seq !== saveSeq.current) return;
     if (!r.ok) { setSaveState({ tone: 'bad', text: r.error ?? 'Save failed' }); return; }
     if (!productId && r.data?.id) { setProductId(r.data.id); window.history.replaceState(null, '', `/distributor/products/${r.data.id}/edit`); }
     setSaveState({ tone: 'ok', text: 'Saved' });
@@ -105,6 +117,8 @@ export function ProductForm({
   }), () => setSaveState({ tone: 'bad', text: 'Fix the highlighted fields' }));
 
   const onSubmitModeration = handleSubmit((v) => start(async () => {
+    cancelPendingAutosave();
+    ++saveSeq.current;
     const r = await saveAction(productId, v, 'full');
     if (!r.ok || !r.data?.id) { setSaveState({ tone: 'bad', text: r.error ?? 'Save failed' }); return; }
     const t = await submitAction(r.data.id, 'submitted');

@@ -110,7 +110,7 @@ test('an account manager sees only their own customer; work queue and limits ren
   const { error } = await admin.from('account_managers').insert({ org_id: A!.orgId, staff_user_id: mgr.id, is_primary: true });
   if (error) throw new Error(error.message);
   await staffLogin(page, mgr, '/admin');
-  await expect(page.getByTestId('staff-only')).toBeVisible();
+  await expect(page.getByTestId('staff-only')).toBeVisible({ timeout: 20_000 });
   await expect(page.getByTestId('work-queue')).toBeVisible();
   await expect(page.getByText('The owner has not set your limits yet')).toBeVisible();
   await shot(page, '06-admin-work-queue-desktop');

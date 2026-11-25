@@ -152,6 +152,8 @@ test('Staff UI kit (/office/dropship/ui-kit), role-filtered Staff shell at 1280p
   await expect(sidebar.getByRole('link', { name: 'Product editor' })).toHaveCount(0);
   // Admin sees "Finance: SaaS billing"
   await expect(sidebar.getByRole('link', { name: 'Finance: SaaS billing' })).toBeVisible();
+  // wait for the streamed catalogue to replace the loading placeholder before running axe
+  await expect(page.getByText('Loading Dropshipping catalogue…')).toHaveCount(0, { timeout: 20_000 });
 
   await checkAxe(page, 'staff-shell-1280');
   if (SHOTS) {

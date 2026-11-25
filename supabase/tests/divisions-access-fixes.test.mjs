@@ -93,7 +93,10 @@ try {
   ok((await all(`select 1 from dropship_products`)).length === totals.p, 'finance (company-wide): reads all dropship products');
   ok((await tryq(`update dropship_rates set fee_cents = fee_cents`)).n === 0, 'finance: cannot edit rates (read only)');
   await as(adm);
-  ok((await tryq(`update dropship_rates set fee_cents = fee_cents`)).n === totals.r, `admin: full access (edits all ${totals.r} rates)`);
+  // Since migration 211 the legacy dropship_rates table is frozen for everyone (rates live in shipping_rate_cards,
+  // fee_versions and duty_rate_entries). Admin still reads every row; any write is refused with DROPSHIP_RATES_FROZEN.
+  ok((await all(`select 1 from dropship_rates`)).length === totals.r, `admin: reads all ${totals.r} rates`);
+  ok(/DROPSHIP_RATES_FROZEN/.test((await tryq(`update dropship_rates set fee_cents = fee_cents`)).err ?? ''), 'admin: legacy dropship_rates writes refused (DROPSHIP_RATES_FROZEN since 211)');
   await as(adm, 'aal1');
   ok((await all(`select 1 from dropship_products`)).length === 0, 'admin without 2FA (aal1): nothing');
   await db.query('reset role');

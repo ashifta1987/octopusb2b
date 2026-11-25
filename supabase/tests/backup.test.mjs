@@ -51,6 +51,9 @@ try {
 
   // partial restore: product deleted after the backup, recovered from the recovery schema
   await db.query('reset role');
+  // run the setup as the database owner, not as the last JWT (finance): since migration 211, guard_item_master()
+  // refuses non-platform callers relinking item_master.sourcing_product_id, which the product delete's ON DELETE SET NULL does
+  await db.query(`select set_config('request.jwt.claims', '', true)`);
   const p = await one(`select p.id, p.title from products p where not exists(select 1 from rfqs where product_id=p.id)
                         and not exists(select 1 from service_requests where product_id=p.id) order by title limit 1`);
   await db.query(`create table recovery.products as select * from public.products where id = $1`, [p.id]);

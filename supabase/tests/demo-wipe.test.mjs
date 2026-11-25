@@ -55,7 +55,13 @@ try {
     (select count(*) from auth.users where email not like '%@demo.octopusb2b.com') real_users,
     (select count(*) from wallet_topups) topups`);
   ok(Number(after.seed_left) === 0, 'every is_seed row is gone');
-  ok(Number(after.demo_users) === 1 && after.demo_left === 'admin@demo.octopusb2b.com', `demo staff + demo buyer removed; only the kept admin remains (${after.demo_left})`);
+  // migration 219: demo users who proposed/approved a fee schedule are kept (fee_versions is append-only two-person history)
+  const keptFee = (await db.query(`select email from auth.users u where email like '%@demo.octopusb2b.com' and email <> 'admin@demo.octopusb2b.com'
+    and exists (select 1 from fee_versions f where f.proposed_by = u.id or f.approved_by = u.id) order by email`)).rows.map((r) => r.email);
+  const expectedLeft = ['admin@demo.octopusb2b.com', ...keptFee].sort().join(',');
+  const actualLeft = (after.demo_left ?? '').split(',').sort().join(',');
+  ok(Number(after.demo_users) === 1 + keptFee.length && actualLeft === expectedLeft,
+    `demo staff + demo buyer removed; only the kept admin${keptFee.length ? ` + ${keptFee.length} fee-history approver(s)` : ''} remain (${after.demo_left})`);
   ok(Number(after.suppliers) === Number(real.suppliers) && Number(after.products) === Number(real.products) && Number(after.orders) === 0,
     `only real suppliers/products remain (${after.suppliers} suppliers, ${after.products} products), no orders`);
   ok(Number(after.ledger_sum) === 0 && Number(after.wallet_sum) === Number(before.real_wallet_sum), `ledger balanced; demo wallets gone, real customers' balances unchanged (${after.wallet_sum})`);
@@ -92,7 +98,7 @@ try {
 
   // idempotent: a second run deletes nothing and still verifies
   const again = (await one(`select wipe_demo_data($1, $2) c`, [`DELETE DEMO DATA FOR ${REF}`, adminId])).c;
-  ok(Object.values(again).every((v) => Number(v) === 0), 'running the wipe again deletes nothing (idempotent)');
+  ok(Object.entries(again).every(([k, v]) => k === 'demo_users_kept_fee_history' || Number(v) === 0), 'running the wipe again deletes nothing (idempotent)');
 
   // merge duplicate companies (using SOUTHFIELD if present, otherwise two temporary duplicate orgs inside this rolled-back tx)
   const sf = (await db.query(`select o.id, (select string_agg(u.email, ',') from org_members m join auth.users u on u.id = m.user_id where m.org_id = o.id) members
@@ -102,7 +108,8 @@ try {
     const m = await one(`select count(*) n, (select string_agg(u.email, ',' order by u.email) from org_members om join auth.users u on u.id = om.user_id where om.org_id = $1) members
       from organizations where name = 'SOUTHFIELD BIOCHEM PVT LTD'`, [sf[0].id]);
     ok(Number(m.n) === 1 && m.members.includes('ashifta1987@gmail.com') && m.members.includes('ashifta@gmail.com'), `SOUTHFIELD merged into one company with both users (${m.members}; moved ${JSON.stringify(moved)})`);
-  } else if (sf.length === 0) {
+  } else {
+    // not exactly two SOUTHFIELD rows (staging's duplicates were already merged): use two temporary duplicates
     const o1 = (await one(`insert into organizations(name, country) values ('DUPE TEST ORG', 'AE') returning id`)).id;
     const o2 = (await one(`insert into organizations(name, country) values ('DUPE TEST ORG', 'AE') returning id`)).id;
     const u1 = (await one(`insert into auth.users(id, email, aud, role, instance_id) values (gen_random_uuid(), 'dupe1@example.com', 'authenticated', 'authenticated', '00000000-0000-0000-0000-000000000000') returning id`)).id;
@@ -114,7 +121,7 @@ try {
     const m = await one(`select count(*) n, (select string_agg(u.email, ',' order by u.email) from org_members om join auth.users u on u.id = om.user_id where om.org_id = $1) members
       from organizations where id in ($1, $2)`, [o1, o2]);
     ok(Number(m.n) === 1 && m.members === 'dupe1@example.com,dupe2@example.com', `duplicate org merged into one company with both users (${m.members}; moved ${JSON.stringify(moved)})`);
-  } else ok(false, `expected 2 SOUTHFIELD companies, found ${sf.length}`);
+  }
 } catch (e) {
   ok(false, 'unexpected: ' + e.message);
 } finally {
