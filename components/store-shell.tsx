@@ -43,8 +43,8 @@ export async function StoreHeader() {
 export function SiteLogo() {
   return (
     <Link href="/" aria-label="Octopus B2B home" className="block shrink-0">
-      <Image src="/images/design/logos/octopus-b2b-colour.svg" alt="Octopus B2B, Global Sourcing, Simplified" width={1018} height={211} unoptimized
-        sizes="212px" loading="eager" className="block h-12 sm:h-14 w-auto" />
+      <Image src="/images/design/logos/octopus-b2b-original.jpg" alt="Octopus B2B, Global Sourcing, Simplified" width={1024} height={270}
+        sizes="260px" loading="eager" className="block h-14 sm:h-[66px] w-auto" />
     </Link>
   );
 }
@@ -102,7 +102,7 @@ export async function StoreFooter() {
       <div className="max-w-[1200px] mx-auto">
         <div className="grid gap-8 grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
           <div>
-            <Image src="/images/design/logos/octopus-b2b-white.svg" alt="Octopus B2B" width={1018} height={211} unoptimized sizes="185px" className="block h-12 w-auto" />
+            <Image src="/images/design/logos/octopus-b2b-logo-white.png" alt="Octopus B2B" width={800} height={208} sizes="185px" className="block h-12 w-auto" />
             <p className="mt-4 mb-0 leading-[1.55]">Sourcing, branding, shared orders, turnkey projects and logistics from China, with one account and one wallet.</p>
           </div>
           <nav aria-labelledby="ft-services">

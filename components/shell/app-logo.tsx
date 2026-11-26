@@ -10,7 +10,7 @@ import { cn } from '@/lib/cn';
  * logos on Ink, Pearl, black or white only; never on Coral). Files: public/images/design/logos/.
  */
 const LOGOS = {
-  b2b: { src: '/images/design/logos/octopus-b2b-colour.svg', width: 1018, height: 211, alt: 'Octopus B2B', svg: true },
+  b2b: { src: '/images/design/logos/octopus-b2b-original.jpg', width: 1024, height: 270, alt: 'Octopus B2B', svg: false }, // owner's original logo (27 Nov)
   dropship: { src: '/images/design/logos/octopus-dropship-colour.svg', width: 848, height: 306, alt: 'Octopus Dropship', svg: true },
   '3pl': { src: '/images/design/logos/octopus-3pl.png', width: 720, height: 297, alt: 'Octopus 3PL', svg: false },
   turnkey: { src: '/images/design/logos/octopus-turnkey.png', width: 720, height: 308, alt: 'Octopus Turnkey', svg: false },
