@@ -175,7 +175,8 @@ export class ResendEmailAdapter implements EmailAdapter {
   async send(m: { to: string; subject: string; html: string }) {
     const r = await fetch(process.env.EMAIL_API_URL || 'https://api.resend.com/emails', {
       method: 'POST', headers: { Authorization: `Bearer ${process.env.EMAIL_API_KEY}`, 'Content-Type': 'application/json', ...outboundTraceHeaders() },
-      body: JSON.stringify({ from: process.env.EMAIL_FROM ?? 'Octopus B2B <support@octopusb2b.com>', to: m.to, subject: m.subject, html: m.html }),
+      // reply_to only when EMAIL_REPLY_TO is set (owner 26 Nov: replies go to support@hostoctopus.com; set in Vercel, never in code)
+      body: JSON.stringify({ from: process.env.EMAIL_FROM ?? 'Octopus B2B <support@octopusb2b.com>', to: m.to, subject: m.subject, html: m.html, ...(process.env.EMAIL_REPLY_TO ? { reply_to: process.env.EMAIL_REPLY_TO } : {}) }),
     });
     if (!r.ok) throw new Error(`email failed ${r.status}`);
     return { id: (await r.json()).id };

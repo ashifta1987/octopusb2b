@@ -43,6 +43,7 @@ export function ApprovalsClient({ tab, page, detail, canEdit }: { tab: string; p
   const [note, setNote] = useState('');
   const [auto, setAuto] = useState(page.rules.price_auto_pct == null ? '' : String(page.rules.price_auto_pct));
   const [days, setDays] = useState(page.rules.ship_within_days == null ? '' : String(page.rules.ship_within_days));
+  const [cum, setCum] = useState(page.rules.price_cum_30d_pct == null ? '' : String(page.rules.price_cum_30d_pct));
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, start] = useTransition();
   const needsChecklist = detail && (detail.kind === 'new_product' || detail.kind === 'bulk_upload');
@@ -55,7 +56,7 @@ export function ApprovalsClient({ tab, page, detail, canEdit }: { tab: string; p
     router.refresh();
   });
   const saveRules = () => start(async () => {
-    const r = await saveRulesAction(auto.trim() === '' ? null : Number(auto), days.trim() === '' ? null : Number(days));
+    const r = await saveRulesAction(auto.trim() === '' ? null : Number(auto), days.trim() === '' ? null : Number(days), cum.trim() === '' ? null : Number(cum));
     setMsg(r.ok ? { ok: true, text: 'Rules saved.' } : { ok: false, text: r.message });
     if (r.ok) router.refresh();
   });
@@ -86,7 +87,7 @@ export function ApprovalsClient({ tab, page, detail, canEdit }: { tab: string; p
       {detail && (
         <DsCard title={`Review: ${detail.summary}`} subtitle={`${SUBMISSION_KIND[detail.kind]} from ${detail.supplier_code} · sent ${fmtDay(detail.created_at)}`} icon="file" testId="approval-detail">
           {detail.kind === 'price_change' && (
-            <p className="m-0 text-[14px]">Cost change from <b>{usd(detail.payload.old_minor)}</b> to <b>{usd(detail.payload.new_minor)}</b> ({detail.payload.pct}%). Approving applies it from today; merchants see the new landed cost only after your pricing rules run.</p>
+            <p className="m-0 text-[14px]">Cost change from <b>{usd(detail.payload.old_minor)}</b> to <b>{usd(detail.payload.new_minor)}</b> ({detail.payload.direction === 'decrease' ? '−' : '+'}{detail.payload.pct}%{detail.payload.cum_pct != null ? `; ${detail.payload.cum_pct}% over the last 30 days` : ''}). Approving applies it from today; prices already quoted to merchants and paid orders keep theirs, and merchants see the new landed cost only after your pricing rules run.</p>
           )}
           {detail.kind === 'stock_update' && <p className="m-0 text-[14px]">Stock changed from {detail.payload.from_qty ?? '—'} to {detail.payload.to_qty ?? '—'}. Stock updates are approved automatically.</p>}
           {needsChecklist && <Products list={detail.kind === 'bulk_upload' ? (detail.payload.products ?? []) : [detail.payload as ProductPayload]} />}
@@ -114,9 +115,10 @@ export function ApprovalsClient({ tab, page, detail, canEdit }: { tab: string; p
           {open && !canEdit && <p className="text-[14px] text-[#5B6478] mt-3 mb-0">You can read this item but not decide it.</p>}
         </DsCard>
       )}
-      <DsCard title="Auto approval rules" subtitle="Stock updates are always approved automatically. New products and anything touching customs data are always reviewed by staff." icon="gear">
-        <div className="grid sm:grid-cols-3 gap-3 items-end">
-          <DsInput label="Approve price changes up to (%)" inputMode="numeric" value={auto} onChange={(e) => setAuto(e.target.value)} hint="Empty = every price change is reviewed." disabled={!canEdit} />
+      <DsCard title="Auto approval rules" subtitle="Stock updates and price decreases are always approved automatically. New products and anything touching customs data are always reviewed by staff. Prices already quoted to merchants never change." icon="gear" testId="approval-rules">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
+          <DsInput label="Approve price increases up to (%)" inputMode="numeric" value={auto} onChange={(e) => setAuto(e.target.value)} hint="Staff are notified. Empty = every increase is reviewed." disabled={!canEdit} />
+          <DsInput label="Review when increases in 30 days pass (%)" inputMode="numeric" value={cum} onChange={(e) => setCum(e.target.value)} hint="Empty = no 30-day limit." disabled={!canEdit} />
           <DsInput label="Suppliers ship within (days)" inputMode="numeric" value={days} onChange={(e) => setDays(e.target.value)} hint="Empty = no ship-by date is shown." disabled={!canEdit} />
           <div><DsButton variant="secondary" onClick={saveRules} loading={pending} disabled={!canEdit} disabledReason={!canEdit ? 'Editing needs Dropship division access' : undefined}>Save rules</DsButton></div>
         </div>

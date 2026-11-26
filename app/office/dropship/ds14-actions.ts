@@ -32,10 +32,12 @@ export async function decideApprovalAction(id: string, action: 'approve' | 'chan
   if (!p.success) return { ok: false, message: 'Check the decision and the note.' };
   return run<{ status: string; product_ids: string[] }>('/office/dropship/approvals', 'ds_staff_approval_decide', { p_id: p.data.id, p_action: p.data.action, p_note: p.data.note, p_checks: p.data.checks }, ['/office/dropship']);
 }
-export async function saveRulesAction(priceAutoPct: number | null, shipWithinDays: number | null): Promise<StaffResult> {
-  const p = z.object({ a: z.number().int().min(0).max(50).nullable(), d: z.number().int().min(1).max(60).nullable() }).safeParse({ a: priceAutoPct, d: shipWithinDays });
-  if (!p.success) return { ok: false, message: 'Auto-approve: 0 to 50 percent. Ship within: 1 to 60 days. Leave a field empty to switch the rule off.' };
-  return run('/office/dropship/approvals', 'ds_staff_rules_save', { p_price_auto_pct: p.data.a, p_ship_within_days: p.data.d });
+/** DS16: price decreases are applied at once; increases up to N % are applied at once (staff are notified) unless the 30-day total passes M %. */
+export async function saveRulesAction(priceAutoPct: number | null, shipWithinDays: number | null, cum30dPct: number | null = null): Promise<StaffResult> {
+  const p = z.object({ a: z.number().int().min(0).max(50).nullable(), d: z.number().int().min(1).max(60).nullable(), c: z.number().int().min(0).max(100).nullable() })
+    .safeParse({ a: priceAutoPct, d: shipWithinDays, c: cum30dPct });
+  if (!p.success) return { ok: false, message: 'Auto-approve: 0 to 50 percent. 30-day limit: 0 to 100 percent. Ship within: 1 to 60 days. Leave a field empty to switch the rule off.' };
+  return run('/office/dropship/approvals', 'ds_staff_rules_save_v2', { p_price_auto_pct: p.data.a, p_ship_within_days: p.data.d, p_price_cum_30d_pct: p.data.c });
 }
 
 // ───────── Suppliers and partner orders ─────────

@@ -17,7 +17,7 @@ import { getTkStaffShipping, getTkStaffTrips } from '@/lib/turnkey/shipping';
 import { BalanceIssueButton, DocumentActions, DocumentUpload, HandoverItemControls, HandoverItemForm, ShipmentCancel, ShipmentCreateForm, ShipmentEventForm } from '@/components/turnkey/shipping-staff';
 import { PassportDeleteStaff, TripCancelStaff, TripCompleteForm, TripConfirmForm, TripFeeDecision, TripFeeForm } from '@/components/turnkey/trips-staff';
 import { DrawingUpload, StaffDrawingComment, WaiveExtraFee } from '@/components/turnkey/drawing-staff';
-import { ClientQuoteBuilder, FactoryQuoteForm, QuoteDraftActions, QuoteWithdraw } from '@/components/turnkey/quote-staff';
+import { ClientQuoteBuilder, CustomBrandedToggle, FactoryQuoteForm, QuoteDraftActions, QuoteWithdraw } from '@/components/turnkey/quote-staff';
 import { InspectionCancel, InspectionCreateForm, InspectionFeeDecision, InspectionFeeForm, InspectionReview, InspectionSchedule, PsiOverride } from '@/components/turnkey/qc-staff';
 import { ProjectPhases, eventText } from '@/components/turnkey/project-phases';
 import { TkFeeDecision } from '@/components/turnkey/fee-decision';
@@ -261,7 +261,9 @@ export default async function TurnkeyClientProjectStaffPage({ params }: { params
           </Card>
           <Card title="Quotes (supplier, cost and margin: staff only)">
             <div className="px-6 pb-6 flex flex-col gap-5" data-testid="tk-staff-quotes">
-              <p className="m-0 text-[13.5px] text-muted">The client never sees factories, costs or margins: only the client quote lines, the total and the deposit ({depositPct ? `${depositPct}% from settings` : 'deposit % not set yet — an admin sets it in Turnkey › Services and fees'}).</p>
+              <p className="m-0 text-[13.5px] text-muted">The client never sees factories, costs or margins: only the client quote lines, the total and the deposit ({depositPct ? `${depositPct}% from settings${qts?.custom_branded ? ' for custom / branded orders' : ''}` : 'deposit % not set yet — an admin sets it in Turnkey › Settings'}).</p>
+              <CustomBrandedToggle projectId={p.id} code={p.code} custom={!!qts?.custom_branded} standardPct={qts?.deposit_pct_standard ?? null} customPct={qts?.deposit_pct_custom ?? null}
+                canEdit={edit && p.status === 'open' && !accepted} />
               <section aria-labelledby="tk-fq-list-h" className="flex flex-col gap-3">
                 <h3 id="tk-fq-list-h" className="m-0 text-[15px] font-semibold">Factory quotes</h3>
                 {factoryQuotes.length === 0 && <p className="m-0 text-[14px]">None yet.</p>}

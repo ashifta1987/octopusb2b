@@ -49,9 +49,17 @@ try {
   ok(/NOTE_REQUIRED/.test(String(await tryQ(`select review_supplier_application($1, 'rejected', '  ')`, [r.id]))), 'rejecting needs a reason');
   await db.query(`select review_supplier_application($1, 'in_review')`, [r.id]);
   await db.query(`select review_supplier_application($1, 'approved', 'audit booked')`, [r.id]);
+  // DS16 (owner 26 Nov): a new supplier is approved by two different people — the first approval keeps it in review
+  ok(/SECOND_PERSON_REQUIRED/.test(String(await tryQ(`select review_supplier_application($1, 'approved')`, [r.id]))), 'the first approver cannot give the second approval');
   await owner();
-  const after = await one(`select status, reviewed_by, review_note from supplier_applications where id = $1`, [r.id]);
-  ok(after.status === 'approved' && after.reviewed_by === admin && after.review_note === 'audit booked', 'review updates status, reviewer and note');
+  ok((await one(`select status, first_approved_by from supplier_applications where id = $1`, [r.id])).first_approved_by === admin, 'first approval recorded, still in review');
+  const admin2 = (await one(`insert into auth.users(id, email, aud, role, instance_id) values (gen_random_uuid(), 'sa-admin2@example.com', 'authenticated', 'authenticated', '00000000-0000-0000-0000-000000000000') returning id`)).id;
+  await db.query(`insert into user_roles(user_id, role_code) values ($1, 'admin')`, [admin2]);
+  await as(admin2);
+  await db.query(`select review_supplier_application($1, 'approved')`, [r.id]);
+  await owner();
+  const after = await one(`select status, reviewed_by, review_note, first_approved_by from supplier_applications where id = $1`, [r.id]);
+  ok(after.status === 'approved' && after.reviewed_by === admin2 && after.first_approved_by === admin && after.review_note === 'audit booked', 'review updates status, second reviewer and note');
   ok(Number((await one(`select count(*) n from audit_log where action = 'supplier_application.review' and entity_id = $1`, [r.id])).n) === 2, 'each review step is audited');
 
   await db.query(`insert into pool_alert_signups(email) values ('qa-pool@example.com')`);

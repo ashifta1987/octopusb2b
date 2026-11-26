@@ -38,7 +38,7 @@ async function Settings() {
     <SettingsClient
       data={data}
       countryName={data.org.country ? COUNTRY_NAMES[data.org.country] ?? data.org.country : null}
-      emailLive={Boolean(process.env.RESEND_API_KEY)}
+      emailLive={Boolean(process.env.EMAIL_API_KEY)}
       ordersOn={features.orders}
     />
   );

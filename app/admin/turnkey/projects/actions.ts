@@ -192,6 +192,25 @@ export async function setDepositPctAction(pct: string): Promise<Result> {
   return { ok: true, message: `Deposit set to ${Number(pct)}%. It applies to quotes sent from now on.` };
 }
 
+/** DS16: Turnkey editors mark a project custom / branded — its next sent quote takes turnkey.deposit_pct_custom (owner: 50 %). */
+export async function setProjectCustomAction(projectId: string, code: string, custom: boolean, reason: string): Promise<Result> {
+  if (!reason.trim()) return { ok: false, error: 'Say why (3 to 300 characters).' };
+  return run(code, 'tk_set_project_custom', { p_project: projectId, p_custom: custom, p_reason: reason.trim() },
+    custom ? 'Marked custom / branded. The next quote you send takes the custom deposit; a quote already sent keeps its %.' : 'Marked standard. The next quote you send takes the standard deposit; a quote already sent keeps its %.');
+}
+
+/** Admins only: the deposit % of quotes for custom / branded projects (setting turnkey.deposit_pct_custom; DS16). */
+export async function setDepositPctCustomAction(pct: string): Promise<Result> {
+  const s = await requireStaff('turnkey', 'view', '/admin/turnkey/settings');
+  if (!s.isAdmin) return { ok: false, error: 'Only admins set the deposit.' };
+  if (!/^\d{1,3}$/.test(pct.trim()) || Number(pct) < 1 || Number(pct) > 100) return { ok: false, error: 'Enter a whole percentage from 1 to 100.' };
+  const sb = await createClient();
+  const { error } = await sb.rpc('tk_set_deposit_pct_custom', { p_pct: Number(pct) });
+  if (error) return { ok: false, error: clean(error.message) };
+  revalidatePath('/admin/turnkey/settings');
+  return { ok: true, message: `Custom / branded deposit set to ${Number(pct)}%. It applies to quotes sent from now on.` };
+}
+
 /* ───────── T5: Production and QC inspections (each paid before it starts; white-label reports) ───────── */
 const isUuid = (v: string) => /^[0-9a-f-]{36}$/i.test(v);
 

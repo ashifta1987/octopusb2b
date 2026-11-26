@@ -2,7 +2,7 @@ import { requireStaff } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { Card, PageHeader, Notice, EmptyState } from '@/components/ui';
 import { fmtDate, money } from '@/lib/format';
-import { DepositSetting } from '@/components/turnkey/quote-staff';
+import { DepositCustomSetting, DepositSetting } from '@/components/turnkey/quote-staff';
 import { TurnkeyStaffNav } from '@/components/turnkey/staff-nav';
 import { settingChangeLabel, type TkSettings } from '@/lib/turnkey/reports';
 import { SettingForm } from './settings-client';
@@ -35,6 +35,12 @@ export default async function TurnkeySettingsPage() {
               <div data-testid="tk-settings-deposit" className="flex flex-col gap-2">
                 <p className="m-0 text-[13.5px] text-muted">The share of an accepted quote the client pays before production. A sent quote keeps the % it was sent with.</p>
                 {edit ? <DepositSetting current={v.deposit_pct} /> : <p className="m-0 text-[15px] font-semibold">{v.deposit_pct ? `${v.deposit_pct}%` : 'Not set yet'}</p>}
+              </div>
+            </Card>
+            <Card title="Quote deposit: custom / branded orders">
+              <div data-testid="tk-settings-deposit-custom" className="flex flex-col gap-2">
+                <p className="m-0 text-[13.5px] text-muted">Projects marked custom / branded take this deposit instead. A sent quote keeps the % it was sent with.</p>
+                {edit ? <DepositCustomSetting current={v.deposit_pct_custom} /> : <p className="m-0 text-[15px] font-semibold">{v.deposit_pct_custom ? `${v.deposit_pct_custom}%` : 'Not set yet'}</p>}
               </div>
             </Card>
             <Card title="Visit China: extra traveller">

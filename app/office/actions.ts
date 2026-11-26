@@ -41,9 +41,18 @@ export async function reviewSupplierApplication(id: string, to: 'in_review' | 'a
   if (to === 'rejected' && !note.trim()) return fail('Add a reason for the rejection.');
   const sb = await createClient();
   const { error } = await sb.rpc('review_supplier_application', { p_id: id, p_status: to, p_note: note.trim() || null });
-  if (error) return fail(/FORBIDDEN/.test(error.message) ? 'You do not have permission to review supplier applications.' : error);
+  if (error) {
+    if (/FORBIDDEN/.test(error.message)) return fail('You do not have permission to review supplier applications.');
+    // DS16: two different people approve a new supplier (enforced in the database)
+    if (/SECOND_PERSON_REQUIRED/.test(error.message)) return fail('You gave the first approval. A different colleague must give the second approval.');
+    return fail(error);
+  }
   revalidatePath('/office/kyc'); revalidatePath(`/office/kyc/supplier/${id}`);
-  return ok(undefined, to === 'approved' ? 'Application approved. Create the supplier in Admin → Suppliers.' : to === 'rejected' ? 'Application rejected' : 'Review started');
+  if (to === 'approved') {
+    const { data: a } = await sb.from('supplier_applications').select('status').eq('id', id).maybeSingle();
+    if (a?.status !== 'approved') return ok(undefined, 'First approval recorded. A second colleague must approve it before the supplier is approved.');
+  }
+  return ok(undefined, to === 'approved' ? 'Application approved by two people. Create the supplier in Admin → Suppliers.' : to === 'rejected' ? 'Application rejected' : 'Review started');
 }
 
 /* ───────── Products ───────── */

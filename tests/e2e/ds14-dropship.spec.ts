@@ -225,7 +225,8 @@ test('Orders to ship @1280 + 390: buyer address only, Octopus slip, mark shipped
   const slip = await page.request.get(`/api/dropship-supplier/packing-slip/${ids.partnerOrder}`);
   expect(slip.status()).toBe(200);
   const html = await slip.text();
-  expect(html).toContain('Octopus');
+  // DS16 (owner 26 Nov): a Dropship parcel carries the merchant's brand only — never Octopus (this merchant has no approved brand, so no brand line)
+  expect(html).not.toContain('Octopus');
   expect(html).toContain('Ben Meyer');
   expect(html).not.toContain(MERCHANT_NAME);
   expect(html).not.toMatch(/[$€£]\s?\d|\bUSD\b/i);

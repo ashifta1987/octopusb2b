@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { money } from '@/lib/format';
 import { depositCents, parseQty, quoteMargin, usdToCents } from '@/lib/turnkey/format';
 import {
-  addFactoryQuoteAction, discardQuoteDraftAction, saveClientQuoteAction, sendClientQuoteAction, setDepositPctAction, withdrawClientQuoteAction,
+  addFactoryQuoteAction, discardQuoteDraftAction, saveClientQuoteAction, sendClientQuoteAction, setDepositPctAction, setDepositPctCustomAction, setProjectCustomAction, withdrawClientQuoteAction,
   type ClientLineInput, type FactoryLineInput,
 } from '@/app/admin/turnkey/projects/actions';
 
@@ -170,5 +170,55 @@ export function DepositSetting({ current }: { current: number | null }) {
       <p id="tk-deposit-help" className="m-0 text-[12.5px] text-muted">{current ? `Now ${current}%.` : 'Not set: quotes cannot be sent until it is.'} A sent quote keeps the % it was sent with.</p>
       <Note msg={msg} id="tk-deposit-msg" />
     </form>
+  );
+}
+
+/** DS16: admins set the deposit % for custom / branded projects (setting turnkey.deposit_pct_custom). */
+export function DepositCustomSetting({ current }: { current: number | null }) {
+  const { pending, msg, run } = useAct();
+  const [pct, setPct] = useState(current ? String(current) : '');
+  return (
+    <form className="flex flex-col gap-2" onSubmit={(e) => { e.preventDefault(); run(() => setDepositPctCustomAction(pct)); }} data-testid="tk-deposit-custom-setting">
+      <label className="label" htmlFor="tk-deposit-custom-pct">Deposit on custom / branded quotes (%)</label>
+      <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+        <input id="tk-deposit-custom-pct" className="input min-h-11 sm:w-32" inputMode="numeric" value={pct} onChange={(e) => setPct(e.target.value)} data-testid="tk-deposit-custom-pct" aria-describedby="tk-deposit-custom-help" />
+        <button type="submit" className="btn btn-primary btn-sm min-h-11" disabled={pending || !pct.trim()} data-testid="tk-deposit-custom-save">Save</button>
+      </div>
+      <p id="tk-deposit-custom-help" className="m-0 text-[12.5px] text-muted">{current ? `Now ${current}%.` : 'Not set: quotes for custom / branded projects cannot be sent until it is.'} A sent quote keeps the % it was sent with.</p>
+      <Note msg={msg} id="tk-deposit-custom-msg" />
+    </form>
+  );
+}
+
+/**
+ * DS16: Turnkey editors mark a project custom / branded (owner 26 Nov: 50 % deposit) or standard (30 %). The database freezes the %
+ * on each sent quote; a quote already sent keeps its %, so send a new version after changing this.
+ */
+export function CustomBrandedToggle({ projectId, code, custom, standardPct, customPct, canEdit }: {
+  projectId: string; code: string; custom: boolean; standardPct: number | null; customPct: number | null; canEdit: boolean;
+}) {
+  const { pending, msg, run } = useAct();
+  const [reason, setReason] = useState('');
+  const pctLabel = (p: number | null) => (p ? `${p}%` : 'not set');
+  const id = `tk-custom-${projectId}`;
+  return (
+    <section aria-labelledby={`${id}-h`} className="flex flex-col gap-2 border border-line rounded-[10px] p-3" data-testid="tk-custom-branded">
+      <h3 id={`${id}-h`} className="m-0 text-[15px] font-semibold">Order type: {custom ? 'custom / branded' : 'standard'}</h3>
+      <p className="m-0 text-[13.5px] text-muted" data-testid="tk-custom-deposit">
+        Deposit on the next quote you send: <strong>{pctLabel(custom ? customPct : standardPct)}</strong> ({custom ? 'custom / branded' : 'standard'}; standard {pctLabel(standardPct)}, custom / branded {pctLabel(customPct)}).
+      </p>
+      {canEdit && (
+        <form className="flex flex-col sm:flex-row gap-2 sm:items-end" onSubmit={(e) => { e.preventDefault(); run(() => setProjectCustomAction(projectId, code, !custom, reason), () => setReason('')); }}>
+          <div className="flex flex-col gap-1 flex-1">
+            <label className="label" htmlFor={`${id}-reason`}>Why (internal)</label>
+            <input id={`${id}-reason`} className="input min-h-11" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} data-testid="tk-custom-reason" />
+          </div>
+          <button type="submit" className="btn btn-ghost btn-sm min-h-11" disabled={pending || reason.trim().length < 3} data-testid="tk-custom-toggle">
+            {custom ? 'Mark as standard' : 'Mark as custom / branded'}
+          </button>
+        </form>
+      )}
+      <Note msg={msg} id="tk-custom-msg" />
+    </section>
   );
 }

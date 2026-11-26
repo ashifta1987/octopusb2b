@@ -75,3 +75,34 @@ export async function rejectFeeVersionAction(id: string, reason: string): Promis
   revalidatePath(PATH);
   return { ok: true, message: 'Rejected.' };
 }
+
+/* ───────── DS16: shipping markup (setting dropship.shipping_markup_pct; two people — the database refuses anything else) ───────── */
+export async function proposeMarkupAction(pct: string, reason: string): Promise<EaResult> {
+  await requireFeesRatesDutyStaff(PATH);
+  const s = String(pct ?? '').trim();
+  if (!/^\d{1,3}(\.\d{1,2})?$/.test(s) || Number(s) > 100) return { ok: false, error: 'Enter a markup from 0 to 100 percent, e.g. 10 or 7.5.' };
+  if (String(reason ?? '').trim().length < 3) return { ok: false, error: 'Enter the reason (3 to 500 characters).' };
+  const sb = await createClient();
+  const { error } = await sb.rpc('ds16_markup_propose', { p_pct: Number(s), p_reason: reason.trim() });
+  if (error) return dbError(error.message);
+  revalidatePath(PATH);
+  return { ok: true, message: 'Proposed. A different Finance approver or an admin must approve it before it is used.' };
+}
+
+export async function decideMarkupAction(id: string, approve: boolean, note: string): Promise<EaResult> {
+  await requireFeesRatesDutyStaff(PATH);
+  const sb = await createClient();
+  const { error } = await sb.rpc('ds16_markup_decide', { p_id: id, p_approve: approve, p_note: String(note ?? '').trim() || null });
+  if (error) return dbError(error.message);
+  revalidatePath(PATH);
+  return { ok: true, message: approve ? 'Approved. New quotes use the new markup; orders already placed keep their shipping line.' : 'Rejected.' };
+}
+
+export async function withdrawMarkupAction(id: string): Promise<EaResult> {
+  await requireFeesRatesDutyStaff(PATH);
+  const sb = await createClient();
+  const { error } = await sb.rpc('ds16_markup_withdraw', { p_id: id });
+  if (error) return dbError(error.message);
+  revalidatePath(PATH);
+  return { ok: true, message: 'Withdrawn.' };
+}

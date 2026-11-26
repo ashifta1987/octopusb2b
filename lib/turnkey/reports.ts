@@ -25,7 +25,7 @@ export type TkDashboard = {
 };
 
 export type TkSettings = {
-  deposit_pct: number | null; extra_traveller_day_cents: number | null; included_travellers: number | null; visit_rule_text: string | null;
+  deposit_pct: number | null; deposit_pct_custom: number | null; extra_traveller_day_cents: number | null; included_travellers: number | null; visit_rule_text: string | null;
   passport_retention_days: number; passport_retention_set: boolean; am_waiver_threshold_cents: number | null; can_edit: boolean;
   changes: { action: string; entity_id: string | null; details: Record<string, unknown> | null; at: string; by: string | null }[];
 };
@@ -113,6 +113,7 @@ export function settingChangeLabel(c: { action: string; details: Record<string, 
   const d = c.details ?? {};
   const usd = (x: unknown) => (x == null ? 'not set' : `US$ ${(Number(x) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`);
   if (c.action === 'turnkey.deposit_pct') return `Deposit: ${d.old ?? 'not set'}${d.old != null ? '%' : ''} → ${d.new}%`;
+  if (c.action === 'turnkey.deposit_pct_custom') return `Deposit for custom / branded orders: ${d.old ?? 'not set'}${d.old != null ? '%' : ''} → ${d.new}%`;
   switch (d.setting) {
     case 'extra_traveller_day_cents': return `Extra traveller per day: ${usd(d.old)} → ${usd(d.new)}`;
     case 'passport_retention_days': return `Passport copies kept: ${d.old} → ${d.new} days after the visit`;

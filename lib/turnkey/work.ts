@@ -107,7 +107,11 @@ export type TkFactoryQuote = {
   id: string; supplier_name: string; supplier_ref: string | null; valid_until: string | null; notes: string | null; total_cost_cents: number; created_at: string;
   created_by_name: string | null; lines: { id: string; line_no: number; description: string; qty: number; unit_cost_cents: number; total_cost_cents: number }[];
 };
-export type TkStaffQuotes = { deposit_pct: number | null; quotes: TkStaffQuote[]; factory_quotes: TkFactoryQuote[] };
+/** deposit_pct = the % the next sent quote of this project takes (DS16: custom / branded projects take deposit_pct_custom). */
+export type TkStaffQuotes = {
+  deposit_pct: number | null; custom_branded?: boolean; deposit_pct_standard?: number | null; deposit_pct_custom?: number | null;
+  quotes: TkStaffQuote[]; factory_quotes: TkFactoryQuote[];
+};
 
 export async function getTkStaffDrawings(projectId: string): Promise<{ data: TkStaffDrawings; urls: Map<string, string> } | null> {
   const sb = await createClient();

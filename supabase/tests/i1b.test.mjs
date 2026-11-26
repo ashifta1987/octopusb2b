@@ -285,14 +285,14 @@ try {
   const qBelowDeMin = (await one(`select get_dropship_quote($1, 'US', 'express', 1, 'DDP') q`, [dsVar1.id])).q;
   ok(
     qBelowDeMin.ok === true
-      && qBelowDeMin.duties_cents === 24
+      && qBelowDeMin.duties_cents === 144
       && qBelowDeMin.duties_status === 'estimate'
       && qBelowDeMin.duty_basis === 'product_price'
       && qBelowDeMin.declared_value_usd_cents === 1200
       && qBelowDeMin.version_ids.shipping_rate_card_id === rcV2
       && qBelowDeMin.version_ids.fee_version_id === fvSelf
       && qBelowDeMin.version_ids.duty_rate_version_id === dvId,
-    `catalogue quote uses product price (1200c <= 2000c de_minimis -> 24c tax), marks duties_status='estimate', and returns version_ids`,
+    `catalogue quote uses product price; DS16: the US has no de minimis (country rule), so 1200c -> 10% duty + 2% tax = 144c even under the table's 2000c; duties_status='estimate', version_ids returned`,
   );
   await owner();
 

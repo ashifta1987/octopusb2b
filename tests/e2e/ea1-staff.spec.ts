@@ -234,11 +234,13 @@ test('EA-1 Support: no rate cards; fees and duty read-only', async ({ page }) =>
   await staffLogin(page, sup!, '/office/dropship/fees');
   await page.goto('/office/dropship/fees');
   await expect(page.locator('h1')).toContainText('Fees and plans');
-  await expect(page.getByText('Read only')).toBeVisible();
+  // DS16 added the shipping-markup card, which also says "Read only" for Support: both cards are read-only
+  await expect(page.getByText('Read only').first()).toBeVisible();
   await expect(page.getByTestId('propose-fee')).toHaveCount(0);
   await expect(page.getByTestId('dropship-staff-sidebar').getByRole('link', { name: 'Shipping rates' })).toHaveCount(0);
   await page.goto('/office/dropship/compliance');
-  await expect(page.getByText('Read only')).toBeVisible();
+  // DS16 added the shipping-markup card, which also says "Read only" for Support: both cards are read-only
+  await expect(page.getByText('Read only').first()).toBeVisible();
   await expect(page.getByTestId('duty-new-version')).toHaveCount(0);
   await page.goto('/office/dropship/rates');
   await expect(page).toHaveURL(/\/forbidden/);

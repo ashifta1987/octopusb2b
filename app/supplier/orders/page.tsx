@@ -7,7 +7,7 @@ import { OrdersClient } from './orders-client';
 
 export const metadata = { title: 'Orders to ship · Supplier portal' };
 
-/** SupplierOrders.html: orders to ship with the buyer's address (never the merchant), carrier, tracking, Octopus packing slip, mark shipped. */
+/** SupplierOrders.html: orders to ship with the buyer's address (never the merchant), carrier, tracking, packing slip (the seller's brand only — DS16), mark shipped. */
 async function Guarded() {
   let data: SupOrders | null = null;
   let error: string | null = null;

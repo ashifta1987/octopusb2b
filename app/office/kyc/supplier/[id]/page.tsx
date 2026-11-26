@@ -28,6 +28,14 @@ export default async function SupplierApplicationPage({ params }: { params: Prom
   // Dropship Release 6: automatic checks beside the application (they never decide; staff do). Read through ds_supplier_application_checks.
   const checks = await getApplicationChecks(id).catch(() => []);
   const canApprove = can(s, 'suppliers', 'approve');
+  // DS16 (owner 26 Nov): a new supplier needs two different approvers — the database records the first and refuses the same person twice
+  const firstBy = (a.first_approved_by as string | null) ?? null;
+  const firstMine = !!firstBy && firstBy === s.userId;
+  let firstName: string | null = null;
+  if (firstBy) {
+    const { data: fp } = await sb.from('profiles').select('full_name, email').eq('id', firstBy).maybeSingle();
+    firstName = (fp?.full_name as string | null) || (fp?.email as string | null) || null;
+  }
   const closed = ['approved', 'rejected'].includes(a.status as string);
   const link = (u: string | null) => (u ? <a href={/^https?:/.test(u) ? u : `https://${u}`} target="_blank" rel="noopener noreferrer" className="text-coral-text break-all">{u}</a> : null);
 
@@ -69,16 +77,23 @@ export default async function SupplierApplicationPage({ params }: { params: Prom
         <Card title="Decision">
           <div className="px-6 pb-6 space-y-3">
             {a.review_note && <Notice tone="blue">Last note: {a.review_note as string}</Notice>}
+            {firstBy && !closed && (
+              <div data-testid="supplier-first-approval"><Notice tone="amber">
+                First approval by {firstMine ? 'you' : firstName ?? 'a colleague'}{a.first_approved_at ? ` on ${fmtDate(a.first_approved_at as string, true)}` : ''}. {firstMine ? 'A different colleague must give the second approval.' : 'Your approval is the second one.'}
+              </Notice></div>
+            )}
             {!canApprove ? <p className="text-sm text-muted">You can view this application but not approve it.</p>
               : closed ? <p className="text-sm text-muted">This application is {a.status as string}{a.reviewed_at ? ` (${fmtDate(a.reviewed_at as string, true)})` : ''}.</p>
                 : (
                   <div className="flex flex-wrap gap-2">
                     {a.status === 'submitted' && <RunButton action={reviewSupplierApplication.bind(null, id, 'in_review', '')}>Start review</RunButton>}
                     <ReasonButton action={reviewSupplierApplication.bind(null, id, 'rejected')} label="Reject" title="Reject application" placeholder="Reason (internal)" className="btn btn-ghost btn-sm text-bad" danger confirmLabel="Reject" />
-                    <ReasonButton action={reviewSupplierApplication.bind(null, id, 'approved')} label="Approve" title="Approve application" placeholder="Internal note (optional)" required={false} className="btn btn-sm bg-ok text-white" confirmLabel="Approve" />
+                    {firstMine
+                      ? <p className="text-sm text-muted m-0" data-testid="supplier-second-needed">Waiting for a second approver.</p>
+                      : <ReasonButton action={reviewSupplierApplication.bind(null, id, 'approved')} label={firstBy ? 'Give second approval' : 'Approve (first of two)'} title={firstBy ? 'Second approval' : 'First approval'} placeholder="Internal note (optional)" required={false} className="btn btn-sm bg-ok text-white" confirmLabel="Approve" />}
                   </div>
                 )}
-            <p className="text-xs text-muted">Approving does not create the supplier. Add it in <Link href="/admin/suppliers" className="text-coral-text">Admin → Suppliers</Link> after the factory audit. Every decision is written to the audit log.</p>
+            <p className="text-xs text-muted">Two different people approve a new supplier. Approving does not create the supplier. Add it in <Link href="/admin/suppliers" className="text-coral-text underline">Admin → Suppliers</Link> after the factory audit. Every decision is written to the audit log.</p>
           </div>
         </Card>
       </div>

@@ -41,11 +41,11 @@ export type BulkResult = {
 export type ApprovalRow = { id: string; kind: string; status: string; summary: string; row_count: number | null; supplier_code: string; supplier_name: string; created_at: string; updated_at: string };
 export type ApprovalsPage = {
   counts: { review: number; changes: number; approved: number; rejected: number };
-  rules: { price_auto_pct?: number; ship_within_days?: number };
+  rules: { price_auto_pct?: number; ship_within_days?: number; price_cum_30d_pct?: number };
   rows: ApprovalRow[];
 };
 export type ApprovalDetail = ApprovalRow & {
-  payload: Record<string, unknown> & ProductPayload & { products?: ProductPayload[]; price_id?: string; old_minor?: number; new_minor?: number; currency?: string; pct?: number; from_qty?: number; to_qty?: number };
+  payload: Record<string, unknown> & ProductPayload & { products?: ProductPayload[]; price_id?: string; old_minor?: number; new_minor?: number; currency?: string; pct?: number; from_qty?: number; to_qty?: number; direction?: string; cum_pct?: number };
   checks: Record<string, boolean>; review_note: string | null; product_ids: string[];
   auto: { ids_unique: boolean; hs_present: boolean; size_present: boolean; images_present: boolean };
 };

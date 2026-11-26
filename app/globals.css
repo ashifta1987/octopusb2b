@@ -48,6 +48,15 @@
   --pink-bg: #fce7f3;
   --cyan: #155e75;
   --cyan-bg: #cffafe;
+  /* design handoff 26 Nov 2026 (octopus-design-handoff §2): navy = --ink, blue = --coral, link = --coral-text */
+  --ink-card: #2e2b66;  /* navy-2: cards on navy sections */
+  --sand: #f3f0e1;      /* hover on nav items, board columns */
+  --divider: #eeeadb;   /* rows inside cards */
+  --disabled: #efede2;  /* disabled buttons (muted text) */
+  --ok-line: #86efac;   /* success border */
+  --ok-soft: #f0fdf4;   /* ticked checklist background */
+  --warn-line: #e3b261; /* warning border, needs-attention KPI */
+  --switch-off: #8793b5;
 }
 
 @theme inline {
@@ -85,6 +94,14 @@
   --color-needs-bg: var(--needs-bg);
   --color-bad-bg: var(--bad-bg);
   --color-new-bg: var(--new-bg);
+  --color-ink-card: var(--ink-card);
+  --color-sand: var(--sand);
+  --color-divider: var(--divider);
+  --color-disabled: var(--disabled);
+  --color-ok-line: var(--ok-line);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn-line: var(--warn-line);
+  --color-switch-off: var(--switch-off);
   /* Degular (text) / Degular Display (headings) / Futura (labels); Figtree / Jost until the licences arrive */
   --font-sans: var(--font-text), system-ui, sans-serif;
   --font-display: var(--font-text), sans-serif; /* Degular Display when licensed */

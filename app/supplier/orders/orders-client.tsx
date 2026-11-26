@@ -56,7 +56,7 @@ function Detail({ o, detail, onDone }: { o: SupOrder; detail: SupOrder; onDone: 
             <a className="ds-btn ds-btn-secondary min-h-[44px] inline-flex items-center gap-2" href={`/api/dropship-supplier/packing-slip/${o.id}`} target="_blank" rel="noopener noreferrer" >Download packing slip</a>
             <DsButton onClick={ship} loading={pending} icon="truck" testId="supplier-mark-shipped">Mark as shipped</DsButton>
           </div>
-          <DsNotice tone="info" title="Use the Octopus packing slip only">Do not add your own invoice, logo or contact details to the parcel. The slip must be printed before you mark the order shipped.</DsNotice>
+          <DsNotice tone="info" title="Use the packing slip printed here only">Do not add your own invoice, logo or contact details to the parcel. The slip must be printed before you mark the order shipped.</DsNotice>
           <details><summary className="min-h-[44px] flex items-center cursor-pointer text-[14px] font-semibold text-[#2A6FD1]">Report a problem</summary>
             <div className="flex flex-col gap-2 pt-2"><DsTextarea label="What is wrong?" value={note} onChange={(e) => setNote(e.target.value)} rows={2} />
               <div><DsButton variant="secondary" onClick={problem} loading={pending}>Tell staff</DsButton></div></div></details>
