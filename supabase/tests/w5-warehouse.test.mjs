@@ -18,6 +18,7 @@
 //  7. Support requests: type + own reference + attachments in the company folder; staff / client context; isolation; RLS.
 //  8. Ledger balanced for every test item; audit rows; staging demo wipe removes the demo client's W5 rows (cascade).
 // Run: node --env-file=.env.staging supabase/tests/w5-warehouse.test.mjs
+import { snapshotSequences, restoreSequences } from './lib-seq-guard.mjs';
 import { config } from 'dotenv';
 import pg from 'pg';
 import fs from 'node:fs';
@@ -32,6 +33,7 @@ if (process.env.APP_ENVIRONMENT !== 'staging' || !process.env.DATABASE_URL) {
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 await db.connect();
 await assertStagingDatabase(db);
+const __seqs = await snapshotSequences(db); // wipe_demo_data() resets sequences; a rollback doesn't undo that
 
 let failed = 0;
 const ok = (c, m) => { console.log(`${c ? '✔' : '✘'} ${m}`); if (!c) failed++; };
@@ -451,6 +453,7 @@ try {
   ok(false, 'unexpected: ' + e.message);
 } finally {
   await db.query('rollback').catch(() => {});
+  await restoreSequences(__seqs).catch((e) => console.log('sequence restore failed:', e.message));
   ok(!(await db.query(`select 1 from auth.users where email like 'w5-%@test.local'`)).rowCount, 'rolled back — nothing left');
   await db.end();
 }

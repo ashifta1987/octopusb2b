@@ -14,6 +14,7 @@ import { dsInter } from '@/components/dropship-ui/font';
  * W3b: Multi-parcel packing, Materials, Scale check and Exceptions are live.
  * W4: Dispatch and freight (labels, label check, hand-over with manifest, freight pallets, tracking) and Carriers and rules are live.
  * W5: Returns is live (not on the board-4 menu list; added next to Exceptions).
+ * W6: Reports is live; Client invoices (the monthly invoice run — warehouse admins preview, Finance issues) is added next to Rates.
  */
 type Item = { href: string; label: string; icon: DsIconName; ships?: string; adminOnly?: boolean };
 const ITEMS: Item[] = [
@@ -37,10 +38,12 @@ const ITEMS: Item[] = [
   { href: '/office/warehouse/carriers', label: 'Carriers and rules', icon: 'globe' },
   { href: '/office/warehouse/clients', label: 'Clients', icon: 'users' },
   { href: '/office/warehouse/rates', label: 'Rates', icon: 'percent' },
+  // W6: monthly client invoices (not on the board-4 menu list; next to Rates)
+  { href: '/office/warehouse/invoices', label: 'Client invoices', icon: 'dollar' },
   { href: '/office/warehouse/exceptions', label: 'Exceptions', icon: 'alert' },
   // W5: returns desk (register, photograph and grade; carry out the client's restock / discard / send-back decision)
   { href: '/office/warehouse/returns', label: 'Returns', icon: 'refresh' },
-  { href: '/office/warehouse/reports', label: 'Reports', icon: 'chart', ships: 'W6' },
+  { href: '/office/warehouse/reports', label: 'Reports', icon: 'chart' },
   { href: '/office/warehouse/users', label: 'Users and roles', icon: 'user' },
   { href: '/office/warehouse/locations', label: 'Locations', icon: 'store', adminOnly: true },
 ];

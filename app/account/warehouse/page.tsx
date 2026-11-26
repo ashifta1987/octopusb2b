@@ -10,7 +10,9 @@ import { signEvidence } from '@/lib/warehouse-evidence';
 import { signProductPhotos, signReturnPhotos } from '@/lib/warehouse-media';
 import type { PortalProof } from '@/lib/warehouse-orders';
 import type { Inventory, ReturnRow, SupportRow } from '@/lib/warehouse-w5';
+import type { IssuedInvoice } from '@/lib/warehouse-w6';
 import { IntegrationsTab } from './integrations-tab';
+import { InvoicesTab } from './invoices-tab';
 import { InventoryTab } from './inventory-tab';
 import { OrdersTab, type PortalOrder } from './orders-tab';
 import { ProofView } from './proof-view';
@@ -22,7 +24,8 @@ export const metadata = { title: '3PL warehouse' };
 
 /**
  * Warehouse OS client portal tabs (design §5). Overview and Send stock (W2a), Orders with packing proof (W3a) and tracking links
- * (W4), Inventory, Returns, Integrations and Support (W5) are live; Invoices says when it arrives (W6).
+ * (W4), Inventory, Returns, Integrations and Support (W5), Invoices — monthly statements with the orders and movements behind
+ * every line (W6, board 22) — are all live.
  */
 const TABS: { key: string; label: string; ships?: string }[] = [
   { key: 'overview', label: 'Overview' },
@@ -30,11 +33,11 @@ const TABS: { key: string; label: string; ships?: string }[] = [
   { key: 'orders', label: 'Orders' },
   { key: 'send', label: 'Send stock' },
   { key: 'returns', label: 'Returns' },
-  { key: 'invoices', label: 'Invoices', ships: 'with monthly invoicing' },
+  { key: 'invoices', label: 'Invoices' },
   { key: 'integrations', label: 'Integrations' },
   { key: 'support', label: 'Support' },
 ];
-const LIVE = new Set(['overview', 'inventory', 'orders', 'send', 'returns', 'integrations', 'support']);
+const LIVE = new Set(['overview', 'inventory', 'orders', 'send', 'returns', 'invoices', 'integrations', 'support']);
 const OPEN_ASN = ['submitted', 'booked', 'arrived', 'receiving'];
 const OPEN_ORDER = ['new', 'allocated', 'picking', 'picked', 'packing', 'exception'];
 
@@ -122,7 +125,7 @@ function LoadError({ what }: { what: string }) {
   return <p role="alert" className="card p-5 mt-5 mb-0 text-[14px]">{what} could not be loaded. Reload the page.</p>;
 }
 
-async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; order?: string; ref?: string }> }) {
+async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; order?: string; ref?: string; month?: string }> }) {
   const s = await requireCustomer('/account/warehouse');
   if (!s.org) return <ServiceStart service="warehouse" />;
   const sb = await createClient();
@@ -140,7 +143,7 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; 
   const weekStart = daysAgo(7);
   const needsInventory = Boolean(client) && (tab === 'overview' || tab === 'inventory');
   const needsReturns = Boolean(client) && (tab === 'returns' || tab === 'support');
-  const [orders, shippedRes, whRes, inbound, inventory, returns, supportRes] = await Promise.all([
+  const [orders, shippedRes, whRes, inbound, inventory, returns, supportRes, invoicesRes] = await Promise.all([
     loadOrders(sb, s.org.id),
     sb.from('shipments').select('id', { count: 'exact', head: true }).eq('org_id', s.org.id).in('status', ['in_transit', 'out_for_delivery', 'delivered']).gte('created_at', weekStart),
     sb.from('warehouses').select('code, name, city, is_default').eq('status', 'active').order('is_default', { ascending: false }).order('name'),
@@ -148,6 +151,8 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; 
     needsInventory ? loadInventory(sb, s.org.id) : Promise.resolve(null),
     needsReturns ? loadReturns(sb, s.org.id) : Promise.resolve(null),
     tab === 'support' ? sb.rpc('wh_portal_support', { p_org: s.org.id }) : Promise.resolve({ data: null, error: null }),
+    // W6: the company's monthly statements (board 22)
+    client && tab === 'invoices' ? sb.rpc('wh_portal_invoices', { p_org: s.org.id }) : Promise.resolve({ data: null, error: null }),
   ]);
   const warehouses = (whRes.data ?? []) as { code: string; name: string; city: string; is_default: boolean }[];
   const hasStock = Boolean(inventory && inventory.skus.length > 0);
@@ -212,6 +217,12 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; 
         client ? (inventory ? <InventoryTab inventory={inventory} orgId={s.org.id} /> : <LoadError what="Your stock" />) : <SetUp what="Inventory" />
       ) : tab === 'returns' ? (
         client ? (returns ? <ReturnsTab returns={returns} /> : <LoadError what="Your returns" />) : <SetUp what="Returns" />
+      ) : tab === 'invoices' ? (
+        client ? (
+          invoicesRes.error ? <LoadError what="Your statements" /> : (
+            <InvoicesTab invoices={(invoicesRes.data ?? []) as IssuedInvoice[]} open={/^\d{4}-\d{2}$/.test(sp.month ?? '') ? sp.month! : null} />
+          )
+        ) : <SetUp what="Monthly statements" />
       ) : tab === 'integrations' ? (
         <IntegrationsTab services={{ dropship: ctx.services.dropship.status, brand: ctx.services.brand.status, sourcing: ctx.services.sourcing.status }} />
       ) : tab === 'support' ? (
@@ -258,6 +269,6 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; 
   );
 }
 
-export default function Page(props: { searchParams: Promise<{ tab?: string; order?: string; ref?: string }> }) {
+export default function Page(props: { searchParams: Promise<{ tab?: string; order?: string; ref?: string; month?: string }> }) {
   return <Suspense fallback={<PageSkeleton cards={2} table={false} />}><Portal {...props} /></Suspense>;
 }
