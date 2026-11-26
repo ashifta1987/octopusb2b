@@ -43,7 +43,7 @@ async function Catalogue() {
             <h1 className="font-[family-name:var(--font-tk-outfit)] text-[34px] sm:text-[46px] font-bold leading-[1.08] m-0">Your complete business, set up from China.</h1>
             <p className="text-[17px] text-[#E8F0FD] max-w-[560px] m-0">Layout drawing, sourcing, quality control, factory inspection, shipping and handover. You deal only with us, and every service is paid before the work starts.</p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/contact?topic=turnkey-consultation" className="inline-flex items-center min-h-12 px-5 rounded-[10px] bg-[#2559B8] text-white font-semibold no-underline hover:bg-[#1F4C9E]" data-testid="tk-book-consultation">
+              <Link href="/account/turnkey/new" className="inline-flex items-center min-h-12 px-5 rounded-[10px] bg-[#2559B8] text-white font-semibold no-underline hover:bg-[#1F4C9E]" data-testid="tk-book-consultation">
                 Book a consultation{consult ? ` (${fromPrice(consult.from_cents, consult.approx).toLowerCase()})` : ''}
               </Link>
               <a href="#projects" className="inline-flex items-center min-h-12 px-5 rounded-[10px] border border-white/40 text-white font-semibold no-underline hover:bg-white/10">See {projects.length} projects</a>

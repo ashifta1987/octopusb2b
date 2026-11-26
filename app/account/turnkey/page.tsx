@@ -1,44 +1,57 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { requireCustomer } from '@/lib/auth';
-import { createAdminClient } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Card, Table, StatusBadge, EmptyState } from '@/components/ui';
+import { PageSkeleton } from '@/components/shell/skeletons';
 import { fmtDate } from '@/lib/format';
+import { phaseLabel, tkStatus } from '@/lib/turnkey/format';
 
 export const metadata = { title: 'My turnkey projects' };
 
-/** Customer portal → My turnkey projects (ADDON-31 §7): the user's quote and interest requests.
- *  Matches requests sent while signed in, and ones sent as a guest with the same (verified) account email. */
-export default async function MyTurnkeyPage() {
+type Row = { code: string; title: string; stage: string; status: string; created_at: string; stage_changed_at: string };
+
+/**
+ * Customer portal → My turnkey projects (Turnkey T2, design ClientPortal): the company's projects and their phase.
+ * Requests sent with the earlier Turnkey form were moved into projects at "Enquiry"; ones sent as a guest join the
+ * company here, matched by this account's verified email (tk_link_legacy_projects).
+ */
+export default function MyTurnkeyPage() {
+  return (
+    <Suspense fallback={<PageSkeleton cards={0} />}>
+      <MyTurnkeyProjects />
+    </Suspense>
+  );
+}
+
+async function MyTurnkeyProjects() {
   const s = await requireCustomer('/account/turnkey');
-  const email = (s.email ?? '').toLowerCase();
-  const filter = email && /^[^@\s,()]+@[^@\s,()]+$/.test(email) ? `buyer_user_id.eq.${s.userId},email.eq.${email}` : `buyer_user_id.eq.${s.userId}`;
-  const { data } = await createAdminClient().from('turnkey_leads')
-    .select('lead_id, reference, kind, status, created_at, target_open_date, project_id, turnkey_projects(title), turnkey_packages(tier_name)')
-    .or(filter).order('created_at', { ascending: false }).limit(100);
+  const sb = await createClient();
+  if (s.org) await sb.rpc('tk_link_legacy_projects', { p_org: s.org.id });
+  const { data } = await sb.from('tk_client_projects').select('code, title, stage, status, created_at, stage_changed_at').order('created_at', { ascending: false }).limit(200);
+  const rows = (data ?? []) as Row[];
   return (
     <>
-      <PageHeader title="My turnkey projects" subtitle="Requests you sent with the earlier Turnkey form. New projects start with a consultation."
-        actions={<Link href="/turnkey" className="btn btn-primary">Browse Turnkey Projects</Link>} />
+      <PageHeader title="My turnkey projects" subtitle="Every project moves through 8 phases. The enquiry is free; each paid phase starts after your payment is confirmed."
+        actions={<Link href="/account/turnkey/new" className="btn btn-primary" data-testid="tk-new-project">Start a new project</Link>} />
       <Card>
-        <Table head={['Reference', 'Project', 'Type', 'Status', 'Target opening', 'Sent']}
-          empty={<EmptyState title="No turnkey requests yet" body="Pick a project and book a consultation. Every service is paid before the work starts." action={<Link href="/turnkey" className="btn btn-primary btn-sm">Browse Turnkey Projects</Link>} />}>
-          {(data ?? []).map((l) => {
-            const proj = (Array.isArray(l.turnkey_projects) ? l.turnkey_projects[0] : l.turnkey_projects) as { title: string } | null;
-            const pkg = (Array.isArray(l.turnkey_packages) ? l.turnkey_packages[0] : l.turnkey_packages) as { tier_name: string } | null;
-            return (
-              <tr key={l.lead_id as string}>
-                <td className="td mono text-sm">{l.reference as string}</td>
-                <td className="td font-semibold"><Link href={`/turnkey/${l.project_id}`} className="hover:text-coral-text">{proj?.title}</Link>{pkg && <div className="text-xs text-muted">{pkg.tier_name} package</div>}</td>
-                <td className="td text-sm">{l.kind === 'quote' ? 'Quote request' : 'Interest'}</td>
-                <td className="td"><StatusBadge status={l.status as string} /></td>
-                <td className="td text-sm">{l.target_open_date ? fmtDate(l.target_open_date as string) : '—'}</td>
-                <td className="td text-sm text-muted">{fmtDate(l.created_at as string)}</td>
-              </tr>
-            );
-          })}
+        <Table head={['Project', 'Phase', 'Status', 'Since', 'Started']}
+          empty={<EmptyState title="No turnkey projects yet" body="Pick a project from the catalogue or tell us what you want to open. The enquiry is free."
+            action={<Link href="/turnkey" className="btn btn-primary btn-sm">Browse Turnkey Projects</Link>} />}>
+          {rows.map((r) => (
+            <tr key={r.code} data-testid={`tk-row-${r.code}`}>
+              <td className="td">
+                <Link href={`/account/turnkey/${r.code}`} className="font-semibold hover:text-coral-text">{r.title}</Link>
+                <div className="mono text-xs text-muted">{r.code}</div>
+              </td>
+              <td className="td text-sm">{phaseLabel(r.stage)}</td>
+              <td className="td"><StatusBadge status={r.status} label={tkStatus(r.status).label} tone={tkStatus(r.status).tone} /></td>
+              <td className="td text-sm">{fmtDate(r.stage_changed_at)}</td>
+              <td className="td text-sm text-muted">{fmtDate(r.created_at)}</td>
+            </tr>
+          ))}
         </Table>
       </Card>
     </>
   );
 }
-

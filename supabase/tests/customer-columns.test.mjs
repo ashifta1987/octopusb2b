@@ -63,7 +63,8 @@ const NO_CUSTOMER_ROWS = ['suppliers', 'supplier_contacts', 'supplier_name_varia
   'status_mappings', 'dropship_handoffs', 'domain_events', 'domain_event_consumptions', 'internal_charge_rules',
   'dropship_price_tiers', 'dropship_import_jobs', 'dropship_product_requests', 'dropship_access_requests',
   'payment_webhook_events', 'payment_settlements', 'payment_reconciliation_alerts', 'escrow_hold_approvals',
-  'wh_applications']; // W1: 3PL applications are staff-only (policy needs is_staff())
+  'wh_applications', // W1: 3PL applications are staff-only (policy needs is_staff())
+  'tk_client_project_staff', 'wh_dock_slots', 'wh_counts', 'wh_serials']; // W2a: dock slots, count passes and serials are staff-only. T2: Turnkey T2: account manager / creator / old lead per client project — staff-only (is_staff() + can('turnkey','view'))
 
 try {
   await db.query('begin');

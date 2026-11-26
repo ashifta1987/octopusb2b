@@ -65,7 +65,7 @@ export async function usedServices(orgId: string): Promise<string[]> {
   const [{ data: svc }, { count: pools }, { count: tk }] = await Promise.all([
     sb.from('service_requests').select('service_code').eq('org_id', orgId).limit(200),
     sb.from('pool_pledges').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
-    sb.from('turnkey_leads').select('id', { count: 'exact', head: true }).eq('org_id', orgId),
+    sb.from('tk_client_projects').select('id', { count: 'exact', head: true }).eq('org_id', orgId), // Turnkey T2 (old leads were moved in)
   ]);
   const used = new Set((svc ?? []).map((s) => serviceType(s.service_code as string) as string));
   if (pools) used.add('pools');

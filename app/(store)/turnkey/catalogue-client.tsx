@@ -61,7 +61,7 @@ export function CatalogueClient({ projects }: { projects: Card[] }) {
         <div className="rounded-[14px] border border-dashed border-[#D3DAEC] bg-white p-8 text-center" data-testid="tk-empty">
           <p className="m-0 font-semibold text-[#1A174A]">No project matches.</p>
           <p className="mt-1 mb-3 text-[14px] text-[#5A6080]">Tell us what you want to open and we’ll plan it with you.</p>
-          <Link href="/contact?topic=turnkey" className="inline-flex min-h-11 items-center px-4 rounded-[10px] bg-[#2559B8] text-white font-semibold no-underline">Ask for a new project</Link>
+          <Link href="/account/turnkey/new" className="inline-flex min-h-11 items-center px-4 rounded-[10px] bg-[#2559B8] text-white font-semibold no-underline">Ask for a new project</Link>
         </div>
       ) : (
         <ul className="list-none m-0 p-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" data-testid="tk-cards">
@@ -111,9 +111,9 @@ export function CatalogueClient({ projects }: { projects: Card[] }) {
                 {projectFrom(open) && <><dt className="text-[#5A6080]">Starting budget</dt><dd className="m-0">{projectFrom(open)}</dd></>}
                 {open.floor_area_m2 != null && <><dt className="text-[#5A6080]">Space</dt><dd className="m-0">About {open.floor_area_m2} m²</dd></>}
               </dl>
-              <p className="m-0 text-[13.5px] text-[#5A6080]">The first step is a paid consultation. We set the exact fee with you before any work starts.</p>
+              <p className="m-0 text-[13.5px] text-[#5A6080]">The enquiry is free. The first paid step is a consultation, and we set the exact fee with you before any work starts.</p>
               <div className="flex flex-wrap gap-3 pt-1">
-                <Link href={`/contact?topic=turnkey-consultation&project=${encodeURIComponent(open.project_id)}`} className="inline-flex min-h-11 items-center px-5 rounded-[10px] bg-[#2559B8] text-white font-semibold no-underline">Book a consultation</Link>
+                <Link href={`/account/turnkey/new?project=${encodeURIComponent(open.project_id)}`} data-testid="tk-dialog-start" className="inline-flex min-h-11 items-center px-5 rounded-[10px] bg-[#2559B8] text-white font-semibold no-underline">Book a consultation</Link>
                 <button type="button" onClick={() => dlg.current?.close()} className="min-h-11 px-5 rounded-[10px] border border-[#D3DAEC] text-[#1A174A] font-semibold">Close</button>
               </div>
             </div>

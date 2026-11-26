@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { requireStaff, can } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { Card, PageHeader, Table, StatusBadge } from '@/components/ui';
@@ -12,8 +13,9 @@ type Project = { project_id: string; title: string; category: string; status: st
 type Lead = { lead_id: string; reference: string; kind: string; status: string; company_name: string; country: string; created_at: string; turnkey_projects: { title: string } | null };
 
 /**
- * Admin › Turnkey (T0 + T1, design docs/design/turnkey-v2): catalogue + CSV import of the project sheet, the services
- * price list, and the old leads (read-only; T2 moves each one into a new project). The ADDON-31 editors are retired.
+ * Admin › Turnkey (T0–T2, design docs/design/turnkey-v2): catalogue + CSV import of the project sheet, the services
+ * price list, the old leads (read-only; T2 moved each one into a client project at "Enquiry") and a link to the client
+ * projects (/admin/turnkey/projects). The ADDON-31 editors are retired.
  */
 export default async function TurnkeyAdminPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const s = await requireStaff('turnkey', 'view', '/admin/turnkey');
@@ -24,11 +26,13 @@ export default async function TurnkeyAdminPage({ searchParams }: { searchParams:
   const sb = await createClient();
   const PROJECT_COLS = 'project_id, title, category, status, starting_budget_usd, hero_image_path, floor_area_m2, sort_rank';
   const LEAD_COLS = 'lead_id, reference, kind, status, company_name, country, created_at, turnkey_projects(title)';
-  const [{ data: projects }, { data: services }, { data: leads }] = await Promise.all([
+  const [{ data: projects }, { data: services }, { data: leads }, { data: moved }] = await Promise.all([
     (scope.all ? sb.from('turnkey_projects').select(PROJECT_COLS) : sb.from('turnkey_projects').select(PROJECT_COLS).eq('division_id', scope.division.id)).order('sort_rank').order('title'),
     sb.from('tk_services').select('code, name, from_cents, unit, approx, rule_text, group_code, photo_path, sort').order('sort'),
     (scope.all ? sb.from('turnkey_leads').select(LEAD_COLS) : sb.from('turnkey_leads').select(LEAD_COLS).eq('division_id', scope.division.id)).order('created_at', { ascending: false }).limit(300),
+    tab === 'leads' ? sb.from('tk_client_project_staff').select('legacy_lead_id, tk_client_projects(code)').not('legacy_lead_id', 'is', null).limit(1000) : Promise.resolve({ data: [] }),
   ]);
+  const movedTo = new Map(((moved ?? []) as unknown as { legacy_lead_id: string; tk_client_projects: { code: string } | null }[]).map((m) => [m.legacy_lead_id, m.tk_client_projects?.code ?? null]));
   const P = (projects ?? []) as Project[];
   const L = (leads ?? []) as unknown as Lead[];
   const tabs: [string, string][] = [['catalogue', `Catalogue (${P.length})`], ['services', 'Services and fees'], ['leads', `Old leads (${L.length})`]];
@@ -40,6 +44,7 @@ export default async function TurnkeyAdminPage({ searchParams }: { searchParams:
           <a key={k} href={`/admin/turnkey?tab=${k}`} aria-current={tab === k ? 'page' : undefined}
             className={`min-h-11 px-4 inline-flex items-center rounded-[10px] border ${tab === k ? 'bg-ink text-white border-ink' : 'bg-white border-line text-ink hover:border-ink'}`}>{label}</a>
         ))}
+        <Link href="/admin/turnkey/projects" className="min-h-11 px-4 inline-flex items-center rounded-[10px] border bg-white border-line text-ink hover:border-ink font-semibold" data-testid="tk-admin-client-projects">Client projects →</Link>
       </nav>
 
       {tab === 'catalogue' && (
@@ -76,8 +81,8 @@ export default async function TurnkeyAdminPage({ searchParams }: { searchParams:
 
       {tab === 'leads' && (
         <Card title="Old leads (read-only)">
-            <p className="text-[13.5px] text-muted -mt-1 mb-3">From the retired lead form. Nothing is deleted; each lead moves into a new project at “Enquiry” with the next step.</p>
-          <Table head={['Reference', 'Company', 'Project', 'Type', 'Status', 'Sent']}>
+            <p className="text-[13.5px] text-muted -mt-1 mb-3">From the retired lead form. Nothing is deleted; each lead was moved into a client project at “Enquiry”.</p>
+          <Table head={['Reference', 'Company', 'Project', 'Type', 'Status', 'Sent', 'Client project']}>
             {L.map((l) => (
               <tr key={l.lead_id}>
                 <td className="td mono text-sm">{l.reference}</td>
@@ -86,6 +91,7 @@ export default async function TurnkeyAdminPage({ searchParams }: { searchParams:
                 <td className="td">{l.kind === 'interest' ? 'Interest' : 'Quote request'}</td>
                 <td className="td"><StatusBadge status={l.status} /></td>
                 <td className="td">{fmtDate(l.created_at)}</td>
+                <td className="td mono text-sm">{movedTo.get(l.lead_id) ? <Link href={`/admin/turnkey/projects/${movedTo.get(l.lead_id)}`} className="hover:text-coral-text">{movedTo.get(l.lead_id)}</Link> : '—'}</td>
               </tr>
             ))}
           </Table>

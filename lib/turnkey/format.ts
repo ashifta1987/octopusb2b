@@ -33,17 +33,57 @@ export const servicePrice = (s: Pick<TkService, 'from_cents' | 'approx' | 'unit'
 export const projectFrom = (p: Pick<TkProject, 'starting_budget_usd' | 'budget_unit'>) =>
   p.starting_budget_usd == null ? null : `From $${nf.format(p.starting_budget_usd)}${p.budget_unit ? ` ${p.budget_unit}` : ''}`;
 
-/** 8 phases, 7 payment gates (only the enquiry is free). */
-export const TK_PHASES: { n: number; name: string; what: string; paid: boolean }[] = [
-  { n: 1, name: 'Enquiry', what: 'Pick a project or ask for a new one and tell us your plan.', paid: false },
-  { n: 2, name: 'Consultation', what: 'Paid first. We set the exact fee with you.', paid: true },
-  { n: 3, name: 'Design', what: 'Layout drawing: 3 versions free, then 50% of the drawing fee per extra version.', paid: true },
-  { n: 4, name: 'Sourcing', what: 'We collect quotes from factories. You deal only with us.', paid: true },
-  { n: 5, name: 'Quote and deposit', what: 'Approve the quote and pay the deposit.', paid: true },
-  { n: 6, name: 'Production and QC', what: 'Factory audit and inspections, each paid before it starts.', paid: true },
-  { n: 7, name: 'Shipment', what: 'Booking, tracking and shipping documents.', paid: true },
-  { n: 8, name: 'Handover', what: 'Final documents, sign-off and an optional China visit.', paid: true },
+/** 8 phases, 7 payment gates (only the enquiry is free). Codes match tk_stages (migration T2). */
+export type TkStageCode = 'enquiry' | 'consultation' | 'design' | 'sourcing' | 'quote_deposit' | 'production_qc' | 'shipment' | 'handover';
+export const TK_PHASES: { n: number; code: TkStageCode; name: string; what: string; paid: boolean }[] = [
+  { n: 1, code: 'enquiry', name: 'Enquiry', what: 'Pick a project or ask for a new one and tell us your plan.', paid: false },
+  { n: 2, code: 'consultation', name: 'Consultation', what: 'Paid first. We set the exact fee with you.', paid: true },
+  { n: 3, code: 'design', name: 'Design', what: 'Layout drawing: 3 versions free, then 50% of the drawing fee per extra version.', paid: true },
+  { n: 4, code: 'sourcing', name: 'Sourcing', what: 'We collect quotes from factories. You deal only with us.', paid: true },
+  { n: 5, code: 'quote_deposit', name: 'Quote and deposit', what: 'Approve the quote and pay the deposit.', paid: true },
+  { n: 6, code: 'production_qc', name: 'Production and QC', what: 'Factory audit and inspections, each paid before it starts.', paid: true },
+  { n: 7, code: 'shipment', name: 'Shipment', what: 'Booking, tracking and shipping documents.', paid: true },
+  { n: 8, code: 'handover', name: 'Handover', what: 'Final documents, sign-off and an optional China visit.', paid: true },
 ];
+
+/* ───────── Client projects (T2) ───────── */
+export type TkProjectStatus = 'open' | 'on_hold' | 'completed' | 'cancelled';
+export const TK_STATUS: Record<TkProjectStatus, { label: string; tone: 'blue' | 'amber' | 'green' | 'red' }> = {
+  open: { label: 'In progress', tone: 'blue' },
+  on_hold: { label: 'On hold', tone: 'amber' },
+  completed: { label: 'Completed', tone: 'green' },
+  cancelled: { label: 'Cancelled', tone: 'red' },
+};
+export const tkStatus = (s: string) => TK_STATUS[s as TkProjectStatus] ?? { label: s, tone: 'blue' as const };
+
+export const tkPhase = (code: string) => TK_PHASES.find((p) => p.code === code) ?? null;
+/** "Phase 2 of 8 · Consultation" (unknown codes are shown as they are). */
+export const phaseLabel = (code: string) => { const p = tkPhase(code); return p ? `Phase ${p.n} of 8 · ${p.name}` : code; };
+export const nextPhase = (code: string) => { const p = tkPhase(code); return p && p.n < 8 ? TK_PHASES[p.n] : null; };
+export const earlierPhases = (code: string) => { const p = tkPhase(code); return p ? TK_PHASES.slice(0, p.n - 1) : []; };
+
+export type TkStageRow = { stage: string; started_at: string | null; completed_at: string | null; due_on: string | null };
+export type TkPhaseState = (typeof TK_PHASES)[number] & { state: 'done' | 'current' | 'todo'; row: TkStageRow | null };
+/** The 8 phases with their state for a project in `current` (done before it, current, to do after it). */
+export function phaseStates(current: string, rows: TkStageRow[]): TkPhaseState[] {
+  const at = tkPhase(current)?.n ?? 1;
+  return TK_PHASES.map((p) => ({ ...p, state: p.n < at ? 'done' : p.n === at ? 'current' : 'todo', row: rows.find((r) => r.stage === p.code) ?? null }));
+}
+
+/** Client's budget in integer cents → "$35,000"; unknown stays "Not given" (never $0 unless they typed 0). */
+export function budgetLabel(cents: number | null | undefined): string {
+  if (cents == null) return 'Not given';
+  const usd = cents / 100;
+  return `$${Number.isInteger(usd) ? nf.format(usd) : usd.toFixed(2)}`;
+}
+export const areaLabel = (m2: number | null | undefined) => (m2 == null ? 'Not given' : `About ${Number(m2)} m²`);
+/** Whole US dollars typed in a form → integer cents; '' → null; anything else invalid → NaN. */
+export function usdToCents(v: string): number | null {
+  const t = v.replace(/[\s,$]/g, '');
+  if (!t) return null;
+  if (!/^\d+(\.\d{1,2})?$/.test(t)) return Number.NaN;
+  return Math.round(Number(t) * 100);
+}
 
 /** Public storage URL for a project photo path (https links pass through). */
 export function tkImageUrl(path: string | null, supabaseUrl: string | undefined): string | null {

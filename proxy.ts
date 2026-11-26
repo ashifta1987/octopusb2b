@@ -205,7 +205,8 @@ async function route(request: NextRequest) {
   }
 
   if (PORTALS.some((p) => under(path, p)) && !user) {
-    return redirectTo('/login', { next: path });
+    // keep the query (e.g. /account/turnkey/new?project=gym) so the visitor comes back to the same choice, like staff areas
+    return redirectTo('/login', { next: path + request.nextUrl.search });
   }
   return response;
 }
