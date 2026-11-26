@@ -164,7 +164,7 @@ export function EditorClient({ st, crumb, marketName }: { st: ListingState; crum
                 hint='Plain text. Start a line with "- " for a bullet list; leave an empty line between paragraphs.'
                 error={badFields.includes('description') ? 'Remove the supplier or factory name, model number or the word Octopus.' : undefined} />
               <p className="m-0 text-[13px]" data-testid="text-check" aria-live="polite">
-                {checking ? <span className="text-[#5B6478]">Checking…</span>
+                {checking ? <span className="text-muted">Checking…</span>
                   : textOk ? <DsBadge tone="ok">Checked No supplier or factory names found.</DsBadge>
                     : <DsBadge tone="warn">{`Check: ${[...new Set(badFields.map(fieldLabel))].join(', ')}`}</DsBadge>}
               </p>
@@ -172,13 +172,13 @@ export function EditorClient({ st, crumb, marketName }: { st: ListingState; crum
           </DsCard>
 
           <DsCard title="Images" icon="image" testId="editor-images" subtitle="Choose which images to push and their order. The first one is the main image.">
-            {f.images.length === 0 && <p className="mt-0 text-[13px] text-[#B42318]">{st.octopus_images.length > 0 ? 'Choose at least one image.' : 'This product has no images yet.'}</p>}
+            {f.images.length === 0 && <p className="mt-0 text-[13px] text-bad">{st.octopus_images.length > 0 ? 'Choose at least one image.' : 'This product has no images yet.'}</p>}
             <ol className="list-none m-0 p-0 grid gap-3 grid-cols-2 sm:grid-cols-3">
               {f.images.map((u, i) => (
-                <li key={u} className="border border-[#E3E7EF] rounded-[12px] p-2 flex flex-col gap-2" data-testid={`image-${i}`}>
+                <li key={u} className="border border-line rounded-[12px] p-2 flex flex-col gap-2" data-testid={`image-${i}`}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={u} alt={`${f.title} – image ${i + 1}`} className="w-full aspect-square object-cover rounded-[8px] bg-[#F7F9FC]" />
-                  <span className="text-[12px] text-[#5B6478]">{i === 0 ? 'Main' : `Image ${i + 1}`}</span>
+                  <img src={u} alt={`${f.title} – image ${i + 1}`} className="w-full aspect-square object-cover rounded-[8px] bg-pearl" />
+                  <span className="text-[12px] text-muted">{i === 0 ? 'Main' : `Image ${i + 1}`}</span>
                   <div className="flex gap-1 flex-wrap">
                     <button type="button" className="ds-btn ds-btn-secondary !px-2" aria-label={`Move image ${i + 1} earlier`} disabled={i === 0} onClick={() => moveImage(i, -1)}><DsIcon name="arrow" size={14} className="rotate-180" /></button>
                     <button type="button" className="ds-btn ds-btn-secondary !px-2" aria-label={`Move image ${i + 1} later`} disabled={i === f.images.length - 1} onClick={() => moveImage(i, 1)}><DsIcon name="arrow" size={14} /></button>
@@ -189,7 +189,7 @@ export function EditorClient({ st, crumb, marketName }: { st: ListingState; crum
             </ol>
             {unchosen.length > 0 && (
               <div className="mt-3">
-                <p className="m-0 mb-2 text-[13px] text-[#5B6478]">Not pushed:</p>
+                <p className="m-0 mb-2 text-[13px] text-muted">Not pushed:</p>
                 <div className="flex gap-2 flex-wrap">
                   {unchosen.map((u, i) => (
                     <button key={u} type="button" className="ds-btn ds-btn-secondary" onClick={() => toggleImage(u)} aria-label={`Add image ${i + 1} back`}>
@@ -200,7 +200,7 @@ export function EditorClient({ st, crumb, marketName }: { st: ListingState; crum
                 </div>
               </div>
             )}
-            <p className="mt-3 mb-0 text-[12px] text-[#5B6478]">Alt text is written from the title. Images have no supplier logos or watermarks (checked by Octopus staff) and are sent under new file names.</p>
+            <p className="mt-3 mb-0 text-[12px] text-muted">Alt text is written from the title. Images have no supplier logos or watermarks (checked by Octopus staff) and are sent under new file names.</p>
           </DsCard>
 
           <DsTableCard title="Variants" icon="layers" testId="editor-variants" minWidth={900}
@@ -211,14 +211,14 @@ export function EditorClient({ st, crumb, marketName }: { st: ListingState; crum
               const name = optionText(r.v.options);
               return (
                 <tr key={r.v.variant_id} data-testid={`variant-${r.v.model_no}`}>
-                  <td><input type="checkbox" className="w-4 h-4 accent-[#2A6FD1]" aria-label={`Push ${name}`} disabled={out} checked={r.vs.include && !out}
+                  <td><input type="checkbox" className="w-4 h-4 accent-coral" aria-label={`Push ${name}`} disabled={out} checked={r.vs.include && !out}
                     onChange={() => setF((s) => ({ ...s, vars: s.vars.map((x, j) => (j === i ? { ...x, include: !x.include } : x)) }))} /></td>
                   <td>{name}</td>
                   <td>{r.v.model_no}</td>
                   <td>{out ? '—' : <input className="ds-input w-[150px]" aria-label={`SKU ${name}`} value={r.vs.store_sku} maxLength={64}
                     aria-invalid={badFields.includes(`sku:${r.v.variant_id}`) || undefined}
                     onChange={(e) => setF((s) => ({ ...s, vars: s.vars.map((x, j) => (j === i ? { ...x, store_sku: e.target.value } : x)) }))} />}</td>
-                  <td>{r.v.landed_usd_cents != null ? money(r.v.landed_usd_cents, 'USD') : <span className="text-[12px] text-[#5B6478]">{r.v.landed && !r.v.landed.ok ? r.v.landed.message : 'Not known yet'}</span>}</td>
+                  <td>{r.v.landed_usd_cents != null ? money(r.v.landed_usd_cents, 'USD') : <span className="text-[12px] text-muted">{r.v.landed && !r.v.landed.ok ? r.v.landed.message : 'Not known yet'}</span>}</td>
                   <td>{out ? '—' : f.manual
                     ? <input className="ds-input w-[110px]" aria-label={`Price ${name}`} inputMode="decimal" value={r.vs.price}
                       onChange={(e) => setF((s) => ({ ...s, vars: s.vars.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)) }))} />
@@ -261,14 +261,14 @@ export function EditorClient({ st, crumb, marketName }: { st: ListingState; crum
           <DsCard title="Preview" icon="eye" testId="editor-preview">
             {f.images[0] ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={f.images[0]} alt="Main image" className="w-full aspect-square object-cover rounded-[8px] bg-[#F7F9FC]" />
-            ) : <div className="w-full aspect-square rounded-[8px] bg-[#F7F9FC] flex items-center justify-center text-[13px] text-[#5B6478]">No image chosen</div>}
-            <h3 className="mt-3 mb-1 text-[16px] font-bold text-[#1A174A]">{f.title || 'Untitled'}</h3>
-            <p className="m-0 text-[15px] text-[#1A174A]">
+              <img src={f.images[0]} alt="Main image" className="w-full aspect-square object-cover rounded-[8px] bg-pearl" />
+            ) : <div className="w-full aspect-square rounded-[8px] bg-pearl flex items-center justify-center text-[13px] text-muted">No image chosen</div>}
+            <h3 className="mt-3 mb-1 text-[16px] font-bold text-ink">{f.title || 'Untitled'}</h3>
+            <p className="m-0 text-[15px] text-ink">
               {storeMoney(priced[0]?.price ?? null, cur)}{' '}
-              {priced[0]?.compare != null && <span className="text-[#5B6478] line-through">{storeMoney(priced[0].compare, cur)}</span>}
+              {priced[0]?.compare != null && <span className="text-muted line-through">{storeMoney(priced[0].compare, cur)}</span>}
             </p>
-            <p className="mt-1 mb-0 text-[13px] text-[#5B6478]">{[f.vendor, included.map((r) => optionText(r.v.options)).join(', ')].filter(Boolean).join(' · ')}</p>
+            <p className="mt-1 mb-0 text-[13px] text-muted">{[f.vendor, included.map((r) => optionText(r.v.options)).join(', ')].filter(Boolean).join(' · ')}</p>
           </DsCard>
 
           <DsCard title="Pricing" icon="tag" testId="editor-pricing">
@@ -277,7 +277,7 @@ export function EditorClient({ st, crumb, marketName }: { st: ListingState; crum
               hint={f.manual ? 'You enter the price per variant.' : 'Prices follow your rule.'} />
             <div className="ds-row"><span className="ds-mut">Compare-at uplift</span><span>{st.rules.compare_at_bp ? `+${st.rules.compare_at_bp / 100}%` : 'Not set'}</span></div>
             <div className="ds-row"><span className="ds-mut">Minimum margin</span><span>{pct(st.min_profit_bp)}</span></div>
-            {cur !== 'USD' && <p className="mt-2 mb-0 text-[12px] text-[#5B6478]">{st.fx?.source_name ? `1 USD = ${st.fx.rate} ${cur} · ${st.fx.source_name}` : `No exchange rate for ${cur} yet.`}</p>}
+            {cur !== 'USD' && <p className="mt-2 mb-0 text-[12px] text-muted">{st.fx?.source_name ? `1 USD = ${st.fx.rate} ${cur} · ${st.fx.source_name}` : `No exchange rate for ${cur} yet.`}</p>}
           </DsCard>
 
           <DsCard title="After pushing" icon="upload" testId="editor-after">

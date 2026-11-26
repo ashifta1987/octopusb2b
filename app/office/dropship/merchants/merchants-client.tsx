@@ -169,7 +169,7 @@ export function StaffMerchantsClient({
                   return (
                     <tr key={req.id} data-testid={`access-request-row-${req.org_id}`}>
                       <td>
-                        <strong className="font-semibold text-[#1A174A]">
+                        <strong className="font-semibold text-ink">
                           {req.org_name}
                         </strong>
                         <div className="ds-mut text-[12px]">
@@ -268,11 +268,11 @@ export function StaffMerchantsClient({
           </div>
         ) : (
           <div className="ds-scroll" data-testid="staff-merchants-table">
-            <table className="ds-tbl min-w-[840px]">
+            <table className="ds-tbl min-w-[1040px]">
               <thead>
                 <tr>
-                  <th scope="col">Merchant</th>
-                  <th scope="col">Plan</th>
+                  <th scope="col" className="min-w-[200px]">Merchant</th>
+                  <th scope="col" className="min-w-[170px]">Plan</th>
                   <th scope="col">Stores</th>
                   <th scope="col">Wallet</th>
                   <th scope="col">Held</th>
@@ -291,10 +291,10 @@ export function StaffMerchantsClient({
                     <tr
                       key={m.org_id}
                       data-testid={`merchant-row-${m.org_id}`}
-                      className={selected ? 'bg-[#F2F7FE]' : undefined}
+                      className={selected ? 'bg-tint-2' : undefined}
                     >
                       <td>
-                        <strong className="font-semibold text-[#1A174A]">
+                        <strong className="font-semibold text-ink">
                           {m.org_name}
                         </strong>
                         <div className="ds-mut text-[12px]">
@@ -447,7 +447,7 @@ export function StaffMerchantsClient({
               </p>
 
               {canEdit && (
-                <div className="mt-4 pt-4 border-t border-[#E3E7EF] flex flex-col gap-4">
+                <div className="mt-4 pt-4 border-t border-line flex flex-col gap-4">
                   {/* Selling countries + lock */}
                   <form
                     key={`markets-${selectedMerchant.org_id}-${selectedMerchant.markets.join(',')}-${selectedMerchant.markets_locked}`}
@@ -483,7 +483,7 @@ export function StaffMerchantsClient({
                         name="locked_by_staff"
                         defaultChecked={selectedMerchant.markets_locked}
                         disabled={pending}
-                        className="w-4 h-4 accent-[#1A174A]"
+                        className="w-4 h-4 accent-ink"
                       />
                       <span>Lock by account manager</span>
                     </label>
@@ -586,7 +586,7 @@ export function StaffMerchantsClient({
               ) : (
                 <div className="flex flex-col gap-3" data-testid="staff-seller-profile-card">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <strong className="text-[15px] text-[#1A174A]">
+                    <strong className="text-[15px] text-ink">
                       {selectedMerchant.seller_profile.brand_name}
                     </strong>
                     <DsBadge
@@ -601,7 +601,7 @@ export function StaffMerchantsClient({
                       {selectedMerchant.seller_profile.status}
                     </DsBadge>
                   </div>
-                  <div className="rounded-[10px] border border-[#E3E7EF] bg-[#F8FAFC] p-3 text-[13px] leading-[1.55]">
+                  <div className="rounded-[10px] border border-line bg-pearl p-3 text-[13px] leading-[1.55]">
                     <div>
                       <strong>{selectedMerchant.seller_profile.return_name}</strong>
                     </div>

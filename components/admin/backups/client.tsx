@@ -125,7 +125,7 @@ export function BackupProgress({ initial, githubConfigured }: { initial: Live | 
       </div>
       {failed && row.error && <p className="text-sm text-bad mt-2">{row.error}</p>}
       {(notConfigured || (row.status === 'queued' && githubConfigured === false)) && (
-        <div role="status" className="mt-4 rounded-[10px] border border-warn/40 bg-warn-bg px-4 py-3 text-sm text-warn">
+        <div role="status" className="mt-4 rounded-[10px] border border-warn-line bg-warn-bg px-4 py-3 text-sm text-warn">
           <b>Backup workflow not connected yet.</b> The backup was saved as <i>queued</i>, but GitHub Actions could not be started.
           To finish setup (see <span className="mono">docs/BACKUP-SETUP.md</span>): add the <span className="mono">backup.yml</span> workflow to the repository,
           set <span className="mono">GITHUB_REPO</span> and <span className="mono">GITHUB_ACTIONS_TOKEN</span> (workflow scope) in the Vercel environment, add the off-site
@@ -204,7 +204,7 @@ const TYPES: { value: string; title: string; body: string }[] = [
 
 export function TypeOption({ value, title, body, checked, disabled, onChange, name = 'restore_type' }: { value: string; title: string; body: string; checked: boolean; disabled?: boolean; onChange?: () => void; name?: string }) {
   return (
-    <label className={cn('flex gap-3 rounded-xl border p-4 cursor-pointer', checked ? 'border-coral-text border-2 bg-tint/40' : 'border-line', disabled && 'cursor-default')}>
+    <label className={cn('flex gap-3 rounded-[12px] border-2 p-4 cursor-pointer', checked ? 'border-coral bg-tint' : 'border-line', disabled && 'cursor-default')}>
       <input type="radio" name={name} value={value} checked={checked} disabled={disabled} onChange={onChange} className="mt-1 w-[18px] h-[18px] accent-coral flex-none" />
       <span>
         <span className="block font-semibold text-[16px]">{title}</span>
@@ -255,7 +255,7 @@ export function RestoreForm({ backupId, backupCode, initialType, canRequest }: {
           {options.map((o) => <TypeOption key={o.value} {...o} checked={type === o.value} onChange={() => setType(o.value)} />)}
         </div>
         {type === 'partial' && (
-          <div className="mt-4 rounded-xl border border-line p-4">
+          <div className="mt-4 rounded-[16px] border border-line p-4">
             <p className="text-sm font-semibold mb-2">Modules</p>
             <div className="grid sm:grid-cols-2 gap-2">
               {PARTIAL_MODULES.map((m) => (

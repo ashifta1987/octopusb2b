@@ -28,9 +28,9 @@ function ParcelPhoto({ d, p, kind }: { d: MultiParcel; p: Parcel; kind: Evidence
   const has = p.evidence.some((e) => e.kind === kind);
   const id = `wh-p${p.seq}-photo-${kind}`;
   return (
-    <div className="rounded-[10px] border border-[#E3E7EF] p-3 flex flex-col gap-2" data-testid={`wh-p${p.seq}-photo-step-${kind}`}>
+    <div className="rounded-[10px] border border-line p-3 flex flex-col gap-2" data-testid={`wh-p${p.seq}-photo-step-${kind}`}>
       <div className="flex items-center gap-2"><strong className="text-[14px]">{EVIDENCE_LABEL[kind]}</strong>{has && <DsBadge tone="ok">Saved</DsBadge>}</div>
-      <label htmlFor={id} className="text-[13px] text-[#5B6478]">{has ? 'Add another photo' : 'Take or choose a photo'} (parcel {p.seq})</label>
+      <label htmlFor={id} className="text-[13px] text-muted">{has ? 'Add another photo' : 'Take or choose a photo'} (parcel {p.seq})</label>
       <input id={id} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" disabled={pending} data-testid={`wh-p${p.seq}-photo-file-${kind}`}
         className="text-[13px] min-h-[44px]"
         onChange={(e) => {
@@ -48,7 +48,7 @@ function ParcelPhoto({ d, p, kind }: { d: MultiParcel; p: Parcel; kind: Evidence
             if (r.ok) router.refresh();
           });
         }} />
-      {pending && <p className="m-0 text-[13px] text-[#5B6478]" role="status">Uploading…</p>}
+      {pending && <p className="m-0 text-[13px] text-muted" role="status">Uploading…</p>}
       <MsgLine msg={msg} testId={`wh-p${p.seq}-photo-msg-${kind}`} />
     </div>
   );
@@ -94,7 +94,7 @@ function ParcelCard({ d, p, last }: { d: MultiParcel; p: Parcel; last: boolean }
             </form>
           )}
           <MsgLine msg={scan.msg} testId={`wh-p${p.seq}-scan-msg`} />
-          {p.items.length === 0 ? <p className="mt-2 mb-0 text-[13px] text-[#5B6478]">No items in this parcel yet.</p> : (
+          {p.items.length === 0 ? <p className="mt-2 mb-0 text-[13px] text-muted">No items in this parcel yet.</p> : (
             <ul className="mt-2 mb-0 p-0 list-none flex flex-col gap-1.5">
               {p.items.map((i) => (
                 <li key={i.line_id} className="flex flex-wrap items-center gap-2 text-[14px]" data-testid={`wh-p${p.seq}-item-${i.sku}`}>
@@ -144,7 +144,7 @@ function ParcelCard({ d, p, last }: { d: MultiParcel; p: Parcel; last: boolean }
             </form>
           )}
           {d.bench_required && !d.benches.some(benchUsable) && open && (
-            <div className="mt-2"><DsNotice tone="bad" title="No scale bench is checked" action={<Link href="/office/warehouse/scale" className="font-semibold text-[#2559B8] underline">Scale check</Link>}>A bench must pass its calibration check before parcels are weighed on it.</DsNotice></div>
+            <div className="mt-2"><DsNotice tone="bad" title="No scale bench is checked" action={<Link href="/office/warehouse/scale" className="font-semibold text-coral-text underline">Scale check</Link>}>A bench must pass its calibration check before parcels are weighed on it.</DsNotice></div>
           )}
           {p.measured_weight_g != null && (
             <p className="mt-2 mb-0 text-[14px] flex flex-wrap items-center gap-2" data-testid={`wh-p${p.seq}-weight`}>
@@ -181,7 +181,7 @@ function ParcelCard({ d, p, last }: { d: MultiParcel; p: Parcel; last: boolean }
                   <DsInput id={`wh-p${p.seq}-reason`} label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} placeholder="e.g. extra padding" />
                   <div className="sm:col-span-3 flex flex-wrap items-center gap-3">
                     <DsButton type="submit" variant="secondary" icon="lock" disabled={ovr.pending || !sup || pin.length < 4 || reason.trim().length < 3} testId={`wh-p${p.seq}-override-submit`}>Approve weight</DsButton>
-                    <span className="text-[13px] text-[#5B6478]">{3 - p.override_attempts} attempt(s) left</span>
+                    <span className="text-[13px] text-muted">{3 - p.override_attempts} attempt(s) left</span>
                   </div>
                 </form>
               )}
@@ -196,7 +196,7 @@ function ParcelCard({ d, p, last }: { d: MultiParcel; p: Parcel; last: boolean }
             <ul className="m-0 p-0 list-none flex flex-col gap-1 text-[13.5px]">
               {p.materials.map((m) => (
                 <li key={m.id} className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono">{m.material}</span><span>{qtyText(m.qty, m.unit)}</span><span className="text-[#5B6478]">{USE_SOURCE_LABEL[m.source] ?? m.source}</span>
+                  <span className="font-mono">{m.material}</span><span>{qtyText(m.qty, m.unit)}</span><span className="text-muted">{USE_SOURCE_LABEL[m.source] ?? m.source}</span>
                   {m.voided && <DsBadge tone="neutral">Taken back</DsBadge>}
                   {open && m.source === 'manual' && !m.voided && (
                     <DsButton variant="link" disabled={mats.pending} onClick={() => mats.run(() => voidMaterialAction(m.id, code, 'Not used'))}>Take back</DsButton>
@@ -232,7 +232,7 @@ function ParcelCard({ d, p, last }: { d: MultiParcel; p: Parcel; last: boolean }
             )}
           </div>
         ) : p.status === 'closed' && (
-          <p className="m-0 text-[13px] text-[#5B6478]">Closed {fmtWh(p.closed_at)}{p.closed_by_name ? ` by ${p.closed_by_name}` : ''}{p.battery_mark ? ' · battery mark applied' : ''}</p>
+          <p className="m-0 text-[13px] text-muted">Closed {fmtWh(p.closed_at)}{p.closed_by_name ? ` by ${p.closed_by_name}` : ''}{p.battery_mark ? ' · battery mark applied' : ''}</p>
         )}
         {p.status === 'closed' && d.can_reopen && ['picked', 'packing'].includes(d.order.status) && (
           <form className="flex flex-wrap gap-2 items-end" onSubmit={(e) => { e.preventDefault(); misc.run(() => parcelReopenAction(p.id, code, why), () => setWhy('')); }}>
@@ -268,7 +268,7 @@ export function MultiParcelClient({ d }: { d: MultiParcel }) {
             </li>
           ))}
         </ul>
-        {o.status === 'packed' && <div className="mt-3"><DsNotice tone="ok" title="Packed" testId="wh-multi-packed" action={<Link href={`/office/warehouse/evidence/${o.code}`} className="font-semibold text-[#2559B8] underline">Evidence</Link>}>{d.parcels.length} parcels · {grams(o.measured_weight_g)} in total · closed {fmtWh(o.packed_at)}.</DsNotice></div>}
+        {o.status === 'packed' && <div className="mt-3"><DsNotice tone="ok" title="Packed" testId="wh-multi-packed" action={<Link href={`/office/warehouse/evidence/${o.code}`} className="font-semibold text-coral-text underline">Evidence</Link>}>{d.parcels.length} parcels · {grams(o.measured_weight_g)} in total · closed {fmtWh(o.packed_at)}.</DsNotice></div>}
         {o.store_order_cancelled && <div className="mt-3"><DsNotice tone="bad" title="The Dropship order was cancelled">Don’t pack it; a supervisor cancels this warehouse order.</DsNotice></div>}
         {o.override_locked_at && packing && <div className="mt-3"><DsNotice tone="bad" title="Weight override locked on the order">A warehouse admin unlocks it on the order page before it is split into parcels.</DsNotice></div>}
         {packing && (
@@ -276,7 +276,7 @@ export function MultiParcelClient({ d }: { d: MultiParcel }) {
             <DsButton variant="secondary" icon="plus" disabled={add.pending || Boolean(o.override_locked_at)} onClick={() => add.run(() => addParcelAction(o.id, o.code))} testId="wh-multi-add">
               {d.parcels.length === 0 ? 'Pack in parcels' : 'Add a parcel'}
             </DsButton>
-            {d.parcels.length === 0 && <span className="text-[13px] text-[#5B6478]">Anything already scanned at the packing station becomes parcel 1.</span>}
+            {d.parcels.length === 0 && <span className="text-[13px] text-muted">Anything already scanned at the packing station becomes parcel 1.</span>}
           </div>
         )}
         <MsgLine msg={add.msg} testId="wh-multi-add-msg" />

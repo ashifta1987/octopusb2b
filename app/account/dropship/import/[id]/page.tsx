@@ -27,8 +27,8 @@ async function Editor({ params }: { params: Promise<{ id: string }> }) {
     }
   }
   const crumb = (
-    <nav aria-label="Breadcrumb" className="text-[13px] text-[#5B6478]">
-      <Link href="/account/dropship/catalogue?list=1" className="text-[#2A6FD1] underline">Import list</Link>
+    <nav aria-label="Breadcrumb" className="text-[13px] text-muted">
+      <Link href="/account/dropship/catalogue?list=1" className="text-coral-text underline">Import list</Link>
       {st ? ` / ${st.title}` : ''}
     </nav>
   );
@@ -36,7 +36,7 @@ async function Editor({ params }: { params: Promise<{ id: string }> }) {
     return (
       <div className="flex flex-col gap-5" data-testid="ds6-editor">
         {crumb}
-        <h1 className="m-0 text-[26px] font-bold text-[#1A174A]">Edit before pushing</h1>
+        <h1 className="m-0 text-[26px] font-bold text-ink">Edit before pushing</h1>
         {error ? (
           <DsNotice tone="bad" title="This product could not be loaded" testId="editor-error"
             action={<DsLinkButton href="/account/dropship/catalogue?list=1" variant="secondary">Back to import list</DsLinkButton>}>{error}</DsNotice>

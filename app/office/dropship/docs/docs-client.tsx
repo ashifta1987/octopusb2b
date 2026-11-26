@@ -47,13 +47,13 @@ export function DocsClient({ data, q, status, canEdit }: { data: DocsPage; q: st
             const st = DOC_STATUS[d.effective_status] ?? DOC_STATUS.pending;
             return (
               <tr key={d.id} data-testid="doc-row">
-                <td className="font-semibold">{d.title}<div className="text-[12px] text-[#5B6478] font-normal">{DOC_KIND[d.kind]}{d.doc_number ? ` · ${d.doc_number}` : ''}{d.issuer ? ` · ${d.issuer}` : ''}</div>
-                  <a className="text-[#2A6FD1] text-[13px] min-h-[44px] inline-flex items-center" href={`/office/dropship/docs/file/${d.id}`} target="_blank" rel="noopener noreferrer" aria-label={`Open ${d.title}`}>Open file</a></td>
+                <td className="font-semibold">{d.title}<div className="text-[12px] text-muted font-normal">{DOC_KIND[d.kind]}{d.doc_number ? ` · ${d.doc_number}` : ''}{d.issuer ? ` · ${d.issuer}` : ''}</div>
+                  <a className="text-coral-text text-[13px] min-h-[44px] inline-flex items-center" href={`/office/dropship/docs/file/${d.id}`} target="_blank" rel="noopener noreferrer" aria-label={`Open ${d.title}`}>Open file</a></td>
                 <td>{canEdit ? (
                   <select className="ds-input" aria-label={`Product for ${d.title}`} value={d.product_id ?? ''} onChange={(e) => start(async () => done(await linkDocAction(d.id, e.target.value || null), 'Link saved.'))}>
                     <option value="">Not linked</option>{data.products.map((p) => <option key={p.id} value={p.id}>{p.model_no} · {p.title}</option>)}
                   </select>) : d.product ? `${d.model_no} · ${d.product}` : 'Not linked'}</td>
-                <td><DsBadge tone={st.tone}>{st.label}</DsBadge>{d.review_note && <div className="text-[12px] text-[#5B6478]">{d.review_note}</div>}</td>
+                <td><DsBadge tone={st.tone}>{st.label}</DsBadge>{d.review_note && <div className="text-[12px] text-muted">{d.review_note}</div>}</td>
                 <td>{d.expires_on ? fmtDay(d.expires_on) : '—'}</td>
                 <td>{canEdit && (
                   <div className="flex gap-2 flex-wrap items-end">

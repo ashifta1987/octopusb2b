@@ -61,7 +61,7 @@ export default async function TurnkeyReportsPage({ searchParams }: { searchParam
           <nav aria-label="Report period" className="flex flex-wrap gap-2" data-testid="tk-report-period">
             {PERIODS.map(([k, label]) => (
               <Link key={k} href={`/admin/turnkey/reports?months=${k}`} aria-current={months === k ? 'page' : undefined}
-                className={`min-h-11 px-3 inline-flex items-center rounded-[10px] border ${months === k ? 'bg-ink text-white border-ink' : 'bg-white border-line text-ink hover:border-ink'}`}>{label}</Link>
+                className={`min-h-11 px-3 inline-flex items-center rounded-[10px] border ${months === k ? 'bg-coral text-white border-coral' : 'bg-white border-line text-ink hover:border-ink'}`}>{label}</Link>
             ))}
           </nav>
           <p className="m-0 text-[13.5px] text-muted">{period.label}{period.from ? ` (from ${fmtDate(period.from)}, by the date each proforma or project was created)` : ''}. Months are calendar months in UTC. Unpaid ageing is always as of today.</p>

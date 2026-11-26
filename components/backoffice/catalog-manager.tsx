@@ -92,7 +92,7 @@ export function CatalogManager({ categories, tags, canEdit, actions }: {
 
   return (
     <div className="space-y-6">
-      {msg && <div role="status" className={cn('rounded-[10px] border px-4 py-3 text-sm', msg.ok ? 'bg-ok-bg border-ok/40 text-ok' : 'bg-bad-bg border-bad/40 text-bad')}>{msg.text}</div>}
+      {msg && <div role="status" className={cn('rounded-[10px] border px-4 py-3 text-sm', msg.ok ? 'bg-ok-bg border-ok-line text-ok font-semibold' : 'bg-bad-bg border-bad/40 text-bad')}>{msg.text}</div>}
       <div className="grid lg:grid-cols-[420px_1fr] gap-6 items-start">
         <section className="card overflow-hidden">
           <div className="flex items-center justify-between px-5 py-4 border-b border-line">

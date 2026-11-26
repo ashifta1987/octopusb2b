@@ -60,14 +60,14 @@ export function DsButton({
           aria-busy={loading || undefined}
           aria-describedby={isDisabled && disabledReason ? reasonId : undefined}
           data-testid={testId}
-          className={`inline-flex items-center gap-1.5 min-h-[44px] px-1 text-[14px] font-semibold text-[#2A6FD1] hover:text-[#1F5BB0] hover:underline disabled:text-[#5B6478] disabled:no-underline disabled:cursor-not-allowed cursor-pointer bg-transparent border-0 ${className}`.trim()}
+          className={`inline-flex items-center gap-1.5 min-h-[44px] px-1 text-[14px] font-semibold text-coral-text hover:text-ink hover:underline disabled:text-muted disabled:no-underline disabled:cursor-not-allowed cursor-pointer bg-transparent border-0 ${className}`.trim()}
           {...rest}
         >
           {icon && <DsIcon name={icon} size={16} />}
           {children}
         </button>
         {isDisabled && disabledReason && (
-          <span id={reasonId} className="text-[12px] text-[#5B6478]" data-testid="disabled-reason">
+          <span id={reasonId} className="text-[12px] text-muted" data-testid="disabled-reason">
             {disabledReason}
           </span>
         )}
@@ -101,7 +101,7 @@ export function DsButton({
     return (
       <div className="inline-flex flex-col items-start gap-1.5">
         {buttonEl}
-        <p id={reasonId} className="m-0 text-[12px] text-[#5B6478]" data-testid="disabled-reason">
+        <p id={reasonId} className="m-0 text-[12px] text-muted" data-testid="disabled-reason">
           {disabledReason}
         </p>
       </div>
@@ -131,7 +131,7 @@ export function DsLinkButton({
       <Link
         href={href}
         data-testid={testId}
-        className={`inline-flex items-center gap-1.5 min-h-[44px] text-[14px] font-semibold text-[#2A6FD1] hover:text-[#1F5BB0] hover:underline ${className}`.trim()}
+        className={`inline-flex items-center gap-1.5 min-h-[44px] text-[14px] font-semibold text-coral-text hover:text-ink hover:underline ${className}`.trim()}
       >
         {icon && <DsIcon name={icon} size={16} />}
         {children}
@@ -185,11 +185,11 @@ export function DsInput({
         {...rest}
       />
       {hasError ? (
-        <p id={msgId} className="mt-1.5 mb-0 text-[12px] text-[#B42318]">
+        <p id={msgId} className="mt-1.5 mb-0 text-[12px] text-bad">
           {error}
         </p>
       ) : hint ? (
-        <p id={msgId} className="mt-1.5 mb-0 text-[12px] text-[#5B6478]">
+        <p id={msgId} className="mt-1.5 mb-0 text-[12px] text-muted">
           {hint}
         </p>
       ) : null}
@@ -232,11 +232,11 @@ export function DsSelect({
         {children}
       </select>
       {hasError ? (
-        <p id={msgId} className="mt-1.5 mb-0 text-[12px] text-[#B42318]">
+        <p id={msgId} className="mt-1.5 mb-0 text-[12px] text-bad">
           {error}
         </p>
       ) : hint ? (
-        <p id={msgId} className="mt-1.5 mb-0 text-[12px] text-[#5B6478]">
+        <p id={msgId} className="mt-1.5 mb-0 text-[12px] text-muted">
           {hint}
         </p>
       ) : null}
@@ -278,11 +278,11 @@ export function DsTextarea({
         {...rest}
       />
       {hasError ? (
-        <p id={msgId} className="mt-1.5 mb-0 text-[12px] text-[#B42318]">
+        <p id={msgId} className="mt-1.5 mb-0 text-[12px] text-bad">
           {error}
         </p>
       ) : hint ? (
-        <p id={msgId} className="mt-1.5 mb-0 text-[12px] text-[#5B6478]">
+        <p id={msgId} className="mt-1.5 mb-0 text-[12px] text-muted">
           {hint}
         </p>
       ) : null}
@@ -304,16 +304,16 @@ export function DsCheckbox({
 }) {
   return (
     <label
-      className={`flex items-center gap-2.5 min-h-[44px] text-[14px] text-[#1A174A] cursor-pointer ${className}`.trim()}
+      className={`flex items-center gap-2.5 min-h-[44px] text-[14px] text-ink cursor-pointer ${className}`.trim()}
     >
       <input
         type="checkbox"
-        className="w-4 h-4 accent-[#2A6FD1] rounded shrink-0"
+        className="w-4 h-4 accent-coral rounded shrink-0"
         {...rest}
       />
       <span>
         {label}
-        {hint && <span className="block text-[12px] text-[#5B6478]">{hint}</span>}
+        {hint && <span className="block text-[12px] text-muted">{hint}</span>}
       </span>
     </label>
   );
@@ -340,10 +340,10 @@ export function DsRadioCard({
 }) {
   return (
     <label
-      className={`flex items-start gap-3 min-h-[44px] p-3.5 rounded-[12px] border cursor-pointer transition-colors ${
+      className={`flex items-start gap-3 min-h-[44px] p-3.5 rounded-[12px] border-2 cursor-pointer transition-colors ${
         checked
-          ? 'border-[#2A6FD1] bg-[#F2F7FE]'
-          : 'border-[#E3E7EF] bg-white hover:border-[#C9D0DD]'
+          ? 'border-coral bg-tint'
+          : 'border-line bg-white hover:border-line-strong'
       } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
     >
       <input
@@ -353,15 +353,15 @@ export function DsRadioCard({
         checked={checked}
         disabled={disabled}
         onChange={() => onChange?.(value)}
-        className="mt-1 w-4 h-4 accent-[#2A6FD1] shrink-0"
+        className="mt-1 w-4 h-4 accent-coral shrink-0"
       />
       <span className="flex-1 min-w-0">
         <span className="flex items-center justify-between gap-2 flex-wrap">
-          <strong className="text-[14px] font-semibold text-[#1A174A]">{title}</strong>
+          <strong className="text-[15px] font-bold text-ink">{title}</strong>
           {badge}
         </span>
         {description && (
-          <span className="block mt-1 text-[13px] text-[#5B6478]">{description}</span>
+          <span className="block mt-1 text-[13px] text-muted">{description}</span>
         )}
       </span>
     </label>
@@ -389,12 +389,12 @@ export function DsSwitch({
   return (
     <div className="flex items-center justify-between gap-3 min-h-[44px]">
       <div className="min-w-0">
-        <span id={id} className="text-[14px] font-semibold text-[#1A174A]">
+        <span id={id} className="text-[15px] font-semibold text-ink">
           {label}
         </span>
-        {hint && <p className="m-0 text-[12px] text-[#5B6478]">{hint}</p>}
+        {hint && <p className="m-0 text-[12px] text-muted">{hint}</p>}
         {disabled && disabledReason && (
-          <p className="m-0 text-[12px] text-[#5B6478]" data-testid="disabled-reason">
+          <p className="m-0 text-[12px] text-muted" data-testid="disabled-reason">
             {disabledReason}
           </p>
         )}
@@ -407,17 +407,17 @@ export function DsSwitch({
         disabled={disabled}
         data-testid={testId}
         onClick={() => !disabled && onChange?.(!checked)}
-        className="inline-flex items-center min-h-[44px] min-w-[48px] px-0.5 bg-transparent border-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex items-center min-h-[44px] min-w-[56px] bg-transparent border-0 cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
       >
         <span
           aria-hidden="true"
-          className={`inline-flex items-center w-11 h-6 rounded-full p-0.5 transition-colors ${
-            checked ? 'bg-[#0B7A75]' : 'bg-[#C9D0DD]'
+          className={`inline-flex items-center w-14 h-8 rounded-full p-1 transition-colors ${
+            checked ? 'bg-ok' : 'bg-switch-off'
           }`}
         >
           <span
-            className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
-              checked ? 'translate-x-5' : 'translate-x-0'
+            className={`w-6 h-6 rounded-full bg-white shadow transition-transform motion-reduce:transition-none ${
+              checked ? 'translate-x-6' : 'translate-x-0'
             }`}
           />
         </span>
@@ -529,7 +529,7 @@ export function DsOrderStatusBadge({
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
- * 8. Card with icon heading & 9. Table card (scroll box, header #F7F9FC, row hover)
+ * 8. Card with icon heading & 9. Table card (scroll box, Jost caps header, row hover)
  * ─────────────────────────────────────────────────────────────────────────── */
 export function DsCard({
   title,
@@ -558,18 +558,18 @@ export function DsCard({
       {(title || actions) && (
         <div
           className={`flex justify-between items-start gap-3 flex-wrap ${
-            noPadding ? 'px-5 py-4 border-b border-[#E3E7EF]' : 'mb-3'
+            noPadding ? 'px-6 py-[18px] border-b border-line' : 'mb-4'
           }`}
         >
           <div className="min-w-0">
             {title && (
-              <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-[#1A174A]">
-                {icon && <DsIcon name={icon} size={18} strokeWidth={2} className="text-[#2A6FD1]" />}
+              <h2 className="m-0 text-[19px] font-extrabold flex items-center gap-2.5 text-ink">
+                {icon && <DsIcon name={icon} size={20} strokeWidth={2} className="text-coral-text" />}
                 <span>{title}</span>
               </h2>
             )}
             {subtitle && (
-              <p className="mt-1 mb-0 text-[13px] text-[#5B6478]">{subtitle}</p>
+              <p className="mt-1 mb-0 text-[14px] text-muted">{subtitle}</p>
             )}
           </div>
           {actions && <div className="flex items-center gap-2 flex-wrap">{actions}</div>}
@@ -618,7 +618,7 @@ export function DsTableCard({
         </table>
       </div>
       {footer && (
-        <div className="px-5 py-3 text-[12px] text-[#5B6478] border-t border-[#EEF0F4]">
+        <div className="px-6 py-3 text-[13px] text-muted border-t border-divider">
           {footer}
         </div>
       )}
@@ -631,11 +631,12 @@ export function DsTableCard({
  * ─────────────────────────────────────────────────────────────────────────── */
 export type DsNoticeTone = 'info' | 'ok' | 'warn' | 'bad';
 
-const NOTICE_STYLES: Record<DsNoticeTone, { bg: string; border: string; icon: DsIconName; iconColor: string }> = {
-  info: { bg: '#F2F7FE', border: '#C7DAF5', icon: 'info', iconColor: '#1F5BB0' },
-  ok: { bg: '#F1FAF8', border: '#B9E2DC', icon: 'check', iconColor: '#0B6A65' },
-  warn: { bg: '#FFFBF2', border: '#F3D9A4', icon: 'alert', iconColor: '#8A5300' },
-  bad: { bg: '#FEF4F4', border: '#F2C4C2', icon: 'stop', iconColor: '#A8201A' },
+// Octopus tokens (design handoff §2): info = tint / coral-text, ok = success, warn = warning, bad = error
+const NOTICE_STYLES: Record<DsNoticeTone, { box: string; icon: DsIconName; iconColor: string }> = {
+  info: { box: 'bg-tint-2 border-tint', icon: 'info', iconColor: 'text-coral-text' },
+  ok: { box: 'bg-ok-soft border-ok-line', icon: 'check', iconColor: 'text-ok' },
+  warn: { box: 'bg-warn-bg border-warn-line', icon: 'alert', iconColor: 'text-warn' },
+  bad: { box: 'bg-bad-bg border-bad/30', icon: 'stop', iconColor: 'text-bad' },
 };
 
 export function DsNotice({
@@ -656,18 +657,17 @@ export function DsNotice({
     <div
       role="status"
       data-testid={testId}
-      style={{ background: s.bg, border: `1px solid ${s.border}` }}
-      className="flex items-center justify-between gap-3.5 flex-wrap rounded-[12px] px-[18px] py-[14px]"
+      className={`flex items-center justify-between gap-3.5 flex-wrap rounded-[12px] border px-[18px] py-[14px] ${s.box}`}
     >
       <div className="min-w-0 flex-1 basis-[260px]">
-        <strong className="text-[14px] font-bold text-[#1A174A] flex items-center gap-2">
-          <span style={{ color: s.iconColor }} className="inline-flex">
+        <strong className="text-[15px] font-bold text-ink flex items-center gap-2">
+          <span className={`inline-flex ${s.iconColor}`}>
             <DsIcon name={s.icon} size={16} />
           </span>
           <span>{title}</span>
         </strong>
         {children && (
-          <p className="mt-1 mb-0 text-[13px] leading-[1.5] text-[#1A174A]">{children}</p>
+          <p className="mt-1 mb-0 text-[14px] leading-[1.5] text-black">{children}</p>
         )}
       </div>
       {action && <div className="shrink-0">{action}</div>}
@@ -690,14 +690,14 @@ export function DsToast({
     <div
       role="status"
       data-testid={testId}
-      className="flex items-center gap-3 bg-[#1A174A] text-white rounded-[10px] px-4 py-3 text-[14px] shadow-[0_6px_20px_rgba(26,23,74,0.18)]"
+      className="flex items-center gap-3 bg-ink text-white rounded-[10px] px-4 py-3 text-[15px] font-semibold shadow-lg"
     >
       <span className="flex-1">{message}</span>
       {actionLabel && (
         <button
           type="button"
           onClick={onAction}
-          className="text-white font-semibold underline hover:opacity-90 bg-transparent border-0 cursor-pointer min-h-[32px] px-2"
+          className="text-white font-bold underline hover:no-underline bg-transparent border-0 cursor-pointer min-h-[44px] px-2"
         >
           {actionLabel}
         </button>
@@ -783,12 +783,12 @@ export function DsDialog({
       aria-modal={inline ? undefined : 'true'}
       aria-labelledby={titleId}
       data-testid={testId}
-      className="bg-white border border-[#E3E7EF] rounded-[12px] p-[18px] shadow-[0_12px_32px_rgba(26,23,74,0.16)] max-w-md w-full"
+      className="bg-white border border-line rounded-[16px] p-6 shadow-xl max-w-md w-full"
     >
-      <h3 id={titleId} className="m-0 mb-1.5 text-[17px] font-bold text-[#1A174A]">
+      <h3 id={titleId} className="m-0 mb-1.5 text-[20px] font-extrabold text-ink">
         {title}
       </h3>
-      <p className="m-0 mb-3.5 text-[14px] text-[#5B6478]">{description}</p>
+      <p className="m-0 mb-5 text-[15px] text-muted">{description}</p>
       <div className="flex justify-end gap-2.5 flex-wrap">
         <DsButton variant="secondary" icon="check" onClick={onCancel}>
           {cancelLabel}
@@ -807,7 +807,7 @@ export function DsDialog({
   if (inline) return box;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1A174A]/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40">
       {box}
     </div>
   );
@@ -839,12 +839,12 @@ export function DsEmptyState({
     <div className="text-center py-3 px-2" data-testid={testId}>
       <div
         aria-hidden="true"
-        className="w-14 h-14 rounded-full bg-[#E6EFFB] text-[#2A6FD1] flex items-center justify-center mx-auto mb-3"
+        className="w-[52px] h-[52px] rounded-[14px] bg-tint text-coral-text flex items-center justify-center mx-auto mb-3"
       >
         <DsIcon name={icon} size={22} />
       </div>
-      <h3 className="m-0 mb-1.5 text-[16px] font-bold text-[#1A174A]">{title}</h3>
-      <p className="m-0 mb-3.5 text-[14px] text-[#5B6478] max-w-md mx-auto">{description}</p>
+      <h3 className="m-0 mb-1.5 text-[18px] font-extrabold text-ink">{title}</h3>
+      <p className="m-0 mb-4 text-[15px] text-muted max-w-md mx-auto">{description}</p>
       {actionLabel &&
         (actionHref ? (
           <DsLinkButton href={actionHref} variant="primary" icon={actionIcon}>
@@ -884,10 +884,10 @@ export function DsSkeleton({
       data-testid={testId}
       className="flex flex-col gap-2.5 animate-pulse motion-reduce:animate-none"
     >
-      <div aria-hidden="true" className="w-full h-[120px] rounded-[6px] bg-[#E6EAF1]" />
-      <div aria-hidden="true" className="w-[70%] h-[14px] rounded-[6px] bg-[#E6EAF1]" />
-      <div aria-hidden="true" className="w-[45%] h-[14px] rounded-[6px] bg-[#E6EAF1]" />
-      <div aria-hidden="true" className="w-[90%] h-[14px] rounded-[6px] bg-[#E6EAF1]" />
+      <div aria-hidden="true" className="w-full h-[120px] rounded-[12px] bg-fill" />
+      <div aria-hidden="true" className="w-[70%] h-[14px] rounded-[6px] bg-fill" />
+      <div aria-hidden="true" className="w-[45%] h-[14px] rounded-[6px] bg-fill" />
+      <div aria-hidden="true" className="w-[90%] h-[14px] rounded-[6px] bg-fill" />
     </div>
   );
 }
@@ -924,19 +924,19 @@ export function DsStepper({
               aria-current={isCurrent ? 'step' : undefined}
               className={`flex items-center gap-2 text-[14px] ${
                 isCurrent
-                  ? 'font-semibold text-[#1A174A]'
+                  ? 'font-bold text-ink'
                   : isDone
-                    ? 'font-medium text-[#1A174A]'
-                    : 'font-medium text-[#5B6478]'
+                    ? 'font-semibold text-ink'
+                    : 'font-medium text-muted'
               }`}
             >
               <span
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0 box-border ${
                   isDone
-                    ? 'bg-[#0B7A75] text-white'
+                    ? 'bg-ok text-white'
                     : isCurrent
-                      ? 'bg-[#2A6FD1] text-white'
-                      : 'border-2 border-[#C9D0DD] text-[#5B6478]'
+                      ? 'bg-coral text-white'
+                      : 'border-2 border-line-strong text-muted'
                 }`}
               >
                 {idx + 1}
@@ -946,7 +946,7 @@ export function DsStepper({
             {idx < steps.length - 1 && (
               <div
                 aria-hidden="true"
-                className="flex-1 min-w-[16px] h-[2px] bg-[#E3E7EF]"
+                className="flex-1 min-w-[16px] h-[2px] bg-line"
               />
             )}
           </li>
@@ -976,16 +976,16 @@ export function DsTimeline({
         const state = ev.state ?? 'done';
         const dotCls =
           state === 'done'
-            ? 'bg-[#0B7A75] border-[#0B7A75]'
+            ? 'bg-ok border-ok'
             : state === 'current'
-              ? 'bg-[#2A6FD1] border-[#2A6FD1]'
-              : 'bg-white border-[#C9D0DD]';
+              ? 'bg-coral border-coral'
+              : 'bg-white border-line-strong';
         return (
           <li key={idx} className="relative pl-6 pb-4 last:pb-0">
             {idx < events.length - 1 && (
               <span
                 aria-hidden="true"
-                className="absolute left-[6px] top-3 bottom-0 w-[2px] bg-[#E3E7EF]"
+                className="absolute left-[6px] top-3 bottom-0 w-[2px] bg-line"
               />
             )}
             <span
@@ -993,13 +993,13 @@ export function DsTimeline({
               className={`absolute left-0 top-1 w-3.5 h-3.5 rounded-full border-2 box-border ${dotCls}`}
             />
             <div className="flex items-baseline justify-between gap-2 flex-wrap">
-              <strong className="text-[14px] font-semibold text-[#1A174A]">{ev.title}</strong>
+              <strong className="text-[14px] font-semibold text-ink">{ev.title}</strong>
               {ev.timestamp && (
-                <span className="text-[12px] text-[#5B6478]">{ev.timestamp}</span>
+                <span className="text-[12px] text-muted">{ev.timestamp}</span>
               )}
             </div>
             {ev.detail && (
-              <p className="mt-0.5 mb-0 text-[13px] text-[#5B6478]">{ev.detail}</p>
+              <p className="mt-0.5 mb-0 text-[13px] text-muted">{ev.detail}</p>
             )}
           </li>
         );
@@ -1049,12 +1049,12 @@ export function DsPriceBreakdown({
         <span className="ds-mut">Duties and tax ({dutiesMode})</span>
         <span>{duties}</span>
       </div>
-      <div className="ds-row font-bold border-t border-[#EEF0F4] pt-2.5 mt-1">
+      <div className="ds-row font-bold border-t border-divider pt-2.5 mt-1">
         <span className="ds-mut">Landed cost</span>
         <span>{landed}</span>
       </div>
       {caption && (
-        <p className="mt-2 mb-0 text-[12px] text-[#5B6478]">{caption}</p>
+        <p className="mt-2 mb-0 text-[12px] text-muted">{caption}</p>
       )}
     </div>
   );
@@ -1082,18 +1082,18 @@ export function DsPageHeader({
       className="flex justify-between items-start gap-4 flex-wrap"
     >
       <div className="min-w-0">
-        <h1 className="m-0 text-[26px] font-bold flex items-center gap-3 flex-wrap text-[#1A174A]">
+        <h1 className="m-0 text-[34px] leading-[1.1] font-extrabold flex items-center gap-3.5 flex-wrap text-ink">
           <span
             data-page-icon=""
             aria-hidden="true"
-            className="w-10 h-10 rounded-[10px] bg-[#E6EFFB] text-[#2A6FD1] inline-flex items-center justify-center shrink-0"
+            className="w-[52px] h-[52px] rounded-[14px] bg-tint text-coral-text inline-flex items-center justify-center shrink-0"
           >
-            <DsIcon name={icon} size={20} strokeWidth={2} />
+            <DsIcon name={icon} size={24} strokeWidth={2} />
           </span>
           <span>{title}</span>
         </h1>
         {subtitle && (
-          <p className="mt-1.5 mb-0 text-[14px] leading-[1.5] text-[#5B6478]">{subtitle}</p>
+          <p className="mt-2 mb-0 text-[16px] leading-[1.5] text-muted">{subtitle}</p>
         )}
       </div>
       {actions && <div className="flex items-center gap-2.5 flex-wrap">{actions}</div>}
@@ -1126,29 +1126,31 @@ export function DsTopBar({
   initials?: string;
   extraRight?: ReactNode;
 }) {
+  // Design handoff §3 top bar: search, then 46 px icon buttons (notifications, help) and the user chip on the right.
+  // The shells put this inside their white `.app-topbar` header; the bar itself only lays the controls out.
   return (
     <div
       data-testid="ds-top-bar"
-      className="flex items-center gap-3 flex-wrap pb-4 border-b border-[#E3E7EF]"
+      className="flex flex-1 min-w-0 items-center gap-3 flex-wrap"
     >
       {searchAction && (
         <form
           action={searchAction}
           role="search"
-          className="flex-1 basis-[260px] max-w-[480px]"
+          className="flex-1 basis-[260px] max-w-[560px]"
         >
-          <label className="flex items-center gap-2 min-h-[44px] bg-white border border-[#C9D0DD] rounded-[8px] px-3 text-[#5B6478] box-border focus-within:border-[#2A6FD1] focus-within:shadow-[0_0_0_2px_#FFFFFF,0_0_0_4px_#2A6FD1]">
-            <DsIcon name="search" size={16} />
+          <label className="relative flex items-center text-muted">
+            <DsIcon name="search" size={18} className="absolute left-3.5 pointer-events-none" />
             <input
               name="q"
               aria-label={searchPlaceholder}
               placeholder={searchPlaceholder}
-              className="border-0 outline-none flex-1 min-w-0 text-[14px] text-[#1A174A] bg-transparent placeholder:text-[#5B6478]"
+              className="w-full min-w-0 min-h-[46px] rounded-[10px] border border-line-strong bg-white pl-11 pr-3.5 text-[15px] text-black placeholder:text-muted box-border focus:border-coral-text"
             />
           </label>
         </form>
       )}
-      <div className="ml-auto flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-2.5">
         {extraRight}
         <Link
           href={notificationsHref}
@@ -1156,13 +1158,13 @@ export function DsTopBar({
             unreadCount > 0 ? `Notifications, ${unreadCount} new` : 'Notifications'
           }
           data-testid="header-bell"
-          className="ds-topic hover:border-[#1A174A]"
+          className="ds-topic"
         >
-          <DsIcon name="bell" size={18} />
+          <DsIcon name="bell" size={20} />
           {unreadCount > 0 && (
             <span
               data-testid="bell-count"
-              className="absolute top-[5px] right-[5px] min-w-[16px] h-[16px] rounded-[8px] bg-[#B42318] text-white text-[10px] font-bold flex items-center justify-center px-[3px] box-border"
+              className="absolute top-[5px] right-[5px] min-w-[17px] h-[17px] rounded-full bg-bad text-white text-[10px] font-bold flex items-center justify-center px-[4px] box-border"
             >
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
@@ -1171,24 +1173,21 @@ export function DsTopBar({
         <Link
           href={helpHref}
           aria-label="Help"
-          className="ds-topic hover:border-[#1A174A]"
+          className="ds-topic"
         >
-          <DsIcon name="help" size={18} />
+          <DsIcon name="help" size={20} />
         </Link>
         <details className="relative" data-testid="ds-account-menu">
-          <summary className="list-none [&::-webkit-details-marker]:hidden cursor-pointer flex items-center gap-2 min-h-[44px] pl-1.5 pr-3 rounded-[8px] border border-[#E3E7EF] bg-white text-[#1A174A] hover:border-[#1A174A] text-[13px] font-semibold box-border">
-            <span
-              aria-hidden="true"
-              className="w-8 h-8 rounded-full bg-[#1A174A] text-white inline-flex items-center justify-center text-[12px] font-semibold"
-            >
+          <summary className="app-chip list-none [&::-webkit-details-marker]:hidden cursor-pointer text-ink box-border">
+            <span aria-hidden="true" className="app-avatar">
               {initials}
             </span>
-            <span>{userName}</span>
+            <span className="text-[14px] font-bold">{userName}</span>
           </summary>
-          <div className="absolute right-0 mt-2 w-[230px] bg-white border border-[#E3E7EF] rounded-[10px] shadow-[0_12px_32px_rgba(26,23,74,0.16)] p-2 z-50">
+          <div className="absolute right-0 mt-2 w-[240px] bg-white border border-line rounded-[12px] shadow-lg p-2 z-50">
             <Link
               href={accountHref}
-              className="block px-3 py-2.5 rounded-[8px] text-[13px] font-semibold text-[#1A174A] hover:text-[#1A174A] hover:bg-[#F4F6F9] no-underline"
+              className="flex items-center min-h-11 px-3 rounded-[10px] text-[14px] font-semibold text-ink hover:text-ink hover:bg-sand no-underline"
             >
               Settings
             </Link>
@@ -1196,15 +1195,15 @@ export function DsTopBar({
               <Link
                 href={backToAccountHref}
                 data-testid="top-bar-back-to-account"
-                className="block px-3 py-2.5 rounded-[8px] text-[13px] font-semibold text-[#1A174A] hover:text-[#1A174A] hover:bg-[#F4F6F9] no-underline"
+                className="flex items-center min-h-11 px-3 rounded-[10px] text-[14px] font-semibold text-ink hover:text-ink hover:bg-sand no-underline"
               >
                 {backToAccountLabel}
               </Link>
             )}
-            <form action="/auth/signout" method="post" className="border-t border-[#EEF0F4] mt-1 pt-1">
+            <form action="/auth/signout" method="post" className="border-t border-divider mt-1 pt-1">
               <button
                 type="submit"
-                className="w-full text-left px-3 py-2.5 rounded-[8px] text-[13px] font-semibold text-[#B42318] hover:bg-[#FEF4F4] bg-transparent border-0 cursor-pointer"
+                className="w-full text-left min-h-11 px-3 rounded-[10px] text-[14px] font-semibold text-bad hover:bg-bad-bg bg-transparent border-0 cursor-pointer"
               >
                 Sign out
               </button>

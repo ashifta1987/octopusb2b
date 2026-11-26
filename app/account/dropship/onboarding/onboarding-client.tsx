@@ -152,7 +152,7 @@ export function OnboardingClient({
                 {idx > 0 && (
                   <span
                     aria-hidden="true"
-                    className="hidden sm:inline-block w-6 h-[2px] bg-[#E3E7EF]"
+                    className="hidden sm:inline-block w-6 h-[2px] bg-line"
                   />
                 )}
                 <button
@@ -166,17 +166,17 @@ export function OnboardingClient({
                   data-testid={`onboarding-step-btn-${num}`}
                   className={`inline-flex items-center gap-2 min-h-[44px] px-2.5 rounded-[8px] border-0 bg-transparent cursor-pointer text-[14px] ${
                     current
-                      ? 'font-semibold text-[#1A174A]'
-                      : 'font-medium text-[#5B6478] hover:text-[#1A174A]'
+                      ? 'font-semibold text-ink'
+                      : 'font-medium text-muted hover:text-ink'
                   }`}
                 >
                   <span
                     className={`w-7 h-7 rounded-full inline-flex items-center justify-center text-[13px] font-bold shrink-0 ${
                       current
-                        ? 'bg-[#2A6FD1] text-white'
+                        ? 'bg-coral text-white'
                         : done
-                          ? 'bg-[#0B7A75] text-white'
-                          : 'border-2 border-[#C9D0DD] text-[#5B6478]'
+                          ? 'bg-ok text-white'
+                          : 'border-2 border-line-strong text-muted'
                     }`}
                   >
                     {num}
@@ -216,7 +216,7 @@ export function OnboardingClient({
                           checked={selectedCountries.includes(code)}
                           onChange={() => toggleCountry(code)}
                           disabled={!isActive || marketsLocked || pending}
-                          className="w-4 h-4 accent-[#1A174A]"
+                          className="w-4 h-4 accent-ink"
                         />
                         <span>{COUNTRY_NAMES[code] ?? code}</span>
                       </label>
@@ -225,7 +225,7 @@ export function OnboardingClient({
                 </fieldset>
 
                 <div
-                  className="rounded-[10px] border border-[#E3E7EF] bg-[#F8FAFC] p-3.5 text-[13px] leading-[1.55] text-[#1A174A]"
+                  className="rounded-[10px] border border-line bg-pearl p-3.5 text-[13px] leading-[1.55] text-ink"
                   data-testid="onboarding-duty-note"
                 >
                   <strong className="block mb-1">How import duties work (DDP vs DAP)</strong>
@@ -460,12 +460,12 @@ export function OnboardingClient({
             <div className="flex flex-col gap-4">
               <DsCard title="3. SaaS plan & billing" icon="card">
                 <div
-                  className="rounded-[12px] border border-[#B9E2DC] bg-[#F1FAF8] p-4 flex flex-wrap items-center justify-between gap-3"
+                  className="rounded-[12px] border border-ok-line bg-ok-soft p-4 flex flex-wrap items-center justify-between gap-3"
                   data-testid="onboarding-plan-card"
                 >
                   <div>
                     <div className="flex items-center gap-2">
-                      <strong className="text-[15px] text-[#1A174A]">
+                      <strong className="text-[15px] text-ink">
                         {state.saas_billing.enabled
                           ? `${state.saas_billing.trial_days}-day free trial`
                           : 'Free while plan fees are off'}
@@ -474,7 +474,7 @@ export function OnboardingClient({
                         {state.saas_billing.enabled ? 'Trial' : 'US$ 0.00 / mo'}
                       </DsBadge>
                     </div>
-                    <p className="m-0 mt-1 text-[13px] leading-[1.5] text-[#1A174A]">
+                    <p className="m-0 mt-1 text-[13px] leading-[1.5] text-ink">
                       {state.saas_billing.enabled
                         ? `You get ${state.saas_billing.trial_days} days free before any plan charge.`
                         : 'Plan fees are currently switched off — US$ 0.00 is charged and no trial has started. Before charging ever starts, you will get a 30-day free trial and approve any plan first.'}
@@ -565,10 +565,10 @@ export function OnboardingClient({
                 </div>
 
                 <div>
-                  <h3 className="m-0 mb-2 text-[15px] font-semibold text-[#1A174A]">
+                  <h3 className="m-0 mb-2 text-[15px] font-semibold text-ink">
                     In Step 5, Shopify will ask you to allow Octopus Dropship to:
                   </h3>
-                  <ul className="m-0 pl-5 text-[14px] leading-[1.8] text-[#1A174A]">
+                  <ul className="m-0 pl-5 text-[14px] leading-[1.8] text-ink">
                     <li>Create and edit the products you push</li>
                     <li>Update stock at an &ldquo;Octopus Dropship&rdquo; location</li>
                     <li>Read your orders and act only on Octopus items</li>
@@ -605,7 +605,7 @@ export function OnboardingClient({
             <ol className="list-none m-0 p-0 flex flex-col gap-3 text-[14px]">
               <li className="flex items-start justify-between gap-2">
                 <div>
-                  <strong className="font-semibold text-[#1A174A]">Your business</strong>
+                  <strong className="font-semibold text-ink">Your business</strong>
                   <div className="ds-mut text-[13px]">
                     {state.org_name} · KYC {state.kyc_status}
                   </div>
@@ -617,7 +617,7 @@ export function OnboardingClient({
 
               <li className="flex items-start justify-between gap-2">
                 <div>
-                  <strong className="font-semibold text-[#1A174A]">1. Selling countries</strong>
+                  <strong className="font-semibold text-ink">1. Selling countries</strong>
                   <div className="ds-mut text-[13px]">
                     {marketsDone
                       ? state.markets.map((m) => m.country).join(', ')
@@ -631,7 +631,7 @@ export function OnboardingClient({
 
               <li className="flex items-start justify-between gap-2">
                 <div>
-                  <strong className="font-semibold text-[#1A174A]">2. Return &amp; brand</strong>
+                  <strong className="font-semibold text-ink">2. Return &amp; brand</strong>
                   <div className="ds-mut text-[13px]">
                     {sp ? sp.brand_name : 'Required before labels print'}
                   </div>
@@ -653,7 +653,7 @@ export function OnboardingClient({
 
               <li className="flex items-start justify-between gap-2">
                 <div>
-                  <strong className="font-semibold text-[#1A174A]">3. Plan &amp; wallet</strong>
+                  <strong className="font-semibold text-ink">3. Plan &amp; wallet</strong>
                   <div className="ds-mut text-[13px]">
                     Free while plan fees off · Wallet {usd(state.wallet_balance_cents)}
                   </div>
@@ -664,7 +664,7 @@ export function OnboardingClient({
               {storeStep && (
                 <li className="flex items-start justify-between gap-2">
                   <div>
-                    <strong className="font-semibold text-[#1A174A]">4. Connect store</strong>
+                    <strong className="font-semibold text-ink">4. Connect store</strong>
                     <div className="ds-mut text-[13px]">Shopify OAuth (Step 5)</div>
                   </div>
                   <DsBadge tone="neutral">Step 5</DsBadge>

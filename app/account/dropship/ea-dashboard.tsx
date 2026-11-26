@@ -110,14 +110,14 @@ export async function EarlyAccessDashboard({ orgId, orgName, features }: { orgId
         <DsCard title="Getting started" subtitle="What’s done and what’s next" icon="check" testId="ea-getting-started">
           <ol className="list-none m-0 p-0 flex flex-col">
             {steps.map((s) => (
-              <li key={s.key} className="flex items-start justify-between gap-3 py-2.5 border-b border-[#EEF0F4] last:border-0" data-testid={`ea-step-${s.key}`}>
+              <li key={s.key} className="flex items-start justify-between gap-3 py-2.5 border-b border-divider last:border-0" data-testid={`ea-step-${s.key}`}>
                 <div className="flex items-start gap-3 min-w-0">
-                  <span className={`mt-0.5 inline-flex w-6 h-6 rounded-full items-center justify-center shrink-0 ${s.state === 'done' ? 'bg-[#0B7A75] text-white' : 'border-2 border-[#C9D0DD] text-[#5B6478]'}`} aria-hidden="true">
+                  <span className={`mt-0.5 inline-flex w-6 h-6 rounded-full items-center justify-center shrink-0 ${s.state === 'done' ? 'bg-ok text-white' : 'border-2 border-line-strong text-muted'}`} aria-hidden="true">
                     {s.state === 'done' ? <DsIcon name="check" size={14} /> : null}
                   </span>
                   <div className="min-w-0">
-                    <div className="text-[14px] font-semibold text-[#1A174A]">{s.href ? <Link href={s.href} className="text-[#1A174A] underline">{s.title}</Link> : s.title}</div>
-                    <div className="text-[13px] text-[#5B6478]">{s.detail}</div>
+                    <div className="text-[14px] font-semibold text-ink">{s.href ? <Link href={s.href} className="text-ink underline">{s.title}</Link> : s.title}</div>
+                    <div className="text-[13px] text-muted">{s.detail}</div>
                   </div>
                 </div>
                 <DsBadge tone={STATE_BADGE[s.state].tone}>{STATE_BADGE[s.state].label}</DsBadge>
@@ -128,10 +128,10 @@ export async function EarlyAccessDashboard({ orgId, orgName, features }: { orgId
 
         <DsCard title="Wallet" icon="wallet" testId="ea-wallet">
           <dl className="m-0 flex flex-col gap-2 text-[14px]">
-            <div className="flex justify-between gap-3"><dt className="text-[#5B6478]">Available</dt><dd className="m-0 font-mono font-semibold">{available != null ? money(available, 'USD') : '—'}</dd></div>
-            <div className="flex justify-between gap-3"><dt className="text-[#5B6478]">Held for protected orders</dt><dd className="m-0 font-mono">{held != null ? money(held, 'USD') : '—'}</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-muted">Available</dt><dd className="m-0 font-mono font-semibold">{available != null ? money(available, 'USD') : '—'}</dd></div>
+            <div className="flex justify-between gap-3"><dt className="text-muted">Held for protected orders</dt><dd className="m-0 font-mono">{held != null ? money(held, 'USD') : '—'}</dd></div>
           </dl>
-          <p className="mt-3 mb-3 text-[13px] text-[#5B6478]">Add funds by bank transfer. Use your reference so we can match it.</p>
+          <p className="mt-3 mb-3 text-[13px] text-muted">Add funds by bank transfer. Use your reference so we can match it.</p>
           <DsLinkButton href="/account/dropship/wallet" variant="secondary" icon="wallet">Add funds</DsLinkButton>
         </DsCard>
       </div>
@@ -140,7 +140,7 @@ export async function EarlyAccessDashboard({ orgId, orgName, features }: { orgId
         <DsCard title="Your product requests" icon="file" noPadding testId="ea-requests"
           actions={<DsLinkButton href="/account/dropship/requests" variant="secondary" icon="send">Request a product</DsLinkButton>}>
           {requests.length === 0 ? (
-            <p className="m-0 px-5 py-4 text-[13.5px] text-[#5B6478]">No requests yet. Ask our sourcing team for a product we don’t stock yet. It’s free.</p>
+            <p className="m-0 px-5 py-4 text-[13.5px] text-muted">No requests yet. Ask our sourcing team for a product we don’t stock yet. It’s free.</p>
           ) : (
             <div className="ds-scroll">
               <table className="ds-tbl min-w-[640px]">
@@ -158,7 +158,7 @@ export async function EarlyAccessDashboard({ orgId, orgName, features }: { orgId
                             <EaRequestActions rfqId={r.rfq_id} rfqCode={r.rfq_code} />
                           </span>
                         ) : r.dropship_model_no ? (
-                          <span>{r.dropship_product_id ? <Link href={`/account/dropship/catalogue/${r.dropship_product_id}`} className="underline text-[#2A6FD1]">{r.dropship_model_no}</Link> : r.dropship_model_no} · only for you</span>
+                          <span>{r.dropship_product_id ? <Link href={`/account/dropship/catalogue/${r.dropship_product_id}`} className="underline text-coral-text">{r.dropship_model_no}</Link> : r.dropship_model_no} · only for you</span>
                         ) : '—'}
                       </td>
                     </tr>
@@ -175,15 +175,15 @@ export async function EarlyAccessDashboard({ orgId, orgName, features }: { orgId
           subtitle="Landed cost = product + processing + shipping + duties (DDP)"
           actions={<DsLinkButton href="/account/dropship/catalogue" variant="secondary" icon="arrow">See all</DsLinkButton>}>
           {!firstCountry ? (
-            <p className="m-0 text-[13.5px] text-[#5B6478]">Choose your selling countries to see landed costs. <Link href="/account/dropship/onboarding?step=1" className="underline text-[#2A6FD1]">Set countries</Link></p>
+            <p className="m-0 text-[13.5px] text-muted">Choose your selling countries to see landed costs. <Link href="/account/dropship/onboarding?step=1" className="underline text-coral-text">Set countries</Link></p>
           ) : newest.length === 0 ? (
-            <p className="m-0 text-[13.5px] text-[#5B6478]">No products with a full landed cost to {countryName(firstCountry)} yet.</p>
+            <p className="m-0 text-[13.5px] text-muted">No products with a full landed cost to {countryName(firstCountry)} yet.</p>
           ) : (
             <ul className="list-none m-0 p-0 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
               {newest.map(({ r, route }) => (
-                <li key={r.product_id} className="rounded-[12px] border border-[#E3E7EF] overflow-hidden bg-white">
-                  <Link href={features.product_detail ? `/account/dropship/catalogue/${r.product_id}?country=${firstCountry}` : '/account/dropship/catalogue'} className="block no-underline text-[#1A174A] hover:text-[#1A174A]">
-                    <div className="h-[120px] bg-[#E9EDF5] flex items-center justify-center text-[12px] text-[#5B6478]">
+                <li key={r.product_id} className="rounded-[12px] border border-line overflow-hidden bg-white">
+                  <Link href={features.product_detail ? `/account/dropship/catalogue/${r.product_id}?country=${firstCountry}` : '/account/dropship/catalogue'} className="block no-underline text-ink hover:text-ink">
+                    <div className="h-[120px] bg-fill flex items-center justify-center text-[12px] text-muted">
                       {r.images[0] ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={r.images[0]} alt={r.title} className="w-full h-full object-cover" />
@@ -191,7 +191,7 @@ export async function EarlyAccessDashboard({ orgId, orgName, features }: { orgId
                     </div>
                     <div className="p-3 flex flex-col gap-1">
                       <span className="text-[14px] font-semibold leading-tight">{r.title}</span>
-                      <span className="font-mono text-[12px] text-[#5B6478]">{r.model_no}</span>
+                      <span className="font-mono text-[12px] text-muted">{r.model_no}</span>
                       <span className="text-[13px]">Landed to {countryName(firstCountry)} <strong className="font-mono">{money(route!.landed_price_cents, 'USD')}</strong></span>
                       <span><DsBadge tone={STOCK[r.stock_status]?.tone ?? 'info'}>{STOCK[r.stock_status]?.label ?? r.stock_status}</DsBadge></span>
                     </div>

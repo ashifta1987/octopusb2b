@@ -116,7 +116,7 @@ async function Detail({
       <nav aria-label="Breadcrumb" className="ds-mut text-[13px]">
         <Link
           href={`/account/dropship/catalogue?country=${country}`}
-          className="text-[#2A6FD1] hover:underline font-medium"
+          className="text-coral-text hover:underline font-medium"
         >
           Find products
         </Link>
@@ -127,7 +127,7 @@ async function Detail({
           </>
         )}
         {' / '}
-        <span aria-current="page" className="text-[#1A174A]">
+        <span aria-current="page" className="text-ink">
           {p.title}
         </span>
       </nav>
@@ -177,13 +177,13 @@ async function Detail({
         footer={
           <span>
             Processing covers pick, pack and standard packaging. Change DDP or DAP per country in{' '}
-            <Link href="/account/dropship/packing" className="text-[#2A6FD1] hover:underline">
+            <Link href="/account/dropship/packing" className="text-coral-text hover:underline">
               Packing and shipping
             </Link>
             . Try other quantities in the{' '}
             <Link
               href={`/account/dropship/landed-cost?product=${p.product_id}&country=${country}`}
-              className="text-[#2A6FD1] hover:underline"
+              className="text-coral-text hover:underline"
             >
               landed cost calculator
             </Link>
@@ -297,7 +297,7 @@ async function Detail({
       {(p.description || specEntries.length > 0) && (
         <DsCard title="Product description and specifications" icon="file">
           {p.description && (
-            <p className="m-0 text-[14px] leading-relaxed text-[#1A174A] whitespace-pre-line">
+            <p className="m-0 text-[14px] leading-relaxed text-ink whitespace-pre-line">
               {p.description}
             </p>
           )}
@@ -306,10 +306,10 @@ async function Detail({
               {specEntries.map(([k, v]) => (
                 <div
                   key={k}
-                  className="flex justify-between gap-2 py-1.5 border-b border-[#EEF0F4]"
+                  className="flex justify-between gap-2 py-1.5 border-b border-divider"
                 >
                   <dt className="ds-mut">{k}</dt>
-                  <dd className="m-0 font-medium text-[#1A174A] text-right">{String(v)}</dd>
+                  <dd className="m-0 font-medium text-ink text-right">{String(v)}</dd>
                 </div>
               ))}
             </dl>

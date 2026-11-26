@@ -84,7 +84,7 @@ export function PackingClient({ data, countryNames }: { data: PackingData; count
               description={hasStock ? 'Your printed mailers, stored at the Octopus warehouse.' : 'You have no branded packaging stored at the Octopus warehouse. Make My Brand can print mailers and cards; they show here once they arrive at the warehouse.'}
               badge={<DsBadge tone="neutral">{`+ ${usd(fees?.branded_cents)} handling`}</DsBadge>} />
           </fieldset>
-          {brandedReason && <p className="mt-2 mb-0 text-[12px] text-[#5B6478]" data-testid="branded-reason">{brandedReason}</p>}
+          {brandedReason && <p className="mt-2 mb-0 text-[12px] text-muted" data-testid="branded-reason">{brandedReason}</p>}
           {pack === 'branded' && hasStock && (
             <DsSelect id="bsku" label="Which stored item is your mailer" value={brandedSku} onChange={(e) => setBrandedSku(e.target.value)} containerClassName="mt-3">
               {data.own_stock.map((k) => <option key={k.id} value={k.id}>{`${k.name} (${k.sku}) · ${k.available} in stock`}</option>)}
@@ -102,7 +102,7 @@ export function PackingClient({ data, countryNames }: { data: PackingData; count
             <DsChip pressed={slip === 'brand_no_prices'} onClick={() => setSlip('brand_no_prices')} testId="slip-brand">My brand, no prices</DsChip>
             <DsChip pressed={slip === 'none'} onClick={() => setSlip('none')} testId="slip-none">No packing slip</DsChip>
           </div>
-          <p className="mt-2 mb-0 text-[12px] text-[#5B6478]">Inserts come from your branded stock at the warehouse. When it runs out, parcels ship without them and you get an alert.</p>
+          <p className="mt-2 mb-0 text-[12px] text-muted">Inserts come from your branded stock at the warehouse. When it runs out, parcels ship without them and you get an alert.</p>
         </DsCard>
 
         <DsCard title="Extras" icon="shield" testId="extras">
@@ -110,8 +110,8 @@ export function PackingClient({ data, countryNames }: { data: PackingData; count
             hint={fees?.insurance_bp ? 'Coming with orders.' : 'Not offered yet.'} />
           <DsCheckbox label="Signature on delivery, where the carrier offers it" disabled checked={false} onChange={() => {}} hint="The signature fee is not set yet." />
           <div className="mt-2">
-            <strong className="text-[#1A174A] text-[14px]">Weighing rule</strong>
-            <p className="mt-1 mb-0 text-[13px] text-[#1A174A]" data-testid="weighing-rule">
+            <strong className="text-ink text-[14px]">Weighing rule</strong>
+            <p className="mt-1 mb-0 text-[13px] text-ink" data-testid="weighing-rule">
               {tolerance
                 ? `Every parcel is weighed and measured after packing. If it is ${tolerance}, Octopus absorbs the difference. Above that, you get an adjustment with a photo and ${fees?.dispute_window_days ?? 7} days to dispute it.`
                 : 'Every parcel is weighed and measured after packing. The tolerance Octopus absorbs is not set yet; it shows here once set.'}
@@ -158,7 +158,7 @@ export function PackingClient({ data, countryNames }: { data: PackingData; count
               <option value="economy">Always Economy</option><option value="standard">Always Standard</option><option value="express">Always Express</option>
             </DsSelect>
           </div>
-          <p className="mt-2 mb-0 text-[12px] text-[#5B6478]">So no order waits. Battery, liquid, magnet and powder items only use services that can carry them.</p>
+          <p className="mt-2 mb-0 text-[12px] text-muted">So no order waits. Battery, liquid, magnet and powder items only use services that can carry them.</p>
         </DsCard>
       </div>
 
@@ -174,7 +174,7 @@ export function PackingClient({ data, countryNames }: { data: PackingData; count
                 <option value="DDP">Included (DDP)</option><option value="DAP">Buyer pays (DAP)</option>
               </select>
             </td>
-            <td className="text-[13px] text-[#5B6478]">{DUTY_NOTE[m.country] ?? ''}{!m.saved ? `${DUTY_NOTE[m.country] ? ' · ' : ''}Default` : ''}</td>
+            <td className="text-[13px] text-muted">{DUTY_NOTE[m.country] ?? ''}{!m.saved ? `${DUTY_NOTE[m.country] ? ' · ' : ''}Default` : ''}</td>
           </tr>
         ))}
       </DsTableCard>

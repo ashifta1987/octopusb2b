@@ -13,7 +13,7 @@ import { assignExceptionAction, raiseExceptionAction, resolveExceptionItemAction
 import { MsgLine, useRun } from '../wh-run';
 
 const CHIP = 'inline-flex items-center px-3 min-h-[44px] rounded-full border text-[13.5px] font-semibold no-underline';
-const chip = (on: boolean) => `${CHIP} ${on ? 'bg-[#1A174A] border-[#1A174A] text-white hover:text-white' : 'bg-white border-[#C9D0DD] text-[#1A174A] hover:bg-[#F2F7FE]'}`;
+const chip = (on: boolean) => `${CHIP} ${on ? 'bg-coral border-coral text-white hover:text-white' : 'bg-white border-line-strong text-ink hover:bg-tint-2'}`;
 const href = (status: string, kind: string | null) => `/office/warehouse/exceptions?status=${status}${kind ? `&kind=${kind}` : ''}`;
 
 function Resolve({ e, board }: { e: ExceptionRow; board: ExceptionsBoard }) {
@@ -26,7 +26,7 @@ function Resolve({ e, board }: { e: ExceptionRow; board: ExceptionsBoard }) {
   const people = board.people.filter((p) => p.warehouse_code === e.warehouse_code);
   const adminOnly = action === 'unlock_override' && !e.can_unlock;
   return (
-    <div className="mt-3 flex flex-col gap-3 border-t border-[#EEF0F4] pt-3">
+    <div className="mt-3 flex flex-col gap-3 border-t border-divider pt-3">
       <form className="flex flex-wrap gap-2 items-end" onSubmit={(ev) => { ev.preventDefault(); asg.run(() => assignExceptionAction(e.id, owner || null)); }}>
         <DsSelect id={`wh-exc-owner-${e.code}`} label="Owner" value={owner} onChange={(ev) => setOwner(ev.target.value)} containerClassName="flex-1 min-w-[200px]">
           <option value="">Me</option>
@@ -60,17 +60,17 @@ function Resolve({ e, board }: { e: ExceptionRow; board: ExceptionsBoard }) {
 function Row({ e, board }: { e: ExceptionRow; board: ExceptionsBoard }) {
   const [label, tone] = EXCEPTION_STATUS[e.status] ?? [e.status, 'neutral'];
   return (
-    <li className="rounded-[12px] border border-[#E3E7EF] bg-white p-4" data-testid={`wh-exc-${e.code}`}>
+    <li className="rounded-[12px] border border-line bg-white p-4" data-testid={`wh-exc-${e.code}`}>
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-mono font-semibold">{e.code}</span>
         <DsBadge tone={e.kind === 'weight' || e.kind === 'short_pick' ? 'bad' : 'warn'} icon="alert">{EXCEPTION_KIND_LABEL[e.kind]}</DsBadge>
         <DsBadge tone={tone} testId={`wh-exc-status-${e.code}`}>{label}</DsBadge>
         {e.held && <DsBadge tone="bad" icon="lock">Holding {e.order ? 'the order' : 'the lot'}</DsBadge>}
-        <span className="ml-auto text-[12.5px] text-[#5B6478]">{e.status === 'resolved' ? `Resolved ${fmtWh(e.resolved_at)}` : `Open ${ageText(e.created_at)}`} · {e.warehouse_code}</span>
+        <span className="ml-auto text-[12.5px] text-muted">{e.status === 'resolved' ? `Resolved ${fmtWh(e.resolved_at)}` : `Open ${ageText(e.created_at)}`} · {e.warehouse_code}</span>
       </div>
       <p className="mt-2 mb-0 text-[14px]">{e.title}</p>
-      <p className="mt-1 mb-0 text-[13px] text-[#5B6478] flex flex-wrap items-center gap-x-3 gap-y-1">
-        {e.order && <span>Order <Link href={`/office/warehouse/orders/${e.order.code}`} className="font-mono font-semibold text-[#2559B8] underline">{e.order.code}</Link> <OrderStatusBadge status={e.order.status} /></span>}
+      <p className="mt-1 mb-0 text-[13px] text-muted flex flex-wrap items-center gap-x-3 gap-y-1">
+        {e.order && <span>Order <Link href={`/office/warehouse/orders/${e.order.code}`} className="font-mono font-semibold text-coral-text underline">{e.order.code}</Link> <OrderStatusBadge status={e.order.status} /></span>}
         {e.parcel_seq != null && <span>Parcel {e.parcel_seq}</span>}
         {e.asn && <span>Notice <span className="font-mono">{e.asn}</span></span>}
         {e.lot && <span>Lot <span className="font-mono">{e.lot.code}</span> · {e.lot.qty} counted</span>}
@@ -84,7 +84,7 @@ function Row({ e, board }: { e: ExceptionRow; board: ExceptionsBoard }) {
         </p>
       )}
       {e.status !== 'resolved' && (e.can_resolve ? <Resolve e={e} board={board} />
-        : <p className="mt-2 mb-0 text-[12.5px] text-[#5B6478]">A supervisor or admin assigns and resolves exceptions.</p>)}
+        : <p className="mt-2 mb-0 text-[12.5px] text-muted">A supervisor or admin assigns and resolves exceptions.</p>)}
     </li>
   );
 }
@@ -110,7 +110,7 @@ function Raise({ board }: { board: ExceptionsBoard }) {
         <DsTextarea label="What is wrong" value={f.title} onChange={(ev) => setF({ ...f, title: ev.target.value })} maxLength={600} rows={2} containerClassName="sm:col-span-4" />
         <div className="sm:col-span-4 flex flex-wrap items-center gap-3">
           <DsButton type="submit" variant="secondary" icon="flag" disabled={pending || f.title.trim().length < 3} testId="wh-exc-raise-submit">Report</DsButton>
-          <span className="text-[12.5px] text-[#5B6478]">Short picks are reported on the picking screen; blocked lots and locked overrides appear here by themselves.</span>
+          <span className="text-[12.5px] text-muted">Short picks are reported on the picking screen; blocked lots and locked overrides appear here by themselves.</span>
         </div>
         <div className="sm:col-span-4"><MsgLine msg={msg} testId="wh-exc-raise-msg" /></div>
       </form>
@@ -127,7 +127,7 @@ export function ExceptionsClient({ board, status, kind }: { board: ExceptionsBoa
           <Link key={s} href={href(s, kind)} aria-current={status === s ? 'page' : undefined}
             className={chip(status === s)}>{l}</Link>
         ))}
-        <span className="w-px bg-[#E3E7EF] mx-1" aria-hidden="true" />
+        <span className="w-px bg-line mx-1" aria-hidden="true" />
         <Link href={href(status, null)} aria-current={kind === null ? 'page' : undefined} className={chip(kind === null)}>Every kind</Link>
         {EXCEPTION_KINDS.map((k) => (
           <Link key={k} href={href(status, k)} aria-current={kind === k ? 'page' : undefined}

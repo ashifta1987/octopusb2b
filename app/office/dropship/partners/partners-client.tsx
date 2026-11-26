@@ -41,7 +41,7 @@ export function PartnersClient({ data }: { data: PartnersPage }) {
             const st = PARTNER_STATUS[p.status];
             return (
               <tr key={p.id} data-testid="partner-row">
-                <td className="font-semibold">{p.name}<div className="text-[12px] text-[#5B6478] font-normal">{p.code} · {p.contact_email}</div></td>
+                <td className="font-semibold">{p.name}<div className="text-[12px] text-muted font-normal">{p.code} · {p.contact_email}</div></td>
                 <td>{PARTNER_KIND[p.kind]}</td><td>{p.merchants}</td><td>{usd(p.earned_cents)}</td>
                 <td className="text-[13px]">{ruleText(p.rule ?? data.default_rule)}{!p.rule && data.default_rule ? ' (default)' : ''}</td>
                 <td><DsBadge tone={st.tone}>{st.label}</DsBadge></td>
@@ -74,23 +74,23 @@ export function PartnersClient({ data }: { data: PartnersPage }) {
               <DsTextarea label="Note (internal)" value={inv.note} onChange={(e) => setInv({ ...inv, note: e.target.value })} rows={2} />
               <div><DsButton type="submit" loading={pending} icon="send">Invite partner</DsButton></div>
             </form>
-            <p className="text-[12px] text-[#5B6478] mt-3 mb-0">An invite records the partner here. No email is sent and the partner has no login yet (not designed).</p>
+            <p className="text-[12px] text-muted mt-3 mb-0">An invite records the partner here. No email is sent and the partner has no login yet (not designed).</p>
           </DsCard>
           <DsCard title="Attach a merchant" icon="link" testId="partner-attach">
-            {data.partners.length === 0 || data.available_merchants.length === 0 ? <p className="m-0 text-[14px] text-[#5B6478]">{data.partners.length === 0 ? 'Invite a partner first.' : 'Every merchant with Dropship already belongs to a partner.'}</p> : (
+            {data.partners.length === 0 || data.available_merchants.length === 0 ? <p className="m-0 text-[14px] text-muted">{data.partners.length === 0 ? 'Invite a partner first.' : 'Every merchant with Dropship already belongs to a partner.'}</p> : (
               <div className="grid gap-3">
                 <DsSelect label="Partner" value={attachP} onChange={(e) => setAttachP(e.target.value)}>{data.partners.filter((p) => p.status !== 'ended').map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</DsSelect>
                 <DsSelect label="Merchant" value={attachM} onChange={(e) => setAttachM(e.target.value)}>{data.available_merchants.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}</DsSelect>
                 <div><DsButton onClick={() => start(async () => done(await attachMerchantAction(attachP, attachM), 'Merchant attached. Commission counts plan fees charged from now on.'))} loading={pending}>Attach merchant</DsButton></div>
               </div>
             )}
-            <p className="text-[12px] text-[#5B6478] mt-3 mb-0">Only plan fees charged after the merchant is attached earn commission. A merchant belongs to one partner.</p>
+            <p className="text-[12px] text-muted mt-3 mb-0">Only plan fees charged after the merchant is attached earn commission. A merchant belongs to one partner.</p>
           </DsCard>
         </div>
       )}
 
       <DsCard title="Commission rules" subtitle="Commission is calculated on plan fees the merchant actually paid. Rates and tax treatment are to be confirmed by management and your accountant." icon="percent" testId="partner-rules">
-        {!data.can_rules ? <p className="m-0 text-[14px] text-[#5B6478]">Only Finance approvers and admins change commission rules. Current default: {ruleText(data.default_rule)}.</p> : (
+        {!data.can_rules ? <p className="m-0 text-[14px] text-muted">Only Finance approvers and admins change commission rules. Current default: {ruleText(data.default_rule)}.</p> : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end">
             <DsSelect label="Applies to" value={rulePartner} onChange={(e) => pickRulePartner(e.target.value)}><option value="">Default for all partners</option>{data.partners.filter((p) => p.status !== 'ended').map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</DsSelect>
             <DsSelect label="Commission type" value={rule.kind} onChange={(e) => setRule({ ...rule, kind: e.target.value as RuleForm['kind'] })}><option value="percent_of_plan_fee">Percent of plan fee</option><option value="fixed_per_merchant">Fixed per merchant</option></DsSelect>

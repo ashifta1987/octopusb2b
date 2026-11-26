@@ -19,13 +19,13 @@ export function ProjectPhases({ stage, status, rows }: { stage: string; status: 
             aria-current={current ? 'step' : undefined}>
             {i < phases.length - 1 && <span className="absolute left-[13px] top-7 bottom-0 w-px bg-line" aria-hidden />}
             <span aria-hidden className={`absolute left-0 top-0.5 w-7 h-7 rounded-full inline-flex items-center justify-center text-[13px] font-bold border-2 ${
-              done ? 'bg-ok border-ok text-white' : current ? (stopped ? 'bg-warn-bg border-warn text-warn' : 'bg-ink border-ink text-white') : 'bg-white border-line-strong text-muted'}`}>
+              done ? 'bg-ok border-ok text-white' : current ? (stopped ? 'bg-warn-bg border-warn text-warn' : 'bg-coral border-coral text-white') : 'bg-white border-line-strong text-muted'}`}>
               {done ? '✓' : p.n}
             </span>
             <div className="flex flex-wrap items-center gap-2">
               <span className={`font-semibold ${p.state === 'todo' ? 'text-muted' : 'text-ink'}`}>{p.name}</span>
               <span className="sr-only">{done ? '(done)' : current ? '(current phase)' : '(to do)'}</span>
-              <span className={`text-[11.5px] font-semibold px-2 py-0.5 rounded-full ${p.paid ? 'bg-tint text-coral-text' : 'bg-ok-bg text-ok'}`}>{p.paid ? 'Paid first' : 'Free'}</span>
+              <span className={`text-[13px] font-bold px-3 py-[3px] rounded-full ${p.paid ? 'bg-tint text-coral-text' : 'bg-ok-bg text-ok'}`}>{p.paid ? 'Paid first' : 'Free'}</span>
               {current && stopped && <span className="text-[12px] font-semibold text-warn">{tkStatus(status).label}</span>}
             </div>
             <p className="m-0 mt-0.5 text-[14px] text-muted">{p.what}</p>

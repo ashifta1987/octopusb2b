@@ -105,7 +105,7 @@ export default async function DeveloperPage({ searchParams }: { searchParams: Pr
                 <nav aria-label="Your apps" className="flex flex-wrap gap-2">
                   {apps.map((a) => (
                     <Link key={a.id} href={href({ app: a.id })} aria-current={a.id === app.id ? 'page' : undefined}
-                      className={cn('btn btn-sm', a.id === app.id ? 'btn-dark' : 'btn-ghost')}>
+                      className={cn('btn btn-sm', a.id === app.id ? 'btn-primary' : 'btn-ghost')}>
                       {a.name}{a.revoked_at ? ' (revoked)' : ''}
                     </Link>
                   ))}

@@ -22,7 +22,7 @@ export function Handover({ board, warehouseNames }: { board: DispatchBoard; ware
       <div className="print:hidden">
         <DsCard title="Hand over to the carrier" icon="truck" testId="wh-handover"
           subtitle={`One batch per carrier account. ${board.ready.length} checked label${board.ready.length === 1 ? '' : 's'} waiting for a batch.`}>
-          {accounts.length === 0 ? <p className="m-0 text-[13.5px] text-[#5B6478]">No carrier account here yet (Carriers and rules).</p> : (
+          {accounts.length === 0 ? <p className="m-0 text-[13.5px] text-muted">No carrier account here yet (Carriers and rules).</p> : (
             <div className="flex flex-wrap gap-3 items-end">
               <DsSelect label="Carrier account" value={account} onChange={(e) => setAccount(e.target.value)} containerClassName="w-[280px]">
                 {accounts.map((a) => <option key={a.id} value={a.id}>{`${CARRIER_LABEL[a.carrier]} · ${a.name}${a.mode === 'sandbox' ? ' (sandbox)' : ''}${Object.keys(warehouseNames).length > 1 ? ` · ${warehouseNames[a.warehouse_code] ?? a.warehouse_code}` : ''}`}</option>)}
@@ -32,7 +32,7 @@ export function Handover({ board, warehouseNames }: { board: DispatchBoard; ware
             </div>
           )}
           {board.ready.length > 0 && (
-            <ul className="mt-3 mb-0 pl-5 text-[13px] text-[#5B6478]" aria-label="Checked labels waiting for a batch">
+            <ul className="mt-3 mb-0 pl-5 text-[13px] text-muted" aria-label="Checked labels waiting for a batch">
               {board.ready.map((l) => <li key={l.id}><span className="font-mono">{l.tracking_no}</span> · {l.order_code} parcel {l.parcel_seq} · {CARRIER_LABEL[l.carrier]} {l.service_name}</li>)}
             </ul>
           )}
@@ -43,7 +43,7 @@ export function Handover({ board, warehouseNames }: { board: DispatchBoard; ware
         <DsCard title="Manifests" icon="list" noPadding testId="wh-manifests" className="print:hidden" subtitle="Handed-over batches of the last 30 days.">
           <ul className="list-none m-0 p-0">
             {closed.map((d) => (
-              <li key={d.id} className="border-b border-[#EEF0F4] last:border-0 px-5 py-3">
+              <li key={d.id} className="border-b border-divider last:border-0 px-5 py-3">
                 <Manifest d={d} onPrint={() => print(d.code)} warehouseName={warehouseNames[d.warehouse_code] ?? d.warehouse_code} />
               </li>
             ))}
@@ -86,14 +86,14 @@ function OpenBatch({ d }: { d: Dispatch }) {
           </table>
         </div>
       )}
-      <div className="mt-4 pt-4 border-t border-[#EEF0F4] flex flex-wrap gap-3 items-end">
+      <div className="mt-4 pt-4 border-t border-divider flex flex-wrap gap-3 items-end">
         <DsInput label="Handed to (driver or pickup reference)" value={to} maxLength={120} onChange={(e) => setTo(e.target.value)} containerClassName="w-[280px]" />
         <DsInput label="Carrier manifest number (optional)" value={mf} maxLength={64} onChange={(e) => setMf(e.target.value)} containerClassName="w-[240px]" />
         <DsButton icon="send" disabled={pending || d.lines.length === 0 || !to.trim()} disabledReason={d.lines.length === 0 ? 'Scan labels in first' : !to.trim() ? 'Enter who took the parcels' : undefined}
           testId={`wh-dispatch-close-${d.code}`} onClick={() => run(() => closeDispatchAction(d.id, to, mf))}>Hand over {d.lines.length} parcel{d.lines.length === 1 ? '' : 's'}</DsButton>
       </div>
       <details className="mt-3">
-        <summary className="cursor-pointer text-[13px] text-[#5B6478] min-h-[44px] flex items-center">Cancel this batch</summary>
+        <summary className="cursor-pointer text-[13px] text-muted min-h-[44px] flex items-center">Cancel this batch</summary>
         <div className="flex flex-wrap gap-3 items-end">
           <DsInput label="Why is the batch cancelled?" value={reason} maxLength={300} onChange={(e) => setReason(e.target.value)} containerClassName="w-[280px]" />
           <DsButton variant="secondary" disabled={pending || !reason.trim()} onClick={() => run(() => cancelDispatchAction(d.id, reason))}>Cancel batch</DsButton>
@@ -114,7 +114,7 @@ function Manifest({ d, onPrint, warehouseName, sheet = false }: { d: Dispatch; o
         {d.account?.mode === 'sandbox' && <DsBadge tone="warn">Sandbox · not a real hand-over</DsBadge>}
         {!sheet && <DsButton variant="link" onClick={onPrint} testId={`wh-manifest-print-${d.code}`}>Print manifest<span className="sr-only"> {d.manifest_no}</span></DsButton>}
       </div>
-      <p className="m-0 mt-1 text-[13px] text-[#5B6478]">Handed to {d.handed_to} · {fmtWh(d.closed_at)} by {d.closed_by_name ?? 'staff'} · {d.lines.length} parcel{d.lines.length === 1 ? '' : 's'} · {kg(total)}</p>
+      <p className="m-0 mt-1 text-[13px] text-muted">Handed to {d.handed_to} · {fmtWh(d.closed_at)} by {d.closed_by_name ?? 'staff'} · {d.lines.length} parcel{d.lines.length === 1 ? '' : 's'} · {kg(total)}</p>
       <div className="mt-2 overflow-x-auto" tabIndex={sheet ? undefined : 0} role={sheet ? undefined : 'region'} aria-label={sheet ? undefined : `Parcels on manifest ${d.manifest_no}`}>
         <table className="ds-tbl min-w-[520px]">
           <thead><tr><th scope="col">Tracking</th><th scope="col">Order</th><th scope="col">Service</th><th scope="col">Weight</th><th scope="col">To</th><th scope="col">Now</th></tr></thead>

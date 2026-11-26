@@ -43,12 +43,12 @@ export function InboundClient({ asns, warehouseNames }: { asns: AsnRow[]; wareho
                   return (
                     <tr key={a.id} data-testid={`wh-inbound-row-${a.code}`}>
                       <td>
-                        <Link href={`/office/warehouse/receive/${a.code}`} className="font-mono font-semibold text-[#2559B8] underline-offset-2 hover:underline">{a.code}</Link>
-                        {a.client_note && <div className="text-[12px] text-[#5B6478] max-w-[220px] truncate" title={a.client_note}>{a.client_note}</div>}
+                        <Link href={`/office/warehouse/receive/${a.code}`} className="font-mono font-semibold text-coral-text underline-offset-2 hover:underline">{a.code}</Link>
+                        {a.client_note && <div className="text-[12px] text-muted max-w-[220px] truncate" title={a.client_note}>{a.client_note}</div>}
                       </td>
                       <td>{a.org_name ?? SOURCE_LABEL[a.source] ?? a.source}</td>
                       <td>{warehouseNames[a.warehouse_code] ?? a.warehouse_code}</td>
-                      <td>{fmtDay(a.expected_date)}{a.booked_slot_at && <div className="text-[12px] text-[#5B6478]">Slot {fmtWh(a.booked_slot_at)} China time</div>}</td>
+                      <td>{fmtDay(a.expected_date)}{a.booked_slot_at && <div className="text-[12px] text-muted">Slot {fmtWh(a.booked_slot_at)} China time</div>}</td>
                       <td>{loadText(a.cartons, a.pallets) || '—'}</td>
                       <td>{a.lines} · {a.units == null ? '—' : Number(a.units).toLocaleString('en-US')} units</td>
                       <td className="whitespace-nowrap">

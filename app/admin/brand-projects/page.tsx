@@ -22,7 +22,7 @@ async function BrandProjects({ searchParams }: { searchParams: Promise<{ status?
   const rows = (scope.all || scope.division.code === 'MMB' ? data ?? [] : []) as BrandRow[];
   const chip = (key: string | null, label: string) => (
     <Link key={label} href={key ? `/admin/brand-projects?status=${key}` : '/admin/brand-projects'} aria-current={status === key ? 'page' : undefined}
-      className={`px-4 py-2 rounded-full text-sm font-semibold ${status === key ? 'bg-ink text-white' : 'bg-white border border-line text-ink hover:border-ink'}`}>{label}</Link>
+      className={`px-4 py-2 rounded-full text-sm font-semibold ${status === key ? 'bg-coral text-white' : 'bg-white border border-line text-ink hover:border-ink'}`}>{label}</Link>
   );
   return (
     <>

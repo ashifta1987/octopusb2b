@@ -41,18 +41,18 @@ export function MarkupCard({ page }: { page: MarkupPage }) {
       subtitle="Rate cards are the carrier cost. The merchant pays the cost plus this markup on the shipping line. Two people change it.">
       <div className="flex flex-col gap-4">
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 m-0 text-[13.5px]">
-          <div><dt className="text-[#5B6478] text-[12.5px]">Markup in force</dt>
+          <div><dt className="text-muted text-[12.5px]">Markup in force</dt>
             <dd className="m-0 text-[18px] font-semibold" data-testid="markup-current">{page.pct == null ? 'Not set — shipping is charged at cost' : `${page.pct}%`}</dd></div>
-          <div><dt className="text-[#5B6478] text-[12.5px]">How it is worked out</dt>
+          <div><dt className="text-muted text-[12.5px]">How it is worked out</dt>
             <dd className="m-0">Shipping line = rate-card cost × (1 + markup), whole cents, rounded half up.</dd></div>
         </dl>
 
         {p && (
-          <div className="border border-[#F2D7A6] bg-[#FFF8EC] rounded-[10px] p-3 flex flex-col gap-2" data-testid="markup-pending">
+          <div className="border border-warn-line bg-warn-bg rounded-[10px] p-3 flex flex-col gap-2" data-testid="markup-pending">
             <div className="text-[13.5px]">
               <DsBadge tone="warn">Waiting for a second approver</DsBadge>{' '}
               <strong>{pctText(p.old_value)} → {pctText(p.new_value)}</strong>
-              <div className="text-[12px] text-[#5B6478]">Proposed by {p.proposed_by_name ?? 'staff'} on {fmtDate(p.proposed_at)}{p.reason ? ` · ${p.reason}` : ''}</div>
+              <div className="text-[12px] text-muted">Proposed by {p.proposed_by_name ?? 'staff'} on {fmtDate(p.proposed_at)}{p.reason ? ` · ${p.reason}` : ''}</div>
             </div>
             {page.can_approve && !mine && (
               <div className="flex flex-wrap gap-2 items-end">
@@ -65,7 +65,7 @@ export function MarkupCard({ page }: { page: MarkupPage }) {
             )}
             {mine && (
               <div className="flex flex-wrap gap-2 items-center">
-                <p className="m-0 text-[13px] text-[#5B6478]" data-testid="markup-own-note">You proposed this change. A different Finance approver or an admin must approve it.</p>
+                <p className="m-0 text-[13px] text-muted" data-testid="markup-own-note">You proposed this change. A different Finance approver or an admin must approve it.</p>
                 <DsButton variant="link" disabled={pending} testId="markup-withdraw" onClick={() => run(() => withdrawMarkupAction(p.id))}>Withdraw</DsButton>
               </div>
             )}
@@ -84,7 +84,7 @@ export function MarkupCard({ page }: { page: MarkupPage }) {
           </form>
         )}
         {!page.can_propose && !page.can_approve && <DsNotice tone="info" title="Read only">Dropship editors and Finance propose a change; a second Finance approver or an admin approves it.</DsNotice>}
-        {msg && <p role={msg.ok ? 'status' : 'alert'} data-testid="markup-msg" className={`m-0 text-[13px] ${msg.ok ? 'text-[#1B7F4B]' : 'text-[#B42318]'}`}>{msg.text}</p>}
+        {msg && <p role={msg.ok ? 'status' : 'alert'} data-testid="markup-msg" className={`m-0 text-[13px] ${msg.ok ? 'text-ok' : 'text-bad'}`}>{msg.text}</p>}
 
         {page.history.length > 0 && (
           <div className="ds-scroll">
@@ -93,10 +93,10 @@ export function MarkupCard({ page }: { page: MarkupPage }) {
               <tbody>
                 {page.history.map((h) => (
                   <tr key={h.id}>
-                    <td className="font-mono">{pctText(h.old_value)} → {pctText(h.new_value)}{h.reason ? <div className="text-[12px] text-[#5B6478] font-sans">{h.reason}</div> : null}</td>
+                    <td className="font-mono">{pctText(h.old_value)} → {pctText(h.new_value)}{h.reason ? <div className="text-[12px] text-muted font-sans">{h.reason}</div> : null}</td>
                     <td><DsBadge tone={STATUS[h.status]?.[1] ?? 'neutral'}>{STATUS[h.status]?.[0] ?? h.status}</DsBadge></td>
-                    <td>{h.proposed_by_name ?? '—'}<div className="text-[12px] text-[#5B6478]">{fmtDate(h.proposed_at)}</div></td>
-                    <td>{h.decided_by_name ?? (h.status === 'seeded' ? 'Set by migration' : '—')}{h.decided_at && <div className="text-[12px] text-[#5B6478]">{fmtDate(h.decided_at)}</div>}</td>
+                    <td>{h.proposed_by_name ?? '—'}<div className="text-[12px] text-muted">{fmtDate(h.proposed_at)}</div></td>
+                    <td>{h.decided_by_name ?? (h.status === 'seeded' ? 'Set by migration' : '—')}{h.decided_at && <div className="text-[12px] text-muted">{fmtDate(h.decided_at)}</div>}</td>
                   </tr>
                 ))}
               </tbody>

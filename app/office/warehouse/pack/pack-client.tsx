@@ -23,7 +23,7 @@ const digits = (s: string) => s.replace(/\D/g, '');
 
 function Step({ n, title, done, children, testId }: { n: number; title: string; done: boolean; children: ReactNode; testId: string }) {
   return (
-    <DsCard testId={testId} title={<span className="flex items-center gap-2"><span className={`w-7 h-7 rounded-full inline-flex items-center justify-center text-[13px] font-bold ${done ? 'bg-[#0B7A75] text-white' : 'border-2 border-[#C9D0DD] text-[#5B6478]'}`} aria-hidden="true">{n}</span>{title}</span>}
+    <DsCard testId={testId} title={<span className="flex items-center gap-2"><span className={`w-7 h-7 rounded-full inline-flex items-center justify-center text-[13px] font-bold ${done ? 'bg-ok text-white' : 'border-2 border-line-strong text-muted'}`} aria-hidden="true">{n}</span>{title}</span>}
       actions={done ? <DsBadge tone="ok">Done</DsBadge> : undefined}>
       {children}
     </DsCard>
@@ -37,9 +37,9 @@ function PhotoInput({ d, kind }: { d: OrderDetail; kind: EvidenceKind }) {
   const has = d.evidence.some((e) => e.kind === kind);
   const id = `wh-photo-input-${kind}`;
   return (
-    <div className="rounded-[10px] border border-[#E3E7EF] p-3 flex flex-col gap-2" data-testid={`wh-photo-step-${kind}`}>
+    <div className="rounded-[10px] border border-line p-3 flex flex-col gap-2" data-testid={`wh-photo-step-${kind}`}>
       <div className="flex items-center gap-2"><strong className="text-[14px]">{EVIDENCE_LABEL[kind]}</strong>{has && <DsBadge tone="ok">Saved</DsBadge>}</div>
-      <label htmlFor={id} className="text-[13px] text-[#5B6478]">{has ? 'Add another photo' : 'Take or choose a photo'}</label>
+      <label htmlFor={id} className="text-[13px] text-muted">{has ? 'Add another photo' : 'Take or choose a photo'}</label>
       <input id={id} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" disabled={pending} data-testid={`wh-photo-file-${kind}`}
         className="text-[13px] min-h-[44px]"
         onChange={(e) => {
@@ -57,7 +57,7 @@ function PhotoInput({ d, kind }: { d: OrderDetail; kind: EvidenceKind }) {
             if (r.ok) router.refresh();
           });
         }} />
-      {pending && <p className="m-0 text-[13px] text-[#5B6478]" role="status">Uploading…</p>}
+      {pending && <p className="m-0 text-[13px] text-muted" role="status">Uploading…</p>}
       <MsgLine msg={msg} testId={`wh-photo-msg-${kind}`} />
     </div>
   );
@@ -77,7 +77,7 @@ function Materials({ d, x }: { d: OrderDetail; x: PackExtras }) {
         <ul className="m-0 p-0 list-none flex flex-col gap-1 text-[13.5px]">
           {x.usage.map((u) => (
             <li key={u.id} className="flex flex-wrap items-center gap-2" data-testid={`wh-pack-use-${u.material}`}>
-              <span className="font-mono">{u.material}</span><span>{qtyText(u.qty, u.unit)}</span><span className="text-[#5B6478]">{USE_SOURCE_LABEL[u.source] ?? u.source}</span>
+              <span className="font-mono">{u.material}</span><span>{qtyText(u.qty, u.unit)}</span><span className="text-muted">{USE_SOURCE_LABEL[u.source] ?? u.source}</span>
               {u.voided && <DsBadge tone="neutral">Taken back</DsBadge>}
               {open && u.source === 'manual' && !u.voided && <DsButton variant="link" disabled={pending} onClick={() => run(() => voidMaterialAction(u.id, d.order.code, 'Not used'))}>Take back</DsButton>}
             </li>
@@ -135,7 +135,7 @@ function PackOrder({ d, x }: { d: OrderDetail; x: PackExtras | null }) {
   if (open && x && x.parcels > 0) {
     return (
       <DsNotice tone="info" title={`${o.code} is packed in ${x.parcels} parcels`} testId="wh-pack-multi"
-        action={<Link href={`/office/warehouse/multi-parcel?order=${o.code}`} className="font-semibold text-[#2559B8] underline">Open multi-parcel packing</Link>}>
+        action={<Link href={`/office/warehouse/multi-parcel?order=${o.code}`} className="font-semibold text-coral-text underline">Open multi-parcel packing</Link>}>
         Items, boxes, photos and weights are recorded per parcel there.
       </DsNotice>
     );
@@ -144,10 +144,10 @@ function PackOrder({ d, x }: { d: OrderDetail; x: PackExtras | null }) {
     <div className="flex flex-col gap-4" data-testid="wh-pack-order">
       <DsCard title={o.code} icon="package" actions={<><OrderStatusBadge status={o.status} testId="wh-pack-status" /><DgBadge kinds={o.dg_kinds} /></>}>
         <p className="m-0 text-[14px]">{o.owner} · {o.ship_name} · {o.ship_country}{o.store_order ? ` · ${o.store_order}` : ''}</p>
-        {o.status === 'packed' && <div className="mt-3"><DsNotice tone="ok" title="Packed" action={<Link href={`/office/warehouse/evidence/${o.code}`} className="font-semibold text-[#2559B8] underline">Evidence</Link>}>Closed at {fmtWh(o.packed_at)}.</DsNotice></div>}
+        {o.status === 'packed' && <div className="mt-3"><DsNotice tone="ok" title="Packed" action={<Link href={`/office/warehouse/evidence/${o.code}`} className="font-semibold text-coral-text underline">Evidence</Link>}>Closed at {fmtWh(o.packed_at)}.</DsNotice></div>}
         {o.store_order_cancelled && <div className="mt-3"><DsNotice tone="bad" title="The Dropship order was cancelled">Don’t pack it; a supervisor cancels this warehouse order.</DsNotice></div>}
         {open && (
-          <p className="mt-3 mb-0 text-[13px] text-[#5B6478]">Needs more than one box? <Link href={`/office/warehouse/multi-parcel?order=${o.code}`} className="font-semibold text-[#2559B8] underline" data-testid="wh-pack-to-multi">Pack it in several parcels</Link></p>
+          <p className="mt-3 mb-0 text-[13px] text-muted">Needs more than one box? <Link href={`/office/warehouse/multi-parcel?order=${o.code}`} className="font-semibold text-coral-text underline" data-testid="wh-pack-to-multi">Pack it in several parcels</Link></p>
         )}
       </DsCard>
 
@@ -205,7 +205,7 @@ function PackOrder({ d, x }: { d: OrderDetail; x: PackExtras | null }) {
             disabledReason={benchMissing ? (benches.some(benchUsable) ? 'Choose the scale bench' : 'No checked bench — run the scale check first') : undefined} testId="wh-pack-weigh-submit">Save weight</DsButton>
         </form>
         {open && x?.bench_required && !benches.some(benchUsable) && (
-          <div className="mt-2"><DsNotice tone="bad" title="No scale bench is checked" testId="wh-pack-no-bench" action={<Link href="/office/warehouse/scale" className="font-semibold text-[#2559B8] underline">Scale check</Link>}>A bench must pass its calibration check before parcels are weighed on it.</DsNotice></div>
+          <div className="mt-2"><DsNotice tone="bad" title="No scale bench is checked" testId="wh-pack-no-bench" action={<Link href="/office/warehouse/scale" className="font-semibold text-coral-text underline">Scale check</Link>}>A bench must pass its calibration check before parcels are weighed on it.</DsNotice></div>
         )}
         {o.measured_weight_g != null && (
           <p className="mt-2 mb-0 text-[14px] flex flex-wrap items-center gap-2" data-testid="wh-pack-weight-result">
@@ -236,7 +236,7 @@ function PackOrder({ d, x }: { d: OrderDetail; x: PackExtras | null }) {
                 <DsInput label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} maxLength={300} placeholder="e.g. heavier protective box" />
                 <div className="sm:col-span-3 flex flex-wrap items-center gap-3">
                   <DsButton type="submit" variant="secondary" icon="lock" disabled={ovr.pending || !sup || pin.length < 4 || reason.trim().length < 3} testId="wh-override-submit">Approve weight</DsButton>
-                  <span className="text-[13px] text-[#5B6478]" data-testid="wh-override-left">{3 - o.override_attempts} attempt(s) left · packers, and whoever packed or weighed this parcel, cannot approve</span>
+                  <span className="text-[13px] text-muted" data-testid="wh-override-left">{3 - o.override_attempts} attempt(s) left · packers, and whoever packed or weighed this parcel, cannot approve</span>
                 </div>
               </form>
             )}
@@ -300,11 +300,11 @@ function StationSettings({ s }: { s: Station }) {
         <p className="m-0 text-[13.5px]" data-testid="wh-settings-readonly">Tolerance: {s.tolerance_g} g or {s.tolerance_pct} %, whichever is larger · photos kept {s.retention_days} days. A warehouse admin changes these.</p>
       )}
       <h3 className="mt-4 mb-2 text-[15px] font-semibold">Boxes</h3>
-      {s.boxes.length === 0 ? <p className="m-0 text-[13px] text-[#5B6478]">No boxes yet.</p> : (
+      {s.boxes.length === 0 ? <p className="m-0 text-[13px] text-muted">No boxes yet.</p> : (
         <ul className="m-0 p-0 list-none flex flex-col gap-1.5">
           {s.boxes.map((b) => (
             <li key={b.id} className="flex flex-wrap items-center gap-2 text-[13.5px]" data-testid={`wh-box-${b.code}`}>
-              <span className="font-mono font-semibold">{b.code}</span><span>{b.name}</span><span className="text-[#5B6478]">empty {b.tare_g} g{b.length_mm ? ` · ${b.length_mm}×${b.width_mm}×${b.height_mm} mm` : ''}</span>
+              <span className="font-mono font-semibold">{b.code}</span><span>{b.name}</span><span className="text-muted">empty {b.tare_g} g{b.length_mm ? ` · ${b.length_mm}×${b.width_mm}×${b.height_mm} mm` : ''}</span>
               {!b.active && <DsBadge tone="neutral">Not in use</DsBadge>}
               {s.can_boxes && (
                 <DsButton variant="link" disabled={bx.pending} onClick={() => bx.run(() => saveBoxAction({
@@ -337,14 +337,14 @@ export function PackClient({ board, detail, extras = null }: { board: PackBoard;
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5 items-start">
         <DsCard title="Ready to pack" icon="list" testId="wh-pack-queue">
-          {board.queue.length === 0 ? <p className="m-0 text-[13px] text-[#5B6478]">Nothing to pack. Orders appear once they are fully picked.</p> : (
+          {board.queue.length === 0 ? <p className="m-0 text-[13px] text-muted">Nothing to pack. Orders appear once they are fully picked.</p> : (
             <ul className="m-0 p-0 list-none flex flex-col gap-2">
               {board.queue.map((o) => (
                 <li key={o.id}>
                   <Link href={`/office/warehouse/pack?order=${o.code}`} aria-current={detail?.order.code === o.code ? 'page' : undefined} data-testid={`wh-pack-open-${o.code}`}
-                    className={`block rounded-[10px] border p-3 no-underline text-[#1A174A] min-h-[44px] ${detail?.order.code === o.code ? 'border-[#2559B8] bg-[#EEF3FD]' : 'border-[#E3E7EF] hover:bg-[#F7F9FC]'}`}>
-                    <span className="font-mono font-semibold">{o.code}</span> <span className="text-[12.5px] text-[#5B6478]">· {o.picked} unit(s){o.has_dangerous_goods ? ' · DG' : ''}</span>
-                    <span className="block text-[12.5px] text-[#5B6478]">{o.owner}</span>
+                    className={`block rounded-[10px] border p-3 no-underline text-ink min-h-[44px] ${detail?.order.code === o.code ? 'border-coral-text bg-tint-2' : 'border-line hover:bg-pearl'}`}>
+                    <span className="font-mono font-semibold">{o.code}</span> <span className="text-[12.5px] text-muted">· {o.picked} unit(s){o.has_dangerous_goods ? ' · DG' : ''}</span>
+                    <span className="block text-[12.5px] text-muted">{o.owner}</span>
                   </Link>
                 </li>
               ))}

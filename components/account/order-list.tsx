@@ -13,7 +13,7 @@ export function OrderList({ orders, activeId }: { orders: OrderListItem[]; activ
       {orders.map((o) => (
         <li key={o.id}>
           <Link href={`/account/orders/${o.id}`} aria-current={o.id === activeId ? 'page' : undefined}
-            className={cn('block px-5 py-4 hover:bg-pearl', o.id === activeId && 'bg-tint border-l-4 border-coral-text')}>
+            className={cn('block px-5 py-4 hover:bg-pearl', o.id === activeId && 'bg-tint shadow-[inset_4px_0_0_var(--coral)] hover:bg-tint')}>
             <div className="flex justify-between gap-3 text-xs text-muted"><span className="mono">{o.code}</span><span>{relTime(o.updated_at)}</span></div>
             <div className="font-semibold mt-1">{o.title}</div>
             <div className="mt-2"><StatusBadge status={o.status} /></div>
@@ -34,7 +34,7 @@ export function OrdersTabs({ active, counts }: { active: 'orders' | 'rfqs' | 'se
     <nav aria-label="Orders, RFQs and services" className="flex flex-wrap gap-2 mb-6">
       {tabs.map((t) => (
         <Link key={t.k} href={t.href} aria-current={active === t.k ? 'page' : undefined}
-          className={cn('inline-flex items-center gap-2 px-5 py-2.5 rounded-full border font-semibold text-[15px]', active === t.k ? 'bg-ink text-white border-ink' : 'bg-white border-line-strong text-ink')}>
+          className="chip px-5 text-[15px]">
           {t.l}<span className="text-xs opacity-80">{t.n}</span>
         </Link>
       ))}

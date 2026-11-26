@@ -25,7 +25,7 @@ function MaterialRow({ m, s }: { m: Material; s: MaterialStation }) {
   const [p, setP] = useState(m.charge_per_unit_cents == null ? '' : (Number(m.charge_per_unit_cents) / 100).toFixed(2));
   const [low, setLow] = useState(m.low_stock_at == null ? '' : String(m.low_stock_at));
   return (
-    <li className="rounded-[12px] border border-[#E3E7EF] bg-white p-4 flex flex-col gap-3" data-testid={`wh-material-${m.code}`}>
+    <li className="rounded-[12px] border border-line bg-white p-4 flex flex-col gap-3" data-testid={`wh-material-${m.code}`}>
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-mono font-semibold text-[15px]">{m.code}</span>
         <span className="text-[14px]">{m.name}</span>
@@ -38,7 +38,7 @@ function MaterialRow({ m, s }: { m: Material; s: MaterialStation }) {
           {m.low ? <DsBadge tone="warn" testId={`wh-material-low-${m.code}`}>Low stock</DsBadge> : null}
         </span>
       </div>
-      <p className="m-0 text-[13px] text-[#5B6478]">
+      <p className="m-0 text-[13px] text-muted">
         Low-stock alert {m.low_stock_at == null ? 'not set' : `at ${m.low_stock_at}`} · used in the last 30 days: {m.used_30d} ·
         price per unit <span data-testid={`wh-material-price-${m.code}`}>{chargeText(m.charge_per_unit_cents)}</span>
       </p>
@@ -53,7 +53,7 @@ function MaterialRow({ m, s }: { m: Material; s: MaterialStation }) {
       )}
       {(s.can_count || s.can_price || s.can_manage) && (
         <details>
-          <summary className="cursor-pointer text-[13.5px] font-semibold text-[#2559B8] min-h-[44px] flex items-center">Count, price and settings</summary>
+          <summary className="cursor-pointer text-[13.5px] font-semibold text-coral-text min-h-[44px] flex items-center">Count, price and settings</summary>
           <div className="mt-2 flex flex-col gap-3">
             {s.can_count && (
               <form className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end" onSubmit={(e) => { e.preventDefault(); cnt.run(() => countMaterialAction(m.id, Number(counted), reason), () => { setCounted(''); setReason(''); }); }}>
@@ -70,7 +70,7 @@ function MaterialRow({ m, s }: { m: Material; s: MaterialStation }) {
                 <DsButton type="submit" variant="secondary" icon="dollar" disabled={price.pending} testId={`wh-material-price-submit-${m.code}`}>Save price</DsButton>
                 <div className="sm:col-span-4"><MsgLine msg={price.msg} testId={`wh-material-price-msg-${m.code}`} /></div>
               </form>
-            ) : <p className="m-0 text-[12.5px] text-[#5B6478]">A warehouse admin sets the price per unit.</p>}
+            ) : <p className="m-0 text-[12.5px] text-muted">A warehouse admin sets the price per unit.</p>}
             {s.can_manage && (
               <form className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end" onSubmit={(e) => {
                 e.preventDefault();
@@ -129,7 +129,7 @@ export function MaterialsClient({ station: s }: { station: MaterialStation }) {
             <div className="col-span-2 sm:col-span-6"><DsButton type="submit" variant="secondary" icon="plus" disabled={add.pending || !f.code || !f.name.trim()} testId="wh-material-submit">Add material</DsButton></div>
             <div className="col-span-2 sm:col-span-6"><MsgLine msg={add.msg} testId="wh-material-msg" /></div>
           </form>
-        ) : <p className="mt-3 mb-0 text-[13px] text-[#5B6478]">Supervisors and admins set up materials; receivers receive them.</p>}
+        ) : <p className="mt-3 mb-0 text-[13px] text-muted">Supervisors and admins set up materials; receivers receive them.</p>}
       </DsCard>
       {s.moves.length > 0 && (
         <DsCard title="Recent movements" icon="activity" noPadding testId={`wh-material-moves-${s.warehouse_code}`}>
@@ -141,7 +141,7 @@ export function MaterialsClient({ station: s }: { station: MaterialStation }) {
                   <tr key={i}>
                     <td>{fmtWh(v.at)}</td><td className="font-mono">{v.material}</td><td>{MOVE_LABEL[v.kind] ?? v.kind}</td>
                     <td>{v.delta > 0 ? '+' : ''}{v.delta}</td><td>{v.balance_after}</td>
-                    <td>{v.order_code ? <span className="font-mono">{v.order_code}</span> : null}{v.reason ? <div className="text-[12px] text-[#5B6478]">{v.reason}</div> : null}</td>
+                    <td>{v.order_code ? <span className="font-mono">{v.order_code}</span> : null}{v.reason ? <div className="text-[12px] text-muted">{v.reason}</div> : null}</td>
                     <td>{v.by_name ?? '—'}</td>
                   </tr>
                 ))}

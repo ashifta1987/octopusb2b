@@ -63,12 +63,12 @@ export function SettingsClient({ data, countryName, emailLive, ordersOn }: { dat
 
       <nav aria-label="Settings sections" className="flex gap-2 overflow-x-auto pb-1">
         {SECTIONS.map(([id, label]) => (
-          <a key={id} href={`#${id}`} className="shrink-0 rounded-full border border-[#D9DEE8] px-3.5 min-h-[44px] inline-flex items-center text-[14px] text-[#1A174A] no-underline hover:bg-[#F7F9FC]">{label}</a>
+          <a key={id} href={`#${id}`} className="shrink-0 rounded-full border border-line px-3.5 min-h-[44px] inline-flex items-center text-[14px] text-ink no-underline hover:bg-pearl">{label}</a>
         ))}
       </nav>
 
       <section id="profile" aria-labelledby="profile-h" className="ds-card flex flex-col gap-4" data-testid="settings-profile">
-        <h2 id="profile-h" className="m-0 text-[17px] font-semibold text-[#1A174A]">Profile</h2>
+        <h2 id="profile-h" className="m-0 text-[17px] font-semibold text-ink">Profile</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <DsInput id="set-company" label="Company" value={data.org.name} readOnly hint="Your company name comes from your Octopus account." />
           <DsInput id="set-country" label="Country" value={countryName ?? 'Not set'} readOnly hint="Set in your company verification (KYC)." />
@@ -83,19 +83,19 @@ export function SettingsClient({ data, countryName, emailLive, ordersOn }: { dat
 
       <section id="team" aria-labelledby="team-h" className="ds-card !p-0 overflow-hidden" data-testid="settings-team">
         <div className="px-5 pt-4 pb-3 flex flex-col gap-1">
-          <h2 id="team-h" className="m-0 text-[17px] font-semibold text-[#1A174A]">Team</h2>
-          <p className="m-0 text-[13px] text-[#5B6478]">Each person signs in with their own login. Nobody shares a password.</p>
+          <h2 id="team-h" className="m-0 text-[17px] font-semibold text-ink">Team</h2>
+          <p className="m-0 text-[13px] text-muted">Each person signs in with their own login. Nobody shares a password.</p>
         </div>
         {noticeAt('team')}
         <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Team members">
           <table className="w-full min-w-[640px] text-[14px] border-collapse">
-            <thead className="bg-[#F7F9FC] text-left text-[#5B6478]">
+            <thead className="bg-pearl text-left text-muted">
               <tr><th scope="col" className="px-5 py-2.5 font-medium">Name</th><th scope="col" className="px-3 py-2.5 font-medium">Email</th><th scope="col" className="px-3 py-2.5 font-medium">Role</th><th scope="col" className="px-3 py-2.5 font-medium">Can do</th><th scope="col" className="px-5 py-2.5 font-medium"><span className="sr-only">Actions</span></th></tr>
             </thead>
             <tbody>
               {data.team.map((m) => (
-                <tr key={m.user_id} className="border-t border-[#EEF0F4]" data-testid={`member-${m.email ?? m.user_id}`}>
-                  <td className="px-5 py-2.5 text-[#1A174A]">{m.name ?? '—'}{m.is_me ? ' (you)' : ''}</td>
+                <tr key={m.user_id} className="border-t border-divider" data-testid={`member-${m.email ?? m.user_id}`}>
+                  <td className="px-5 py-2.5 text-ink">{m.name ?? '—'}{m.is_me ? ' (you)' : ''}</td>
                   <td className="px-3 py-2.5">{m.email ?? '—'}</td>
                   <td className="px-3 py-2.5">
                     {isOwner && !m.is_me && !closed ? (
@@ -107,7 +107,7 @@ export function SettingsClient({ data, countryName, emailLive, ordersOn }: { dat
                       </label>
                     ) : ROLE_LABELS[m.ds_role].label}
                   </td>
-                  <td className="px-3 py-2.5 text-[#3A4256]">{ROLE_LABELS[m.ds_role].can}</td>
+                  <td className="px-3 py-2.5 text-black">{ROLE_LABELS[m.ds_role].can}</td>
                   <td className="px-5 py-2.5 text-right">
                     {isOwner && !m.is_me && m.ds_role !== 'owner' && !closed
                       ? <DsButton variant="link" onClick={() => run(async () => show('team', await removeMemberAction(m.user_id), 'Removed from your team'))}>Remove<span className="sr-only"> {m.name ?? m.email}</span></DsButton>
@@ -116,18 +116,18 @@ export function SettingsClient({ data, countryName, emailLive, ordersOn }: { dat
                 </tr>
               ))}
               {data.invites.map((i) => (
-                <tr key={i.id} className="border-t border-[#EEF0F4]" data-testid={`invite-${i.email}`}>
-                  <td className="px-5 py-2.5 text-[#5B6478]">Invited</td>
+                <tr key={i.id} className="border-t border-divider" data-testid={`invite-${i.email}`}>
+                  <td className="px-5 py-2.5 text-muted">Invited</td>
                   <td className="px-3 py-2.5">{i.email}</td>
                   <td className="px-3 py-2.5">{ROLE_LABELS[i.ds_role].label}</td>
-                  <td className="px-3 py-2.5 text-[#5B6478]">Waiting until {fmtDate(i.expires_at)}</td>
+                  <td className="px-3 py-2.5 text-muted">Waiting until {fmtDate(i.expires_at)}</td>
                   <td className="px-5 py-2.5 text-right"><DsButton variant="link" onClick={() => run(async () => show('team', await cancelInviteAction(i.id), 'Invitation cancelled'))}>Cancel<span className="sr-only"> invitation for {i.email}</span></DsButton></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <form className="px-5 py-4 border-t border-[#EEF0F4] grid grid-cols-1 md:grid-cols-[1fr_200px_auto] gap-3 items-end"
+        <form className="px-5 py-4 border-t border-divider grid grid-cols-1 md:grid-cols-[1fr_200px_auto] gap-3 items-end"
           onSubmit={(e) => { e.preventDefault(); run(async () => { const r = await inviteAction(inviteMail, inviteRole); show('team', r, 'Invitation saved', `Ask ${inviteMail} to sign in (or sign up) with this email, then open ${typeof window === 'undefined' ? '' : window.location.origin}/account/dropship/join. Invitation emails start when app email is set up.`); if (r.ok) setInviteMail(''); }); }}>
           <DsInput id="invite-email" type="email" label="Email" value={inviteMail} onChange={(e) => setInviteMail(e.target.value)} disabled={!isOwner || closed} required />
           <DsSelect id="invite-role" label="Role" value={inviteRole} onChange={(e) => setInviteRole(e.target.value as 'manager' | 'support')} disabled={!isOwner || closed}>
@@ -139,17 +139,17 @@ export function SettingsClient({ data, countryName, emailLive, ordersOn }: { dat
       </section>
 
       <section id="notifications" aria-labelledby="notif-h" className="ds-card !p-0 overflow-hidden" data-testid="settings-notifications">
-        <h2 id="notif-h" className="m-0 px-5 pt-4 pb-3 text-[17px] font-semibold text-[#1A174A]">Notifications</h2>
+        <h2 id="notif-h" className="m-0 px-5 pt-4 pb-3 text-[17px] font-semibold text-ink">Notifications</h2>
         {noticeAt('notifications')}
         <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Notification choices">
           <table className="w-full min-w-[480px] text-[14px] border-collapse">
-            <thead className="bg-[#F7F9FC] text-left text-[#5B6478]">
+            <thead className="bg-pearl text-left text-muted">
               <tr><th scope="col" className="px-5 py-2.5 font-medium">Event</th><th scope="col" className="px-3 py-2.5 font-medium">Email</th><th scope="col" className="px-5 py-2.5 font-medium">In the app</th></tr>
             </thead>
             <tbody>
               {prefs.map((p, idx) => (
-                <tr key={p.event} className="border-t border-[#EEF0F4]">
-                  <td className="px-5 py-2 text-[#1A174A]">{NOTIFICATION_LABELS[p.event]}</td>
+                <tr key={p.event} className="border-t border-divider">
+                  <td className="px-5 py-2 text-ink">{NOTIFICATION_LABELS[p.event]}</td>
                   <td className="px-3 py-2"><DsCheckbox label={<span className="sr-only">Email: {NOTIFICATION_LABELS[p.event]}</span>} checked={p.email} disabled={!emailLive}
                     onChange={(e) => setPrefs(prefs.map((x, j) => (j === idx ? { ...x, email: e.target.checked } : x)))} /></td>
                   <td className="px-5 py-2"><DsCheckbox label={<span className="sr-only">In the app: {NOTIFICATION_LABELS[p.event]}</span>} checked={p.in_app}
@@ -159,26 +159,26 @@ export function SettingsClient({ data, countryName, emailLive, ordersOn }: { dat
             </tbody>
           </table>
         </div>
-        <div className="px-5 py-4 border-t border-[#EEF0F4] flex flex-wrap items-center gap-3">
+        <div className="px-5 py-4 border-t border-divider flex flex-wrap items-center gap-3">
           <DsButton variant="secondary" loading={pending} testId="prefs-save"
             onClick={() => run(async () => show('notifications', await savePrefsAction(prefs.map((p) => ({ event: p.event as NotificationEvent, email: p.email, in_app: p.in_app }))), 'Notification choices saved'))}>Save notifications</DsButton>
-          <p className="m-0 text-[13px] text-[#5B6478]">{emailLive ? 'Email goes to your sign-in address.' : 'Email starts when app email is set up. Until then, everything arrives in the app.'}</p>
+          <p className="m-0 text-[13px] text-muted">{emailLive ? 'Email goes to your sign-in address.' : 'Email starts when app email is set up. Until then, everything arrives in the app.'}</p>
         </div>
       </section>
 
       <section id="branding" aria-labelledby="brand-h" className="ds-card flex flex-col gap-4" data-testid="settings-branding">
-        <h2 id="brand-h" className="m-0 text-[17px] font-semibold text-[#1A174A]">Branding</h2>
+        <h2 id="brand-h" className="m-0 text-[17px] font-semibold text-ink">Branding</h2>
         {noticeAt('branding')}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1">
             <DsInput id="brand-name" label="Brand name on parcels" value={data.branding.brand_name ?? ''} readOnly placeholder="Not set yet"
-              hint={<>Shown on packing slips and the tracking page. Changing it needs a new staff check: <Link href="/account/dropship/onboarding" className="text-[#2A6FD1] underline">change in setup</Link>.</>} />
+              hint={<>Shown on packing slips and the tracking page. Changing it needs a new staff check: <Link href="/account/dropship/onboarding" className="text-coral-text underline">change in setup</Link>.</>} />
             {data.branding.profile_status && <span><DsBadge tone={data.branding.profile_status === 'approved' ? 'ok' : 'warn'}>{data.branding.profile_status === 'approved' ? 'Approved' : 'Waiting for staff check'}</DsBadge></span>}
           </div>
           <form className="flex flex-col gap-2" onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); run(async () => show('branding', await uploadLogoAction(fd), 'Logo uploaded')); }}>
-            <label htmlFor="brand-logo" className="text-[14px] font-medium text-[#1A174A]">Logo</label>
+            <label htmlFor="brand-logo" className="text-[14px] font-medium text-ink">Logo</label>
             <input id="brand-logo" name="logo" type="file" accept="image/png,image/jpeg,image/webp" disabled={Boolean(brandReason)} className="text-[14px] min-h-[44px]" aria-describedby="brand-logo-hint" />
-            <p id="brand-logo-hint" className="m-0 text-[13px] text-[#5B6478]">PNG, JPG or WEBP, up to 1 MB. {data.branding.has_logo ? 'A logo is saved.' : 'No logo yet.'}</p>
+            <p id="brand-logo-hint" className="m-0 text-[13px] text-muted">PNG, JPG or WEBP, up to 1 MB. {data.branding.has_logo ? 'A logo is saved.' : 'No logo yet.'}</p>
             <div className="flex flex-wrap gap-2">
               <DsButton type="submit" variant="secondary" icon="upload" loading={pending} disabled={Boolean(brandReason)} disabledReason={brandReason ?? undefined} testId="logo-upload">Upload</DsButton>
               {data.branding.has_logo && <DsButton variant="link" disabled={Boolean(brandReason)} onClick={() => run(async () => show('branding', await removeLogoAction(), 'Logo removed'))}>Remove logo</DsButton>}
@@ -190,25 +190,25 @@ export function SettingsClient({ data, countryName, emailLive, ordersOn }: { dat
             hint={!data.branding.has_logo ? 'Upload a logo first.' : undefined} />
           <DsCheckbox label="Show my logo on the tracking page" checked={track} disabled={!data.branding.has_logo || Boolean(brandReason)} onChange={(e) => setTrack(e.target.checked)}
             hint={!data.branding.has_logo ? 'Upload a logo first.' : undefined} />
-          <p className="m-0 text-[13px] text-[#5B6478]">Want printed mailers, cards or stickers? <Link href="/account/brand" className="text-[#2A6FD1] underline">Make it your brand with Make My Brand</Link>.</p>
+          <p className="m-0 text-[13px] text-muted">Want printed mailers, cards or stickers? <Link href="/account/brand" className="text-coral-text underline">Make it your brand with Make My Brand</Link>.</p>
         </div>
       </section>
 
       <section id="policies" aria-labelledby="pol-h" className="ds-card flex flex-col gap-4" data-testid="settings-policies">
-        <h2 id="pol-h" className="m-0 text-[17px] font-semibold text-[#1A174A]">Policies shown to buyers</h2>
+        <h2 id="pol-h" className="m-0 text-[17px] font-semibold text-ink">Policies shown to buyers</h2>
         <DsTextarea id="pol-returns" label="Returns policy (tracking page and packing slip)" value={returns} onChange={(e) => setReturns(e.target.value)} rows={3} maxLength={1000}
           disabled={Boolean(brandReason)} hint="Your store's words. Don't name Octopus or a supplier." />
         <DsInput id="pol-email" type="email" label="Support email shown to buyers" value={mail} onChange={(e) => setMail(e.target.value)} disabled={Boolean(brandReason)} />
-        {!ordersOn && <p className="m-0 text-[13px] text-[#5B6478]">Buyers see these once store orders are switched on.</p>}
+        {!ordersOn && <p className="m-0 text-[13px] text-muted">Buyers see these once store orders are switched on.</p>}
       </section>
 
       <section id="data" aria-labelledby="data-h" className="ds-card flex flex-col gap-4" data-testid="settings-data">
-        <h2 id="data-h" className="m-0 text-[17px] font-semibold text-[#1A174A]">Data</h2>
+        <h2 id="data-h" className="m-0 text-[17px] font-semibold text-ink">Data</h2>
         <dl className="m-0 grid grid-cols-1 md:grid-cols-2 gap-4 text-[14px]">
-          <div><dt className="font-medium text-[#1A174A]">Buyer names and addresses</dt>
-            <dd className="m-0 text-[#3A4256]" data-testid="data-retention">{data.buyer_data_days != null ? `Deleted ${data.buyer_data_days} days after delivery, except what invoices must keep.` : 'Automatic deletion after delivery starts with the store connection (except what invoices must keep).'}</dd></div>
-          <div><dt className="font-medium text-[#1A174A]">Your data export</dt>
-            <dd className="m-0 text-[#3A4256]">CSV of products, orders and invoices</dd></div>
+          <div><dt className="font-medium text-ink">Buyer names and addresses</dt>
+            <dd className="m-0 text-black" data-testid="data-retention">{data.buyer_data_days != null ? `Deleted ${data.buyer_data_days} days after delivery, except what invoices must keep.` : 'Automatic deletion after delivery starts with the store connection (except what invoices must keep).'}</dd></div>
+          <div><dt className="font-medium text-ink">Your data export</dt>
+            <dd className="m-0 text-black">CSV of products, orders and invoices</dd></div>
         </dl>
         <div className="flex flex-wrap gap-2">
           <DsLinkButton href="/account/dropship/export" variant="secondary" icon="download" testId="dropship-data-export-link">Export my data</DsLinkButton>
@@ -219,16 +219,16 @@ export function SettingsClient({ data, countryName, emailLive, ordersOn }: { dat
       </section>
 
       <section id="close" aria-labelledby="close-h" className="ds-card flex flex-col gap-3" data-testid="settings-close">
-        <h2 id="close-h" className="m-0 text-[17px] font-semibold text-[#1A174A]">Close dropshipping</h2>
-        <p className="m-0 text-[14px] text-[#3A4256]">Disconnects your stores and stops syncing. Open orders are finished first. Your wallet balance stays in your Octopus account, and invoices are kept as the law requires.</p>
+        <h2 id="close-h" className="m-0 text-[17px] font-semibold text-ink">Close dropshipping</h2>
+        <p className="m-0 text-[14px] text-black">Disconnects your stores and stops syncing. Open orders are finished first. Your wallet balance stays in your Octopus account, and invoices are kept as the law requires.</p>
         {noticeAt('close')}
         {!confirmOpen ? (
           <div><DsButton variant="danger" disabled={!isOwner || closed} disabledReason={closed ? 'Dropshipping is already closed.' : !isOwner ? 'Only the account owner can close dropshipping.' : undefined}
             onClick={() => setConfirmOpen(true)} testId="close-open">Close dropshipping</DsButton></div>
         ) : (
-          <div className="rounded-xl border border-[#F2C1B6] bg-[#FFF6F3] p-4 flex flex-col gap-3" role="group" aria-labelledby="close-confirm-h">
-            <h3 id="close-confirm-h" className="m-0 text-[15px] font-semibold text-[#1A174A]">Close dropshipping for {data.org.name}?</h3>
-            <p className="m-0 text-[14px] text-[#3A4256]">New imports, pushes and order charges stop. Paid orders keep shipping. You keep your wallet, statements, invoices, support and data export.</p>
+          <div className="rounded-xl border border-bad/30 bg-bad-bg p-4 flex flex-col gap-3" role="group" aria-labelledby="close-confirm-h">
+            <h3 id="close-confirm-h" className="m-0 text-[15px] font-semibold text-ink">Close dropshipping for {data.org.name}?</h3>
+            <p className="m-0 text-[14px] text-black">New imports, pushes and order charges stop. Paid orders keep shipping. You keep your wallet, statements, invoices, support and data export.</p>
             <DsInput id="close-confirm" label="Type CLOSE to confirm" value={confirmText} onChange={(e) => setConfirmText(e.target.value)} autoComplete="off" />
             <div className="flex flex-wrap gap-2">
               <DsButton variant="danger" loading={pending} disabled={confirmText.trim().toUpperCase() !== 'CLOSE'} disabledReason={confirmText.trim().toUpperCase() !== 'CLOSE' ? 'Type CLOSE first.' : undefined}
@@ -241,7 +241,7 @@ export function SettingsClient({ data, countryName, emailLive, ordersOn }: { dat
       </section>
 
       <DsCard title="Statements and invoices" icon="file">
-        <p className="m-0 text-[13px] text-[#5B6478] mb-3">Weekly STMT-DS statements, OCT-DS invoices and credit notes.</p>
+        <p className="m-0 text-[13px] text-muted mb-3">Weekly STMT-DS statements, OCT-DS invoices and credit notes.</p>
         <DsLinkButton href="/account/invoices" variant="secondary" icon="file">View statements &amp; invoices</DsLinkButton>
       </DsCard>
     </div>

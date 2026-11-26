@@ -66,9 +66,9 @@ export default async function WorkQueue({ searchParams }: { searchParams: Promis
           <span className="mono text-[11px] uppercase tracking-[.08em] text-muted">{shown.length} of {q.items.length} items</span>
         </div>
         <div className="px-5 pb-4 flex flex-wrap items-center gap-2">
-          <Link href={href({ s: null })} aria-current={svc === 'all' ? 'true' : undefined} className={`inline-flex items-center min-h-10 px-4 rounded-full border text-[14px] font-medium ${svc === 'all' ? 'bg-ink text-white border-ink' : 'border-line-strong bg-white'}`}>All · {q.items.length}</Link>
+          <Link href={href({ s: null })} aria-current={svc === 'all' ? 'true' : undefined} className={`inline-flex items-center min-h-10 px-4 rounded-full border text-[14px] font-medium ${svc === 'all' ? 'bg-coral text-white border-coral' : 'border-line-strong bg-white'}`}>All · {q.items.length}</Link>
           {services.map((k) => (
-            <Link key={k} href={href({ s: k })} aria-current={svc === k ? 'true' : undefined} className={`inline-flex items-center min-h-10 px-4 rounded-full border text-[14px] font-medium ${svc === k ? 'bg-ink text-white border-ink' : 'border-line-strong bg-white'}`}>{SVC[k][0]} · {q.items.filter((i) => i.service === k).length}</Link>
+            <Link key={k} href={href({ s: k })} aria-current={svc === k ? 'true' : undefined} className={`inline-flex items-center min-h-10 px-4 rounded-full border text-[14px] font-medium ${svc === k ? 'bg-coral text-white border-coral' : 'border-line-strong bg-white'}`}>{SVC[k][0]} · {q.items.filter((i) => i.service === k).length}</Link>
           ))}
           {q.stats.needOwner > 0 && (
             <Link href={href({ owner: onlyOwner ? null : '1' })} aria-pressed={onlyOwner} className="ml-auto inline-flex items-center gap-2 min-h-10 px-4 rounded-full border border-line-strong bg-white text-[14px] font-medium">

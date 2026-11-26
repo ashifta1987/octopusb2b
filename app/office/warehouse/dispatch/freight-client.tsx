@@ -27,7 +27,7 @@ export function Freight({ board, warehouseNames, cities }: { board: DispatchBoar
       <div className="print:hidden">
         <DsCard title="Freight pallets" icon="layers" testId="wh-freight"
           subtitle="For client orders that go by freight instead of a parcel carrier. Scan the orders onto the pallet, weigh and measure it, print its label, then dispatch it to the forwarder.">
-          {places.length === 0 ? <p className="m-0 text-[13.5px] text-[#5B6478]">Packers, supervisors and admins of this warehouse build pallets.</p> : (
+          {places.length === 0 ? <p className="m-0 text-[13.5px] text-muted">Packers, supervisors and admins of this warehouse build pallets.</p> : (
             <form className="flex flex-wrap gap-3 items-end" onSubmit={(e) => { e.preventDefault(); if (dest.trim()) run(() => freightCreateAction(wh, dest), () => setDest('')); }}>
               {places.length > 1 && (
                 <DsSelect label="Warehouse" value={wh} onChange={(e) => setWh(e.target.value)} containerClassName="w-[200px]">
@@ -46,9 +46,9 @@ export function Freight({ board, warehouseNames, cities }: { board: DispatchBoar
         <DsCard title="Dispatched pallets" icon="truck" noPadding className="print:hidden" testId="wh-freight-sent">
           <ul className="list-none m-0 p-0">
             {sent.map((p) => (
-              <li key={p.id} className="border-b border-[#EEF0F4] last:border-0 px-5 py-2 text-[13.5px]">
+              <li key={p.id} className="border-b border-divider last:border-0 px-5 py-2 text-[13.5px]">
                 <span className="font-mono font-semibold">{p.code}</span> · {p.destination} · {p.orders.length} order{p.orders.length === 1 ? '' : 's'} · {kg(p.gross_weight_g)}
-                <span className="text-[#5B6478]"> · {p.forwarder}{p.reference ? ` ${p.reference}` : ''} · {fmtWh(p.dispatched_at)}</span>
+                <span className="text-muted"> · {p.forwarder}{p.reference ? ` ${p.reference}` : ''} · {fmtWh(p.dispatched_at)}</span>
               </li>
             ))}
           </ul>
@@ -111,7 +111,7 @@ function PalletCard({ p, canVoid, onPrint }: { p: FreightPallet; canVoid: boolea
         </div>
       )}
       {p.status === 'open' && p.orders.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-[#EEF0F4] flex flex-wrap gap-3 items-end">
+        <div className="mt-4 pt-4 border-t border-divider flex flex-wrap gap-3 items-end">
           <DsInput label="Gross weight (kg)" inputMode="decimal" value={f.grossKg} onChange={(e) => setF({ ...f, grossKg: e.target.value.replace(/[^\d.,]/g, '').slice(0, 9) })} containerClassName="w-[150px]" />
           <DsInput label="Length (cm)" inputMode="decimal" value={f.lengthCm} onChange={(e) => setF({ ...f, lengthCm: e.target.value.replace(/[^\d.,]/g, '').slice(0, 6) })} containerClassName="w-[120px]" />
           <DsInput label="Width (cm)" inputMode="decimal" value={f.widthCm} onChange={(e) => setF({ ...f, widthCm: e.target.value.replace(/[^\d.,]/g, '').slice(0, 6) })} containerClassName="w-[120px]" />
@@ -136,7 +136,7 @@ function PalletCard({ p, canVoid, onPrint }: { p: FreightPallet; canVoid: boolea
           </div>
           {canVoid && (
             <details>
-              <summary className="cursor-pointer text-[13px] text-[#5B6478] min-h-[44px] flex items-center">Reopen this pallet (supervisor)</summary>
+              <summary className="cursor-pointer text-[13px] text-muted min-h-[44px] flex items-center">Reopen this pallet (supervisor)</summary>
               <div className="flex flex-wrap gap-3 items-end">
                 <DsInput label="Why is it reopened?" value={reason} maxLength={300} onChange={(e) => setReason(e.target.value)} containerClassName="w-[260px]" />
                 <DsButton variant="secondary" disabled={pending || !reason.trim()} onClick={() => run(() => freightReopenAction(p.id, reason))}>Reopen</DsButton>

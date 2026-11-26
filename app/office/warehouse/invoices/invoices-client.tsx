@@ -14,7 +14,7 @@ function Refs({ refs, testId }: { refs: ChargeRef[]; testId: string }) {
   if (!refs.length) return null;
   return (
     <details className="mt-1" data-testid={testId}>
-      <summary className="cursor-pointer text-[13px] font-semibold text-[#2A6FD1] min-h-[44px] inline-flex items-center">
+      <summary className="cursor-pointer text-[13px] font-semibold text-coral-text min-h-[44px] inline-flex items-center">
         What is behind this line ({refs.length})
       </summary>
       <ul className="m-0 mt-1 pl-4 flex flex-col gap-1 text-[13px]">
@@ -24,7 +24,7 @@ function Refs({ refs, testId }: { refs: ChargeRef[]; testId: string }) {
           return (
             <li key={`${r.type}-${r.id}-${i}`}>
               {href ? <Link href={href} className="underline">{t.label}</Link> : <span>{t.label}</span>}
-              <span className="text-[#5B6478]"> · {t.detail}</span>
+              <span className="text-muted"> · {t.detail}</span>
             </li>
           );
         })}
@@ -40,8 +40,8 @@ function LineRow({ l, i }: { l: PreviewLine | IssuedLine; i: number }) {
     <tr data-testid={`wh-inv-line-${i}`} data-kind={l.kind} data-status={status}>
       <td>
         <div className="font-semibold">{KIND_LABEL[l.kind]}</div>
-        <div className="text-[13px] text-[#5B6478]">{l.description}</div>
-        {l.rate_version != null && <div className="text-[12px] text-[#5B6478]">Rates version {l.rate_version}</div>}
+        <div className="text-[13px] text-muted">{l.description}</div>
+        {l.rate_version != null && <div className="text-[12px] text-muted">Rates version {l.rate_version}</div>}
         <Refs refs={l.refs} testId={`wh-inv-refs-${i}`} />
       </td>
       <td className="whitespace-nowrap">{l.qty == null ? '—' : `${fmtQty(l.qty)} ${unitWord(l.unit_label, Number(l.qty))}`}</td>
@@ -79,7 +79,7 @@ function Preview({ p, month, canIssue }: { p: InvoicePreview; month: string; can
       <div className="flex flex-col gap-3">
         <MsgLine msg={issue.msg} testId="wh-inv-msg" />
         {inv && (
-          <p className="m-0 text-[13px] text-[#5B6478]">
+          <p className="m-0 text-[13px] text-muted">
             Issued {fmtDate(inv.issued_at)}{inv.issued_by ? ` by ${inv.issued_by}` : ''} ·
             paid {usd(inv.paid_cents)} of {usd(inv.amount_cents)}{inv.tax_invoice ? ` · tax invoice ${inv.tax_invoice.number}` : ''}. The issued lines are below; the live preview follows.
           </p>
@@ -112,7 +112,7 @@ function Preview({ p, month, canIssue }: { p: InvoicePreview; month: string; can
           <dt className="font-bold">Total</dt><dd className="m-0 text-right font-bold" data-testid="wh-inv-total">{usd(p.total_cents)}</dd>
         </dl>
         {p.unbilled_count > 0 && (
-          <p className="m-0 text-[13px] text-[#8A5300]" data-testid="wh-inv-unbilled">
+          <p className="m-0 text-[13px] text-warn" data-testid="wh-inv-unbilled">
             {p.unbilled_count} line{p.unbilled_count === 1 ? ' is' : 's are'} not charged because the fee is not set or the quantity is not measured. Set the fee in Rates (two people approve it) — it applies from then on, not to this month.
           </p>
         )}
@@ -138,7 +138,7 @@ export function InvoicesClient({ board, preview, previewError, month, canIssue }
         {board.clients.length === 0 ? (
           <tr><td colSpan={8}><DsEmptyState icon="users" title="No 3PL clients yet" description="Approved clients appear here (Clients and applications)." /></td></tr>
         ) : board.clients.map((c) => (
-          <tr key={c.org_id} data-testid={`wh-inv-row-${c.org_id}`} className={preview?.org_id === c.org_id ? 'bg-[#F2F7FE]' : undefined}>
+          <tr key={c.org_id} data-testid={`wh-inv-row-${c.org_id}`} className={preview?.org_id === c.org_id ? 'bg-tint-2' : undefined}>
             <td className="font-semibold">{c.name}</td>
             <td>{PLAN_LABEL[c.plan] ?? c.plan}{c.status !== 'active' ? ` · ${c.status}` : ''}</td>
             <td>{usd(c.subtotal_cents)}</td>
@@ -151,7 +151,7 @@ export function InvoicesClient({ board, preview, previewError, month, canIssue }
           </tr>
         ))}
       </DsTableCard>
-      {previewError && <p role="alert" className="m-0 ds-card text-[14px] text-[#B42318]">The preview could not be loaded. Reload the page.</p>}
+      {previewError && <p role="alert" className="m-0 ds-card text-[14px] text-bad">The preview could not be loaded. Reload the page.</p>}
       {preview && <Preview key={`${preview.org_id}-${month}`} p={preview} month={month} canIssue={canIssue && board.can_issue} />}
     </>
   );

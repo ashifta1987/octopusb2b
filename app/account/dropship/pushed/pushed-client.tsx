@@ -95,14 +95,14 @@ export function PushedClient({ data, showFailed }: { data: PushedData; showFaile
           ) : (
             <DsTableCard testId="pushed-table" title="In your store" minWidth={820}
               headers={[
-                <input key="all" type="checkbox" aria-label="Select all" className="w-4 h-4 accent-[#2A6FD1]" checked={rows.length > 0 && rows.every((r) => selected.has(r.product_id))}
+                <input key="all" type="checkbox" aria-label="Select all" className="w-4 h-4 accent-coral" checked={rows.length > 0 && rows.every((r) => selected.has(r.product_id))}
                   onChange={(e) => setSelected(e.target.checked ? new Set(rows.map((r) => r.product_id)) : new Set())} />,
                 'Product', 'Store status', 'Stock', 'Price', 'Sync', 'Last sync']}>
               {rows.map((r) => (
                 <tr key={r.product_id} data-testid={`pushed-row-${r.model_no}`}>
-                  <td><input type="checkbox" className="w-4 h-4 accent-[#2A6FD1]" aria-label={`Select ${r.title}`} checked={selected.has(r.product_id)}
+                  <td><input type="checkbox" className="w-4 h-4 accent-coral" aria-label={`Select ${r.title}`} checked={selected.has(r.product_id)}
                     onChange={() => setSelected((s) => { const n = new Set(s); if (n.has(r.product_id)) n.delete(r.product_id); else n.add(r.product_id); return n; })} /></td>
-                  <td><strong className="text-[#1A174A]">{r.title}</strong><span className="block text-[12px] text-[#5B6478]">{r.model_no}</span></td>
+                  <td><strong className="text-ink">{r.title}</strong><span className="block text-[12px] text-muted">{r.model_no}</span></td>
                   <td><DsBadge tone={r.store_status === 'active' ? 'ok' : 'neutral'}>{r.store_status === 'active' ? 'Active' : r.store_status === 'archived' ? 'Archived' : 'Draft'}</DsBadge></td>
                   <td><DsBadge tone={STOCK_TONE[r.stock_status]}>{STOCK_TEXT[r.stock_status]}</DsBadge></td>
                   <td>{r.price_min == null ? '—' : r.price_min === r.price_max ? storeMoney(r.price_min, r.currency) : `${storeMoney(r.price_min, r.currency)} – ${storeMoney(r.price_max, r.currency)}`}</td>
@@ -117,12 +117,12 @@ export function PushedClient({ data, showFailed }: { data: PushedData; showFaile
 
       <DsCard title={`Failed (${data.failed.length})`} icon="stop" testId="pushed-failed">
         {data.failed.length === 0 ? (
-          <p className="m-0 text-[14px] text-[#5B6478]">No failed pushes.</p>
+          <p className="m-0 text-[14px] text-muted">No failed pushes.</p>
         ) : (
           <ul className="list-none m-0 p-0 flex flex-col gap-3">
             {data.failed.map((j) => (
               <li key={j.id} className="flex flex-wrap items-center justify-between gap-2" data-testid={`failed-${j.model_no}`}>
-                <span className="min-w-0"><strong className="text-[#1A174A]">{`${j.title} · ${j.model_no}`}</strong><span className="block text-[13px] text-[#5B6478]">{j.error_message}</span></span>
+                <span className="min-w-0"><strong className="text-ink">{`${j.title} · ${j.model_no}`}</strong><span className="block text-[13px] text-muted">{j.error_message}</span></span>
                 <span className="flex gap-2 flex-wrap">
                   {j.error_code === 'HANDLE_TAKEN' && <DsLinkButton href={`/account/dropship/import/${j.product_id}`} variant="secondary" icon="pencil">Change handle</DsLinkButton>}
                   {j.error_code === 'STORE_ACCESS_EXPIRED' && <DsLinkButton href="/account/dropship/stores" icon="link">Reconnect</DsLinkButton>}

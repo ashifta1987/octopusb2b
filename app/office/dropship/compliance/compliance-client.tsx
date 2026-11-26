@@ -48,13 +48,13 @@ const sameData = (a: DutyEntry, b: DutyEntry) =>
   a.duty_bp === b.duty_bp && a.tax_bp === b.tax_bp && Number(a.de_minimis_cents) === Number(b.de_minimis_cents)
   && a.de_minimis_applies_to === b.de_minimis_applies_to && (a.source ?? '') === (b.source ?? '');
 const sourceLink = (s: string | null) =>
-  !s ? <span className="text-[#5B6478]">—</span> : /^https?:\/\//i.test(s)
-    ? <a href={s} target="_blank" rel="noopener noreferrer nofollow" className="underline break-all text-[#2A6FD1]">{s.replace(/^https?:\/\//, '').slice(0, 40)}</a>
+  !s ? <span className="text-muted">—</span> : /^https?:\/\//i.test(s)
+    ? <a href={s} target="_blank" rel="noopener noreferrer nofollow" className="underline break-all text-coral-text">{s.replace(/^https?:\/\//, '').slice(0, 40)}</a>
     : <span>{s}</span>;
 
 function Message({ m }: { m: Msg }) {
   if (!m) return null;
-  return <p role={m.ok ? 'status' : 'alert'} data-testid="compliance-msg" className={`m-0 text-[13px] ${m.ok ? 'text-[#1B7F4B]' : 'text-[#B42318]'}`}>{m.text}</p>;
+  return <p role={m.ok ? 'status' : 'alert'} data-testid="compliance-msg" className={`m-0 text-[13px] ${m.ok ? 'text-ok' : 'text-bad'}`}>{m.text}</p>;
 }
 
 /** A small inline "reason" form used for reject / send back (keyboard friendly, no browser prompt). */
@@ -182,7 +182,7 @@ export function ComplianceClient({ versions, entries, policies, completeness, ac
             <div className="p-5"><DsEmptyState icon="globe" title="No duty table yet" description="Create the first version. Until an entry exists for a country, duties show as “not known yet”." /></div>
           ) : (
             <>
-              <p className="m-0 px-5 py-3 text-[13px] text-[#5B6478]" data-testid="duty-summary">
+              <p className="m-0 px-5 py-3 text-[13px] text-muted" data-testid="duty-summary">
                 {shownEntries.length} entr{shownEntries.length === 1 ? 'y' : 'ies'}
                 {diff ? ` · ${diff.changed} changed, ${diff.added} new${diff.removed ? `, ${diff.removed} removed` : ''} since version ${active?.version}` : ''}. Default = country default (blank HS prefix).
               </p>
@@ -244,11 +244,11 @@ export function ComplianceClient({ versions, entries, policies, completeness, ac
       {draft?.submitted_at && (
         <DsCard title={`Publish version ${draft.version}`} icon="check" testId="duty-publish">
           <dl className="grid grid-cols-[170px_1fr] gap-x-3 gap-y-1 m-0 text-[13.5px]">
-            <dt className="text-[#5B6478]">Changes vs version {active?.version ?? '—'}</dt>
+            <dt className="text-muted">Changes vs version {active?.version ?? '—'}</dt>
             <dd className="m-0">{diff ? `${diff.changed} changed · ${diff.added} new${diff.removed ? ` · ${diff.removed} removed` : ''}` : `${draft.entries} entries (first version)`}</dd>
-            <dt className="text-[#5B6478]">Proposed by</dt><dd className="m-0">{draft.submitted_by_name ?? draft.created_by_name ?? 'Staff'}</dd>
-            <dt className="text-[#5B6478]">Effective from</dt><dd className="m-0">When approved</dd>
-            <dt className="text-[#5B6478]">Paid orders</dt><dd className="m-0">Keep the version they were quoted with</dd>
+            <dt className="text-muted">Proposed by</dt><dd className="m-0">{draft.submitted_by_name ?? draft.created_by_name ?? 'Staff'}</dd>
+            <dt className="text-muted">Effective from</dt><dd className="m-0">When approved</dd>
+            <dt className="text-muted">Paid orders</dt><dd className="m-0">Keep the version they were quoted with</dd>
           </dl>
           {access.canPublish ? (
             <div className="mt-3">
@@ -263,7 +263,7 @@ export function ComplianceClient({ versions, entries, policies, completeness, ac
                 </div>
               )}
             </div>
-          ) : <p className="mt-2 mb-0 text-[13px] text-[#5B6478]">Approver must be a different person with publish rights.</p>}
+          ) : <p className="mt-2 mb-0 text-[13px] text-muted">Approver must be a different person with publish rights.</p>}
         </DsCard>
       )}
 
@@ -271,17 +271,17 @@ export function ComplianceClient({ versions, entries, policies, completeness, ac
         <DsCard title="Customs value policy" icon="shield" testId="customs-policy"
           subtitle={activePolicy ? `Version ${activePolicy.version}, from ${fmtDate(activePolicy.effective_from)}` : 'Not approved yet'}>
           <dl className="grid grid-cols-[200px_1fr] gap-x-3 gap-y-2 m-0 text-[13.5px]">
-            <dt className="text-[#5B6478]">Declared value</dt><dd className="m-0">The price the buyer paid, from the store order</dd>
-            <dt className="text-[#5B6478]">Locked</dt><dd className="m-0">At payment, saved with the order snapshot</dd>
-            <dt className="text-[#5B6478]">Block the label if declared value is below</dt>
+            <dt className="text-muted">Declared value</dt><dd className="m-0">The price the buyer paid, from the store order</dd>
+            <dt className="text-muted">Locked</dt><dd className="m-0">At payment, saved with the order snapshot</dd>
+            <dt className="text-muted">Block the label if declared value is below</dt>
             <dd className="m-0" data-testid="customs-threshold">{activePolicy?.block_below_pct != null ? `${Number(activePolicy.block_below_pct)}% of the store price` : 'Not set'}</dd>
-            <dt className="text-[#5B6478]">Shipping in declared value</dt>
+            <dt className="text-muted">Shipping in declared value</dt>
             <dd className="m-0">{SHIPPING_RULE[activePolicy?.shipping_in_declared_value ?? 'follow_destination']}</dd>
           </dl>
-          <p className="mt-3 mb-0 text-[12.5px] text-[#5B6478]">Never the cost price. Confirm destination rules with the carrier or customs broker.</p>
+          <p className="mt-3 mb-0 text-[12.5px] text-muted">Never the cost price. Confirm destination rules with the carrier or customs broker.</p>
 
           {pendingPolicy && (
-            <div className="mt-4 border-t border-[#E3E7EF] pt-3 flex flex-col gap-2" data-testid="customs-pending">
+            <div className="mt-4 border-t border-line pt-3 flex flex-col gap-2" data-testid="customs-pending">
               <p className="m-0 text-[13.5px]"><strong>Waiting for approval:</strong> version {pendingPolicy.version} · threshold {pendingPolicy.block_below_pct != null ? `${Number(pendingPolicy.block_below_pct)}%` : 'not set'} · {SHIPPING_RULE[pendingPolicy.shipping_in_declared_value]} · proposed by {pendingPolicy.proposed_by_name ?? 'staff'}</p>
               {(access.canPublish || access.canEdit) && (rejecting === pendingPolicy.id ? (
                 <ReasonForm label="Why is it rejected?" button="Reject" pending={pending} onCancel={() => setRejecting(null)}
@@ -300,7 +300,7 @@ export function ComplianceClient({ versions, entries, policies, completeness, ac
           )}
 
           {access.canEdit && !pendingPolicy && (
-            <form className="mt-4 border-t border-[#E3E7EF] pt-3 grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="customs-propose"
+            <form className="mt-4 border-t border-line pt-3 grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="customs-propose"
               onSubmit={(e) => { e.preventDefault(); const fd = new FormData(e.currentTarget); run(() => proposeCustomsPolicyAction(fd)); }}>
               <DsInput label="Block below (% of store price)" name="block_below_pct" inputMode="decimal" hint="Empty = not set"
                 defaultValue={activePolicy?.block_below_pct != null ? String(Number(activePolicy.block_below_pct)) : ''} />
@@ -316,9 +316,9 @@ export function ComplianceClient({ versions, entries, policies, completeness, ac
         <DsCard title="Data completeness" icon="chart" testId="data-completeness"
           subtitle={completeness ? `${completeness.published} published product${completeness.published === 1 ? '' : 's'}` : undefined}>
           <dl className="grid grid-cols-1 gap-3 m-0 text-[13.5px]">
-            <div><dt className="text-[#5B6478]">HS codes checked</dt><dd className="m-0 font-semibold">{completeness ? `${share(completeness.hs_verified)} of published products (${completeness.hs_verified}/${completeness.published})` : '—'}</dd></div>
-            <div><dt className="text-[#5B6478]">Weight and box size</dt><dd className="m-0 font-semibold">{completeness ? `${share(completeness.weight_and_box)} (${completeness.weight_and_box}/${completeness.published})` : '—'}</dd></div>
-            <div><dt className="text-[#5B6478]">Restricted flags confirmed</dt><dd className="m-0">Not recorded yet: flags are stored per item but there is no separate “confirmed” check.</dd></div>
+            <div><dt className="text-muted">HS codes checked</dt><dd className="m-0 font-semibold">{completeness ? `${share(completeness.hs_verified)} of published products (${completeness.hs_verified}/${completeness.published})` : '—'}</dd></div>
+            <div><dt className="text-muted">Weight and box size</dt><dd className="m-0 font-semibold">{completeness ? `${share(completeness.weight_and_box)} (${completeness.weight_and_box}/${completeness.published})` : '—'}</dd></div>
+            <div><dt className="text-muted">Restricted flags confirmed</dt><dd className="m-0">Not recorded yet: flags are stored per item but there is no separate “confirmed” check.</dd></div>
           </dl>
         </DsCard>
       </div>
@@ -336,8 +336,8 @@ export function ComplianceClient({ versions, entries, policies, completeness, ac
                     <td className="font-mono">v{v.version}</td>
                     <td><DsBadge tone={v.status === 'active' ? 'ok' : v.status === 'draft' ? 'warn' : 'neutral'}>{v.status === 'active' ? 'Active' : v.status === 'draft' ? (v.submitted_at ? 'Waiting for approval' : 'Draft') : 'Replaced'}</DsBadge></td>
                     <td>{v.confirmed}/{v.entries} confirmed</td>
-                    <td>{v.submitted_by_name ?? v.created_by_name ?? '—'}<div className="text-[12px] text-[#5B6478]">{fmtDate(v.submitted_at ?? v.created_at)}</div></td>
-                    <td>{v.activated_by_name ?? '—'}{v.effective_from && <div className="text-[12px] text-[#5B6478]">{fmtDate(v.effective_from)}</div>}</td>
+                    <td>{v.submitted_by_name ?? v.created_by_name ?? '—'}<div className="text-[12px] text-muted">{fmtDate(v.submitted_at ?? v.created_at)}</div></td>
+                    <td>{v.activated_by_name ?? '—'}{v.effective_from && <div className="text-[12px] text-muted">{fmtDate(v.effective_from)}</div>}</td>
                     <td className="text-[12.5px] whitespace-pre-line">{v.note ?? '—'}</td>
                   </tr>
                 ))}

@@ -24,7 +24,7 @@ async function Pushed({ searchParams }: { searchParams: Promise<{ f?: string }> 
   if (!data) {
     return (
       <div className="flex flex-col gap-5" data-testid="ds6-pushed">
-        <h1 className="m-0 text-[26px] font-bold text-[#1A174A]">Pushed products</h1>
+        <h1 className="m-0 text-[26px] font-bold text-ink">Pushed products</h1>
         <DsNotice tone="bad" title="Pushed products could not be loaded" testId="pushed-error"
           action={<DsLinkButton href="/account/dropship/pushed" variant="secondary" icon="refresh">Try again</DsLinkButton>}>{error}</DsNotice>
       </div>

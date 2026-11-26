@@ -90,9 +90,9 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
   if (!on) {
     return (
       <div className="max-w-[780px]" data-testid="dropship-not-switched-on">
-        <h1 className="text-[28px] font-bold text-[#1A174A] m-0">Dropshipping is not switched on</h1>
+        <h1 className="text-[28px] font-bold text-ink m-0">Dropshipping is not switched on</h1>
         <section className="card p-6 mt-4" data-testid="dropship-coming-soon">
-          <p className="m-0 text-[15px] text-[#5B6478]">
+          <p className="m-0 text-[15px] text-muted">
             Dropshipping is not switched on for {s.org.name} yet. Ask your account manager to switch it on, or leave your email to be notified. No products are shown until then.
           </p>
           <div className="mt-4 max-w-[540px]">
@@ -334,7 +334,7 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
 
           <div className="flex-[1_1_220px] min-w-0">
             <span className="ds-label">Duties</span>
-            <p className="m-0 min-h-[44px] flex items-center flex-wrap gap-1 text-[14px] text-[#1A174A]">
+            <p className="m-0 min-h-[44px] flex items-center flex-wrap gap-1 text-[14px] text-ink">
               <span>
                 {countryIncoterm === 'DAP' ? 'Paid by buyer (DAP)' : 'Included (DDP)'}
                 {countryName ? ` for ${country}` : ''}
@@ -342,7 +342,7 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
               <span aria-hidden="true">·</span>
               <Link
                 href="/account/dropship/packing"
-                className="text-[#2A6FD1] hover:underline font-medium"
+                className="text-coral-text hover:underline font-medium"
               >
                 change in Packing and shipping
               </Link>
@@ -362,9 +362,9 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
         </form>
 
         {/* Shipping method filter & selling countries toggle */}
-        <div className="mt-3.5 pt-3 border-t border-[#EEF0F4] flex items-center justify-between gap-3 flex-wrap">
+        <div className="mt-3.5 pt-3 border-t border-divider flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2 flex-wrap" role="group" aria-label="Shipping method">
-            <span className="text-[12.5px] font-semibold text-[#5B6478]">Shipping method:</span>
+            <span className="text-[12.5px] font-semibold text-muted">Shipping method:</span>
             {SHIPS.map(([val, label]) => {
               const active = (ship ?? '') === val;
               return (
@@ -373,7 +373,7 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
                   href={buildHref({ ship: val || undefined, page: undefined })}
                   aria-current={active ? 'true' : undefined}
                   className={`ds-chip no-underline ${
-                    active ? '!bg-[#1A174A] !text-white !border-[#1A174A]' : ''
+                    active ? '!bg-coral !text-white !border-coral' : ''
                   }`}
                 >
                   {label}
@@ -384,7 +384,7 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
 
           <Link
             href="/account/dropship/landed-cost"
-            className="text-[13px] font-semibold text-[#2A6FD1] hover:underline inline-flex items-center gap-1 min-h-[36px]"
+            className="text-[13px] font-semibold text-coral-text hover:underline inline-flex items-center gap-1 min-h-[36px]"
           >
             <DsIcon name="globe" size={15} />
             <span>Landed cost calculator</span>
@@ -396,29 +396,29 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
       {(countries.length === 0 || sp.markets === '1') && (
         <DsCard title="Selling countries" icon="globe" testId="selling-countries-panel">
           {lockedByStaff ? (
-            <p className="m-0 text-[13.5px] text-[#5B6478]" data-testid="markets-locked-msg">
+            <p className="m-0 text-[13.5px] text-muted" data-testid="markets-locked-msg">
               Your account manager has locked your selling countries. Contact support to add or remove a market.
             </p>
           ) : (
             <form action={saveMerchantMarkets} className="space-y-3" data-testid="markets-form">
-              <p className="m-0 text-[13.5px] text-[#5B6478]">
+              <p className="m-0 text-[13.5px] text-muted">
                 Pick the countries your store ships to. Only products with active routes to these countries are shown.
               </p>
               <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 md:grid-cols-4">
                 {supportedOpts.map(([code, name]) => (
                   <label
                     key={code}
-                    className="inline-flex items-center gap-2 min-h-[44px] text-[13.5px] px-3 py-1.5 rounded-[8px] border border-[#E3E7EF] bg-white cursor-pointer"
+                    className="inline-flex items-center gap-2 min-h-[44px] text-[13.5px] px-3 py-1.5 rounded-[8px] border border-line bg-white cursor-pointer"
                   >
                     <input
                       type="checkbox"
                       name="countries"
                       value={code}
                       defaultChecked={countries.includes(code)}
-                      className="accent-[#1A174A] w-4 h-4"
+                      className="accent-ink w-4 h-4"
                     />
                     <span>
-                      {name} <span className="mono text-[11px] text-[#5B6478]">({code})</span>
+                      {name} <span className="mono text-[11px] text-muted">({code})</span>
                     </span>
                   </label>
                 ))}
@@ -437,7 +437,7 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
           href={buildHref({ only: undefined, list: undefined, page: undefined })}
           aria-current={!onlyForYou && !isListOnly ? 'true' : undefined}
           className={`ds-chip no-underline ${
-            !onlyForYou && !isListOnly ? '!bg-[#1A174A] !text-white !border-[#1A174A]' : ''
+            !onlyForYou && !isListOnly ? '!bg-coral !text-white !border-coral' : ''
           }`}
         >
           All products
@@ -447,7 +447,7 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
           aria-current={onlyForYou ? 'true' : undefined}
           data-testid="filter-only-for-you"
           className={`ds-chip no-underline ${
-            onlyForYou ? '!bg-[#1A174A] !text-white !border-[#1A174A]' : ''
+            onlyForYou ? '!bg-coral !text-white !border-coral' : ''
           }`}
         >
           Only for you ({onlyForYouCount})
@@ -519,7 +519,7 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
                 key={r.product_id}
                 data-testid="catalogue-card"
                 className={`ds-card !p-0 flex flex-col overflow-hidden ${
-                  r.only_for_you ? '!border-2 !border-[#0B7A75]' : ''
+                  r.only_for_you ? '!border-2 !border-ok' : ''
                 }`}
               >
                 <Link
@@ -527,7 +527,7 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
                   tabIndex={-1}
                   aria-hidden="true"
                   className={`h-[156px] flex items-center justify-center overflow-hidden relative ${
-                    r.only_for_you ? 'bg-[#E3F4F2] text-[#0B6A65]' : 'bg-[#E9EDF5] text-[#5B6478]'
+                    r.only_for_you ? 'bg-ok-bg text-ok' : 'bg-fill text-muted'
                   }`}
                 >
                   {r.images[0] ? (
@@ -569,7 +569,7 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
                   <h2 className="m-0 text-[16px] font-bold leading-snug">
                     <Link
                       href={detailHref}
-                      className="text-[#1A174A] hover:text-[#2A6FD1] no-underline"
+                      className="text-ink hover:text-coral-text no-underline"
                     >
                       {r.title}
                     </Link>
@@ -585,7 +585,7 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
                   )}
 
                   {/* 4-Part Landed Cost Breakdown (Product, Processing, Shipping, Duties, Landed) */}
-                  <div className="border-t border-[#EEF0F4] pt-1.5 text-[13.5px]">
+                  <div className="border-t border-divider pt-1.5 text-[13.5px]">
                     <div className="ds-row">
                       <span className="ds-mut">Product</span>
                       <span className="mono">{usdShort(productCents)}</span>
@@ -604,7 +604,7 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
                       </span>
                       <span className="mono">{dutiesText}</span>
                     </div>
-                    <div className="ds-row font-bold text-[#1A174A]">
+                    <div className="ds-row font-bold text-ink">
                       <span>Landed cost</span>
                       <span className="mono">{usdShort(route.landed_price_cents)}</span>
                     </div>
@@ -651,7 +651,7 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
 
       {totalPages > 1 && (
         <nav className="flex items-center justify-between gap-3" aria-label="Catalogue pages">
-          <span className="text-[13px] text-[#5B6478]">
+          <span className="text-[13px] text-muted">
             Page {pageNum} of {totalPages}
           </span>
           <div className="flex gap-2">

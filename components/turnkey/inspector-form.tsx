@@ -114,7 +114,7 @@ export function InspectorForm({ job }: { job: InspectorJobProps }) {
   if (!open) {
     return (
       <div className="flex flex-col gap-3" data-testid="tk-insp-closed">
-        {msg && <p role="status" className={`m-0 rounded-[10px] border px-4 py-3 text-sm ${msg.ok ? 'bg-ok-bg border-ok/40 text-ok' : 'bg-bad-bg border-bad/40 text-bad'}`} data-testid="tk-insp-msg">{msg.text}</p>}
+        {msg && <p role="status" className={`m-0 rounded-[10px] border px-4 py-3 text-sm ${msg.ok ? 'bg-ok-bg border-ok-line text-ok font-semibold' : 'bg-bad-bg border-bad/40 text-bad'}`} data-testid="tk-insp-msg">{msg.text}</p>}
         <p className="m-0 text-[15px]">
           {job.status === 'submitted' ? 'Report submitted. The team reviews it and publishes it to the client.'
             : job.status === 'published' ? 'Report published to the client.'
@@ -135,7 +135,7 @@ export function InspectorForm({ job }: { job: InspectorJobProps }) {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5" data-testid="tk-insp-form" aria-label={`${inspectionLabel(job.kind, job.round)} report`}>
-      {msg && <p role="status" className={`m-0 rounded-[10px] border px-4 py-3 text-sm ${msg.ok ? 'bg-ok-bg border-ok/40 text-ok' : 'bg-bad-bg border-bad/40 text-bad'}`} data-testid="tk-insp-msg">{msg.text}</p>}
+      {msg && <p role="status" className={`m-0 rounded-[10px] border px-4 py-3 text-sm ${msg.ok ? 'bg-ok-bg border-ok-line text-ok font-semibold' : 'bg-bad-bg border-bad/40 text-bad'}`} data-testid="tk-insp-msg">{msg.text}</p>}
       {job.status === 'scheduled' && (
         <button type="button" className="btn btn-primary min-h-12 w-full" onClick={onStart} disabled={pending} data-testid="tk-insp-start">Start inspection</button>
       )}
@@ -143,7 +143,7 @@ export function InspectorForm({ job }: { job: InspectorJobProps }) {
       <section aria-labelledby="tk-insp-check-h" className="flex flex-col gap-3">
         <h2 id="tk-insp-check-h" className="m-0 text-[17px] font-semibold">Checklist</h2>
         {job.items.map((i) => (
-          <fieldset key={i.id} className="m-0 border border-line rounded-[12px] p-3 flex flex-col gap-2" data-testid={`tk-insp-item-${i.position}`}>
+          <fieldset key={i.id} className="m-0 border border-line rounded-[16px] p-4 flex flex-col gap-2" data-testid={`tk-insp-item-${i.position}`}>
             <legend className="px-1 text-[15px] font-semibold">{i.position}. {i.label}</legend>
             <div className="grid grid-cols-3 gap-2">
               {TK_ANSWERS.map((a) => {

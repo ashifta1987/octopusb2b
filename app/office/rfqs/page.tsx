@@ -29,7 +29,7 @@ async function OfficeRfqsContent({ searchParams }: { searchParams: Promise<{ f?:
     <>
       <PageHeader title="RFQs & quotes" subtitle="Buyer requests. Open one to see the requested specs and add quotes for any supplier." />
       <nav className="flex flex-wrap gap-2 mb-4" aria-label="Filter">
-        {Object.keys(FILTERS).map((k) => <Link key={k} href={`/office/rfqs?f=${k}`} aria-current={f === k ? 'page' : undefined} className={`btn btn-sm ${f === k ? 'btn-dark' : 'btn-ghost'}`}>{k.replace('_', ' ')}</Link>)}
+        {Object.keys(FILTERS).map((k) => <Link key={k} href={`/office/rfqs?f=${k}`} aria-current={f === k ? 'page' : undefined} className={`btn btn-sm ${f === k ? 'btn-primary' : 'btn-ghost'}`}>{k.replace('_', ' ')}</Link>)}
       </nav>
       <Card>
         <Table head={['RFQ', 'Request', 'Customer location', 'Target', 'Quotes', 'Age', 'Status', '']} empty={<EmptyState title="No RFQs here" />}>

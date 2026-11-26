@@ -1,26 +1,24 @@
 import { Suspense } from 'react';
-import { StoreHeader, StoreFooter, StoreAnnouncement } from '@/components/store-shell';
+import { SiteFrame, StoreAnnouncement } from '@/components/store-shell';
 import { MaintenanceNotice } from '@/components/maintenance-notice';
+import { HomeOnly } from '@/components/site/home-only';
 
-/** Storefront layout (SPEC §8.2): top bar + header + mega-menu, CMS footer. */
+/** Storefront layout: website shell (design §3) — skip link, announcement (homepage only), white header + navy service bar, navy footer. */
 export default function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-col">
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 btn btn-primary">Skip to content</a>
-      {/* Maintenance mode (SPEC §16.3): prominent CMS notice; pages stay browsable. */}
-      <Suspense fallback={null}>
-        <MaintenanceNotice variant="prominent" />
-      </Suspense>
-      {/* cached data only → part of the static shell (no pop-in, no layout shift) */}
-      <StoreAnnouncement />
-      {/* Header reads the session cookie → streamed; fixed-height fallback avoids layout shift. */}
-      <Suspense fallback={<div className="h-[196px] min-[761px]:h-[202px] lg:h-[142px] bg-white border-b border-line" aria-hidden />}>
-        <StoreHeader />
-      </Suspense>
-      <main id="main" className="flex-1">{children}</main>
-      <Suspense fallback={<div className="h-[320px] bg-ink mt-16" aria-hidden />}>
-        <StoreFooter />
-      </Suspense>
-    </div>
+    <SiteFrame
+      before={
+        <>
+          {/* Maintenance mode (SPEC §16.3): prominent CMS notice; pages stay browsable. */}
+          <Suspense fallback={null}>
+            <MaintenanceNotice variant="prominent" />
+          </Suspense>
+          {/* cached data only → part of the static shell */}
+          <HomeOnly><StoreAnnouncement /></HomeOnly>
+        </>
+      }
+    >
+      {children}
+    </SiteFrame>
   );
 }

@@ -403,7 +403,7 @@ export function SampleOrderClient({
               </div>
             </div>
 
-            <h3 className="mt-5 mb-2.5 text-[15px] font-bold text-[#1A174A]">Ship to</h3>
+            <h3 className="mt-5 mb-2.5 text-[15px] font-bold text-ink">Ship to</h3>
             <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
               <div>
                 <label className="ds-label" htmlFor="sample-name">
@@ -575,7 +575,7 @@ export function SampleOrderClient({
                           : usdShort(quote.duties_cents)}
                   </span>
                 </div>
-                <div className="ds-row font-bold border-t border-[#EEF0F4] pt-2.5 mt-1 text-[#1A174A]">
+                <div className="ds-row font-bold border-t border-divider pt-2.5 mt-1 text-ink">
                   <span className="ds-mut">Total</span>
                   <span className="mono" data-testid="sample-total-cents">
                     {totalCents != null ? usdShort(totalCents) : '—'}
@@ -686,8 +686,8 @@ export function SampleOrderClient({
         </div>
 
         {recentSamples.length > 0 && (
-          <div className="mt-4 pt-3 border-t border-[#EEF0F4]">
-            <div className="text-[12.5px] font-semibold text-[#5B6478] mb-2">
+          <div className="mt-4 pt-3 border-t border-divider">
+            <div className="text-[12.5px] font-semibold text-muted mb-2">
               Your recent sample orders
             </div>
             <div className="flex flex-col gap-1.5 text-[13.5px]">

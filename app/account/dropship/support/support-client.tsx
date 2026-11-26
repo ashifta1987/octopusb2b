@@ -78,7 +78,7 @@ export function SupportClient({ data, orgId, notifications }: { data: SupportPag
       />
 
       <section className="ds-card" aria-label="Help topics" data-testid="support-help">
-        <h2 className="m-0 mb-3 text-[17px] font-bold text-[#1A174A]">Help</h2>
+        <h2 className="m-0 mb-3 text-[17px] font-bold text-ink">Help</h2>
         <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
           {[
             { href: '/account/dropship/onboarding', title: 'Getting started', text: 'Connect, import, push', show: true },
@@ -86,9 +86,9 @@ export function SupportClient({ data, orgId, notifications }: { data: SupportPag
             { href: '/account/dropship/pricing', title: 'Pricing and sync', text: 'Rules, currency, stock', show: data.orders_on },
             { href: '/account/dropship/wallet', title: 'Wallet and billing', text: 'Top-ups, invoices, plans', show: true },
           ].filter((x) => x.show).map((x) => (
-            <Link key={x.title} href={x.href} className="ds-card !p-4 no-underline hover:border-[#C9D0DD] min-h-[44px]">
-              <strong className="block text-[15px] text-[#1A174A]">{x.title}</strong>
-              <span className="text-[13px] text-[#5B6478]">{x.text}</span>
+            <Link key={x.title} href={x.href} className="ds-card !p-4 no-underline hover:border-line-strong min-h-[44px]">
+              <strong className="block text-[15px] text-ink">{x.title}</strong>
+              <span className="text-[13px] text-muted">{x.text}</span>
             </Link>
           ))}
         </div>
@@ -106,11 +106,11 @@ export function SupportClient({ data, orgId, notifications }: { data: SupportPag
                   const s = ticketStatusLabel(t.status);
                   return (
                     <tr key={t.id} data-testid={`ticket-row-${t.code}`}>
-                      <td><Link href={`/account/dropship/support/${t.id}`} className="font-mono text-[#2A6FD1] underline inline-flex items-center min-h-[44px]">{t.code}</Link></td>
-                      <td>{t.subject}<span className="block text-[12px] text-[#5B6478]">{categoryLabel(t.category)}{t.case ? ` · ${t.case.code}` : ''}</span></td>
+                      <td><Link href={`/account/dropship/support/${t.id}`} className="font-mono text-coral-text underline inline-flex items-center min-h-[44px]">{t.code}</Link></td>
+                      <td>{t.subject}<span className="block text-[12px] text-muted">{categoryLabel(t.category)}{t.case ? ` · ${t.case.code}` : ''}</span></td>
                       <td>
                         {t.store_order ? (data.orders_on
-                          ? <Link href={`/account/dropship/orders/${t.store_order.id}`} className="text-[#2A6FD1] underline">{`Order ${t.store_order.external_order_name ?? t.store_order.order_number}`}</Link>
+                          ? <Link href={`/account/dropship/orders/${t.store_order.id}`} className="text-coral-text underline">{`Order ${t.store_order.external_order_name ?? t.store_order.order_number}`}</Link>
                           : `Order ${t.store_order.external_order_name ?? t.store_order.order_number}`)
                           : t.rfq ?? t.b2b_order ?? '—'}
                       </td>
@@ -126,10 +126,10 @@ export function SupportClient({ data, orgId, notifications }: { data: SupportPag
       </DsCard>
 
       <section className="ds-card" aria-labelledby="nt-title" ref={formRef} data-testid="support-new-ticket">
-        <h2 id="nt-title" className="m-0 mb-3 text-[17px] font-bold text-[#1A174A]">New ticket</h2>
+        <h2 id="nt-title" className="m-0 mb-3 text-[17px] font-bold text-ink">New ticket</h2>
         {created && (
           <DsNotice tone="ok" title={`Ticket ${created.code} sent`} testId="support-created"
-            action={<Link className="text-[14px] font-semibold text-[#2A6FD1] underline" href={`/account/dropship/support/${created.id}`}>Open the conversation</Link>}>
+            action={<Link className="text-[14px] font-semibold text-coral-text underline" href={`/account/dropship/support/${created.id}`}>Open the conversation</Link>}>
             Octopus support replies here and by notification.
           </DsNotice>
         )}
@@ -150,7 +150,7 @@ export function SupportClient({ data, orgId, notifications }: { data: SupportPag
             <label className="ds-label" htmlFor="ta">Attach file</label>
             <input id="ta" type="file" multiple className="block text-[14px] min-h-[44px]" onChange={(e) => setFiles(Array.from(e.target.files ?? []).slice(0, 10))} />
           </div>
-          {error && !/^(Subject|Order number|Message)/.test(error) && <p role="alert" className="m-0 text-[13px] text-[#B42318] sm:col-span-2" data-testid="support-error">{error}</p>}
+          {error && !/^(Subject|Order number|Message)/.test(error) && <p role="alert" className="m-0 text-[13px] text-bad sm:col-span-2" data-testid="support-error">{error}</p>}
           <div className="sm:col-span-2 flex gap-2.5 flex-wrap">
             <DsButton type="submit" icon="send" loading={pending} disabled={pending} testId="support-send">Send ticket</DsButton>
           </div>
@@ -159,7 +159,7 @@ export function SupportClient({ data, orgId, notifications }: { data: SupportPag
 
       <section className="ds-card" aria-labelledby="nf-title" data-testid="support-notifications">
         <div className="flex justify-between items-center gap-3 flex-wrap mb-2">
-          <h2 id="nf-title" className="m-0 text-[17px] font-bold text-[#1A174A]">{`Notifications${unread ? ` (${unread} new)` : ''}`}</h2>
+          <h2 id="nf-title" className="m-0 text-[17px] font-bold text-ink">{`Notifications${unread ? ` (${unread} new)` : ''}`}</h2>
           {unread > 0 && (
             <form action={markNotificationsRead}>
               <input type="hidden" name="seen" value={notifications[0]?.created_at ?? ''} />
@@ -167,15 +167,15 @@ export function SupportClient({ data, orgId, notifications }: { data: SupportPag
             </form>
           )}
         </div>
-        {notifications.length === 0 ? <p className="m-0 text-[14px] text-[#5B6478]">No notifications yet.</p> : (
+        {notifications.length === 0 ? <p className="m-0 text-[14px] text-muted">No notifications yet.</p> : (
           <ul className="list-none m-0 p-0 flex flex-col">
             {notifications.map((n) => (
-              <li key={n.id} className="flex justify-between gap-3 py-2.5 border-b border-[#EEF0F4] last:border-0">
-                <span className="text-[14px] text-[#1A174A] flex items-center gap-2">
-                  {!n.read_at && <span className="text-[#2A6FD1] inline-flex"><DsIcon name="bell" size={14} /><span className="sr-only">New:</span></span>}
-                  {n.link?.startsWith('/') ? <Link href={n.link} className="text-[#1A174A] underline">{n.title}</Link> : n.title}
+              <li key={n.id} className="flex justify-between gap-3 py-2.5 border-b border-divider last:border-0">
+                <span className="text-[14px] text-ink flex items-center gap-2">
+                  {!n.read_at && <span className="text-coral-text inline-flex"><DsIcon name="bell" size={14} /><span className="sr-only">New:</span></span>}
+                  {n.link?.startsWith('/') ? <Link href={n.link} className="text-ink underline">{n.title}</Link> : n.title}
                 </span>
-                <span className="text-[12px] text-[#5B6478] whitespace-nowrap">{fmtStamp(n.created_at)}</span>
+                <span className="text-[12px] text-muted whitespace-nowrap">{fmtStamp(n.created_at)}</span>
               </li>
             ))}
           </ul>

@@ -99,7 +99,7 @@ export function PushClient({ data, ids }: { data: PushPageData; ids: string[] })
             <DsCheckbox label="Push all images" checked={pushImages} onChange={(e) => setPushImages(e.target.checked)} />
             <DsCheckbox label="Push SEO title and description" checked={pushSeo} onChange={(e) => setPushSeo(e.target.checked)} />
             <DsCheckbox label="Keep stock and price in sync" checked={keepSynced} onChange={(e) => setKeepSynced(e.target.checked)} />
-            <p className="m-0 text-[13px] text-[#5B6478]">Products are created through Shopify&apos;s Admin API. You can edit them in Shopify afterwards.</p>
+            <p className="m-0 text-[13px] text-muted">Products are created through Shopify&apos;s Admin API. You can edit them in Shopify afterwards.</p>
             <DsButton icon="upload" loading={pending} disabled={pending || Boolean(disabledReason)} disabledReason={disabledReason} onClick={() => push()} testId="push-start">
               {`Push ${ready.length} product${ready.length === 1 ? '' : 's'}`}
             </DsButton>
@@ -111,14 +111,14 @@ export function PushClient({ data, ids }: { data: PushPageData; ids: string[] })
             <DsEmptyState title="No push yet" description={store ? 'Start a push to see each product here.' : 'Progress shows here once a store is connected and you push.'} icon="upload" />
           ) : (
             <>
-              <p className="mt-0 text-[13px] text-[#5B6478]">
+              <p className="mt-0 text-[13px] text-muted">
                 {`${latest.jobs.filter((j) => j.status === 'done').length} of ${latest.jobs.filter((j) => j.status !== 'blocked' && j.status !== 'cancelled').length} done · started ${fmtWhen(latest.created_at)}`}
                 {open ? ' · you can leave this page' : ''}
               </p>
               <ul className="list-none m-0 p-0 flex flex-col gap-3">
                 {latest.jobs.map((j) => (
-                  <li key={j.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EEF0F4] pb-2" data-testid={`job-${j.model_no}`}>
-                    <span className="min-w-0"><strong className="text-[#1A174A]">{j.title}</strong><span className="block text-[12px] text-[#5B6478]">{j.model_no}</span></span>
+                  <li key={j.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-divider pb-2" data-testid={`job-${j.model_no}`}>
+                    <span className="min-w-0"><strong className="text-ink">{j.title}</strong><span className="block text-[12px] text-muted">{j.model_no}</span></span>
                     <span className="flex items-center gap-2 flex-wrap">
                       <DsBadge tone={JOB[j.status].tone}>{JOB[j.status].label(j)}</DsBadge>
                       {['queued', 'retry_wait'].includes(j.status) && (
@@ -129,7 +129,7 @@ export function PushClient({ data, ids }: { data: PushPageData; ids: string[] })
                           onClick={() => start(async () => { const r = await pushRetryAction([j.id], newRequestKey()); setNotice(r.ok ? { tone: 'ok', title: 'Queued again' } : { tone: 'bad', title: 'Not queued', text: r.message }); router.refresh(); })}>Retry</DsButton>
                       )}
                     </span>
-                    {j.error_message && j.status !== 'done' && <span className="w-full text-[12px] text-[#5B6478]">{j.error_message}</span>}
+                    {j.error_message && j.status !== 'done' && <span className="w-full text-[12px] text-muted">{j.error_message}</span>}
                   </li>
                 ))}
               </ul>
@@ -147,7 +147,7 @@ export function PushClient({ data, ids }: { data: PushPageData; ids: string[] })
               const text = blocking ? blocking.message : low ? `Price ${storeMoney(low.price_minor, i.currency)} gives ${pct(low.profit_bp, 1)}, below your ${pct(i.min_profit_bp)} minimum.` : '';
               return (
                 <li key={i.product_id} className="flex flex-wrap items-center justify-between gap-2" data-testid={`not-pushed-${i.model_no}`}>
-                  <span className="min-w-0"><strong className="text-[#1A174A]">{i.title}</strong><span className="block text-[13px] text-[#5B6478]">{text}</span></span>
+                  <span className="min-w-0"><strong className="text-ink">{i.title}</strong><span className="block text-[13px] text-muted">{text}</span></span>
                   <span className="flex gap-2 flex-wrap">
                     <DsLinkButton href={`/account/dropship/import/${i.product_id}`} variant="secondary" icon="pencil">{blocking?.code === 'TEXT_CHECK' ? 'Edit description' : 'Change price'}</DsLinkButton>
                     {!blocking && low && (
@@ -163,11 +163,11 @@ export function PushClient({ data, ids }: { data: PushPageData; ids: string[] })
       )}
 
       <DsCard testId="push-when-done">
-        <strong className="text-[#1A174A]">When it finishes</strong>
-        <p className="mt-1 mb-3 text-[14px] text-[#1A174A]">We send a notification and an email (when app email is live). Pushed products appear in Pushed with their sync status.</p>
+        <strong className="text-ink">When it finishes</strong>
+        <p className="mt-1 mb-3 text-[14px] text-ink">We send a notification and an email (when app email is live). Pushed products appear in Pushed with their sync status.</p>
         <DsLinkButton href="/account/dropship/pushed" icon="arrow">Go to Pushed products</DsLinkButton>
       </DsCard>
-      <p className="m-0 text-[12px] text-[#5B6478]">Need to change a price first? <Link href="/account/dropship/pricing" className="text-[#2A6FD1] underline">Pricing and sync</Link></p>
+      <p className="m-0 text-[12px] text-muted">Need to change a price first? <Link href="/account/dropship/pricing" className="text-coral-text underline">Pricing and sync</Link></p>
 
       {confirm && (
         <DsDialog title={confirm.title} description={confirm.text} confirmLabel="Push anyway" cancelLabel="Change price" confirmVariant="primary"

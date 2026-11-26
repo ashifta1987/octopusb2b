@@ -75,11 +75,11 @@ export default async function GeographyPage({ searchParams }: { searchParams: Pr
 
       <Card title="By region" className="mb-6">
         <div className="px-6 pb-6 grid gap-3 grid-cols-2 md:grid-cols-4 xl:grid-cols-7">
-          <Link href={qs({ region: undefined })} aria-current={!sp.region ? 'true' : undefined} className={cn('rounded-[10px] border p-4', !sp.region ? 'bg-ink text-white border-ink' : 'border-line hover:border-ink')}>
+          <Link href={qs({ region: undefined })} aria-current={!sp.region ? 'true' : undefined} className={cn('rounded-[10px] border p-4', !sp.region ? 'bg-tint text-ink border-2 border-coral' : 'border-line hover:border-ink')}>
             <div className="text-sm opacity-80">All regions</div><div className="font-display text-2xl font-bold">{allRegionCustomers}</div><div className="text-xs opacity-80">{gmv(allRegionGmv)} GMV</div>
           </Link>
           {regionList.map((x) => (
-            <Link key={x.r} href={qs({ region: x.r })} aria-current={sp.region === x.r ? 'true' : undefined} className={cn('rounded-[10px] border p-4', sp.region === x.r ? 'bg-ink text-white border-ink' : 'border-line hover:border-ink')}>
+            <Link key={x.r} href={qs({ region: x.r })} aria-current={sp.region === x.r ? 'true' : undefined} className={cn('rounded-[10px] border p-4', sp.region === x.r ? 'bg-tint text-ink border-2 border-coral' : 'border-line hover:border-ink')}>
               <div className="text-sm opacity-80">{x.r}</div><div className="font-display text-2xl font-bold">{x.customers}</div><div className="text-xs opacity-80">{gmv(x.gmv)} GMV</div>
             </Link>
           ))}

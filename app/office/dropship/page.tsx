@@ -542,17 +542,17 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
     <div data-testid="staff-dropship-list">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="m-0 text-[26px] font-bold leading-tight flex items-center gap-3 flex-wrap text-[#1A174A]">
+          <h1 className="m-0 text-[26px] font-bold leading-tight flex items-center gap-3 flex-wrap text-ink">
             <span
               data-page-icon=""
               aria-hidden="true"
-              className="w-10 h-10 rounded-[10px] bg-[#E6EFFB] text-[#2A6FD1] inline-flex items-center justify-center shrink-0"
+              className="w-10 h-10 rounded-[10px] bg-tint text-coral-text inline-flex items-center justify-center shrink-0"
             >
               <DsIcon name="package" size={20} strokeWidth={2} />
             </span>
             <span>Dropship products</span>
           </h1>
-          <p className="text-[14px] text-[#5B6478] mt-1.5 mb-0">
+          <p className="text-[14px] text-muted mt-1.5 mb-0">
             /office/dropship · what merchants can buy, and what they must never see.
             {!staff.canEdit && (
               <span className="ml-2 ds-badge ds-badge-neutral">
@@ -587,14 +587,14 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
       {staff.canSeeCosts && supplierPausedCount > 0 && (
         <div
           role="status"
-          className="mt-4 flex flex-wrap items-center justify-between gap-3.5 rounded-[12px] border border-[#F2C4C2] bg-[#FEF4F4] px-4 py-3.5"
+          className="mt-4 flex flex-wrap items-center justify-between gap-3.5 rounded-[12px] border border-bad/30 bg-bad-bg px-4 py-3.5"
           data-testid="supplier-paused-banner"
         >
           <div className="min-w-0 flex-1">
-            <strong className="text-[14px] text-[#1A174A]">
+            <strong className="text-[14px] text-ink">
               {supplierPausedCount} {supplierPausedCount === 1 ? 'product' : 'products'} paused
             </strong>
-            <p className="m-0 mt-1 text-[13px] text-[#5B6478]">
+            <p className="m-0 mt-1 text-[13px] text-muted">
               Their supplier is no longer verified in Sourcing. Merchants can&apos;t import them;
               pushed products show as out of stock.
             </p>
@@ -684,7 +684,7 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
 
       {/* Main products table */}
       <form action={bulkArchiveDropshipProducts} className="card mt-5 p-0 overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-[#E3E7EF] flex flex-wrap items-center justify-between gap-3">
+        <div className="px-5 py-3.5 border-b border-line flex flex-wrap items-center justify-between gap-3">
           <span className="text-[14px] font-semibold">
             {rows.length} {rows.length === 1 ? 'product' : 'products'}
           </span>
@@ -700,16 +700,16 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
         </div>
 
         {rows.length === 0 ? (
-          <p className="p-8 text-center text-[15px] text-[#5B6478] m-0">
+          <p className="p-8 text-center text-[15px] text-muted m-0">
             No Dropshipping products match these filters.
           </p>
         ) : (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Dropship products">
-            <table className="ds-tbl min-w-[860px]">
+            <table className="ds-tbl min-w-[1180px]">
               <thead>
                 <tr>
                   {staff.canEdit && <th scope="col" className="w-10">Select</th>}
-                  <th scope="col">Product</th>
+                  <th scope="col" className="min-w-[240px]">Product</th>
                   {staff.canSeeCosts && (
                     <>
                       <th scope="col">Source (staff only)</th>
@@ -758,7 +758,7 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
                   return (
                     <tr
                       key={id}
-                      className={isSelected ? 'bg-[#F2F7FE]' : undefined}
+                      className={isSelected ? 'bg-tint-2' : undefined}
                       data-testid="staff-product-row"
                     >
                       {staff.canEdit && (
@@ -768,18 +768,18 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
                             name="ids"
                             value={id}
                             aria-label={`Select ${p.title}`}
-                            className="w-4 h-4 accent-[#1A174A]"
+                            className="w-4 h-4 accent-ink"
                           />
                         </td>
                       )}
-                      <td>
+                      <td className="min-w-[240px]">
                         <Link
                           href={`/office/dropship/${id}`}
-                          className="font-bold text-[#1A174A] hover:text-[#2A6FD1] hover:underline"
+                          className="font-bold text-ink hover:text-coral-text hover:underline"
                         >
                           {String(p.title)}
                         </Link>
-                        <div className="text-[12px] text-[#5B6478] mt-0.5 flex flex-wrap items-center gap-1.5">
+                        <div className="text-[12px] text-muted mt-0.5 flex flex-wrap items-center gap-1.5">
                           <span className="capitalize">{String(p.status)}</span>
                           <span>·</span>
                           <span className="mono font-medium">{String(p.model_no)}</span>
@@ -801,7 +801,7 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
                                   {primaryLink.supplier_code} · {primaryLink.supplier_name}
                                 </div>
                                 {primaryLink.sourcing_sku && (
-                                  <div className="text-[12px] text-[#5B6478] mono">
+                                  <div className="text-[12px] text-muted mono">
                                     Sourcing: {primaryLink.sourcing_sku}
                                   </div>
                                 )}
@@ -809,7 +809,7 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
                             ) : p.source_type === 'own_warehouse' ? (
                               <span>Own warehouse</span>
                             ) : (
-                              <span className="text-[#5B6478]">Unlinked</span>
+                              <span className="text-muted">Unlinked</span>
                             )}
                           </td>
                           <td
@@ -824,9 +824,9 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
                       )}
 
                       <td className="mono whitespace-nowrap">
-                        {im?.hs_code || <span className="text-[#5B6478]">Missing</span>}
+                        {im?.hs_code || <span className="text-muted">Missing</span>}
                       </td>
-                      <td className="text-[13px] text-[#5B6478]">
+                      <td className="text-[13px] text-muted">
                         {hsSourceLabel(im?.hs_code_source ?? null)}
                       </td>
                       <td>
@@ -845,7 +845,7 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
                       </td>
                       <td className="text-[13px] whitespace-nowrap">
                         <div>{stockText}</div>
-                        <div className="text-[12px] text-[#5B6478]">
+                        <div className="text-[12px] text-muted">
                           {rtInfo?.activeCount ? `${rtInfo.activeCount} (${countries})` : '0 routes'}
                         </div>
                       </td>
@@ -868,7 +868,7 @@ async function StaffDropshipList({ searchParams }: { searchParams: Promise<SP> }
                           )}
                           <Link
                             href={`/office/dropship?${reviewQuery.toString()}`}
-                            className="text-[12.5px] font-semibold text-[#2A6FD1] hover:underline"
+                            className="text-[12.5px] font-semibold text-coral-text hover:underline"
                           >
                             Inspect
                           </Link>

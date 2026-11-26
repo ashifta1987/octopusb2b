@@ -428,7 +428,7 @@ export function LandedCostCalculatorClient({
                         : usdShort(quote.duties_cents)}
                   </span>
                 </div>
-                <div className="ds-row font-bold border-t border-[#EEF0F4] pt-2.5 mt-1 text-[#1A174A]">
+                <div className="ds-row font-bold border-t border-divider pt-2.5 mt-1 text-ink">
                   <span>Landed cost</span>
                   <span className="mono" data-testid="lc-total-cents">
                     {landedCents != null ? usdShort(landedCents) : 'Not set'}

@@ -547,8 +547,8 @@ export function DropshipProductForm({
 
   return (
     <div className="space-y-5" data-testid="dropship-product-form">
-      <nav aria-label="Breadcrumb" className="text-[13px] text-[#5B6478]">
-        <Link href="/office/dropship" className="text-[#2A6FD1] hover:underline font-medium">
+      <nav aria-label="Breadcrumb" className="text-[13px] text-muted">
+        <Link href="/office/dropship" className="text-coral-text hover:underline font-medium">
           Products
         </Link>{' '}
         / <span>{title || initial.model_no || 'New product'}</span>
@@ -556,11 +556,11 @@ export function DropshipProductForm({
 
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h1 className="m-0 text-[26px] font-bold flex items-center gap-3 flex-wrap text-[#1A174A]">
+          <h1 className="m-0 text-[26px] font-bold flex items-center gap-3 flex-wrap text-ink">
             <span
               data-page-icon=""
               aria-hidden="true"
-              className="w-10 h-10 rounded-[10px] bg-[#E6EFFB] text-[#2A6FD1] inline-flex items-center justify-center shrink-0"
+              className="w-10 h-10 rounded-[10px] bg-tint text-coral-text inline-flex items-center justify-center shrink-0"
             >
               <DsIcon name="pencil" size={20} strokeWidth={2} />
             </span>
@@ -580,12 +580,12 @@ export function DropshipProductForm({
             )}
           </h1>
           {initial.import_job_code ? (
-            <p className="m-0 mt-1.5 text-[14px] text-[#5B6478]">
+            <p className="m-0 mt-1.5 text-[14px] text-muted">
               Created by import <span className="mono">{initial.import_job_code}</span>
               {initial.created_at_label ? ` on ${initial.created_at_label}` : ''}
             </p>
           ) : initial.created_at_label ? (
-            <p className="m-0 mt-1.5 text-[14px] text-[#5B6478]">
+            <p className="m-0 mt-1.5 text-[14px] text-muted">
               Created on {initial.created_at_label}
             </p>
           ) : null}
@@ -633,8 +633,8 @@ export function DropshipProductForm({
           data-testid="form-message"
           className={`rounded-[12px] px-4 py-3.5 text-[14px] font-medium border ${
             msg.ok
-              ? 'bg-[#F1FAF8] border-[#B9E2DC] text-[#0B7A75]'
-              : 'bg-[#FEF4F4] border-[#F2C4C2] text-[#B42318]'
+              ? 'bg-ok-soft border-ok-line text-ok'
+              : 'bg-bad-bg border-bad/30 text-bad'
           }`}
         >
           {msg.text}
@@ -644,7 +644,7 @@ export function DropshipProductForm({
       {initial.needs_review && initial.needs_review_reason && (
         <div
           role="status"
-          className="rounded-[12px] border border-[#F3D9A4] bg-[#FFFBF2] px-4 py-3 text-[13.5px] text-[#7A4D00]"
+          className="rounded-[12px] border border-warn-line bg-warn-bg px-4 py-3 text-[13.5px] text-warn"
           data-testid="editor-needs-review-alert"
         >
           <strong>Needs review:</strong> {initial.needs_review_reason}
@@ -656,8 +656,8 @@ export function DropshipProductForm({
         <div className="flex-[3_1_640px] min-w-0 flex flex-col gap-4">
           {/* 1. Identity (Cost, Supplier & Sourcing model no. strictly gated by canSeeCosts — Correction 5) */}
           <section className="card p-5 space-y-4" data-testid="identity-section">
-            <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-[#1A174A]">
-              <DsIcon name="file" size={18} className="text-[#2A6FD1]" />
+            <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-ink">
+              <DsIcon name="file" size={18} className="text-coral-text" />
               <span>Identity</span>
             </h2>
 
@@ -667,7 +667,7 @@ export function DropshipProductForm({
                 <strong className="mono text-[15px]" data-testid="input-model-no">
                   {initial.model_no ?? 'Auto-assigned on save (DS-XXXXXX)'}
                 </strong>
-                <div className="text-[12px] text-[#5B6478]">Locked</div>
+                <div className="text-[12px] text-muted">Locked</div>
               </div>
 
               {canSeeCosts && (
@@ -677,7 +677,7 @@ export function DropshipProductForm({
                     <strong className="mono text-[15px]">
                       {primarySp?.sourcing_sku ?? 'Not linked'}
                     </strong>
-                    <div className="text-[12px] text-[#5B6478]">Link to the Sourcing item</div>
+                    <div className="text-[12px] text-muted">Link to the Sourcing item</div>
                   </div>
                   <div data-testid="editor-supplier">
                     <span className="ds-label !mb-0.5">Supplier (staff only)</span>
@@ -693,10 +693,10 @@ export function DropshipProductForm({
                           </span>
                         </>
                       ) : (
-                        <span className="text-[#5B6478]">Unlinked</span>
+                        <span className="text-muted">Unlinked</span>
                       )}
                     </strong>
-                    <div className="text-[12px] text-[#5B6478]">Owned by Sourcing</div>
+                    <div className="text-[12px] text-muted">Owned by Sourcing</div>
                   </div>
                 </>
               )}
@@ -719,7 +719,7 @@ export function DropshipProductForm({
                   <option value="fast_ship">Own warehouse (Fast-ship stock)</option>
                   <option value="extended_catalog">Partner supplier (Extended catalogue)</option>
                 </select>
-                <div className="text-[12px] text-[#5B6478] mt-1">
+                <div className="text-[12px] text-muted mt-1">
                   Merchants see:{' '}
                   {fulfilmentType === 'fast_ship' ? 'Fast-ship stock' : 'Extended catalogue'}
                 </div>
@@ -757,7 +757,7 @@ export function DropshipProductForm({
                     >
                       {effectiveUnitCostCents > 0 ? usd(effectiveUnitCostCents) : 'Not linked'}
                     </strong>
-                    <div className="text-[12px] text-[#5B6478]">From Sourcing (read-only)</div>
+                    <div className="text-[12px] text-muted">From Sourcing (read-only)</div>
                   </div>
                 </>
               )}
@@ -766,8 +766,8 @@ export function DropshipProductForm({
 
           {/* 2. Details for merchants */}
           <section className="card p-5 space-y-4" data-testid="merchant-details-section">
-            <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-[#1A174A]">
-              <DsIcon name="users" size={18} className="text-[#2A6FD1]" />
+            <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-ink">
+              <DsIcon name="users" size={18} className="text-coral-text" />
               <span>Details for merchants</span>
             </h2>
 
@@ -799,7 +799,7 @@ export function DropshipProductForm({
                 className="ds-input w-full !py-2.5"
                 data-testid="input-description"
               />
-              <p className="m-0 mt-1.5 text-[12px] text-[#5B6478]">
+              <p className="m-0 mt-1.5 text-[12px] text-muted">
                 White-label rule: never include supplier or factory names, supplier codes, or
                 manufacturer SKUs.
               </p>
@@ -902,11 +902,11 @@ export function DropshipProductForm({
           <section className="card p-5 space-y-4" data-testid="images-section">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-[#1A174A]">
-                  <DsIcon name="image" size={18} className="text-[#2A6FD1]" />
+                <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-ink">
+                  <DsIcon name="image" size={18} className="text-coral-text" />
                   <span>Images ({images.length} / 10)</span>
                 </h2>
-                <p className="m-0 mt-1 text-[12.5px] text-[#5B6478]">
+                <p className="m-0 mt-1 text-[12.5px] text-muted">
                   JPG, PNG or WebP up to 5 MB · re-encoded, location data removed, stored under a
                   random UUID file name.
                 </p>
@@ -928,7 +928,7 @@ export function DropshipProductForm({
             </div>
 
             {images.length === 0 ? (
-              <p className="m-0 text-[14px] text-[#5B6478]">
+              <p className="m-0 text-[14px] text-muted">
                 No photos uploaded yet. At least 1 photo is required before publishing.
               </p>
             ) : (
@@ -939,11 +939,11 @@ export function DropshipProductForm({
                     <li
                       key={url}
                       className={`rounded-[10px] border p-2 flex flex-col gap-2 ${
-                        isFlagged ? 'border-[#F3D9A4] bg-[#FFFBF2]' : 'border-[#E3E7EF] bg-white'
+                        isFlagged ? 'border-warn-line bg-warn-bg' : 'border-line bg-white'
                       }`}
                       data-testid="uploaded-image-item"
                     >
-                      <div className="relative aspect-square rounded overflow-hidden bg-[#F4F6F9]">
+                      <div className="relative aspect-square rounded overflow-hidden bg-pearl">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={url}
@@ -952,7 +952,7 @@ export function DropshipProductForm({
                         />
                       </div>
                       <div className="flex items-center justify-between gap-1 text-[11.5px]">
-                        <span className="text-[#5B6478]">#{idx + 1}</span>
+                        <span className="text-muted">#{idx + 1}</span>
                         {canEdit && (
                           <div className="flex items-center gap-2">
                             <button
@@ -964,7 +964,7 @@ export function DropshipProductForm({
                                     : [...prev, url],
                                 )
                               }
-                              className="text-[#B54708] font-semibold hover:underline"
+                              className="text-warn font-semibold hover:underline"
                             >
                               {isFlagged ? 'Unflag' : 'Flag'}
                             </button>
@@ -974,7 +974,7 @@ export function DropshipProductForm({
                                 setImages((prev) => prev.filter((_, i) => i !== idx));
                                 setFlaggedImages((prev) => prev.filter((u) => u !== url));
                               }}
-                              className="text-[#B42318] font-semibold hover:underline"
+                              className="text-bad font-semibold hover:underline"
                             >
                               Remove
                             </button>
@@ -990,8 +990,8 @@ export function DropshipProductForm({
 
           {/* 4. Shipping and customs data (shared item master) */}
           <section className="card p-5 space-y-4" data-testid="item-master-section">
-            <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-[#1A174A]">
-              <DsIcon name="globe" size={18} className="text-[#2A6FD1]" />
+            <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-ink">
+              <DsIcon name="globe" size={18} className="text-coral-text" />
               <span>Shipping and customs data (shared item master)</span>
             </h2>
 
@@ -1087,15 +1087,15 @@ export function DropshipProductForm({
               </div>
             </div>
 
-            <div className="rounded-[10px] bg-[#F4F6F9] px-3.5 py-2.5 text-[13px] space-y-1">
+            <div className="rounded-[10px] bg-pearl px-3.5 py-2.5 text-[13px] space-y-1">
               <div className="flex flex-wrap justify-between gap-2">
-                <span className="text-[#5B6478]">Billed weight</span>
+                <span className="text-muted">Billed weight</span>
                 <span className="font-semibold" data-testid="billed-weight-preview">
                   {billedWeightInfo.label}
                 </span>
               </div>
               <div className="flex flex-wrap justify-between gap-2">
-                <span className="text-[#5B6478]">Used by</span>
+                <span className="text-muted">Used by</span>
                 <span>Dropship, Shipping, 3PL</span>
               </div>
             </div>
@@ -1106,7 +1106,7 @@ export function DropshipProductForm({
                 disabled={!canEdit || !hsCode.trim()}
                 checked={hsVerified}
                 onChange={(e) => setHsVerified(e.target.checked)}
-                className="w-4 h-4 accent-[#1A174A]"
+                className="w-4 h-4 accent-ink"
                 data-testid="input-hs-verified"
               />
               <span>I checked this HS code against the tariff</span>
@@ -1131,7 +1131,7 @@ export function DropshipProductForm({
                       disabled={!canEdit}
                       checked={checked as boolean}
                       onChange={(e) => (setter as (v: boolean) => void)(e.target.checked)}
-                      className="w-4 h-4 accent-[#1A174A]"
+                      className="w-4 h-4 accent-ink"
                       data-testid={tid as string}
                     />
                     <span>{label as string}</span>
@@ -1143,10 +1143,10 @@ export function DropshipProductForm({
 
           {/* 5. Variants (reads 3PL stock; hides Sourcing link when !canSeeCosts) */}
           <section className="card p-0 overflow-hidden" data-testid="variants-section">
-            <div className="px-5 py-4 border-b border-[#E3E7EF] flex flex-wrap items-center justify-between gap-2">
+            <div className="px-5 py-4 border-b border-line flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-[#1A174A]">
-                  <DsIcon name="layers" size={18} className="text-[#2A6FD1]" />
+                <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-ink">
+                  <DsIcon name="layers" size={18} className="text-coral-text" />
                   <span>Variants ({variants.length})</span>
                 </h2>
               </div>
@@ -1178,7 +1178,7 @@ export function DropshipProductForm({
             </div>
 
             {variants.length === 0 ? (
-              <p className="p-5 m-0 text-[14px] text-[#5B6478]">
+              <p className="p-5 m-0 text-[14px] text-muted">
                 A default variant (<span className="mono">-01</span>) is created automatically on
                 save.
               </p>
@@ -1307,7 +1307,7 @@ export function DropshipProductForm({
                                 onClick={() =>
                                   setVariants((prev) => prev.filter((_, i) => i !== idx))
                                 }
-                                className="text-[#B42318] text-[12.5px] font-semibold hover:underline"
+                                className="text-bad text-[12.5px] font-semibold hover:underline"
                               >
                                 Remove
                               </button>
@@ -1320,7 +1320,7 @@ export function DropshipProductForm({
                 </table>
               </div>
             )}
-            <div className="px-5 py-3 border-t border-[#E3E7EF] text-[12.5px] text-[#5B6478]">
+            <div className="px-5 py-3 border-t border-line text-[12.5px] text-muted">
               Stock is owned by 3PL (<span className="mono">warehouse_stock</span>); this table
               reads it.
             </div>
@@ -1328,10 +1328,10 @@ export function DropshipProductForm({
 
           {/* 6. Routes and price split (DDP vs DAP; Our cost & Margin hidden when !canSeeCosts) */}
           <section className="card p-0 overflow-hidden" data-testid="routes-section">
-            <div className="px-5 py-4 border-b border-[#E3E7EF] flex flex-wrap items-center justify-between gap-2">
+            <div className="px-5 py-4 border-b border-line flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-[#1A174A]">
-                  <DsIcon name="truck" size={18} className="text-[#2A6FD1]" />
+                <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-ink">
+                  <DsIcon name="truck" size={18} className="text-coral-text" />
                   <span>Routes and price split ({routes.length})</span>
                 </h2>
               </div>
@@ -1365,7 +1365,7 @@ export function DropshipProductForm({
             </div>
 
             {routes.length === 0 ? (
-              <p className="p-5 m-0 text-[14px] text-[#5B6478]">
+              <p className="p-5 m-0 text-[14px] text-muted">
                 No routes configured. Add at least 1 active route before publishing.
               </p>
             ) : (
@@ -1526,7 +1526,7 @@ export function DropshipProductForm({
                           </td>
                           <td className="tabular-nums whitespace-nowrap" data-testid="route-duty-display">
                             {r.incoterm === 'DAP' ? (
-                              <span className="text-[12.5px] text-[#5B6478]">
+                              <span className="text-[12.5px] text-muted">
                                 Duties paid by buyer
                               </span>
                             ) : dutyTableCents != null ? (
@@ -1559,7 +1559,7 @@ export function DropshipProductForm({
                               className="ds-input mono !min-h-[36px] w-24"
                               data-testid="route-landed-cents"
                             />
-                            <div className="text-[11px] text-[#5B6478]">
+                            <div className="text-[11px] text-muted">
                               {usd(r.landed_price_cents)}
                             </div>
                           </td>
@@ -1648,7 +1648,7 @@ export function DropshipProductForm({
                                   ),
                                 )
                               }
-                              className="w-4 h-4 accent-[#1A174A]"
+                              className="w-4 h-4 accent-ink"
                             />
                           </td>
                           {canEdit && (
@@ -1657,7 +1657,7 @@ export function DropshipProductForm({
                                 <button
                                   type="button"
                                   onClick={() => prefillRouteFromRateCard(idx)}
-                                  className="text-[#2A6FD1] text-[12px] font-semibold hover:underline"
+                                  className="text-coral-text text-[12px] font-semibold hover:underline"
                                 >
                                   Pre-fill
                                 </button>
@@ -1667,7 +1667,7 @@ export function DropshipProductForm({
                                 onClick={() =>
                                   setRoutes((prev) => prev.filter((_, i) => i !== idx))
                                 }
-                                className="text-[#B42318] text-[12px] font-semibold hover:underline"
+                                className="text-bad text-[12px] font-semibold hover:underline"
                               >
                                 Remove
                               </button>
@@ -1680,7 +1680,7 @@ export function DropshipProductForm({
                 </table>
               </div>
             )}
-            <div className="px-5 py-3 border-t border-[#E3E7EF] text-[12.5px] text-[#5B6478]">
+            <div className="px-5 py-3 border-t border-line text-[12.5px] text-muted">
               Shipping comes from Shipping&apos;s rate card on billed weight; DDP duties come from
               the versioned rate table (DAP routes show &ldquo;Duties paid by buyer&rdquo;).
             </div>
@@ -1688,9 +1688,9 @@ export function DropshipProductForm({
 
           {/* 7. Volume tiers (dropship_price_tiers — Correction 2) */}
           <section className="card p-0 overflow-hidden" data-testid="price-tiers-section">
-            <div className="px-5 py-4 border-b border-[#E3E7EF] flex flex-wrap items-center justify-between gap-2">
-              <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-[#1A174A]">
-                <DsIcon name="layers" size={18} className="text-[#2A6FD1]" />
+            <div className="px-5 py-4 border-b border-line flex flex-wrap items-center justify-between gap-2">
+              <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-ink">
+                <DsIcon name="layers" size={18} className="text-coral-text" />
                 <span>Volume tiers</span>
               </h2>
               {canEdit && (
@@ -1716,7 +1716,7 @@ export function DropshipProductForm({
             </div>
 
             {priceTiers.length === 0 ? (
-              <p className="p-5 m-0 text-[14px] text-[#5B6478]">
+              <p className="p-5 m-0 text-[14px] text-muted">
                 No volume tiers set. Single product price applies to all quantities.
               </p>
             ) : (
@@ -1785,7 +1785,7 @@ export function DropshipProductForm({
                               onClick={() =>
                                 setPriceTiers((prev) => prev.filter((_, i) => i !== idx))
                               }
-                              className="text-[#B42318] text-[12.5px] font-semibold hover:underline"
+                              className="text-bad text-[12.5px] font-semibold hover:underline"
                             >
                               Remove
                             </button>
@@ -1803,8 +1803,8 @@ export function DropshipProductForm({
         {/* Right sticky column: Publish checklist + Audit history */}
         <div className="flex-[1_1_280px] min-w-0 flex flex-col gap-4">
           <section className="card p-5 space-y-3" data-testid="publish-checklist-card">
-            <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-[#1A174A]">
-              <DsIcon name="check" size={18} className="text-[#2A6FD1]" />
+            <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-ink">
+              <DsIcon name="check" size={18} className="text-coral-text" />
               <span>Publish checklist</span>
             </h2>
             <ul className="list-none m-0 p-0 text-[14px] space-y-2">
@@ -1827,7 +1827,7 @@ export function DropshipProductForm({
                 </li>
               ))}
             </ul>
-            <p className="m-0 text-[12px] text-[#5B6478]">
+            <p className="m-0 text-[12px] text-muted">
               {liveChecklist.ready
                 ? 'Everything required to publish is complete.'
                 : 'Publish stays disabled until everything is done.'}
@@ -1835,12 +1835,12 @@ export function DropshipProductForm({
           </section>
 
           <section className="card p-5 space-y-3" data-testid="product-history-card">
-            <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-[#1A174A]">
-              <DsIcon name="clock" size={18} className="text-[#2A6FD1]" />
+            <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-ink">
+              <DsIcon name="clock" size={18} className="text-coral-text" />
               <span>History</span>
             </h2>
             {initial.history.length === 0 ? (
-              <p className="m-0 text-[13px] text-[#5B6478]">
+              <p className="m-0 text-[13px] text-muted">
                 Changes are recorded in the audit log as soon as you save.
               </p>
             ) : (
@@ -1849,11 +1849,11 @@ export function DropshipProductForm({
                   <li key={h.id} className="flex gap-2.5 items-start">
                     <span
                       aria-hidden="true"
-                      className="w-2.5 h-2.5 rounded-full bg-[#0B7A75] mt-1.5 shrink-0"
+                      className="w-2.5 h-2.5 rounded-full bg-ok mt-1.5 shrink-0"
                     />
                     <div>
-                      <strong className="font-semibold text-[#1A174A]">{h.summary}</strong>
-                      <div className="text-[12px] text-[#5B6478]">
+                      <strong className="font-semibold text-ink">{h.summary}</strong>
+                      <div className="text-[12px] text-muted">
                         {h.created_at} · {h.actor_label}
                       </div>
                     </div>

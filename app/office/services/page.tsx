@@ -37,7 +37,7 @@ async function OfficeServicesContent({ searchParams }: { searchParams: Promise<{
     <>
       <PageHeader title="Service requests" subtitle="Samples, QC, certification, 3PL, dropship and sourcing requests. Move each through its workflow; rejecting a wallet-paid request refunds the fee." />
       <form className="flex flex-wrap gap-2 mb-4 items-center" role="search">
-        {Object.keys(FILTERS).map((k) => <Link key={k} href={`/office/services?f=${k}${type ? `&type=${type}` : ''}`} aria-current={f === k ? 'page' : undefined} className={`btn btn-sm ${f === k ? 'btn-dark' : 'btn-ghost'}`}>{humanize(k)}</Link>)}
+        {Object.keys(FILTERS).map((k) => <Link key={k} href={`/office/services?f=${k}${type ? `&type=${type}` : ''}`} aria-current={f === k ? 'page' : undefined} className={`btn btn-sm ${f === k ? 'btn-primary' : 'btn-ghost'}`}>{humanize(k)}</Link>)}
         <input type="hidden" name="f" value={f} />
         <label htmlFor="sv-type" className="sr-only">Service type</label>
         <select id="sv-type" name="type" defaultValue={type ?? ''} className="input w-auto min-h-9 text-sm ml-auto">

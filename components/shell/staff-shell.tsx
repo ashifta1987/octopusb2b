@@ -1,4 +1,4 @@
-import { Logo } from '@/components/ui';
+import { AppLogo } from './app-logo';
 import { SideNav } from '@/components/side-nav';
 import { MaintenanceNotice } from '@/components/maintenance-notice';
 import { WorkspaceSwitcher, StaffUserMenu } from '@/components/portal-shell';
@@ -18,7 +18,9 @@ import { StaffShellSwitcher } from './dropship-shell-switcher';
  * ADDON-41 boards 06–08 — staff shell: navy header ("Admin · staff only"), admin tabs, and the side menu
  * (work queue first, then the existing back-office and admin pages the person may open).
  */
-export function StaffShell({ session, nav, counts, moderation, unread = 0, scope, dropshipV2Ui = false, canEditDropship = false, canSeeRates = false, in3pl = false, warehouseMember = false, children }: {
+export function StaffShell({ area = 'staff', session, nav, counts, moderation, unread = 0, scope, dropshipV2Ui = false, canEditDropship = false, canSeeRates = false, in3pl = false, warehouseMember = false, children }: {
+  /** layout segment (admin / office): keeps the skip-link target id unique while Next keeps the other layout hidden */
+  area?: string;
   session: Session; nav: NavSection[]; counts: { queue: number; approvals: number; transfers: number }; moderation?: number | null; unread?: number; scope?: DivisionScope; dropshipV2Ui?: boolean; canEditDropship?: boolean; canSeeRates?: boolean; in3pl?: boolean;
   /** W7: whether this person works in a warehouse (from the layout) */
   warehouseMember?: boolean; children: React.ReactNode;
@@ -70,41 +72,61 @@ export function StaffShell({ session, nav, counts, moderation, unread = 0, scope
     .filter((s) => s.items.length);
 
   const staging = isStaging();
+  const hasDivisions = Boolean(scope && scope.options.length > 0);
+  // Design handoff 26 Nov 2026 (App shell §3): white 264 px sidebar (logo, context box with the current division,
+  // Jost group labels, 44 px items, "Switch workspace" at the bottom) + white top bar (staff badge, search, bell,
+  // user chip) + the existing admin tabs and division banner. Phones: top bar, tabs, context + menu strip, page.
   const defaultShell = (
-    <div className="min-h-screen bg-pearl">
+    <div className="app-shell min-h-screen bg-pearl">
+      <a href={`#staff-main-${area}`} className="skip-link">Skip to content</a>
       <MaintenanceNotice />
-      <header className="bg-ink text-white">
-        <div className="px-4 sm:px-6 py-3 flex flex-wrap items-center gap-x-5 gap-y-3">
-          <Logo white />
-          <span className="mono text-[11px] font-bold uppercase tracking-[.08em] px-3 py-1 rounded-full bg-white text-ink" data-testid="staff-only">Admin · staff only</span>
-          <form action="/office/orders" role="search" className="order-3 lg:order-none basis-full lg:basis-auto lg:flex-1 lg:max-w-[520px]">
-            <label htmlFor="staff-q" className="sr-only">Search orders by code or title</label>
-            <input id="staff-q" name="q" className="input !rounded-[10px] !border-white" placeholder="Search orders by code or title" />
-          </form>
-          {staging && <span className="order-2 mono text-[11px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full bg-warn-bg text-warn" data-testid="staging-badge" title="Staging environment: test data, not the live site">Staging</span>}
-          <div className="ml-auto flex items-center gap-3 [&_summary]:text-white [&_.btn-ghost]:!text-white [&_.btn-ghost]:!bg-transparent [&_.btn-ghost]:!border-white/40 [&_.text-muted]:!text-white/70 [&_summary_.bg-ink]:!bg-coral">
-            {/* staff notification inbox (bug 2, 8 Nov 2026): drops at once when one is opened */}
-            <Link href="/admin/notifications" data-testid="staff-bell" className="relative w-11 h-11 rounded-[10px] border border-white/40 flex items-center justify-center hover:border-white">
-              <span className="sr-only">Notifications</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
-              <UnreadBellDot count={unread} />
-            </Link>
-            {scope && <DivisionSwitcher options={scope.options} current={scope.all ? null : scope.division.code} action={setDivisionScope} />}
-            <WorkspaceSwitcher session={session} current="Admin" />
-            <StaffUserMenu name={name} initials={initials} sub={sub} email={session.email} />
+      <div className="app-cols md:grid md:grid-cols-[264px_minmax(0,1fr)] md:grid-rows-[auto_1fr] md:min-h-screen">
+        <div className="md:col-start-2 md:row-start-1 min-w-0">
+          <header className="app-topbar gap-x-4 gap-y-3">
+            <AppLogo size="bar" className="md:hidden" />
+            <span className="text-[13px] font-bold px-3 py-1.5 rounded-full bg-ink text-white" data-testid="staff-only">Admin · staff only</span>
+            <form action="/office/orders" role="search" className="order-3 lg:order-none basis-full lg:basis-auto lg:flex-1 lg:max-w-[520px]">
+              <label htmlFor="staff-q" className="sr-only">Search orders by code or title</label>
+              <input id="staff-q" name="q" className="input" placeholder="Search orders by code or title" />
+            </form>
+            {staging && <span className="order-2 lg:order-none text-[13px] font-bold px-3 py-1.5 rounded-full bg-warn-bg text-warn" data-testid="staging-badge" title="Staging environment: test data, not the live site">Staging</span>}
+            <div className="order-2 lg:order-none ml-auto flex items-center gap-3">
+              {/* staff notification inbox (bug 2, 8 Nov 2026): drops at once when one is opened */}
+              <Link href="/admin/notifications" data-testid="staff-bell" className="app-ibtn">
+                <span className="sr-only">Notifications</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+                <UnreadBellDot count={unread} />
+              </Link>
+              <StaffUserMenu name={name} initials={initials} sub={sub} email={session.email} />
+            </div>
+          </header>
+          <AccountTabs tabs={tabs} />
+          {scope && !scope.all && (
+            <div className="bg-tint border-b border-line px-4 sm:px-6 lg:px-12 py-2.5 text-sm text-ink flex flex-wrap items-center gap-x-3 gap-y-1" data-testid="division-banner">
+              <span>Showing <b>{scope.division.name}</b> only: lists, counts and notifications follow this division.</span>
+              {scope.options.length > 1 && <form action={setDivisionScope}><input type="hidden" name="division" value="all" /><button className="inline-flex items-center min-h-11 text-coral-text font-bold underline">Show all divisions</button></form>}
+            </div>
+          )}
+        </div>
+        <aside className="app-sidebar gap-3 md:gap-0 px-4 py-3 border-b md:border-b-0 md:col-start-1 md:row-start-1 md:row-span-2 md:sticky md:top-0 md:self-start md:h-screen md:overflow-y-auto md:border-r md:px-3.5 md:pt-6 md:pb-7">
+          <div className="hidden md:block px-2"><AppLogo /></div>
+          {/* context box: the division the app already knows (the division switcher), else the current workspace */}
+          <div className="app-context md:mx-1 md:mt-4 md:mb-2.5">
+            <span className="app-context-tile" aria-hidden>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6M9 10h.01M15 10h.01" /></svg>
+            </span>
+            <div className="min-w-0 flex-1">
+              {hasDivisions && scope
+                ? <DivisionSwitcher variant="context" options={scope.options} current={scope.all ? null : scope.division.code} action={setDivisionScope} />
+                : <><span className="block text-[12px] text-muted">Workspace</span><b className="block mt-0.5 text-[15px] leading-tight text-ink">Admin</b></>}
+            </div>
           </div>
-        </div>
-      </header>
-      <AccountTabs tabs={tabs} />
-      {scope && !scope.all && (
-        <div className="bg-tint border-b border-line px-4 sm:px-6 py-2 text-sm flex flex-wrap items-center gap-x-3 gap-y-1" data-testid="division-banner">
-          <span>Showing <b>{scope.division.name}</b> only: lists, counts and notifications follow this division.</span>
-          {scope.options.length > 1 && <form action={setDivisionScope}><input type="hidden" name="division" value="all" /><button className="text-coral-text font-semibold underline">Show all divisions</button></form>}
-        </div>
-      )}
-      <div className="flex flex-col md:flex-row">
-        <SideNav sections={[...work, ...rest]} moderation={moderation} badges={{ '/admin': counts.queue, '/admin/notifications': unread, '/admin/approvals': counts.approvals, '/admin/finance/transfers': counts.transfers }} />
-        <main className="flex-1 min-w-0 px-4 sm:px-8 py-8"><div className="max-w-[1280px] mx-auto">{children}</div></main>
+          <SideNav sections={[...work, ...rest]} moderation={moderation} badges={{ '/admin': counts.queue, '/admin/notifications': unread, '/admin/approvals': counts.approvals, '/admin/finance/transfers': counts.transfers }} />
+          <div className="md:mt-auto md:pt-6 empty:hidden">
+            <WorkspaceSwitcher session={session} current="Admin" placement="sidebar" />
+          </div>
+        </aside>
+        <main id={`staff-main-${area}`} tabIndex={-1} className="app-main md:col-start-2 md:row-start-2"><div className="max-w-[1280px] mx-auto">{children}</div></main>
       </div>
     </div>
   );

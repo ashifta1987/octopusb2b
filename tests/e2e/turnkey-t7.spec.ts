@@ -213,6 +213,6 @@ test('T7 terms and legal page; axe', async ({ page }) => {
   for (const id of ['china-visit', 'privacy', 'independence', 'passport']) await expect(page.getByTestId(`tk-terms-${id}`)).toBeVisible();
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Terms and legal');
   await checkAxe(page, 'turnkey terms');
-  await page.goto('/turnkey');
+  await page.goto('/turnkey/catalogue'); // design handoff: the live catalogue moved from /turnkey
   await expect(page.getByTestId('tk-terms-link')).toHaveAttribute('href', '/turnkey/terms');
 });

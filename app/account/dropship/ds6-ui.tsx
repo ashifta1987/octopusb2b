@@ -35,7 +35,7 @@ export function RowStatus({ ready, problems, minProfitBp, testId }: { ready: boo
     return (
       <span className="inline-flex flex-col gap-1" data-testid={testId}>
         <DsBadge tone={blocking.code === 'OUT_OF_STOCK' ? 'bad' : 'warn'}>{problemShort(blocking.code)}</DsBadge>
-        <span className="text-[12px] text-[#5B6478] max-w-[260px]">{blocking.message}</span>
+        <span className="text-[12px] text-muted max-w-[260px]">{blocking.message}</span>
       </span>
     );
   }

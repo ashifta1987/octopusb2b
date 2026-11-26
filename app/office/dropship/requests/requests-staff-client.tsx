@@ -70,12 +70,12 @@ function Detail({ r, canEdit, canSeeSourcing, processingCents }: {
     <div className="flex flex-col gap-4" data-testid={`request-detail-${r.rfq_code}`}>
       <DsCard title="Request details" icon="file">
         <dl className="grid grid-cols-[150px_1fr] gap-x-3 gap-y-1.5 m-0 text-[13.5px]">
-          <dt className="text-[#5B6478]">Merchant</dt>
+          <dt className="text-muted">Merchant</dt>
           <dd className="m-0">{r.org_name}{r.org_kyc_status === 'verified' ? ' · verified' : r.org_kyc_status ? ` · KYC ${r.org_kyc_status.replace(/_/g, ' ')}` : ''}</dd>
-          <dt className="text-[#5B6478]">Link they sent</dt>
-          <dd className="m-0 break-all">{r.product_link ? <a href={r.product_link} target="_blank" rel="noopener noreferrer nofollow" className="underline text-[#2A6FD1]">{r.product_link}</a> : '—'}</dd>
-          <dt className="text-[#5B6478]">Notes</dt><dd className="m-0 whitespace-pre-line">{notes ?? '—'}</dd>
-          <dt className="text-[#5B6478]">Sourcing request</dt>
+          <dt className="text-muted">Link they sent</dt>
+          <dd className="m-0 break-all">{r.product_link ? <a href={r.product_link} target="_blank" rel="noopener noreferrer nofollow" className="underline text-coral-text">{r.product_link}</a> : '—'}</dd>
+          <dt className="text-muted">Notes</dt><dd className="m-0 whitespace-pre-line">{notes ?? '—'}</dd>
+          <dt className="text-muted">Sourcing request</dt>
           <dd className="m-0"><span className="font-mono">{r.rfq_code}</span> · {r.merchant_label ?? r.rfq_status}</dd>
         </dl>
       </DsCard>
@@ -83,7 +83,7 @@ function Detail({ r, canEdit, canSeeSourcing, processingCents }: {
       {canSeeSourcing && (
         <DsCard title="Sourcing match (staff with cost permission only)" icon="lock" testId="request-sourcing-match">
           <p className="m-0 text-[13px]">Supplier, Sourcing model no. and purchase cost are kept on the Sourcing request.{' '}
-            <a href={`/office/rfqs/${r.rfq_id}`} className="underline text-[#2A6FD1]">Open {r.rfq_code} in Sourcing</a></p>
+            <a href={`/office/rfqs/${r.rfq_id}`} className="underline text-coral-text">Open {r.rfq_code} in Sourcing</a></p>
         </DsCard>
       )}
 
@@ -92,21 +92,21 @@ function Detail({ r, canEdit, canSeeSourcing, processingCents }: {
           <table className="ds-tbl min-w-[560px]">
             <thead><tr><th scope="col">Country</th><th scope="col">Product</th><th scope="col">Processing</th><th scope="col">Shipping</th><th scope="col">Duties</th><th scope="col">Landed</th></tr></thead>
             <tbody>
-              {countries.length === 0 && <tr><td colSpan={6} className="text-[#5B6478]">The merchant didn’t choose countries.</td></tr>}
+              {countries.length === 0 && <tr><td colSpan={6} className="text-muted">The merchant didn’t choose countries.</td></tr>}
               {countries.map((c) => (
                 <tr key={c}>
                   <td>{countryName(c)}</td>
-                  <td className="text-[#5B6478]">After the product is set up</td>
+                  <td className="text-muted">After the product is set up</td>
                   <td className="font-mono">{processingCents != null ? money(processingCents, 'USD') : 'Not set'}</td>
-                  <td className="text-[#5B6478]">Needs weight and box size</td>
-                  <td className="text-[#5B6478]">Not known yet</td>
+                  <td className="text-muted">Needs weight and box size</td>
+                  <td className="text-muted">Not known yet</td>
                   <td className="font-mono">{r.quoted_country === c && r.quoted_landed_cents != null ? money(r.quoted_landed_cents, 'USD') : '—'}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <p className="m-0 px-5 py-3 text-[12.5px] text-[#5B6478]">The quote sent is one landed price per unit for one country. The full breakdown comes from the quote engine once the private product has weight, box size and a verified HS code.</p>
+        <p className="m-0 px-5 py-3 text-[12.5px] text-muted">The quote sent is one landed price per unit for one country. The full breakdown comes from the quote engine once the private product has weight, box size and a verified HS code.</p>
       </DsCard>
 
       {canEdit && open ? (
@@ -124,8 +124,8 @@ function Detail({ r, canEdit, canSeeSourcing, processingCents }: {
               {r.rfq_status === 'quoted' ? 'Update quote' : 'Send quote'}
             </DsButton>
           </form>
-          <p className="mt-2 mb-0 text-[12.5px] text-[#5B6478]">No supplier names or costs are sent to the merchant.</p>
-          <div className="mt-4 border-t border-[#E3E7EF] pt-3">
+          <p className="mt-2 mb-0 text-[12.5px] text-muted">No supplier names or costs are sent to the merchant.</p>
+          <div className="mt-4 border-t border-line pt-3">
             {declining ? (
               <form className="flex flex-wrap gap-2 items-end" action={() => start(async () => { const res = await declineDropshipRequestAction(r.rfq_id, reason); say(res); if (res.ok) setDeclining(false); })}>
                 <DsInput label="Why is it declined?" value={reason} onChange={(e) => setReason(e.target.value)} required autoFocus />
@@ -138,12 +138,12 @@ function Detail({ r, canEdit, canSeeSourcing, processingCents }: {
           </div>
         </DsCard>
       ) : (
-        <p className="m-0 text-[13px] text-[#5B6478]">
-          {!open ? (r.created_dropship_product_id ? <>Accepted: <a className="underline text-[#2A6FD1]" href={`/office/dropship/${r.created_dropship_product_id}`}>open the private product</a> (only this merchant can see it).</> : 'Closed. No quote needed.')
+        <p className="m-0 text-[13px] text-muted">
+          {!open ? (r.created_dropship_product_id ? <>Accepted: <a className="underline text-coral-text" href={`/office/dropship/${r.created_dropship_product_id}`}>open the private product</a> (only this merchant can see it).</> : 'Closed. No quote needed.')
             : 'Support can view requests but can’t send quotes.'}
         </p>
       )}
-      {msg && <p role={msg.ok ? 'status' : 'alert'} className={`m-0 text-[13px] ${msg.ok ? 'text-[#1B7F4B]' : 'text-[#B42318]'}`}>{msg.text}</p>}
+      {msg && <p role={msg.ok ? 'status' : 'alert'} className={`m-0 text-[13px] ${msg.ok ? 'text-ok' : 'text-bad'}`}>{msg.text}</p>}
     </div>
   );
 }
@@ -189,9 +189,9 @@ export function StaffDropshipRequestsClient({ rows, canEdit, canSeeSourcing, pro
                   {shown.map((r) => {
                     const isCurrent = current?.rfq_id === r.rfq_id;
                     return (
-                      <tr key={r.rfq_id} data-testid={`staff-request-row-${r.rfq_code}`} aria-selected={isCurrent} className={isCurrent ? 'bg-[#EEF4FD]' : undefined}>
+                      <tr key={r.rfq_id} data-testid={`staff-request-row-${r.rfq_code}`} aria-selected={isCurrent} className={isCurrent ? 'bg-tint-2' : undefined}>
                         <td>
-                          <button type="button" className="font-mono font-semibold underline text-[#2A6FD1] min-h-[44px]" onClick={() => setSelected(r.rfq_id)}
+                          <button type="button" className="font-mono font-semibold underline text-coral-text min-h-[44px]" onClick={() => setSelected(r.rfq_id)}
                             aria-label={`Open ${r.rfq_code}`}>{r.rfq_code}</button>
                           <div><DsBadge tone={BUCKET_TONE[BUCKET[r.rfq_status] ?? 'closed']}>{r.merchant_label ?? r.rfq_status}</DsBadge></div>
                         </td>
@@ -213,7 +213,7 @@ export function StaffDropshipRequestsClient({ rows, canEdit, canSeeSourcing, pro
         <div>
           {current && (current.rfq_id === selected || (BUCKET[current.rfq_status] ?? 'closed') === bucket) ? (
             <>
-              <h2 className="m-0 mb-3 text-[18px] font-bold text-[#1A174A]"><span className="font-mono">{current.rfq_code}</span> · {current.title}</h2>
+              <h2 className="m-0 mb-3 text-[18px] font-bold text-ink"><span className="font-mono">{current.rfq_code}</span> · {current.title}</h2>
               <Detail key={current.rfq_id} r={current} canEdit={canEdit} canSeeSourcing={canSeeSourcing} processingCents={processingCents} />
             </>
           ) : null}

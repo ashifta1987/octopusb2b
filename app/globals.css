@@ -150,6 +150,86 @@ h1, h2, h3, h4 { font-family: var(--font-display); color: var(--ink); letter-spa
   /* Grid items default to min-width:auto, so a wide table inside a `lg:grid-cols-[…]` layout widened the page at
      360 px. Let grid children shrink; their own scroll regions handle wide content. */
   .grid > * { min-width: 0; }
+
+  /* ── Design handoff 26 Nov 2026 §4 (all surfaces): buttons 700 weight; blocked buttons use the `disabled`
+     fill with muted text (AA 5.0:1) instead of 50 % opacity. Declared after the variants so it beats their hover. */
+  .btn { font-weight: 700; }
+  .btn:disabled { background-color: var(--disabled); color: var(--muted); border-color: transparent; opacity: 1; }
+  .btn-ghost { @apply hover:bg-sand; }
+  /* skip link (§7): off-screen until focused */
+  .skip-link { @apply absolute left-[-9999px] top-2 z-[100] rounded-[8px] bg-white px-4 py-2.5 font-bold text-ink shadow-lg focus:left-2; }
+
+  /* ── App shell scope (§3–§4): customer portal, staff, back office, Warehouse OS, supplier portal.
+     Everything below only applies inside an element with class `app-shell`, so public pages keep their look. */
+  .app-shell .card { border-radius: 16px; }
+  .app-shell .input { min-height: 46px; border-radius: 10px; }
+  .app-shell textarea.input { min-height: 96px; }
+  .app-shell .btn-ghost { font-size: 14px; }
+  /* status pills: 13 px / 700, sentence case, 5 × 12 px (the label text itself is unchanged) */
+  .app-shell .pill { font-family: var(--font-sans); font-size: 13px; font-weight: 700; text-transform: none; letter-spacing: 0; padding: 5px 12px; line-height: 1.15; }
+  .app-shell .th { @apply font-mono text-[12px] font-semibold uppercase tracking-[.12em] text-muted px-4 py-3 border-b border-line bg-white; }
+  .app-shell .td { @apply border-divider py-4; }
+  /* codes and money in table cells never break mid-value ("US$ / 180.00", "TEST-ORD- / MMB"); tables scroll inside their region */
+  .app-shell .td .mono, .app-shell .td.mono { white-space: nowrap; }
+
+  /* App shell building blocks (shared by every portal shell so they look like one product) */
+  .app-sidebar { @apply bg-white border-line flex flex-col; }
+  /* full-height white sidebar column (with its 1 px line) behind the sticky 264 px sidebar, however long the page is */
+  /* .ds-v2.app-cols: the .ds-v2 `background` shorthand would otherwise reset the image on Dropship / Warehouse roots */
+  .app-cols, .ds-v2.app-cols { @media (min-width: 48rem) { background-image: linear-gradient(to right, white 263px, var(--line) 263px, var(--line) 264px, transparent 264px); } }
+  @media print { .app-cols, .ds-v2.app-cols { background-image: none; } }
+  .app-grp { @apply font-mono text-[11px] font-semibold uppercase tracking-[.14em] text-muted px-3.5 pt-5 pb-1.5; }
+  /* nav item: 44 px, 15 px semibold navy, hover sand, current = tint + 3 px blue left border */
+  .app-nav { @apply flex items-center gap-3.5 min-h-11 px-3.5 rounded-[10px] border-l-[3px] border-transparent text-[15px] font-semibold text-ink no-underline hover:bg-sand; }
+  .app-nav[aria-current="page"], .app-nav[aria-current="true"], .app-nav.is-on { @apply bg-tint border-coral font-bold hover:bg-tint; }
+  .app-nav > svg { flex: none; }
+  /* context box (back office): pearl, 1 px line, 14 px radius, 48 px tile, 12 px muted label, 15 px bold navy value */
+  .app-context { @apply flex items-center gap-3 rounded-[14px] border border-line bg-pearl px-3 py-2.5; }
+  .app-context-tile { @apply flex-none w-12 h-12 rounded-[10px] bg-tint text-coral-text flex items-center justify-center; }
+  .app-topbar { @apply bg-white border-b border-line flex flex-wrap items-center gap-3 px-4 sm:px-6 lg:px-12 py-3.5; }
+  /* 46 px icon button (notifications, help) */
+  .app-ibtn { @apply relative w-[46px] h-[46px] flex-none rounded-[12px] border border-line bg-white text-ink flex items-center justify-center hover:bg-sand; }
+  /* user chip: avatar, name, role */
+  .app-chip { @apply flex items-center gap-2.5 min-h-[46px] rounded-[12px] border border-line bg-white pl-1.5 pr-3.5 hover:bg-sand; }
+  .app-avatar { @apply w-[34px] h-[34px] flex-none rounded-full bg-coral text-white font-bold text-[13px] flex items-center justify-center; }
+  .app-main { @apply flex-1 min-w-0 px-4 sm:px-8 lg:px-12 pt-7 lg:pt-9 pb-12 lg:pb-[72px]; }
+  /* page heading: 52 px tint icon tile + H1 34/800 + one-line subtitle */
+  .app-tile { @apply flex-none w-[52px] h-[52px] rounded-[14px] bg-tint text-coral-text flex items-center justify-center; }
+  /* KPI card: white, line border, 16 px, 22/24 padding; label 14 muted, value 32/800 navy; amber when it needs attention */
+  .kpi { @apply bg-white border border-line rounded-[16px] px-6 py-[22px] min-w-0; }
+  .kpi-warn { @apply border-warn-line; }
+  .kpi-label { @apply text-sm text-muted; }
+  .kpi-value { @apply mt-2 text-[32px] font-extrabold leading-none text-ink; }
+  /* filter chip: 40 px, rounded; selected = blue with white text (aria-pressed / aria-current) */
+  .chip { @apply inline-flex items-center gap-1.5 min-h-10 px-4 rounded-full border border-line-strong bg-white text-sm font-bold text-ink whitespace-nowrap hover:bg-sand; }
+  .chip[aria-pressed="true"], .chip[aria-current="page"], .chip[aria-current="true"], .chip[aria-selected="true"] { @apply bg-coral border-coral text-white hover:bg-coral-text; }
+  /* view toggle: selected = navy */
+  .toggle-btn { @apply inline-flex items-center min-h-10 px-4 rounded-[10px] border border-line-strong bg-white text-sm font-bold text-ink; }
+  .toggle-btn[aria-pressed="true"] { @apply bg-ink border-ink text-white; }
+  /* toast: success colours, role="status" */
+  .toast-ok { @apply flex items-center justify-between gap-3 rounded-[10px] border border-ok-line bg-ok-bg px-4 py-2.5 text-[15px] font-semibold text-ok; }
+  /* stepper pills "1. Name": done = success, current = blue, upcoming = disabled */
+  .step-pill { @apply inline-flex items-center rounded-full px-3 py-[5px] text-[13px] font-bold bg-disabled text-muted; }
+  .step-pill.is-done { @apply bg-ok-bg text-ok; }
+  .step-pill.is-current { @apply bg-coral text-white; }
+  /* checklist item: 48 px button, 22 px box; ticked = green box + ok-soft background + ok-line border */
+  .check-item { @apply flex w-full items-center gap-3 min-h-12 px-3.5 rounded-[10px] border border-line bg-white text-left text-[15px] text-black; }
+  .check-item[aria-pressed="true"], .check-item.is-done { @apply bg-ok-soft border-ok-line; }
+  /* detail panel: 16 px card, field list with a 140 px label column, rows split by `divider` */
+  .detail-panel { @apply bg-white border border-line rounded-[16px] p-6 sm:p-7 min-w-0; }
+  .field-row { @apply grid grid-cols-[140px_1fr] gap-3 py-2.5 border-b border-divider text-[15px]; }
+  /* toggle switch: 56 × 32, role="switch"; on = success, off = switch-off, white knob */
+  .switch { @apply relative inline-flex flex-none w-14 h-8 rounded-full bg-switch-off transition-colors cursor-pointer; }
+  .switch::after { content: ''; @apply absolute top-1 left-1 w-6 h-6 rounded-full bg-white shadow transition-transform; }
+  .switch[aria-checked="true"] { @apply bg-ok; }
+  .switch[aria-checked="true"]::after { transform: translateX(24px); }
+}
+
+@layer base {
+  /* App H1 34 px / 800 at every width inside the app shells (page utilities still win) */
+  .app-shell h1 { font-size: 34px; line-height: 1.1; font-weight: 800; }
+  /* app card titles 20–22 px (the website's 34 px H2 is too big inside portal cards) */
+  .app-shell h2 { font-size: 22px; line-height: 1.2; }
 }
 
 @media (min-width: 1000px) {
@@ -161,38 +241,42 @@ h1, h2, h3, h4 { font-family: var(--font-display); color: var(--ink); letter-spa
 
 /* ───────────────────────────────────────────────────────────────────────────
  * Octopus Dropship — design v2 tokens & utility classes (docs/design/dropship-v2/specs/tokens.css)
- * Scoped under .ds-v2 so existing B2B store/account/staff screens stay untouched.
+ * Scoped under .ds-v2. Design handoff 26 Nov 2026: the Dropship kit now renders with the Octopus tokens so the
+ * Dropship, Warehouse OS and supplier screens look like the rest of the app (Figtree, Pearl background, Coral Blue
+ * fills with white text, coral-text links, 10 px controls, 16 px cards, 3 px focus outline). The --ds-* names are
+ * kept for the pages that read them; every value is a brand token.
  * ─────────────────────────────────────────────────────────────────────────── */
 :root {
-  --ds-navy: #1A174A;
-  --ds-navy-hover: #2E2B66;
-  --ds-blue: #2A6FD1;
-  --ds-blue-hover: #1F5BB0;
-  --ds-logo-blue: #2F7BE0;
-  --ds-teal: #0B7A75;
-  --ds-teal-accent: #5FD3C9;
-  --ds-danger: #B42318;
-  --ds-bg: #F4F6F9;
-  --ds-surface: #FFFFFF;
-  --ds-border: #E3E7EF;
-  --ds-border-strong: #C9D0DD;
-  --ds-muted: #5B6478;
-  --ds-text: #1A174A;
-  --ds-ok-bg: #E3F4F2;
-  --ds-ok-fg: #0B6A65;
-  --ds-warn-bg: #FFF4E0;
-  --ds-warn-fg: #8A5300;
-  --ds-bad-bg: #FDE8E8;
-  --ds-bad-fg: #A8201A;
-  --ds-info-bg: #E6EFFB;
-  --ds-info-fg: #1F5BB0;
-  --ds-neu-bg: #EEF0F4;
-  --ds-neu-fg: #3D4558;
-  --ds-radius-control: 8px;
-  --ds-radius-card: 12px;
+  --ds-navy: var(--ink);
+  --ds-navy-hover: var(--ink-2);
+  --ds-blue: var(--coral);           /* fills with white text only */
+  --ds-blue-hover: var(--coral-hover);
+  --ds-logo-blue: var(--coral);
+  --ds-teal: var(--green-ink);
+  --ds-teal-accent: var(--ok-line);
+  --ds-danger: var(--red-ink);
+  --ds-bg: var(--pearl);
+  --ds-surface: white;
+  --ds-border: var(--line);
+  --ds-border-strong: var(--line-strong);
+  --ds-muted: var(--muted);
+  --ds-text: var(--black);
+  --ds-ok-bg: var(--ok-bg);
+  --ds-ok-fg: var(--green-ink);
+  --ds-warn-bg: var(--warn-bg);
+  --ds-warn-fg: var(--amber-ink);
+  --ds-bad-bg: var(--bad-bg);
+  --ds-bad-fg: var(--red-ink);
+  --ds-info-bg: var(--tint);
+  --ds-info-fg: var(--coral-text);
+  --ds-neu-bg: var(--fill);
+  --ds-neu-fg: var(--black);
+  --ds-radius-control: 10px;
+  --ds-radius-card: 16px;
   --ds-touch: 44px;
   --ds-content-max: 1240px;
-  --ds-font: var(--font-ds-inter), Inter, system-ui, -apple-system, sans-serif;
+  /* Figtree (the app's --font-text, i.e. font-sans); the kit no longer uses Inter */
+  --ds-font: var(--font-text), system-ui, -apple-system, sans-serif;
 }
 
 @layer components {
@@ -200,192 +284,228 @@ h1, h2, h3, h4 { font-family: var(--font-display); color: var(--ink); letter-spa
     font-family: var(--ds-font);
     color: var(--ds-text);
     background: var(--ds-bg);
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.5;
   }
   .ds-v2 h1, .ds-v2 h2, .ds-v2 h3, .ds-v2 h4 {
     font-family: var(--ds-font);
-    color: var(--ds-text);
-    letter-spacing: normal;
-    line-height: 1.25;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+    line-height: 1.15;
   }
+  /* §7 focus: 3 px coral-text outline, 2 px offset (same as the global :focus-visible; no box-shadow ring) */
   .ds-v2 :focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #2A6FD1;
+    outline: 3px solid var(--focus);
+    outline-offset: 2px;
+    box-shadow: none;
   }
   .ds-v2 .ds-card {
-    background: #FFFFFF;
-    border: 1px solid #E3E7EF;
-    border-radius: 12px;
+    background: var(--ds-surface);
+    border: 1px solid var(--line);
+    border-radius: var(--ds-radius-card);
     padding: 20px;
     box-sizing: border-box;
     min-width: 0;
-    box-shadow: 0 1px 2px rgba(26, 23, 74, 0.05);
   }
+  @media (min-width: 768px) {
+    .ds-v2 .ds-card { padding: 22px 24px; }
+  }
+  /* status pill: 13 px / 700, 5 × 12 px, fully rounded, sentence case */
   .ds-v2 .ds-badge {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     border-radius: 999px;
-    padding: 3px 10px;
-    font-size: 12px;
-    font-weight: 600;
+    padding: 5px 12px;
+    font-size: 13px;
+    font-weight: 700;
     white-space: nowrap;
-    line-height: 1.4;
+    line-height: 1.15;
   }
-  .ds-v2 .ds-badge-ok { background: #E3F4F2; color: #0B6A65; }
-  .ds-v2 .ds-badge-warn { background: #FFF4E0; color: #8A5300; }
-  .ds-v2 .ds-badge-bad { background: #FDE8E8; color: #A8201A; }
-  .ds-v2 .ds-badge-info { background: #E6EFFB; color: #1F5BB0; }
-  .ds-v2 .ds-badge-neutral { background: #EEF0F4; color: #3D4558; }
+  .ds-v2 .ds-badge-ok { background: var(--ok-bg); color: var(--green-ink); }
+  .ds-v2 .ds-badge-warn { background: var(--warn-bg); color: var(--amber-ink); }
+  .ds-v2 .ds-badge-bad { background: var(--bad-bg); color: var(--red-ink); }
+  .ds-v2 .ds-badge-info { background: var(--tint); color: var(--coral-text); }
+  .ds-v2 .ds-badge-neutral { background: var(--fill); color: var(--black); }
 
+  /* buttons §4: 46 px, 10 px radius, 700 weight; primary = Coral Blue fill + white 15 px, secondary = white +
+     line-strong border + navy 14 px; blocked = disabled fill + muted text */
   .ds-v2 .ds-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    min-height: 44px;
-    padding: 0 18px;
-    border-radius: 8px;
-    font: 600 14px Inter, system-ui, sans-serif;
+    min-height: 46px;
+    padding: 0 20px;
+    border-radius: var(--ds-radius-control);
+    font: 700 15px/1.2 var(--ds-font);
     text-decoration: none;
     cursor: pointer;
     box-sizing: border-box;
     transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
   }
   .ds-v2 .ds-btn-primary {
-    background: #2A6FD1;
-    color: #FFFFFF;
-    border: 1px solid #2A6FD1;
+    background: var(--coral);
+    color: white;
+    border: 1px solid var(--coral);
   }
   .ds-v2 .ds-btn-primary:hover:not(:disabled) {
-    background: #1F5BB0;
-    border-color: #1F5BB0;
-    color: #FFFFFF;
+    background: var(--coral-hover);
+    border-color: var(--coral-hover);
+    color: white;
   }
   .ds-v2 .ds-btn-secondary {
-    background: #FFFFFF;
-    color: #1A174A;
-    border: 1px solid #C9D0DD;
+    background: white;
+    color: var(--ink);
+    border: 1px solid var(--line-strong);
+    font-size: 14px;
   }
   .ds-v2 .ds-btn-secondary:hover:not(:disabled) {
-    background: #F7F9FC;
-    border-color: #1A174A;
-    color: #1A174A;
+    background: var(--sand);
+    border-color: var(--line-strong);
+    color: var(--ink);
   }
   .ds-v2 .ds-btn-danger {
-    background: #B42318;
-    color: #FFFFFF;
-    border: 1px solid #B42318;
+    background: var(--red-ink);
+    color: white;
+    border: 1px solid var(--red-ink);
   }
   .ds-v2 .ds-btn-danger:hover:not(:disabled) {
-    background: #911B12;
-    border-color: #911B12;
-    color: #FFFFFF;
+    background: color-mix(in srgb, var(--red-ink) 82%, black);
+    border-color: color-mix(in srgb, var(--red-ink) 82%, black);
+    color: white;
   }
   .ds-v2 .ds-btn:disabled {
-    background: #EEF0F4;
-    color: #5B6478;
-    border-color: #E3E7EF;
+    background: var(--disabled);
+    color: var(--muted);
+    border-color: transparent;
     cursor: not-allowed;
   }
-  .ds-v2 .ds-input {
-    min-height: 44px;
-    border: 1px solid #C9D0DD;
-    border-radius: 8px;
-    padding: 0 12px;
-    font: 14px Inter, system-ui, sans-serif;
-    color: #1A174A;
-    background: #FFFFFF;
+  .ds-v2 .ds-input, .ds-v2 .ds-inp {
+    min-height: 46px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--ds-radius-control);
+    padding: 0 14px;
+    font: 15px var(--ds-font);
+    color: var(--black);
+    background: white;
     box-sizing: border-box;
   }
-  .ds-v2 .ds-input:focus {
-    outline: none;
-    border-color: #2A6FD1;
-    box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #2A6FD1;
+  .ds-v2 .ds-input::placeholder, .ds-v2 .ds-inp::placeholder { color: var(--muted); }
+  .ds-v2 .ds-input:focus, .ds-v2 .ds-inp:focus {
+    border-color: var(--coral-text);
   }
-  .ds-v2 .ds-input[aria-invalid="true"] {
-    border-color: #B42318;
+  .ds-v2 .ds-input[aria-invalid="true"], .ds-v2 .ds-inp[aria-invalid="true"] {
+    border-color: var(--red-ink);
   }
-  .ds-v2 .ds-input:disabled {
-    background: #EEF0F4;
-    color: #5B6478;
+  .ds-v2 .ds-input:disabled, .ds-v2 .ds-inp:disabled {
+    background: var(--disabled);
+    color: var(--muted);
     cursor: not-allowed;
   }
-  .ds-v2 .ds-label {
-    font-size: 12px;
+  /* .ds-scroll / .ds-btn2 / .ds-btn-link: names some Dropship pages use that were never defined (tables spilled out of their
+     cards and those buttons rendered unstyled) */
+  .ds-v2 .ds-scroll { position: relative; max-width: 100%; overflow-x: auto; }
+  .ds-v2 .ds-btn2 {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px;
+    border-radius: var(--ds-radius-control); border: 1px solid var(--line-strong); background: white; color: var(--ink);
+    font-family: var(--ds-font); font-weight: 700; cursor: pointer; white-space: nowrap;
+  }
+  .ds-v2 .ds-btn2:hover:not(:disabled) { background: var(--sand); }
+  .ds-v2 .ds-btn2:disabled { background: var(--disabled); color: var(--muted); border-color: transparent; cursor: not-allowed; }
+  .ds-v2 .ds-btn-link { background: transparent; border-color: transparent; color: var(--coral-text); }
+  .ds-v2 .ds-btn-link:hover:not(:disabled) { text-decoration: underline; }
+  /* .ds-inp / .ds-lbl: short names some Dropship pages use (were never defined, so those fields rendered unstyled) */
+  .ds-v2 .ds-label, .ds-v2 .ds-lbl {
+    font-size: 14px;
     font-weight: 600;
-    color: #5B6478;
+    color: var(--ink);
     display: block;
     margin-bottom: 6px;
   }
+  /* filter chip §4: rounded, 44 px target; selected = Coral Blue with white text (aria-pressed) */
   .ds-v2 .ds-chip {
     display: inline-flex;
     align-items: center;
     gap: 6px;
     min-height: 44px;
-    padding: 0 14px;
+    padding: 0 16px;
     border-radius: 999px;
-    border: 1px solid #C9D0DD;
-    background: #FFFFFF;
-    font-size: 13px;
-    font-weight: 600;
-    color: #1A174A;
+    border: 1px solid var(--line-strong);
+    background: white;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap;
     cursor: pointer;
   }
+  .ds-v2 .ds-chip:hover { background: var(--sand); }
   .ds-v2 .ds-chip[aria-pressed="true"] {
-    background: #1A174A;
-    color: #FFFFFF;
-    border-color: #1A174A;
+    background: var(--coral);
+    color: white;
+    border-color: var(--coral);
   }
+  .ds-v2 .ds-chip[aria-pressed="true"]:hover { background: var(--coral-hover); border-color: var(--coral-hover); }
   .ds-v2 .ds-tbl {
     width: 100%;
     border-collapse: collapse;
-    font-size: 14px;
+    font-size: 15px;
   }
+  /* table header: Jost 12 px caps, muted, on white */
   .ds-v2 .ds-tbl th {
     text-align: left;
+    font-family: var(--font-label), system-ui, sans-serif;
     font-size: 12px;
-    color: #5B6478;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
     font-weight: 600;
-    padding: 10px 12px;
-    border-bottom: 1px solid #E3E7EF;
-    background: #F7F9FC;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    background: white;
     white-space: nowrap;
   }
   .ds-v2 .ds-tbl td {
-    padding: 12px;
-    border-bottom: 1px solid #EEF0F4;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--divider);
     vertical-align: middle;
   }
   .ds-v2 .ds-tbl tbody tr:hover td {
-    background: #FAFBFD;
+    background: var(--tint-2);
   }
+  /* selected row §4: tint + 4 px Coral Blue inset bar on the left */
   .ds-v2 .ds-tbl tbody tr[data-selected="true"] td {
-    background: #F2F7FE;
+    background: var(--tint);
+  }
+  .ds-v2 .ds-tbl tbody tr[data-selected="true"] td:first-child {
+    box-shadow: inset 4px 0 0 var(--coral);
   }
   .ds-v2 .ds-row {
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    font-size: 14px;
-    padding: 6px 0;
+    font-size: 15px;
+    padding: 7px 0;
   }
   .ds-v2 .ds-mut {
-    color: #5B6478;
+    color: var(--muted);
   }
+  /* 46 px icon button (notifications, help), same as .app-ibtn */
   .ds-v2 .ds-topic {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 8px;
-    border: 1px solid #E3E7EF;
-    background: #FFFFFF;
-    color: #1A174A;
+    flex: none;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: white;
+    color: var(--ink);
     position: relative;
     text-decoration: none;
   }
+  .ds-v2 .ds-topic:hover {
+    background: var(--sand);
+  }
 }
-

@@ -32,7 +32,7 @@ async function Detail({ params }: { params: Promise<{ id: string }> }) {
   if (!d) {
     return (
       <div className="flex flex-col gap-5" data-testid="order-detail-page">
-        <h1 className="m-0 text-[26px] font-bold text-[#1A174A]">Order detail</h1>
+        <h1 className="m-0 text-[26px] font-bold text-ink">Order detail</h1>
         {missing ? (
           <DsNotice tone="info" title="This order was not found" testId="order-detail-missing"
             action={<DsLinkButton href="/account/dropship/orders" variant="secondary">Back to orders</DsLinkButton>}>

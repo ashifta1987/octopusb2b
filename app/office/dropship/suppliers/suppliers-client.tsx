@@ -25,15 +25,15 @@ export function SuppliersClient({ data, canEdit }: { data: StaffSuppliers; canEd
       <DsTableCard title="Partner suppliers" subtitle="Suppliers with a portal account or products in the Dropship catalog." headers={['Supplier', 'Portal', 'Linked products', 'Open orders', 'In review']} minWidth={640} testId="partner-suppliers">
         {data.suppliers.length === 0 ? <tr><td colSpan={5}>No partner suppliers yet. Approve an application, then create the supplier and its portal account.</td></tr> : data.suppliers.map((s) => (
           <tr key={s.id} data-testid="partner-supplier-row">
-            <td className="font-semibold">{s.code}<div className="text-[12px] text-[#5B6478] font-normal">{s.name}</div></td>
-            <td>{s.portal_user ? <DsBadge tone={s.portal_on ? 'ok' : 'warn'}>{s.portal_on ? 'Portal on' : 'Portal off'}</DsBadge> : <DsBadge tone="neutral">No account</DsBadge>}{s.portal_user && <div className="text-[12px] text-[#5B6478]">{s.portal_user}</div>}</td>
+            <td className="font-semibold">{s.code}<div className="text-[12px] text-muted font-normal">{s.name}</div></td>
+            <td>{s.portal_user ? <DsBadge tone={s.portal_on ? 'ok' : 'warn'}>{s.portal_on ? 'Portal on' : 'Portal off'}</DsBadge> : <DsBadge tone="neutral">No account</DsBadge>}{s.portal_user && <div className="text-[12px] text-muted">{s.portal_user}</div>}</td>
             <td>{s.products}</td><td>{s.open_orders}</td><td>{s.in_review}</td>
           </tr>
         ))}
       </DsTableCard>
 
       <DsCard title="Create a portal account" subtitle="Only verified suppliers. The supplier gets an email to set a password. Use an address that is not a staff or merchant login." icon="user">
-        {data.link_candidates.length === 0 ? <p className="m-0 text-[14px] text-[#5B6478]">Every verified supplier already has a portal account.</p> : (
+        {data.link_candidates.length === 0 ? <p className="m-0 text-[14px] text-muted">Every verified supplier already has a portal account.</p> : (
           <div className="grid sm:grid-cols-3 gap-3 items-end">
             <DsSelect label="Supplier" value={supplier} onChange={(e) => { setSupplier(e.target.value); setEmail(data.link_candidates.find((c) => c.id === e.target.value)?.email ?? ''); }}>
               {data.link_candidates.map((c) => <option key={c.id} value={c.id}>{c.code} · {c.name}</option>)}
@@ -61,7 +61,7 @@ export function SuppliersClient({ data, canEdit }: { data: StaffSuppliers; canEd
           return (
             <tr key={p.id}>
               <td className="font-semibold">{p.order}</td><td>{p.supplier_code}</td>
-              <td><DsBadge tone={st.tone}>{p.status === 'cancelled' ? 'Taken back' : st.label}</DsBadge>{p.problem_note && <div className="text-[12px] text-[#8A5300]">{p.problem_note}</div>}</td>
+              <td><DsBadge tone={st.tone}>{p.status === 'cancelled' ? 'Taken back' : st.label}</DsBadge>{p.problem_note && <div className="text-[12px] text-warn">{p.problem_note}</div>}</td>
               <td>{p.tracking_no ? `${carrierLabel(p.carrier)} · ${p.tracking_no}` : '—'}</td><td>{p.ship_by ? fmtDay(p.ship_by) : '—'}</td>
               <td>{open && canEdit && (
                 <div className="flex gap-2 items-end">
@@ -75,7 +75,7 @@ export function SuppliersClient({ data, canEdit }: { data: StaffSuppliers; canEd
 
       <DsCard title="Sources" subtitle="Where products and stock come from" icon="layers">
         <DsEmptyState title="DSers and Alibaba are not connected yet" description="Marketplace and order-forwarding connections open in the store-connection release. Nothing is synced and no credentials are stored. Partner suppliers above work through the supplier portal." icon="link" />
-        <p className="text-[12px] text-[#5B6478] mt-3 mb-0">Merchants never see supplier or source names. Full supplier details: <Link className="text-[#2A6FD1] underline" href="/admin/suppliers">Admin › Suppliers</Link>.</p>
+        <p className="text-[12px] text-muted mt-3 mb-0">Merchants never see supplier or source names. Full supplier details: <Link className="text-coral-text underline" href="/admin/suppliers">Admin › Suppliers</Link>.</p>
       </DsCard>
     </div>
   );

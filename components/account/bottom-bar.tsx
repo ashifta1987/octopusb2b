@@ -53,7 +53,7 @@ export function AccountBottomBar({ newQuotes, used }: { newQuotes: number; used:
           {main.map((m) => (
             <li key={m.href}>
               <Link href={m.href} prefetch={false} aria-current={m.on ? 'page' : undefined} aria-label={m.href === '/account/sourcing' ? 'Product sourcing' : undefined}
-                className={`relative flex flex-col items-center justify-center gap-0.5 min-h-[56px] text-[11.5px] font-semibold ${m.on ? 'text-coral-text' : 'text-muted'}`}>
+                className={`relative flex flex-col items-center justify-center gap-0.5 min-h-[56px] text-[11.5px] font-semibold ${m.on ? 'text-coral-text font-bold shadow-[inset_0_3px_0_var(--coral)]' : 'text-muted'}`}>
                 <Icon d={ICONS[m.icon]} />
                 {m.label}
                 {!!m.badge && m.badge > 0 && <span data-testid="bar-badge" aria-label={`${m.badge} new quotes`} className="absolute top-1.5 left-[calc(50%+6px)] min-w-[18px] h-[18px] px-1 rounded-full bg-bad text-white text-[10.5px] font-bold leading-[18px] text-center">{m.badge > 99 ? '99+' : m.badge}</span>}
@@ -71,21 +71,21 @@ export function AccountBottomBar({ newQuotes, used }: { newQuotes: number; used:
       {open && (
         <div className="md:hidden fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="More">
           <button type="button" className="absolute inset-0 bg-ink/40" aria-label="Close" onClick={() => setOpen(false)} />
-          <div className="absolute inset-x-0 bottom-0 bg-white rounded-t-[18px] pb-[calc(12px+env(safe-area-inset-bottom))] max-h-[80vh] overflow-y-auto" data-testid="more-sheet">
+          <div className="absolute inset-x-0 bottom-0 bg-white rounded-t-[24px] border-t border-line pb-[calc(12px+env(safe-area-inset-bottom))] max-h-[80vh] overflow-y-auto" data-testid="more-sheet">
             <div className="flex items-center justify-between px-5 pt-4 pb-2">
-              <h2 className="text-[17px] font-semibold">More</h2>
-              <button type="button" onClick={() => setOpen(false)} className="min-h-[44px] min-w-[44px] text-[15px] font-semibold text-coral-text">Close</button>
+              <h2 className="text-[20px] font-extrabold">More</h2>
+              <button type="button" onClick={() => setOpen(false)} className="min-h-[44px] min-w-[44px] text-[15px] font-bold text-coral-text">Close</button>
             </div>
             <ul className="px-2">
               {more.map((m) => (
                 <li key={m.href}>
-                  <Link href={m.href} onClick={() => setOpen(false)} className="flex items-center justify-between min-h-[48px] px-3 rounded-[10px] text-[15.5px] font-medium hover:bg-pearl">
+                  <Link href={m.href} onClick={() => setOpen(false)} className="flex items-center justify-between min-h-[48px] px-3 rounded-[10px] text-[15.5px] font-semibold text-ink hover:bg-sand">
                     {m.label}{m.key && used.includes(m.key) && <span className="text-[11px] font-semibold text-muted">Used</span>}
                   </Link>
                 </li>
               ))}
               <li className="border-t border-line mt-2 pt-2">
-                <form action="/auth/signout" method="post"><button type="submit" className="w-full text-left min-h-[48px] px-3 rounded-[10px] text-[15.5px] font-semibold text-bad hover:bg-pearl">Log out</button></form>
+                <form action="/auth/signout" method="post"><button type="submit" className="w-full text-left min-h-[48px] px-3 rounded-[10px] text-[15.5px] font-semibold text-bad hover:bg-sand">Log out</button></form>
               </li>
             </ul>
           </div>

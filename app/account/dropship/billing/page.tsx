@@ -25,7 +25,7 @@ async function Billing() {
   if (!data) {
     return (
       <div className="flex flex-col gap-5" data-testid="ds-billing-page">
-        <h1 className="m-0 text-[26px] font-bold text-[#1A174A]">Plan and billing</h1>
+        <h1 className="m-0 text-[26px] font-bold text-ink">Plan and billing</h1>
         <DsNotice tone="bad" title="Plan and billing could not be loaded" testId="billing-error"
           action={<DsLinkButton href="/account/dropship/billing" variant="secondary" icon="refresh">Try again</DsLinkButton>}>{error}</DsNotice>
       </div>

@@ -31,7 +31,7 @@ export function DropshipFeaturesClient({ initial, canEdit }: { initial: Dropship
                 type="checkbox"
                 role="switch"
                 aria-checked={f[x.key]}
-                className="w-5 h-5 accent-[#2A6FD1]"
+                className="w-5 h-5 accent-coral"
                 checked={f[x.key]}
                 disabled={x.locked}
                 data-testid={`feature-${x.key}`}

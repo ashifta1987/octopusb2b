@@ -31,7 +31,7 @@ async function WorkspaceBody() {
     <div className="flex flex-col gap-5">
       <StaffHeading title={`Welcome, ${name}`} hint="Choose where to work. You only see the areas your role allows; switch anytime from the top bar." />
       {list.length === 0 ? (
-        <div className="bg-white border border-line rounded-[10px] p-5 text-sm text-muted">
+        <div className="bg-white border border-line rounded-[16px] p-5 text-sm text-muted">
           No work areas are assigned to your role yet. Ask an Admin to give your role permissions in Staff &amp; roles.
         </div>
       ) : (
@@ -43,18 +43,19 @@ async function WorkspaceBody() {
               <li key={w.key}>
                 <form action={switchWorkspace}>
                   <input type="hidden" name="workspace" value={w.key} />
-                  <button type="submit" className="w-full text-left bg-white border-2 border-line hover:border-coral-text focus-visible:border-coral-text rounded-[10px] px-4 py-4 flex items-center gap-3.5 transition-colors">
-                    <span className="w-11 h-11 rounded-[8px] bg-ink text-white flex items-center justify-center font-bold text-[15px] flex-none" aria-hidden>{w.short}</span>
+                  <button type="submit" className="w-full text-left bg-white border-2 border-line hover:border-coral focus-visible:border-coral rounded-[16px] px-5 py-4 min-h-[84px] flex items-center gap-4 transition-colors">
+                    <span className="w-[50px] h-[50px] rounded-[12px] bg-ink text-white flex items-center justify-center font-bold text-[16px] flex-none" aria-hidden>{w.short}</span>
                     <span className="flex-1 min-w-0">
-                      <span className="block font-semibold text-[16px] text-ink">{w.label}</span>
-                      <span className="block text-sm text-black leading-[1.45]">{w.description}</span>
+                      <span className="block font-bold text-[18px] text-ink">{w.label}</span>
+                      <span className="block text-[15px] text-muted leading-[1.45]">{w.description}</span>
                     </span>
                     {(last || badge) && (
-                      <span className="text-xs text-muted text-right flex-none flex flex-col gap-1">
+                      <span className="text-[13px] text-muted text-right flex-none flex flex-col gap-1">
                         {last && <span>Last used</span>}
                         {badge && <span>{badge}</span>}
                       </span>
                     )}
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="flex-none text-coral-text"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
                   </button>
                 </form>
               </li>
@@ -64,7 +65,7 @@ async function WorkspaceBody() {
       )}
       <div className="flex justify-between items-center text-sm text-muted gap-3 flex-wrap">
         <span>Role: {roleText}{prof?.office ? ` · ${prof.office}` : ''}</span>
-        <form action={staffSignOut}><button type="submit" className="font-semibold text-coral-text">Sign out</button></form>
+        <form action={staffSignOut}><button type="submit" className="inline-flex items-center min-h-11 font-bold text-coral-text">Sign out</button></form>
       </div>
     </div>
   );

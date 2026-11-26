@@ -305,7 +305,7 @@ export function DropshipRequestsClient({
                         type="checkbox"
                         checked={shipTo.includes(code)}
                         onChange={() => toggleCountry(code)}
-                        className="accent-[#1A174A] w-4 h-4"
+                        className="accent-ink w-4 h-4"
                       />
                       <span>{name}</span>
                     </label>
@@ -318,7 +318,7 @@ export function DropshipRequestsClient({
                   type="checkbox"
                   checked={wantsBrand}
                   onChange={(e) => setWantsBrand(e.target.checked)}
-                  className="accent-[#1A174A] w-4 h-4"
+                  className="accent-ink w-4 h-4"
                 />
                 <span>I want it with my brand (Make My Brand quotes packaging and logo too)</span>
               </label>
@@ -342,7 +342,7 @@ export function DropshipRequestsClient({
                   {images.map((src, idx) => (
                     <div
                       key={src}
-                      className="relative w-16 h-16 rounded-[8px] overflow-hidden border border-[#E3E7EF] bg-[#E9EDF5]"
+                      className="relative w-16 h-16 rounded-[8px] overflow-hidden border border-line bg-fill"
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={src} alt={`Reference ${idx + 1}`} className="w-full h-full object-cover" />
@@ -350,7 +350,7 @@ export function DropshipRequestsClient({
                         type="button"
                         aria-label={`Remove image ${idx + 1}`}
                         onClick={() => setImages((prev) => prev.filter((_, i) => i !== idx))}
-                        className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-[#1A174A]/80 text-white border-0 cursor-pointer flex items-center justify-center text-[11px]"
+                        className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full bg-ink/80 text-white border-0 cursor-pointer flex items-center justify-center text-[11px]"
                       >
                         ×
                       </button>
@@ -402,10 +402,10 @@ export function DropshipRequestsClient({
               <li className="flex gap-3">
                 <span
                   aria-hidden="true"
-                  className="w-3 h-3 rounded-full border-2 border-[#C9D0DD] mt-1.5 shrink-0 box-border"
+                  className="w-3 h-3 rounded-full border-2 border-line-strong mt-1.5 shrink-0 box-border"
                 />
                 <div>
-                  <strong className="font-semibold text-[#1A174A]">
+                  <strong className="font-semibold text-ink">
                     Sourcing reviews your request
                   </strong>
                   <div className="ds-mut text-[13px]">Within {replyHours} working hours</div>
@@ -414,20 +414,20 @@ export function DropshipRequestsClient({
               <li className="flex gap-3">
                 <span
                   aria-hidden="true"
-                  className="w-3 h-3 rounded-full border-2 border-[#C9D0DD] mt-1.5 shrink-0 box-border"
+                  className="w-3 h-3 rounded-full border-2 border-line-strong mt-1.5 shrink-0 box-border"
                 />
                 <div>
-                  <strong className="font-semibold text-[#1A174A]">You get a quote</strong>
+                  <strong className="font-semibold text-ink">You get a quote</strong>
                   <div className="ds-mut text-[13px]">Landed cost to your countries</div>
                 </div>
               </li>
               <li className="flex gap-3">
                 <span
                   aria-hidden="true"
-                  className="w-3 h-3 rounded-full border-2 border-[#C9D0DD] mt-1.5 shrink-0 box-border"
+                  className="w-3 h-3 rounded-full border-2 border-line-strong mt-1.5 shrink-0 box-border"
                 />
                 <div>
-                  <strong className="font-semibold text-[#1A174A]">You accept</strong>
+                  <strong className="font-semibold text-ink">You accept</strong>
                   <div className="ds-mut text-[13px]">
                     The product is added for you only, with a DS model number
                   </div>
@@ -502,7 +502,7 @@ export function DropshipRequestsClient({
                     req.dropship_product_status === 'active' && req.dropship_product_id ? (
                       <Link
                         href={`/account/dropship/catalogue/${req.dropship_product_id}`}
-                        className="text-[#2A6FD1] hover:underline font-medium inline-flex items-center gap-1"
+                        className="text-coral-text hover:underline font-medium inline-flex items-center gap-1"
                         data-testid="request-added-link"
                       >
                         <span className="mono">{req.dropship_model_no}</span>
@@ -511,7 +511,7 @@ export function DropshipRequestsClient({
                       </Link>
                     ) : (
                       <span className="ds-mut text-[13px]" data-testid="request-draft-model">
-                        <span className="mono font-semibold text-[#1A174A]">
+                        <span className="mono font-semibold text-ink">
                           {req.dropship_model_no}
                         </span>{' '}
                         · only for you (preparing routes)

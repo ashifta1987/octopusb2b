@@ -67,12 +67,12 @@ function LineCard({ d, line }: { d: AsnDetail; line: Line }) {
   return (
     <DsCard title={itemText(line.item)} icon="box" testId={`wh-line-${line.item?.sku ?? line.id}`} actions={<DsBadge tone={tone}>{label}</DsBadge>}>
       <dl className="grid grid-cols-[120px_1fr] gap-x-3 gap-y-1 m-0 text-[14px]">
-        <dt className="text-[#5B6478]">Expected</dt><dd className="m-0 text-[20px] font-bold leading-tight" data-testid="wh-line-expected">{line.expected.toLocaleString('en-US')}</dd>
-        {line.item?.barcode && <><dt className="text-[#5B6478]">Barcode</dt><dd className="m-0 font-mono">{line.item.barcode}</dd></>}
-        {p1 && <><dt className="text-[#5B6478]">Count 1</dt><dd className="m-0">{p1.good} good · {p1.damaged} damaged · {p1.by === d.me ? 'you' : p1.by_name ?? 'staff'}{p1.note ? ` · “${p1.note}”` : ''}</dd></>}
-        {p2 && <><dt className="text-[#5B6478]">Count 2</dt><dd className="m-0">{p2.good} good · {p2.damaged} damaged · {p2.by === d.me ? 'you' : p2.by_name ?? 'staff'}{p2.note ? ` · “${p2.note}”` : ''}</dd></>}
-        {line.status === 'accepted' && <><dt className="text-[#5B6478]">Received</dt><dd className="m-0">{line.good ?? '—'} good · {line.damaged ?? '—'} damaged</dd></>}
-        {line.lot && <><dt className="text-[#5B6478]">Lot</dt><dd className="m-0 font-mono">{line.lot.code} · {line.lot.qty} · {line.lot.status === 'blocked' ? 'blocked' : 'on hand'}</dd></>}
+        <dt className="text-muted">Expected</dt><dd className="m-0 text-[20px] font-bold leading-tight" data-testid="wh-line-expected">{line.expected.toLocaleString('en-US')}</dd>
+        {line.item?.barcode && <><dt className="text-muted">Barcode</dt><dd className="m-0 font-mono">{line.item.barcode}</dd></>}
+        {p1 && <><dt className="text-muted">Count 1</dt><dd className="m-0">{p1.good} good · {p1.damaged} damaged · {p1.by === d.me ? 'you' : p1.by_name ?? 'staff'}{p1.note ? ` · “${p1.note}”` : ''}</dd></>}
+        {p2 && <><dt className="text-muted">Count 2</dt><dd className="m-0">{p2.good} good · {p2.damaged} damaged · {p2.by === d.me ? 'you' : p2.by_name ?? 'staff'}{p2.note ? ` · “${p2.note}”` : ''}</dd></>}
+        {line.status === 'accepted' && <><dt className="text-muted">Received</dt><dd className="m-0">{line.good ?? '—'} good · {line.damaged ?? '—'} damaged</dd></>}
+        {line.lot && <><dt className="text-muted">Lot</dt><dd className="m-0 font-mono">{line.lot.code} · {line.lot.qty} · {line.lot.status === 'blocked' ? 'blocked' : 'on hand'}</dd></>}
       </dl>
       {open && d.can_receive && line.status === 'pending' && <div className="mt-4"><CountForm code={d.asn.code} line={line} pass={1} onResult={setMsg} /></div>}
       {open && d.can_receive && line.status === 'counted' && (
@@ -83,12 +83,12 @@ function LineCard({ d, line }: { d: AsnDetail; line: Line }) {
       )}
       {line.status === 'blocked' && (
         <div className="mt-4">
-          <DsNotice tone="bad" title="Blocked until a supervisor approves" action={<Link href="/office/warehouse/counts" className="font-semibold text-[#2559B8] underline">Counts and lots</Link>}>
+          <DsNotice tone="bad" title="Blocked until a supervisor approves" action={<Link href="/office/warehouse/counts" className="font-semibold text-coral-text underline">Counts and lots</Link>}>
             The lot is not on hand and can’t be picked.
           </DsNotice>
         </div>
       )}
-      {msg && <p role={msg.ok ? 'status' : 'alert'} data-testid="wh-count-msg" className={`mt-3 mb-0 text-[13px] ${msg.ok ? 'text-[#1B7F4B]' : 'text-[#B42318]'}`}>{msg.text}</p>}
+      {msg && <p role={msg.ok ? 'status' : 'alert'} data-testid="wh-count-msg" className={`mt-3 mb-0 text-[13px] ${msg.ok ? 'text-ok' : 'text-bad'}`}>{msg.text}</p>}
     </DsCard>
   );
 }
@@ -105,19 +105,19 @@ export function ReceiveClient({ detail: d }: { detail: AsnDetail }) {
     <div className="flex flex-col gap-4 max-w-[760px]">
       <DsCard title={a.code} icon="file" testId="wh-receive-head" actions={<DsBadge tone={tone} testId="wh-asn-status">{label}</DsBadge>}>
         <dl className="grid grid-cols-[130px_1fr] gap-x-3 gap-y-1.5 m-0 text-[13.5px]">
-          <dt className="text-[#5B6478]">Owner</dt><dd className="m-0">{a.org_name ?? SOURCE_LABEL[a.source] ?? a.source}</dd>
-          <dt className="text-[#5B6478]">Arrives</dt><dd className="m-0">{fmtDay(a.expected_date)}</dd>
-          <dt className="text-[#5B6478]">Load</dt><dd className="m-0">{loadText(a.cartons, a.pallets) || '—'}</dd>
-          <dt className="text-[#5B6478]">Dock slot</dt>
+          <dt className="text-muted">Owner</dt><dd className="m-0">{a.org_name ?? SOURCE_LABEL[a.source] ?? a.source}</dd>
+          <dt className="text-muted">Arrives</dt><dd className="m-0">{fmtDay(a.expected_date)}</dd>
+          <dt className="text-muted">Load</dt><dd className="m-0">{loadText(a.cartons, a.pallets) || '—'}</dd>
+          <dt className="text-muted">Dock slot</dt>
           <dd className="m-0">{d.slot && slot ? <>Dock {d.slot.dock} · {fmtWh(d.slot.starts_at)} China time · <DsBadge tone={slot[1]}>{slot[0]}</DsBadge></> : 'Not booked yet'}</dd>
-          <dt className="text-[#5B6478]">Lines accepted</dt><dd className="m-0">{counted} of {d.lines.length}</dd>
-          {a.client_note && <><dt className="text-[#5B6478]">Client note</dt><dd className="m-0 whitespace-pre-line">{a.client_note}</dd></>}
-          {a.created_by_name && <><dt className="text-[#5B6478]">Sent by</dt><dd className="m-0">{a.created_by_name}</dd></>}
-          {a.cancel_reason && <><dt className="text-[#5B6478]">Cancelled because</dt><dd className="m-0">{a.cancel_reason}</dd></>}
+          <dt className="text-muted">Lines accepted</dt><dd className="m-0">{counted} of {d.lines.length}</dd>
+          {a.client_note && <><dt className="text-muted">Client note</dt><dd className="m-0 whitespace-pre-line">{a.client_note}</dd></>}
+          {a.created_by_name && <><dt className="text-muted">Sent by</dt><dd className="m-0">{a.created_by_name}</dd></>}
+          {a.cancel_reason && <><dt className="text-muted">Cancelled because</dt><dd className="m-0">{a.cancel_reason}</dd></>}
         </dl>
         {(a.status === 'submitted' || a.status === 'booked') && (
           <div className="mt-3">
-            <DsNotice tone="info" title="Not checked in yet" action={<Link href="/office/warehouse/dock" className="font-semibold text-[#2559B8] underline">Dock appointments</Link>}>
+            <DsNotice tone="info" title="Not checked in yet" action={<Link href="/office/warehouse/dock" className="font-semibold text-coral-text underline">Dock appointments</Link>}>
               Counting opens once the delivery is checked in at the dock.
             </DsNotice>
             {d.can_receive && (cancelling ? (
@@ -130,9 +130,9 @@ export function ReceiveClient({ detail: d }: { detail: AsnDetail }) {
           </div>
         )}
         {!d.can_receive && (a.status === 'arrived' || a.status === 'receiving') && (
-          <p className="mt-3 mb-0 text-[13px] text-[#5B6478]">Receivers, supervisors and admins record counts.</p>
+          <p className="mt-3 mb-0 text-[13px] text-muted">Receivers, supervisors and admins record counts.</p>
         )}
-        {msg && <p role={msg.ok ? 'status' : 'alert'} className={`mt-2 mb-0 text-[13px] ${msg.ok ? 'text-[#1B7F4B]' : 'text-[#B42318]'}`}>{msg.text}</p>}
+        {msg && <p role={msg.ok ? 'status' : 'alert'} className={`mt-2 mb-0 text-[13px] ${msg.ok ? 'text-ok' : 'text-bad'}`}>{msg.text}</p>}
       </DsCard>
       {d.lines.map((l) => <LineCard key={l.id} d={d} line={l} />)}
     </div>

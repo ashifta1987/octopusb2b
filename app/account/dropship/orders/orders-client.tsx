@@ -114,13 +114,13 @@ export function OrdersClient({ data, countryNames, paused }: {
 
       <section aria-label="Wallet" data-testid="orders-wallet-bar" className="ds-card flex flex-wrap items-center gap-x-8 gap-y-3 !py-3.5">
         <div className="flex items-baseline gap-2">
-          <span className="text-[13px] text-[#5B6478]">Available</span>
-          <strong className="text-[20px] text-[#1A174A]" data-testid="wallet-available">{usd(data.wallet.available_cents)}</strong>
+          <span className="text-[13px] text-muted">Available</span>
+          <strong className="text-[20px] text-ink" data-testid="wallet-available">{usd(data.wallet.available_cents)}</strong>
           {lowWallet && <DsBadge tone="warn" testId="wallet-low">Low</DsBadge>}
         </div>
         <div className="flex items-baseline gap-2">
-          <span className="text-[13px] text-[#5B6478]">Held</span>
-          <strong className="text-[20px] text-[#1A174A]" data-testid="wallet-held">{usd(data.wallet.held_cents)}</strong>
+          <span className="text-[13px] text-muted">Held</span>
+          <strong className="text-[20px] text-ink" data-testid="wallet-held">{usd(data.wallet.held_cents)}</strong>
         </div>
         <div className="ml-auto"><DsLinkButton href="/account/dropship/wallet#add-funds" icon="plus" testId="orders-add-funds">Add funds</DsLinkButton></div>
       </section>
@@ -128,8 +128,8 @@ export function OrdersClient({ data, countryNames, paused }: {
       {notice && <DsNotice tone={notice.tone} title={notice.title} testId={notice.testId}>{notice.text}</DsNotice>}
 
       {!data.store_connected && data.rows.length > 0 && (
-        <p className="m-0 text-[13px] text-[#5B6478]" data-testid="orders-no-store">
-          No store is connected yet. <Link className="font-semibold text-[#2A6FD1] underline" href="/account/dropship/stores">Connect a store</Link> to receive orders automatically.
+        <p className="m-0 text-[13px] text-muted" data-testid="orders-no-store">
+          No store is connected yet. <Link className="font-semibold text-coral-text underline" href="/account/dropship/stores">Connect a store</Link> to receive orders automatically.
         </p>
       )}
 
@@ -162,12 +162,12 @@ export function OrdersClient({ data, countryNames, paused }: {
                 {selected.length ? `Charge and ship (${selected.length}) · ${usd(selTotal)}` : 'Charge and ship selected'}
               </DsButton>
               {waitingShort && (
-                <span className="text-[13px] text-[#8A5300]" data-testid="bulk-short">
+                <span className="text-[13px] text-warn" data-testid="bulk-short">
                   {`Waiting orders need ${usd(plan.totalDue)}; your wallet has ${usd(data.wallet.available_cents)}. They are paid oldest first.`}
                 </span>
               )}
               {(
-                <label className="flex items-center gap-2 text-[13px] text-[#1A174A]">
+                <label className="flex items-center gap-2 text-[13px] text-ink">
                   <span>Pay with</span>
                   <select className="ds-input !min-h-[44px] !w-auto" value={option} onChange={(e) => setOption(e.target.value as typeof option)} aria-label="Pay with" data-testid="bulk-option">
                     <option value="wallet">Wallet</option>
@@ -196,7 +196,7 @@ export function OrdersClient({ data, countryNames, paused }: {
                 </thead>
                 <tbody>
                   {rows.length === 0 && (
-                    <tr><td colSpan={8} className="text-center text-[14px] text-[#5B6478] py-6" data-testid="orders-chip-empty">No orders here.</td></tr>
+                    <tr><td colSpan={8} className="text-center text-[14px] text-muted py-6" data-testid="orders-chip-empty">No orders here.</td></tr>
                   )}
                   {rows.map((r) => {
                     const st = statusLabel(r);
@@ -207,17 +207,17 @@ export function OrdersClient({ data, countryNames, paused }: {
                       <tr key={r.id} data-testid={`merchant-order-row-${r.order_number}`}>
                         <td>
                           {act === 'pay' && (
-                            <input type="checkbox" className="w-4 h-4 accent-[#2A6FD1]" aria-label={`Select order ${orderName(r)}`}
+                            <input type="checkbox" className="w-4 h-4 accent-coral" aria-label={`Select order ${orderName(r)}`}
                               checked={selected.includes(r.id)} onChange={(e) => setSelected((s) => (e.target.checked ? [...s, r.id] : s.filter((x) => x !== r.id)))} />
                           )}
                         </td>
                         <td>
-                          <Link href={`/account/dropship/orders/${r.id}`} className="block font-mono font-bold text-[#2A6FD1] underline" data-testid={`order-link-${r.order_number}`}>{orderName(r)}</Link>
-                          <span className="block text-[12px] text-[#5B6478]">{channelLabel(r)}{r.external_order_name ? ` · ${r.order_number}` : ''}</span>
+                          <Link href={`/account/dropship/orders/${r.id}`} className="block font-mono font-bold text-coral-text underline" data-testid={`order-link-${r.order_number}`}>{orderName(r)}</Link>
+                          <span className="block text-[12px] text-muted">{channelLabel(r)}{r.external_order_name ? ` · ${r.order_number}` : ''}</span>
                         </td>
                         <td>
                           <span className="block">{itemsSummary(r)}</span>
-                          {other && <span className="block text-[12px] text-[#5B6478]" data-testid={`other-items-${r.order_number}`}>{other}</span>}
+                          {other && <span className="block text-[12px] text-muted" data-testid={`other-items-${r.order_number}`}>{other}</span>}
                         </td>
                         <td>{[r.buyer, r.destination_country].filter(Boolean).join(' · ')}</td>
                         <td className="font-mono whitespace-nowrap">{usd(r.total_cents)}</td>
@@ -231,7 +231,7 @@ export function OrdersClient({ data, countryNames, paused }: {
                           {act === 'review' && <DsButton variant="secondary" onClick={() => setReview(r)} testId={`review-${r.order_number}`}>Review</DsButton>}
                           {act === 'fix_address' && <DsButton variant="secondary" onClick={() => setFix(r)} testId={`fix-${r.order_number}`}>Fix address</DsButton>}
                           {act === 'track' && r.track_token && <DsLinkButton href={`/t/${r.track_token}`} variant="link" icon="truck">Track</DsLinkButton>}
-                          {act === 'none' && <span className="text-[#5B6478]" aria-label="No action needed">—</span>}
+                          {act === 'none' && <span className="text-muted" aria-label="No action needed">—</span>}
                         </td>
                       </tr>
                     );
@@ -245,12 +245,12 @@ export function OrdersClient({ data, countryNames, paused }: {
       )}
 
       {review && (
-        <section className="ds-card border-[#F2C4C2]" aria-labelledby="review-title" data-testid="review-panel">
-          <h2 id="review-title" className="m-0 text-[17px] font-bold text-[#1A174A] flex items-center gap-2">
-            <span className="text-[#A8201A] inline-flex"><DsIcon name="stop" size={18} /></span>
+        <section className="ds-card border-bad/30" aria-labelledby="review-title" data-testid="review-panel">
+          <h2 id="review-title" className="m-0 text-[17px] font-bold text-ink flex items-center gap-2">
+            <span className="text-bad inline-flex"><DsIcon name="stop" size={18} /></span>
             {`Order ${orderName(review)} is on hold: high risk`}
           </h2>
-          <p className="mt-1.5 mb-3 text-[14px] text-[#1A174A]">Your store rated this order high risk. We have not charged your wallet or shipped it. Check it in your store, then choose.</p>
+          <p className="mt-1.5 mb-3 text-[14px] text-ink">Your store rated this order high risk. We have not charged your wallet or shipped it. Check it in your store, then choose.</p>
           <div className="flex flex-wrap gap-2.5">
             <DsButton icon="check" loading={pending} disabled={!canStart || pending || review.total_cents == null}
               disabledReason={!canStart ? pausedReason : review.total_cents == null ? 'Duties for this country are not known yet.' : undefined}
@@ -332,12 +332,12 @@ function FixAddress({ row, countryName, onClose, onDone }: {
     });
   }
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#1A174A]/40">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40">
       <form onSubmit={save} role="dialog" aria-modal="true" aria-labelledby="fix-title" data-testid="fix-address-dialog"
-        className="bg-white border border-[#E3E7EF] rounded-[12px] p-[18px] shadow-[0_12px_32px_rgba(26,23,74,0.16)] w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        className="bg-white border border-line rounded-[12px] p-[18px] shadow-[0_12px_32px_rgba(26,23,74,0.16)] w-full max-w-lg max-h-[90vh] overflow-y-auto"
         onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}>
-        <h2 id="fix-title" className="m-0 mb-1 text-[17px] font-bold text-[#1A174A]">{`Fix the address for ${orderName(row)}`}</h2>
-        {row.address_issue && <p className="m-0 mb-3 text-[13px] text-[#B42318]" data-testid="fix-issue">{row.address_issue}</p>}
+        <h2 id="fix-title" className="m-0 mb-1 text-[17px] font-bold text-ink">{`Fix the address for ${orderName(row)}`}</h2>
+        {row.address_issue && <p className="m-0 mb-3 text-[13px] text-bad" data-testid="fix-issue">{row.address_issue}</p>}
         <div className="grid gap-3 sm:grid-cols-2">
           <DsInput label="Buyer name" value={form.name} onChange={set('name')} autoFocus required containerClassName="sm:col-span-2" />
           <DsInput label="Street address" value={form.line1} onChange={set('line1')} required containerClassName="sm:col-span-2" />
@@ -346,9 +346,9 @@ function FixAddress({ row, countryName, onClose, onDone }: {
           <DsInput label="Region (optional)" value={form.region} onChange={set('region')} />
           <DsInput label="Postcode" value={form.postcode} onChange={set('postcode')} error={error && /postcode|zip/i.test(error) ? error : undefined} />
           <DsInput label="Phone (optional)" value={form.phone} onChange={set('phone')} inputMode="tel" />
-          <p className="m-0 text-[13px] text-[#5B6478] sm:col-span-2">{`Country: ${countryName}. A different country changes the shipping price, so it can\u2019t be changed here.`}</p>
+          <p className="m-0 text-[13px] text-muted sm:col-span-2">{`Country: ${countryName}. A different country changes the shipping price, so it can\u2019t be changed here.`}</p>
         </div>
-        {error && !/postcode|zip/i.test(error) && <p role="alert" className="mt-3 mb-0 text-[13px] text-[#B42318]" data-testid="fix-error">{error}</p>}
+        {error && !/postcode|zip/i.test(error) && <p role="alert" className="mt-3 mb-0 text-[13px] text-bad" data-testid="fix-error">{error}</p>}
         <div className="flex justify-end gap-2.5 mt-4 flex-wrap">
           <DsButton variant="secondary" onClick={onClose}>Close</DsButton>
           <DsButton type="submit" icon="check" loading={pending} disabled={pending} testId="fix-save">Save and resubmit</DsButton>

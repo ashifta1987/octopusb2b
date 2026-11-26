@@ -26,7 +26,7 @@ async function Orders() {
   if (!data) {
     return (
       <div className="flex flex-col gap-5" data-testid="dropship-orders-page">
-        <h1 className="m-0 text-[26px] font-bold text-[#1A174A]">Orders</h1>
+        <h1 className="m-0 text-[26px] font-bold text-ink">Orders</h1>
         <DsNotice tone="bad" title="Orders could not be loaded" testId="orders-error"
           action={<DsLinkButton href="/account/dropship/orders" variant="secondary" icon="refresh">Try again</DsLinkButton>}>{error}</DsNotice>
       </div>

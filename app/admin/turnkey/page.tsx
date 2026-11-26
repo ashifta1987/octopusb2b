@@ -156,7 +156,7 @@ function Dashboard({ d }: { d: TkDashboard }) {
           </section>
 
           <Card title="Open projects by phase">
-            <ol className="list-none m-0 p-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2" data-testid="tk-dash-phases">
+            <ol className="list-none m-0 px-6 pb-6 pt-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2" data-testid="tk-dash-phases">
               {TK_PHASES.map((p) => (
                 <li key={p.code}>
                   <Link href={`/admin/turnkey/projects?stage=${p.code}&status=open`} data-testid={`tk-dash-phase-${p.code}`}

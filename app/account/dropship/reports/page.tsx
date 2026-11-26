@@ -35,7 +35,7 @@ async function Reports({ searchParams }: { searchParams: Search }) {
   if (!data) {
     return (
       <div className="flex flex-col gap-5" data-testid="ds-reports-page">
-        <h1 className="m-0 text-[26px] font-bold text-[#1A174A]">Reports</h1>
+        <h1 className="m-0 text-[26px] font-bold text-ink">Reports</h1>
         <DsNotice tone="bad" title="Reports could not be loaded" testId="reports-error"
           action={<DsLinkButton href="/account/dropship/reports" variant="secondary" icon="refresh">Try again</DsLinkButton>}>{error}</DsNotice>
       </div>

@@ -48,7 +48,7 @@ export function RecoveryCompare({ table, rows, restorable, canRestore, reasonDis
         <div className="flex gap-2" role="group" aria-label="Show rows">
           {(['diff', 'all'] as const).map((f) => (
             <button key={f} type="button" aria-pressed={filter === f} onClick={() => setFilter(f)}
-              className={cn('rounded-full border px-4 py-2 text-sm font-semibold', filter === f ? 'bg-ink text-white border-ink' : 'bg-white border-line-strong')}>
+              className="chip">
               {f === 'diff' ? 'Missing & changed' : 'All rows'}
             </button>
           ))}

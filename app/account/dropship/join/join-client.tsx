@@ -15,7 +15,7 @@ export function JoinClient({ invites }: { invites: { id: string; company: string
       {msg && <DsNotice tone={msg.ok ? 'ok' : 'bad'} title={msg.ok ? 'You joined the team' : 'Not joined'} testId="join-notice">{msg.text}</DsNotice>}
       {invites.map((i) => (
         <DsCard key={i.id} title={i.company} icon="users" testId={`join-invite-${i.id}`}>
-          <p className="m-0 mb-3 text-[14px] text-[#3A4256]">Role: <strong>{ROLE_LABELS[i.ds_role].label}</strong> — {ROLE_LABELS[i.ds_role].can}. Valid until {fmtDate(i.expires_at)}.</p>
+          <p className="m-0 mb-3 text-[14px] text-black">Role: <strong>{ROLE_LABELS[i.ds_role].label}</strong> — {ROLE_LABELS[i.ds_role].can}. Valid until {fmtDate(i.expires_at)}.</p>
           <DsButton loading={pending} testId="join-accept" onClick={() => start(async () => {
             const r = await acceptInviteAction(i.id);
             setMsg(r.ok ? { ok: true, text: 'Opening Octopus Dropship…' } : { ok: false, text: r.message });

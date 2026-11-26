@@ -11,7 +11,8 @@ import { customerSignIn, customerSignUp } from './actions';
 
 type Step = 'email' | 'verify';
 
-export function AuthForm({ initialMode, next, initialError, google = false }: { initialMode: 'signup' | 'login'; next: string; initialError?: string; google?: boolean }) {
+/** `design` (customer log in, design page 09): no Sign up / Log in tabs and no inner heading (the page has the H1), label "Email". */
+export function AuthForm({ initialMode, next, initialError, google = false, design = false }: { initialMode: 'signup' | 'login'; next: string; initialError?: string; google?: boolean; design?: boolean }) {
   const sb = createClient();
   const router = useRouter();
   const [mode, setMode] = useState(initialMode);
@@ -88,17 +89,17 @@ export function AuthForm({ initialMode, next, initialError, google = false }: { 
           ))}
         </div>
       )}
-      <div className="grid grid-cols-2 bg-fill rounded-[10px] p-1 mb-7" role="tablist">
+      {!design && <div className="grid grid-cols-2 bg-fill rounded-[10px] p-1 mb-7" role="tablist">
         {(['signup', 'login'] as const).map((m) => (
           <button key={m} role="tab" aria-selected={mode === m} onClick={() => { setMode(m); setStep('email'); setErr(null); }}
             className={cn('min-h-11 rounded-[8px] font-semibold', mode === m ? 'bg-white shadow-sm text-ink' : 'text-muted')}>{m === 'signup' ? 'Sign up' : 'Log in'}</button>
         ))}
-      </div>
+      </div>}
 
       {step === 'email' ? (
         <>
-          <h2 className="text-[28px] font-semibold">{mode === 'signup' ? 'Create your account' : 'Welcome back'}</h2>
-          <p className="text-sm text-muted mt-1">{mode === 'signup' ? 'Free for buyers. Suppliers are verified before going live.' : 'Log in to your Octopus B2B account.'}</p>
+          {!design && <h2 className="text-[28px] font-semibold">{mode === 'signup' ? 'Create your account' : 'Welcome back'}</h2>}
+          {!design && <p className="text-sm text-muted mt-1">{mode === 'signup' ? 'Free for buyers. Suppliers are verified before going live.' : 'Log in to your Octopus B2B account.'}</p>}
           {google && (
             <>
               <button type="button" onClick={signInWithGoogle} disabled={busy} className="btn btn-ghost w-full mt-6 min-h-[50px]">
@@ -108,21 +109,21 @@ export function AuthForm({ initialMode, next, initialError, google = false }: { 
               <div className="flex items-center gap-3 my-6 text-sm text-muted"><span className="flex-1 h-px bg-line" />or {mode === 'signup' ? 'sign up' : 'log in'} with email<span className="flex-1 h-px bg-line" /></div>
             </>
           )}
-          <form onSubmit={submit} className={google ? 'space-y-5' : 'space-y-5 mt-6'}>
+          <form onSubmit={submit} className={google || design ? 'space-y-5' : 'space-y-5 mt-6'}>
             <div>
-              <label htmlFor="email" className="label">Work email</label>
-              <input id="email" type="email" required autoComplete="email" className="input min-h-12" placeholder="you@company.com" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <label htmlFor="email" className="label">{design ? 'Email' : 'Work email'}</label>
+              <input id="email" type="email" required autoComplete="email" className={cn('input min-h-12', design && 'rounded-[10px] min-h-[52px] border-line-strong')} placeholder={design ? undefined : 'you@company.com'} value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div>
               <div className="flex justify-between items-baseline">
                 <label htmlFor="password" className="label">Password</label>
-                {mode === 'login' && <Link href="/forgot" className="inline-flex items-center min-h-11 text-[13px] font-semibold text-coral-text">Forgot password?</Link>}
+                {mode === 'login' && <Link href="/forgot" className={design ? 'inline-flex items-center min-h-11 text-[15px] font-semibold text-ink underline hover:text-coral-text' : 'inline-flex items-center min-h-11 text-[13px] font-semibold text-coral-text'}>Forgot password?</Link>}
               </div>
-              <PasswordInput id="password" required autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} className="input min-h-12" value={password} onChange={(e) => setPassword(e.target.value)} />
+              <PasswordInput id="password" required autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} className={cn('input min-h-12', design && 'rounded-[10px] min-h-[52px] border-line-strong')} value={password} onChange={(e) => setPassword(e.target.value)} />
               {mode === 'signup' && <p className="text-sm text-muted mt-2">At least 8 characters, with a number.</p>}
             </div>
             {err && <p className="text-sm text-bad" role="alert">{err}</p>}
-            <button className="btn btn-primary w-full min-h-[50px]" disabled={busy}>{busy ? 'Please wait…' : mode === 'signup' ? 'Create account with email' : 'Log in'}</button>
+            <button className={cn('btn btn-primary w-full min-h-[50px]', design && 'min-h-[54px] text-[17px]')} disabled={busy}>{busy ? 'Please wait…' : mode === 'signup' ? 'Create account with email' : 'Log in'}</button>
             <button type="button" onClick={emailCode} disabled={!email || busy} className="w-full min-h-11 text-sm font-semibold text-coral-text disabled:opacity-50">Email me a 6-digit code instead</button>
           </form>
         </>

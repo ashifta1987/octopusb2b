@@ -21,6 +21,6 @@ export function useRun() {
 
 export function MsgLine({ msg, testId }: { msg: Msg; testId: string }) {
   return msg
-    ? <p role={msg.ok ? 'status' : 'alert'} data-testid={testId} className={`m-0 text-[13px] ${msg.ok ? 'text-[#1B7F4B]' : 'text-[#B42318]'}`}>{msg.text}</p>
+    ? <p role={msg.ok ? 'status' : 'alert'} data-testid={testId} className={`m-0 text-[13px] ${msg.ok ? 'text-ok' : 'text-bad'}`}>{msg.text}</p>
     : null;
 }

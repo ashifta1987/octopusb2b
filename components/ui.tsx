@@ -43,7 +43,7 @@ const STATUS_TONE: Record<string, keyof typeof TONES> = {
 export function StatusBadge({ status, label, tone }: { status: string; label?: string; tone?: keyof typeof TONES }) {
   const t = tone ?? STATUS_TONE[status] ?? 'gray';
   return (
-    <span className={cn('inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap', TONES[t])}>
+    <span className={cn('inline-flex shrink-0 items-center rounded-full px-3 py-[5px] text-[13px] font-bold leading-[1.15] whitespace-nowrap', TONES[t])}>
       {label ?? humanize(status)}
     </span>
   );
@@ -74,8 +74,8 @@ export function Card({ children, className, title, action }: { children: React.R
   return (
     <section className={cn('card', className)}>
       {(title || action) && (
-        <div className="flex items-center justify-between gap-4 px-6 pt-5 pb-3">
-          {title && <h2 className="text-lg font-semibold">{title}</h2>}
+        <div className="flex items-center justify-between gap-4 px-6 pt-6 pb-3">
+          {title && <h2 className="text-[20px] font-extrabold">{title}</h2>}
           {action}
         </div>
       )}
@@ -84,23 +84,35 @@ export function Card({ children, className, title, action }: { children: React.R
   );
 }
 
+/** KPI card (design handoff §4): white, line border, 16 px, label 14 muted, value 32/800 navy; amber border when the hint is a warning. */
 export function Stat({ label, value, hint, hintTone }: { label: string; value: React.ReactNode; hint?: React.ReactNode; hintTone?: 'ok' | 'warn' | 'bad' }) {
   return (
-    <div className="card p-5">
-      <div className="text-sm text-muted">{label}</div>
-      <div className="mt-2 font-display text-[28px] font-bold leading-tight text-ink">{value}</div>
-      {hint && <div className={cn('mt-1 text-sm', hintTone === 'ok' ? 'text-ok' : hintTone === 'warn' ? 'text-warn' : hintTone === 'bad' ? 'text-bad' : 'text-muted')}>{hint}</div>}
+    <div className={cn('kpi', hintTone === 'warn' && 'kpi-warn')}>
+      <div className="kpi-label">{label}</div>
+      <div className="mt-2 font-display text-[28px] sm:text-[32px] font-extrabold leading-tight text-ink">{value}</div>
+      {hint && <div className={cn('mt-2.5 text-sm', hintTone === 'ok' ? 'text-ok' : hintTone === 'warn' ? 'text-warn' : hintTone === 'bad' ? 'text-bad' : 'text-muted')}>{hint}</div>}
     </div>
   );
 }
 
-export function PageHeader({ title, subtitle, actions, eyebrow }: { title: React.ReactNode; subtitle?: React.ReactNode; actions?: React.ReactNode; eyebrow?: React.ReactNode }) {
+/**
+ * Page heading (design handoff §3): 52 px tint icon tile, H1 34/800 and a one-line subtitle. `icon` replaces the
+ * default tile glyph; `icon={false}` drops the tile.
+ */
+export function PageHeader({ title, subtitle, actions, eyebrow, icon }: { title: React.ReactNode; subtitle?: React.ReactNode; actions?: React.ReactNode; eyebrow?: React.ReactNode; icon?: React.ReactNode | false }) {
   return (
-    <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
-      <div>
-        {eyebrow && <div className="mb-2">{eyebrow}</div>}
-        <h1 className="text-[30px] font-bold leading-tight">{title}</h1>
-        {subtitle && <p className="mt-1 text-muted">{subtitle}</p>}
+    <div className="flex flex-wrap items-end justify-between gap-4 mb-7">
+      <div className="flex items-center gap-4 min-w-0">
+        {icon !== false && (
+          <span className="app-tile hidden sm:flex" aria-hidden>
+            {icon ?? <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>}
+          </span>
+        )}
+        <div className="min-w-0">
+          {eyebrow && <div className="mb-2">{eyebrow}</div>}
+          <h1 className="text-[28px] sm:text-[34px] font-extrabold leading-[1.1]">{title}</h1>
+          {subtitle && <p className="mt-1.5 text-[16px] text-muted">{subtitle}</p>}
+        </div>
       </div>
       {actions && <div className="flex flex-wrap gap-3">{actions}</div>}
     </div>
@@ -111,8 +123,8 @@ export function PageHeader({ title, subtitle, actions, eyebrow }: { title: React
 export function EmptyState({ title, body, action }: { title: string; body?: string; action?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center text-center py-12 px-6">
-      <div className="w-12 h-12 rounded-full bg-pearl border border-line flex items-center justify-center mb-3" aria-hidden>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-muted" strokeWidth="2"><path d="M4 7h16M4 12h16M4 17h10" /></svg>
+      <div className="w-12 h-12 rounded-[14px] bg-tint text-coral-text flex items-center justify-center mb-3" aria-hidden>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 7h16M4 12h16M4 17h10" /></svg>
       </div>
       <div className="font-semibold">{title}</div>
       {body && <p className="text-sm text-muted mt-1 max-w-md">{body}</p>}
@@ -178,7 +190,7 @@ export function PermissionGate({ allowed, children, fallback = null }: { allowed
 }
 
 export function Notice({ tone = 'blue', children }: { tone?: 'blue' | 'amber' | 'red' | 'green'; children: React.ReactNode }) {
-  const t = { blue: 'bg-tint border-coral-text/30 text-coral-text', amber: 'bg-warn-bg border-warn/40 text-warn', red: 'bg-bad-bg border-bad/40 text-bad', green: 'bg-ok-bg border-ok/40 text-ok' }[tone];
+  const t = { blue: 'bg-tint border-coral-text/30 text-coral-text', amber: 'bg-warn-bg border-warn-line text-warn', red: 'bg-bad-bg border-bad/40 text-bad', green: 'bg-ok-bg border-ok/40 text-ok' }[tone];
   return <div role="status" className={cn('rounded-[10px] border px-4 py-3 text-sm', t)}>{children}</div>;
 }
 

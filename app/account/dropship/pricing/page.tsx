@@ -24,7 +24,7 @@ async function Pricing() {
   if (!data) {
     return (
       <div className="flex flex-col gap-5" data-testid="ds6-pricing">
-        <h1 className="m-0 text-[26px] font-bold text-[#1A174A]">Pricing and sync</h1>
+        <h1 className="m-0 text-[26px] font-bold text-ink">Pricing and sync</h1>
         <DsNotice tone="bad" title="Pricing could not be loaded" testId="pricing-error"
           action={<DsLinkButton href="/account/dropship/pricing" variant="secondary" icon="refresh">Try again</DsLinkButton>}>{error}</DsNotice>
       </div>

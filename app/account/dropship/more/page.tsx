@@ -42,9 +42,9 @@ async function MoreContent() {
           <Link
             key={item.href}
             href={item.href}
-            className="flex items-center gap-3 min-h-[52px] px-4 border-b border-[#EEF0F4] last:border-b-0 text-[#1A174A] hover:text-[#1A174A] hover:bg-[#FAFBFD] no-underline text-[15px] font-medium"
+            className="flex items-center gap-3 min-h-[52px] px-4 border-b border-divider last:border-b-0 text-ink hover:text-ink hover:bg-pearl no-underline text-[15px] font-medium"
           >
-            <span className="text-[#2A6FD1] inline-flex">
+            <span className="text-coral-text inline-flex">
               <DsIcon name={item.icon} size={18} />
             </span>
             <span>{item.label}</span>

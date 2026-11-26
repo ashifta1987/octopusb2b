@@ -33,7 +33,7 @@ async function Content({ searchParams }: { searchParams: Promise<{ month?: strin
         subtitle={`${monthLabel(month)} · one invoice per client and month, from real receiving, storage, pick and pack, packaging and returns. ${access.issue ? 'You can issue invoices (Finance).' : 'Finance issues the invoices; you can preview them.'}`}
         actions={
           <form method="get" className="flex items-end gap-2" data-testid="wh-inv-month-form">
-            <label className="flex flex-col text-[12px] text-[#5B6478]">
+            <label className="flex flex-col text-[12px] text-muted">
               <span>Month</span>
               <select name="month" defaultValue={month.slice(0, 7)} className="ds-input min-h-[44px]" aria-label="Month">
                 {options.map((m) => <option key={m} value={m.slice(0, 7)}>{monthLabel(m)}</option>)}

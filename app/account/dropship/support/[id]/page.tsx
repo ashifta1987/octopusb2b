@@ -29,7 +29,7 @@ async function Thread({ params }: { params: Promise<{ id: string }> }) {
   if (!t) {
     return (
       <div className="flex flex-col gap-5" data-testid="support-thread">
-        <h1 className="m-0 text-[26px] font-bold text-[#1A174A]">Support ticket</h1>
+        <h1 className="m-0 text-[26px] font-bold text-ink">Support ticket</h1>
         <DsNotice tone="info" title="This ticket was not found" action={<DsLinkButton href="/account/dropship/support" variant="secondary">Back to Support</DsLinkButton>}>
           It may belong to another company or the link is wrong.
         </DsNotice>
@@ -46,13 +46,13 @@ async function Thread({ params }: { params: Promise<{ id: string }> }) {
   const s = ticketStatusLabel(t.status as TicketStatus);
   return (
     <div className="flex flex-col gap-5" data-testid="support-thread">
-      <nav aria-label="Breadcrumb" className="text-[13px] text-[#5B6478]"><Link href="/account/dropship/support" className="text-[#2A6FD1] underline">Support</Link> / {t.code}</nav>
+      <nav aria-label="Breadcrumb" className="text-[13px] text-muted"><Link href="/account/dropship/support" className="text-coral-text underline">Support</Link> / {t.code}</nav>
       <header className="flex justify-between items-start gap-3 flex-wrap">
         <div>
-          <h1 className="m-0 text-[26px] font-bold text-[#1A174A]">{t.subject}</h1>
-          <p className="m-0 mt-1.5 text-[14px] text-[#5B6478]">
+          <h1 className="m-0 text-[26px] font-bold text-ink">{t.subject}</h1>
+          <p className="m-0 mt-1.5 text-[14px] text-muted">
             {`${t.code} · ${categoryLabel(t.category)} · opened ${fmtStamp(t.created_at)}`}
-            {so && <> · {features.orders ? <Link className="text-[#2A6FD1] underline" href={`/account/dropship/orders/${t.store_order_id}`}>{`Order ${so.external_order_name ?? so.order_number}`}</Link> : `Order ${so.external_order_name ?? so.order_number}`}</>}
+            {so && <> · {features.orders ? <Link className="text-coral-text underline" href={`/account/dropship/orders/${t.store_order_id}`}>{`Order ${so.external_order_name ?? so.order_number}`}</Link> : `Order ${so.external_order_name ?? so.order_number}`}</>}
           </p>
         </div>
         <DsBadge tone={s.tone} testId="thread-status">{s.label}</DsBadge>
@@ -60,14 +60,14 @@ async function Thread({ params }: { params: Promise<{ id: string }> }) {
       <DsCard title="Conversation" testId="thread-messages">
         <ol className="list-none m-0 p-0 flex flex-col gap-3">
           {(msgs ?? []).map((m) => (
-            <li key={m.id} className={`rounded-[10px] px-4 py-3 max-w-[85%] ${m.is_staff ? 'ml-auto bg-[#F2F7FE]' : 'bg-[#F7F9FC]'}`}>
-              <div className="text-[12px] font-semibold text-[#5B6478]">{`${m.is_staff ? 'Octopus support' : 'You'} · ${fmtStamp(m.created_at)}`}</div>
-              <p className="m-0 mt-1 text-[14px] whitespace-pre-line text-[#1A174A]">{m.body}</p>
+            <li key={m.id} className={`rounded-[10px] px-4 py-3 max-w-[85%] ${m.is_staff ? 'ml-auto bg-tint-2' : 'bg-pearl'}`}>
+              <div className="text-[12px] font-semibold text-muted">{`${m.is_staff ? 'Octopus support' : 'You'} · ${fmtStamp(m.created_at)}`}</div>
+              <p className="m-0 mt-1 text-[14px] whitespace-pre-line text-ink">{m.body}</p>
               {parseAtt(m.attachments).length > 0 && (
                 <div className="flex gap-2 flex-wrap mt-1">
                   {parseAtt(m.attachments).map((a, n) => {
                     const href = a.bucket === 'ds-claims' ? claimUrls.get(a.path) : `/account/support/attachment?p=${encodeURIComponent(a.path)}`;
-                    return href ? <a key={n} href={href} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#2A6FD1] underline min-h-[44px] inline-flex items-center">{a.name ?? `File ${n + 1}`}</a> : null;
+                    return href ? <a key={n} href={href} target="_blank" rel="noopener noreferrer" className="text-[13px] text-coral-text underline min-h-[44px] inline-flex items-center">{a.name ?? `File ${n + 1}`}</a> : null;
                   })}
                 </div>
               )}

@@ -22,14 +22,14 @@ function Products({ list }: { list: ProductPayload[] }) {
   return (
     <div className="flex flex-col gap-3">
       {list.map((p, i) => (
-        <div key={i} className="border border-[#E3E7EF] rounded-[10px] p-3 text-[14px]" data-testid="approval-product">
-          <div className="font-semibold">{p.name} <span className="text-[#5B6478] font-normal">· Model {p.supplier_sku}</span></div>
+        <div key={i} className="border border-line rounded-[10px] p-3 text-[14px]" data-testid="approval-product">
+          <div className="font-semibold">{p.name} <span className="text-muted font-normal">· Model {p.supplier_sku}</span></div>
           <dl className="grid sm:grid-cols-2 gap-x-6 gap-y-1 m-0 mt-2">
-            <div><dt className="inline text-[#5B6478]">Variants: </dt><dd className="inline m-0">{(p.variants ?? []).map((v) => `${v.option} (${usd(v.cost_cents)}, stock ${v.stock})`).join(', ') || '—'}</dd></div>
-            <div><dt className="inline text-[#5B6478]">Package: </dt><dd className="inline m-0">{p.package?.weight_g ?? '—'} g · {p.package?.length_cm ?? '—'} x {p.package?.width_cm ?? '—'} x {p.package?.height_cm ?? '—'} cm</dd></div>
-            <div><dt className="inline text-[#5B6478]">HS code: </dt><dd className="inline m-0">{p.customs?.hs_code || '—'} · origin {p.customs?.origin || '—'}</dd></div>
-            <div><dt className="inline text-[#5B6478]">Flags: </dt><dd className="inline m-0">battery {p.customs?.battery ? 'yes' : 'no'}, liquid {p.customs?.liquid ? 'yes' : 'no'}</dd></div>
-            <div className="sm:col-span-2"><dt className="inline text-[#5B6478]">Images: </dt><dd className="inline m-0 break-all">{(p.images ?? []).map((u, k) => <a key={k} className="text-[#2A6FD1] underline mr-2" href={u} target="_blank" rel="noopener noreferrer">Image {k + 1}</a>)}</dd></div>
+            <div><dt className="inline text-muted">Variants: </dt><dd className="inline m-0">{(p.variants ?? []).map((v) => `${v.option} (${usd(v.cost_cents)}, stock ${v.stock})`).join(', ') || '—'}</dd></div>
+            <div><dt className="inline text-muted">Package: </dt><dd className="inline m-0">{p.package?.weight_g ?? '—'} g · {p.package?.length_cm ?? '—'} x {p.package?.width_cm ?? '—'} x {p.package?.height_cm ?? '—'} cm</dd></div>
+            <div><dt className="inline text-muted">HS code: </dt><dd className="inline m-0">{p.customs?.hs_code || '—'} · origin {p.customs?.origin || '—'}</dd></div>
+            <div><dt className="inline text-muted">Flags: </dt><dd className="inline m-0">battery {p.customs?.battery ? 'yes' : 'no'}, liquid {p.customs?.liquid ? 'yes' : 'no'}</dd></div>
+            <div className="sm:col-span-2"><dt className="inline text-muted">Images: </dt><dd className="inline m-0 break-all">{(p.images ?? []).map((u, k) => <a key={k} className="text-coral-text underline mr-2" href={u} target="_blank" rel="noopener noreferrer">Image {k + 1}</a>)}</dd></div>
           </dl>
         </div>
       ))}
@@ -76,9 +76,9 @@ export function ApprovalsClient({ tab, page, detail, canEdit }: { tab: string; p
             const st = SUBMISSION_STATUS[r.status] ?? { label: r.status, tone: 'neutral' as const };
             return (
               <tr key={r.id} data-testid="approval-row">
-                <td className="font-semibold">{r.summary}</td><td>{r.supplier_code}<div className="text-[12px] text-[#5B6478]">{r.supplier_name}</div></td>
+                <td className="font-semibold">{r.summary}</td><td>{r.supplier_code}<div className="text-[12px] text-muted">{r.supplier_name}</div></td>
                 <td>{SUBMISSION_KIND[r.kind] ?? r.kind}{r.row_count ? ` (${r.row_count})` : ''}</td><td><DsBadge tone={st.tone}>{st.label}</DsBadge></td>
-                <td><Link className="text-[#2A6FD1] font-semibold min-h-[44px] inline-flex items-center" href={`/office/dropship/approvals?tab=${tab}&id=${r.id}`} aria-label={`Review ${r.summary}`}>Review</Link></td>
+                <td><Link className="text-coral-text font-semibold min-h-[44px] inline-flex items-center" href={`/office/dropship/approvals?tab=${tab}&id=${r.id}`} aria-label={`Review ${r.summary}`}>Review</Link></td>
               </tr>
             );
           })}
@@ -93,14 +93,14 @@ export function ApprovalsClient({ tab, page, detail, canEdit }: { tab: string; p
           {needsChecklist && <Products list={detail.kind === 'bulk_upload' ? (detail.payload.products ?? []) : [detail.payload as ProductPayload]} />}
           {detail.review_note && <p className="text-[14px] mt-3 mb-0"><b>Note to supplier:</b> {detail.review_note}</p>}
           {detail.product_ids.length > 0 && (
-            <p className="text-[14px] mt-3 mb-0">Draft products: {detail.product_ids.map((id, i) => <Link key={id} className="text-[#2A6FD1] underline mr-2" href={`/office/dropship/${id}`}>Open draft {i + 1}</Link>)} Link each variant to its Sourcing supplier product, then publish with the checklist.</p>
+            <p className="text-[14px] mt-3 mb-0">Draft products: {detail.product_ids.map((id, i) => <Link key={id} className="text-coral-text underline mr-2" href={`/office/dropship/${id}`}>Open draft {i + 1}</Link>)} Link each variant to its Sourcing supplier product, then publish with the checklist.</p>
           )}
           {open && canEdit && (
             <div className="mt-4 flex flex-col gap-3">
               {needsChecklist && (
                 <fieldset className="border-0 p-0 m-0"><legend className="font-semibold text-[14px] mb-1">Checklist</legend>
                   {CHECKS.map(([k, l, a]) => (
-                    <DsCheckbox key={k} label={<>{l}{a && <span className="ml-2 text-[12px] text-[#5B6478]">{detail.auto[a] ? '(automatic check passed)' : '(automatic check found a problem)'}</span>}</>} checked={!!checks[k]} onChange={(e) => setChecks((c) => ({ ...c, [k]: e.target.checked }))} />
+                    <DsCheckbox key={k} label={<>{l}{a && <span className="ml-2 text-[12px] text-muted">{detail.auto[a] ? '(automatic check passed)' : '(automatic check found a problem)'}</span>}</>} checked={!!checks[k]} onChange={(e) => setChecks((c) => ({ ...c, [k]: e.target.checked }))} />
                   ))}
                 </fieldset>
               )}
@@ -112,7 +112,7 @@ export function ApprovalsClient({ tab, page, detail, canEdit }: { tab: string; p
               </div>
             </div>
           )}
-          {open && !canEdit && <p className="text-[14px] text-[#5B6478] mt-3 mb-0">You can read this item but not decide it.</p>}
+          {open && !canEdit && <p className="text-[14px] text-muted mt-3 mb-0">You can read this item but not decide it.</p>}
         </DsCard>
       )}
       <DsCard title="Auto approval rules" subtitle="Stock updates and price decreases are always approved automatically. New products and anything touching customs data are always reviewed by staff. Prices already quoted to merchants never change." icon="gear" testId="approval-rules">

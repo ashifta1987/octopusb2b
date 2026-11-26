@@ -56,7 +56,7 @@ export default async function MyPoolsPage({ searchParams }: { searchParams: Prom
       <nav aria-label="Filter pledges" className="flex gap-2 mb-4">
         {[{ k: undefined, l: 'All' }, { k: 'active', l: 'Active' }, { k: 'closed', l: 'Closed & refunded' }].map((t) => (
           <Link key={t.l} href={t.k ? `/account/pools?filter=${t.k}` : '/account/pools'} aria-current={filter === t.k ? 'page' : undefined}
-            className={`px-4 py-2 rounded-full border text-sm font-semibold ${filter === t.k ? 'bg-ink text-white border-ink' : 'bg-white border-line-strong'}`}>{t.l}</Link>
+            className={`px-4 py-2 rounded-full border text-sm font-semibold ${filter === t.k ? 'bg-coral text-white border-coral' : 'bg-white border-line-strong'}`}>{t.l}</Link>
         ))}
       </nav>
       <Card>

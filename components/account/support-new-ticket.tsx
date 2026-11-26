@@ -100,11 +100,11 @@ export function SupportNewTicket({ orders, defaultOrderId, orgId, now, defaultSu
         <legend className="label">Type of request<span className="text-bad" aria-hidden> *</span></legend>
         <div className="grid gap-2 sm:grid-cols-3">
           {CATEGORIES.map((c) => (
-            <label key={c.value} className={cn('cursor-pointer rounded-[8px] border px-3 py-2.5 text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-coral-text',
-              category === c.value ? 'bg-ink border-ink text-white' : 'bg-white border-line-strong hover:border-ink')}>
+            <label key={c.value} className={cn('cursor-pointer rounded-[10px] border-2 px-3 py-2.5 text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-coral-text',
+              category === c.value ? 'bg-tint border-coral text-ink' : 'bg-white border-line hover:border-line-strong')}>
               <input type="radio" name="category" value={c.value} checked={category === c.value} onChange={() => setCategory(c.value)} className="sr-only" />
               <span className="block font-semibold">{c.label}{category === c.value && <span className="sr-only"> (selected)</span>}</span>
-              <span className={cn('block text-xs mt-0.5', category === c.value ? 'text-white/80' : 'text-muted')}>{c.hint}</span>
+              <span className="block text-xs mt-0.5 text-muted">{c.hint}</span>
             </label>
           ))}
         </div>
@@ -115,8 +115,8 @@ export function SupportNewTicket({ orders, defaultOrderId, orgId, now, defaultSu
           <legend className="label">What happened?</legend>
           <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
             {WHAT_HAPPENED.map((w) => (
-              <label key={w} className={cn('cursor-pointer rounded-[8px] border px-3 py-2.5 text-sm font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-coral-text',
-                what === w ? 'bg-ink border-ink text-white' : 'bg-white border-line-strong hover:border-ink')}>
+              <label key={w} className={cn('cursor-pointer rounded-[10px] border-2 px-3 py-2.5 text-sm font-semibold has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-coral-text',
+                what === w ? 'bg-tint border-coral text-ink' : 'bg-white border-line hover:border-line-strong')}>
                 <input type="radio" name="what" value={w} checked={what === w} onChange={() => setWhat(w)} className="sr-only" />
                 {w}{what === w && <span className="sr-only"> (selected)</span>}
               </label>
@@ -208,7 +208,7 @@ function ClaimNotice({ order, now }: { order: SupportOrderOption; now: number })
   if (vis && now <= vis) {
     const days = del ? Math.round((vis - del) / 86_400_000) : null;
     return (
-      <p role="status" className="rounded-[10px] border border-warn/40 bg-warn-bg px-4 py-3 text-sm text-warn">
+      <p role="status" className="rounded-[10px] border border-warn-line bg-warn-bg px-4 py-3 text-sm text-warn">
         Report visible problems{days ? ` within ${days} days of delivery` : ''}. {order.code}
         {del ? ` was delivered ${fmtDate(order.delivered_at)}, so the deadline is ` : ' deadline: '}{fmtDate(order.claim_visible_until)}.
         {hid ? ` Hidden defects can be reported until ${fmtDate(order.claim_hidden_until)}.` : ''}
@@ -217,7 +217,7 @@ function ClaimNotice({ order, now }: { order: SupportOrderOption; now: number })
   }
   if (hid && now <= hid) {
     return (
-      <p role="status" className="rounded-[10px] border border-warn/40 bg-warn-bg px-4 py-3 text-sm text-warn">
+      <p role="status" className="rounded-[10px] border border-warn-line bg-warn-bg px-4 py-3 text-sm text-warn">
         The window for visible problems on {order.code} ended {fmtDate(order.claim_visible_until)}. Hidden defects can still be reported until {fmtDate(order.claim_hidden_until)}.
       </p>
     );

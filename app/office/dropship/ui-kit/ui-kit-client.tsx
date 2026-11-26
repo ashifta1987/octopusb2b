@@ -55,7 +55,7 @@ export function UiKitClient() {
           {COLOUR_SWATCHES.map((s) => (
             <div
               key={s.hex}
-              className="border border-[#E3E7EF] rounded-[12px] overflow-hidden bg-white"
+              className="border border-line rounded-[12px] overflow-hidden bg-white"
             >
               <div
                 style={{
@@ -79,19 +79,19 @@ export function UiKitClient() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <DsCard title="Type: Inter" icon="file">
           <div className="flex flex-col gap-2.5">
-            <div className="flex gap-4 items-baseline border-b border-[#EEF0F4] pb-2 flex-wrap">
+            <div className="flex gap-4 items-baseline border-b border-divider pb-2 flex-wrap">
               <span className="ds-mut font-mono text-[12px] font-semibold w-[140px]">
                 H1 · 26/700
               </span>
               <span className="text-[26px] font-bold">Find products</span>
             </div>
-            <div className="flex gap-4 items-baseline border-b border-[#EEF0F4] pb-2 flex-wrap">
+            <div className="flex gap-4 items-baseline border-b border-divider pb-2 flex-wrap">
               <span className="ds-mut font-mono text-[12px] font-semibold w-[140px]">
                 H2 · 18/700
               </span>
               <span className="text-[18px] font-bold">Landed cost by country</span>
             </div>
-            <div className="flex gap-4 items-baseline border-b border-[#EEF0F4] pb-2 flex-wrap">
+            <div className="flex gap-4 items-baseline border-b border-divider pb-2 flex-wrap">
               <span className="ds-mut font-mono text-[12px] font-semibold w-[140px]">
                 Body · 14/400
               </span>
@@ -99,23 +99,23 @@ export function UiKitClient() {
                 Prices include shipping and duties to the country you pick.
               </span>
             </div>
-            <div className="flex gap-4 items-baseline border-b border-[#EEF0F4] pb-2 flex-wrap">
+            <div className="flex gap-4 items-baseline border-b border-divider pb-2 flex-wrap">
               <span className="ds-mut font-mono text-[12px] font-semibold w-[140px]">
                 Small · 13/400
               </span>
-              <span className="text-[13px] text-[#5B6478]">
+              <span className="text-[13px] text-muted">
                 Sourced from your request
               </span>
             </div>
-            <div className="flex gap-4 items-baseline border-b border-[#EEF0F4] pb-2 flex-wrap">
+            <div className="flex gap-4 items-baseline border-b border-divider pb-2 flex-wrap">
               <span className="ds-mut font-mono text-[12px] font-semibold w-[140px]">
                 Label · 12/600
               </span>
-              <span className="text-[12px] font-semibold text-[#5B6478]">
+              <span className="text-[12px] font-semibold text-muted">
                 CUSTOMS CODE (HS)
               </span>
             </div>
-            <div className="flex gap-4 items-baseline border-b border-[#EEF0F4] pb-2 flex-wrap">
+            <div className="flex gap-4 items-baseline border-b border-divider pb-2 flex-wrap">
               <span className="ds-mut font-mono text-[12px] font-semibold w-[140px]">
                 Number · 30/700
               </span>
@@ -130,7 +130,7 @@ export function UiKitClient() {
               <div key={px} className="text-center text-[12px] ds-mut">
                 <div
                   style={{ width: px, height: px }}
-                  className="bg-[#2A6FD1] rounded-[3px] mx-auto mb-1.5"
+                  className="bg-coral rounded-[3px] mx-auto mb-1.5"
                 />
                 {px}
               </div>
@@ -160,7 +160,7 @@ export function UiKitClient() {
             <DsButton
               variant="primary"
               icon="plus"
-              className="!bg-[#1F5BB0] !border-[#1F5BB0]"
+              className="!bg-coral-text !border-coral-text"
             >
               Add to import list
             </DsButton>
@@ -236,7 +236,7 @@ export function UiKitClient() {
               id="uikit-i2"
               label="Store address"
               defaultValue="my-store.myshopify.com"
-              className="!border-[#2A6FD1] shadow-[0_0_0_2px_#FFFFFF,0_0_0_4px_#2A6FD1]"
+              className="!border-coral shadow-[0_0_0_2px_#FFFFFF,0_0_0_4px_#2A6FD1]"
             />
           </div>
           <div>
@@ -276,7 +276,7 @@ export function UiKitClient() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 pt-4 border-t border-[#EEF0F4]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5 pt-4 border-t border-divider">
           <div>
             <div className="ds-mut text-[12px] font-semibold mb-1.5">
               Checkbox and Switch
@@ -473,7 +473,7 @@ export function UiKitClient() {
             actionLabel="Find products"
             actionHref="/account/dropship/catalogue"
           />
-          <div className="mt-4 pt-4 border-t border-[#EEF0F4]">
+          <div className="mt-4 pt-4 border-t border-divider">
             <DsSkeleton immediate />
             <p className="ds-mut mt-2 mb-0 text-[12px]">
               Shown after 300 ms; never a full-page spinner.
@@ -532,7 +532,7 @@ export function UiKitClient() {
             <td>Pet water fountain</td>
             <td>White row, 12 px padding</td>
           </tr>
-          <tr className="bg-[#F7F9FC]">
+          <tr className="bg-pearl">
             <td>Hover</td>
             <td>Phone holder</td>
             <td>Background #F7F9FC / #FAFBFD</td>

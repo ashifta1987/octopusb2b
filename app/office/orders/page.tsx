@@ -34,7 +34,7 @@ async function OfficeOrdersContent({ searchParams }: { searchParams: Promise<{ f
     <>
       <PageHeader title="Orders" subtitle="All orders. Open one to move it through its workflow, record bank payments and see its events." />
       <form className="flex flex-wrap gap-2 mb-4 items-center" role="search">
-        {Object.keys(FILTERS).map((k) => <Link key={k} href={`/office/orders?f=${k}`} aria-current={f === k ? 'page' : undefined} className={`btn btn-sm ${f === k ? 'btn-dark' : 'btn-ghost'}`}>{humanize(k)}</Link>)}
+        {Object.keys(FILTERS).map((k) => <Link key={k} href={`/office/orders?f=${k}`} aria-current={f === k ? 'page' : undefined} className={`btn btn-sm ${f === k ? 'btn-primary' : 'btn-ghost'}`}>{humanize(k)}</Link>)}
         <input type="hidden" name="f" value={f} />
         <label htmlFor="o-q" className="sr-only">Search orders</label>
         <input id="o-q" name="q" defaultValue={q} placeholder="ORD-… or title" className="input w-56 min-h-9 text-sm ml-auto" />

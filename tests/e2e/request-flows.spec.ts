@@ -5,14 +5,16 @@ import { adminClient, createTempCustomer, customerLogin, purgeTestOrgs, type Tem
 let C: TempCustomer | null = null;
 test.afterAll(async () => { if (C) await purgeTestOrgs([C.orgId], [C.id]); });
 
-// the brand-kit home (step 5) replaced the hero quote box with the service picker's "Source a product" tab
-test('home picker "Source a product" → the sourcing form shows the typed title, quantity and country', async ({ page }) => {
-  await page.goto('/?do=source');
-  await page.locator('#pk-title').fill('E2E cable ties 300 mm');
-  await page.locator('#pk-qty').fill('20000');
-  await page.locator('#pk-country').selectOption('DE');
-  await page.locator('button[form="picker-source"]').click();
-  await page.waitForURL(/\/request\/sourcing\?/);
+// design handoff (Nov 2026): the homepage hero is a search box ("Find factories"); the sourcing form still reads
+// title / qty / country from the query string, and /sourcing sends visitors to log in, then to that form
+test('hero search goes to /search; the sourcing form shows the title, quantity and country from the link', async ({ page }) => {
+  await page.goto('/');
+  await page.getByLabel('Search products or HS codes').fill('cable ties');
+  await page.getByRole('button', { name: 'Find factories' }).click();
+  await page.waitForURL(/\/search\?q=cable\+ties/);
+  await page.goto('/sourcing');
+  await expect(page.getByTestId('service-primary')).toHaveAttribute('href', '/login?next=%2Frequest%2Fsourcing');
+  await page.goto(`/request/sourcing?title=${encodeURIComponent('E2E cable ties 300 mm')}&qty=20000&country=DE`);
   await expect(page.locator('#rq-title')).toHaveValue('E2E cable ties 300 mm');
   await expect(page.locator('#rq-quantity')).toHaveValue('20000');
   await expect(page.locator('#rq-destination_country')).toHaveValue('DE');
@@ -64,8 +66,9 @@ test('fee text never shows "Free" together with a charge; each type has its own 
   const heads = new Set<string>();
   try {
     await page.goto('/request/dropship');
-    await expect(page.locator('h1')).toHaveText('Dropshipping is coming soon');   // 20 Nov 2026: honest Coming soon
-    await expect(page.getByText('How dropshipping will work')).toBeVisible();
+    await expect(page.locator('h1')).toHaveText('You sell. We ship to your customer.');   // design page 05: honest Coming soon
+    await expect(page.getByTestId('dropship-coming-soon')).toContainText('Coming soon');
+    await expect(page.getByRole('heading', { name: 'How it works' })).toBeVisible();
     await expect(page.getByTestId('fee-row')).toHaveCount(0);                        // no setup form, so no fee row
     for (const t of ['sourcing', 'dropship', '3pl', 'sample', 'qc', 'certification', 'factory-audit']) { await page.goto(`/request/${t}`); heads.add(await page.locator('h1').innerText()); }
   } finally {
@@ -73,15 +76,18 @@ test('fee text never shows "Free" together with a charge; each type has its own 
     else await adminClient().from('site_settings').upsert({ key: 'dropship_v2_ui', value: flag[0].value });
   }
   expect(heads.size).toBe(7);
-  // home picker, Source tab: the fact line shows the RFQ fee or no fee, never "Free" with a charge
-  await page.goto('/?do=source');
-  const fact = await page.locator('#picker-source').locator('xpath=..').innerText();
-  expect(/RFQ fee US\$ [\d.,]+ · quotes in 24 h|Quotes in 24 h/.test(fact)).toBe(true);
+  // /sourcing (design page 02): the fee line shows the RFQ fee, never "Free" with a charge
+  await page.goto('/sourcing');
+  const fact = await page.locator('#top').innerText();
+  expect(/Request fee: US\$ [\d.,]+ per request\. Quotes within 24 hours\./.test(fact)).toBe(true);
   expect(fact).not.toMatch(/Free/);
+  // the cost table shows the real fee per service, or "On request" / "Free to submit" — never a zero price
+  await expect(page.getByTestId('sourcing-costs').locator('dt')).toHaveCount(5);
+  await expect(page.getByTestId('sourcing-costs')).not.toContainText(/US\$ 0\.00/);
 });
 
 test('login, sign-up and reset pages have their own headings', async ({ page }) => {
-  await page.goto('/login'); await expect(page.locator('h1')).toHaveText('Log in to Octopus B2B');
+  await page.goto('/login'); await expect(page.locator('h1')).toHaveText('Customer log in');
   await page.goto('/signup'); await expect(page.locator('h1')).toHaveText('Create a free account');
   await page.goto('/forgot'); await expect(page.locator('h1')).toHaveText('Reset your password');
 });

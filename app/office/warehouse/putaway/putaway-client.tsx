@@ -61,7 +61,7 @@ function PutawayForm({ board, lotId, setLotId, canAt }: { board: PutawayBoard; l
           {pallets.map((p) => <option key={p.id} value={p.code}>{p.code}{p.bin_code ? ` · in ${p.bin_code}` : ' · open'}</option>)}
         </DsSelect>
       </div>
-      {lot && <p className="m-0 text-[13px] text-[#5B6478]" data-testid="wh-putaway-lot">{itemText(lot.item)} · {lot.owner} · {lot.free} of {lot.qty} left to put away</p>}
+      {lot && <p className="m-0 text-[13px] text-muted" data-testid="wh-putaway-lot">{itemText(lot.item)} · {lot.owner} · {lot.free} of {lot.qty} left to put away</p>}
       <div><DsButton type="submit" disabled={pending || Boolean(why)} disabledReason={why} testId="wh-putaway-submit" icon="check">Put away</DsButton></div>
       <MsgLine msg={msg} testId="wh-putaway-msg" />
     </form>
@@ -75,7 +75,7 @@ function NewPallet({ board, current, warehouseNames }: { board: PutawayBoard; cu
   const [asn, setAsn] = useState('');
   const [org, setOrg] = useState('');
   const [note, setNote] = useState('');
-  if (places.length === 0) return <p className="m-0 text-[13px] text-[#5B6478]">Only receivers, supervisors and admins build pallets.</p>;
+  if (places.length === 0) return <p className="m-0 text-[13px] text-muted">Only receivers, supervisors and admins build pallets.</p>;
   return (
     <form className="flex flex-col gap-3" data-testid="wh-pallet-form" onSubmit={(e) => { e.preventDefault(); run(() => createPalletAction(wh, asn, org, note), () => setNote('')); }}>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -109,11 +109,11 @@ function PalletItem({ p, can, warehouseNames }: { p: PalletRow; can: boolean; wa
   const [reason, setReason] = useState('');
   const [label, tone] = PALLET_STATUS[p.status] ?? [p.status, 'neutral'];
   return (
-    <li className="border-b border-[#EEF0F4] last:border-0 px-5 py-3 flex flex-col gap-2" data-testid={`wh-pallet-${p.code}`}>
+    <li className="border-b border-divider last:border-0 px-5 py-3 flex flex-col gap-2" data-testid={`wh-pallet-${p.code}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           <div className="font-semibold font-mono">{p.code}</div>
-          <div className="text-[12.5px] text-[#5B6478]">
+          <div className="text-[12.5px] text-muted">
             {p.owner ?? 'Unknown owner'} · {p.asn_code ? <span className="font-mono">{p.asn_code}</span> : 'no stock notice'} · {warehouseNames[p.warehouse_code] ?? p.warehouse_code}
             {p.units ? ` · ${p.units} unit(s) in ${p.lots} lot(s)` : ' · empty'}{p.bin_code ? <> · bin <span className="font-mono">{p.bin_code}</span></> : null}
           </div>
@@ -148,7 +148,7 @@ function MoveStock({ contents, canAt }: { contents: BinContent[]; canAt: (wh: st
   const max = sel ? rows.filter((c) => c.bin_id === sel.bin_id && c.lot_id === sel.lot_id).reduce((s, c) => s + c.qty, 0) : 0;
   const why = !sel ? 'Choose what to move' : !to ? 'Scan or type the bin to move to' : !(Number(qty) > 0) ? 'Enter the units'
     : Number(qty) > max ? `Only ${max} unit(s) of this lot are in ${sel.bin_code}` : !reason.trim() ? 'Enter a reason' : undefined;
-  if (rows.length === 0) return <p className="m-0 text-[13.5px] text-[#5B6478]">No stock in bins yet.</p>;
+  if (rows.length === 0) return <p className="m-0 text-[13.5px] text-muted">No stock in bins yet.</p>;
   return (
     <form className="flex flex-col gap-3" data-testid="wh-move-form"
       onSubmit={(e) => { e.preventDefault(); if (!why && sel) run(() => moveStockAction({ warehouse: sel.warehouse_code, fromBin: sel.bin_id, toBin: to, itemId: sel.item_id, lotId: sel.lot_id, qty: Number(qty), reason }), () => { setQty(''); setReason(''); setTo(''); }); }}>
@@ -185,28 +185,28 @@ export function PutawayClient({ board, warehouseNames, current }: { board: Putaw
       <section aria-label="Summary" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {tiles.map(([l, n, s]) => (
           <div key={l} className="ds-card" data-testid={`wh-pw-${l.toLowerCase().replace(/ /g, '-')}`}>
-            <div className="text-[13px] text-[#5B6478]">{l}</div>
+            <div className="text-[13px] text-muted">{l}</div>
             <div className="text-[28px] font-bold leading-tight">{n}</div>
-            <div className="text-[12px] text-[#5B6478]">{s}</div>
+            <div className="text-[12px] text-muted">{s}</div>
           </div>
         ))}
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         <DsCard title="Waiting for putaway" icon="download" noPadding testId="wh-unplaced" subtitle="Released lots not yet in a bin, by source and owner.">
-          {groups.length === 0 ? <p className="m-0 px-5 py-4 text-[13.5px] text-[#5B6478]">No released lots are waiting.</p> : (
+          {groups.length === 0 ? <p className="m-0 px-5 py-4 text-[13.5px] text-muted">No released lots are waiting.</p> : (
             <ul className="list-none m-0 p-0">
               {groups.map((g) => (
-                <li key={g.key} className="border-b border-[#EEF0F4] last:border-0">
-                  <div className="px-5 pt-3 text-[12.5px] font-semibold text-[#5B6478]">
-                    {g.source}{g.ref && <> · {g.ref.startsWith('ASN-') ? <Link className="font-mono text-[#2559B8] hover:underline" href={`/office/warehouse/receive/${g.ref}`}>{g.ref}</Link> : <span className="font-mono">{g.ref}</span>}</>} · {g.owner}
+                <li key={g.key} className="border-b border-divider last:border-0">
+                  <div className="px-5 pt-3 text-[12.5px] font-semibold text-muted">
+                    {g.source}{g.ref && <> · {g.ref.startsWith('ASN-') ? <Link className="font-mono text-coral-text hover:underline" href={`/office/warehouse/receive/${g.ref}`}>{g.ref}</Link> : <span className="font-mono">{g.ref}</span>}</>} · {g.owner}
                   </div>
                   <ul className="list-none m-0 p-0">
                     {g.lots.map((l) => (
                       <li key={l.lot_id} className="px-5 py-2.5 flex flex-wrap items-center justify-between gap-2" data-testid={`wh-unplaced-${l.lot_code}`}>
                         <div className="min-w-0">
                           <div className="font-semibold">{itemText(l.item)}</div>
-                          <div className="text-[12.5px] text-[#5B6478]"><span className="font-mono">{l.lot_code}</span> · {l.free} of {l.qty} left · {warehouseNames[l.warehouse_code] ?? l.warehouse_code}</div>
+                          <div className="text-[12.5px] text-muted"><span className="font-mono">{l.lot_code}</span> · {l.free} of {l.qty} left · {warehouseNames[l.warehouse_code] ?? l.warehouse_code}</div>
                         </div>
                         {canAt(l.warehouse_code) && <DsButton variant="secondary" onClick={() => setLotId(l.lot_id)} aria-label={`Put away ${l.lot_code}`}>Put away</DsButton>}
                       </li>
@@ -224,8 +224,8 @@ export function PutawayClient({ board, warehouseNames, current }: { board: Putaw
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
         <DsCard title="Pallets" icon="layers" noPadding testId="wh-pallets" subtitle="Open and stored pallets with their source and owner. One owner per pallet.">
-          <div className="px-5 py-4 border-b border-[#EEF0F4]"><NewPallet board={board} current={current} warehouseNames={warehouseNames} /></div>
-          {board.pallets.length === 0 ? <p className="m-0 px-5 py-4 text-[13.5px] text-[#5B6478]">No open or stored pallets.</p> : (
+          <div className="px-5 py-4 border-b border-divider"><NewPallet board={board} current={current} warehouseNames={warehouseNames} /></div>
+          {board.pallets.length === 0 ? <p className="m-0 px-5 py-4 text-[13.5px] text-muted">No open or stored pallets.</p> : (
             <ul className="list-none m-0 p-0">{board.pallets.map((p) => <PalletItem key={p.id} p={p} can={canAt(p.warehouse_code)} warehouseNames={warehouseNames} />)}</ul>
           )}
         </DsCard>
@@ -235,7 +235,7 @@ export function PutawayClient({ board, warehouseNames, current }: { board: Putaw
       </div>
 
       <DsCard title="Bin occupancy" icon="grid" noPadding testId="wh-bins-occupancy"
-        actions={<Link href="/office/warehouse/putaway/bins" className="text-[14px] font-semibold text-[#2559B8] hover:underline">Manage bins</Link>}
+        actions={<Link href="/office/warehouse/putaway/bins" className="text-[14px] font-semibold text-coral-text hover:underline">Manage bins</Link>}
         subtitle="Units, products and pallets in each bin.">
         {board.bins.length === 0 ? (
           <div className="px-5 py-4"><DsEmptyState icon="grid" title="No bins yet" description="Create bins (rack, row and bin) before putting stock away." actionLabel="Create bins" actionHref="/office/warehouse/putaway/bins" actionIcon="plus" /></div>
@@ -248,9 +248,9 @@ export function PutawayClient({ board, warehouseNames, current }: { board: Putaw
                   const [label, tone] = BIN_STATUS[b.status] ?? [b.status, 'neutral'];
                   return (
                     <tr key={b.id} data-testid={`wh-bin-row-${b.code}`}>
-                      <td><span className="font-mono font-semibold">{b.code}</span>{current ? null : <span className="text-[12px] text-[#5B6478]"> · {warehouseNames[b.warehouse_code] ?? b.warehouse_code}</span>}</td>
+                      <td><span className="font-mono font-semibold">{b.code}</span>{current ? null : <span className="text-[12px] text-muted"> · {warehouseNames[b.warehouse_code] ?? b.warehouse_code}</span>}</td>
                       <td>{b.zone ?? '—'}</td>
-                      <td><DsBadge tone={tone}>{label}</DsBadge>{b.block_reason ? <span className="block text-[12px] text-[#5B6478]">{b.block_reason}</span> : null}</td>
+                      <td><DsBadge tone={tone}>{label}</DsBadge>{b.block_reason ? <span className="block text-[12px] text-muted">{b.block_reason}</span> : null}</td>
                       <td>{b.units ?? 'Empty'}</td><td>{b.items}</td><td>{b.pallets}</td>
                     </tr>
                   );
@@ -262,14 +262,14 @@ export function PutawayClient({ board, warehouseNames, current }: { board: Putaw
       </DsCard>
 
       <DsCard title="Recent placement" icon="clock" noPadding testId="wh-recent-moves">
-        {board.recent.length === 0 ? <p className="m-0 px-5 py-4 text-[13.5px] text-[#5B6478]">Nothing put away or moved yet.</p> : (
+        {board.recent.length === 0 ? <p className="m-0 px-5 py-4 text-[13.5px] text-muted">Nothing put away or moved yet.</p> : (
           <ul className="list-none m-0 p-0">
             {board.recent.map((m) => (
-              <li key={m.id} className="border-b border-[#EEF0F4] last:border-0 px-5 py-2.5 text-[13.5px]">
+              <li key={m.id} className="border-b border-divider last:border-0 px-5 py-2.5 text-[13.5px]">
                 <span className="font-semibold">{MOVE_KIND[m.kind] ?? m.kind}</span> · {m.qty} × {itemText(m.item)} · <span className="font-mono">{m.lot_code}</span>
                 {m.from_bin && <> · from <span className="font-mono">{m.from_bin}</span></>}{m.to_bin && <> · to <span className="font-mono">{m.to_bin}</span></>}
                 {m.pallet_code && <> · <span className="font-mono">{m.pallet_code}</span></>}
-                <span className="text-[#5B6478]"> · {m.by_name ?? 'staff'} · {fmtWh(m.created_at)}{m.reason ? ` · “${m.reason}”` : ''}</span>
+                <span className="text-muted"> · {m.by_name ?? 'staff'} · {fmtWh(m.created_at)}{m.reason ? ` · “${m.reason}”` : ''}</span>
               </li>
             ))}
           </ul>

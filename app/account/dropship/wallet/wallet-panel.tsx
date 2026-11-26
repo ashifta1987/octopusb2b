@@ -34,18 +34,18 @@ export function DsWalletPanel({ data }: { data: WalletDsData }) {
     <div className="ds-v2 flex flex-col gap-5 mb-6" data-testid="ds-wallet-panel">
       <div className="grid gap-5 sm:grid-cols-2">
         <DsCard testId="ds-available">
-          <p className="m-0 text-[13px] text-[#5B6478]">Available</p>
-          <p className="m-0 text-[28px] font-bold text-[#1A174A]">{usd(data.available_cents)}</p>
+          <p className="m-0 text-[13px] text-muted">Available</p>
+          <p className="m-0 text-[28px] font-bold text-ink">{usd(data.available_cents)}</p>
           {low ? (
             <DsBadge tone="warn" testId="ds-low">{`Low: ${data.waiting_orders} order${data.waiting_orders === 1 ? '' : 's'} waiting for payment`}</DsBadge>
           ) : data.waiting_orders > 0 ? (
-            <p className="m-0 text-[13px] text-[#5B6478]">{`${data.waiting_orders} order${data.waiting_orders === 1 ? '' : 's'} waiting; paid oldest first.`}</p>
+            <p className="m-0 text-[13px] text-muted">{`${data.waiting_orders} order${data.waiting_orders === 1 ? '' : 's'} waiting; paid oldest first.`}</p>
           ) : null}
         </DsCard>
         <DsCard testId="ds-held">
-          <p className="m-0 text-[13px] text-[#5B6478]">Held for protected orders</p>
-          <p className="m-0 text-[28px] font-bold text-[#1A174A]">{usd(data.held_cents)}</p>
-          <p className="m-0 text-[13px] text-[#5B6478]">
+          <p className="m-0 text-[13px] text-muted">Held for protected orders</p>
+          <p className="m-0 text-[28px] font-bold text-ink">{usd(data.held_cents)}</p>
+          <p className="m-0 text-[13px] text-muted">
             {data.held_orders ? `${data.held_orders} order${data.held_orders === 1 ? '' : 's'} · released ${data.protection_days} days after delivery` : `Nothing held. Protected orders are released ${data.protection_days} days after delivery.`}
           </p>
         </DsCard>

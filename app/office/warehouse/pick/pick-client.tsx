@@ -48,9 +48,9 @@ function PickOrder({ d }: { d: OrderDetail }) {
       <DsCard title={o.code} icon="cart" actions={<><OrderStatusBadge status={o.status} testId="wh-pick-status" /><DgBadge kinds={o.dg_kinds} /></>}>
         <p className="m-0 text-[14px]">{o.owner} · {o.ship_name} · {o.ship_country}</p>
         <p className="mt-1 mb-0 text-[20px] font-bold" data-testid="wh-pick-left">{left} unit{left === 1 ? '' : 's'} left to pick</p>
-        {!d.can_pick && <p className="mt-2 mb-0 text-[13px] text-[#5B6478]">Packers, supervisors and admins of this warehouse pick.</p>}
+        {!d.can_pick && <p className="mt-2 mb-0 text-[13px] text-muted">Packers, supervisors and admins of this warehouse pick.</p>}
         {o.status === 'picked' && (
-          <div className="mt-3"><DsNotice tone="ok" title="Fully picked" action={<Link href={`/office/warehouse/pack?order=${o.code}`} className="font-semibold text-[#2559B8] underline">Packing station</Link>}>Take the items to packing.</DsNotice></div>
+          <div className="mt-3"><DsNotice tone="ok" title="Fully picked" action={<Link href={`/office/warehouse/pack?order=${o.code}`} className="font-semibold text-coral-text underline">Packing station</Link>}>Take the items to packing.</DsNotice></div>
         )}
         {o.status === 'exception' && <div className="mt-3"><DsNotice tone="bad" title="Stopped">{o.exception_reason}</DsNotice></div>}
         {o.status === 'allocated' && d.can_pick && (
@@ -81,23 +81,23 @@ function PickOrder({ d }: { d: OrderDetail }) {
           <DsCard key={l.id} title={l.sku} icon="box" testId={`wh-pick-line-${l.sku}`}
             actions={rest === 0 ? <DsBadge tone={l.short ? 'bad' : 'ok'}>{l.short ? `${l.short} short` : 'Picked'}</DsBadge> : <DsBadge tone="info">{rest} to pick</DsBadge>}>
             <p className="m-0 text-[14px]">{l.name}</p>
-            <p className="mt-1 mb-0 text-[13px] text-[#5B6478]">{l.picked} of {l.qty} picked{l.barcode ? ` · barcode ${l.barcode}` : ''}</p>
+            <p className="mt-1 mb-0 text-[13px] text-muted">{l.picked} of {l.qty} picked{l.barcode ? ` · barcode ${l.barcode}` : ''}</p>
             {rest > 0 && (
               l.suggest.length ? (
                 <ul className="mt-2 mb-0 p-0 list-none flex flex-col gap-1" data-testid="wh-pick-suggest">
                   {l.suggest.map((s, i) => (
-                    <li key={i} className={`text-[15px] ${i === 0 ? 'font-bold' : 'text-[#5B6478]'}`}>
-                      {i === 0 ? 'Go to ' : 'Then '}<button type="button" className="font-mono underline text-[#2559B8]" onClick={() => { setBin(s.bin); focusItem(); }}>{s.bin}</button> · {s.lot} · {s.qty} there
+                    <li key={i} className={`text-[15px] ${i === 0 ? 'font-bold' : 'text-muted'}`}>
+                      {i === 0 ? 'Go to ' : 'Then '}<button type="button" className="font-mono underline text-coral-text" onClick={() => { setBin(s.bin); focusItem(); }}>{s.bin}</button> · {s.lot} · {s.qty} there
                     </li>
                   ))}
                 </ul>
-              ) : <p className="mt-2 mb-0 text-[13px] text-[#B42318]">Not in any bin here — it must be put away first.</p>
+              ) : <p className="mt-2 mb-0 text-[13px] text-bad">Not in any bin here — it must be put away first.</p>
             )}
             {rest > 0 && open && d.can_pick && <div className="mt-2"><ShortForm d={d} line={l} /></div>}
           </DsCard>
         );
       })}
-      <Link href="/office/warehouse/pick" className="text-[14px] font-semibold text-[#2559B8] underline">← All orders to pick</Link>
+      <Link href="/office/warehouse/pick" className="text-[14px] font-semibold text-coral-text underline">← All orders to pick</Link>
     </div>
   );
 }
@@ -112,11 +112,11 @@ export function PickClient({ board, detail }: { board: PickBoard; detail: OrderD
       {board.orders.map((o) => (
         <li key={o.id}>
           <Link href={`/office/warehouse/pick?order=${o.code}`} data-testid={`wh-pick-open-${o.code}`}
-            className="ds-card !p-4 flex flex-wrap items-center gap-3 no-underline text-[#1A174A] hover:bg-[#F7F9FC] min-h-[64px]">
+            className="ds-card !p-4 flex flex-wrap items-center gap-3 no-underline text-ink hover:bg-pearl min-h-[64px]">
             <span className="font-mono font-bold text-[17px]">{o.code}</span>
             <OrderStatusBadge status={o.status} />
             <span className="text-[14px]">{o.units - o.picked} unit(s) · {o.lines} line(s)</span>
-            <span className="text-[13px] text-[#5B6478] w-full">{o.owner} · {o.warehouse_code} · since {fmtWh(o.allocated_at ?? o.created_at)}</span>
+            <span className="text-[13px] text-muted w-full">{o.owner} · {o.warehouse_code} · since {fmtWh(o.allocated_at ?? o.created_at)}</span>
           </Link>
         </li>
       ))}

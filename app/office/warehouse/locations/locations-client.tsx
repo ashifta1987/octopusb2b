@@ -51,18 +51,18 @@ export function LocationsClient({ rows }: { rows: Location[] }) {
           <LocationForm key={editing === 'new' ? 'new' : editing.code} loc={editing === 'new' ? null : editing} onDone={() => setEditing(null)} run={run} pending={pending} />
         </DsCard>
       )}
-      {msg && <p role={msg.ok ? 'status' : 'alert'} data-testid="wh-locations-msg" className={`m-0 text-[13px] ${msg.ok ? 'text-[#1B7F4B]' : 'text-[#B42318]'}`}>{msg.text}</p>}
+      {msg && <p role={msg.ok ? 'status' : 'alert'} data-testid="wh-locations-msg" className={`m-0 text-[13px] ${msg.ok ? 'text-ok' : 'text-bad'}`}>{msg.text}</p>}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {rows.map((l) => (
           <DsCard key={l.code} testId={`wh-location-${l.code}`} icon="store"
-            title={<>{l.name} <span className="font-mono text-[13px] text-[#5B6478]">{l.code}</span></>}
+            title={<>{l.name} <span className="font-mono text-[13px] text-muted">{l.code}</span></>}
             actions={<><DsBadge tone={TONE[l.status] ?? 'neutral'}>{STATUS[l.status] ?? l.status}</DsBadge>{l.is_default && <DsBadge tone="info">Default</DsBadge>}</>}>
             <dl className="grid grid-cols-[110px_1fr] gap-x-3 gap-y-1 m-0 text-[13.5px]">
-              <dt className="text-[#5B6478]">City</dt><dd className="m-0">{l.city}{l.province ? `, ${l.province}` : ''}</dd>
-              <dt className="text-[#5B6478]">Address</dt><dd className="m-0">{l.address ?? 'Not set yet'}</dd>
-              <dt className="text-[#5B6478]">Contact</dt><dd className="m-0">{[l.email, l.phone].filter(Boolean).join(' · ') || '—'}</dd>
-              <dt className="text-[#5B6478]">Hours</dt><dd className="m-0">{l.hours ?? 'Not set yet'}</dd>
-              <dt className="text-[#5B6478]">Stock</dt><dd className="m-0">{(l.units ?? 0).toLocaleString('en-US')} units</dd>
+              <dt className="text-muted">City</dt><dd className="m-0">{l.city}{l.province ? `, ${l.province}` : ''}</dd>
+              <dt className="text-muted">Address</dt><dd className="m-0">{l.address ?? 'Not set yet'}</dd>
+              <dt className="text-muted">Contact</dt><dd className="m-0">{[l.email, l.phone].filter(Boolean).join(' · ') || '—'}</dd>
+              <dt className="text-muted">Hours</dt><dd className="m-0">{l.hours ?? 'Not set yet'}</dd>
+              <dt className="text-muted">Stock</dt><dd className="m-0">{(l.units ?? 0).toLocaleString('en-US')} units</dd>
             </dl>
             {l.status !== 'closed' && (
               <div className="mt-3 flex flex-wrap gap-2 items-start">
@@ -82,7 +82,7 @@ export function LocationsClient({ rows }: { rows: Location[] }) {
                       onClick={() => { setStatusFor({ code: l.code, status: 'closed' }); setReason(''); }}>Close</DsButton>
                   </>
                 ))}
-                {l.is_default && <span className="text-[12.5px] text-[#5B6478] self-center">The default warehouse can’t be paused or closed. Make another one the default first.</span>}
+                {l.is_default && <span className="text-[12.5px] text-muted self-center">The default warehouse can’t be paused or closed. Make another one the default first.</span>}
               </div>
             )}
           </DsCard>

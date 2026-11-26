@@ -58,22 +58,22 @@ export function SaasClient({ data }: { data: SaasPageData }) {
   return (
     <div className="flex flex-col gap-5" data-testid="finance-saas-page">
       <DsPageHeader title="SaaS billing" icon="card" subtitle="Finance · decide when Octopus Dropship plan fees start, and how long the free trial is. Changes need a second approver."
-        actions={<a href="#history" className="ds-btn-link text-[14px] font-medium text-[#2A6FD1] min-h-[44px] inline-flex items-center">Billing history</a>} />
+        actions={<a href="#history" className="ds-btn-link text-[14px] font-medium text-coral-text min-h-[44px] inline-flex items-center">Billing history</a>} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <DsCard title="Charge plan fees" icon="dollar" testId="saas-switch">
           <div className="flex items-center gap-3 mb-3">
             <DsBadge tone={s.enabled ? 'ok' : 'neutral'} testId="saas-state">{s.enabled ? 'On' : 'Off'}</DsBadge>
-            <span className="text-[14px] text-[#3A4256]" data-testid="saas-state-line">{statusLine}</span>
+            <span className="text-[14px] text-black" data-testid="saas-state-line">{statusLine}</span>
           </div>
-          <p className="m-0 mb-3 text-[13px] text-[#5B6478]">
+          <p className="m-0 mb-3 text-[13px] text-muted">
             {s.enabled ? 'On: merchants get their free trial first, then approve and pay their plan.' : 'Off: every merchant uses their plan free. Nothing is billed in Shopify or by Octopus. Merchants see "Plans are free for now".'}
           </p>
           {noteAt('switch')}
           {s.pending_enabled !== null ? (
-            <div className="rounded-xl border border-[#F5D9A8] bg-[#FFF9EE] p-4 flex flex-col gap-3" data-testid="saas-pending">
-              <strong className="text-[15px] text-[#1A174A]">Waiting for approval: switch {s.pending_enabled ? 'on' : 'off'}{s.pending_scheduled_start ? ` on ${fmtDate(s.pending_scheduled_start)}` : ''}</strong>
-              <span className="text-[14px] text-[#3A4256]">Proposed by {s.proposed_by_name ?? 'a Finance user'} at {fmtDateTime(s.proposed_at)}. Reason: {s.proposal_reason}. Another Finance user or admin must approve.</span>
+            <div className="rounded-xl border border-warn-line bg-warn-bg p-4 flex flex-col gap-3" data-testid="saas-pending">
+              <strong className="text-[15px] text-ink">Waiting for approval: switch {s.pending_enabled ? 'on' : 'off'}{s.pending_scheduled_start ? ` on ${fmtDate(s.pending_scheduled_start)}` : ''}</strong>
+              <span className="text-[14px] text-black">Proposed by {s.proposed_by_name ?? 'a Finance user'} at {fmtDateTime(s.proposed_at)}. Reason: {s.proposal_reason}. Another Finance user or admin must approve.</span>
               <DsTextarea id="saas-decision" label="Note (needed to reject)" value={decision} onChange={(e) => setDecision(e.target.value)} rows={2} disabled={!can || iProposed} />
               <div className="flex flex-wrap gap-2">
                 <DsButton loading={pending} disabled={!can || iProposed} disabledReason={iProposed ? 'You proposed this change; a second person must approve.' : noFinance ?? undefined}
@@ -88,7 +88,7 @@ export function SaasClient({ data }: { data: SaasPageData }) {
             <form className="flex flex-col gap-3" onSubmit={(e) => { e.preventDefault(); run('switch', () => proposeSwitchAction(enable, enable && mode === 'date' ? date : null, reason), 'Proposed. A second Finance user or admin must approve.'); setReason(''); }}>
               {enable && (
                 <fieldset className="m-0 p-0 border-0 flex flex-col gap-2">
-                  <legend className="text-[14px] font-medium text-[#1A174A] mb-1">Start charging</legend>
+                  <legend className="text-[14px] font-medium text-ink mb-1">Start charging</legend>
                   <DsRadioCard name="saas-start" value="now" checked={mode === 'now'} onChange={() => setMode('now')} title="Now, after approval" disabled={!can} />
                   <DsRadioCard name="saas-start" value="date" checked={mode === 'date'} onChange={() => setMode('date')} title="On a date" disabled={!can} />
                   {mode === 'date' && <DsInput id="saas-date" type="date" label="Date (if on a date)" value={date} onChange={(e) => setDate(e.target.value)} disabled={!can} />}
@@ -103,17 +103,17 @@ export function SaasClient({ data }: { data: SaasPageData }) {
               </div>
             </form>
           )}
-          <p className="m-0 mt-3 text-[13px] text-[#5B6478]">Proposed by one Finance user, approved by another (company-wide Finance or admin). Every change is in the audit log.</p>
+          <p className="m-0 mt-3 text-[13px] text-muted">Proposed by one Finance user, approved by another (company-wide Finance or admin). Every change is in the audit log.</p>
         </DsCard>
 
         <DsCard title="Free trial" icon="clock" testId="saas-trial">
           <dl className="m-0 flex flex-col gap-2 text-[14px]">
-            <div className="flex justify-between gap-2"><dt>Trial length</dt><dd className="m-0 font-semibold text-[#1A174A]" data-testid="saas-trial-days">{s.trial_days} days</dd></div>
-            <div className="flex justify-between gap-2"><dt>Trial starts</dt><dd className="m-0 text-right text-[#1A174A]">When charging is switched on (existing merchants) or when a new merchant starts</dd></div>
-            <div className="flex justify-between gap-2"><dt>After the trial, if the plan isn&rsquo;t approved</dt><dd className="m-0 text-right text-[#1A174A]">{s.grace_days} days&rsquo; grace, then new pushes pause</dd></div>
-            <div className="flex justify-between gap-2"><dt>Trials</dt><dd className="m-0 text-right text-[#1A174A]">One per company, even if the store reinstalls the app</dd></div>
+            <div className="flex justify-between gap-2"><dt>Trial length</dt><dd className="m-0 font-semibold text-ink" data-testid="saas-trial-days">{s.trial_days} days</dd></div>
+            <div className="flex justify-between gap-2"><dt>Trial starts</dt><dd className="m-0 text-right text-ink">When charging is switched on (existing merchants) or when a new merchant starts</dd></div>
+            <div className="flex justify-between gap-2"><dt>After the trial, if the plan isn&rsquo;t approved</dt><dd className="m-0 text-right text-ink">{s.grace_days} days&rsquo; grace, then new pushes pause</dd></div>
+            <div className="flex justify-between gap-2"><dt>Trials</dt><dd className="m-0 text-right text-ink">One per company, even if the store reinstalls the app</dd></div>
           </dl>
-          <p className="m-0 mt-3 text-[13px] text-[#5B6478]">Paid orders always keep shipping. Trial and grace length are the owner&rsquo;s decision (30 and 7 days).</p>
+          <p className="m-0 mt-3 text-[13px] text-muted">Paid orders always keep shipping. Trial and grace length are the owner&rsquo;s decision (30 and 7 days).</p>
         </DsCard>
       </div>
 
@@ -129,23 +129,23 @@ export function SaasClient({ data }: { data: SaasPageData }) {
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3" data-testid="saas-counts">
         {[['Free, billing off', data.counts.free_off], ['In free trial', data.counts.trial], ['Paying', data.counts.paying], ['In grace', data.counts.grace], ['Pushes paused', data.counts.paused], ['Free forever (internal)', data.counts.free_forever]].map(([k, v]) => (
-          <div key={k as string} className="ds-card !py-3"><span className="block text-[13px] text-[#5B6478]">{k}</span><strong className="text-[20px] text-[#1A174A]">{v as number}</strong></div>
+          <div key={k as string} className="ds-card !py-3"><span className="block text-[13px] text-muted">{k}</span><strong className="text-[20px] text-ink">{v as number}</strong></div>
         ))}
       </div>
 
       <section aria-labelledby="ov-h" className="ds-card !p-0 overflow-hidden" data-testid="saas-overrides">
-        <h2 id="ov-h" className="m-0 px-5 pt-4 pb-3 text-[17px] font-semibold text-[#1A174A]">Per-merchant overrides</h2>
+        <h2 id="ov-h" className="m-0 px-5 pt-4 pb-3 text-[17px] font-semibold text-ink">Per-merchant overrides</h2>
         {noteAt('override')}
         <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Per-merchant overrides">
           <table className="w-full min-w-[720px] text-[14px] border-collapse">
-            <thead className="bg-[#F7F9FC] text-left text-[#5B6478]">
+            <thead className="bg-pearl text-left text-muted">
               <tr><th scope="col" className="px-5 py-2.5 font-medium">Merchant</th><th scope="col" className="px-3 py-2.5 font-medium">Plan</th><th scope="col" className="px-3 py-2.5 font-medium">State</th><th scope="col" className="px-3 py-2.5 font-medium">Override</th><th scope="col" className="px-3 py-2.5 font-medium">Reason</th><th scope="col" className="px-3 py-2.5 font-medium">Set by</th><th scope="col" className="px-5 py-2.5 font-medium"><span className="sr-only">Actions</span></th></tr>
             </thead>
             <tbody>
-              {data.merchants.length === 0 && <tr><td colSpan={7} className="px-5 py-4 text-[#5B6478]">No Dropship merchants yet.</td></tr>}
+              {data.merchants.length === 0 && <tr><td colSpan={7} className="px-5 py-4 text-muted">No Dropship merchants yet.</td></tr>}
               {data.merchants.map((m) => (
-                <tr key={m.org_id} className="border-t border-[#EEF0F4]" data-testid={`saas-merchant-${m.org_id}`}>
-                  <td className="px-5 py-2.5 text-[#1A174A]">{m.name}{m.credit_eligible ? <span className="ml-2"><DsBadge tone="info">Internal</DsBadge></span> : null}</td>
+                <tr key={m.org_id} className="border-t border-divider" data-testid={`saas-merchant-${m.org_id}`}>
+                  <td className="px-5 py-2.5 text-ink">{m.name}{m.credit_eligible ? <span className="ml-2"><DsBadge tone="info">Internal</DsBadge></span> : null}</td>
                   <td className="px-3 py-2.5">{m.plan_name ?? '—'}</td>
                   <td className="px-3 py-2.5">{STATUS_LABEL[m.status] ?? m.status}</td>
                   <td className="px-3 py-2.5">{m.override === 'free_forever' ? 'Free forever' : m.override === 'extra_trial' ? `Trial +${m.extra_trial_days} days` : 'Default'}</td>
@@ -162,7 +162,7 @@ export function SaasClient({ data }: { data: SaasPageData }) {
             </tbody>
           </table>
         </div>
-        <form className="px-5 py-4 border-t border-[#EEF0F4] grid grid-cols-1 md:grid-cols-4 gap-3 items-end"
+        <form className="px-5 py-4 border-t border-divider grid grid-cols-1 md:grid-cols-4 gap-3 items-end"
           onSubmit={(e) => { e.preventDefault(); run('override', () => setOverrideAction(ovOrg, ovKind, ovKind === 'extra_trial' ? Number(ovDays) : null, ovReason), 'Override saved.'); }}>
           <DsSelect id="ov-merchant" label="Merchant" value={ovOrg} onChange={(e) => setOvOrg(e.target.value)} disabled={!can}>
             <option value="">Choose a merchant</option>
@@ -180,28 +180,28 @@ export function SaasClient({ data }: { data: SaasPageData }) {
               disabledReason={noFinance ?? (!ovOrg ? 'Choose a merchant.' : ovReason.trim().length < 3 ? 'Enter the reason.' : undefined)} testId="ov-save">Save override</DsButton>
           </div>
         </form>
-        <p className="m-0 px-5 pb-4 text-[13px] text-[#5B6478]">Free forever is only for Octopus group companies and test accounts, the same rule as Pay later (the database refuses others).</p>
+        <p className="m-0 px-5 pb-4 text-[13px] text-muted">Free forever is only for Octopus group companies and test accounts, the same rule as Pay later (the database refuses others).</p>
       </section>
 
       <section aria-labelledby="plans-h" className="ds-card flex flex-col gap-4" data-testid="saas-plans">
-        <h2 id="plans-h" className="m-0 text-[17px] font-semibold text-[#1A174A]">Plans, prices and limits</h2>
+        <h2 id="plans-h" className="m-0 text-[17px] font-semibold text-ink">Plans, prices and limits</h2>
         {noteAt('plans')}
         {data.plans.length === 0 ? (
-          <p className="m-0 text-[14px] text-[#5B6478]" data-testid="saas-plans-empty">No plans yet. Plan prices and limits stay unset until the owner confirms them; until then merchants see &ldquo;Free while plan fees are off&rdquo;.</p>
+          <p className="m-0 text-[14px] text-muted" data-testid="saas-plans-empty">No plans yet. Plan prices and limits stay unset until the owner confirms them; until then merchants see &ldquo;Free while plan fees are off&rdquo;.</p>
         ) : (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Plans">
             <table className="w-full min-w-[640px] text-[14px] border-collapse">
-              <thead className="bg-[#F7F9FC] text-left text-[#5B6478]"><tr><th scope="col" className="px-3 py-2 font-medium">Plan</th><th scope="col" className="px-3 py-2 font-medium">Price / month</th><th scope="col" className="px-3 py-2 font-medium">Stores</th><th scope="col" className="px-3 py-2 font-medium">Live products</th><th scope="col" className="px-3 py-2 font-medium">Orders / month</th><th scope="col" className="px-3 py-2 font-medium">Offered</th></tr></thead>
+              <thead className="bg-pearl text-left text-muted"><tr><th scope="col" className="px-3 py-2 font-medium">Plan</th><th scope="col" className="px-3 py-2 font-medium">Price / month</th><th scope="col" className="px-3 py-2 font-medium">Stores</th><th scope="col" className="px-3 py-2 font-medium">Live products</th><th scope="col" className="px-3 py-2 font-medium">Orders / month</th><th scope="col" className="px-3 py-2 font-medium">Offered</th></tr></thead>
               <tbody>{data.plans.map((p) => (
-                <tr key={p.code} className="border-t border-[#EEF0F4]"><td className="px-3 py-2">{p.name} <span className="text-[#5B6478]">({p.code})</span></td><td className="px-3 py-2">{p.price_cents == null ? 'Not set' : usd(p.price_cents)}</td><td className="px-3 py-2">{p.stores_limit ?? 'No limit'}</td><td className="px-3 py-2">{p.live_products_limit ?? 'No limit'}</td><td className="px-3 py-2">{p.orders_month_limit ?? 'No limit'}</td><td className="px-3 py-2">{p.active ? 'Yes' : 'No'}</td></tr>
+                <tr key={p.code} className="border-t border-divider"><td className="px-3 py-2">{p.name} <span className="text-muted">({p.code})</span></td><td className="px-3 py-2">{p.price_cents == null ? 'Not set' : usd(p.price_cents)}</td><td className="px-3 py-2">{p.stores_limit ?? 'No limit'}</td><td className="px-3 py-2">{p.live_products_limit ?? 'No limit'}</td><td className="px-3 py-2">{p.orders_month_limit ?? 'No limit'}</td><td className="px-3 py-2">{p.active ? 'Yes' : 'No'}</td></tr>
               ))}</tbody>
             </table>
           </div>
         )}
         {data.plan_changes.map((c) => (
-          <div key={c.id} className="rounded-xl border border-[#F5D9A8] bg-[#FFF9EE] p-4 flex flex-col gap-2" data-testid={`plan-change-${c.plan_code}`}>
-            <strong className="text-[14px] text-[#1A174A]">Waiting for approval: {String(c.proposal.name)} ({c.plan_code}) · {c.proposal.price_cents == null ? 'price not set' : usd(Number(c.proposal.price_cents))}</strong>
-            <span className="text-[13px] text-[#3A4256]">Proposed by {c.proposed_by_name ?? 'a Finance user'} at {fmtDateTime(c.proposed_at)}. Reason: {c.reason}</span>
+          <div key={c.id} className="rounded-xl border border-warn-line bg-warn-bg p-4 flex flex-col gap-2" data-testid={`plan-change-${c.plan_code}`}>
+            <strong className="text-[14px] text-ink">Waiting for approval: {String(c.proposal.name)} ({c.plan_code}) · {c.proposal.price_cents == null ? 'price not set' : usd(Number(c.proposal.price_cents))}</strong>
+            <span className="text-[13px] text-black">Proposed by {c.proposed_by_name ?? 'a Finance user'} at {fmtDateTime(c.proposed_at)}. Reason: {c.reason}</span>
             <DsInput id={`plan-note-${c.id}`} label="Note (needed to reject)" value={planDecision} onChange={(e) => setPlanDecision(e.target.value)} disabled={!can || c.proposed_by === data.me} />
             <div className="flex flex-wrap gap-2">
               <DsButton loading={pending} disabled={!can || c.proposed_by === data.me} disabledReason={c.proposed_by === data.me ? 'You proposed this change; a second person must approve.' : noFinance ?? undefined}
@@ -212,7 +212,7 @@ export function SaasClient({ data }: { data: SaasPageData }) {
             </div>
           </div>
         ))}
-        <form className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end border-t border-[#EEF0F4] pt-4"
+        <form className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end border-t border-divider pt-4"
           onSubmit={(e) => {
             e.preventDefault();
             run('plans', () => proposePlanAction({
@@ -230,7 +230,7 @@ export function SaasClient({ data }: { data: SaasPageData }) {
           <DsInput id="plan-orders" type="number" min={1} label="Orders per month" value={plan.orders} onChange={(e) => setPlan({ ...plan, orders: e.target.value })} hint="Notice only; orders never stop" disabled={!can} />
           <DsInput id="plan-desc" label="Description (optional)" value={plan.description} onChange={(e) => setPlan({ ...plan, description: e.target.value })} disabled={!can} />
           <fieldset className="md:col-span-4 m-0 p-0 border-0 flex flex-wrap gap-4">
-            <legend className="text-[14px] font-medium text-[#1A174A] mb-1">Features shown on the plan</legend>
+            <legend className="text-[14px] font-medium text-ink mb-1">Features shown on the plan</legend>
             {Object.entries(PLAN_FEATURE_LABELS).map(([k, label]) => (
               <DsCheckbox key={k} label={label} checked={plan.features.includes(k)} disabled={!can}
                 onChange={(e) => setPlan({ ...plan, features: e.target.checked ? [...plan.features, k] : plan.features.filter((x) => x !== k) })} />
@@ -257,12 +257,12 @@ export function SaasClient({ data }: { data: SaasPageData }) {
       </div>
 
       <section id="history" aria-labelledby="hist-h" className="ds-card" data-testid="saas-history">
-        <h2 id="hist-h" className="m-0 mb-3 text-[17px] font-semibold text-[#1A174A]">Billing history</h2>
-        {data.history.length === 0 ? <p className="m-0 text-[14px] text-[#5B6478]">No changes yet.</p> : (
-          <ul className="m-0 p-0 list-none flex flex-col divide-y divide-[#EEF0F4] text-[14px]">
+        <h2 id="hist-h" className="m-0 mb-3 text-[17px] font-semibold text-ink">Billing history</h2>
+        {data.history.length === 0 ? <p className="m-0 text-[14px] text-muted">No changes yet.</p> : (
+          <ul className="m-0 p-0 list-none flex flex-col divide-y divide-divider text-[14px]">
             {data.history.map((h, i) => (
-              <li key={i} className="py-2 flex flex-wrap gap-x-3"><span className="text-[#5B6478]">{fmtDateTime(h.created_at)}</span><strong className="text-[#1A174A]">{ACTION_LABEL[h.action] ?? h.action}</strong>
-                <span>{h.actor_name ?? 'System'}</span>{h.details && (h.details as Record<string, unknown>).reason ? <span className="text-[#3A4256]">· {String((h.details as Record<string, unknown>).reason)}</span> : null}</li>
+              <li key={i} className="py-2 flex flex-wrap gap-x-3"><span className="text-muted">{fmtDateTime(h.created_at)}</span><strong className="text-ink">{ACTION_LABEL[h.action] ?? h.action}</strong>
+                <span>{h.actor_name ?? 'System'}</span>{h.details && (h.details as Record<string, unknown>).reason ? <span className="text-black">· {String((h.details as Record<string, unknown>).reason)}</span> : null}</li>
             ))}
           </ul>
         )}

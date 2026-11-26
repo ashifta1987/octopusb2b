@@ -27,7 +27,7 @@ async function Push({ searchParams }: { searchParams: Promise<{ ids?: string }> 
   if (!data) {
     return (
       <div className="flex flex-col gap-5" data-testid="ds6-push">
-        <h1 className="m-0 text-[26px] font-bold text-[#1A174A]">Push to Shopify</h1>
+        <h1 className="m-0 text-[26px] font-bold text-ink">Push to Shopify</h1>
         <DsNotice tone="bad" title="This page could not be loaded" testId="push-error"
           action={<DsLinkButton href="/account/dropship/catalogue?list=1" variant="secondary">Back to import list</DsLinkButton>}>{error}</DsNotice>
       </div>

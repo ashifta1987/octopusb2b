@@ -14,7 +14,7 @@ const volumetric = (b: { length_mm: number | null; width_mm: number | null; heig
   b && b.length_mm && b.width_mm && b.height_mm ? Math.ceil(((b.length_mm / 10) * (b.width_mm / 10) * (b.height_mm / 10)) / 5) : null;
 
 function Row({ label, children }: { label: string; children: ReactNode }) {
-  return <><dt className="text-[#5B6478]">{label}</dt><dd className="m-0">{children}</dd></>;
+  return <><dt className="text-muted">{label}</dt><dd className="m-0">{children}</dd></>;
 }
 
 export function OrderDetailClient({ detail: d }: { detail: OrderDetail }) {
@@ -34,13 +34,13 @@ export function OrderDetailClient({ detail: d }: { detail: OrderDetail }) {
         <dl className="grid grid-cols-[140px_1fr] gap-x-3 gap-y-1.5 m-0 text-[13.5px]">
           <Row label="Owner">{o.owner}</Row>
           <Row label="Source">{SOURCE_TEXT[o.source] ?? o.source}{o.store_order ? ` · ${o.store_order}` : ''}{o.external_ref ? ` · ref ${o.external_ref}` : ''}</Row>
-          <Row label="Ship to">{o.ship_name}{o.ship_phone ? ` · ${o.ship_phone}` : ''}<div className="text-[#5B6478]">{addressText(o.ship_address, o.ship_country)}</div></Row>
+          <Row label="Ship to">{o.ship_name}{o.ship_phone ? ` · ${o.ship_phone}` : ''}<div className="text-muted">{addressText(o.ship_address, o.ship_country)}</div></Row>
           <Row label="Warehouse">{o.warehouse_code}</Row>
           <Row label="Received">{fmtWh(o.created_at)}{o.created_by_name ? ` · ${o.created_by_name}` : ''}</Row>
           {o.allocated_at && <Row label="Stock reserved">{fmtWh(o.allocated_at)}</Row>}
           {o.picked_at && <Row label="Picked">{fmtWh(o.picked_at)}</Row>}
           {o.packed_at && <Row label="Packed">{fmtWh(o.packed_at)}{o.packed_by_name ? ` · ${o.packed_by_name}` : ''}</Row>}
-          {o.exception_reason && <Row label="Exception"><span className="text-[#B42318]">{o.exception_reason}</span></Row>}
+          {o.exception_reason && <Row label="Exception"><span className="text-bad">{o.exception_reason}</span></Row>}
           {o.cancel_reason && <Row label="Cancelled">{o.cancel_reason}</Row>}
         </dl>
         {o.store_order_cancelled && !['cancelled', 'packed'].includes(o.status) && (
@@ -124,7 +124,7 @@ export function OrderDetailClient({ detail: d }: { detail: OrderDetail }) {
         </DsTableCard>
       )}
 
-      <DsCard title="Packing photos" icon="image" testId="wh-order-photos" actions={<Link href={`/office/warehouse/evidence/${o.code}`} className="text-[13px] font-semibold text-[#2559B8] underline">Evidence view</Link>}>
+      <DsCard title="Packing photos" icon="image" testId="wh-order-photos" actions={<Link href={`/office/warehouse/evidence/${o.code}`} className="text-[13px] font-semibold text-coral-text underline">Evidence view</Link>}>
         <EvidenceGallery items={d.evidence} />
       </DsCard>
 

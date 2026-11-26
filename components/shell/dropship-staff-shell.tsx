@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -120,25 +121,45 @@ export function DropshipStaffShell({
         : canSeeDropshipItems,
   );
 
+  // Design handoff 26 Nov 2026 (App shell §3): 264 px white sidebar (Octopus Dropship logo, context box, 44 px items),
+  // white top bar (search, 46 px icon buttons, user chip), Pearl main. Phones keep the menu strip above the top bar.
   return (
     <div
       data-testid="dropship-staff-shell"
-      className={`${dsInter.variable} ds-v2 min-h-screen flex flex-col md:flex-row bg-[#F4F6F9] text-[#1A174A] overflow-x-hidden`}
+      className={`${dsInter.variable} ds-v2 app-shell min-h-screen bg-pearl text-black overflow-x-clip app-cols md:grid md:grid-cols-[264px_minmax(0,1fr)] md:grid-rows-[auto_1fr]`}
     >
+      <a href="#ds-staff-main" className="skip-link">Skip to content</a>
       <nav
         aria-label="Back office"
         data-testid="dropship-staff-sidebar"
-        className="w-full md:w-[240px] shrink-0 bg-[#1A174A] text-white px-4 py-6 box-border flex flex-col gap-1"
+        className="app-sidebar w-full box-border gap-1 border-b md:border-b-0 md:border-r px-4 pt-4 pb-2 md:px-3.5 md:pt-6 md:pb-7 md:col-start-1 md:row-start-1 md:row-span-2 md:sticky md:top-0 md:self-start md:h-screen md:overflow-y-auto"
       >
-        <div className="px-2 pb-1.5 text-[16px] font-bold">Octopus B2B</div>
-        <div className="px-2 pb-4 text-[12px] text-[#C9D3E3]">
-          {isFinanceSaas
-            ? 'Finance · SaaS billing'
-            : 'Back office · Dropshipping division'}
+        <div className="px-2 pb-3 md:pb-4">
+          <Image
+            src="/images/design/logos/octopus-dropship-colour.svg"
+            alt="Octopus Dropship"
+            width={848}
+            height={306}
+            unoptimized
+            loading="eager"
+            sizes="160px"
+            className="block w-auto h-[44px] md:h-[54px]"
+          />
+        </div>
+        <div className="app-context mb-1 md:mb-2">
+          <span className="app-context-tile" aria-hidden="true">
+            <DsIcon name={isFinanceSaas ? 'card' : 'package'} size={22} />
+          </span>
+          <span className="min-w-0 text-[14px] font-bold leading-snug text-ink">
+            {isFinanceSaas
+              ? 'Finance · SaaS billing'
+              : 'Back office · Dropshipping division'}
+          </span>
         </div>
 
+        <div className="app-grp hidden md:block">Menu</div>
         <div
-          className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible pb-2 md:pb-0"
+          className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible pt-1 pb-2 md:p-0"
           tabIndex={0}
           role="region"
           aria-label="Staff navigation"
@@ -150,13 +171,9 @@ export function DropshipStaffShell({
                 key={item.href}
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
-                className={`flex items-center gap-3 px-3 min-h-[44px] rounded-[8px] no-underline text-[14px] box-border whitespace-nowrap transition-colors ${
-                  active
-                    ? 'bg-[#2E2B66] text-white hover:text-white font-semibold shadow-[inset_3px_0_0_#5FD3C9]'
-                    : 'text-[#C9D3E3] hover:text-white hover:bg-[#221F58] font-medium'
-                }`}
+                className="app-nav shrink-0 whitespace-nowrap box-border hover:text-ink"
               >
-                <DsIcon name={item.icon} size={18} />
+                <DsIcon name={item.icon} size={20} />
                 <span>{item.label}</span>
               </Link>
             );
@@ -164,11 +181,11 @@ export function DropshipStaffShell({
         </div>
 
         <div className="mt-auto pt-4 md:pt-6">
-          <div className="p-3 border border-[#3A3775] rounded-[10px] text-[12px] leading-[1.5] text-[#C9D3E3]">
+          <div className="px-3.5 pt-3 pb-1 border border-line rounded-[14px] bg-pearl text-[13px] leading-[1.5] text-muted">
             <div>Staff only. Supplier names are visible here and never to merchants.</div>
             <Link
               href="/admin"
-              className="inline-block mt-1.5 text-[#5FD3C9] hover:text-white font-semibold no-underline"
+              className="inline-flex items-center min-h-11 text-coral-text hover:text-ink font-semibold no-underline"
             >
               Back to Admin work queue →
             </Link>
@@ -176,31 +193,34 @@ export function DropshipStaffShell({
         </div>
       </nav>
 
-      <main className="flex-1 min-w-0 px-4 py-5 md:px-8 md:pt-5 md:pb-10 box-border">
+      <header className="app-topbar md:col-start-2 md:row-start-1">
+        <DsTopBar
+          searchPlaceholder="Search products, orders, merchants, DS or SR numbers"
+          searchAction="/office/dropship"
+          unreadCount={unreadCount}
+          notificationsHref="/admin/notifications"
+          helpHref="/office/dropship/health"
+          accountHref="/staff/account"
+          backToAccountHref="/admin"
+          backToAccountLabel="Back to Admin work queue"
+          userName={userName}
+          initials={initials}
+          extraRight={
+            isStaging ? (
+              <span
+                data-testid="staging-badge"
+                title="Staging environment: test data, not the live site"
+                className="text-[13px] font-bold px-3 py-1.5 rounded-full bg-warn-bg text-warn"
+              >
+                Staging
+              </span>
+            ) : null
+          }
+        />
+      </header>
+
+      <main id="ds-staff-main" tabIndex={-1} className="app-main box-border md:col-start-2 md:row-start-2 focus:outline-none">
         <div className="w-full max-w-[1240px] mx-auto flex flex-col gap-5">
-          <DsTopBar
-            searchPlaceholder="Search products, orders, merchants, DS or SR numbers"
-            searchAction="/office/dropship"
-            unreadCount={unreadCount}
-            notificationsHref="/admin/notifications"
-            helpHref="/office/dropship/health"
-            accountHref="/staff/account"
-            backToAccountHref="/admin"
-            backToAccountLabel="Back to Admin work queue"
-            userName={userName}
-            initials={initials}
-            extraRight={
-              isStaging ? (
-                <span
-                  data-testid="staging-badge"
-                  title="Staging environment: test data, not the live site"
-                  className="mono text-[11px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full bg-[#FFF4E0] text-[#8A5300]"
-                >
-                  Staging
-                </span>
-              ) : null
-            }
-          />
           {children}
         </div>
       </main>

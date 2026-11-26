@@ -31,25 +31,23 @@ export function PageSkeleton({ cards = 2, table = true }: { cards?: number; tabl
 
 export function AccountShellSkeleton() {
   return (
-    <div className="min-h-screen bg-pearl" role="status" aria-busy="true" aria-label="Loading your account">
-      <div className="bg-white">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 py-3 flex items-center gap-5">
-          <Bar w={150} h={44} />
-          <Bar w={520} h={44} className="hidden lg:block flex-1 max-w-[560px]" />
-          <div className="ml-auto flex items-center gap-3"><Bar w={110} h={44} className="hidden sm:block" /><Bar w={44} h={44} /><Bar w={44} h={44} className="!rounded-full" /></div>
+    <div className="min-h-screen bg-pearl app-cols md:grid md:grid-cols-[264px_minmax(0,1fr)] md:grid-rows-[auto_1fr]" role="status" aria-busy="true" aria-label="Loading your account">
+      <div className="bg-white border-b border-line md:col-start-2 md:row-start-1">
+        <div className="px-4 sm:px-6 lg:px-12 py-3.5 flex items-center gap-4">
+          <Bar w={140} h={36} className="md:hidden" />
+          <Bar w={520} h={46} className="hidden md:block flex-1 max-w-[560px]" />
+          <div className="ml-auto flex items-center gap-3"><Bar w={110} h={46} className="hidden sm:block" /><Bar w={46} h={46} /><Bar w={46} h={46} /></div>
         </div>
       </div>
-      <div className="bg-white border-b border-line">
-        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 flex gap-6 h-[48px] items-center overflow-hidden">
-          {[60, 80, 110, 120, 120, 150].map((w, i) => <Bar key={i} w={w} h={14} className="shrink-0" />)}
-        </div>
+      <div className="md:hidden bg-white border-b border-line px-4 flex gap-6 h-[48px] items-center overflow-hidden">
+        {[60, 80, 110, 120, 120, 150].map((w, i) => <Bar key={i} w={w} h={14} className="shrink-0" />)}
       </div>
-      <div className="max-w-[1440px] mx-auto flex">
-        <aside className="hidden md:block w-[236px] shrink-0 border-r border-line bg-white min-h-[calc(100vh-130px)] px-3 py-7 space-y-3">
-          <Bar w={90} h={11} /><Bar h={44} /><Bar h={20} w="70%" /><Bar h={20} w="60%" /><Bar h={20} w="75%" /><Bar h={20} w="65%" />
-        </aside>
-        <main className="flex-1 min-w-0 px-4 sm:px-8 py-8"><PageSkeleton /></main>
-      </div>
+      <aside className="hidden md:block md:col-start-1 md:row-start-1 md:row-span-2 border-r border-line bg-white min-h-screen px-3.5 pt-6 space-y-3">
+        <Bar w={180} h={54} /><Bar h={48} className="!mt-5" />
+        {[0, 1, 2, 3, 4, 5].map((i) => <Bar key={i} h={36} />)}
+        <Bar w={90} h={11} className="!mt-6" /><Bar h={20} w="70%" /><Bar h={20} w="60%" /><Bar h={20} w="75%" />
+      </aside>
+      <main className="min-w-0 px-4 sm:px-8 lg:px-12 pt-7 lg:pt-9 pb-12 md:col-start-2 md:row-start-2"><PageSkeleton /></main>
     </div>
   );
 }

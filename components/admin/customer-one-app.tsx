@@ -58,7 +58,7 @@ export async function CustomerOneApp({ orgId, session }: { orgId: string; sessio
             submitClass="btn btn-ghost btn-sm min-h-10"
             className="rounded-[10px] border border-line p-3 space-y-2 mt-3"
           >
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted">
+            <div className="font-mono text-xs font-semibold uppercase tracking-[.12em] text-muted">
               Dropshipping selling countries (ISO-2)
             </div>
             <input

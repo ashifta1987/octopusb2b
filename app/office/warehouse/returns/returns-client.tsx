@@ -14,7 +14,7 @@ import { addReturnPhotoAction, applyReturnDefaultAction, completeReturnAction, i
 import { MsgLine, useRun } from '../wh-run';
 
 const CHIP = 'inline-flex items-center px-3 min-h-[44px] rounded-full border text-[13.5px] font-semibold no-underline';
-const chip = (on: boolean) => `${CHIP} ${on ? 'bg-[#1A174A] border-[#1A174A] text-white hover:text-white' : 'bg-white border-[#C9D0DD] text-[#1A174A] hover:bg-[#F2F7FE]'}`;
+const chip = (on: boolean) => `${CHIP} ${on ? 'bg-coral border-coral text-white hover:text-white' : 'bg-white border-line-strong text-ink hover:bg-tint-2'}`;
 
 function Register({ board }: { board: ReturnsBoard }) {
   const reg = useRun();
@@ -82,7 +82,7 @@ function Inspect({ r }: { r: ReturnRow }) {
   const ungraded = r.lines.some((l) => !grades[l.id]);
   const why = r.photos.length === 0 ? 'Add at least one photo first' : ungraded ? 'Grade every product' : null;
   return (
-    <div className="mt-3 flex flex-col gap-3 border-t border-[#EEF0F4] pt-3">
+    <div className="mt-3 flex flex-col gap-3 border-t border-divider pt-3">
       <div>
         <label htmlFor={`wh-rt-photo-${r.code}`} className="ds-label">Add a photo to {r.code}</label>
         <input id={`wh-rt-photo-${r.code}`} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" className="text-[14px] min-h-[44px]" disabled={up.pending}
@@ -134,7 +134,7 @@ function Complete({ r }: { r: ReturnRow }) {
   const [note, setNote] = useState('');
   const label = r.decision === 'restock' ? 'Restock and finish' : r.decision === 'send_back' ? 'Create the send-back order' : 'Disposed of — finish';
   return (
-    <form className="mt-3 flex flex-col gap-3 border-t border-[#EEF0F4] pt-3" onSubmit={(e) => { e.preventDefault(); run.run(() => completeReturnAction(r.id, note)); }}>
+    <form className="mt-3 flex flex-col gap-3 border-t border-divider pt-3" onSubmit={(e) => { e.preventDefault(); run.run(() => completeReturnAction(r.id, note)); }}>
       <DsInput id={`wh-rt-done-note-${r.code}`} label="Note (optional, staff only)" value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} autoComplete="off" />
       <div><DsButton type="submit" icon="check" disabled={run.pending} testId={`wh-rt-complete-${r.code}`}>{label}</DsButton></div>
       <MsgLine msg={run.msg} testId={`wh-rt-complete-msg-${r.code}`} />
@@ -145,8 +145,8 @@ function Complete({ r }: { r: ReturnRow }) {
 function ApplyDefault({ r }: { r: ReturnRow }) {
   const run = useRun();
   return (
-    <div className="mt-3 flex flex-col gap-2 border-t border-[#EEF0F4] pt-3">
-      <p className="m-0 text-[13px] text-[#5B6478]">The client did not decide by {fmtWh(r.decide_by)}. Default: restock the good units ({r.good_units}), dispose of the rest; with no good unit, discard.</p>
+    <div className="mt-3 flex flex-col gap-2 border-t border-divider pt-3">
+      <p className="m-0 text-[13px] text-muted">The client did not decide by {fmtWh(r.decide_by)}. Default: restock the good units ({r.good_units}), dispose of the rest; with no good unit, discard.</p>
       <div><DsButton variant="secondary" icon="clock" disabled={run.pending} onClick={() => run.run(() => applyReturnDefaultAction(r.id))} testId={`wh-rt-default-${r.code}`}>Apply the default</DsButton></div>
       <MsgLine msg={run.msg} testId={`wh-rt-default-msg-${r.code}`} />
     </div>
@@ -157,16 +157,16 @@ function Row({ r, board, focus }: { r: ReturnRow; board: ReturnsBoard; focus: bo
   const [label, tone] = RETURN_STATUS_STAFF[r.status] ?? [r.status, 'neutral'];
   const can = board.can_returns.includes(r.warehouse_code);
   return (
-    <li id={r.code} className={`rounded-[12px] border bg-white p-4 ${focus ? 'border-[#2A6FD1] shadow-[0_0_0_2px_#D6E4FA]' : 'border-[#E3E7EF]'}`} data-testid={`wh-rt-${r.code}`}>
+    <li id={r.code} className={`rounded-[12px] border bg-white p-4 ${focus ? 'border-coral shadow-[0_0_0_2px_#D6E4FA]' : 'border-line'}`} data-testid={`wh-rt-${r.code}`}>
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-mono font-semibold">{r.code}</span>
         <DsBadge tone={tone} testId={`wh-rt-status-${r.code}`}>{label}</DsBadge>
         {r.overdue && <DsBadge tone="bad" icon="clock">Decision overdue</DsBadge>}
         <span className="text-[13.5px] font-semibold">{r.owner}</span>
-        <span className="ml-auto text-[12.5px] text-[#5B6478]">{r.warehouse_code} · received {fmtWh(r.created_at)}{r.received_by_name ? ` by ${r.received_by_name}` : ''}</span>
+        <span className="ml-auto text-[12.5px] text-muted">{r.warehouse_code} · received {fmtWh(r.created_at)}{r.received_by_name ? ` by ${r.received_by_name}` : ''}</span>
       </div>
-      <div className="mt-1 text-[13px] text-[#5B6478]">
-        {r.order_code ? <>Order <Link href={`/office/warehouse/orders/${r.order_code}`} className="font-mono text-[#2559B8] hover:underline">{r.order_code}</Link></> : 'No original order'}
+      <div className="mt-1 text-[13px] text-muted">
+        {r.order_code ? <>Order <Link href={`/office/warehouse/orders/${r.order_code}`} className="font-mono text-coral-text hover:underline">{r.order_code}</Link></> : 'No original order'}
         {r.carrier_ref ? ` · tracking ${r.carrier_ref}` : ''}{r.reason ? ` · “${r.reason}”` : ''}
       </div>
       <ul className="mt-2 mb-0 pl-5 text-[13.5px]">
@@ -181,16 +181,16 @@ function Row({ r, board, focus }: { r: ReturnRow; board: ReturnsBoard; focus: bo
               {p.url ? (
                 <a href={p.url} target="_blank" rel="noopener noreferrer">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.url} alt={`Photo ${i + 1} of ${r.code}`} className="w-[88px] h-[88px] object-cover rounded-[8px] border border-[#E3E7EF] block" />
+                  <img src={p.url} alt={`Photo ${i + 1} of ${r.code}`} className="w-[88px] h-[88px] object-cover rounded-[8px] border border-line block" />
                 </a>
-              ) : <span className="text-[12px] text-[#5B6478]">Photo unavailable</span>}
+              ) : <span className="text-[12px] text-muted">Photo unavailable</span>}
             </li>
           ))}
         </ul>
       )}
-      {r.condition_note && <p className="mt-2 mb-0 text-[13px]"><span className="text-[#5B6478]">Notes for the client:</span> {r.condition_note}</p>}
+      {r.condition_note && <p className="mt-2 mb-0 text-[13px]"><span className="text-muted">Notes for the client:</span> {r.condition_note}</p>}
       {r.status !== 'received' && (
-        <p className="mt-2 mb-0 text-[13px] text-[#5B6478]">
+        <p className="mt-2 mb-0 text-[13px] text-muted">
           Inspected {fmtWh(r.inspected_at)}{r.inspected_by_name ? ` by ${r.inspected_by_name}` : ''} · client decides by {fmtWh(r.decide_by)}
           {' · '}{r.charge_cents != null && r.charge_per_item_cents != null ? `charge ${r.charge_units} × ${usd(r.charge_per_item_cents)} = ${usd(r.charge_cents)}` : 'returns rate not set for this client (no charge recorded)'}
         </p>
@@ -202,9 +202,9 @@ function Row({ r, board, focus }: { r: ReturnRow; board: ReturnsBoard; focus: bo
         </p>
       )}
       {r.outbound_order && (
-        <p className="mt-1 mb-0 text-[13px]">Send-back order <Link href={`/office/warehouse/orders/${r.outbound_order.code}`} className="font-mono text-[#2559B8] hover:underline">{r.outbound_order.code}</Link> · {r.outbound_order.status}</p>
+        <p className="mt-1 mb-0 text-[13px]">Send-back order <Link href={`/office/warehouse/orders/${r.outbound_order.code}`} className="font-mono text-coral-text hover:underline">{r.outbound_order.code}</Link> · {r.outbound_order.status}</p>
       )}
-      {r.status === 'done' && <p className="mt-1 mb-0 text-[12.5px] text-[#5B6478]">Done {fmtWh(r.done_at)}{r.done_by_name ? ` by ${r.done_by_name}` : ''}{r.done_note ? ` · ${r.done_note}` : ''}</p>}
+      {r.status === 'done' && <p className="mt-1 mb-0 text-[12.5px] text-muted">Done {fmtWh(r.done_at)}{r.done_by_name ? ` by ${r.done_by_name}` : ''}{r.done_note ? ` · ${r.done_note}` : ''}</p>}
       {can && (r.status === 'received' || r.status === 'inspected') && <Inspect r={r} />}
       {can && r.status === 'decided' && <Complete r={r} />}
       {r.overdue && board.can_default.includes(r.warehouse_code) && <ApplyDefault r={r} />}
@@ -219,13 +219,13 @@ export function ReturnsClient({ board, status, focus }: { board: ReturnsBoard; s
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([['To inspect', c.received], ['Waiting for the client', c.inspected], ['To carry out', c.decided], ['Decision overdue', c.overdue]] as const).map(([k, v]) => (
           <div key={k} className="ds-card" data-testid={`wh-rt-count-${k.toLowerCase().replace(/ /g, '-')}`}>
-            <div className="text-[13px] text-[#5B6478]">{k}</div>
+            <div className="text-[13px] text-muted">{k}</div>
             <div className="text-[28px] font-bold leading-tight">{v}</div>
           </div>
         ))}
       </div>
       {board.can_returns.length > 0 ? <Register board={board} /> : (
-        <p className="m-0 text-[13.5px] text-[#5B6478]">Receivers, supervisors and warehouse admins register and inspect returns.</p>
+        <p className="m-0 text-[13.5px] text-muted">Receivers, supervisors and warehouse admins register and inspect returns.</p>
       )}
       <nav aria-label="Return filters" className="flex flex-wrap gap-2">
         {[['open', 'Open'], ['done', 'Done'], ['all', 'All']].map(([s, l]) => (

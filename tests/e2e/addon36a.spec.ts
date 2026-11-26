@@ -5,17 +5,20 @@ import { assertStagingOrThrow } from '../../scripts/lib-staging-guard.mjs';
 
 /** ADDON-36 · 36-A: links and empty states on the live catalogue (read-only, nothing submitted). */
 
-test('no category link in the rail or footer leads to an empty category', async ({ page }) => {
+// design handoff (Nov 2026): the header carries the six services (no category rail); every service-bar and footer
+// link must open a real page, and any category link that remains must not lead to an empty category
+test('no service-bar or footer link leads to a missing page or an empty category', async ({ page }) => {
   await page.goto('/');
   const hrefs = new Set<string>();
-  for (const sel of ['nav[aria-label="Shop by category"] a[href^="/c/"]', 'footer a[href^="/c/"]']) {
+  for (const sel of ['nav[aria-label="Services"] a[href^="/"]', 'footer a[href^="/"]']) {
     for (const a of await page.locator(sel).all()) hrefs.add((await a.getAttribute('href'))!);
   }
-  expect(hrefs.size).toBeGreaterThan(0);
+  expect(hrefs.size).toBeGreaterThan(8);
   for (const h of hrefs) {
-    await page.goto(h);
-    await expect(page.locator('h1:visible').first()).toBeVisible();
-    await expect(page.getByTestId('empty-category'), `${h} should have products`).toHaveCount(0);
+    const res = await page.goto(h);
+    expect(res?.status() ?? 0, h).toBeLessThan(400);
+    await expect(page.locator('h1:visible').first(), h).toBeVisible();
+    if (h.startsWith('/c/')) await expect(page.getByTestId('empty-category'), `${h} should have products`).toHaveCount(0);
   }
 });
 
@@ -42,17 +45,15 @@ test('an empty category says we will source it and is not indexed', async ({ pag
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
 });
 
-test('"Sell on Octopus B2B" and "Become a supplier" land on /suppliers; footer has no staff login', async ({ page }) => {
+test('footer "Supplier sign-up" lands on /suppliers; staff sign-in goes to /staff/login', async ({ page }) => {
   await page.goto('/');
   const footer = page.locator('footer');
   await expect(footer.getByRole('link', { name: 'Staff login' })).toHaveCount(0);
-  await expect(footer.getByRole('link', { name: 'Supplier and staff sign-in' })).toHaveAttribute('href', '/staff/login');
-  await footer.getByRole('link', { name: 'Sell on Octopus B2B' }).click();
+  await expect(footer.getByRole('link', { name: 'Staff sign-in' })).toHaveAttribute('href', '/staff/login');
+  await footer.getByRole('link', { name: 'Supplier sign-up' }).click();
   await page.waitForURL(/\/suppliers$/);
   await expect(page.locator('h1:visible')).toHaveText('Sell on Octopus B2B');
   await expect(page.getByTestId('supplier-apply-form')).toBeVisible();
-  await page.goto('/');
-  await expect(page.locator('a:visible', { hasText: 'Become a supplier' }).first()).toHaveAttribute('href', /^\/suppliers/);
 });
 
 test('the supplier form explains what is missing instead of failing silently', async ({ page }) => {
@@ -62,7 +63,7 @@ test('the supplier form explains what is missing instead of failing silently', a
   await expect(page.locator('#sa-company_name')).toHaveAttribute('aria-invalid', 'true');
 });
 
-test('pools: empty state with steps, start link and notify form, or the list when pools are open', async ({ page }) => {
+test('pools: empty state with start link and notify form, or the list when pools are open', async ({ page }) => {
   await page.goto('/pools');
   const empty = page.getByTestId('no-pools');
   if (await empty.count()) {

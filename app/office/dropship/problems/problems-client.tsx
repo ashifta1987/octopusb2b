@@ -56,11 +56,11 @@ export function ProblemsClient({ board, selected, tab: initialTab }: { board: St
                       const s = caseStatusLabel(r.status, r.kind);
                       const t = sla(r.ticket_sla_due_at);
                       return (
-                        <tr key={r.id} className={r.code === sel ? 'bg-[#F2F7FE]' : ''} data-testid={`problem-row-${r.code}`}>
-                          <td><button type="button" aria-current={r.code === sel ? 'true' : undefined} className="font-mono text-[#2A6FD1] underline bg-transparent border-0 cursor-pointer min-h-[44px] p-0" onClick={() => { setSel(r.code); setResult(null); }}>{r.external_order_name ?? r.order_number}</button>
-                            <span className="block text-[12px] text-[#5B6478]">{r.code}</span></td>
+                        <tr key={r.id} className={r.code === sel ? 'bg-tint-2' : ''} data-testid={`problem-row-${r.code}`}>
+                          <td><button type="button" aria-current={r.code === sel ? 'true' : undefined} className="font-mono text-coral-text underline bg-transparent border-0 cursor-pointer min-h-[44px] p-0" onClick={() => { setSel(r.code); setResult(null); }}>{r.external_order_name ?? r.order_number}</button>
+                            <span className="block text-[12px] text-muted">{r.code}</span></td>
                           <td>{r.merchant}</td>
-                          <td><DsBadge tone={r.kind === 'return' ? 'info' : 'bad'}>{CASE_KIND_LABEL[r.kind]}</DsBadge><span className="block text-[12px] text-[#5B6478]">{s.label}</span></td>
+                          <td><DsBadge tone={r.kind === 'return' ? 'info' : 'bad'}>{CASE_KIND_LABEL[r.kind]}</DsBadge><span className="block text-[12px] text-muted">{s.label}</span></td>
                           <td>{waitingOn(r.status)}</td>
                           <td>{tab === 'open' ? <DsBadge tone={t.tone}>{t.text}</DsBadge> : fmtStamp(r.decided_at)}</td>
                           <td>{r.ticket_owner ?? 'Unassigned'}</td>
@@ -94,21 +94,21 @@ function CaseDetail({ c, board, pending, act }: { c: StaffCaseRow; board: StaffB
   return (
     <section className="ds-card" aria-labelledby="pc-title" data-testid="problem-detail">
       <div className="flex justify-between gap-2 flex-wrap">
-        <h2 id="pc-title" className="m-0 text-[18px] font-bold text-[#1A174A]">{`Order ${c.external_order_name ?? c.order_number}: ${CASE_KIND_LABEL[c.kind].toLowerCase()} · ${c.code}`}</h2>
+        <h2 id="pc-title" className="m-0 text-[18px] font-bold text-ink">{`Order ${c.external_order_name ?? c.order_number}: ${CASE_KIND_LABEL[c.kind].toLowerCase()} · ${c.code}`}</h2>
         <DsBadge tone={caseStatusLabel(c.status, c.kind).tone}>{caseStatusLabel(c.status, c.kind).label}</DsBadge>
       </div>
-      <p className="m-0 mt-1 text-[13px] text-[#5B6478]">{`${c.merchant} · reported ${fmtStamp(c.created_at)} · order total ${usd(c.order_total_cents)} · paid with ${c.payment_option ?? '—'}${c.protected_open ? ' (payment protection still holds it)' : ''}`}</p>
+      <p className="m-0 mt-1 text-[13px] text-muted">{`${c.merchant} · reported ${fmtStamp(c.created_at)} · order total ${usd(c.order_total_cents)} · paid with ${c.payment_option ?? '—'}${c.protected_open ? ' (payment protection still holds it)' : ''}`}</p>
       <ol className="list-none m-0 mt-3 p-0 flex flex-col gap-2 text-[14px]">
         {steps.map((s) => (
           <li key={s.label} className="flex gap-2 items-center"><DsBadge tone={s.state === 'done' ? 'ok' : s.state === 'current' ? 'warn' : 'neutral'}>{s.state === 'done' ? 'Done' : s.state === 'current' ? 'Waiting' : 'Next'}</DsBadge>{s.label}{s.detail ? ` · ${s.detail}` : ''}</li>
         ))}
       </ol>
-      <p className="m-0 mt-3 text-[14px] text-[#1A174A] whitespace-pre-line"><strong>Merchant wrote:</strong> {c.description}</p>
+      <p className="m-0 mt-3 text-[14px] text-ink whitespace-pre-line"><strong>Merchant wrote:</strong> {c.description}</p>
       {c.merchant_choice && <p className="m-0 mt-1 text-[14px]"><strong>Merchant asked for:</strong> {c.merchant_choice === 'reship' ? 'Reship' : 'Refund to the wallet'}</p>}
       {c.kind === 'return' && <p className="m-0 mt-1 text-[14px]"><strong>Return:</strong> {`${c.return_to === 'warehouse' ? 'to the warehouse' : 'to the merchant'} · ${String(c.return_reason ?? '').replace('_', ' ')} · ${c.return_units.map((u) => `${u.qty} × ${u.model_no}`).join(', ')}`}</p>}
-      {c.warehouse_return && <p className="m-0 mt-1 text-[14px]"><strong>Warehouse:</strong> <Link className="text-[#2A6FD1] underline" href={`/office/warehouse/returns?status=all&r=${c.warehouse_return.code}`}>{c.warehouse_return.code}</Link>{` · ${c.warehouse_return.status} · ${c.warehouse_return.good_units} of ${c.warehouse_return.units} good`}</p>}
-      {(c.photo_urls ?? []).some(Boolean) && <div className="flex gap-2 flex-wrap mt-2">{(c.photo_urls ?? []).map((u, n) => u && <a key={n} href={u} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#2A6FD1] underline min-h-[44px] inline-flex items-center">{`Photo ${n + 1}`}</a>)}</div>}
-      {c.ticket && <p className="m-0 mt-1 text-[13px]"><Link className="text-[#2A6FD1] underline" href={`/office/support?t=${c.ticket.id}`}>{`Ticket ${c.ticket.code}`}</Link></p>}
+      {c.warehouse_return && <p className="m-0 mt-1 text-[14px]"><strong>Warehouse:</strong> <Link className="text-coral-text underline" href={`/office/warehouse/returns?status=all&r=${c.warehouse_return.code}`}>{c.warehouse_return.code}</Link>{` · ${c.warehouse_return.status} · ${c.warehouse_return.good_units} of ${c.warehouse_return.units} good`}</p>}
+      {(c.photo_urls ?? []).some(Boolean) && <div className="flex gap-2 flex-wrap mt-2">{(c.photo_urls ?? []).map((u, n) => u && <a key={n} href={u} target="_blank" rel="noopener noreferrer" className="text-[13px] text-coral-text underline min-h-[44px] inline-flex items-center">{`Photo ${n + 1}`}</a>)}</div>}
+      {c.ticket && <p className="m-0 mt-1 text-[13px]"><Link className="text-coral-text underline" href={`/office/support?t=${c.ticket.id}`}>{`Ticket ${c.ticket.code}`}</Link></p>}
       {c.outcome_message && <p className="m-0 mt-2 text-[14px]"><strong>Decision:</strong> {c.outcome_message}</p>}
 
       {c.status === 'awaiting_approval' && c.approval && (
@@ -135,7 +135,7 @@ function CaseDetail({ c, board, pending, act }: { c: StaffCaseRow; board: StaffB
             <div className="flex gap-2 items-end flex-wrap">
               <DsInput label="Return tracking / carrier reference" value={carrierRef} onChange={(e) => setCarrierRef(e.target.value)} maxLength={64} containerClassName="min-w-[240px]" />
               <DsButton variant="secondary" disabled={pending} onClick={() => act(receiveReturnAction(c.id, carrierRef))} testId="receive-return">Parcel arrived: register at the warehouse</DsButton>
-              <span className="text-[12px] text-[#5B6478]">Warehouse staff with the returns role.</span>
+              <span className="text-[12px] text-muted">Warehouse staff with the returns role.</span>
             </div>
           )}
           <DsTextarea label="Message to the merchant" value={msg} onChange={(e) => setMsg(e.target.value)} rows={2} maxLength={600} />
@@ -159,7 +159,7 @@ function CaseDetail({ c, board, pending, act }: { c: StaffCaseRow; board: StaffB
               )}
             </div>
           )}
-          <p className="m-0 text-[12px] text-[#5B6478]">{`Refunds above ${usd(board.approval_limit_cents)} go to a second Finance approver.`}</p>
+          <p className="m-0 text-[12px] text-muted">{`Refunds above ${usd(board.approval_limit_cents)} go to a second Finance approver.`}</p>
           <div className="flex gap-2 flex-wrap">
             <DsButton variant="danger" icon="x" disabled={pending || msg.trim().length < 5 || !board.can_edit} disabledReason={msg.trim().length < 5 ? 'Write the reason for the merchant first.' : editDisabled}
               onClick={() => act(rejectCaseAction(c.id, msg))} testId="reject-case">{c.kind === 'return' ? 'Close: not accepted' : 'Not covered: reject'}</DsButton>
@@ -175,15 +175,15 @@ function Reweigh({ board, pending, act }: { board: StaffBoard; pending: boolean;
   return (
     <div className="flex flex-col gap-4">
       <DsCard title="Over tolerance" subtitle="Parcels heavier than the weight billed at payment. Charging creates an OCT-DS invoice paid from the wallet; the merchant gets 7 days to dispute." testId="reweigh-candidates">
-        {board.reweigh_candidates.length === 0 ? <p className="m-0 text-[14px] text-[#5B6478]">Nothing to decide.</p> : (
+        {board.reweigh_candidates.length === 0 ? <p className="m-0 text-[14px] text-muted">Nothing to decide.</p> : (
           <ul className="list-none m-0 p-0 flex flex-col gap-3">
             {board.reweigh_candidates.map((r) => (
-              <li key={r.store_order_id} className="border border-[#E3E7EF] rounded-[12px] p-4" data-testid={`reweigh-${r.order_number}`}>
-                <strong className="text-[#1A174A]">{r.tolerance_unknown ? `Order ${r.external_order_name ?? r.order_number} is heavier than billed` : `Charge the merchant ${usd(r.amount_cents)}?`}</strong>
-                <p className="m-0 mt-1 text-[13px] text-[#5B6478]">
+              <li key={r.store_order_id} className="border border-line rounded-[12px] p-4" data-testid={`reweigh-${r.order_number}`}>
+                <strong className="text-ink">{r.tolerance_unknown ? `Order ${r.external_order_name ?? r.order_number} is heavier than billed` : `Charge the merchant ${usd(r.amount_cents)}?`}</strong>
+                <p className="m-0 mt-1 text-[13px] text-muted">
                   {`${r.merchant} · ${r.order_number} · billed ${(r.billed_g / 1000).toFixed(2)} kg vs ${(r.quoted_g / 1000).toFixed(2)} kg estimate (+${r.diff_g} g; measured ${r.actual_g} g, box ${r.volumetric_g} g volumetric).`}
                   {r.tolerance_unknown ? ' The weighing tolerance of this order\u2019s fee version is not set, so nothing can be charged.' : ` Tolerance ${r.tolerance_g} g.`}
-                  {' '}<Link className="text-[#2A6FD1] underline" href={`/office/warehouse/evidence/${r.wh_order_code}`}>{r.photo_path ? 'Scale photo' : 'Packing record'}</Link>
+                  {' '}<Link className="text-coral-text underline" href={`/office/warehouse/evidence/${r.wh_order_code}`}>{r.photo_path ? 'Scale photo' : 'Packing record'}</Link>
                 </p>
                 <div className="flex gap-2 mt-2 flex-wrap">
                   <DsButton disabled={pending || r.tolerance_unknown || !board.can_edit} disabledReason={r.tolerance_unknown ? 'Tolerance not set (owner input).' : undefined}
@@ -196,12 +196,12 @@ function Reweigh({ board, pending, act }: { board: StaffBoard; pending: boolean;
         )}
       </DsCard>
       <DsCard title="Disputes" testId="reweigh-disputes">
-        {board.reweigh_disputes.length === 0 ? <p className="m-0 text-[14px] text-[#5B6478]">No open disputes.</p> : (
+        {board.reweigh_disputes.length === 0 ? <p className="m-0 text-[14px] text-muted">No open disputes.</p> : (
           <ul className="list-none m-0 p-0 flex flex-col gap-3">
             {board.reweigh_disputes.map((r) => (
-              <li key={r.id} className="border border-[#E3E7EF] rounded-[12px] p-4">
-                <strong className="text-[#1A174A]">{`Re-weigh disputed: order ${r.external_order_name ?? r.order_number} (${usd(r.amount_cents)})`}</strong>
-                <p className="m-0 mt-1 text-[13px] text-[#5B6478]">{`${r.merchant} · billed ${r.billed_weight_g} g vs ${r.quoted_weight_g} g · disputed ${fmtStamp(r.disputed_at)}`}</p>
+              <li key={r.id} className="border border-line rounded-[12px] p-4">
+                <strong className="text-ink">{`Re-weigh disputed: order ${r.external_order_name ?? r.order_number} (${usd(r.amount_cents)})`}</strong>
+                <p className="m-0 mt-1 text-[13px] text-muted">{`${r.merchant} · billed ${r.billed_weight_g} g vs ${r.quoted_weight_g} g · disputed ${fmtStamp(r.disputed_at)}`}</p>
                 <p className="m-0 mt-1 text-[14px]">{r.dispute_reason}</p>
                 <DsTextarea label="Answer to the merchant" value={answers[r.id] ?? ''} onChange={(e) => setAnswers((a) => ({ ...a, [r.id]: e.target.value }))} rows={2} maxLength={600} containerClassName="mt-2" />
                 <div className="flex gap-2 mt-2 flex-wrap">

@@ -8,7 +8,7 @@ export function Barcode128({ value, height = 56, moduleWidth = 2, showText = tru
   value: string; height?: number; moduleWidth?: number; showText?: boolean; testId?: string;
 }) {
   if (!canEncode128(value)) {
-    return <span className="text-[12px] text-[#B42318]" data-testid={testId}>Can’t print “{value}” as a barcode</span>;
+    return <span className="text-[12px] text-bad" data-testid={testId}>Can’t print “{value}” as a barcode</span>;
   }
   const { bars, width } = code128Bars(value);
   return (

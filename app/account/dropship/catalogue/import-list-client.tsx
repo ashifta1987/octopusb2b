@@ -123,16 +123,16 @@ export function ImportListClient({ data, marketName }: { data: ImportListData; m
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-0 flex-1 basis-[240px]">
             <span className="ds-label" id="rule-label">Pricing rule</span>
-            <p className="m-0 text-[14px] text-[#1A174A]" aria-labelledby="rule-label" data-testid="import-rule-summary">
+            <p className="m-0 text-[14px] text-ink" aria-labelledby="rule-label" data-testid="import-rule-summary">
               {data.rules.saved ? ruleSummary(data.rules) : 'Not saved yet'}{' '}
-              <Link href="/account/dropship/pricing" className="text-[#2A6FD1] font-semibold underline">{data.rules.saved ? 'Change' : 'Set your rule'}</Link>
+              <Link href="/account/dropship/pricing" className="text-coral-text font-semibold underline">{data.rules.saved ? 'Change' : 'Set your rule'}</Link>
             </p>
           </div>
           <DsButton variant="secondary" icon="refresh" disabled={pending || chosen.length === 0} disabledReason={chosen.length === 0 ? 'Select products first.' : undefined}
             onClick={() => run(() => importApplyRuleAction(chosen.map((r) => r.product_id)), 'Rule applied to the selected products')} testId="apply-rule">Apply rule to selected</DsButton>
           <DsButton variant="secondary" icon="x" disabled={pending || chosen.length === 0} disabledReason={chosen.length === 0 ? 'Select products first.' : undefined}
             onClick={() => run(async () => { const r = await importRemoveAction(chosen.map((x) => x.product_id)); if (r.ok) setSelected(new Set()); return r; }, 'Removed from your import list')} testId="remove-selected">Remove selected</DsButton>
-          <span className="text-[13px] text-[#5B6478]" data-testid="selection-count">{`${chosen.length} selected · ${variantCount} variants`}</span>
+          <span className="text-[13px] text-muted" data-testid="selection-count">{`${chosen.length} selected · ${variantCount} variants`}</span>
         </div>
       </DsCard>
 
@@ -141,7 +141,7 @@ export function ImportListClient({ data, marketName }: { data: ImportListData; m
         title="Products"
         minWidth={820}
         headers={[
-          <input key="all" type="checkbox" aria-label="Select all" className="w-4 h-4 accent-[#2A6FD1]" checked={allOn}
+          <input key="all" type="checkbox" aria-label="Select all" className="w-4 h-4 accent-coral" checked={allOn}
             onChange={() => setSelected(allOn ? new Set() : new Set(selectable.map((r) => r.product_id)))} />,
           'Product', 'Variants', 'Your cost', 'Your price', 'Margin', 'Status',
         ]}
@@ -153,18 +153,18 @@ export function ImportListClient({ data, marketName }: { data: ImportListData; m
           return (
             <tr key={r.product_id} data-testid={`import-row-${r.model_no}`}>
               <td>
-                <input type="checkbox" className="w-4 h-4 accent-[#2A6FD1]" aria-label={`Select ${r.title}`} disabled={disabled}
+                <input type="checkbox" className="w-4 h-4 accent-coral" aria-label={`Select ${r.title}`} disabled={disabled}
                   checked={selected.has(r.product_id)} onChange={() => toggle(r.product_id)} />
               </td>
               <td>
-                <strong className="text-[#1A174A]">{r.title}{r.only_for_you ? ' · only for you' : ''}</strong>
-                <span className="block text-[12px] text-[#5B6478]">
-                  {r.model_no} · <Link href={`/account/dropship/import/${r.product_id}`} className="text-[#2A6FD1] underline" data-testid={`edit-${r.model_no}`}>Edit title, images, variants</Link>
+                <strong className="text-ink">{r.title}{r.only_for_you ? ' · only for you' : ''}</strong>
+                <span className="block text-[12px] text-muted">
+                  {r.model_no} · <Link href={`/account/dropship/import/${r.product_id}`} className="text-coral-text underline" data-testid={`edit-${r.model_no}`}>Edit title, images, variants</Link>
                 </span>
               </td>
               <td>{r.variants_included}{r.variants_included !== r.variants_total ? ` of ${r.variants_total}` : ''}</td>
               <td>{usd(r.landed_min)}</td>
-              <td>{price}{r.price_mode === 'manual' ? <span className="block text-[12px] text-[#5B6478]">Your own price</span> : null}</td>
+              <td>{price}{r.price_mode === 'manual' ? <span className="block text-[12px] text-muted">Your own price</span> : null}</td>
               <td>{pct(r.lowest_profit_bp)}</td>
               <td><RowStatus ready={r.ready} problems={r.problems} minProfitBp={minBp} testId={`status-${r.model_no}`} /></td>
             </tr>
@@ -178,7 +178,7 @@ export function ImportListClient({ data, marketName }: { data: ImportListData; m
         {example && example.example && example.example.landed && example.example.landed.ok ? (
           <ExampleRows ex={example} currency={currency} rules={data.rules} marketName={marketName} />
         ) : (
-          <p className="m-0 text-[14px] text-[#5B6478]">
+          <p className="m-0 text-[14px] text-muted">
             Your price = landed cost (product + processing + shipping + duties if DDP) × your rule, converted to your store currency and rounded
             ({ROUNDING_LABEL[data.rules.rounding].toLowerCase()}). An example appears when a product in your list can be priced.
           </p>
@@ -198,7 +198,7 @@ function ExampleRows({ ex, currency, rules, marketName }: { ex: ImportListData['
       {band && <div className="ds-row"><span className="ds-mut">× rule</span><span>{`${multiplierText(band.multiplier_milli)}${band.fixed_cents ? ` + ${usd(band.fixed_cents)}` : ''}`}</span></div>}
       <div className="ds-row"><span className="ds-mut">{v.manual ? 'Your own price' : `Rounded (${ROUNDING_LABEL[rules.rounding].toLowerCase()})`}</span><span>{storeMoney(v.price_minor, currency)}</span></div>
       <div className="ds-row"><span className="ds-mut">Margin</span><span>{pct(v.profit_bp)}</span></div>
-      <p className="mt-2 mb-0 text-[12px] text-[#5B6478]">Example: {ex.title}. {currency === 'USD' ? 'Prices are in US$; no exchange rate is needed.' : 'Converted with the exchange rate shown in Pricing and sync.'}</p>
+      <p className="mt-2 mb-0 text-[12px] text-muted">Example: {ex.title}. {currency === 'USD' ? 'Prices are in US$; no exchange rate is needed.' : 'Converted with the exchange rate shown in Pricing and sync.'}</p>
     </div>
   );
 }
@@ -206,20 +206,20 @@ function ExampleRows({ ex, currency, rules, marketName }: { ex: ImportListData['
 function BulkCard({ fileRef, onFile, pending, skipped = [] }: { fileRef: RefObject<HTMLInputElement | null>; onFile: (f: File | undefined) => void; pending: boolean; skipped?: { line: number; model_no: string; reason: string }[] }) {
   return (
     <DsCard title="Bulk add by file" icon="upload" testId="bulk-add">
-      <p className="mt-0 mb-2 text-[14px] text-[#1A174A]">Add many catalogue products at once with a list of dropship model numbers.</p>
-      <label htmlFor="bulk-file" className="flex flex-col items-center justify-center gap-1 min-h-[88px] rounded-[12px] border border-dashed border-[#C9D0DD] bg-[#F7F9FC] p-4 text-[14px] text-[#1A174A] cursor-pointer">
-        <span>Drop a CSV here or <span className="text-[#2A6FD1] font-semibold underline">choose a file</span>{pending ? ' · adding…' : ''}</span>
+      <p className="mt-0 mb-2 text-[14px] text-ink">Add many catalogue products at once with a list of dropship model numbers.</p>
+      <label htmlFor="bulk-file" className="flex flex-col items-center justify-center gap-1 min-h-[88px] rounded-[12px] border border-dashed border-line-strong bg-pearl p-4 text-[14px] text-ink cursor-pointer">
+        <span>Drop a CSV here or <span className="text-coral-text font-semibold underline">choose a file</span>{pending ? ' · adding…' : ''}</span>
         <input id="bulk-file" ref={fileRef} type="file" accept=".csv,text/csv" className="sr-only" data-testid="bulk-file"
           onChange={(e) => onFile(e.target.files?.[0])} />
       </label>
-      <p className="mt-2 mb-0 text-[13px] text-[#5B6478]">
+      <p className="mt-2 mb-0 text-[13px] text-muted">
         Columns: model_no, variant (optional).{' '}
-        <button type="button" className="text-[#2A6FD1] font-semibold underline bg-transparent border-0 p-0 min-h-[44px] cursor-pointer"
+        <button type="button" className="text-coral-text font-semibold underline bg-transparent border-0 p-0 min-h-[44px] cursor-pointer"
           onClick={() => download('import-list-template.csv', 'model_no,variant\nDS-000001,\n')}>Download the template</button>.
       </p>
       {skipped.length > 0 && (
         <div className="mt-3" data-testid="bulk-skipped">
-          <ul className="m-0 pl-5 text-[13px] text-[#1A174A]">
+          <ul className="m-0 pl-5 text-[13px] text-ink">
             {skipped.slice(0, 10).map((s) => <li key={`${s.line}-${s.model_no}`}>{`Line ${s.line}: ${s.reason}`}</li>)}
           </ul>
           <DsButton variant="secondary" icon="download" className="mt-2"

@@ -17,9 +17,9 @@ const METHOD: Record<string, string> = { economy: 'Economy', standard: 'Standard
 function Tile({ label, value, sub, testId }: { label: string; value: string; sub?: string | null; testId: string }) {
   return (
     <div className="ds-card !py-4 flex flex-col gap-1" data-testid={testId}>
-      <span className="text-[13px] text-[#5B6478]">{label}</span>
-      <strong className="text-[22px] text-[#1A174A]" data-testid={`${testId}-value`}>{value}</strong>
-      {sub ? <span className="text-[13px] text-[#5B6478]">{sub}</span> : null}
+      <span className="text-[13px] text-muted">{label}</span>
+      <strong className="text-[22px] text-ink" data-testid={`${testId}-value`}>{value}</strong>
+      {sub ? <span className="text-[13px] text-muted">{sub}</span> : null}
     </div>
   );
 }
@@ -76,7 +76,7 @@ export function ReportsClient({ data, period, customFrom, customTo, badCustom, c
         </DsSelect>
         <DsButton type="submit" variant="secondary" icon="refresh" testId="reports-apply">Show</DsButton>
       </form>
-      <p className="m-0 -mt-2 text-[13px] text-[#5B6478]" data-testid="reports-range">{fmtDate(data.from)} to {fmtDate(new Date(new Date(data.to).getTime() - 1).toISOString())} · amounts in US$ at each order&rsquo;s locked exchange rate</p>
+      <p className="m-0 -mt-2 text-[13px] text-muted" data-testid="reports-range">{fmtDate(data.from)} to {fmtDate(new Date(new Date(data.to).getTime() - 1).toISOString())} · amounts in US$ at each order&rsquo;s locked exchange rate</p>
 
       {c.orders === 0 ? (
         <DsEmptyState icon="chart" testId="reports-empty" title="No orders in this period"
@@ -104,8 +104,8 @@ export function ReportsClient({ data, period, customFrom, customTo, badCustom, c
                   const v = Number(w.profit_cents);
                   return (
                     <div key={w.week_start} className="flex-1 flex flex-col items-center justify-end h-full gap-1">
-                      <div className={`w-full rounded-t ${v < 0 ? 'bg-[#C2410C]' : 'bg-[#0E8A7E]'}`} style={{ height: `${Math.max(2, Math.round((Math.abs(v) / maxWeek) * 130))}px` }} title={`${weekLabel(i)} (from ${fmtDate(w.week_start)}): ${usd(v)}`} />
-                      <span className="text-[11px] text-[#5B6478]" aria-hidden="true">{weekLabel(i)}</span>
+                      <div className={`w-full rounded-t ${v < 0 ? 'bg-needs' : 'bg-ok'}`} style={{ height: `${Math.max(2, Math.round((Math.abs(v) / maxWeek) * 130))}px` }} title={`${weekLabel(i)} (from ${fmtDate(w.week_start)}): ${usd(v)}`} />
+                      <span className="text-[11px] text-muted" aria-hidden="true">{weekLabel(i)}</span>
                     </div>
                   );
                 })}
@@ -114,18 +114,18 @@ export function ReportsClient({ data, period, customFrom, customTo, badCustom, c
             <DsCard title="Where the costs go" icon="dollar" testId="reports-costs">
               <dl className="m-0 flex flex-col gap-2 text-[14px]">
                 {costs.map(([k, v]) => (
-                  <div key={k} className="flex justify-between gap-3"><dt className="text-[#3A4256]">{k}</dt><dd className="m-0 font-medium text-[#1A174A]" data-testid={`cost-${k.toLowerCase().replace(/\s+/g, '-')}`}>{usd(Number(v))}</dd></div>
+                  <div key={k} className="flex justify-between gap-3"><dt className="text-black">{k}</dt><dd className="m-0 font-medium text-ink" data-testid={`cost-${k.toLowerCase().replace(/\s+/g, '-')}`}>{usd(Number(v))}</dd></div>
                 ))}
-                <div className="flex justify-between gap-3 border-t border-[#EEF0F4] pt-2"><dt className="font-semibold text-[#1A174A]">Total Octopus costs</dt><dd className="m-0 font-semibold text-[#1A174A]" data-testid="cost-total">{usd(c.costs_cents)}</dd></div>
+                <div className="flex justify-between gap-3 border-t border-divider pt-2"><dt className="font-semibold text-ink">Total Octopus costs</dt><dd className="m-0 font-semibold text-ink" data-testid="cost-total">{usd(c.costs_cents)}</dd></div>
               </dl>
             </DsCard>
           </div>
 
           <section aria-labelledby="top-h" className="ds-card !p-0 overflow-hidden" data-testid="reports-top">
-            <h2 id="top-h" className="m-0 px-5 pt-4 pb-3 text-[17px] font-semibold text-[#1A174A]">Top products</h2>
+            <h2 id="top-h" className="m-0 px-5 pt-4 pb-3 text-[17px] font-semibold text-ink">Top products</h2>
             <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Top products">
               <table className="w-full min-w-[720px] text-[14px] border-collapse">
-                <thead className="bg-[#F7F9FC] text-left text-[#5B6478]">
+                <thead className="bg-pearl text-left text-muted">
                   <tr>
                     <th scope="col" className="px-5 py-2.5 font-medium">Product</th><th scope="col" className="px-3 py-2.5 font-medium text-right">Units</th>
                     <th scope="col" className="px-3 py-2.5 font-medium text-right">Sales</th><th scope="col" className="px-3 py-2.5 font-medium text-right">Costs</th>
@@ -135,8 +135,8 @@ export function ReportsClient({ data, period, customFrom, customTo, badCustom, c
                 </thead>
                 <tbody>
                   {data.top_products.map((t) => (
-                    <tr key={t.product_id} className="border-t border-[#EEF0F4] hover:bg-[#FAFBFD]">
-                      <td className="px-5 py-2.5 text-[#1A174A]">{t.title} · <span className="text-[#5B6478]">{t.model_no}</span></td>
+                    <tr key={t.product_id} className="border-t border-divider hover:bg-pearl">
+                      <td className="px-5 py-2.5 text-ink">{t.title} · <span className="text-muted">{t.model_no}</span></td>
                       <td className="px-3 py-2.5 text-right">{t.units ?? 0}</td>
                       <td className="px-3 py-2.5 text-right">{usdWhole(t.sales_cents)}</td>
                       <td className="px-3 py-2.5 text-right">{usdWhole(t.costs_cents)}</td>

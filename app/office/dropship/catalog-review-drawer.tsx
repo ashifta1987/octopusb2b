@@ -130,7 +130,7 @@ export function CatalogReviewDrawer({
         data-testid="staff-review-card"
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="m-0 text-[18px] font-bold text-[#1A174A] flex items-center gap-2 flex-wrap">
+          <h2 className="m-0 text-[18px] font-bold text-ink flex items-center gap-2 flex-wrap">
             <span>{selected.title}</span>
             <span
               className={`ds-badge ${
@@ -146,7 +146,7 @@ export function CatalogReviewDrawer({
           </h2>
           <Link
             href={`/office/dropship/${selected.id}`}
-            className="text-[13px] font-semibold text-[#2A6FD1] hover:underline"
+            className="text-[13px] font-semibold text-coral-text hover:underline"
             data-testid="open-editor-link"
           >
             Open full editor →
@@ -156,7 +156,7 @@ export function CatalogReviewDrawer({
         {selected.needs_review && selected.needs_review_reason && (
           <div
             role="status"
-            className="rounded-[10px] border border-[#F3D9A4] bg-[#FFFBF2] px-3.5 py-2.5 text-[13px] text-[#7A4D00]"
+            className="rounded-[10px] border border-warn-line bg-warn-bg px-3.5 py-2.5 text-[13px] text-warn"
             data-testid="needs-review-banner"
           >
             <strong>Needs review:</strong> {selected.needs_review_reason}
@@ -168,8 +168,8 @@ export function CatalogReviewDrawer({
             role={feedback.ok ? 'status' : 'alert'}
             className={`rounded-[10px] px-3.5 py-2.5 text-[13px] font-medium border ${
               feedback.ok
-                ? 'bg-[#F1FAF8] border-[#B9E2DC] text-[#0B7A75]'
-                : 'bg-[#FEF4F4] border-[#F2C4C2] text-[#B42318]'
+                ? 'bg-ok-soft border-ok-line text-ok'
+                : 'bg-bad-bg border-bad/30 text-bad'
             }`}
             data-testid="quick-review-feedback"
           >
@@ -178,14 +178,14 @@ export function CatalogReviewDrawer({
         )}
 
         <div
-          className={`grid gap-3 rounded-[10px] bg-[#F4F6F9] p-3 ${
+          className={`grid gap-3 rounded-[10px] bg-pearl p-3 ${
             canSeeCosts ? 'sm:grid-cols-2' : 'grid-cols-1'
           }`}
         >
           <div>
             <span className="ds-label !mb-0.5">Dropship model no.</span>
             <strong className="mono text-[14px]">{selected.model_no}</strong>
-            <div className="text-[12px] text-[#5B6478]">
+            <div className="text-[12px] text-muted">
               Generated on creation. Can&apos;t be edited or reused.
             </div>
           </div>
@@ -195,7 +195,7 @@ export function CatalogReviewDrawer({
               <strong className="mono text-[14px]">
                 {selected.sourcing_sku || 'Own warehouse'}
               </strong>
-              <div className="text-[12px] text-[#5B6478]">
+              <div className="text-[12px] text-muted">
                 The link to Sourcing. Never shown to merchants or pushed to stores.
               </div>
             </div>
@@ -249,7 +249,7 @@ export function CatalogReviewDrawer({
             disabled={!canEdit || !hsCode.trim()}
             checked={hsVerified}
             onChange={(e) => setHsVerified(e.target.checked)}
-            className="w-4 h-4 accent-[#1A174A]"
+            className="w-4 h-4 accent-ink"
             data-testid="drawer-hs-verified-checkbox"
           />
           <span>I checked this HS code against the tariff for this product</span>
@@ -273,7 +273,7 @@ export function CatalogReviewDrawer({
                   disabled={!canEdit}
                   checked={checked as boolean}
                   onChange={(e) => (setter as (v: boolean) => void)(e.target.checked)}
-                  className="w-4 h-4 accent-[#1A174A]"
+                  className="w-4 h-4 accent-ink"
                 />
                 <span>{label as string}</span>
               </label>
@@ -302,7 +302,7 @@ export function CatalogReviewDrawer({
           </select>
         </div>
 
-        <div className="rounded-[10px] bg-[#F4F6F9] p-3.5" data-testid="drawer-publish-checklist">
+        <div className="rounded-[10px] bg-pearl p-3.5" data-testid="drawer-publish-checklist">
           <strong className="text-[14px]">Ready to publish?</strong>
           <ul className="list-none m-0 mt-2 p-0 text-[14px] space-y-1.5">
             {checklist.checks.map((c) => (
@@ -337,7 +337,7 @@ export function CatalogReviewDrawer({
                 Publish
               </button>
               {!checklist.ready && checklist.blockers.length > 0 && (
-                <p className="w-full m-0 text-[12px] text-[#5B6478]" data-testid="drawer-publish-reason">
+                <p className="w-full m-0 text-[12px] text-muted" data-testid="drawer-publish-reason">
                   Missing: {checklist.blockers.join(' · ')}
                 </p>
               )}
@@ -351,19 +351,19 @@ export function CatalogReviewDrawer({
         className="card p-0 flex-[2_1_520px] min-w-0 overflow-hidden"
         data-testid="staff-routes-split-card"
       >
-        <div className="px-5 py-4 border-b border-[#E3E7EF]">
-          <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-[#1A174A]">
-            <DsIcon name="truck" size={18} className="text-[#2A6FD1]" />
+        <div className="px-5 py-4 border-b border-line">
+          <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-ink">
+            <DsIcon name="truck" size={18} className="text-coral-text" />
             <span>Routes and price split</span>
           </h2>
-          <p className="m-0 mt-1 text-[13px] text-[#5B6478]">
+          <p className="m-0 mt-1 text-[13px] text-muted">
             Merchants see product, processing, shipping, duties and landed cost.
             {canSeeCosts ? ' Cost and margin stay here.' : ''}
           </p>
         </div>
 
         {selected.routesSplit.length === 0 ? (
-          <p className="p-5 text-[14px] text-[#5B6478] m-0">
+          <p className="p-5 text-[14px] text-muted m-0">
             No routes configured on this product yet.
           </p>
         ) : (
@@ -409,7 +409,7 @@ export function CatalogReviewDrawer({
                     </td>
                     <td className="tabular-nums">
                       {rt.duties_status === 'dap' ? (
-                        <span className="text-[12.5px] text-[#5B6478]">Duties paid by buyer</span>
+                        <span className="text-[12.5px] text-muted">Duties paid by buyer</span>
                       ) : rt.duties_cents != null ? (
                         usd(rt.duties_cents)
                       ) : (
@@ -462,7 +462,7 @@ export function CatalogReviewDrawer({
         )}
 
         {canSeeCosts && (
-          <p className="m-0 px-5 py-3 text-[12px] text-[#5B6478] border-t border-[#E3E7EF]">
+          <p className="m-0 px-5 py-3 text-[12px] text-muted border-t border-line">
             Our cost includes the Sourcing purchase cost, internal pick-and-pack charge from 3PL, and
             carrier cost from the Shipping rate card. Duty and tax values come from the versioned rate
             table; unknown DDP values stay empty until staff fill them in.

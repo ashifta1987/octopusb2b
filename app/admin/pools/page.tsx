@@ -115,7 +115,7 @@ export default async function AdminPoolsPage({ searchParams }: { searchParams: S
       <nav aria-label="Filter pools" className="flex flex-wrap gap-2 mb-4">
         {['open', 'locked', 'confirmed', 'shipped', 'completed', 'expired', 'cancelled', 'all'].map((k) => (
           <Link key={k} href={href({ status: k === 'open' ? null : k, closing: null, pool: null })} aria-current={status === k && !closing ? 'page' : undefined}
-            className={`px-3.5 py-1.5 rounded-full border text-sm font-semibold ${status === k && !closing ? 'bg-ink text-white border-ink' : 'bg-white border-line-strong'}`}>
+            className={`px-3.5 py-1.5 rounded-full border text-sm font-semibold ${status === k && !closing ? 'bg-coral text-white border-coral' : 'bg-white border-line-strong'}`}>
             {k === 'locked' ? 'Waiting for balances' : humanize(k)}{k !== 'all' && ` · ${statusCount[k] ?? 0}`}
           </Link>
         ))}

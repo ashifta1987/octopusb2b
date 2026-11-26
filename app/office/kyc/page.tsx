@@ -22,7 +22,7 @@ export default async function KycList({ searchParams }: { searchParams: Promise<
   return (
     <>
       <PageHeader title="KYC review" subtitle="Customer company verification. Open each submission to view documents (links expire after 60 seconds; every view is logged)." />
-      <nav className="flex gap-2 mb-4" aria-label="Filter">
+      <nav className="flex flex-wrap gap-2 mb-4" aria-label="Filter">
         <Tabs f={f} />
       </nav>
       <Card>
@@ -48,7 +48,7 @@ export default async function KycList({ searchParams }: { searchParams: Promise<
 }
 
 function Tabs({ f }: { f: string }) {
-  return <>{TABS.map(([k, l]) => <Link key={k} href={`/office/kyc?f=${k}`} aria-current={f === k ? 'page' : undefined} className={`btn btn-sm ${f === k ? 'btn-dark' : 'btn-ghost'}`}>{l}</Link>)}</>;
+  return <>{TABS.map(([k, l]) => <Link key={k} href={`/office/kyc?f=${k}`} aria-current={f === k ? 'page' : undefined} className={`btn btn-sm ${f === k ? 'btn-primary' : 'btn-ghost'}`}>{l}</Link>)}</>;
 }
 
 /** ADDON-36 C5 — applications from the public /suppliers page. */

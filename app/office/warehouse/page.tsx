@@ -34,9 +34,9 @@ async function Content() {
       <section aria-label="Today" className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {tiles.map(([label, n, sub]) => (
           <div key={label} className="ds-card" data-testid={`wh-tile-${label.toLowerCase().replace(/ /g, '-')}`}>
-            <div className="text-[13px] text-[#5B6478]">{label}</div>
+            <div className="text-[13px] text-muted">{label}</div>
             <div className="text-[28px] font-bold leading-tight">{n.toLocaleString('en-US')}</div>
-            <div className="text-[12.5px] text-[#5B6478]">{sub}</div>
+            <div className="text-[12.5px] text-muted">{sub}</div>
           </div>
         ))}
       </section>
@@ -49,13 +49,13 @@ async function Content() {
             ['YunExpress', 'Labels and tracking', 'info', `${yunMode} · accounts per warehouse in Carriers and rules`],
             ['4PX', 'Labels and tracking', 'info', 'Accounts per warehouse in Carriers and rules'],
           ].map(([name, what, tone, state]) => (
-            <li key={name} className="rounded-[10px] border border-[#E3E7EF] p-3 flex items-start justify-between gap-3">
-              <div><div className="font-semibold text-[14px]">{name}</div><div className="text-[12.5px] text-[#5B6478]">{what}</div></div>
+            <li key={name} className="rounded-[10px] border border-line p-3 flex flex-wrap items-start justify-between gap-x-3 gap-y-2 min-w-0 [&_.ds-badge]:whitespace-normal [&_.ds-badge]:max-w-full">
+              <div className="min-w-0 flex-[1_1_140px]"><div className="font-semibold text-[14px]">{name}</div><div className="text-[12.5px] text-muted">{what}</div></div>
               <DsBadge tone={tone as 'ok' | 'warn' | 'info' | 'neutral'}>{state}</DsBadge>
             </li>
           ))}
         </ul>
-        <p className="mt-3 mb-0 text-[12.5px] text-[#5B6478]">Last event processed: {d.outbox.last_processed_at ? fmtDate(d.outbox.last_processed_at, true) : 'none yet'}</p>
+        <p className="mt-3 mb-0 text-[12.5px] text-muted">Last event processed: {d.outbox.last_processed_at ? fmtDate(d.outbox.last_processed_at, true) : 'none yet'}</p>
       </DsCard>
     </div>
   );

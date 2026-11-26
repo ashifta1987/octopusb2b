@@ -28,7 +28,7 @@ export function DispatchClient({ board, labelUrls, warehouseNames, cities }: {
     <div className="flex flex-col gap-5">
       <style>{PRINT_CSS}</style>
       {board.staging && (
-        <p role="note" className="print:hidden m-0 rounded-[10px] border border-[#F3D9A4] bg-[#FFFBF2] px-4 py-3 text-[13.5px]" data-testid="wh-dispatch-sandbox-note">
+        <p role="note" className="print:hidden m-0 rounded-[10px] border border-warn-line bg-warn-bg px-4 py-3 text-[13.5px]" data-testid="wh-dispatch-sandbox-note">
           Staging: sandbox accounts make test labels whose tracking numbers start with <span className="font-mono">SBX</span>. They are never sent to a carrier.
         </p>
       )}
@@ -49,7 +49,7 @@ function LabelQueue({ board, labelUrls }: { board: DispatchBoard; labelUrls: Rec
     <DsCard title={`Label parcels · ${board.orders.length}`} icon="file" testId="wh-label-queue"
       subtitle="Packed orders. The carrier rules choose the service for each parcel; print the label, stick it on, then scan it at Label check.">
       <MsgLine msg={msg} testId="wh-label-msg" />
-      {board.orders.length === 0 ? <p className="m-0 text-[13.5px] text-[#5B6478]">Nothing packed is waiting for a label.</p> : (
+      {board.orders.length === 0 ? <p className="m-0 text-[13.5px] text-muted">Nothing packed is waiting for a label.</p> : (
         <ul className="list-none m-0 p-0 flex flex-col gap-3">
           {board.orders.map((o) => <OrderRow key={o.id} o={o} labelUrls={labelUrls} canLabel={board.can_dispatch.includes(o.warehouse_code)}
             canVoid={board.can_void.includes(o.warehouse_code)} pending={pending} run={run} />)}
@@ -63,10 +63,10 @@ function OrderRow({ o, labelUrls, canLabel, canVoid, pending, run }: {
   o: DispatchOrder; labelUrls: Record<string, string>; canLabel: boolean; canVoid: boolean; pending: boolean; run: ReturnType<typeof useRun>['run'];
 }) {
   return (
-    <li className="rounded-[10px] border border-[#E3E7EF] p-4 flex flex-col gap-2" data-testid={`wh-dispatch-order-${o.code}`}>
+    <li className="rounded-[10px] border border-line p-4 flex flex-col gap-2" data-testid={`wh-dispatch-order-${o.code}`}>
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-mono font-semibold">{o.code}</span>
-        <span className="text-[13px] text-[#5B6478]">{o.owner} · to {o.ship_country} · {o.parcels.length} parcel{o.parcels.length === 1 ? '' : 's'}</span>
+        <span className="text-[13px] text-muted">{o.owner} · to {o.ship_country} · {o.parcels.length} parcel{o.parcels.length === 1 ? '' : 's'}</span>
         {o.dg_kinds.map((k) => <DsBadge key={k} tone="warn">{DG_LABEL[k] ?? k}</DsBadge>)}
         <DsBadge tone={o.status === 'labelled' ? 'ok' : 'info'}>{o.status === 'labelled' ? 'All parcels labelled' : 'Packed'}</DsBadge>
       </div>
@@ -85,9 +85,9 @@ function ParcelRow({ o, p, url, canLabel, canVoid, pending, run }: {
   const l = p.label;
   const id = `${o.code}-${p.seq}`;
   return (
-    <li className="flex flex-wrap items-center gap-3 border-t border-[#EEF0F4] pt-2" data-testid={`wh-parcel-row-${id}`}>
+    <li className="flex flex-wrap items-center gap-3 border-t border-divider pt-2" data-testid={`wh-parcel-row-${id}`}>
       <span className="text-[13.5px] font-semibold">Parcel {p.seq}</span>
-      <span className="text-[13px] text-[#5B6478]">{grams(p.weight_g)}{p.box ? ` · box ${p.box}` : ''}</span>
+      <span className="text-[13px] text-muted">{grams(p.weight_g)}{p.box ? ` · box ${p.box}` : ''}</span>
       {p.pallet ? <DsBadge tone="info">{`On freight pallet ${p.pallet}`}</DsBadge> : l ? (
         <>
           <span className="font-mono text-[13.5px]" data-testid={`wh-label-info-${id}`}>{l.tracking_no}</span>
@@ -108,13 +108,13 @@ function ParcelRow({ o, p, url, canLabel, canVoid, pending, run }: {
               <DsButton variant="link" onClick={() => setVoiding(false)}>Keep it</DsButton>
             </span>
           )}
-          {l.rule_reason && <span className="basis-full text-[12.5px] text-[#5B6478]">Why this service: {l.rule_reason}</span>}
+          {l.rule_reason && <span className="basis-full text-[12.5px] text-muted">Why this service: {l.rule_reason}</span>}
         </>
       ) : canLabel ? (
         <DsButton icon="file" disabled={pending} testId={`wh-label-make-${id}`} onClick={() => run(() => createLabelAction(p.id))}>
           Make label<span className="sr-only"> for {o.code} parcel {p.seq}</span>
         </DsButton>
-      ) : <span className="text-[13px] text-[#5B6478]">No label yet</span>}
+      ) : <span className="text-[13px] text-muted">No label yet</span>}
     </li>
   );
 }
@@ -127,7 +127,7 @@ function LabelCheck({ board }: { board: DispatchBoard }) {
   return (
     <DsCard title="Label check" icon="check" testId="wh-label-check"
       subtitle="Scan the order number, then the label on the parcel. A label that belongs to another order is refused and logged on the Exceptions queue.">
-      {!can ? <p className="m-0 text-[13.5px] text-[#5B6478]">Packers, supervisors and admins of this warehouse check labels.</p> : (
+      {!can ? <p className="m-0 text-[13.5px] text-muted">Packers, supervisors and admins of this warehouse check labels.</p> : (
         <form className="flex flex-wrap gap-3 items-end" onSubmit={(e) => {
           e.preventDefault();
           if (!order.trim() || !scan.trim()) { setMsg({ ok: false, text: 'Scan the order number and the label.' }); return; }

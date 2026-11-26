@@ -24,13 +24,13 @@ function QualityBar({ label, stat, target, testId }: { label: string; stat: Time
         <span>{share == null ? '—' : `${share}% within ${target}`}</span>
       </div>
       {share == null ? (
-        <p className="m-0 text-[13px] text-[#5B6478]">{stat.measured === 0 && stat.n > 0 ? 'No target set for these warehouses — set one below to see this bar.' : 'Nothing measured in this period.'}</p>
+        <p className="m-0 text-[13px] text-muted">{stat.measured === 0 && stat.n > 0 ? 'No target set for these warehouses — set one below to see this bar.' : 'Nothing measured in this period.'}</p>
       ) : (
-        <div role="img" aria-label={`${label}: ${share}% within target`} className="h-3 rounded-full bg-[#E3E7EF] overflow-hidden">
-          <div className={`h-full ${share >= 90 ? 'bg-[#0B7A75]' : share >= 70 ? 'bg-[#B76E00]' : 'bg-[#B42318]'}`} style={{ width: `${share}%` }} />
+        <div role="img" aria-label={`${label}: ${share}% within target`} className="h-3 rounded-full bg-line overflow-hidden">
+          <div className={`h-full ${share >= 90 ? 'bg-ok' : share >= 70 ? 'bg-warn' : 'bg-bad'}`} style={{ width: `${share}%` }} />
         </div>
       )}
-      <p className="m-0 text-[12.5px] text-[#5B6478]">{stat.n} measured · average {fmtHours(stat.avg_h)} · median {fmtHours(stat.median_h)}</p>
+      <p className="m-0 text-[12.5px] text-muted">{stat.n} measured · average {fmtHours(stat.avg_h)} · median {fmtHours(stat.median_h)}</p>
     </div>
   );
 }
@@ -69,11 +69,11 @@ async function Content({ searchParams }: { searchParams: Promise<{ from?: string
         subtitle={`${access.current ? access.current.name : 'All warehouses'} · orders shipped, handoff and dock-to-shelf times, exceptions — real records only.`} />
       <DsCard title="Period and client" icon="clock">
         <form method="get" className="flex flex-wrap items-end gap-3" data-testid="wh-rep-filter">
-          <label className="flex flex-col text-[12px] text-[#5B6478]" htmlFor="wh-rep-from"><span>From</span>
+          <label className="flex flex-col text-[12px] text-muted" htmlFor="wh-rep-from"><span>From</span>
             <input id="wh-rep-from" type="date" name="from" defaultValue={from} className="ds-input min-h-[44px]" /></label>
-          <label className="flex flex-col text-[12px] text-[#5B6478]" htmlFor="wh-rep-to"><span>To</span>
+          <label className="flex flex-col text-[12px] text-muted" htmlFor="wh-rep-to"><span>To</span>
             <input id="wh-rep-to" type="date" name="to" defaultValue={to} className="ds-input min-h-[44px]" /></label>
-          <label className="flex flex-col text-[12px] text-[#5B6478]" htmlFor="wh-rep-client"><span>Client</span>
+          <label className="flex flex-col text-[12px] text-muted" htmlFor="wh-rep-client"><span>Client</span>
             <select id="wh-rep-client" name="org" defaultValue={org ?? ''} className="ds-input min-h-[44px]">
               <option value="">All clients</option>
               {(r?.clients ?? []).map((c) => <option key={c.org_id} value={c.org_id}>{c.name}</option>)}
@@ -83,7 +83,7 @@ async function Content({ searchParams }: { searchParams: Promise<{ from?: string
             {PRESETS.map(([k, l]) => <Link key={k} href={`/office/warehouse/reports?preset=${k}${org ? `&org=${org}` : ''}`} className="ds-btn ds-btn-secondary">{l}</Link>)}
           </span>
         </form>
-        <p className="mt-2 mb-0 text-[12.5px] text-[#5B6478]">Dates are China time (the warehouse day). Up to one year.</p>
+        <p className="mt-2 mb-0 text-[12.5px] text-muted">Dates are China time (the warehouse day). Up to one year.</p>
       </DsCard>
       {badPeriod || !r ? (
         <p role="alert" className="m-0 ds-card text-[14px]" data-testid="wh-rep-bad-period">Choose a period of up to one year where “To” is not before “From”.</p>
@@ -97,9 +97,9 @@ async function Content({ searchParams }: { searchParams: Promise<{ from?: string
               ['Exceptions', r.totals.exceptions.total.toLocaleString('en-US'), kinds.length ? kinds.map((k) => `${EXCEPTION_KIND_LABEL[k]} ${r.totals.exceptions.by_kind[k]}`).join(' · ') : 'None raised', 'exceptions'],
             ].map(([label, value, sub, id]) => (
               <div key={id} className="ds-card" data-testid={`wh-rep-tile-${id}`}>
-                <div className="text-[13px] text-[#5B6478]">{label}</div>
+                <div className="text-[13px] text-muted">{label}</div>
                 <div className="text-[28px] font-bold leading-tight">{value}</div>
-                <div className="text-[12.5px] text-[#5B6478]">{sub}</div>
+                <div className="text-[12.5px] text-muted">{sub}</div>
               </div>
             ))}
           </section>
@@ -113,7 +113,7 @@ async function Content({ searchParams }: { searchParams: Promise<{ from?: string
             actions={<a href={csv} className="ds-btn ds-btn-secondary" download data-testid="wh-rep-csv">Download CSV</a>}
             headers={['Client', 'Warehouse', 'Orders shipped', 'Order to handoff (median)', 'Within target', 'Dock to shelf (median)', 'Within target', 'Exceptions']}>
             {r.rows.length === 0 ? (
-              <tr><td colSpan={8} className="text-center text-[#5B6478]" data-testid="wh-rep-empty">Nothing shipped, received or raised in this period.</td></tr>
+              <tr><td colSpan={8} className="text-center text-muted" data-testid="wh-rep-empty">Nothing shipped, received or raised in this period.</td></tr>
             ) : r.rows.map((x) => {
               const hs = withinShare(x.handoff), ds = withinShare(x.dock_to_shelf);
               return (
@@ -130,7 +130,7 @@ async function Content({ searchParams }: { searchParams: Promise<{ from?: string
               );
             })}
           </DsTableCard>
-          <p className="m-0 text-[12.5px] text-[#5B6478]">
+          <p className="m-0 text-[12.5px] text-muted">
             Order to handoff: from when the order reached the warehouse to its first hand-over to the carrier (or shipped time). Dock to shelf: from the
             delivery’s check-in at the dock to the last putaway, once every lot of the notice is released and placed. “Octopus stock” is Octopus’s own stock (Dropship).
           </p>

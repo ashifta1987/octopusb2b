@@ -35,7 +35,7 @@ function ProductRow({ p }: { p: SupProduct }) {
   });
   return (
     <tr data-testid="supplier-product-row">
-      <td><div className="font-semibold">{p.title}</div><div className="text-[12px] text-[#5B6478]">Model {p.model ?? '—'}</div></td>
+      <td><div className="font-semibold">{p.title}</div><div className="text-[12px] text-muted">Model {p.model ?? '—'}</div></td>
       <td>{p.variants}</td>
       <td>
         {price ? (
@@ -43,7 +43,7 @@ function ProductRow({ p }: { p: SupProduct }) {
             <span aria-hidden>{price.currency === 'USD' ? '$' : price.currency}</span>
             <input className="ds-input w-24" inputMode="decimal" aria-label={`Your cost for ${p.title}`} value={cost} onChange={(e) => setCost(e.target.value)} />
           </span>
-        ) : <span className="text-[#5B6478]">No cost set</span>}
+        ) : <span className="text-muted">No cost set</span>}
       </td>
       <td>
         <label className="flex items-center gap-1"><span className="sr-only">Stock for {p.title}</span>
@@ -55,11 +55,11 @@ function ProductRow({ p }: { p: SupProduct }) {
           <DsBadge tone={out ? 'bad' : st.tone}>{out ? 'Out of stock' : st.label}</DsBadge>
           {p.in_dropship && <DsBadge tone="ok">Selling</DsBadge>}
         </div>
-        {p.rejection_reason && <div className="text-[12px] text-[#8A5300] mt-1">{p.rejection_reason}</div>}
+        {p.rejection_reason && <div className="text-[12px] text-warn mt-1">{p.rejection_reason}</div>}
       </td>
       <td>
         <DsButton variant="secondary" loading={pending} onClick={save} aria-label={`Save changes for ${p.title}`}>Save</DsButton>
-        {msg && <div role={msg.ok ? 'status' : 'alert'} className={`text-[12px] mt-1 ${msg.ok ? 'text-[#0B6A65]' : 'text-[#B42318]'}`}>{msg.text}</div>}
+        {msg && <div role={msg.ok ? 'status' : 'alert'} className={`text-[12px] mt-1 ${msg.ok ? 'text-ok' : 'text-bad'}`}>{msg.text}</div>}
       </td>
     </tr>
   );
@@ -80,9 +80,9 @@ export function ProductsClient({ home, data }: { home: SupHome; data: SupProduct
       />
       <div className="grid sm:grid-cols-4 gap-3" data-testid="supplier-week">
         {[['Orders to ship', home.to_ship], ['Out of stock', home.out_of_stock], ['Waiting for review', home.in_review]].map(([l, v]) => (
-          <DsCard key={String(l)}><div className="text-[13px] text-[#5B6478]">{l}</div><div className="text-[26px] font-bold">{v}</div></DsCard>
+          <DsCard key={String(l)}><div className="text-[13px] text-muted">{l}</div><div className="text-[26px] font-bold">{v}</div></DsCard>
         ))}
-        <DsCard><div className="text-[13px] text-[#5B6478]">Open orders</div><Link className="text-[#2A6FD1] font-semibold min-h-[44px] inline-flex items-center" href="/supplier/orders">Open orders</Link></DsCard>
+        <DsCard><div className="text-[13px] text-muted">Open orders</div><Link className="text-coral-text font-semibold min-h-[44px] inline-flex items-center" href="/supplier/orders">Open orders</Link></DsCard>
       </div>
       {home.attention.length > 0 && (
         <DsNotice tone="warn" title="Needs your attention" testId="supplier-attention">
@@ -112,13 +112,13 @@ export function ProductsClient({ home, data }: { home: SupHome; data: SupProduct
               <tr key={s.id}>
                 <td className="font-semibold">{s.summary}</td><td>{SUBMISSION_KIND[s.kind] ?? s.kind}</td>
                 <td><DsBadge tone={st.tone}>{st.label}</DsBadge></td><td>{s.review_note ?? '—'}</td>
-                <td>{s.editable && s.kind === 'new_product' ? <Link className="text-[#2A6FD1] font-semibold min-h-[44px] inline-flex items-center" href={`/supplier/products/new?edit=${s.id}`}>Edit</Link> : null}</td>
+                <td>{s.editable && s.kind === 'new_product' ? <Link className="text-coral-text font-semibold min-h-[44px] inline-flex items-center" href={`/supplier/products/new?edit=${s.id}`}>Edit</Link> : null}</td>
               </tr>
             );
           })}
         </DsTableCard>
       )}
-      <p className="text-[12px] text-[#5B6478] m-0">Merchants never see your name and you never see theirs.</p>
+      <p className="text-[12px] text-muted m-0">Merchants never see your name and you never see theirs.</p>
     </SupplierFrame>
   );
 }

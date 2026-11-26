@@ -42,7 +42,7 @@ export function UsersClient({ rows, capabilities, warehouses, manageable, me, is
                   const can = manageable.includes(r.warehouse_code) && r.user_id !== me && (r.role !== 'admin' || isCompanyAdmin);
                   return (
                     <tr key={key} data-testid={`wh-staff-${r.email}`}>
-                      <td><div className="font-semibold">{r.full_name ?? '—'}</div><div className="text-[12px] text-[#5B6478]">{r.email}</div></td>
+                      <td><div className="font-semibold">{r.full_name ?? '—'}</div><div className="text-[12px] text-muted">{r.email}</div></td>
                       <td>{r.warehouse_name}</td>
                       <td>
                         {can && !r.suspended_at ? (
@@ -53,7 +53,7 @@ export function UsersClient({ rows, capabilities, warehouses, manageable, me, is
                         ) : LABEL[r.role] ?? r.role}
                       </td>
                       <td>{r.suspended_at
-                        ? <><DsBadge tone="bad">Suspended</DsBadge><div className="text-[12px] text-[#5B6478]">{fmtDate(r.suspended_at)} · {r.suspend_reason}</div></>
+                        ? <><DsBadge tone="bad">Suspended</DsBadge><div className="text-[12px] text-muted">{fmtDate(r.suspended_at)} · {r.suspend_reason}</div></>
                         : <DsBadge tone="ok">Active</DsBadge>}</td>
                       <td>
                         {can && (r.suspended_at ? (
@@ -93,9 +93,9 @@ export function UsersClient({ rows, capabilities, warehouses, manageable, me, is
           </form>
         </DsCard>
       ) : (
-        <p className="m-0 text-[13px] text-[#5B6478]">Only warehouse admins can add or change people.</p>
+        <p className="m-0 text-[13px] text-muted">Only warehouse admins can add or change people.</p>
       )}
-      {msg && <p role={msg.ok ? 'status' : 'alert'} data-testid="wh-users-msg" className={`m-0 text-[13px] ${msg.ok ? 'text-[#1B7F4B]' : 'text-[#B42318]'}`}>{msg.text}</p>}
+      {msg && <p role={msg.ok ? 'status' : 'alert'} data-testid="wh-users-msg" className={`m-0 text-[13px] ${msg.ok ? 'text-ok' : 'text-bad'}`}>{msg.text}</p>}
 
       <DsCard title="What each role can do" icon="shield" noPadding testId="wh-roles-table">
         <div className="ds-scroll">
@@ -107,14 +107,14 @@ export function UsersClient({ rows, capabilities, warehouses, manageable, me, is
                   <td>{a.label}</td>
                   {ROLES.map((r) => {
                     const yes = capabilities.some((c) => c.role === r && c.action === a.action);
-                    return <td key={r}>{yes ? <span className="text-[#1B7F4B] font-semibold">Yes<span className="sr-only">, {LABEL[r]} can {a.label.toLowerCase()}</span></span> : <span className="text-[#5B6478]">No</span>}</td>;
+                    return <td key={r}>{yes ? <span className="text-ok font-semibold">Yes<span className="sr-only">, {LABEL[r]} can {a.label.toLowerCase()}</span></span> : <span className="text-muted">No</span>}</td>;
                   })}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <p className="m-0 px-5 py-3 text-[12.5px] text-[#5B6478]">Rate and carrier-rule changes always need a second person to approve.</p>
+        <p className="m-0 px-5 py-3 text-[12.5px] text-muted">Rate and carrier-rule changes always need a second person to approve.</p>
       </DsCard>
     </div>
   );

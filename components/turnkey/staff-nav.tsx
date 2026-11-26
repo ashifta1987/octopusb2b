@@ -23,7 +23,7 @@ export function TurnkeyStaffNav({ current, isAdmin }: { current: string; isAdmin
     <nav aria-label="Turnkey sections" className="flex gap-2 flex-wrap" data-testid="tk-staff-nav">
       {items.map((i) => (
         <Link key={i.key} href={i.href} aria-current={current === i.key ? 'page' : undefined} data-testid={i.testid}
-          className={`min-h-11 px-4 inline-flex items-center rounded-[10px] border ${current === i.key ? 'bg-ink text-white border-ink' : 'bg-white border-line text-ink hover:border-ink'}`}>
+          className="chip min-h-11">
           {i.label}
         </Link>
       ))}

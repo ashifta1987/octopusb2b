@@ -39,7 +39,7 @@ function BenchSettings({ b, station }: { b: Bench; station: ScaleStation }) {
   const [f, setF] = useState({ name: b.name, maxG: b.max_g ? String(b.max_g) : '', tol: String(b.check_tolerance_g), every: b.check_every_hours ? String(b.check_every_hours) : '' });
   return (
     <details className="mt-3">
-      <summary className="cursor-pointer text-[13.5px] font-semibold text-[#2559B8] min-h-[44px] flex items-center">Bench settings</summary>
+      <summary className="cursor-pointer text-[13.5px] font-semibold text-coral-text min-h-[44px] flex items-center">Bench settings</summary>
       <form className="mt-2 grid grid-cols-1 sm:grid-cols-5 gap-3 items-end" data-testid={`wh-bench-edit-${b.code}`}
         onSubmit={(e) => { e.preventDefault(); run(() => saveBenchAction({ warehouse: station.warehouse_code, id: b.id, code: b.code, name: f.name, maxG: f.maxG, toleranceG: f.tol, everyHours: f.every, active: b.active })); }}>
         <DsInput label="Name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} maxLength={80} />
@@ -52,7 +52,7 @@ function BenchSettings({ b, station }: { b: Bench; station: ScaleStation }) {
         <DsButton variant="link" disabled={pending} onClick={() => run(() => saveBenchAction({ warehouse: station.warehouse_code, id: b.id, code: b.code, name: b.name, maxG: b.max_g ? String(b.max_g) : '', toleranceG: String(b.check_tolerance_g), everyHours: b.check_every_hours ? String(b.check_every_hours) : '', active: !b.active }))}>
           {b.active ? 'Stop using this bench' : 'Use this bench again'}
         </DsButton>
-        <span className="text-[12.5px] text-[#5B6478]">Changing the tolerance, capacity or interval locks the bench until it passes again.</span>
+        <span className="text-[12.5px] text-muted">Changing the tolerance, capacity or interval locks the bench until it passes again.</span>
       </div>
       <MsgLine msg={msg} testId={`wh-bench-edit-msg-${b.code}`} />
     </details>
@@ -62,13 +62,13 @@ function BenchSettings({ b, station }: { b: Bench; station: ScaleStation }) {
 function BenchCard({ b, station }: { b: Bench; station: ScaleStation }) {
   const [label, tone] = benchState(b);
   return (
-    <li className="rounded-[12px] border border-[#E3E7EF] bg-white p-4 flex flex-col gap-3" data-testid={`wh-bench-${b.code}`}>
+    <li className="rounded-[12px] border border-line bg-white p-4 flex flex-col gap-3" data-testid={`wh-bench-${b.code}`}>
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-mono font-semibold text-[15px]">{b.code}</span>
         <span className="text-[14px]">{b.name}</span>
         <span className="ml-auto"><DsBadge tone={tone} testId={`wh-bench-state-${b.code}`}>{label}</DsBadge></span>
       </div>
-      <p className="m-0 text-[13px] text-[#5B6478]">
+      <p className="m-0 text-[13px] text-muted">
         Tolerance ± {b.check_tolerance_g} g{b.max_g ? ` · up to ${grams(b.max_g)}` : ''}{b.check_every_hours ? ` · check every ${b.check_every_hours} h` : ''}
         {b.last_pass_at ? ` · last passed ${fmtWh(b.last_pass_at)}` : ' · never passed'}
       </p>
@@ -85,8 +85,8 @@ function BenchCard({ b, station }: { b: Bench; station: ScaleStation }) {
               {b.checks.map((c, i) => (
                 <tr key={i}>
                   <td>{fmtWh(c.at)}</td><td>{grams(c.reference_g)}</td>
-                  <td>{grams(c.reading_g)} <span className="text-[12px] text-[#5B6478]">({c.reading_g - c.reference_g > 0 ? '+' : ''}{c.reading_g - c.reference_g} g)</span></td>
-                  <td>{c.passed ? <DsBadge tone="ok">Passed</DsBadge> : <DsBadge tone="bad">Failed</DsBadge>}{c.note ? <div className="text-[12px] text-[#5B6478]">{c.note}</div> : null}</td>
+                  <td>{grams(c.reading_g)} <span className="text-[12px] text-muted">({c.reading_g - c.reference_g > 0 ? '+' : ''}{c.reading_g - c.reference_g} g)</span></td>
+                  <td>{c.passed ? <DsBadge tone="ok">Passed</DsBadge> : <DsBadge tone="bad">Failed</DsBadge>}{c.note ? <div className="text-[12px] text-muted">{c.note}</div> : null}</td>
                   <td>{c.by_name ?? '—'}</td>
                 </tr>
               ))}
@@ -127,12 +127,12 @@ export function ScaleClient({ station }: { station: ScaleStation }) {
           <DsInput label="Check every (h)" inputMode="numeric" value={f.every} onChange={(e) => setF({ ...f, every: digits(e.target.value) })} />
           <div className="col-span-2 sm:col-span-6 flex flex-wrap items-center gap-3">
             <DsButton type="submit" variant="secondary" icon="plus" disabled={add.pending || !f.code || !f.name.trim() || !f.tol} testId="wh-bench-submit">Add bench</DsButton>
-            <span className="text-[12.5px] text-[#5B6478]">A new bench is locked until it passes its first check.</span>
+            <span className="text-[12.5px] text-muted">A new bench is locked until it passes its first check.</span>
           </div>
           <div className="col-span-2 sm:col-span-6"><MsgLine msg={add.msg} testId="wh-bench-msg" /></div>
         </form>
       ) : (
-        <p className="mt-3 mb-0 text-[13px] text-[#5B6478]">Supervisors and admins add benches and change their check settings.</p>
+        <p className="mt-3 mb-0 text-[13px] text-muted">Supervisors and admins add benches and change their check settings.</p>
       )}
     </DsCard>
   );

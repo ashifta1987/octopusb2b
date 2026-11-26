@@ -24,18 +24,19 @@ export function SideNav({ sections, moderation = null, badges = {}, mobileHidden
   const all = sections.flatMap((s) => s.items.map((i) => i.href));
   // active = longest matching href
   const active = all.filter((h) => !h.includes('?') && (path === h || path.startsWith(h + '/'))).sort((a, b) => b.length - a.length)[0];
+  // Design handoff 26 Nov 2026 (App shell §3): sits inside the shell's 264 px sidebar (the shell owns width, background
+  // and border); Jost group labels, 44 px items, current = tint + 3 px blue left border. Phones: one scrolling strip.
   return (
-    <nav aria-label="Portal" className={`${mobileHidden ? 'hidden md:block ' : ''}md:w-[240px] md:min-h-[calc(100vh-69px)] bg-white border-b md:border-b-0 md:border-r border-line`}>
-      <div className="flex md:flex-col gap-1.5 md:gap-1 overflow-x-auto px-3 py-2.5 md:px-3.5 md:py-5">
+    <nav aria-label="Portal" className={`${mobileHidden ? 'hidden md:block ' : ''}min-w-0`}>
+      <div className="flex md:flex-col gap-1.5 md:gap-0 overflow-x-auto md:overflow-visible -mx-1 px-1 md:mx-0 md:px-0">
         {sections.map((s, si) => (
-          <div key={si} className="flex md:flex-col gap-1.5 md:gap-1 md:mb-4">
-            {s.title && <div className="hidden md:block px-3.5 pb-1 pt-1 text-xs font-semibold uppercase tracking-wider text-muted">{s.title}</div>}
+          <div key={si} className="flex md:flex-col gap-1.5 md:gap-0.5">
+            {s.title && <div className="hidden md:block app-grp">{s.title}</div>}
             {s.items.map((i) => {
               const badge = i.href === MODERATION && pending ? pending : badges[i.href] ?? 0;
               return (
                 <Link key={i.href} href={i.href} aria-current={active === i.href ? 'page' : undefined}
-                  className={cn('whitespace-nowrap rounded-[8px] px-3.5 py-2.5 md:py-3 text-[15px] font-medium flex-none flex items-center justify-between gap-2',
-                    active === i.href ? 'bg-ink text-white font-semibold' : 'text-ink hover:bg-pearl')}>
+                  className={cn('app-nav whitespace-nowrap flex-none justify-between gap-2')}>
                   <span>{i.label}</span>
                   {badge > 0 && (
                     <span data-testid={i.href === MODERATION ? 'moderation-badge' : 'nav-badge'} aria-label={i.href === MODERATION ? `${badge} pending` : `${badge} new`}

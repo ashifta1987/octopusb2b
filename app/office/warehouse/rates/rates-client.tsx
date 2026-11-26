@@ -68,7 +68,7 @@ export function RatesClient({ versions, plans, warehouses, canPropose, isAdmin, 
             </tbody>
           </table>
         </div>
-        <p className="m-0 px-5 py-3 text-[12.5px] text-[#5B6478]">Prices for all warehouses. {active.some((x) => x.warehouse_code) ? `Warehouse prices: ${active.filter((x) => x.warehouse_code).map((x) => `${plans.find((p) => p.code === x.plan_code)?.name} at ${whName[x.warehouse_code!] ?? x.warehouse_code}`).join(', ')}.` : 'No warehouse has its own prices.'}</p>
+        <p className="m-0 px-5 py-3 text-[12.5px] text-muted">Prices for all warehouses. {active.some((x) => x.warehouse_code) ? `Warehouse prices: ${active.filter((x) => x.warehouse_code).map((x) => `${plans.find((p) => p.code === x.plan_code)?.name} at ${whName[x.warehouse_code!] ?? x.warehouse_code}`).join(', ')}.` : 'No warehouse has its own prices.'}</p>
       </DsCard>
 
       {waiting.length > 0 && (
@@ -77,9 +77,9 @@ export function RatesClient({ versions, plans, warehouses, canPropose, isAdmin, 
             {waiting.map((w) => {
               const mine = w.proposed_by === me;
               return (
-                <div key={w.id} className="border-b border-[#E3E7EF] pb-3 last:border-0">
+                <div key={w.id} className="border-b border-line pb-3 last:border-0">
                   <p className="m-0 text-[13.5px]"><strong>{plans.find((p) => p.code === w.plan_code)?.name} · {w.warehouse_code ? whName[w.warehouse_code] ?? w.warehouse_code : 'All warehouses'} · v{w.version}</strong> · {fmtDate(w.created_at)}{w.note ? ` · ${w.note}` : ''}</p>
-                  <p className="m-0 text-[12.5px] text-[#5B6478]">{FEES.map(([k, l]) => `${l}: ${v(w[k])}`).join(' · ')}</p>
+                  <p className="m-0 text-[12.5px] text-muted">{FEES.map(([k, l]) => `${l}: ${v(w[k])}`).join(' · ')}</p>
                   {isAdmin && (rejecting === w.id ? (
                     <form className="mt-2 flex flex-wrap gap-2 items-end" onSubmit={(e) => { e.preventDefault(); run(decideRatesAction(w.id, 'reject', reason), () => setRejecting(null)); }}>
                       <DsInput label="Why is it rejected?" value={reason} onChange={(e) => setReason(e.target.value)} required autoFocus />
@@ -92,7 +92,7 @@ export function RatesClient({ versions, plans, warehouses, canPropose, isAdmin, 
                       <DsButton variant="secondary" disabled={pending} onClick={() => { setRejecting(w.id); setReason(''); }}>Reject</DsButton>
                     </div>
                   ))}
-                  {!isAdmin && <p className="mt-1 mb-0 text-[12.5px] text-[#5B6478]">An admin approves client rates.</p>}
+                  {!isAdmin && <p className="mt-1 mb-0 text-[12.5px] text-muted">An admin approves client rates.</p>}
                 </div>
               );
             })}
@@ -118,7 +118,7 @@ export function RatesClient({ versions, plans, warehouses, canPropose, isAdmin, 
           </form>
         </DsCard>
       )}
-      {msg && <p role={msg.ok ? 'status' : 'alert'} data-testid="wh-rates-msg" className={`m-0 text-[13px] ${msg.ok ? 'text-[#1B7F4B]' : 'text-[#B42318]'}`}>{msg.text}</p>}
+      {msg && <p role={msg.ok ? 'status' : 'alert'} data-testid="wh-rates-msg" className={`m-0 text-[13px] ${msg.ok ? 'text-ok' : 'text-bad'}`}>{msg.text}</p>}
 
       <DsCard title="Monthly quote" icon="dollar" testId="wh-quote">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -130,20 +130,20 @@ export function RatesClient({ versions, plans, warehouses, canPropose, isAdmin, 
           <DsInput label="Cartons received" inputMode="numeric" value={q.cartons} onChange={(e) => setQ({ ...q, cartons: e.target.value })} />
           <DsInput label="Returns" inputMode="numeric" value={q.returns} onChange={(e) => setQ({ ...q, returns: e.target.value })} />
         </div>
-        {!quote ? <p className="mt-3 mb-0 text-[13.5px] text-[#5B6478]" data-testid="wh-quote-none">This plan has no active rates yet.</p> : (
+        {!quote ? <p className="mt-3 mb-0 text-[13.5px] text-muted" data-testid="wh-quote-none">This plan has no active rates yet.</p> : (
           <dl className="mt-3 grid grid-cols-[180px_1fr] gap-y-1 m-0 text-[14px]" data-testid="wh-quote-result">
-            {quote.parts.map(([k, c]) => <div key={k} className="contents"><dt className="text-[#5B6478]">{k}</dt><dd className="m-0 font-mono">{c == null ? 'Not set' : money(c, 'USD')}</dd></div>)}
+            {quote.parts.map(([k, c]) => <div key={k} className="contents"><dt className="text-muted">{k}</dt><dd className="m-0 font-mono">{c == null ? 'Not set' : money(c, 'USD')}</dd></div>)}
             <dt className="font-semibold">Estimated month</dt><dd className="m-0 font-mono font-semibold">{money(quote.total, 'USD')}{quote.minApplied ? ' (monthly minimum)' : ''}{quote.unknown ? ' + fees not set yet' : ''}</dd>
           </dl>
         )}
-        <p className="mt-2 mb-0 text-[12.5px] text-[#5B6478]">Shipping and packaging materials are charged on top, by use.</p>
+        <p className="mt-2 mb-0 text-[12.5px] text-muted">Shipping and packaging materials are charged on top, by use.</p>
       </DsCard>
 
       <DsCard title="History" icon="clock" noPadding>
         <div className="ds-scroll"><table className="ds-tbl min-w-[620px]">
           <thead><tr><th scope="col">Plan</th><th scope="col">Warehouse</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Date</th></tr></thead>
           <tbody>
-            {versions.length === 0 && <tr><td colSpan={5} className="text-[#5B6478]">No rates proposed yet.</td></tr>}
+            {versions.length === 0 && <tr><td colSpan={5} className="text-muted">No rates proposed yet.</td></tr>}
             {versions.map((x) => (
               <tr key={x.id}><td>{plans.find((p) => p.code === x.plan_code)?.name ?? x.plan_code}</td><td>{x.warehouse_code ? whName[x.warehouse_code] ?? x.warehouse_code : 'All'}</td><td className="font-mono">v{x.version}</td>
                 <td><DsBadge tone={x.status === 'active' ? 'ok' : x.status === 'pending_approval' ? 'warn' : x.status === 'rejected' ? 'bad' : 'neutral'}>{x.status === 'pending_approval' ? 'Waiting' : x.status === 'active' ? 'Active' : x.status === 'rejected' ? 'Rejected' : 'Replaced'}</DsBadge></td>

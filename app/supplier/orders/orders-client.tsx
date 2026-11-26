@@ -36,15 +36,15 @@ function Detail({ o, detail, onDone }: { o: SupOrder; detail: SupOrder; onDone: 
     <DsCard title={`Order ${o.order}`} subtitle={o.ship_by ? `Ship by ${fmtDay(o.ship_by)}` : undefined} icon="package" testId="supplier-order-detail">
       <dl className="grid sm:grid-cols-2 gap-x-6 gap-y-3 m-0 text-[14px]">
         {o.items.flatMap((i, k) => [
-          <div key={`t${k}`}><dt className="text-[12px] text-[#5B6478]">Item</dt><dd className="m-0 font-semibold">{i.title}{i.variant ? ` (${i.variant})` : ''}</dd></div>,
-          <div key={`s${k}`}><dt className="text-[12px] text-[#5B6478]">SKU and quantity</dt><dd className="m-0">{i.sku} × {i.qty}</dd></div>,
+          <div key={`t${k}`}><dt className="text-[12px] text-muted">Item</dt><dd className="m-0 font-semibold">{i.title}{i.variant ? ` (${i.variant})` : ''}</dd></div>,
+          <div key={`s${k}`}><dt className="text-[12px] text-muted">SKU and quantity</dt><dd className="m-0">{i.sku} × {i.qty}</dd></div>,
         ])}
-        <div className="sm:col-span-2"><dt className="text-[12px] text-[#5B6478]">Ship to (for shipping only)</dt>
+        <div className="sm:col-span-2"><dt className="text-[12px] text-muted">Ship to (for shipping only)</dt>
           <dd className="m-0" data-testid="supplier-ship-to">{a ? [a.name, a.line1, a.line2, [a.postcode, a.city].filter(Boolean).join(' '), a.region, countryName(a.country), a.phone].filter(Boolean).map((l, i) => <div key={i}>{l}</div>) : '—'}</dd></div>
       </dl>
       {o.status === 'shipped' && <p className="mt-3 mb-0 text-[14px]">Shipped with {carrierLabel(o.carrier)}. Tracking number <b>{o.tracking_no}</b>.</p>}
       {o.status === 'cancelled' && <DsNotice tone="bad" title="This order was cancelled">Do not ship it. If you already packed it, tell your Octopus contact.</DsNotice>}
-      {o.problem_note && <p className="mt-3 mb-0 text-[14px] text-[#8A5300]">You reported: {o.problem_note}</p>}
+      {o.problem_note && <p className="mt-3 mb-0 text-[14px] text-warn">You reported: {o.problem_note}</p>}
       {open && (
         <div className="mt-4 flex flex-col gap-3">
           <div className="grid sm:grid-cols-3 gap-3">
@@ -57,12 +57,12 @@ function Detail({ o, detail, onDone }: { o: SupOrder; detail: SupOrder; onDone: 
             <DsButton onClick={ship} loading={pending} icon="truck" testId="supplier-mark-shipped">Mark as shipped</DsButton>
           </div>
           <DsNotice tone="info" title="Use the packing slip printed here only">Do not add your own invoice, logo or contact details to the parcel. The slip must be printed before you mark the order shipped.</DsNotice>
-          <details><summary className="min-h-[44px] flex items-center cursor-pointer text-[14px] font-semibold text-[#2A6FD1]">Report a problem</summary>
+          <details><summary className="min-h-[44px] flex items-center cursor-pointer text-[14px] font-semibold text-coral-text">Report a problem</summary>
             <div className="flex flex-col gap-2 pt-2"><DsTextarea label="What is wrong?" value={note} onChange={(e) => setNote(e.target.value)} rows={2} />
               <div><DsButton variant="secondary" onClick={problem} loading={pending}>Tell staff</DsButton></div></div></details>
         </div>
       )}
-      {msg && <div role={msg.ok ? 'status' : 'alert'} className={`text-[14px] mt-3 ${msg.ok ? 'text-[#0B6A65]' : 'text-[#B42318]'}`} data-testid="supplier-order-msg">{msg.text}</div>}
+      {msg && <div role={msg.ok ? 'status' : 'alert'} className={`text-[14px] mt-3 ${msg.ok ? 'text-ok' : 'text-bad'}`} data-testid="supplier-order-msg">{msg.text}</div>}
     </DsCard>
   );
 }
@@ -108,7 +108,7 @@ export function OrdersClient({ data }: { data: SupOrders }) {
       )}
       {loading && <p role="status" className="text-[14px] m-0">Opening the order…</p>}
       {current && detail && detail.id === current.id && <Detail o={current} detail={detail} onDone={() => router.refresh()} />}
-      {data.ship_within_days != null && <p className="text-[12px] text-[#5B6478] m-0">Ship within {data.ship_within_days} days of receiving the order.</p>}
+      {data.ship_within_days != null && <p className="text-[12px] text-muted m-0">Ship within {data.ship_within_days} days of receiving the order.</p>}
     </SupplierFrame>
   );
 }

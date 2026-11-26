@@ -25,7 +25,7 @@ function useRun() {
   return { pending, msg, run };
 }
 const MsgLine = ({ msg, testId }: { msg: Msg; testId: string }) => msg
-  ? <p role={msg.ok ? 'status' : 'alert'} data-testid={testId} className={`m-0 text-[13px] ${msg.ok ? 'text-[#1B7F4B]' : 'text-[#B42318]'}`}>{msg.text}</p>
+  ? <p role={msg.ok ? 'status' : 'alert'} data-testid={testId} className={`m-0 text-[13px] ${msg.ok ? 'text-ok' : 'text-bad'}`}>{msg.text}</p>
   : null;
 
 function BlockedLot({ b, me }: { b: Blocked; me: string }) {
@@ -37,18 +37,18 @@ function BlockedLot({ b, me }: { b: Blocked; me: string }) {
   const why = own ? 'You did the recount; another supervisor approves this lot'
     : !/^\d+$/.test(qty) ? 'Enter the approved quantity' : !reason.trim() ? 'Enter a reason' : undefined;
   return (
-    <li className="border-b border-[#EEF0F4] last:border-0 px-5 py-4 flex flex-col gap-3" data-testid={`wh-blocked-${b.lot_code}`}>
+    <li className="border-b border-divider last:border-0 px-5 py-4 flex flex-col gap-3" data-testid={`wh-blocked-${b.lot_code}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <div className="font-semibold">{itemText(b.item)}</div>
-          <div className="text-[12.5px] text-[#5B6478]"><span className="font-mono">{b.lot_code}</span>{b.asn_code && <> · <Link href={`/office/warehouse/receive/${b.asn_code}`} className="font-mono text-[#2559B8] hover:underline">{b.asn_code}</Link></>}</div>
+          <div className="text-[12.5px] text-muted"><span className="font-mono">{b.lot_code}</span>{b.asn_code && <> · <Link href={`/office/warehouse/receive/${b.asn_code}`} className="font-mono text-coral-text hover:underline">{b.asn_code}</Link></>}</div>
         </div>
         <DsBadge tone="bad">Blocked · not on hand</DsBadge>
       </div>
       <dl className="grid grid-cols-[110px_1fr] gap-x-3 gap-y-1 m-0 text-[13.5px]">
-        <dt className="text-[#5B6478]">Expected</dt><dd className="m-0">{b.expected ?? '—'}</dd>
+        <dt className="text-muted">Expected</dt><dd className="m-0">{b.expected ?? '—'}</dd>
         {b.counts.map((c) => (
-          <div key={c.pass} className="contents"><dt className="text-[#5B6478]">Count {c.pass}</dt><dd className="m-0">{c.good} good · {c.damaged} damaged · {c.by === me ? 'you' : c.by_name ?? 'staff'}{c.note ? ` · “${c.note}”` : ''}</dd></div>
+          <div key={c.pass} className="contents"><dt className="text-muted">Count {c.pass}</dt><dd className="m-0">{c.good} good · {c.damaged} damaged · {c.by === me ? 'you' : c.by_name ?? 'staff'}{c.note ? ` · “${c.note}”` : ''}</dd></div>
         ))}
       </dl>
       {b.can_approve ? (
@@ -57,7 +57,7 @@ function BlockedLot({ b, me }: { b: Blocked; me: string }) {
           <DsInput label="Reason" value={reason} onChange={(e) => setReason(e.target.value)} containerClassName="min-w-[240px] flex-1" disabled={own} maxLength={300} />
           <DsButton type="submit" disabled={pending || Boolean(why)} disabledReason={why} testId="wh-approve-lot">Approve and release</DsButton>
         </form>
-      ) : <p className="m-0 text-[13px] text-[#5B6478]">Only a supervisor or admin approves counts.</p>}
+      ) : <p className="m-0 text-[13px] text-muted">Only a supervisor or admin approves counts.</p>}
       <MsgLine msg={msg} testId="wh-approve-msg" />
     </li>
   );
@@ -79,7 +79,7 @@ function SerialScan({ lots }: { lots: Lot[] }) {
       <DsTextarea label="Serials (scan one per line)" value={raw} onChange={(e) => setRaw(e.target.value)} rows={5} className="font-mono" />
       <div className="flex flex-wrap items-center gap-3">
         <DsButton type="submit" disabled={pending || !raw.trim() || !sel} testId="wh-serial-submit">Record serials</DsButton>
-        {sel && <span className="text-[13px] text-[#5B6478]">{sel.serials} of {sel.qty} recorded for this lot</span>}
+        {sel && <span className="text-[13px] text-muted">{sel.serials} of {sel.qty} recorded for this lot</span>}
       </div>
       <MsgLine msg={msg} testId="wh-serial-msg" />
     </form>
@@ -92,18 +92,18 @@ export function CountsClient({ board }: { board: CountsBoard }) {
       <section aria-label="Summary" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {([['Waiting for a recount', board.recount.length], ['Blocked lots', board.blocked.length], ['Recent lots', board.lots.length]] as const).map(([l, n]) => (
           <div key={l} className="ds-card" data-testid={`wh-counts-${l.toLowerCase().replace(/ /g, '-')}`}>
-            <div className="text-[13px] text-[#5B6478]">{l}</div><div className="text-[28px] font-bold leading-tight">{n}</div>
+            <div className="text-[13px] text-muted">{l}</div><div className="text-[28px] font-bold leading-tight">{n}</div>
           </div>
         ))}
       </section>
       <DsCard title="Waiting for a recount" icon="refresh" noPadding testId="wh-recount-list" subtitle="The first count differs from the notice. Someone other than the first counter counts again.">
-        {board.recount.length === 0 ? <p className="m-0 px-5 py-4 text-[13.5px] text-[#5B6478]">No lines are waiting for a recount.</p> : (
+        {board.recount.length === 0 ? <p className="m-0 px-5 py-4 text-[13.5px] text-muted">No lines are waiting for a recount.</p> : (
           <ul className="list-none m-0 p-0">
             {board.recount.map((r) => (
-              <li key={r.line_id} className="border-b border-[#EEF0F4] last:border-0 px-5 py-3 flex flex-wrap items-center justify-between gap-3">
+              <li key={r.line_id} className="border-b border-divider last:border-0 px-5 py-3 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <div className="font-semibold">{itemText(r.item)}</div>
-                  <div className="text-[12.5px] text-[#5B6478]">
+                  <div className="text-[12.5px] text-muted">
                     <span className="font-mono">{r.asn_code}</span> · expected {r.expected}
                     {r.pass1 && <> · count 1: {r.pass1.good} good, {r.pass1.damaged} damaged by {r.pass1.by === board.me ? 'you' : r.pass1.by_name ?? 'staff'}</>}
                   </div>
@@ -115,7 +115,7 @@ export function CountsClient({ board }: { board: CountsBoard }) {
         )}
       </DsCard>
       <DsCard title="Blocked lots" icon="lock" noPadding testId="wh-blocked-list" subtitle="Not on hand and can’t be picked until approved. The person who recounted can’t approve.">
-        {board.blocked.length === 0 ? <p className="m-0 px-5 py-4 text-[13.5px] text-[#5B6478]">No blocked lots.</p> : (
+        {board.blocked.length === 0 ? <p className="m-0 px-5 py-4 text-[13.5px] text-muted">No blocked lots.</p> : (
           <ul className="list-none m-0 p-0">{board.blocked.map((b) => <BlockedLot key={b.lot_id} b={b} me={board.me} />)}</ul>
         )}
       </DsCard>

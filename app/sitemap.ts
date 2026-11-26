@@ -16,8 +16,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/pools`, lastModified: now, changeFrequency: 'hourly', priority: 0.8 },
     { url: `${SITE_URL}/pools/terms`, changeFrequency: 'monthly', priority: 0.2 },
     { url: `${SITE_URL}/turnkey`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
+    { url: `${SITE_URL}/turnkey/catalogue`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${SITE_URL}/turnkey/services`, lastModified: now, changeFrequency: 'monthly', priority: 0.6 },
     { url: `${SITE_URL}/turnkey/terms`, changeFrequency: 'monthly', priority: 0.2 },
+    { url: `${SITE_URL}/sourcing`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${SITE_URL}/make-my-brand`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${SITE_URL}/request/dropship`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${SITE_URL}/3pl`, lastModified: now, changeFrequency: 'monthly', priority: 0.7 },
     { url: `${SITE_URL}/3pl/apply`, lastModified: now, changeFrequency: 'monthly', priority: 0.5 },
     ...stocked.map((c) => ({

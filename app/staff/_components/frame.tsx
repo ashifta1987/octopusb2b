@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
-import Link from 'next/link';
 import { getSiteContent } from '@/lib/content';
 import { cn } from '@/lib/cn';
+import { AppLogo } from '@/components/shell/app-logo';
 
 const STEPS = ['Sign in', 'Verify', 'Workspace'] as const;
 
@@ -10,57 +10,59 @@ async function CompanyName() {
   return company?.legal_name ? <span>{company.legal_name}</span> : null;
 }
 
-/** StaffLogin.png frame: navy staff-portal panel on the left, 3-step progress + content on the right. */
+const Tick = () => (
+  <span className="flex-none w-[22px] h-[22px] mt-px rounded-full bg-tint text-coral-text flex items-center justify-center" aria-hidden>
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 5 5 9-10" /></svg>
+  </span>
+);
+
+/**
+ * StaffLogin.png frame — design handoff 26 Nov 2026 page 11: white header (full-colour logo, "Staff portal" badge),
+ * the staff-portal card on the left, 3-step progress + content on the right. Same wording, steps and flow.
+ */
 export function StaffFrame({ step, children }: { step: 0 | 1 | 2 | null; children: React.ReactNode }) {
   return (
-    <div className="min-h-screen flex flex-wrap bg-pearl text-ink">
-      <aside className="flex-[1_1_420px] bg-ink text-white p-8 sm:p-12 flex flex-col gap-9">
-        <div className="flex items-center gap-3.5 flex-wrap">
-          <Link href="/" aria-label="Octopus B2B home">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-white.png" alt="Octopus B2B" className="h-16 w-auto block" />
-          </Link>
-          <span className="inline-flex items-center text-xs font-semibold px-2.5 py-1.5 rounded-full bg-coral text-white">Staff portal</span>
+    <div className="app-shell min-h-screen bg-pearl text-ink">
+      <a href="#staff-signin-main" className="skip-link">Skip to content</a>
+      <header className="bg-white border-b border-line">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4 flex-wrap">
+          <AppLogo />
+          <span className="inline-flex items-center text-[13px] font-bold px-4 py-2 rounded-full bg-ink text-white">Staff portal</span>
         </div>
-        <div className="flex flex-col gap-4 max-w-[460px]">
-          <h1 className="!text-white m-0 font-display font-extrabold text-[30px] sm:text-[40px] leading-[1.1] tracking-[-0.02em]">Back office sign-in</h1>
-          <p className="m-0 text-[17px] leading-[1.55] text-line-strong">For Octopus team members: operations, finance, support, sourcing, QC, content, distributors and admins.</p>
-        </div>
-        <ul className="list-none m-0 p-0 flex flex-col gap-4 text-[15px] text-fill">
-          <li className="flex gap-3 items-start">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="flex-none text-on-ink-link"><path d="M12 3 4 6v6c0 4.5 3.4 8.3 8 9 4.6-.7 8-4.5 8-9V6z" /></svg>
-            Accounts by invitation from Admin only
-          </li>
-          <li className="flex gap-3 items-start">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="flex-none text-on-ink-link"><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
-            Two-step verification on every sign-in
-          </li>
-          <li className="flex gap-3 items-start">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="flex-none text-on-ink-link"><path d="M4 5h16M4 12h16M4 19h10" /></svg>
-            Every sign-in and action is recorded in the audit log
-          </li>
-        </ul>
-        <div className="mt-auto flex flex-col gap-1.5 text-[13px] text-muted">
-          <span>Lost access or your phone? Ask an Admin to reset your two-step verification.</span>
-          <Suspense fallback={null}><CompanyName /></Suspense>
-        </div>
-      </aside>
-      <main className="flex-[1.3_1_520px] min-w-0 flex items-start justify-center px-4 sm:px-6 py-14">
-        <div className="w-full max-w-[480px] flex flex-col gap-6">
-          {step !== null && <StepBar step={step} />}
-          {children}
-        </div>
-      </main>
+      </header>
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-8 py-10 sm:py-12 flex flex-wrap gap-8 lg:gap-10 items-start">
+        <aside className="flex-[1_1_360px] lg:max-w-[468px] bg-white border border-line rounded-[24px] p-7 sm:p-10 flex flex-col gap-6">
+          <div className="flex flex-col gap-3">
+            <h1 className="m-0 font-display font-extrabold text-[34px] sm:text-[40px] leading-[1.1] tracking-[-0.01em] text-ink">Back office sign-in</h1>
+            <p className="m-0 text-[17px] leading-[1.55] text-muted">For Octopus team members: operations, finance, support, sourcing, QC, content, distributors and admins.</p>
+          </div>
+          <ul className="list-none m-0 p-0 flex flex-col gap-3.5 text-[16px] text-black">
+            <li className="flex gap-3 items-start"><Tick />Accounts by invitation from Admin only</li>
+            <li className="flex gap-3 items-start"><Tick />Two-step verification on every sign-in</li>
+            <li className="flex gap-3 items-start"><Tick />Every sign-in and action is recorded in the audit log</li>
+          </ul>
+          <div className="border-t border-line pt-5 flex flex-col gap-1.5 text-[15px] leading-[1.5] text-muted">
+            <span>Lost access or your phone? Ask an Admin to reset your two-step verification.</span>
+            <Suspense fallback={null}><CompanyName /></Suspense>
+          </div>
+        </aside>
+        <main id="staff-signin-main" tabIndex={-1} className="flex-[1.3_1_480px] min-w-0">
+          <div className="w-full max-w-[644px] flex flex-col gap-7">
+            {step !== null && <StepBar step={step} />}
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
 
 export function StepBar({ step }: { step: 0 | 1 | 2 }) {
   return (
-    <ol aria-label="Sign-in steps" className="grid grid-cols-3 gap-2 list-none m-0 p-0">
+    <ol aria-label="Sign-in steps" className="grid grid-cols-3 gap-4 list-none m-0 p-0">
       {STEPS.map((s, i) => (
-        <li key={s} aria-current={i === step ? 'step' : undefined} className={cn('flex flex-col gap-2 text-[13px] font-semibold', i <= step ? 'text-ink' : 'text-muted')}>
-          <span className={cn('block h-[5px] rounded', i <= step ? 'bg-coral' : 'bg-line')} aria-hidden />
+        <li key={s} aria-current={i === step ? 'step' : undefined} className={cn('flex flex-col gap-2.5 text-[15px] font-bold', i <= step ? 'text-ink' : 'text-muted')}>
+          <span className={cn('block h-[5px] rounded-full', i <= step ? 'bg-coral' : 'bg-line')} aria-hidden />
           {s}
           {i < step && <span className="sr-only">(done)</span>}
         </li>
@@ -72,5 +74,5 @@ export function StepBar({ step }: { step: 0 | 1 | 2 }) {
 export { StaffHeading, LockNotice } from './bits';
 
 export function FrameFallback() {
-  return <div className="h-64 rounded-[10px] bg-white/60 animate-pulse" aria-hidden />;
+  return <div className="h-64 rounded-[16px] bg-white/60 animate-pulse" aria-hidden />;
 }

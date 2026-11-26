@@ -54,22 +54,22 @@ export function OrderDetailClient({ detail: d, orgId, countryNames }: { detail: 
 
   return (
     <div className="flex flex-col gap-5" data-testid="order-detail-page">
-      <nav aria-label="Breadcrumb" className="text-[13px] text-[#5B6478]">
-        <Link href="/account/dropship/orders" className="text-[#2A6FD1] underline">Orders</Link> / {name}
+      <nav aria-label="Breadcrumb" className="text-[13px] text-muted">
+        <Link href="/account/dropship/orders" className="text-coral-text underline">Orders</Link> / {name}
       </nav>
       <header className="flex justify-between items-start gap-4 flex-wrap">
         <div className="min-w-0">
-          <h1 className="m-0 text-[26px] font-bold flex items-center gap-3 flex-wrap text-[#1A174A]">
-            <span aria-hidden="true" className="w-10 h-10 rounded-[10px] bg-[#E6EFFB] text-[#2A6FD1] inline-flex items-center justify-center shrink-0"><DsIcon name="cart" size={20} /></span>
+          <h1 className="m-0 text-[26px] font-bold flex items-center gap-3 flex-wrap text-ink">
+            <span aria-hidden="true" className="w-10 h-10 rounded-[10px] bg-tint text-coral-text inline-flex items-center justify-center shrink-0"><DsIcon name="cart" size={20} /></span>
             <span>{`Order ${name}`}</span>
             <DsBadge tone={st.tone} testId="order-status">{st.label}</DsBadge>
           </h1>
-          <p className="mt-1.5 mb-0 text-[14px] text-[#5B6478]" data-testid="order-subtitle">
+          <p className="mt-1.5 mb-0 text-[14px] text-muted" data-testid="order-subtitle">
             {[d.order.channel === 'shopify' ? 'Shopify' : d.order.channel === 'manual' ? (d.order.test_order ? 'Test order' : 'Octopus') : d.order.channel.toUpperCase(),
               d.order.external_order_name ? d.order.order_number : null, `placed ${fmtStamp(d.order.created_at)}`].filter(Boolean).join(' · ')}
           </p>
           {d.order.reship_of && (
-            <p className="mt-1 mb-0 text-[13px] text-[#5B6478]">Free reship of <Link className="text-[#2A6FD1] underline" href={`/account/dropship/orders/${d.order.reship_of.id}`}>{d.order.reship_of.external_order_name ?? d.order.reship_of.order_number}</Link></p>
+            <p className="mt-1 mb-0 text-[13px] text-muted">Free reship of <Link className="text-coral-text underline" href={`/account/dropship/orders/${d.order.reship_of.id}`}>{d.order.reship_of.external_order_name ?? d.order.reship_of.order_number}</Link></p>
           )}
         </div>
         {d.tracking_token && <DsLinkButton href={`/t/${d.tracking_token}`} variant="secondary" icon="truck">Tracking page</DsLinkButton>}
@@ -85,17 +85,17 @@ export function OrderDetailClient({ detail: d, orgId, countryNames }: { detail: 
           <DsCard title="Items" noPadding testId="detail-items">
             <ul className="list-none m-0 p-0">
               {d.items.map((i) => (
-                <li key={`${i.item_id}-${i.model_no}`} className="flex justify-between gap-3 px-5 py-3.5 border-b border-[#EEF0F4] flex-wrap">
+                <li key={`${i.item_id}-${i.model_no}`} className="flex justify-between gap-3 px-5 py-3.5 border-b border-divider flex-wrap">
                   <div>
-                    <strong className="text-[#1A174A]">{i.title}</strong> ×{i.qty}
-                    <div className="text-[13px] text-[#5B6478]">{[i.variant, i.model_no].filter(Boolean).join(' · ')}</div>
+                    <strong className="text-ink">{i.title}</strong> ×{i.qty}
+                    <div className="text-[13px] text-muted">{[i.variant, i.model_no].filter(Boolean).join(' · ')}</div>
                   </div>
                   <DsBadge tone="ok">Shipped by Octopus</DsBadge>
                 </li>
               ))}
               {d.other_items > 0 && (
-                <li className="flex justify-between gap-3 px-5 py-3.5 flex-wrap bg-[#FAFBFC] rounded-b-[12px]" data-testid="detail-other-items">
-                  <div><strong className="text-[#1A174A]">{`${d.other_items} other item${d.other_items === 1 ? '' : 's'}`}</strong><div className="text-[13px] text-[#5B6478]">Not an Octopus product</div></div>
+                <li className="flex justify-between gap-3 px-5 py-3.5 flex-wrap bg-pearl rounded-b-[12px]" data-testid="detail-other-items">
+                  <div><strong className="text-ink">{`${d.other_items} other item${d.other_items === 1 ? '' : 's'}`}</strong><div className="text-[13px] text-muted">Not an Octopus product</div></div>
                   <DsBadge tone="neutral">You or another supplier ships this</DsBadge>
                 </li>
               )}
@@ -106,22 +106,22 @@ export function OrderDetailClient({ detail: d, orgId, countryNames }: { detail: 
             <ol className="list-none m-0 p-0 flex flex-col gap-3 text-[14px]">
               {progress.map((s) => (
                 <li key={s.label} className="flex gap-3" aria-current={s.state === 'current' ? 'step' : undefined}>
-                  <span aria-hidden="true" className={`inline-block w-3 h-3 rounded-full mt-1 shrink-0 ${s.state === 'done' ? 'bg-[#0B7A75]' : s.state === 'current' ? 'bg-[#2A6FD1]' : 'border-2 border-[#C9D0DD]'}`} />
+                  <span aria-hidden="true" className={`inline-block w-3 h-3 rounded-full mt-1 shrink-0 ${s.state === 'done' ? 'bg-ok' : s.state === 'current' ? 'bg-coral' : 'border-2 border-line-strong'}`} />
                   <div>
-                    <strong className={s.state === 'upcoming' ? 'font-medium text-[#5B6478]' : 'text-[#1A174A]'}>{s.label}</strong>
-                    {s.detail && <div className="text-[13px] text-[#5B6478]">{s.detail}</div>}
+                    <strong className={s.state === 'upcoming' ? 'font-medium text-muted' : 'text-ink'}>{s.label}</strong>
+                    {s.detail && <div className="text-[13px] text-muted">{s.detail}</div>}
                   </div>
                 </li>
               ))}
             </ol>
             {d.timeline.length > 0 && (
               <details className="mt-4" data-testid="detail-timeline">
-                <summary className="cursor-pointer text-[14px] font-semibold text-[#2A6FD1] min-h-[44px] flex items-center">Full history ({d.timeline.length})</summary>
+                <summary className="cursor-pointer text-[14px] font-semibold text-coral-text min-h-[44px] flex items-center">Full history ({d.timeline.length})</summary>
                 <ol className="list-none m-0 mt-2 p-0 flex flex-col gap-2.5">
                   {d.timeline.map((e, n) => (
-                    <li key={n} className="text-[14px] border-l-2 border-[#E3E7EF] pl-3">
-                      <div className="flex justify-between gap-2 flex-wrap"><strong className="text-[#1A174A]">{e.title}</strong><span className="text-[12px] text-[#5B6478]">{fmtStamp(e.at)}</span></div>
-                      {e.body && <p className="m-0 text-[13px] text-[#5B6478]">{e.body}</p>}
+                    <li key={n} className="text-[14px] border-l-2 border-line pl-3">
+                      <div className="flex justify-between gap-2 flex-wrap"><strong className="text-ink">{e.title}</strong><span className="text-[12px] text-muted">{fmtStamp(e.at)}</span></div>
+                      {e.body && <p className="m-0 text-[13px] text-muted">{e.body}</p>}
                     </li>
                   ))}
                 </ol>
@@ -132,18 +132,18 @@ export function OrderDetailClient({ detail: d, orgId, countryNames }: { detail: 
           {d.cases.map((c) => <CaseCard key={c.id} c={c} />)}
 
           <section className="ds-card" aria-labelledby="change-title" data-testid="change-card">
-            <h2 id="change-title" className="m-0 mb-1 text-[17px] font-bold text-[#1A174A]">Need to change this order?</h2>
-            <p className="m-0 mb-3 text-[13px] text-[#5B6478]">Your request goes to Octopus support. Refunds go back to your wallet.</p>
+            <h2 id="change-title" className="m-0 mb-1 text-[17px] font-bold text-ink">Need to change this order?</h2>
+            <p className="m-0 mb-3 text-[13px] text-muted">Your request goes to Octopus support. Refunds go back to your wallet.</p>
             <fieldset className="border-0 m-0 p-0 grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
               <legend className="ds-label">What happened</legend>
               {([['cancel', 'Cancel (until packed)'], ['address', 'Change address'], ['claim', 'Lost or damaged (after it ships)'], ['return', 'Return (after delivery)']] as [Req, string][]).map(([k, label]) => (
-                <label key={k} className={`flex gap-2.5 items-center min-h-[44px] rounded-[8px] px-3 text-[14px] ${req === k ? 'border-2 border-[#2A6FD1]' : 'border border-[#C9D0DD]'} ${enabled(k) ? 'text-[#1A174A] cursor-pointer' : 'text-[#5B6478] border-[#E3E7EF]'}`}>
+                <label key={k} className={`flex gap-2.5 items-center min-h-[44px] rounded-[8px] px-3 text-[14px] ${req === k ? 'border-2 border-coral' : 'border border-line-strong'} ${enabled(k) ? 'text-ink cursor-pointer' : 'text-muted border-line'}`}>
                   <input type="radio" name="change" value={k} checked={req === k} disabled={!enabled(k)} onChange={() => setReq(k)} data-testid={`req-${k}`} /> {label}
                 </label>
               ))}
             </fieldset>
             {(['cancel', 'claim', 'return'] as Req[]).filter((k) => !enabled(k)).length > 0 && (
-              <ul className="m-0 mt-3 pl-5 text-[13px] text-[#5B6478]" data-testid="req-reasons">
+              <ul className="m-0 mt-3 pl-5 text-[13px] text-muted" data-testid="req-reasons">
                 {(['cancel', 'claim', 'return'] as Req[]).filter((k) => !enabled(k)).map((k) => <li key={k}>{reasons[k]}</li>)}
               </ul>
             )}
@@ -163,8 +163,8 @@ export function OrderDetailClient({ detail: d, orgId, countryNames }: { detail: 
             <div className="ds-row"><span className="ds-mut">Packaging</span><span>Included</span></div>
             <div className="ds-row"><span className="ds-mut">{`Shipping to ${country}, one parcel`}</span><span>{usd(d.cost.shipping_cents)}</span></div>
             <div className="ds-row"><span className="ds-mut">{`Duties and tax (${d.order.incoterm})`}</span><span>{d.order.incoterm === 'DAP' ? 'Paid by the buyer' : usd(d.cost.duties_cents)}</span></div>
-            <div className="ds-row font-bold border-t border-[#EEF0F4] pt-2.5"><span>Total</span><span data-testid="cost-total">{usd(d.cost.total_cents)}</span></div>
-            {d.cost.refunded_cents > 0 && <div className="ds-row text-[#0B6A65]"><span>Refunded</span><span data-testid="cost-refunded">{`−${usd(d.cost.refunded_cents)}`}</span></div>}
+            <div className="ds-row font-bold border-t border-divider pt-2.5"><span>Total</span><span data-testid="cost-total">{usd(d.cost.total_cents)}</span></div>
+            {d.cost.refunded_cents > 0 && <div className="ds-row text-ok"><span>Refunded</span><span data-testid="cost-refunded">{`−${usd(d.cost.refunded_cents)}`}</span></div>}
           </DsCard>
 
           <DsCard title="Payment" testId="detail-payment">
@@ -177,7 +177,7 @@ export function OrderDetailClient({ detail: d, orgId, countryNames }: { detail: 
           </DsCard>
 
           <DsCard title="Ship to" testId="detail-ship-to">
-            <p className="m-0 text-[14px] leading-[1.6] text-[#1A174A]">
+            <p className="m-0 text-[14px] leading-[1.6] text-ink">
               {[d.ship_to.name, ...addressLines(d.ship_to.address, country)].filter(Boolean).map((l, n) => <span key={n} className="block">{l}</span>)}
             </p>
             {d.actions.address && <DsButton variant="secondary" className="mt-3" onClick={() => setReq('address')} testId="edit-address">{d.actions.address_after_label ? 'Ask to redirect the parcel' : 'Edit address (until the label is printed)'}</DsButton>}
@@ -192,7 +192,7 @@ export function OrderDetailClient({ detail: d, orgId, countryNames }: { detail: 
                   const s = ticketStatusLabel(t.status);
                   return (
                     <li key={t.id} className="flex justify-between gap-2 flex-wrap items-center">
-                      <Link className="text-[14px] text-[#2A6FD1] underline min-h-[44px] inline-flex items-center" href={`/account/dropship/support/${t.id}`}>{`${t.code} · ${t.subject}`}</Link>
+                      <Link className="text-[14px] text-coral-text underline min-h-[44px] inline-flex items-center" href={`/account/dropship/support/${t.id}`}>{`${t.code} · ${t.subject}`}</Link>
                       <DsBadge tone={s.tone}>{s.label}</DsBadge>
                     </li>
                   );
@@ -212,28 +212,28 @@ function CaseCard({ c }: { c: CaseRow }) {
   return (
     <section className="ds-card" aria-labelledby={`case-${c.id}`} data-testid={`case-${c.code}`}>
       <div className="flex justify-between gap-2 flex-wrap items-start">
-        <h2 id={`case-${c.id}`} className="m-0 text-[17px] font-bold text-[#1A174A]">{`${CASE_KIND_LABEL[c.kind]} · ${c.code}`}</h2>
+        <h2 id={`case-${c.id}`} className="m-0 text-[17px] font-bold text-ink">{`${CASE_KIND_LABEL[c.kind]} · ${c.code}`}</h2>
         <DsBadge tone={s.tone} testId={`case-status-${c.code}`}>{s.label}</DsBadge>
       </div>
       <ol className="list-none m-0 mt-3 p-0 flex flex-col gap-2.5 text-[14px]" aria-label={`${c.code} steps`}>
         {steps.map((st) => (
           <li key={st.label} className="flex gap-3" aria-current={st.state === 'current' ? 'step' : undefined}>
-            <span aria-hidden="true" className={`inline-block w-3 h-3 rounded-full mt-1 shrink-0 ${st.state === 'done' ? 'bg-[#0B7A75]' : st.state === 'current' ? 'bg-[#2A6FD1]' : 'border-2 border-[#C9D0DD]'}`} />
-            <div><strong className={st.state === 'upcoming' ? 'font-medium text-[#5B6478]' : 'text-[#1A174A]'}>{st.label}</strong>{st.detail && <div className="text-[13px] text-[#5B6478]">{st.detail}</div>}</div>
+            <span aria-hidden="true" className={`inline-block w-3 h-3 rounded-full mt-1 shrink-0 ${st.state === 'done' ? 'bg-ok' : st.state === 'current' ? 'bg-coral' : 'border-2 border-line-strong'}`} />
+            <div><strong className={st.state === 'upcoming' ? 'font-medium text-muted' : 'text-ink'}>{st.label}</strong>{st.detail && <div className="text-[13px] text-muted">{st.detail}</div>}</div>
           </li>
         ))}
       </ol>
-      {c.outcome_message && <p className="m-0 mt-3 text-[14px] text-[#1A174A]" data-testid={`case-outcome-${c.code}`}>{c.outcome_message}</p>}
+      {c.outcome_message && <p className="m-0 mt-3 text-[14px] text-ink" data-testid={`case-outcome-${c.code}`}>{c.outcome_message}</p>}
       {c.refund_cents != null && c.status === 'refunded' && (
         <DsNotice tone="ok" title={`${usd(c.refund_cents)} refunded to your wallet for order ${c.external_order_name ?? c.order_number}.`}>{c.credit_note ? `Credit note ${c.credit_note}.` : undefined}</DsNotice>
       )}
-      {c.reship && <p className="m-0 mt-2 text-[14px]">Reship: <Link className="text-[#2A6FD1] underline" href={`/account/dropship/orders/${c.reship.id}`}>{c.reship.order_number}</Link></p>}
+      {c.reship && <p className="m-0 mt-2 text-[14px]">Reship: <Link className="text-coral-text underline" href={`/account/dropship/orders/${c.reship.id}`}>{c.reship.order_number}</Link></p>}
       {(c.photo_urls ?? []).some(Boolean) && (
         <div className="flex gap-2 flex-wrap mt-3">
-          {(c.photo_urls ?? []).map((u, n) => u && <a key={n} href={u} target="_blank" rel="noopener noreferrer" className="text-[13px] text-[#2A6FD1] underline min-h-[44px] inline-flex items-center">{`Photo ${n + 1}`}</a>)}
+          {(c.photo_urls ?? []).map((u, n) => u && <a key={n} href={u} target="_blank" rel="noopener noreferrer" className="text-[13px] text-coral-text underline min-h-[44px] inline-flex items-center">{`Photo ${n + 1}`}</a>)}
         </div>
       )}
-      {c.ticket && <p className="m-0 mt-2 text-[13px] text-[#5B6478]">Conversation: <Link className="text-[#2A6FD1] underline" href={`/account/dropship/support/${c.ticket.id}`}>{c.ticket.code}</Link></p>}
+      {c.ticket && <p className="m-0 mt-2 text-[13px] text-muted">Conversation: <Link className="text-coral-text underline" href={`/account/dropship/support/${c.ticket.id}`}>{c.ticket.code}</Link></p>}
     </section>
   );
 }
@@ -249,10 +249,10 @@ function CancelForm({ d, onDone }: { d: OrderDetail; onDone: (n: Notice) => void
       onDone({ tone: r.data.accepted ? 'ok' : 'warn', title: r.data.accepted ? 'Cancelled' : 'Cancellation refused', text: r.data.message });
     }); }} data-testid="cancel-form">
       <DsTextarea label="Message" value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="Why the buyer cancelled (optional)" maxLength={300} />
-      {error && <p role="alert" className="mt-2 mb-0 text-[13px] text-[#B42318]">{error}</p>}
+      {error && <p role="alert" className="mt-2 mb-0 text-[13px] text-bad">{error}</p>}
       <div className="flex gap-2.5 mt-3 flex-wrap items-center">
         <DsButton type="submit" variant="danger" icon="x" loading={pending} disabled={pending} testId="cancel-send">Cancel order</DsButton>
-        <span className="text-[13px] text-[#5B6478]">{d.payment.charged_at ? 'The money goes back to your wallet.' : 'Nothing was charged for this order.'}</span>
+        <span className="text-[13px] text-muted">{d.payment.charged_at ? 'The money goes back to your wallet.' : 'Nothing was charged for this order.'}</span>
       </div>
     </form>
   );
@@ -281,11 +281,11 @@ function AddressForm({ d, country, onDone }: { d: OrderDetail; country: string; 
         <DsInput label="Postcode" value={f.postcode} onChange={set('postcode')} error={error && /postcode|zip/i.test(error) ? error : undefined} />
         <DsInput label="Phone (optional)" value={f.phone} onChange={set('phone')} inputMode="tel" />
       </div>
-      <p className="m-0 mt-2 text-[13px] text-[#5B6478]">{`Country: ${country}. A different country changes the shipping price, so it can\u2019t be changed here.`}</p>
-      {error && !/postcode|zip/i.test(error) && <p role="alert" className="mt-2 mb-0 text-[13px] text-[#B42318]" data-testid="address-error">{error}</p>}
+      <p className="m-0 mt-2 text-[13px] text-muted">{`Country: ${country}. A different country changes the shipping price, so it can\u2019t be changed here.`}</p>
+      {error && !/postcode|zip/i.test(error) && <p role="alert" className="mt-2 mb-0 text-[13px] text-bad" data-testid="address-error">{error}</p>}
       <div className="flex gap-2.5 mt-3 flex-wrap items-center">
         <DsButton type="submit" icon="send" loading={pending} disabled={pending} testId="address-send">Send request</DsButton>
-        <span className="text-[13px] text-[#5B6478]">Address changes are checked again before packing.</span>
+        <span className="text-[13px] text-muted">Address changes are checked again before packing.</span>
       </div>
     </form>
   );
@@ -325,7 +325,7 @@ function ClaimForm({ d, orgId, onDone }: { d: OrderDetail; orgId: string; onDone
       <fieldset className="border-0 m-0 p-0 flex gap-2 flex-wrap">
         <legend className="ds-label">The parcel is</legend>
         {(['lost', 'damaged'] as const).map((k) => (
-          <label key={k} className="flex gap-2 items-center min-h-[44px] px-3 border border-[#C9D0DD] rounded-[8px] text-[14px] cursor-pointer">
+          <label key={k} className="flex gap-2 items-center min-h-[44px] px-3 border border-line-strong rounded-[8px] text-[14px] cursor-pointer">
             <input type="radio" name="claim-kind" checked={kind === k} disabled={k === 'lost' && d.stage.delivered} onChange={() => setKind(k)} /> {k === 'lost' ? 'Lost (never arrived)' : 'Damaged'}
           </label>
         ))}
@@ -333,7 +333,7 @@ function ClaimForm({ d, orgId, onDone }: { d: OrderDetail; orgId: string; onDone
       <fieldset className="border-0 m-0 mt-3 p-0 flex gap-2 flex-wrap">
         <legend className="ds-label">You would like</legend>
         {(['reship', 'refund'] as const).map((k) => (
-          <label key={k} className="flex gap-2 items-center min-h-[44px] px-3 border border-[#C9D0DD] rounded-[8px] text-[14px] cursor-pointer">
+          <label key={k} className="flex gap-2 items-center min-h-[44px] px-3 border border-line-strong rounded-[8px] text-[14px] cursor-pointer">
             <input type="radio" name="claim-choice" checked={choice === k} onChange={() => setChoice(k)} /> {k === 'reship' ? 'A reship' : 'A refund to your wallet'}
           </label>
         ))}
@@ -343,12 +343,12 @@ function ClaimForm({ d, orgId, onDone }: { d: OrderDetail; orgId: string; onDone
         <label className="ds-label" htmlFor="claim-photos">{kind === 'damaged' ? 'Photos (at least one)' : 'Photos (optional)'}</label>
         <input id="claim-photos" type="file" accept="image/jpeg,image/png,image/webp" multiple capture="environment" className="block text-[14px] min-h-[44px]"
           onChange={(e) => setFiles(Array.from(e.target.files ?? []).slice(0, 6))} data-testid="claim-photos" />
-        <p className="m-0 mt-1 text-[12px] text-[#5B6478]">Up to 6 photos, JPG / PNG / WebP, 10 MB each. Only you and Octopus support can see them.</p>
+        <p className="m-0 mt-1 text-[12px] text-muted">Up to 6 photos, JPG / PNG / WebP, 10 MB each. Only you and Octopus support can see them.</p>
       </div>
-      {error && <p role="alert" className="mt-2 mb-0 text-[13px] text-[#B42318]" data-testid="claim-error">{error}</p>}
+      {error && <p role="alert" className="mt-2 mb-0 text-[13px] text-bad" data-testid="claim-error">{error}</p>}
       <div className="flex gap-2.5 mt-3 flex-wrap items-center">
         <DsButton type="submit" icon="send" loading={pending} disabled={pending} testId="claim-send">Send request</DsButton>
-        <span className="text-[13px] text-[#5B6478]">{`Claims are possible up to ${d.actions.claim_window_days} days after delivery.`}</span>
+        <span className="text-[13px] text-muted">{`Claims are possible up to ${d.actions.claim_window_days} days after delivery.`}</span>
       </div>
     </form>
   );
@@ -372,14 +372,14 @@ function ReturnForm({ d, onDone }: { d: OrderDetail; onDone: (n: Notice) => void
     }); }} data-testid="return-form">
       <fieldset className="border-0 m-0 p-0 grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
         <legend className="ds-label">The buyer sends it to</legend>
-        <label className="flex gap-2 items-center min-h-[44px] px-3 border border-[#C9D0DD] rounded-[8px] text-[14px] cursor-pointer">
+        <label className="flex gap-2 items-center min-h-[44px] px-3 border border-line-strong rounded-[8px] text-[14px] cursor-pointer">
           <input type="radio" name="return-to" checked={to === 'warehouse'} onChange={() => setTo('warehouse')} /> The Octopus warehouse
         </label>
-        <label className="flex gap-2 items-center min-h-[44px] px-3 border border-[#C9D0DD] rounded-[8px] text-[14px] cursor-pointer">
+        <label className="flex gap-2 items-center min-h-[44px] px-3 border border-line-strong rounded-[8px] text-[14px] cursor-pointer">
           <input type="radio" name="return-to" checked={to === 'merchant'} onChange={() => setTo('merchant')} disabled={!ra} /> Your return address
         </label>
       </fieldset>
-      <p className="m-0 mt-2 text-[13px] text-[#5B6478]" data-testid="return-rules">
+      <p className="m-0 mt-2 text-[13px] text-muted" data-testid="return-rules">
         {to === 'warehouse'
           ? 'Refund rules: after the warehouse checks it, you get the product price of units that can be sold again, minus the return handling fee. Processing, shipping and duties are not refunded. Faulty or wrong items: the product price of every returned unit. The buyer pays the return postage.'
           : ra ? `Your return address: ${[ra.name, ra.line1, ra.city, ra.country].filter(Boolean).join(', ')}. Octopus refunds nothing for returns you receive yourself.` : 'Your return address is not approved yet (Settings).'}
@@ -393,10 +393,10 @@ function ReturnForm({ d, onDone }: { d: OrderDetail; onDone: (n: Notice) => void
         ))}
       </div>
       <DsTextarea label="Message" containerClassName="mt-3" value={msg} onChange={(e) => setMsg(e.target.value)} placeholder="What the buyer told you, and the return tracking number if you have it" rows={3} maxLength={2000} required />
-      {error && <p role="alert" className="mt-2 mb-0 text-[13px] text-[#B42318]" data-testid="return-error">{error}</p>}
+      {error && <p role="alert" className="mt-2 mb-0 text-[13px] text-bad" data-testid="return-error">{error}</p>}
       <div className="flex gap-2.5 mt-3 flex-wrap items-center">
         <DsButton type="submit" icon="send" loading={pending} disabled={pending} testId="return-send">Send request</DsButton>
-        <span className="text-[13px] text-[#5B6478]">{`Returns are possible up to ${d.actions.return_window_days} days after delivery.`}</span>
+        <span className="text-[13px] text-muted">{`Returns are possible up to ${d.actions.return_window_days} days after delivery.`}</span>
       </div>
     </form>
   );
@@ -411,16 +411,16 @@ function ReweighCard({ d, onDone }: { d: OrderDetail; onDone: (n: Notice) => voi
   return (
     <section className="ds-card" style={{ background: '#FFFBF2', borderColor: '#F3D9A4' }} aria-labelledby="rw-title" data-testid="reweigh-card">
       <DsBadge tone="warn">Extra charge</DsBadge>
-      <h2 id="rw-title" className="m-0 mt-2 mb-1.5 text-[16px] font-bold text-[#1A174A]">{`Re-weigh on order ${d.order.external_order_name ?? d.order.order_number}: +${usd(r.amount_cents)}`}</h2>
-      <p className="m-0 text-[13px] leading-[1.5] text-[#1A174A]">
+      <h2 id="rw-title" className="m-0 mt-2 mb-1.5 text-[16px] font-bold text-ink">{`Re-weigh on order ${d.order.external_order_name ?? d.order.order_number}: +${usd(r.amount_cents)}`}</h2>
+      <p className="m-0 text-[13px] leading-[1.5] text-ink">
         {`The parcel weighed ${r.billed_weight_g - r.quoted_weight_g} g more than the product data (${r.billed_weight_g} g billed vs ${r.quoted_weight_g} g at payment).`}
         {r.dispute_state === null && (r.can_dispute ? ` You can dispute this until ${fmtDay(r.dispute_until)}.` : ' The dispute window has ended.')}
       </p>
-      {r.dispute_state === 'open' && <p className="m-0 mt-2 text-[13px] text-[#1A174A]" data-testid="reweigh-disputed">Dispute open. Octopus checks the weight and photo.</p>}
-      {r.dispute_state === 'refunded' && <p className="m-0 mt-2 text-[13px] text-[#0B6A65]" data-testid="reweigh-refunded">{`Refunded ${usd(r.refund_cents)}${r.credit_note ? ` (credit note ${r.credit_note})` : ''}. ${r.dispute_answer ?? ''}`}</p>}
-      {r.dispute_state === 'rejected' && <p className="m-0 mt-2 text-[13px] text-[#1A174A]" data-testid="reweigh-rejected">{`Dispute not accepted: ${r.dispute_answer ?? ''}`}</p>}
+      {r.dispute_state === 'open' && <p className="m-0 mt-2 text-[13px] text-ink" data-testid="reweigh-disputed">Dispute open. Octopus checks the weight and photo.</p>}
+      {r.dispute_state === 'refunded' && <p className="m-0 mt-2 text-[13px] text-ok" data-testid="reweigh-refunded">{`Refunded ${usd(r.refund_cents)}${r.credit_note ? ` (credit note ${r.credit_note})` : ''}. ${r.dispute_answer ?? ''}`}</p>}
+      {r.dispute_state === 'rejected' && <p className="m-0 mt-2 text-[13px] text-ink" data-testid="reweigh-rejected">{`Dispute not accepted: ${r.dispute_answer ?? ''}`}</p>}
       <div className="flex gap-2.5 mt-3 flex-wrap">
-        {r.photo_url ? <DsLinkButton href={r.photo_url} variant="secondary" icon="image">View photo</DsLinkButton> : <span className="text-[13px] text-[#5B6478]">No scale photo is kept for this parcel.</span>}
+        {r.photo_url ? <DsLinkButton href={r.photo_url} variant="secondary" icon="image">View photo</DsLinkButton> : <span className="text-[13px] text-muted">No scale photo is kept for this parcel.</span>}
         {r.can_dispute && !open && <DsButton variant="secondary" onClick={() => setOpen(true)} testId="reweigh-dispute">Dispute</DsButton>}
       </div>
       {open && (

@@ -16,7 +16,7 @@ export async function importTurnkeyCatalogueAction(rows: Record<string, string>[
   if (apply) {
     revalidateTag('turnkey', 'max');
     revalidatePath('/admin/turnkey');
-    revalidatePath('/turnkey');
+    revalidatePath('/turnkey'); revalidatePath('/turnkey/catalogue');
     const n = out.filter((r) => r.action === 'new').length; const u = out.filter((r) => r.action === 'update').length;
     return { ok: true, rows: out, message: `Imported: ${n} new, ${u} updated.` };
   }

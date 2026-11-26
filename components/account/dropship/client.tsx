@@ -221,8 +221,8 @@ export function DropshipBuyBox({
                       onClick={() => chooseVariant(v.id)}
                       className={`inline-flex items-center gap-2 min-h-11 px-3.5 rounded-full border text-[14px] font-medium ${
                         on
-                          ? 'bg-ink text-white border-ink'
-                          : 'border-line-strong bg-white hover:border-ink'
+                          ? 'bg-coral text-white border-coral'
+                          : 'border-line-strong bg-white hover:bg-sand'
                       }`}
                     >
                       {variantLabel(v)}
@@ -316,7 +316,7 @@ export function DropshipBuyBox({
         </section>
 
         <section
-          className="rounded-[14px] bg-white border-2 border-ink p-5"
+          className="rounded-[16px] bg-white border-2 border-coral p-5"
           aria-labelledby="price-h"
           data-testid="price-box"
         >

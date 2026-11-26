@@ -37,17 +37,17 @@ function Review({ a, plans, canManage, warehouseNames }: { a: Application; plans
     <div className="flex flex-col gap-4" data-testid={`wh-app-${a.code}`}>
       <DsCard title={`${a.code} · ${a.company}`} icon="file" actions={<DsBadge tone={STATUS[a.status][1]}>{STATUS[a.status][0]}</DsBadge>}>
         <dl className="grid grid-cols-[150px_1fr] gap-x-3 gap-y-1.5 m-0 text-[13.5px]">
-          <dt className="text-[#5B6478]">Contact</dt><dd className="m-0">{a.contact_name} · {a.email}{a.phone ? ` · ${a.phone}` : ''}</dd>
-          <dt className="text-[#5B6478]">Country</dt><dd className="m-0">{a.country ?? '—'}</dd>
-          <dt className="text-[#5B6478]">Sells</dt><dd className="m-0 whitespace-pre-line">{a.sells}</dd>
-          <dt className="text-[#5B6478]">Orders a month</dt><dd className="m-0">{BAND[a.orders_band] ?? a.orders_band}</dd>
-          <dt className="text-[#5B6478]">Channels</dt><dd className="m-0">{a.channels.join(', ') || '—'}</dd>
-          <dt className="text-[#5B6478]">Stock comes from</dt><dd className="m-0">{ROUTE[a.stock_route] ?? a.stock_route}</dd>
-          <dt className="text-[#5B6478]">Dangerous goods</dt><dd className="m-0">{[a.has_batteries && 'Batteries', a.has_liquids && 'Liquids'].filter(Boolean).join(', ') || 'None declared'}</dd>
-          <dt className="text-[#5B6478]">Preferred warehouse</dt><dd className="m-0">{a.preferred_warehouse ? warehouseNames[a.preferred_warehouse] ?? a.preferred_warehouse : 'Default'}</dd>
-          <dt className="text-[#5B6478]">Sent</dt><dd className="m-0">{fmtDate(a.created_at, true)}</dd>
-          {a.decline_reason && <><dt className="text-[#5B6478]">Declined because</dt><dd className="m-0">{a.decline_reason}</dd></>}
-          {a.status === 'approved' && <><dt className="text-[#5B6478]">Portal</dt><dd className="m-0">{a.org_id ? 'Open' : 'Opens when they sign in with this email'}</dd></>}
+          <dt className="text-muted">Contact</dt><dd className="m-0">{a.contact_name} · {a.email}{a.phone ? ` · ${a.phone}` : ''}</dd>
+          <dt className="text-muted">Country</dt><dd className="m-0">{a.country ?? '—'}</dd>
+          <dt className="text-muted">Sells</dt><dd className="m-0 whitespace-pre-line">{a.sells}</dd>
+          <dt className="text-muted">Orders a month</dt><dd className="m-0">{BAND[a.orders_band] ?? a.orders_band}</dd>
+          <dt className="text-muted">Channels</dt><dd className="m-0">{a.channels.join(', ') || '—'}</dd>
+          <dt className="text-muted">Stock comes from</dt><dd className="m-0">{ROUTE[a.stock_route] ?? a.stock_route}</dd>
+          <dt className="text-muted">Dangerous goods</dt><dd className="m-0">{[a.has_batteries && 'Batteries', a.has_liquids && 'Liquids'].filter(Boolean).join(', ') || 'None declared'}</dd>
+          <dt className="text-muted">Preferred warehouse</dt><dd className="m-0">{a.preferred_warehouse ? warehouseNames[a.preferred_warehouse] ?? a.preferred_warehouse : 'Default'}</dd>
+          <dt className="text-muted">Sent</dt><dd className="m-0">{fmtDate(a.created_at, true)}</dd>
+          {a.decline_reason && <><dt className="text-muted">Declined because</dt><dd className="m-0">{a.decline_reason}</dd></>}
+          {a.status === 'approved' && <><dt className="text-muted">Portal</dt><dd className="m-0">{a.org_id ? 'Open' : 'Opens when they sign in with this email'}</dd></>}
         </dl>
       </DsCard>
       {open && canManage && (
@@ -74,8 +74,8 @@ function Review({ a, plans, canManage, warehouseNames }: { a: Application; plans
           </div>
         </DsCard>
       )}
-      {open && !canManage && <p className="m-0 text-[13px] text-[#5B6478]">Only warehouse admins review applications.</p>}
-      {msg && <p role={msg.ok ? 'status' : 'alert'} data-testid="wh-app-msg" className={`m-0 text-[13px] ${msg.ok ? 'text-[#1B7F4B]' : 'text-[#B42318]'}`}>{msg.text}</p>}
+      {open && !canManage && <p className="m-0 text-[13px] text-muted">Only warehouse admins review applications.</p>}
+      {msg && <p role={msg.ok ? 'status' : 'alert'} data-testid="wh-app-msg" className={`m-0 text-[13px] ${msg.ok ? 'text-ok' : 'text-bad'}`}>{msg.text}</p>}
     </div>
   );
 }
@@ -102,11 +102,11 @@ export function ClientsClient({ apps, clients, plans, canManage, warehouseNames 
           {list.length === 0 ? <div className="p-5"><DsEmptyState icon="file" title="Nothing here" description="New applications from the public Apply page appear here." /></div> : (
             <ul className="list-none m-0 p-0">
               {list.map((a) => (
-                <li key={a.id} className="border-b border-[#EEF0F4] last:border-0">
+                <li key={a.id} className="border-b border-divider last:border-0">
                   <button type="button" onClick={() => setSel(a.id)} aria-current={current?.id === a.id ? 'true' : undefined}
-                    className={`w-full text-left px-5 py-3 min-h-11 hover:bg-[#FAFBFD] ${current?.id === a.id ? 'bg-[#EEF4FD]' : ''}`} data-testid={`wh-app-row-${a.code}`}>
+                    className={`w-full text-left px-5 py-3 min-h-11 hover:bg-pearl ${current?.id === a.id ? 'bg-tint-2' : ''}`} data-testid={`wh-app-row-${a.code}`}>
                     <div className="flex items-center justify-between gap-3"><span className="font-semibold">{a.company}</span><DsBadge tone={STATUS[a.status][1]}>{STATUS[a.status][0]}</DsBadge></div>
-                    <div className="text-[12.5px] text-[#5B6478]"><span className="font-mono">{a.code}</span> · {a.email} · {fmtDate(a.created_at)}</div>
+                    <div className="text-[12.5px] text-muted"><span className="font-mono">{a.code}</span> · {a.email} · {fmtDate(a.created_at)}</div>
                   </button>
                 </li>
               ))}
@@ -116,7 +116,7 @@ export function ClientsClient({ apps, clients, plans, canManage, warehouseNames 
         <div>{current && <Review key={current.id} a={current} plans={plans} canManage={canManage} warehouseNames={warehouseNames} />}</div>
       </div>
       <DsCard title={`Clients (${clients.length})`} icon="users" noPadding testId="wh-clients">
-        {clients.length === 0 ? <p className="m-0 px-5 py-4 text-[13.5px] text-[#5B6478]">No approved clients yet.</p> : (
+        {clients.length === 0 ? <p className="m-0 px-5 py-4 text-[13.5px] text-muted">No approved clients yet.</p> : (
           <div className="ds-scroll"><table className="ds-tbl min-w-[620px]">
             <thead><tr><th scope="col">Company</th><th scope="col">Plan</th><th scope="col">Preferred warehouse</th><th scope="col">Status</th><th scope="col">Since</th></tr></thead>
             <tbody>{clients.map((c) => (

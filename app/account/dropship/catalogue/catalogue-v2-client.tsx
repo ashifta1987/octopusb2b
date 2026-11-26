@@ -187,7 +187,7 @@ export function ProductDetailHeroClient({
     <div className="flex gap-5 flex-wrap items-start">
       {/* Left Gallery */}
       <div className="flex-1 basis-[340px] min-w-0 flex flex-col gap-2.5">
-        <div className="h-[340px] bg-[#E9EDF5] rounded-[12px] overflow-hidden flex items-center justify-center text-[#5B6478] relative border border-[#E3E7EF]">
+        <div className="h-[340px] bg-fill rounded-[12px] overflow-hidden flex items-center justify-center text-muted relative border border-line">
           {images[activeImageIdx] ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -207,8 +207,8 @@ export function ProductDetailHeroClient({
                 type="button"
                 onClick={() => setActiveImageIdx(idx)}
                 aria-label={`Show image ${idx + 1}`}
-                className={`h-[72px] rounded-[8px] overflow-hidden bg-[#E9EDF5] border p-0 cursor-pointer ${
-                  activeImageIdx === idx ? 'border-[#2A6FD1] ring-2 ring-[#2A6FD1]/30' : 'border-[#E3E7EF]'
+                className={`h-[72px] rounded-[8px] overflow-hidden bg-fill border p-0 cursor-pointer ${
+                  activeImageIdx === idx ? 'border-coral ring-2 ring-coral/30' : 'border-line'
                 }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -240,11 +240,11 @@ export function ProductDetailHeroClient({
           )}
         </div>
 
-        <h1 className="m-0 text-[26px] font-bold flex items-center gap-3 flex-wrap text-[#1A174A]">
+        <h1 className="m-0 text-[26px] font-bold flex items-center gap-3 flex-wrap text-ink">
           <span
             data-page-icon=""
             aria-hidden="true"
-            className="w-10 h-10 rounded-[10px] bg-[#E6EFFB] text-[#2A6FD1] inline-flex items-center justify-center shrink-0"
+            className="w-10 h-10 rounded-[10px] bg-tint text-coral-text inline-flex items-center justify-center shrink-0"
           >
             <DsIcon name="package" size={20} strokeWidth={2} />
           </span>
@@ -252,12 +252,12 @@ export function ProductDetailHeroClient({
         </h1>
 
         <p className="ds-mut m-0 text-[13px]">
-          Model no. <span className="mono font-semibold text-[#1A174A]">{modelNo}</span>
+          Model no. <span className="mono font-semibold text-ink">{modelNo}</span>
           {selectedVariant && selectedVariant.model_no !== modelNo && (
             <>
               {' '}
               · {variantText ? `${variantText} variant ` : 'Variant '}
-              <span className="mono font-semibold text-[#1A174A]">{selectedVariant.model_no}</span>
+              <span className="mono font-semibold text-ink">{selectedVariant.model_no}</span>
             </>
           )}{' '}
           · pushed to your store as SKU <span className="mono">{activeModelNo}</span>, which you can change
@@ -265,7 +265,7 @@ export function ProductDetailHeroClient({
 
         {sourcedRfqCode && (
           <p className="ds-mut m-0 text-[12.5px]" data-testid="detail-sourced-rfq">
-            Sourced from your request <span className="mono font-semibold text-[#1A174A]">{sourcedRfqCode}</span>
+            Sourced from your request <span className="mono font-semibold text-ink">{sourcedRfqCode}</span>
           </p>
         )}
 
@@ -305,7 +305,7 @@ export function ProductDetailHeroClient({
         {tierRows.length > 0 ? (
           <div data-testid="volume-tiers-section">
             <span className="ds-label">Your product cost by quantity in one order</span>
-            <div className="overflow-x-auto border border-[#E3E7EF] rounded-[10px]">
+            <div className="overflow-x-auto border border-line rounded-[10px]">
               <table className="ds-tbl">
                 <thead>
                   <tr>
@@ -329,9 +329,9 @@ export function ProductDetailHeroClient({
           </div>
         ) : (
           baseProductCents != null && (
-            <div className="flex items-center justify-between py-2 border-y border-[#EEF0F4] text-[14px]">
+            <div className="flex items-center justify-between py-2 border-y border-divider text-[14px]">
               <span className="ds-mut">Unit product cost</span>
-              <strong className="mono text-[#1A174A]">
+              <strong className="mono text-ink">
                 {usdShort(Math.max(0, baseProductCents + (selectedVariant?.price_adjust_cents ?? 0)))}
               </strong>
             </div>

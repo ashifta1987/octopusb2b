@@ -48,7 +48,7 @@ async function MyTurnkeyProjects() {
       <Card>
         <Table head={['Project', 'Phase', 'Status', 'Since', 'Started']}
           empty={<EmptyState title="No turnkey projects yet" body="Pick a project from the catalogue or tell us what you want to open. The enquiry is free."
-            action={<Link href="/turnkey" className="btn btn-primary btn-sm">Browse Turnkey Projects</Link>} />}>
+            action={<Link href="/turnkey/catalogue" className="btn btn-primary btn-sm">Browse Turnkey Projects</Link>} />}>
           {rows.map((r) => (
             <tr key={r.code} data-testid={`tk-row-${r.code}`}>
               <td className="td">

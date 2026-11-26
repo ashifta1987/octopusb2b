@@ -21,7 +21,7 @@ export function ThreadReply({ ticketId }: { ticketId: string }) {
       <DsTextarea label="Your reply" value={body} onChange={(e) => setBody(e.target.value)} rows={4} maxLength={10000} required error={error ?? undefined} />
       <div className="flex gap-2.5 mt-2 items-center flex-wrap">
         <DsButton type="submit" icon="send" loading={pending} disabled={pending} testId="thread-send">Send reply</DsButton>
-        {sent && <span role="status" className="text-[13px] text-[#0B6A65]">Reply sent.</span>}
+        {sent && <span role="status" className="text-[13px] text-ok">Reply sent.</span>}
       </div>
     </form>
   );

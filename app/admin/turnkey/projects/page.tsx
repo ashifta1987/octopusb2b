@@ -61,18 +61,18 @@ export default async function TurnkeyClientProjectsPage({ searchParams }: { sear
         subtitle="Every client project moves through 8 phases. Move a project on the project page; the client sees each change." />
       <nav aria-label="Whose projects" className="flex flex-wrap gap-2">
         <Link href={href({ mine: '' })} aria-current={!mine ? 'page' : undefined} data-testid="tk-filter-all"
-          className={`min-h-11 px-3 inline-flex items-center rounded-[10px] border ${!mine ? 'bg-ink text-white border-ink' : 'bg-white border-line text-ink hover:border-ink'}`}>All projects</Link>
+          className={`min-h-11 px-3 inline-flex items-center rounded-[10px] border ${!mine ? 'bg-coral text-white border-coral' : 'bg-white border-line text-ink hover:border-ink'}`}>All projects</Link>
         <Link href={href({ mine: '1' })} aria-current={mine ? 'page' : undefined} data-testid="tk-filter-mine"
-          className={`min-h-11 px-3 inline-flex items-center rounded-[10px] border ${mine ? 'bg-ink text-white border-ink' : 'bg-white border-line text-ink hover:border-ink'}`}>My projects</Link>
+          className={`min-h-11 px-3 inline-flex items-center rounded-[10px] border ${mine ? 'bg-coral text-white border-coral' : 'bg-white border-line text-ink hover:border-ink'}`}>My projects</Link>
         {s.isAdmin && <Link href="/admin/turnkey/approvals" className="min-h-11 px-3 inline-flex items-center rounded-[10px] border bg-white border-line text-ink hover:border-ink font-semibold" data-testid="tk-link-approvals">Fee approvals →</Link>}
       </nav>
       <nav aria-label="Projects by phase" className="flex flex-wrap gap-2" data-testid="tk-staff-funnel">
         <Link href={href({ stage: '' })} aria-current={!stage ? 'page' : undefined}
-          className={`min-h-11 px-3 inline-flex items-center gap-2 rounded-[10px] border ${!stage ? 'bg-ink text-white border-ink' : 'bg-white border-line text-ink hover:border-ink'}`}>All phases</Link>
+          className={`min-h-11 px-3 inline-flex items-center gap-2 rounded-[10px] border ${!stage ? 'bg-coral text-white border-coral' : 'bg-white border-line text-ink hover:border-ink'}`}>All phases</Link>
         {TK_PHASES.map((p) => (
           <Link key={p.code} href={href({ stage: p.code })} aria-current={stage === p.code ? 'page' : undefined}
-            className={`min-h-11 px-3 inline-flex items-center gap-2 rounded-[10px] border ${stage === p.code ? 'bg-ink text-white border-ink' : 'bg-white border-line text-ink hover:border-ink'}`}>
-            {p.n}. {p.name}<span className="mono text-[12px] opacity-80">{perStage.get(p.code) ?? 0}</span>
+            className={`min-h-11 px-3 inline-flex items-center gap-2 rounded-[10px] border ${stage === p.code ? 'bg-coral text-white border-coral' : 'bg-white border-line text-ink hover:border-ink'}`}>
+            {p.n}. {p.name}<span className="mono text-[12px]">{perStage.get(p.code) ?? 0}</span>
           </Link>
         ))}
       </nav>

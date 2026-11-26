@@ -18,8 +18,8 @@ const KIND: Record<string, string> = { domain_event: 'Event between divisions', 
 function Tile({ name, tone, state, line, testId }: { name: string; tone: DsBadgeTone; state: string; line: string; testId: string }) {
   return (
     <div className="ds-card !py-3 flex flex-col gap-1.5" data-testid={testId}>
-      <div className="flex items-center justify-between gap-2"><strong className="text-[14px] text-[#1A174A]">{name}</strong><DsBadge tone={tone} icon={tone === 'ok' ? 'check' : tone === 'warn' ? 'alert' : tone === 'bad' ? 'stop' : 'info'}>{state}</DsBadge></div>
-      <span className="text-[13px] text-[#5B6478]">{line}</span>
+      <div className="flex items-center justify-between gap-2"><strong className="text-[14px] text-ink">{name}</strong><DsBadge tone={tone} icon={tone === 'ok' ? 'check' : tone === 'warn' ? 'alert' : tone === 'bad' ? 'stop' : 'info'}>{state}</DsBadge></div>
+      <span className="text-[13px] text-muted">{line}</span>
     </div>
   );
 }
@@ -44,7 +44,7 @@ export function HealthClient({ data }: { data: HealthPageData }) {
     <div className="flex flex-col gap-5" data-testid="ds-health-page">
       <DsPageHeader title="System health" icon="activity" subtitle="Jobs, webhooks, events between divisions and store connections."
         actions={<DsButton variant="secondary" icon="refresh" onClick={() => router.refresh()} testId="health-refresh">Refresh</DsButton>} />
-      <p className="m-0 -mt-3 text-[13px] text-[#5B6478]">Checked {fmtDateTime(data.checked_at)}</p>
+      <p className="m-0 -mt-3 text-[13px] text-muted">Checked {fmtDateTime(data.checked_at)}</p>
       {msg && <DsNotice tone={msg.ok ? 'ok' : 'bad'} title={msg.ok ? 'Done' : 'Not done'} testId="health-notice">{msg.text}</DsNotice>}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" data-testid="health-tiles">
@@ -58,14 +58,14 @@ export function HealthClient({ data }: { data: HealthPageData }) {
       </div>
 
       <section aria-labelledby="failed-h" className="ds-card !p-0 overflow-hidden" data-testid="health-failed">
-        <h2 id="failed-h" className="m-0 px-5 pt-4 pb-3 text-[17px] font-semibold text-[#1A174A]">Failed jobs</h2>
-        {data.failed.length === 0 ? <p className="m-0 px-5 pb-5 text-[14px] text-[#5B6478]" data-testid="failed-empty">No failed jobs.</p> : (
+        <h2 id="failed-h" className="m-0 px-5 pt-4 pb-3 text-[17px] font-semibold text-ink">Failed jobs</h2>
+        {data.failed.length === 0 ? <p className="m-0 px-5 pb-5 text-[14px] text-muted" data-testid="failed-empty">No failed jobs.</p> : (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Failed jobs">
             <table className="w-full min-w-[760px] text-[14px] border-collapse">
-              <thead className="bg-[#F7F9FC] text-left text-[#5B6478]"><tr><th scope="col" className="px-5 py-2.5 font-medium">Time</th><th scope="col" className="px-3 py-2.5 font-medium">Job</th><th scope="col" className="px-3 py-2.5 font-medium">Merchant</th><th scope="col" className="px-3 py-2.5 font-medium">Reason</th><th scope="col" className="px-3 py-2.5 font-medium">Tries</th><th scope="col" className="px-5 py-2.5 font-medium"><span className="sr-only">Actions</span></th></tr></thead>
+              <thead className="bg-pearl text-left text-muted"><tr><th scope="col" className="px-5 py-2.5 font-medium">Time</th><th scope="col" className="px-3 py-2.5 font-medium">Job</th><th scope="col" className="px-3 py-2.5 font-medium">Merchant</th><th scope="col" className="px-3 py-2.5 font-medium">Reason</th><th scope="col" className="px-3 py-2.5 font-medium">Tries</th><th scope="col" className="px-5 py-2.5 font-medium"><span className="sr-only">Actions</span></th></tr></thead>
               <tbody>
                 {data.failed.map((f) => (
-                  <tr key={`${f.kind}-${f.id}`} className="border-t border-[#EEF0F4] align-top" data-testid={`failed-${f.id}`}>
+                  <tr key={`${f.kind}-${f.id}`} className="border-t border-divider align-top" data-testid={`failed-${f.id}`}>
                     <td className="px-5 py-2.5 whitespace-nowrap">{fmtDateTime(f.at)}</td>
                     <td className="px-3 py-2.5">{KIND[f.kind]}: {f.job}</td>
                     <td className="px-3 py-2.5">{f.merchant ?? '—'}</td>
@@ -93,8 +93,8 @@ export function HealthClient({ data }: { data: HealthPageData }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <section aria-labelledby="tok-h" className="ds-card" data-testid="health-tokens">
-          <h2 id="tok-h" className="m-0 mb-2 text-[17px] font-semibold text-[#1A174A]">Store access (token refresh)</h2>
-          {data.token_failures.length === 0 ? <p className="m-0 text-[14px] text-[#5B6478]">No store needs reconnecting.{data.stores_active ? '' : ' No store is connected yet.'}</p> : (
+          <h2 id="tok-h" className="m-0 mb-2 text-[17px] font-semibold text-ink">Store access (token refresh)</h2>
+          {data.token_failures.length === 0 ? <p className="m-0 text-[14px] text-muted">No store needs reconnecting.{data.stores_active ? '' : ' No store is connected yet.'}</p> : (
             <ul className="m-0 p-0 list-none flex flex-col gap-2 text-[14px]">
               {data.token_failures.map((t) => (
                 <li key={t.id} className="flex flex-wrap items-center gap-2"><span className="flex-1">{t.merchant} · {t.shop_domain}: {t.reason ?? 'Refresh token rejected: store must reconnect'}</span>
@@ -104,8 +104,8 @@ export function HealthClient({ data }: { data: HealthPageData }) {
           )}
         </section>
         <section aria-labelledby="wh-h" className="ds-card" data-testid="health-webhooks">
-          <h2 id="wh-h" className="m-0 mb-2 text-[17px] font-semibold text-[#1A174A]">Webhook failures</h2>
-          {data.webhooks.store_failed.length === 0 ? <p className="m-0 text-[14px] text-[#5B6478]">No failed webhooks.</p> : (
+          <h2 id="wh-h" className="m-0 mb-2 text-[17px] font-semibold text-ink">Webhook failures</h2>
+          {data.webhooks.store_failed.length === 0 ? <p className="m-0 text-[14px] text-muted">No failed webhooks.</p> : (
             <ul className="m-0 p-0 list-none flex flex-col gap-1.5 text-[14px]">
               {data.webhooks.store_failed.map((w, i) => <li key={i}>{fmtDateTime(w.received_at)} · {w.source} {w.topic ?? ''}: {w.error} ({w.attempts} tries)</li>)}
             </ul>
@@ -114,8 +114,8 @@ export function HealthClient({ data }: { data: HealthPageData }) {
       </div>
 
       <section aria-labelledby="sync-h" className="ds-card" data-testid="health-sync">
-        <h2 id="sync-h" className="m-0 mb-2 text-[17px] font-semibold text-[#1A174A]">Sync errors</h2>
-        {data.sync_errors.length === 0 ? <p className="m-0 text-[14px] text-[#5B6478]">No sync errors.</p> : (
+        <h2 id="sync-h" className="m-0 mb-2 text-[17px] font-semibold text-ink">Sync errors</h2>
+        {data.sync_errors.length === 0 ? <p className="m-0 text-[14px] text-muted">No sync errors.</p> : (
           <ul className="m-0 p-0 list-none flex flex-col gap-1.5 text-[14px]">
             {data.sync_errors.map((e, i) => <li key={i}>{fmtDateTime(e.at)} · {e.merchant} · {e.kind}: {e.change} → {e.result}</li>)}
           </ul>
@@ -123,20 +123,20 @@ export function HealthClient({ data }: { data: HealthPageData }) {
       </section>
 
       <section aria-labelledby="jobs-h" className="ds-card !p-0 overflow-hidden" data-testid="health-jobs">
-        <h2 id="jobs-h" className="m-0 px-5 pt-4 pb-3 text-[17px] font-semibold text-[#1A174A]">Scheduled jobs</h2>
-        {!data.cron_readable ? <p className="m-0 px-5 pb-5 text-[14px] text-[#5B6478]">The job scheduler can&rsquo;t be read here.</p> : (
+        <h2 id="jobs-h" className="m-0 px-5 pt-4 pb-3 text-[17px] font-semibold text-ink">Scheduled jobs</h2>
+        {!data.cron_readable ? <p className="m-0 px-5 pb-5 text-[14px] text-muted">The job scheduler can&rsquo;t be read here.</p> : (
           <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scheduled jobs">
             <table className="w-full min-w-[640px] text-[14px] border-collapse">
-              <thead className="bg-[#F7F9FC] text-left text-[#5B6478]"><tr><th scope="col" className="px-5 py-2.5 font-medium">Job</th><th scope="col" className="px-3 py-2.5 font-medium">When</th><th scope="col" className="px-3 py-2.5 font-medium">Last run</th><th scope="col" className="px-5 py-2.5 font-medium">Result</th></tr></thead>
+              <thead className="bg-pearl text-left text-muted"><tr><th scope="col" className="px-5 py-2.5 font-medium">Job</th><th scope="col" className="px-3 py-2.5 font-medium">When</th><th scope="col" className="px-3 py-2.5 font-medium">Last run</th><th scope="col" className="px-5 py-2.5 font-medium">Result</th></tr></thead>
               <tbody>
                 {data.jobs.map((j) => (
-                  <tr key={j.name} className="border-t border-[#EEF0F4]" data-testid={`job-${j.name}`}>
-                    <td className="px-5 py-2.5 text-[#1A174A]">{j.name.replace(/^octopus-/, '').replace(/-/g, ' ')}</td>
+                  <tr key={j.name} className="border-t border-divider" data-testid={`job-${j.name}`}>
+                    <td className="px-5 py-2.5 text-ink">{j.name.replace(/^octopus-/, '').replace(/-/g, ' ')}</td>
                     <td className="px-3 py-2.5 font-mono text-[13px]">{j.schedule}{j.active ? '' : ' (off)'}</td>
                     <td className="px-3 py-2.5">{j.last_start ? fmtDateTime(j.last_start) : 'Not run yet'}</td>
                     <td className="px-5 py-2.5">{j.last_status == null ? '—' : <DsBadge tone={j.last_status === 'succeeded' ? 'ok' : j.last_status === 'failed' ? 'bad' : 'info'}>{j.last_status === 'succeeded' ? 'OK' : j.last_status === 'failed' ? 'Failed' : j.last_status}</DsBadge>}
-                      {j.failed_24h > 0 ? <span className="ml-2 text-[13px] text-[#B42318]">{j.failed_24h} failed in 24 h</span> : null}
-                      {j.last_message ? <span className="block text-[13px] text-[#5B6478]">{j.last_message}</span> : null}</td>
+                      {j.failed_24h > 0 ? <span className="ml-2 text-[13px] text-bad">{j.failed_24h} failed in 24 h</span> : null}
+                      {j.last_message ? <span className="block text-[13px] text-muted">{j.last_message}</span> : null}</td>
                   </tr>
                 ))}
               </tbody>

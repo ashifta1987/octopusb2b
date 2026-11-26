@@ -6,10 +6,10 @@ import { assertStagingOrThrow, assertStagingDatabase } from '../../scripts/lib-s
 
 /**
  * Turnkey T0 + T1 E2E (STAGING ONLY) — design docs/design/turnkey-v2 (Catalogue + Services, matched to the text).
- *  1. /turnkey: hero with "Book a consultation (from $99)", Visit China banner, photo cards, search, category chips,
- *     detail pop-up (Escape closes it), 8 phases.
+ *  1. /turnkey (design page 07, overview) links to /turnkey/catalogue (design page 08): Visit China banner, live photo
+ *     cards, search, category chips, detail pop-up (Escape closes it), 8 phases.
  *  2. /turnkey/services: every fee shown as a starting price.
- *  3. Old ADDON-31 URLs redirect to the catalogue.
+ *  3. Old ADDON-31 URLs redirect to the Turnkey overview; /turnkey/catalogue is not redirected.
  *  4. Admin import: preview, tick, import; the new project shows on the public page.
  *  5. axe clean at 1280 px and 390 px.
  */
@@ -39,12 +39,16 @@ test.afterAll(async () => {
   await deleteTempStaff(admin);
 });
 
-test('T1 catalogue: hero, cards, search, chips, dialog, phases; axe', async ({ page }) => {
+test('T1 overview + catalogue: hero, cards, search, chips, dialog, phases; axe', async ({ page }) => {
   for (const [w, h] of [[1280, 1000], [390, 844]] as const) {
     await page.setViewportSize({ width: w, height: h });
     await page.goto('/turnkey');
+    await expect(page.getByTestId('tk-overview')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Your complete business, set up from China.');
+    await expect(page.getByTestId('tk-browse').getByRole('link')).toHaveAttribute('href', '/turnkey/catalogue');
+    await checkAxe(page, `overview @${w}`);
+    await page.goto('/turnkey/catalogue');
     await expect(page.getByTestId('tk-catalogue')).toBeVisible();
-    await expect(page.getByTestId('tk-book-consultation')).toContainText('from $99');
     await expect(page.getByTestId('tk-visit-banner')).toContainText('From $399 per day');
     await expect(page.getByTestId('tk-phases').locator('li')).toHaveCount(8);
     const total = await page.getByTestId('tk-cards').locator('li').count();
@@ -52,7 +56,7 @@ test('T1 catalogue: hero, cards, search, chips, dialog, phases; axe', async ({ p
     await checkAxe(page, `catalogue @${w}`);
   }
   await page.setViewportSize({ width: 1280, height: 1000 });
-  await page.goto('/turnkey');
+  await page.goto('/turnkey/catalogue');
   await page.getByTestId('tk-search').fill('zzzz-no-such-project');
   await expect(page.getByTestId('tk-empty')).toBeVisible();
   await page.getByTestId('tk-search').fill('');
@@ -80,13 +84,16 @@ test('T1 services: every fee is a starting price; axe', async ({ page }) => {
   await checkAxe(page, 'services @1280');
 });
 
-test('T0 old Turnkey URLs go to the catalogue', async ({ page }) => {
+test('T0 old Turnkey URLs go to the Turnkey overview; the catalogue keeps its URL', async ({ page }) => {
   for (const old of ['/turnkey/atlas', '/turnkey/gym-fit-out', '/turnkey/gym-fit-out/request', '/turnkey/gym-fit-out/interest']) {
     await page.goto(old);
     await expect(page, old).toHaveURL(/\/turnkey$/);
   }
   await page.goto('/turnkey/services');
   await expect(page).toHaveURL(/\/turnkey\/services$/);
+  await page.goto('/turnkey/catalogue');
+  await expect(page).toHaveURL(/\/turnkey\/catalogue$/);
+  await expect(page.getByTestId('tk-catalogue')).toBeVisible();
 });
 
 test('T1 admin import: preview, import, public card', async ({ page }) => {
@@ -102,7 +109,7 @@ test('T1 admin import: preview, import, public card', async ({ page }) => {
   await expect(page.getByTestId('tk-import-preview-table')).toContainText('New');
   await page.getByTestId('tk-import-apply').click();
   await expect(page.getByTestId('tk-import-msg')).toContainText('Imported: 1 new');
-  await page.goto('/turnkey');
+  await page.goto('/turnkey/catalogue');
   await page.getByTestId('tk-search').fill('E2E Laundry');
   await expect(page.getByTestId(`tk-card-${TEST_ID}`)).toBeVisible();
 });

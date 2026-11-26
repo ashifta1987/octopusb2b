@@ -98,7 +98,7 @@ async function TermsTab({ isAdmin, editable, sectionNo, viewId }: { isAdmin: boo
         <nav aria-label="Sections" className="px-6 pt-4 flex flex-wrap gap-2">
           {Array.from({ length: 15 }, (_, i) => i + 1).map((n) => (
             <Link key={n} href={`/admin/content?tab=terms&s=${n}${vParam}`} aria-current={n === no ? 'true' : undefined} aria-label={`Section ${n}`}
-              className={cn('min-w-10 h-10 inline-flex items-center justify-center rounded-[8px] border mono text-sm font-semibold', n === no ? 'bg-ink text-white border-ink' : 'bg-white border-line-strong hover:border-ink')}>
+              className={cn('min-w-10 h-10 inline-flex items-center justify-center rounded-[8px] border mono text-sm font-semibold', n === no ? 'bg-coral text-white border-coral' : 'bg-white border-line-strong hover:border-ink')}>
               {n}
             </Link>
           ))}

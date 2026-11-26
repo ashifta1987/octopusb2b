@@ -164,7 +164,7 @@ function Steps({ current, done }: { current: number; done: number }) {
         const isCur = n === current && !isDone;
         return (
           <li key={s} aria-current={isCur ? 'step' : undefined}
-            className={cn('rounded-full px-3 py-1.5 text-xs font-semibold', isDone ? 'bg-ink text-white' : isCur ? 'bg-coral text-white' : 'bg-fill text-black')}>
+            className={cn('step-pill', isDone ? 'is-done' : isCur && 'is-current')}>
             {n} {s}{isDone ? ' ✓' : ''}
           </li>
         );
@@ -207,7 +207,7 @@ export function RestoreCard({ mode, request, backup, checks, postChecks, names, 
   if (mode === 'none' || !backup) {
     return (
       <section id="restore" className="card p-6 mb-6 scroll-mt-6">
-        <div className="eyebrow mono text-xs text-muted uppercase tracking-wider">Restore</div>
+        <div className="eyebrow mono text-xs text-muted uppercase tracking-[.12em]">Restore</div>
         <h2 className="text-lg font-semibold mt-1">Restore wizard</h2>
         <p className="text-sm text-muted mt-1">Pick a completed backup above and press <b>Restore</b> (or <b>Verify</b> for a restore drill). Every restore is verified in a scratch project first, then needs a second approver.</p>
         <p className="text-sm mt-3"><Link href="/admin/backups/recovery" className="text-coral-text font-semibold">Partial restore — compare records side by side →</Link></p>

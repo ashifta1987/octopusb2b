@@ -2,12 +2,12 @@ import { test, expect } from '@playwright/test';
 import { adminClient } from './helpers/customer';
 
 /** ADDON-44-C — audit quick fixes (03, 05, 06, 09, 11, 13, 16) on public pages. */
-const PUBLIC = ['/', '/about', '/turnkey', '/developers', '/pools', '/request/dropship', '/request/3pl', '/request/sourcing', '/3pl'];
+const PUBLIC = ['/', '/about', '/turnkey', '/turnkey/catalogue', '/developers', '/sourcing', '/make-my-brand', '/pools', '/request/dropship', '/request/3pl', '/request/sourcing', '/3pl', '/login'];
 
 test('no carrier name, card payment, separate dropship app or unsupported platforms on public pages', async ({ request }) => {
   for (const path of PUBLIC) {
     const html = await (await request.get(path)).text();
-    for (const bad of [/yunexpress/i, /dropship app/i, /by card/i, /card \/ bank transfer/i, /\bWix\b/, /send orders here automatically/i]) {
+    for (const bad of [/yunexpress/i, /\b4PX\b/, /\bDHL\b/, /dropship app/i, /by card/i, /card \/ bank transfer/i, /\bWix\b/, /send orders here automatically/i]) {
       expect(html, `${path} contains ${bad}`).not.toMatch(bad);
     }
   }

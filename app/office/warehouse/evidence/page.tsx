@@ -41,11 +41,11 @@ async function Content({ searchParams }: { searchParams: Promise<{ q?: string }>
             const diff = o.expected_weight_g != null && o.measured_weight_g != null ? o.measured_weight_g - o.expected_weight_g : null;
             return (
               <tr key={o.id} data-testid={`wh-evidence-row-${o.code}`}>
-                <td><Link href={`/office/warehouse/evidence/${o.code}`} className="font-mono font-semibold text-[#2559B8] underline">{o.code}</Link>
-                  {o.external_ref && <div className="text-[12px] text-[#5B6478]">{o.external_ref}</div>}</td>
+                <td><Link href={`/office/warehouse/evidence/${o.code}`} className="font-mono font-semibold text-coral-text underline">{o.code}</Link>
+                  {o.external_ref && <div className="text-[12px] text-muted">{o.external_ref}</div>}</td>
                 <td>{o.owner}</td>
                 <td>{fmtWh(o.packed_at)}</td>
-                <td>{grams(o.measured_weight_g)}{o.expected_weight_g != null ? <div className="text-[12px] text-[#5B6478]">expected {grams(o.expected_weight_g)}{diff != null ? ` (${diff > 0 ? '+' : ''}${diff} g)` : ''}</div> : null}
+                <td>{grams(o.measured_weight_g)}{o.expected_weight_g != null ? <div className="text-[12px] text-muted">expected {grams(o.expected_weight_g)}{diff != null ? ` (${diff > 0 ? '+' : ''}${diff} g)` : ''}</div> : null}
                   {o.override && <DsBadge tone="warn">Supervisor approved</DsBadge>}</td>
                 <td>{o.photos} · {EVIDENCE_KINDS.every((k) => o.kinds.includes(k)) ? <DsBadge tone="ok">Complete</DsBadge> : <DsBadge tone="bad">Missing</DsBadge>}</td>
                 <td>{fmtWh(o.retention_until)}</td>

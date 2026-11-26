@@ -3,12 +3,15 @@ import { notFound } from 'next/navigation';
 import { getSiteContent } from '@/lib/content';
 import { getPage } from './data';
 import { Breadcrumbs, Prose } from './seo';
+import { siteImage } from '@/lib/site-images';
+import { Pic } from '@/components/site/ui';
 
 /** /about and /contact — CMS page body + company_profile + branches (all from CMS). */
 export async function CompanyPage({ slug, showContact }: { slug: 'about' | 'contact'; showContact?: boolean }) {
   const [page, { company, branches }] = await Promise.all([getPage(slug), getSiteContent()]);
   if (!page && !company) notFound();
   const title = page?.title ?? (slug === 'about' ? 'About us' : 'Contact us');
+  const contactImg = slug === 'contact' ? siteImage('contact-office') : null;
   const wa = company?.whatsapp ? `https://wa.me/${company.whatsapp.replace(/\D/g, '')}` : null;
   return (
     <div className="max-w-[1100px] mx-auto px-4 sm:px-8 py-10">
@@ -17,6 +20,7 @@ export async function CompanyPage({ slug, showContact }: { slug: 'about' | 'cont
       {company?.tagline && <p className="eyebrow mt-2">{company.tagline}</p>}
       <div className="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr] items-start">
         <div className="space-y-6 min-w-0">
+          {contactImg && <Pic src={contactImg.src} alt={contactImg.alt} sizes="(min-width:1024px) 620px, 100vw" preload />}
           {page && <div className="card p-6 sm:p-8"><Prose text={page.body} /></div>}
           {showContact && (
             <div className="flex flex-wrap gap-3">

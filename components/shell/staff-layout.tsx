@@ -48,5 +48,5 @@ export async function StaffLayoutShell({ next, children }: { next: string; child
     approvals: q?.myApprovals ?? 0,
     transfers: q?.items.filter((i) => i.key.startsWith('tt-')).length ?? 0,
   };
-  return <StaffShell session={session} nav={OFFICE_NAV} counts={counts} moderation={moderation} unread={unread} scope={scope} dropshipV2Ui={dropshipV2Ui} canEditDropship={canEditDropship} canSeeRates={canSeeRates} in3pl={in3pl} warehouseMember={warehouseMember}>{children}</StaffShell>;
+  return <StaffShell area={next.replace(/\W+/g, '') || 'staff'} session={session} nav={OFFICE_NAV} counts={counts} moderation={moderation} unread={unread} scope={scope} dropshipV2Ui={dropshipV2Ui} canEditDropship={canEditDropship} canSeeRates={canSeeRates} in3pl={in3pl} warehouseMember={warehouseMember}>{children}</StaffShell>;
 }

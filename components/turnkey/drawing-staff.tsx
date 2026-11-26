@@ -8,7 +8,7 @@ import { registerDrawingAction, staffDrawingCommentAction, waiveDrawingFeeAction
 
 type Msg = { ok: boolean; text: string } | null;
 const Note = ({ msg, id }: { msg: Msg; id: string }) => msg
-  ? <p role="status" className={`m-0 rounded-[10px] border px-4 py-3 text-sm ${msg.ok ? 'bg-ok-bg border-ok/40 text-ok' : 'bg-bad-bg border-bad/40 text-bad'}`} data-testid={id}>{msg.text}</p>
+  ? <p role="status" className={`m-0 rounded-[10px] border px-4 py-3 text-sm ${msg.ok ? 'bg-ok-bg border-ok-line text-ok font-semibold' : 'bg-bad-bg border-bad/40 text-bad'}`} data-testid={id}>{msg.text}</p>
   : null;
 
 /**

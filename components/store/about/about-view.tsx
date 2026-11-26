@@ -4,6 +4,8 @@ import { ShieldCheck, House, Globe, SquareCheck, MapPin, Phone, Mail, Clock, Mes
 import { block, getSiteContent, type Branch } from '@/lib/content';
 import { copy, fill, hasToken, n } from '@/components/store/home/shared';
 import { getHomeLiveData } from '@/components/store/home/live-data';
+import { siteImage } from '@/lib/site-images';
+import { Pic } from '@/components/site/ui';
 
 /**
  * /about — docs/design/About.png. Every text comes from content_blocks `about.*`, company_profile and branches
@@ -94,11 +96,13 @@ export async function AboutView() {
   }).filter((p) => p.h && p.d && !hasToken(p.h) && !hasToken(p.d));
   const partners = copy(blocks, 'about.partners', '').filter(Boolean);
   const [cRfq, cSupplier] = copy(blocks, 'about.company.buttons', 'Send us an RFQ|Become a supplier');
+  const teamImg = siteImage('about-team');
+  const officeImg = siteImage('about-office');
 
   return (
     <>
       {/* ───── Hero ───── */}
-      <section className="relative overflow-hidden text-white bg-[linear-gradient(135deg,#0A0B2A_0%,#11133C_55%,#1A1F5C_100%)]" aria-labelledby="about-h">
+      <section className="relative overflow-hidden text-white bg-ink" aria-labelledby="about-h">
         <div aria-hidden className="absolute -top-[120px] -right-20 w-[540px] h-[540px] rounded-full bg-[radial-gradient(circle,rgba(42,111,214,0.3),transparent_65%)]" />
         <div aria-hidden className="absolute -bottom-[140px] -left-[60px] w-[460px] h-[460px] rounded-full bg-[radial-gradient(circle,rgba(111,168,242,0.18),transparent_65%)]" />
         <div className="relative max-w-[1360px] mx-auto px-4 sm:px-8 py-12 sm:py-16 grid gap-10 lg:gap-14 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] items-center">
@@ -122,7 +126,7 @@ export async function AboutView() {
             <dl className="grid grid-cols-2 gap-3" aria-label="Octopus B2B in numbers">
               {stats.map((s) => (
                 <div key={s.l} className="bg-white/[0.06] border border-white/10 rounded-[14px] p-4 sm:p-5 flex flex-col-reverse">
-                  <dt className="text-[13px] text-muted mt-1.5">{s.l}</dt>
+                  <dt className="text-[13px] text-on-ink mt-1.5">{s.l}</dt>
                   <dd className="font-[family-name:var(--font-display)] font-extrabold text-[28px] sm:text-[32px] leading-none text-white">{s.v}</dd>
                 </div>
               ))}
@@ -152,6 +156,15 @@ export async function AboutView() {
               </ul>
             )}
           </div>
+        </div>
+      </section>
+
+      {/* ───── Team and warehouse photos (owner image slots about-team / about-office) ───── */}
+      <section aria-label="Our team and warehouse" className="max-w-[1360px] mx-auto px-4 sm:px-8 pt-12 sm:pt-16">
+        <div className={`grid gap-5 items-start ${teamImg.supplied ? 'lg:grid-cols-[1.4fr_1fr]' : ''}`}>
+          {/* owner 27 Nov: the team photo shows only when the owner's real photo is supplied */}
+          {teamImg.supplied && <figure className="m-0"><Pic src={teamImg.src} alt={teamImg.alt} sizes="(min-width:1024px) 760px, 100vw" /><figcaption className="mt-2.5 text-[15px] text-muted">The Octopus team in China.</figcaption></figure>}
+          <figure className="m-0"><Pic src={officeImg.src} alt={officeImg.alt} sizes="(min-width:1024px) 540px, 100vw" /><figcaption className="mt-2.5 text-[15px] text-muted">Our warehouse in Foshan, China.</figcaption></figure>
         </div>
       </section>
 
@@ -196,7 +209,7 @@ export async function AboutView() {
       {/* ───── Company details ───── */}
       {company && (
         <section aria-labelledby="co-h" className="max-w-[1360px] mx-auto px-4 sm:px-8 pt-14 sm:pt-[72px]">
-          <div className="rounded-2xl border border-tint bg-[linear-gradient(135deg,#FFFFFF_0%,#F4F8FE_100%)] p-6 sm:p-9 flex flex-wrap gap-8 items-center justify-between">
+          <div className="rounded-2xl border border-tint bg-white p-6 sm:p-9 flex flex-wrap gap-8 items-center justify-between">
             <div className="flex-[1_1_460px] min-w-0 flex flex-col gap-2.5">
               <span className={eyebrow}>{t('about.company.eyebrow', 'Company details')}</span>
               <h2 id="co-h" className="text-[24px] sm:text-[28px] font-extrabold leading-[1.15]">{company.legal_name}</h2>

@@ -34,16 +34,16 @@ async function Content({ params }: { params: Promise<{ code: string }> }) {
       <WhHeader access={access} title={`Evidence ${o.code}`} icon="image" subtitle={`${o.owner}${o.external_ref ? ` · ref ${o.external_ref}` : ''}${o.store_order ? ` · ${o.store_order}` : ''}`} />
       <DsCard title="Weight check" icon="scale" testId="wh-evidence-weights" actions={<><OrderStatusBadge status={o.status} /><DgBadge kinds={o.dg_kinds} /></>}>
         <dl className="grid grid-cols-[160px_1fr] gap-x-3 gap-y-1.5 m-0 text-[13.5px]">
-          <dt className="text-[#5B6478]">Box</dt><dd className="m-0">{o.box ? `${o.box.name} · empty ${grams(o.box.tare_g)}` : '—'}</dd>
-          <dt className="text-[#5B6478]">Expected</dt><dd className="m-0">{o.expected_weight_g == null ? 'Unknown' : `${grams(o.expected_weight_g)} ± ${o.tolerance_g} g`}</dd>
-          <dt className="text-[#5B6478]">Measured</dt><dd className="m-0" data-testid="wh-evidence-measured">{grams(o.measured_weight_g)}{diff != null ? ` (${diff > 0 ? '+' : ''}${diff} g)` : ''}</dd>
-          <dt className="text-[#5B6478]">Result</dt>
+          <dt className="text-muted">Box</dt><dd className="m-0">{o.box ? `${o.box.name} · empty ${grams(o.box.tare_g)}` : '—'}</dd>
+          <dt className="text-muted">Expected</dt><dd className="m-0">{o.expected_weight_g == null ? 'Unknown' : `${grams(o.expected_weight_g)} ± ${o.tolerance_g} g`}</dd>
+          <dt className="text-muted">Measured</dt><dd className="m-0" data-testid="wh-evidence-measured">{grams(o.measured_weight_g)}{diff != null ? ` (${diff > 0 ? '+' : ''}${diff} g)` : ''}</dd>
+          <dt className="text-muted">Result</dt>
           <dd className="m-0">{o.override_by_name ? <DsBadge tone="warn">Approved by {o.override_by_name}: “{o.override_reason}”</DsBadge> : o.measured_weight_g != null ? <DsBadge tone="ok">Inside tolerance</DsBadge> : '—'}</dd>
-          {o.has_dangerous_goods && <><dt className="text-[#5B6478]">Battery mark</dt><dd className="m-0">{o.battery_mark ? 'Applied' : 'Not applied'}</dd></>}
-          <dt className="text-[#5B6478]">Packed</dt><dd className="m-0">{fmtWh(o.packed_at)}{o.packed_by_name ? ` · ${o.packed_by_name}` : ''}</dd>
-          <dt className="text-[#5B6478]">Proof kept until</dt><dd className="m-0" data-testid="wh-evidence-kept">{kept ? fmtWh(kept) : '—'} ({d.settings.retention_days} days at this warehouse)</dd>
+          {o.has_dangerous_goods && <><dt className="text-muted">Battery mark</dt><dd className="m-0">{o.battery_mark ? 'Applied' : 'Not applied'}</dd></>}
+          <dt className="text-muted">Packed</dt><dd className="m-0">{fmtWh(o.packed_at)}{o.packed_by_name ? ` · ${o.packed_by_name}` : ''}</dd>
+          <dt className="text-muted">Proof kept until</dt><dd className="m-0" data-testid="wh-evidence-kept">{kept ? fmtWh(kept) : '—'} ({d.settings.retention_days} days at this warehouse)</dd>
         </dl>
-        <p className="mt-3 mb-0"><Link href={`/office/warehouse/orders/${o.code}`} className="text-[13px] font-semibold text-[#2559B8] underline">Order detail and history</Link></p>
+        <p className="mt-3 mb-0"><Link href={`/office/warehouse/orders/${o.code}`} className="text-[13px] font-semibold text-coral-text underline">Order detail and history</Link></p>
       </DsCard>
       <DsCard title="Photos" icon="image" testId="wh-evidence-photos"><EvidenceGallery items={photos} /></DsCard>
       <DsTableCard title="Packing scan log" icon="activity" testId="wh-evidence-scans" minWidth={520} headers={['When', 'Scanned', 'Result', 'By']}>

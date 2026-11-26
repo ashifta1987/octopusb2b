@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { DsIcon, DsTopBar, type DsIconName } from '@/components/dropship-ui';
 import { dsInter } from '@/components/dropship-ui/font';
+import { AppLogo } from './app-logo';
 
 /**
  * Warehouse OS staff shell (docs/design/warehouse-os §4): one left menu for every desktop staff screen.
@@ -61,60 +62,66 @@ export function WarehouseStaffShell({
   userName, initials, unreadCount = 0, isStaging = false, isAdmin = false, warehouseMember = true, children,
 }: { userName: string; initials: string; unreadCount?: number; isStaging?: boolean; isAdmin?: boolean; warehouseMember?: boolean; children: ReactNode }) {
   const pathname = usePathname();
+  // Design handoff 26 Nov 2026 (App shell §3): 264 px white sidebar (full-colour logo, context box, 44 px items), white
+  // top bar, Pearl main. Phones keep the menu strip above the top bar; printing a label sheet hides menu and top bar.
   return (
-    <div data-testid="warehouse-staff-shell" className={`${dsInter.variable} ds-v2 min-h-screen flex flex-col md:flex-row bg-[#F4F6F9] text-[#1A174A] overflow-x-hidden`}>
-      <nav aria-label="Warehouse" data-testid="warehouse-sidebar" className="print:hidden w-full md:w-[248px] shrink-0 bg-[#1A174A] text-white px-4 py-6 box-border flex flex-col gap-1">
-        <Link href="/office/warehouse" className="block px-2 pb-1.5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/octopus-b2b-logo-white.png" alt="Octopus B2B" className="w-[150px] max-w-full h-auto block" />
-        </Link>
-        <div className="px-2 pb-4 text-[12px] text-[#C9D3E3]">Warehouse OS · 3PL and logistics</div>
-        <div className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible pb-2 md:pb-0" role="region" aria-label="Warehouse navigation" tabIndex={0}>
+    <div data-testid="warehouse-staff-shell" className={`${dsInter.variable} ds-v2 app-shell min-h-screen bg-pearl text-black overflow-x-clip app-cols md:grid md:grid-cols-[264px_minmax(0,1fr)] md:grid-rows-[auto_1fr] print:block print:bg-white`}>
+      <a href="#wh-staff-main" className="skip-link print:hidden">Skip to content</a>
+      <nav aria-label="Warehouse" data-testid="warehouse-sidebar" className="print:hidden app-sidebar w-full box-border gap-1 border-b md:border-b-0 md:border-r px-4 pt-4 pb-2 md:px-3.5 md:pt-6 md:pb-7 md:col-start-1 md:row-start-1 md:row-span-2 md:sticky md:top-0 md:self-start md:h-screen md:overflow-y-auto">
+        <div className="px-2 pb-3 md:pb-4">
+          <AppLogo variant="b2b" href="/office/warehouse" label="Octopus B2B" className="[&_img]:h-[40px] md:[&_img]:h-[48px]" />
+        </div>
+        <div className="app-context mb-1 md:mb-2">
+          <span className="app-context-tile" aria-hidden="true"><DsIcon name="box" size={22} /></span>
+          <span className="min-w-0 text-[14px] font-bold leading-snug text-ink">Warehouse OS · 3PL and logistics</span>
+        </div>
+        <div className="app-grp hidden md:block">Menu</div>
+        <div className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible pt-1 pb-2 md:p-0" role="region" aria-label="Warehouse navigation" tabIndex={0}>
           {ITEMS.filter((i) => (!i.adminOnly || isAdmin) && (warehouseMember || i.open)).map((i) => {
             if (i.ships) {
               return (
                 <span key={i.href} aria-disabled="true" title={`Ships in step ${i.ships}`}
-                  className="flex items-center gap-3 px-3 min-h-[44px] rounded-[8px] text-[14px] whitespace-nowrap text-[#AEB9D6] cursor-default select-none">
-                  <DsIcon name={i.icon} size={18} />
+                  className="app-nav shrink-0 whitespace-nowrap text-muted font-medium cursor-default select-none hover:bg-transparent">
+                  <DsIcon name={i.icon} size={20} />
                   <span>{i.label}</span>
-                  <span className="ml-auto text-[10.5px] font-bold tracking-wide text-[#AEB9D6] border border-[#3A3775] rounded px-1.5">{i.ships}</span>
+                  <span className="ml-auto text-[11px] font-bold tracking-wide text-muted border border-line rounded px-1.5">{i.ships}</span>
                 </span>
               );
             }
             const on = active(i.href, pathname);
             return (
               <Link key={i.href} href={i.href} aria-current={on ? 'page' : undefined}
-                className={`flex items-center gap-3 px-3 min-h-[44px] rounded-[8px] no-underline text-[14px] whitespace-nowrap ${on ? 'bg-[#2E2B66] text-white hover:text-white font-semibold shadow-[inset_3px_0_0_#8FB6F8]' : 'text-[#C9D3E3] hover:text-white hover:bg-[#221F58] font-medium'}`}>
-                <DsIcon name={i.icon} size={18} />
+                className="app-nav shrink-0 whitespace-nowrap hover:text-ink">
+                <DsIcon name={i.icon} size={20} />
                 <span>{i.label}</span>
               </Link>
             );
           })}
         </div>
         <div className="mt-auto pt-4 md:pt-6">
-          <div className="p-3 border border-[#3A3775] rounded-[10px] text-[12px] leading-[1.5] text-[#C9D3E3]">
-            <Link href="/account/warehouse" className="block text-[#8FB6F8] hover:text-white font-semibold no-underline">Client portal →</Link>
-            <Link href="/admin" className="inline-block mt-1.5 text-[#8FB6F8] hover:text-white font-semibold no-underline">Back to Admin work queue →</Link>
+          <div className="px-3.5 py-1 border border-line rounded-[14px] bg-pearl text-[13px] leading-[1.5]">
+            <Link href="/account/warehouse" className="flex items-center min-h-11 text-coral-text hover:text-ink font-semibold no-underline">Client portal →</Link>
+            <Link href="/admin" className="flex items-center min-h-11 text-coral-text hover:text-ink font-semibold no-underline">Back to Admin work queue →</Link>
           </div>
         </div>
       </nav>
-      <main className="flex-1 min-w-0 px-4 py-5 md:px-8 md:pt-5 md:pb-10 box-border print:p-0">
+      <header className="app-topbar print:hidden md:col-start-2 md:row-start-1">
+        <DsTopBar
+          searchPlaceholder="Search orders and stock"
+          searchAction=""
+          unreadCount={unreadCount}
+          notificationsHref="/admin/notifications"
+          helpHref="/office/support"
+          accountHref="/staff/account"
+          backToAccountHref="/admin"
+          backToAccountLabel="Back to Admin work queue"
+          userName={userName}
+          initials={initials}
+          extraRight={isStaging ? <span data-testid="staging-badge" className="text-[13px] font-bold px-3 py-1.5 rounded-full bg-warn-bg text-warn">Staging</span> : null}
+        />
+      </header>
+      <main id="wh-staff-main" tabIndex={-1} className="app-main box-border md:col-start-2 md:row-start-2 focus:outline-none print:p-0">
         <div className="w-full max-w-[1240px] mx-auto flex flex-col gap-5">
-          <div className="print:hidden">
-          <DsTopBar
-            searchPlaceholder="Search orders and stock"
-            searchAction=""
-            unreadCount={unreadCount}
-            notificationsHref="/admin/notifications"
-            helpHref="/office/support"
-            accountHref="/staff/account"
-            backToAccountHref="/admin"
-            backToAccountLabel="Back to Admin work queue"
-            userName={userName}
-            initials={initials}
-            extraRight={isStaging ? <span data-testid="staging-badge" className="mono text-[11px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full bg-[#FFF4E0] text-[#8A5300]">Staging</span> : null}
-          />
-          </div>
           {children}
         </div>
       </main>

@@ -48,7 +48,7 @@ test.afterAll(async () => {
 });
 
 test('T2 enquiry: catalogue → log in → form → project at Enquiry; axe', async ({ page }) => {
-  await page.goto('/turnkey');
+  await page.goto('/turnkey/catalogue'); // design handoff: the live catalogue moved from /turnkey
   // skip cards left by the T1 import test (its cleanup deletes the row while the catalogue is cached for 5 minutes)
   const first = page.getByTestId('tk-cards').locator('button:not([data-testid^="tk-card-tk-e2e"])').first();
   const pid = ((await first.getAttribute('data-testid')) ?? '').replace(/^tk-card-/, '');

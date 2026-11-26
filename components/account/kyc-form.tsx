@@ -226,7 +226,7 @@ export function KycForm({
           <h2 id="kyc-s4" className="text-lg font-semibold">4 · Documents</h2>
           <p className="mt-1 mb-4 text-sm text-muted">PDF, JPG or PNG, up to 10 MB each. Only our verification team can see them.</p>
           {mode === 'docs' && (
-            <p className="mb-4 rounded-[10px] border border-warn/40 bg-warn-bg px-4 py-3 text-sm text-warn" role="status">
+            <p className="mb-4 rounded-[10px] border border-warn-line bg-warn-bg px-4 py-3 text-sm text-warn" role="status">
               Your details were received, but some required documents are missing. Upload them here to start the review.
             </p>
           )}

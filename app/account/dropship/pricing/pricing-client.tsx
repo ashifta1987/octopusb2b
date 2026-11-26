@@ -147,10 +147,10 @@ export function PricingClient({ data, countryNames }: { data: PricingData; count
             </DsSelect>
             <div>
               <span className="ds-label" id="fr-label">Exchange rate</span>
-              <p className="m-0 text-[14px] text-[#1A174A]" aria-labelledby="fr-label" data-testid="fx-rate">
+              <p className="m-0 text-[14px] text-ink" aria-labelledby="fr-label" data-testid="fx-rate">
                 {currency === 'USD' ? 'Not needed: prices are in US$.' : fxText ?? `No exchange rate for ${currency} yet. Products can't be priced in ${currency} until Octopus adds one.`}
               </p>
-              {currency !== 'USD' && fx?.source_name && <p className="mt-1 mb-0 text-[12px] text-[#5B6478]" data-testid="fx-source">{`Source: ${fx.source_name} · updated ${fmtWhen(fx.effective_from)}`}</p>}
+              {currency !== 'USD' && fx?.source_name && <p className="mt-1 mb-0 text-[12px] text-muted" data-testid="fx-source">{`Source: ${fx.source_name} · updated ${fmtWhen(fx.effective_from)}`}</p>}
             </div>
             <DsInput id="ft" label="Reprice when the rate moves more than (%)" inputMode="decimal" value={threshold} onChange={(e) => setThreshold(e.target.value)}
               error={thrErr ?? undefined} hint={currency === 'USD' ? 'Only needed for a store currency other than US$.' : undefined} />
@@ -160,11 +160,11 @@ export function PricingClient({ data, countryNames }: { data: PricingData; count
 
       <DsCard title="Preview" icon="eye" testId="pricing-preview">
         {!data.sample ? (
-          <p className="m-0 text-[14px] text-[#5B6478]">Add a product to your import list to see a preview with its real landed cost.</p>
+          <p className="m-0 text-[14px] text-muted">Add a product to your import list to see a preview with its real landed cost.</p>
         ) : !data.sample.landed || !data.sample.landed.ok ? (
-          <p className="m-0 text-[14px] text-[#5B6478]">{`${data.sample.title}: ${data.sample.landed && !data.sample.landed.ok ? data.sample.landed.message : 'no landed cost yet.'}`}</p>
+          <p className="m-0 text-[14px] text-muted">{`${data.sample.title}: ${data.sample.landed && !data.sample.landed.ok ? data.sample.landed.message : 'no landed cost yet.'}`}</p>
         ) : !preview || !preview.ok ? (
-          <p className="m-0 text-[14px] text-[#5B6478]">{preview && !preview.ok ? preview.message : bandErr}</p>
+          <p className="m-0 text-[14px] text-muted">{preview && !preview.ok ? preview.message : bandErr}</p>
         ) : (
           <div data-testid="preview-rows">
             <div className="ds-row"><span className="ds-mut">Landed cost</span><span>{money(landed, 'USD')}</span></div>
@@ -173,7 +173,7 @@ export function PricingClient({ data, countryNames }: { data: PricingData; count
             <div className="ds-row"><span className="ds-mut">Rounded</span><span data-testid="preview-price">{storeMoney(preview.price_minor, currency)}</span></div>
             <div className="ds-row"><span className="ds-mut">Compare-at</span><span>{preview.compare_at_minor != null ? storeMoney(preview.compare_at_minor, currency) : 'Not set'}</span></div>
             <div className="ds-row"><span className="ds-mut">Margin</span><span>{preview.below_min ? <DsBadge tone="warn">{`${pct(preview.profit_bp)} · below your minimum`}</DsBadge> : pct(preview.profit_bp)}</span></div>
-            <p className="mt-2 mb-0 text-[12px] text-[#5B6478]">{`${data.sample.title}, ${optionText(data.sample.options)}, to ${countryNames[data.sample.landed.country] ?? data.sample.landed.country} (${data.sample.landed.incoterm === 'DAP' ? 'buyer pays duties' : 'duties included'}).`}</p>
+            <p className="mt-2 mb-0 text-[12px] text-muted">{`${data.sample.title}, ${optionText(data.sample.options)}, to ${countryNames[data.sample.landed.country] ?? data.sample.landed.country} (${data.sample.landed.incoterm === 'DAP' ? 'buyer pays duties' : 'duties included'}).`}</p>
           </div>
         )}
       </DsCard>
@@ -195,7 +195,7 @@ export function PricingClient({ data, countryNames }: { data: PricingData; count
         </div>
         <DsCheckbox label="Alert me when a product goes to Low stock" checked={lowAlert} onChange={(e) => setLowAlert(e.target.checked)} />
         <DsCheckbox label="Alert me by email about price changes (when app email is live)" checked={email} onChange={(e) => setEmail(e.target.checked)} />
-        <p className="m-0 text-[12px] text-[#5B6478]">{`Rules never price below your minimum margin of ${pct(minBp)}${marketName ? ` (landed to ${marketName})` : ''}; a change that would needs your approval.`}</p>
+        <p className="m-0 text-[12px] text-muted">{`Rules never price below your minimum margin of ${pct(minBp)}${marketName ? ` (landed to ${marketName})` : ''}; a change that would needs your approval.`}</p>
       </DsCard>
 
       <DsTableCard title={`Waiting for your approval (${data.approvals.length})`} icon="clock" testId="approvals" headers={['Product', 'Change', 'New price', 'Margin', '']} minWidth={720}>

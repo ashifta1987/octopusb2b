@@ -121,20 +121,20 @@ export function ActivateClient({ state }: { state: DropshipAccessState }) {
             <li className="flex gap-3">
               <span
                 aria-hidden="true"
-                className="w-3 h-3 rounded-full bg-[#2A6FD1] mt-1.5 shrink-0"
+                className="w-3 h-3 rounded-full bg-coral mt-1.5 shrink-0"
               />
               <div>
-                <strong className="font-semibold text-[#1A174A]">Request access</strong>
+                <strong className="font-semibold text-ink">Request access</strong>
                 <div className="ds-mut text-[13px]">Takes 2 minutes</div>
               </div>
             </li>
             <li className="flex gap-3">
               <span
                 aria-hidden="true"
-                className="w-3 h-3 rounded-full border-2 border-[#C9D0DD] mt-1.5 shrink-0 box-border"
+                className="w-3 h-3 rounded-full border-2 border-line-strong mt-1.5 shrink-0 box-border"
               />
               <div>
-                <strong className="font-medium text-[#1A174A]">
+                <strong className="font-medium text-ink">
                   Account manager checks your account
                 </strong>
                 <div className="ds-mut text-[13px]">Usually within 1 working day</div>
@@ -143,20 +143,20 @@ export function ActivateClient({ state }: { state: DropshipAccessState }) {
             <li className="flex gap-3">
               <span
                 aria-hidden="true"
-                className="w-3 h-3 rounded-full border-2 border-[#C9D0DD] mt-1.5 shrink-0 box-border"
+                className="w-3 h-3 rounded-full border-2 border-line-strong mt-1.5 shrink-0 box-border"
               />
               <div>
-                <strong className="font-medium text-[#1A174A]">Connect your Shopify store</strong>
+                <strong className="font-medium text-ink">Connect your Shopify store</strong>
                 <div className="ds-mut text-[13px]">Inside Shopify admin (Step 5)</div>
               </div>
             </li>
             <li className="flex gap-3">
               <span
                 aria-hidden="true"
-                className="w-3 h-3 rounded-full border-2 border-[#C9D0DD] mt-1.5 shrink-0 box-border"
+                className="w-3 h-3 rounded-full border-2 border-line-strong mt-1.5 shrink-0 box-border"
               />
               <div>
-                <strong className="font-medium text-[#1A174A]">
+                <strong className="font-medium text-ink">
                   Import products and start selling
                 </strong>
                 <div className="ds-mut text-[13px]">We pack and ship each order</div>
@@ -166,7 +166,7 @@ export function ActivateClient({ state }: { state: DropshipAccessState }) {
         </DsCard>
 
         <DsCard title="What you need" icon="check">
-          <ul className="m-0 pl-5 text-[14px] leading-[1.85] text-[#1A174A]">
+          <ul className="m-0 pl-5 text-[14px] leading-[1.85] text-ink">
             <li className="flex flex-wrap items-center gap-2">
               <span>A verified Octopus account (KYC done)</span>
               {isVerified ? (
@@ -256,7 +256,7 @@ export function ActivateClient({ state }: { state: DropshipAccessState }) {
                     checked={selectedCountries.includes(code)}
                     onChange={() => toggleCountry(code)}
                     disabled={!isVerified || pending}
-                    className="w-4 h-4 accent-[#1A174A]"
+                    className="w-4 h-4 accent-ink"
                   />
                   <span>{COUNTRY_NAMES[code] ?? code}</span>
                 </label>
@@ -291,14 +291,14 @@ export function ActivateClient({ state }: { state: DropshipAccessState }) {
 
       <div
         role="status"
-        className="flex flex-wrap items-center justify-between gap-3.5 bg-[#F2F7FE] border border-[#C7DAF5] rounded-[12px] px-4 py-3.5"
+        className="flex flex-wrap items-center justify-between gap-3.5 bg-tint-2 border border-tint rounded-[12px] px-4 py-3.5"
       >
         <div className="min-w-0 flex-1">
-          <strong className="text-[14px] text-[#1A174A] inline-flex items-center gap-1.5">
+          <strong className="text-[14px] text-ink inline-flex items-center gap-1.5">
             <DsIcon name="info" size={16} />
             After you send it
           </strong>
-          <p className="m-0 mt-1 text-[13px] leading-[1.5] text-[#1A174A]">
+          <p className="m-0 mt-1 text-[13px] leading-[1.5] text-ink">
             Your account manager reviews your request and switches dropshipping on. You&apos;ll get
             an in-app notification in your account; nothing is charged while plan fees are off.
           </p>

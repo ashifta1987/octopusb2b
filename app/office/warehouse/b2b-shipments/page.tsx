@@ -95,16 +95,16 @@ async function Content({ searchParams }: { searchParams: Promise<{ order?: strin
   const carrierStatus = !carrier ? null : carrier.mode === 'live' ? 'Production' : isStaging() ? 'Sandbox mode' : 'Carrier not connected';
 
   const orderCell = (x: (typeof ships)[number]) => {
-    if (x.ord?.id) return <Link href={`/office/orders/${x.ord.id}`} className="font-mono text-[#2A6FD1]">{x.ord.code}</Link>;
+    if (x.ord?.id) return <Link href={`/office/orders/${x.ord.id}`} className="font-mono text-coral-text">{x.ord.code}</Link>;
     if (x.isDropship) {
       return (
         <span className="text-[13px]">
-          <span className="text-[#5B6478]">Dropship </span>
-          {x.dso && whMember ? <Link href={packFallback(x.dso)} className="font-mono text-[#2A6FD1]">{x.dso}</Link> : <span className="font-mono">{x.dso ?? '—'}</span>}
+          <span className="text-muted">Dropship </span>
+          {x.dso && whMember ? <Link href={packFallback(x.dso)} className="font-mono text-coral-text">{x.dso}</Link> : <span className="font-mono">{x.dso ?? '—'}</span>}
         </span>
       );
     }
-    return <span className="text-[#5B6478]">—</span>;
+    return <span className="text-muted">—</span>;
   };
 
   return (
@@ -113,7 +113,7 @@ async function Content({ searchParams }: { searchParams: Promise<{ order?: strin
         title={sel ? `Create shipment · ${sel.code}` : 'B2B shipments'}
         icon="send"
         subtitle={sel
-          ? <><Link href={B2B_SHIPMENTS_PATH} className="text-[#2A6FD1]">B2B shipments</Link> / {sel.code}</>
+          ? <><Link href={B2B_SHIPMENTS_PATH} className="text-coral-text">B2B shipments</Link> / {sel.code}</>
           : a.canSeeReadyToShip
             ? 'Sourcing orders the supplier ships direct to the buyer: ready to ship, waybill and label, tracking and exceptions. Warehouse parcels are labelled in Dispatch and freight.'
             : 'Read-only tracking of B2B shipments: status, waybill number and tracking events.'}
@@ -128,16 +128,16 @@ async function Content({ searchParams }: { searchParams: Promise<{ order?: strin
           <div className="flex flex-col gap-5">
             <DsCard title="1 · Route" icon="globe">
               <div className="grid sm:grid-cols-[1fr_auto_1fr] gap-4 items-center text-[14px]">
-                <div className="rounded-[10px] bg-[#F7F9FC] p-4">
-                  <div className="text-[12px] text-[#5B6478]">Ship from · supplier</div>
+                <div className="rounded-[10px] bg-pearl p-4">
+                  <div className="text-[12px] text-muted">Ship from · supplier</div>
                   <div className="font-semibold mt-1">{sup ? `${sup.legal_name} (${sup.code})` : '—'}</div>
-                  <div className="text-[13px] text-[#5B6478]">{[sup?.city, sup?.country].filter(Boolean).join(', ')}</div>
+                  <div className="text-[13px] text-muted">{[sup?.city, sup?.country].filter(Boolean).join(', ')}</div>
                 </div>
-                <span aria-hidden className="text-[#5B6478] text-xl">→</span>
-                <div className="rounded-[10px] bg-[#F7F9FC] p-4">
-                  <div className="text-[12px] text-[#5B6478]">Ship to · buyer</div>
+                <span aria-hidden className="text-muted text-xl">→</span>
+                <div className="rounded-[10px] bg-pearl p-4">
+                  <div className="text-[12px] text-muted">Ship to · buyer</div>
                   <div className="font-semibold mt-1">{org?.name}</div>
-                  <div className="text-[13px] text-[#5B6478]">{[org?.city, org?.country ? COUNTRY_NAMES[org.country] ?? org.country : null].filter(Boolean).join(', ')} · Incoterm {sel.incoterm ?? '—'}</div>
+                  <div className="text-[13px] text-muted">{[org?.city, org?.country ? COUNTRY_NAMES[org.country] ?? org.country : null].filter(Boolean).join(', ')} · Incoterm {sel.incoterm ?? '—'}</div>
                 </div>
               </div>
             </DsCard>
@@ -148,8 +148,8 @@ async function Content({ searchParams }: { searchParams: Promise<{ order?: strin
             ) : <DsNotice tone="info" title="View only">You can view shipping but not create shipments.</DsNotice>}
           </div>
           <DsCard title="Who sees what" icon="eye">
-            <p className="m-0 text-[13px] text-[#5B6478]">The buyer sees the waybill number and tracking only, with the carrier label set in Admin. The supplier&apos;s address stays hidden.</p>
-            <p className="mt-2 mb-0 text-[13px] text-[#5B6478]">The supplier gets the label to print and stick on the parcels.</p>
+            <p className="m-0 text-[13px] text-muted">The buyer sees the waybill number and tracking only, with the carrier label set in Admin. The supplier&apos;s address stays hidden.</p>
+            <p className="mt-2 mb-0 text-[13px] text-muted">The supplier gets the label to print and stick on the parcels.</p>
           </DsCard>
         </div>
       ) : a.canSeeReadyToShip ? (
@@ -160,8 +160,8 @@ async function Content({ searchParams }: { searchParams: Promise<{ order?: strin
             const og = one(o.organizations as unknown as Org | null);
             return (
               <tr key={o.id}>
-                <td><div className="font-mono font-semibold text-[13px]">{o.code}</div><div className="text-[12px] text-[#5B6478] line-clamp-1">{o.title}</div></td>
-                <td className="text-[13px]">{og?.name} <span className="text-[#5B6478]">{og?.country}</span></td>
+                <td><div className="font-mono font-semibold text-[13px]">{o.code}</div><div className="text-[12px] text-muted line-clamp-1">{o.title}</div></td>
+                <td className="text-[13px]">{og?.name} <span className="text-muted">{og?.country}</span></td>
                 {a.canSeeSuppliers && <td className="font-mono text-[13px]">{one(o.suppliers as unknown as { code: string } | null)?.code ?? '—'}</td>}
                 <td className="font-mono text-[13px]">{money(o.total_cents, o.currency)}</td>
                 <td className="text-[13px]">{o.incoterm ?? '—'}</td>
@@ -194,11 +194,11 @@ async function Content({ searchParams }: { searchParams: Promise<{ order?: strin
             {a.canSeeRates && <td className="font-mono text-[13px]">{x.rate_cents == null ? '—' : money(x.rate_cents, x.rate_currency)}</td>}
             <td className="text-[13px]">
               <div>{x.evs[0]?.description ?? '—'}</div>
-              <div className="text-[12px] text-[#5B6478]">{fmtDate(x.at, true)}</div>
+              <div className="text-[12px] text-muted">{fmtDate(x.at, true)}</div>
               {x.evs.length > 0 && (
                 <details className="mt-1">
-                  <summary className="cursor-pointer text-[12px] text-[#2A6FD1]">All events ({x.evs.length})</summary>
-                  <ul className="mt-1 pl-4 text-[12px] text-[#5B6478]">
+                  <summary className="cursor-pointer text-[12px] text-coral-text">All events ({x.evs.length})</summary>
+                  <ul className="mt-1 pl-4 text-[12px] text-muted">
                     {x.evs.map((e, i) => <li key={i}>{humanize(e.status)}{e.description ? ` · ${e.description}` : ''} · {fmtDate(e.occurred_at, true)}</li>)}
                   </ul>
                 </details>

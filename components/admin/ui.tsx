@@ -10,9 +10,9 @@ export function Tabs({ tabs, active, base, param = 'tab' }: { tabs: { key: strin
           key={t.key}
           href={`${base}?${param}=${t.key}`}
           aria-current={active === t.key ? 'page' : undefined}
-          className={cn('rounded-full border px-4 py-2 text-sm font-semibold', active === t.key ? 'bg-ink text-white border-ink' : 'bg-white text-ink border-line-strong hover:border-ink')}
+          className="chip"
         >
-          {t.label}{t.count != null && <span className="ml-1.5 mono text-xs opacity-85">{t.count}</span>}
+          {t.label}{t.count != null && <span className="ml-1.5 mono text-xs">{t.count}</span>}
         </Link>
       ))}
     </nav>
@@ -25,7 +25,7 @@ export function Bar({ label, value, max, display, tone = 'blue' }: { label: Reac
   return (
     <div className="py-2">
       <div className="flex justify-between gap-3 text-[15px]"><span className="font-semibold">{label}</span><span className="mono text-sm">{display}</span></div>
-      <div className="mt-1.5 h-2 rounded-full bg-line" aria-hidden>
+      <div className="mt-1.5 h-2 rounded-full bg-divider" aria-hidden>
         <div className={cn('h-2 rounded-full', tone === 'navy' ? 'bg-ink' : 'bg-coral')} style={{ width: `${value > 0 ? pct : 0}%` }} />
       </div>
     </div>

@@ -52,8 +52,13 @@ test('W1 public intro and Apply', async ({ page }) => {
     await page.setViewportSize({ width: w, height: h });
     await page.goto('/3pl');
     await expect(page.getByTestId('wh-intro')).toBeVisible();
-    for (const id of ['who', 'family', 'how', 'services', 'proof', 'connections', 'faq']) await expect(page.locator(`#${id}`)).toBeVisible();
-    await expect(page.getByTestId('wh-intro-footer')).toContainText('foshan@octopusb2b.com');
+    // design page 06: hero, key facts, who, how, pictures, included + good to know, FAQ; warehouse Foshan, China
+    for (const id of ['top', 'how', 'faq']) await expect(page.locator(`#${id}`)).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Stored in China. Delivered worldwide.');
+    await expect(page.locator('#top')).toContainText('Warehouse: Foshan, China.');
+    await expect(page.getByTestId('wh-intro-apply')).toHaveAttribute('href', '/3pl/apply');
+    // storage fees come from the live standard rate plan, or the agreed-with-you line when there is none
+    await expect(page.getByTestId('wh-intro-rates').or(page.getByTestId('wh-intro-rates-none'))).toHaveCount(1);
     await expect(page.locator('main')).not.toContainText(/\[[A-Z ]+\]/);
     await checkAxe(page, `intro @${w}`);
   }

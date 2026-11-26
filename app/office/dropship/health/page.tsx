@@ -25,7 +25,7 @@ async function Guarded() {
   if (!data) {
     return (
       <div className="flex flex-col gap-5" data-testid="ds-health-page">
-        <h1 className="m-0 text-[26px] font-bold text-[#1A174A]">System health</h1>
+        <h1 className="m-0 text-[26px] font-bold text-ink">System health</h1>
         <DsNotice tone="bad" title="System health could not be loaded" testId="health-error"
           action={<DsLinkButton href="/office/dropship/health" variant="secondary" icon="refresh">Try again</DsLinkButton>}>{error}</DsNotice>
       </div>

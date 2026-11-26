@@ -41,7 +41,7 @@ export async function WalletView({ next = '/account/wallet', subtitle, slot }: {
       <PageHeader title="Wallet" subtitle={subtitle ?? 'One US dollar wallet for every service. Top up by bank transfer; money for work in progress is held, then charged or released.'} />
       {!settings.wallet_enabled && <div className="mb-6"><Notice tone="amber">The wallet is switched off at the moment. Top-ups are paused.</Notice></div>}
 
-      <section className="rounded-[14px] bg-ink text-white p-6 sm:p-8 mb-6" aria-label="Wallet balance" data-testid="wallet-balance">
+      <section className="rounded-[16px] bg-ink text-white p-6 sm:p-8 mb-6" aria-label="Wallet balance" data-testid="wallet-balance">
         <div className="flex flex-wrap justify-between gap-6">
           <div>
             <div className="text-sm text-white/70">Available</div>
@@ -66,8 +66,8 @@ export async function WalletView({ next = '/account/wallet', subtitle, slot }: {
           <div id="bank" className="px-6 pb-6 scroll-mt-24" data-testid="bank-details">
             {bank ? (
               <>
-                <dl className="grid grid-cols-[150px_1fr] gap-y-2 text-[15px]">
-                  {bankLines(bank).map(([k, v]) => <div key={k} className="contents"><dt className="text-muted">{k}</dt><dd className="font-medium mono break-all">{v}</dd></div>)}
+                <dl className="grid grid-cols-[140px_minmax(0,1fr)] gap-x-4 gap-y-2 text-[15px]">
+                  {bankLines(bank).map(([k, v]) => <div key={k} className="contents"><dt className="text-muted">{k}</dt><dd className="font-medium mono min-w-0 [overflow-wrap:anywhere]">{v}</dd></div>)}
                   <dt className="text-muted">Your reference</dt><dd className="font-bold mono text-ink">{w?.reference}</dd>
                 </dl>
                 {bank.notes && <p className="text-[13px] text-muted mt-3">{bank.notes}</p>}

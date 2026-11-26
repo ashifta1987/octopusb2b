@@ -119,11 +119,11 @@ export function LabelsClient({ board, initialKind, initialRef, current, warehous
         {kind === 'parcel' ? (
           <ParcelLabels labels={parcelLabels} urls={parcelUrls} filter={filter} setFilter={setFilter} whName={whName} />
         ) : places.length === 0 ? (
-          <DsCard><p className="m-0 text-[13.5px] text-[#5B6478]">You don’t work at a warehouse here, so you can’t print its labels.</p></DsCard>
+          <DsCard><p className="m-0 text-[13.5px] text-muted">You don’t work at a warehouse here, so you can’t print its labels.</p></DsCard>
         ) : (
           <DsCard title={KIND_TEXT[kind]} icon="file" noPadding testId="wh-label-picker"
             subtitle={kind === 'bin' ? 'Each bin has its own location label.' : kind === 'carton' ? 'One label per stock notice line; print one copy per carton.' : 'Pallet number, owner, source and bin.'}>
-            <div className="px-5 py-3 flex flex-wrap gap-3 items-end border-b border-[#EEF0F4]">
+            <div className="px-5 py-3 flex flex-wrap gap-3 items-end border-b border-divider">
               {places.length > 1 && (
                 <DsSelect label="Warehouse" value={wh} onChange={(e) => { setWh(e.target.value); setSelected(new Set()); }} containerClassName="w-[200px]">
                   {places.map((c) => <option key={c} value={c}>{whName(c)}</option>)}
@@ -134,21 +134,21 @@ export function LabelsClient({ board, initialKind, initialRef, current, warehous
               <DsButton variant="link" onClick={() => setSelected(new Set())} disabled={selected.size === 0}>Clear</DsButton>
             </div>
             {shown.length === 0 ? (
-              <p className="m-0 px-5 py-4 text-[13.5px] text-[#5B6478]" data-testid="wh-label-none">
+              <p className="m-0 px-5 py-4 text-[13.5px] text-muted" data-testid="wh-label-none">
                 {kind === 'bin' ? 'No bins here yet. Create them under Putaway › Manage bins.' : kind === 'pallet' ? 'No open or stored pallets here.' : 'No stock notices here.'}
               </p>
             ) : (
               <ul className="list-none m-0 p-0 max-h-[360px] overflow-y-auto" role="list" aria-label={`${KIND_TEXT[kind]} to print`} tabIndex={0}>
                 {shown.slice(0, 1000).map((l) => (
-                  <li key={l.ref} className="border-b border-[#EEF0F4] last:border-0 px-5 py-1.5 flex items-center justify-between gap-2" data-testid={`wh-label-row-${l.ref}`}>
-                    <DsCheckbox label={<span><span className="font-mono font-semibold">{l.title}</span>{l.detail ? <span className="text-[#5B6478]"> · {l.detail}</span> : null}</span>}
+                  <li key={l.ref} className="border-b border-divider last:border-0 px-5 py-1.5 flex items-center justify-between gap-2" data-testid={`wh-label-row-${l.ref}`}>
+                    <DsCheckbox label={<span><span className="font-mono font-semibold">{l.title}</span>{l.detail ? <span className="text-muted"> · {l.detail}</span> : null}</span>}
                       checked={selected.has(l.ref)} onChange={() => toggle(l.ref)} />
                     {l.printed > 0 && <DsBadge tone="neutral">Printed {l.printed}×</DsBadge>}
                   </li>
                 ))}
               </ul>
             )}
-            <div className="px-5 py-3 flex flex-wrap gap-3 items-end border-t border-[#EEF0F4]">
+            <div className="px-5 py-3 flex flex-wrap gap-3 items-end border-t border-divider">
               <DsInput label="Copies of each" inputMode="numeric" value={copies} onChange={(e) => setCopies(e.target.value.replace(/\D/g, '').slice(0, 3))} containerClassName="w-[140px]" />
               <DsButton icon="file" disabled={pending || Boolean(why)} disabledReason={chosen.length ? why : undefined} testId="wh-label-print"
                 onClick={() => run(() => logLabelPrintAction(wh, kind, chosen.map((l) => l.ref), n), () => { window.print(); })}>
@@ -168,12 +168,12 @@ export function LabelsClient({ board, initialKind, initialRef, current, warehous
 
       <div className="print:hidden">
         <DsCard title="Print log" icon="clock" noPadding testId="wh-label-log" subtitle="Who printed which labels, and how many copies.">
-          {board.prints.length === 0 ? <p className="m-0 px-5 py-4 text-[13.5px] text-[#5B6478]">Nothing printed yet.</p> : (
+          {board.prints.length === 0 ? <p className="m-0 px-5 py-4 text-[13.5px] text-muted">Nothing printed yet.</p> : (
             <ul className="list-none m-0 p-0">
               {board.prints.map((p) => (
-                <li key={p.id} className="border-b border-[#EEF0F4] last:border-0 px-5 py-2 text-[13.5px]">
+                <li key={p.id} className="border-b border-divider last:border-0 px-5 py-2 text-[13.5px]">
                   <span className="font-mono font-semibold">{p.ref}</span> · {p.kind} · {p.copies} cop{p.copies === 1 ? 'y' : 'ies'}
-                  <span className="text-[#5B6478]"> · {p.by_name ?? 'staff'} · {fmtWh(p.created_at)} · {whName(p.warehouse_code)}</span>
+                  <span className="text-muted"> · {p.by_name ?? 'staff'} · {fmtWh(p.created_at)} · {whName(p.warehouse_code)}</span>
                 </li>
               ))}
             </ul>
@@ -192,7 +192,7 @@ function ParcelLabels({ labels, urls, filter, setFilter, whName }: {
   return (
     <DsCard title="Parcel labels" icon="file" noPadding testId="wh-label-parcel"
       subtitle="Carrier labels made at Dispatch and freight (last 30 days, and every label not handed over yet). Print opens the 10 × 15 cm PDF.">
-      <div className="px-5 py-3 flex flex-wrap gap-3 items-end border-b border-[#EEF0F4]">
+      <div className="px-5 py-3 flex flex-wrap gap-3 items-end border-b border-divider">
         <DsInput label="Find" value={filter} onChange={(e) => setFilter(e.target.value)} containerClassName="w-[220px]" />
       </div>
       {shown.length === 0 ? (
@@ -200,9 +200,9 @@ function ParcelLabels({ labels, urls, filter, setFilter, whName }: {
       ) : (
         <ul className="list-none m-0 p-0 max-h-[480px] overflow-y-auto" role="list" aria-label="Parcel labels" tabIndex={0}>
           {shown.map((l) => (
-            <li key={l.id} className="border-b border-[#EEF0F4] last:border-0 px-5 py-2 flex flex-wrap items-center gap-2" data-testid={`wh-parcel-label-${l.tracking_no}`}>
+            <li key={l.id} className="border-b border-divider last:border-0 px-5 py-2 flex flex-wrap items-center gap-2" data-testid={`wh-parcel-label-${l.tracking_no}`}>
               <span className="font-mono font-semibold">{l.tracking_no}</span>
-              <span className="text-[13px] text-[#5B6478]">{l.order_code} · parcel {l.parcel_seq} · {CARRIER_LABEL[l.carrier]} {l.service_name} · {grams(l.weight_g)} · to {l.ship_country} · {whName(l.warehouse_code)}</span>
+              <span className="text-[13px] text-muted">{l.order_code} · parcel {l.parcel_seq} · {CARRIER_LABEL[l.carrier]} {l.service_name} · {grams(l.weight_g)} · to {l.ship_country} · {whName(l.warehouse_code)}</span>
               {l.sandbox && <DsBadge tone="warn">Sandbox</DsBadge>}
               <DsBadge tone={SHIPMENT_STATUS[l.status][1]}>{SHIPMENT_STATUS[l.status][0]}</DsBadge>
               {l.printed > 0 && <DsBadge tone="neutral">Printed {l.printed}×</DsBadge>}
@@ -211,7 +211,7 @@ function ParcelLabels({ labels, urls, filter, setFilter, whName }: {
                   data-testid={`wh-parcel-label-print-${l.tracking_no}`}>
                   {l.printed > 0 ? 'Reprint' : 'Print'}<span className="sr-only"> label {l.tracking_no} (opens the PDF)</span>
                 </a>
-              ) : <span className="ml-auto text-[12.5px] text-[#5B6478]">PDF not available</span>}
+              ) : <span className="ml-auto text-[12.5px] text-muted">PDF not available</span>}
             </li>
           ))}
         </ul>

@@ -112,7 +112,7 @@ async function AccountHomeContent({ searchParams }: { searchParams: Promise<{ no
               <nav aria-label="Filter by service" className="mt-3 flex flex-wrap gap-2">
                 {['all', ...present].map((k) => (
                   <Link key={k} href={k === 'all' ? '/account#waiting' : `/account?w=${k}#waiting`} aria-current={filter === k ? 'true' : undefined} scroll={false}
-                    className={`inline-flex items-center min-h-10 px-4 rounded-full border text-[14px] font-medium ${filter === k ? 'bg-ink text-white border-ink' : 'border-line-strong bg-white hover:border-ink'}`}>{k === 'all' ? 'All' : SVC_LABEL[k]}</Link>
+                    className={`inline-flex items-center min-h-10 px-4 rounded-full border text-[14px] font-medium ${filter === k ? 'bg-coral text-white border-coral' : 'border-line-strong bg-white hover:border-ink'}`}>{k === 'all' ? 'All' : SVC_LABEL[k]}</Link>
                 ))}
               </nav>
             )}
@@ -189,7 +189,7 @@ async function AccountHomeContent({ searchParams }: { searchParams: Promise<{ no
             const soon = svc.key === 'dropship' && !on;
             return (
               <li key={svc.key} className="card p-5 flex flex-col" data-testid={`service-${svc.key}`}>
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-col items-start gap-1.5">
                   <h3 className="text-[17px] font-bold">{svc.label}</h3>
                   {soon
                     ? <span className="mono text-[10.5px] font-bold uppercase px-2 py-0.5 rounded-full bg-warn-bg text-warn">Coming soon</span>
@@ -215,7 +215,7 @@ async function AccountHomeContent({ searchParams }: { searchParams: Promise<{ no
                 ) : soon ? (
                   <div data-testid="dropship-coming-soon" className="mt-3">
                     <p className="text-[14px] text-muted">Dropshipping is launching soon: sell from your own store, we pack and ship each order. Leave your email and we tell you once it opens.</p>
-                    <div className="mt-3"><LaunchNotifyForm feature="dropship" source="account" defaultEmail={s.email ?? ''} buttonClass="btn btn-dark min-h-11 w-full" /></div>
+                    <div className="mt-3 min-w-0 [&_form]:min-w-0 [&_input]:min-w-0 [&_input]:basis-full [&_input]:w-full"><LaunchNotifyForm feature="dropship" source="account" defaultEmail={s.email ?? ''} buttonClass="btn btn-dark min-h-11 w-full whitespace-normal text-center leading-tight py-2.5" /></div>
                   </div>
                 ) : (
                   <p className="text-[14px] text-muted mt-3">{ABOUT[svc.key]}</p>

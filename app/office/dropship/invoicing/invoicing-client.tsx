@@ -19,13 +19,13 @@ export function InvoicingClient({ data, filters }: { data: InvoicesPage; filters
       <DsCard title="Invoicing entity" subtitle="Issues invoices to merchants" icon="shield" testId="invoicing-entity">
         {data.entity ? (
           <dl className="grid sm:grid-cols-4 gap-3 m-0 text-[14px]">
-            <div><dt className="text-[12px] text-[#5B6478]">Legal entity</dt><dd className="m-0 font-semibold">{data.entity.legal_name}</dd></div>
-            <div><dt className="text-[12px] text-[#5B6478]">Tax ID</dt><dd className="m-0">{data.entity.tax_id || 'Not set'}</dd></div>
-            <div><dt className="text-[12px] text-[#5B6478]">Registered in</dt><dd className="m-0">{data.entity.registered_in || 'Not set'}</dd></div>
-            <div><dt className="text-[12px] text-[#5B6478]">Currency</dt><dd className="m-0">{data.entity.currency}</dd></div>
+            <div><dt className="text-[12px] text-muted">Legal entity</dt><dd className="m-0 font-semibold">{data.entity.legal_name}</dd></div>
+            <div><dt className="text-[12px] text-muted">Tax ID</dt><dd className="m-0">{data.entity.tax_id || 'Not set'}</dd></div>
+            <div><dt className="text-[12px] text-muted">Registered in</dt><dd className="m-0">{data.entity.registered_in || 'Not set'}</dd></div>
+            <div><dt className="text-[12px] text-muted">Currency</dt><dd className="m-0">{data.entity.currency}</dd></div>
           </dl>
         ) : <p className="m-0 text-[14px]">No default legal entity is set. Admins set it in Finance.</p>}
-        <p className="text-[12px] text-[#5B6478] mt-3 mb-0">Read only. Number prefixes are OCT-DS (invoices), CN-DS (credit notes) and STMT-DS (statements). Tax by merchant country and the wallet top-up treatment are for your accountant to confirm; they are not configured here.</p>
+        <p className="text-[12px] text-muted mt-3 mb-0">Read only. Number prefixes are OCT-DS (invoices), CN-DS (credit notes) and STMT-DS (statements). Tax by merchant country and the wallet top-up treatment are for your accountant to confirm; they are not configured here.</p>
       </DsCard>
       <form className="grid sm:grid-cols-3 lg:grid-cols-6 gap-3 items-end ds-card" role="search" aria-label="Filter invoices" onSubmit={(e) => { e.preventDefault(); router.push(`/office/dropship/invoicing?${qs(f)}`); }}>
         <DsSelect label="Type" value={f.type} onChange={(e) => setF({ ...f, type: e.target.value })}><option value="">All</option><option value="invoice">Invoices</option><option value="credit_note">Credit notes</option><option value="statement">Statements</option></DsSelect>

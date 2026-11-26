@@ -16,7 +16,7 @@ export function WhHeader({ access, title, subtitle, icon, actions }: {
         <>
           {access.warehouses.length > 1 ? (
             <form action={setWarehouseScope} className="flex items-end gap-2" data-testid="wh-switcher">
-              <label className="flex flex-col text-[12px] text-[#5B6478]">
+              <label className="flex flex-col text-[12px] text-muted">
                 <span>Warehouse</span>
                 <select name="warehouse" defaultValue={access.current?.code ?? 'all'} className="ds-input min-h-[44px]" aria-label="Warehouse">
                   {access.canSeeAll && <option value="all">All warehouses</option>}
@@ -28,7 +28,7 @@ export function WhHeader({ access, title, subtitle, icon, actions }: {
               <button type="submit" className="ds-btn ds-btn-secondary">Switch</button>
             </form>
           ) : (
-            <span className="text-[13px] text-[#5B6478]" data-testid="wh-single">{access.current?.name ?? access.warehouses[0]?.name}</span>
+            <span className="text-[13px] text-muted" data-testid="wh-single">{access.current?.name ?? access.warehouses[0]?.name}</span>
           )}
           {actions}
         </>

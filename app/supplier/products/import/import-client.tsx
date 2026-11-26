@@ -54,7 +54,7 @@ export function ImportClient() {
           </label>
           {name && <span className="text-[14px]" data-testid="supplier-import-name">{name}</span>}
         </div>
-        <p className="text-[12px] text-[#5B6478] mt-3 mb-0">Several rows with the same model number become one product with several variants. Image links are separated with |.</p>
+        <p className="text-[12px] text-muted mt-3 mb-0">Several rows with the same model number become one product with several variants. Image links are separated with |.</p>
       </DsCard>
       {err && <DsNotice tone="bad" title="The file could not be read" testId="supplier-import-error">{err}</DsNotice>}
       {pending && <DsNotice tone="info" title="Checking your file">One moment.</DsNotice>}
@@ -77,7 +77,7 @@ export function ImportClient() {
         </>
       )}
       {done && <DsNotice tone="ok" title="Sent for review" testId="supplier-import-done">{done} You get an email when it is approved or when we need changes.</DsNotice>}
-      <DsCard title="Template columns"><p className="m-0 text-[14px] text-[#5B6478]">{TEMPLATE_COLUMNS.map(([, h]) => h).join(', ')}.</p></DsCard>
+      <DsCard title="Template columns"><p className="m-0 text-[14px] text-muted">{TEMPLATE_COLUMNS.map(([, h]) => h).join(', ')}.</p></DsCard>
     </SupplierFrame>
   );
 }

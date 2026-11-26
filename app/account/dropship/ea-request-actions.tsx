@@ -20,7 +20,7 @@ export function EaRequestActions({ rfqId, rfqCode }: { rfqId: string; rfqCode: s
     <span className="inline-flex flex-wrap items-center gap-2">
       <DsButton disabled={pending} onClick={() => respond('accept')} testId={`ea-accept-${rfqCode}`} aria-label={`Accept quote ${rfqCode}`}>Accept</DsButton>
       <DsButton variant="secondary" disabled={pending} onClick={() => respond('decline')} testId={`ea-decline-${rfqCode}`} aria-label={`Decline quote ${rfqCode}`}>Decline</DsButton>
-      {msg && <span role={msg.ok ? 'status' : 'alert'} className={`text-[12.5px] ${msg.ok ? 'text-[#1B7F4B]' : 'text-[#B42318]'}`}>{msg.text}</span>}
+      {msg && <span role={msg.ok ? 'status' : 'alert'} className={`text-[12.5px] ${msg.ok ? 'text-ok' : 'text-bad'}`}>{msg.text}</span>}
     </span>
   );
 }

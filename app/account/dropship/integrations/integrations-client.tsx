@@ -29,15 +29,15 @@ export function IntegrationsClient({ data }: { data: ChannelsPage }) {
           return (
             <DsCard key={c.key} testId={`channel-${c.key}`}>
               <div className="flex items-start gap-3">
-                <div aria-hidden className="w-10 h-10 rounded-[10px] bg-[#EAF1FB] text-[#1F5BB0] font-bold flex items-center justify-center shrink-0">{c.letter}</div>
+                <div aria-hidden className="w-10 h-10 rounded-[10px] bg-tint-2 text-coral-text font-bold flex items-center justify-center shrink-0">{c.letter}</div>
                 <div className="min-w-0 flex-1">
                   <h2 className="m-0 text-[17px] font-bold">{c.name}</h2>
-                  <p className="m-0 text-[13px] text-[#5B6478]">{c.how}</p>
+                  <p className="m-0 text-[13px] text-muted">{c.how}</p>
                 </div>
                 <DsBadge tone={connected ? 'ok' : c.key === 'amazon' ? 'neutral' : 'info'}>{connected ? 'Connected' : c.key === 'amazon' ? 'Coming later' : 'Not connected yet'}</DsBadge>
               </div>
               {connected && data.shopify.shop && <p className="text-[13px] mt-2 mb-0">Store {data.shopify.shop}</p>}
-              <ul className="m-0 mt-3 pl-4 text-[13px] text-[#5B6478]">{c.notes.map((n) => <li key={n}>{n}</li>)}</ul>
+              <ul className="m-0 mt-3 pl-4 text-[13px] text-muted">{c.notes.map((n) => <li key={n}>{n}</li>)}</ul>
               <div className="mt-3 flex flex-wrap gap-2 items-center">
                 {c.key === 'amazon' ? (
                   <DsButton variant="secondary" onClick={() => toggle('amazon', !waiting)} loading={pending} icon={waiting ? 'check' : 'bell'} testId="amazon-waitlist">{waiting ? 'On the waiting list. Leave' : 'Join the waiting list'}</DsButton>
@@ -57,8 +57,8 @@ export function IntegrationsClient({ data }: { data: ChannelsPage }) {
       </DsTableCard>
       <DsCard title="Your plan" icon="card" testId="integrations-plan">
         <dl className="grid sm:grid-cols-2 gap-3 m-0 text-[14px]">
-          <div><dt className="text-[12px] text-[#5B6478]">Connected stores</dt><dd className="m-0 font-semibold">{data.stores_used} of {data.stores_limit ?? (data.billing_enabled ? 'no limit' : 'no limit while plans are free')}</dd></div>
-          <div><dt className="text-[12px] text-[#5B6478]">Plan</dt><dd className="m-0 font-semibold">{data.plan_name ?? (data.billing_enabled ? 'No plan chosen' : 'Free for now')}</dd></div>
+          <div><dt className="text-[12px] text-muted">Connected stores</dt><dd className="m-0 font-semibold">{data.stores_used} of {data.stores_limit ?? (data.billing_enabled ? 'no limit' : 'no limit while plans are free')}</dd></div>
+          <div><dt className="text-[12px] text-muted">Plan</dt><dd className="m-0 font-semibold">{data.plan_name ?? (data.billing_enabled ? 'No plan chosen' : 'Free for now')}</dd></div>
         </dl>
         <div className="mt-3"><DsLinkButton href="/account/dropship/billing" variant="secondary">Change plan</DsLinkButton></div>
       </DsCard>

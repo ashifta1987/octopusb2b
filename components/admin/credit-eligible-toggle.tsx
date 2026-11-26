@@ -69,15 +69,15 @@ export function CreditEligibleToggle({
             onChange={(e) => setReason(e.target.value)}
             placeholder="Reason for change (required for audit log)"
             data-testid="credit-eligible-reason-input"
-            className="w-full rounded-lg border border-line bg-canvas px-3 py-2 text-xs"
+            className="input"
           />
           {error && (
-            <p className="text-xs text-red-700" role="alert" data-testid="credit-eligible-error">
+            <p className="text-xs text-bad" role="alert" data-testid="credit-eligible-error">
               {error}
             </p>
           )}
           {notice && (
-            <p className="text-xs text-emerald-800" data-testid="credit-eligible-notice">
+            <p className="text-xs text-ok" data-testid="credit-eligible-notice">
               {notice}
             </p>
           )}
@@ -86,7 +86,7 @@ export function CreditEligibleToggle({
             disabled={pending}
             onClick={() => handleToggle(!eligible)}
             data-testid="credit-eligible-toggle-btn"
-            className="inline-flex min-h-9 items-center justify-center rounded-lg border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-ink hover:bg-canvas disabled:opacity-50"
+            className="btn btn-ghost btn-sm"
           >
             {pending
               ? 'Saving…'

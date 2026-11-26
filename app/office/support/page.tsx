@@ -96,7 +96,7 @@ export default async function SupportDesk({ searchParams }: { searchParams: Prom
       <div className="grid lg:grid-cols-[380px_1fr] gap-6 items-start">
         <section className="card overflow-hidden">
           <nav className="flex flex-wrap gap-2 p-4 border-b border-line" aria-label="Ticket filters">
-            {FILTERS.map((k) => <Link key={k} href={link({ f: k, t: undefined })} aria-current={f === k ? 'page' : undefined} className={cn('rounded-full px-3 py-1.5 text-sm font-semibold border', f === k ? 'bg-ink text-white border-ink' : 'border-line-strong')}>{humanize(k)}</Link>)}
+            {FILTERS.map((k) => <Link key={k} href={link({ f: k, t: undefined })} aria-current={f === k ? 'page' : undefined} className={cn('rounded-full px-3 py-1.5 text-sm font-semibold border', f === k ? 'bg-coral text-white border-coral' : 'border-line-strong')}>{humanize(k)}</Link>)}
             <form className="w-full flex gap-2 mt-1">
               <input type="hidden" name="f" value={f} />
               <label htmlFor="sd-p" className="sr-only">Priority</label>

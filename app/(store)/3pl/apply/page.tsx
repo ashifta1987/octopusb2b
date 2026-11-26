@@ -13,7 +13,7 @@ async function Content() {
   const sb = await createClient();
   const { data } = await sb.from('warehouses').select('code, name, city').eq('status', 'active').order('is_default', { ascending: false }).order('name');
   return (
-    <div className="bg-[#EEF3FD] min-h-[70vh] py-10 px-4">
+    <div className="bg-tint min-h-[70vh] py-10 px-4">
       <ApplyClient warehouses={(data ?? []) as { code: string; name: string; city: string }[]} />
     </div>
   );

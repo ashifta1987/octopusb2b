@@ -223,21 +223,21 @@ export function DropshipCsvImportClient({
         <div className="min-w-0">
           <Link
             href="/office/dropship"
-            className="text-[13px] font-semibold text-[#2A6FD1] hover:underline"
+            className="text-[13px] font-semibold text-coral-text hover:underline"
           >
             ← Back to Dropshipping catalogue
           </Link>
-          <h1 className="m-0 mt-1 text-[26px] font-bold flex items-center gap-3 flex-wrap text-[#1A174A]">
+          <h1 className="m-0 mt-1 text-[26px] font-bold flex items-center gap-3 flex-wrap text-ink">
             <span
               data-page-icon=""
               aria-hidden="true"
-              className="w-10 h-10 rounded-[10px] bg-[#E6EFFB] text-[#2A6FD1] inline-flex items-center justify-center shrink-0"
+              className="w-10 h-10 rounded-[10px] bg-tint text-coral-text inline-flex items-center justify-center shrink-0"
             >
               <DsIcon name="upload" size={20} strokeWidth={2} />
             </span>
             <span>Import products</span>
           </h1>
-          <p className="m-0 mt-1.5 text-[14px] text-[#5B6478]">
+          <p className="m-0 mt-1.5 text-[14px] text-muted">
             Add products to the dropship catalogue from a CSV file, from a Sourcing item, or one at
             a time. Everything lands as a draft.
           </p>
@@ -270,11 +270,11 @@ export function DropshipCsvImportClient({
       {/* Import history drawer */}
       {canSeeCosts && showHistory && (
         <section className="card p-0 overflow-hidden" data-testid="import-history-panel">
-          <div className="px-5 py-3.5 border-b border-[#E3E7EF]">
+          <div className="px-5 py-3.5 border-b border-line">
             <h2 className="m-0 text-[16px] font-bold">Recent import jobs</h2>
           </div>
           {recentJobs.length === 0 ? (
-            <p className="p-5 m-0 text-[14px] text-[#5B6478]">No import jobs recorded yet.</p>
+            <p className="p-5 m-0 text-[14px] text-muted">No import jobs recorded yet.</p>
           ) : (
             <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Recent import jobs">
               <table className="ds-tbl min-w-[640px]">
@@ -293,7 +293,7 @@ export function DropshipCsvImportClient({
                   {recentJobs.map((j) => (
                     <tr key={j.id}>
                       <td className="mono font-semibold">{j.job_code}</td>
-                      <td className="uppercase text-[12px] text-[#5B6478]">{j.source_type}</td>
+                      <td className="uppercase text-[12px] text-muted">{j.source_type}</td>
                       <td className="tabular-nums">{j.created_count}</td>
                       <td className="tabular-nums">{j.updated_count}</td>
                       <td className="tabular-nums">{j.unchanged_count}</td>
@@ -328,25 +328,25 @@ export function DropshipCsvImportClient({
                 {idx > 0 && (
                   <span
                     aria-hidden="true"
-                    className="flex-[1_1_20px] min-w-[14px] h-[2px] bg-[#E3E7EF]"
+                    className="flex-[1_1_20px] min-w-[14px] h-[2px] bg-line"
                   />
                 )}
                 <span
                   className={`flex items-center gap-2 text-[14px] ${
                     active
-                      ? 'font-semibold text-[#1A174A]'
+                      ? 'font-semibold text-ink'
                       : done
-                        ? 'font-medium text-[#1A174A]'
-                        : 'font-medium text-[#5B6478]'
+                        ? 'font-medium text-ink'
+                        : 'font-medium text-muted'
                   }`}
                 >
                   <span
                     className={`w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0 ${
                       done
-                        ? 'bg-[#0B7A75] text-white'
+                        ? 'bg-ok text-white'
                         : active
-                          ? 'bg-[#2A6FD1] text-white'
-                          : 'border-2 border-[#C9D0DD] text-[#5B6478]'
+                          ? 'bg-coral text-white'
+                          : 'border-2 border-line-strong text-muted'
                     }`}
                   >
                     {stepNum}
@@ -366,8 +366,8 @@ export function DropshipCsvImportClient({
           data-testid="csv-import-message"
           className={`rounded-[12px] px-4 py-3.5 text-[14px] font-medium border ${
             msg.ok
-              ? 'bg-[#F1FAF8] border-[#B9E2DC] text-[#0B7A75]'
-              : 'bg-[#FEF4F4] border-[#F2C4C2] text-[#B42318]'
+              ? 'bg-ok-soft border-ok-line text-ok'
+              : 'bg-bad-bg border-bad/30 text-bad'
           }`}
         >
           {msg.text}
@@ -382,10 +382,10 @@ export function DropshipCsvImportClient({
           <div
             role="status"
             data-testid="csv-nothing-changed-banner"
-            className="rounded-[12px] border border-[#B9E2DC] bg-[#F1FAF8] px-4 py-3.5"
+            className="rounded-[12px] border border-ok-line bg-ok-soft px-4 py-3.5"
           >
-            <strong className="text-[14px] text-[#1A174A]">Nothing changed</strong>
-            <p className="m-0 mt-1 text-[13px] text-[#5B6478]">
+            <strong className="text-[14px] text-ink">Nothing changed</strong>
+            <p className="m-0 mt-1 text-[13px] text-muted">
               All {commitResult.unchanged}{' '}
               {commitResult.unchanged === 1 ? 'row matches' : 'rows match'} what&apos;s already
               imported. No duplicates were created.
@@ -396,8 +396,8 @@ export function DropshipCsvImportClient({
       {/* Step 1 · Choose a source */}
       <section className="card p-5 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-[#1A174A]">
-            <DsIcon name="layers" size={18} className="text-[#2A6FD1]" />
+          <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-ink">
+            <DsIcon name="layers" size={18} className="text-coral-text" />
             <span>Step 1 · Choose a source</span>
           </h2>
         </div>
@@ -407,8 +407,8 @@ export function DropshipCsvImportClient({
           <label
             className={`flex flex-col gap-1.5 rounded-[12px] p-4 text-[14px] cursor-pointer ${
               sourceMode === 'csv'
-                ? 'border-2 border-[#2A6FD1] bg-[#F8FAFF]'
-                : 'border border-[#C9D0DD]'
+                ? 'border-2 border-coral bg-tint-2'
+                : 'border border-line-strong'
             }`}
           >
             <span className="flex items-center gap-2.5 font-bold">
@@ -420,7 +420,7 @@ export function DropshipCsvImportClient({
               />
               CSV file
             </span>
-            <span className="text-[13px] text-[#5B6478]">
+            <span className="text-[13px] text-muted">
               Up to 2,000 rows. Matched on the Sourcing model no.
             </span>
           </label>
@@ -428,8 +428,8 @@ export function DropshipCsvImportClient({
           <label
             className={`flex flex-col gap-1.5 rounded-[12px] p-4 text-[14px] cursor-pointer ${
               sourceMode === 'sourcing'
-                ? 'border-2 border-[#2A6FD1] bg-[#F8FAFF]'
-                : 'border border-[#C9D0DD]'
+                ? 'border-2 border-coral bg-tint-2'
+                : 'border border-line-strong'
             }`}
           >
             <span className="flex items-center gap-2.5 font-bold">
@@ -446,7 +446,7 @@ export function DropshipCsvImportClient({
               />
               From a Sourcing item
             </span>
-            <span className="text-[13px] text-[#5B6478]">
+            <span className="text-[13px] text-muted">
               Approved items and accepted merchant requests
             </span>
           </label>
@@ -454,8 +454,8 @@ export function DropshipCsvImportClient({
           <label
             className={`flex flex-col gap-1.5 rounded-[12px] p-4 text-[14px] cursor-pointer ${
               sourceMode === 'one'
-                ? 'border-2 border-[#2A6FD1] bg-[#F8FAFF]'
-                : 'border border-[#C9D0DD]'
+                ? 'border-2 border-coral bg-tint-2'
+                : 'border border-line-strong'
             }`}
           >
             <span className="flex items-center gap-2.5 font-bold">
@@ -470,7 +470,7 @@ export function DropshipCsvImportClient({
               />
               One product
             </span>
-            <span className="text-[13px] text-[#5B6478]">Open an empty product form</span>
+            <span className="text-[13px] text-muted">Open an empty product form</span>
           </label>
         </fieldset>
 
@@ -488,7 +488,7 @@ export function DropshipCsvImportClient({
               />
             </label>
             {fileName && (
-              <span className="text-[13.5px] font-semibold text-[#1A174A]">{fileName}</span>
+              <span className="text-[13.5px] font-semibold text-ink">{fileName}</span>
             )}
           </div>
 
@@ -522,9 +522,9 @@ export function DropshipCsvImportClient({
       {/* Step 2 · Map columns */}
       {preview && !preview.globalError && preview.columnMappings.length > 0 && (
         <section className="card p-0 overflow-hidden" data-testid="csv-column-map">
-          <div className="px-5 py-4 border-b border-[#E3E7EF] flex flex-wrap items-center justify-between gap-2">
-            <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-[#1A174A]">
-              <DsIcon name="layers" size={18} className="text-[#2A6FD1]" />
+          <div className="px-5 py-4 border-b border-line flex flex-wrap items-center justify-between gap-2">
+            <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-ink">
+              <DsIcon name="layers" size={18} className="text-coral-text" />
               <span>Step 2 · Map columns</span>
             </h2>
             <span className="ds-badge ds-badge-ok">
@@ -547,7 +547,7 @@ export function DropshipCsvImportClient({
                   <tr key={`${cm.fileColumn}-${idx}`}>
                     <td className="mono">{cm.fileColumn}</td>
                     <td>{cm.octopusField}</td>
-                    <td className="text-[#5B6478]">{cm.rule}</td>
+                    <td className="text-muted">{cm.rule}</td>
                     <td>
                       {cm.status === 'matched' ? (
                         <span className="ds-badge ds-badge-ok">
@@ -568,7 +568,7 @@ export function DropshipCsvImportClient({
               </tbody>
             </table>
           </div>
-          <div className="px-5 py-3 border-t border-[#E3E7EF] text-[13px] text-[#5B6478]">
+          <div className="px-5 py-3 border-t border-line text-[13px] text-muted">
             Cost and supplier are never read from the file: they come from the Sourcing item linked
             by the model no., so prices can&apos;t be typed wrong.
           </div>
@@ -580,11 +580,11 @@ export function DropshipCsvImportClient({
         <section className="card p-5 space-y-4" data-testid="csv-preview-table">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-[#1A174A]">
-                <DsIcon name="check" size={18} className="text-[#2A6FD1]" />
+              <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-ink">
+                <DsIcon name="check" size={18} className="text-coral-text" />
                 <span>Step 3 · Check</span>
               </h2>
-              <p className="m-0 mt-1 text-[13px] text-[#5B6478]">
+              <p className="m-0 mt-1 text-[13px] text-muted">
                 Nothing is saved yet. Rows with errors are skipped; imported items always start as
                 Draft.
               </p>
@@ -596,13 +596,13 @@ export function DropshipCsvImportClient({
             <div
               role="status"
               data-testid="csv-global-error"
-              className="flex flex-wrap items-center justify-between gap-3.5 rounded-[12px] border border-[#F2C4C2] bg-[#FEF4F4] px-4 py-3.5"
+              className="flex flex-wrap items-center justify-between gap-3.5 rounded-[12px] border border-bad/30 bg-bad-bg px-4 py-3.5"
             >
               <div className="min-w-0 flex-1">
-                <strong className="text-[14px] text-[#1A174A]">
+                <strong className="text-[14px] text-ink">
                   This file can&apos;t be imported
                 </strong>
-                <p className="m-0 mt-1 text-[13px] text-[#5B6478]">{preview.globalError}</p>
+                <p className="m-0 mt-1 text-[13px] text-muted">{preview.globalError}</p>
               </div>
               <a
                 href="/office/dropship/import/template"
@@ -616,19 +616,19 @@ export function DropshipCsvImportClient({
           ) : (
             <>
               <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
-                <div className="rounded-[10px] border border-[#E3E7EF] p-3.5 text-center">
+                <div className="rounded-[10px] border border-line p-3.5 text-center">
                   <div className="text-[24px] font-bold">{preview.newReadyRows}</div>
                   <span className="ds-badge ds-badge-ok">New, ready</span>
                 </div>
-                <div className="rounded-[10px] border border-[#E3E7EF] p-3.5 text-center">
+                <div className="rounded-[10px] border border-line p-3.5 text-center">
                   <div className="text-[24px] font-bold">{preview.updateRows}</div>
                   <span className="ds-badge ds-badge-info">Updates to existing</span>
                 </div>
-                <div className="rounded-[10px] border border-[#E3E7EF] p-3.5 text-center">
+                <div className="rounded-[10px] border border-line p-3.5 text-center">
                   <div className="text-[24px] font-bold">{preview.errorRows}</div>
                   <span className="ds-badge ds-badge-bad">Errors, won&apos;t import</span>
                 </div>
-                <div className="rounded-[10px] border border-[#E3E7EF] p-3.5 text-center">
+                <div className="rounded-[10px] border border-line p-3.5 text-center">
                   <div className="text-[24px] font-bold">{preview.warningRows}</div>
                   <span className="ds-badge ds-badge-warn">With warnings</span>
                 </div>
@@ -638,12 +638,12 @@ export function DropshipCsvImportClient({
                 <div
                   role="progressbar"
                   aria-label="Import progress"
-                  className="rounded-[10px] border border-[#E3E7EF] bg-[#F9FAFC] p-3.5"
+                  className="rounded-[10px] border border-line bg-pearl p-3.5"
                 >
-                  <div className="h-2.5 rounded-full bg-[#EEF0F4] overflow-hidden">
-                    <div className="h-2.5 w-2/3 bg-[#2A6FD1] animate-pulse rounded-full" />
+                  <div className="h-2.5 rounded-full bg-divider overflow-hidden">
+                    <div className="h-2.5 w-2/3 bg-coral animate-pulse rounded-full" />
                   </div>
-                  <p className="m-0 mt-2 text-[13px] text-[#5B6478]">
+                  <p className="m-0 mt-2 text-[13px] text-muted">
                     Saving {preview.validRows} draft rows…
                   </p>
                 </div>
@@ -702,14 +702,14 @@ export function DropshipCsvImportClient({
                                   : 'Valid (Draft)'}
                               </span>
                               {r.warnings.map((w, idx) => (
-                                <div key={idx} className="text-[12px] text-[#B54708]">
+                                <div key={idx} className="text-[12px] text-warn">
                                   Warning: {w}
                                 </div>
                               ))}
                             </div>
                           ) : (
                             <ul
-                              className="list-none m-0 p-0 text-[#B42318] text-[12.5px] font-medium space-y-0.5"
+                              className="list-none m-0 p-0 text-bad text-[12.5px] font-medium space-y-0.5"
                               data-testid="csv-row-errors"
                             >
                               {r.errors.map((err, idx) => (
@@ -773,20 +773,20 @@ export function DropshipCsvImportClient({
       {/* Step 4 · Images (multi-file upload -> EXIF stripped, re-encoded, random UUID filename) */}
       <section className="card p-5 space-y-3.5" data-testid="csv-images-step">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-[#1A174A]">
-            <DsIcon name="image" size={18} className="text-[#2A6FD1]" />
+          <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-ink">
+            <DsIcon name="image" size={18} className="text-coral-text" />
             <span>Step 4 · Images</span>
           </h2>
         </div>
-        <p className="m-0 text-[14px] text-[#5B6478]">
+        <p className="m-0 text-[14px] text-muted">
           Images aren&apos;t in the CSV. Upload image files named after the Sourcing model no. or
           DS model no. (for example <span className="mono">DS-000001-1.jpg</span>). Each file is
           verified by magic bytes (JPG/PNG/WebP ≤ 5 MB), EXIF stripped, and saved under a random
           UUID file name.
         </p>
 
-        <label className="block rounded-[12px] border-2 border-dashed border-[#C9D0DD] p-5 text-center text-[14px] cursor-pointer hover:border-[#2A6FD1] bg-[#FAFBFD]">
-          <span className="font-semibold text-[#2A6FD1]">
+        <label className="block rounded-[12px] border-2 border-dashed border-line-strong p-5 text-center text-[14px] cursor-pointer hover:border-coral bg-pearl">
+          <span className="font-semibold text-coral-text">
             {uploadingBatch ? 'Processing images…' : 'Choose product image files'}
           </span>
           <input
@@ -805,8 +805,8 @@ export function DropshipCsvImportClient({
             role={batchImgMsg.ok ? 'status' : 'alert'}
             className={`rounded-[10px] px-3.5 py-2.5 text-[13px] font-medium border ${
               batchImgMsg.ok
-                ? 'bg-[#F1FAF8] border-[#B9E2DC] text-[#0B7A75]'
-                : 'bg-[#FEF4F4] border-[#F2C4C2] text-[#B42318]'
+                ? 'bg-ok-soft border-ok-line text-ok'
+                : 'bg-bad-bg border-bad/30 text-bad'
             }`}
             data-testid="batch-images-message"
           >
@@ -818,27 +818,27 @@ export function DropshipCsvImportClient({
       {/* Step 5 · Result (after import) */}
       {commitResult && (
         <section className="card p-5 space-y-4" data-testid="csv-result-step">
-          <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-[#1A174A]">
-            <DsIcon name="chart" size={18} className="text-[#2A6FD1]" />
+          <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-ink">
+            <DsIcon name="chart" size={18} className="text-coral-text" />
             <span>Step 5 · Result ({commitResult.job_code})</span>
           </h2>
 
           <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
-            <div className="rounded-[10px] border border-[#E3E7EF] p-3.5 text-center">
+            <div className="rounded-[10px] border border-line p-3.5 text-center">
               <div className="text-[24px] font-bold">{commitResult.created}</div>
-              <div className="text-[12.5px] text-[#5B6478]">Drafts created</div>
+              <div className="text-[12.5px] text-muted">Drafts created</div>
             </div>
-            <div className="rounded-[10px] border border-[#E3E7EF] p-3.5 text-center">
+            <div className="rounded-[10px] border border-line p-3.5 text-center">
               <div className="text-[24px] font-bold">{commitResult.updated}</div>
-              <div className="text-[12.5px] text-[#5B6478]">Updated</div>
+              <div className="text-[12.5px] text-muted">Updated</div>
             </div>
-            <div className="rounded-[10px] border border-[#E3E7EF] p-3.5 text-center">
+            <div className="rounded-[10px] border border-line p-3.5 text-center">
               <div className="text-[24px] font-bold">{commitResult.unchanged}</div>
-              <div className="text-[12.5px] text-[#5B6478]">Unchanged</div>
+              <div className="text-[12.5px] text-muted">Unchanged</div>
             </div>
-            <div className="rounded-[10px] border border-[#E3E7EF] p-3.5 text-center">
+            <div className="rounded-[10px] border border-line p-3.5 text-center">
               <div className="text-[24px] font-bold">{commitResult.skippedErrors}</div>
-              <div className="text-[12.5px] text-[#5B6478]">Skipped with errors</div>
+              <div className="text-[12.5px] text-muted">Skipped with errors</div>
             </div>
           </div>
 
@@ -867,15 +867,15 @@ export function DropshipCsvImportClient({
           className="card p-0 overflow-hidden"
           data-testid="sourcing-import-section"
         >
-          <div className="px-5 py-4 border-b border-[#E3E7EF]">
-            <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-[#1A174A]">
-              <DsIcon name="package" size={18} className="text-[#2A6FD1]" />
+          <div className="px-5 py-4 border-b border-line">
+            <h2 className="m-0 text-[18px] font-bold flex items-center gap-2 text-ink">
+              <DsIcon name="package" size={18} className="text-coral-text" />
               <span>Or: from a Sourcing item</span>
             </h2>
           </div>
 
           {candidates.length === 0 ? (
-            <p className="p-5 m-0 text-[14px] text-[#5B6478]">
+            <p className="p-5 m-0 text-[14px] text-muted">
               No Sourcing items available yet.
             </p>
           ) : (
@@ -894,12 +894,12 @@ export function DropshipCsvImportClient({
                   {candidates.slice(0, 25).map((cand) => (
                     <tr key={cand.supplier_product_id} data-testid="sourcing-candidate-row">
                       <td>
-                        <div className="font-medium text-[#1A174A]">
+                        <div className="font-medium text-ink">
                           {cand.rfq_code ? `${cand.rfq_code} · ` : ''}
                           {cand.sourcing_title}
                         </div>
                         {cand.sourcing_sku && (
-                          <div className="text-[12px] text-[#5B6478] mono">
+                          <div className="text-[12px] text-muted mono">
                             {cand.sourcing_sku}
                           </div>
                         )}
@@ -972,7 +972,7 @@ export function DropshipCsvImportClient({
             </div>
           )}
 
-          <div className="px-5 py-3 border-t border-[#E3E7EF] text-[13px] text-[#5B6478]">
+          <div className="px-5 py-3 border-t border-line text-[13px] text-muted">
             Creates a draft with a new DS model number, reusing the Sourcing item&apos;s physical
             item master unit. Cost and supplier stay owned by Sourcing.
           </div>

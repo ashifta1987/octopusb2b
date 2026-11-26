@@ -40,15 +40,15 @@ async function Content({ searchParams }: { searchParams: Promise<{ order?: strin
         subtitle={`${access.current ? access.current.name : 'All warehouses'} · split an order into parcels: items, box, photos and weight per parcel.`} />
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-5 items-start">
         <DsCard title="Ready to pack" icon="list" testId="wh-multi-queue">
-          {queue.length === 0 ? <p className="m-0 text-[13px] text-[#5B6478]">Nothing to pack. Orders appear once they are fully picked.</p> : (
+          {queue.length === 0 ? <p className="m-0 text-[13px] text-muted">Nothing to pack. Orders appear once they are fully picked.</p> : (
             <ul className="m-0 p-0 list-none flex flex-col gap-2">
               {queue.map((o) => (
                 <li key={o.id}>
                   <Link href={`/office/warehouse/multi-parcel?order=${o.code}`} aria-current={detail?.order.code === o.code ? 'page' : undefined} data-testid={`wh-multi-open-${o.code}`}
-                    className={`block rounded-[10px] border p-3 no-underline text-[#1A174A] min-h-[44px] ${detail?.order.code === o.code ? 'border-[#2559B8] bg-[#EEF3FD]' : 'border-[#E3E7EF] hover:bg-[#F7F9FC]'}`}>
+                    className={`block rounded-[10px] border p-3 no-underline text-ink min-h-[44px] ${detail?.order.code === o.code ? 'border-coral-text bg-tint-2' : 'border-line hover:bg-pearl'}`}>
                     <span className="font-mono font-semibold">{o.code}</span>{' '}
-                    <span className="text-[12.5px] text-[#5B6478]">· {o.picked} unit(s){o.parcels ? ` · ${o.parcels} parcel(s)` : ''}{o.has_dangerous_goods ? ' · DG' : ''}</span>
-                    <span className="block text-[12.5px] text-[#5B6478]">{o.owner}</span>
+                    <span className="text-[12.5px] text-muted">· {o.picked} unit(s){o.parcels ? ` · ${o.parcels} parcel(s)` : ''}{o.has_dangerous_goods ? ' · DG' : ''}</span>
+                    <span className="block text-[12.5px] text-muted">{o.owner}</span>
                   </Link>
                 </li>
               ))}

@@ -36,7 +36,7 @@ function useRun() {
 
 function MsgLine({ msg, testId }: { msg: Msg; testId: string }) {
   if (!msg) return null;
-  return <p role={msg.ok ? 'status' : 'alert'} data-testid={testId} className={`m-0 text-[13px] ${msg.ok ? 'text-[#1B7F4B]' : 'text-[#B42318]'}`}>{msg.text}</p>;
+  return <p role={msg.ok ? 'status' : 'alert'} data-testid={testId} className={`m-0 text-[13px] ${msg.ok ? 'text-ok' : 'text-bad'}`}>{msg.text}</p>;
 }
 
 function BookForm({ board, bookable }: { board: DockBoard; bookable: { code: string; name: string }[] }) {
@@ -45,7 +45,7 @@ function BookForm({ board, bookable }: { board: DockBoard; bookable: { code: str
   const set = (k: keyof typeof f) => (e: { target: { value: string } }) => setF((x) => ({ ...x, [k]: e.target.value }));
   const asns = board.open_asns.filter((a) => a.warehouse_code === f.warehouse);
   if (bookable.length === 0) {
-    return <DsCard title="Book a slot" icon="plus"><p className="m-0 text-[13.5px] text-[#5B6478]">Receivers, supervisors and admins book dock slots. Choose a warehouse where you have one of these roles.</p></DsCard>;
+    return <DsCard title="Book a slot" icon="plus"><p className="m-0 text-[13.5px] text-muted">Receivers, supervisors and admins book dock slots. Choose a warehouse where you have one of these roles.</p></DsCard>;
   }
   return (
     <DsCard title="Book a slot" icon="plus" testId="wh-dock-book" subtitle="Times are local at the warehouse. Two bookings on the same dock can't overlap.">
@@ -81,19 +81,19 @@ function SlotRow({ s, asns }: { s: DockSlot; asns: OpenAsn[] }) {
   const [label, tone] = SLOT_STATUS[s.status] ?? [s.status, 'neutral'];
   const linkable = asns.filter((a) => a.warehouse_code === s.warehouse_code);
   return (
-    <li className="border-b border-[#EEF0F4] last:border-0 px-5 py-3 flex flex-col gap-2" data-testid={`wh-slot-${s.dock}-${s.start_local}`}>
+    <li className="border-b border-divider last:border-0 px-5 py-3 flex flex-col gap-2" data-testid={`wh-slot-${s.dock}-${s.start_local}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-mono font-semibold">{s.start_local}–{s.end_local}</span>
           {s.asn_code
-            ? <Link href={`/office/warehouse/receive/${s.asn_code}`} className="font-mono font-semibold text-[#2559B8] hover:underline">{s.asn_code}</Link>
+            ? <Link href={`/office/warehouse/receive/${s.asn_code}`} className="font-mono font-semibold text-coral-text hover:underline">{s.asn_code}</Link>
             : <DsBadge tone="bad">No ASN</DsBadge>}
           {s.owner && <span className="text-[13px]">{s.owner}</span>}
-          {loadText(s.cartons, s.pallets) && <span className="text-[13px] text-[#5B6478]">{loadText(s.cartons, s.pallets)}</span>}
+          {loadText(s.cartons, s.pallets) && <span className="text-[13px] text-muted">{loadText(s.cartons, s.pallets)}</span>}
         </div>
         <DsBadge tone={tone}>{label}</DsBadge>
       </div>
-      {s.load_note && <p className="m-0 text-[12.5px] text-[#5B6478]">{s.load_note}</p>}
+      {s.load_note && <p className="m-0 text-[12.5px] text-muted">{s.load_note}</p>}
       {s.can_act && (
         <div className="flex flex-wrap gap-2 items-start">
           {s.status === 'booked' && (

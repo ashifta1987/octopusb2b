@@ -274,7 +274,7 @@ export function ChooseHowToPay({
       <div className="space-y-4" data-testid="payment-protection-active-card">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-3">
           <div>
-            <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-900">
+            <span className="pill bg-ok-bg text-ok">
               Payment protection
             </span>
             <h3 className="mt-1 text-base font-semibold text-ink">
@@ -307,10 +307,10 @@ export function ChooseHowToPay({
           ].map((s) => (
             <li
               key={s.key}
-              className={`rounded-lg border px-3 py-2 text-xs font-medium ${
+              className={`rounded-[10px] border px-3 py-2 text-xs font-medium ${
                 s.done
-                  ? 'border-emerald-300 bg-emerald-50 text-emerald-950'
-                  : 'border-line bg-surface text-muted'
+                  ? 'border-ok-line bg-ok-bg text-ok'
+                  : 'border-line bg-white text-muted'
               }`}
             >
               {s.label}
@@ -320,7 +320,7 @@ export function ChooseHowToPay({
 
         {existingHold.status === 'disputed' && (
           <div
-            className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950"
+            className="rounded-[16px] border border-warn-line bg-warn-bg p-3 text-xs text-warn"
             data-testid="protection-disputed-banner"
           >
             <strong>Dispute open — held funds frozen:</strong> {existingHold.dispute_reason}
@@ -348,12 +348,12 @@ export function ChooseHowToPay({
                 type="button"
                 onClick={() => setShowDisputeForm(true)}
                 data-testid="open-dispute-btn"
-                className="inline-flex min-h-10 items-center rounded-lg border border-line bg-canvas px-3.5 py-2 text-xs font-semibold text-ink hover:bg-surface"
+                className="btn btn-ghost btn-sm"
               >
                 Open a dispute (freeze held payment)
               </button>
             ) : (
-              <div className="space-y-2 rounded-xl border border-line bg-surface p-3" data-testid="dispute-form">
+              <div className="space-y-2 rounded-[16px] border border-line bg-white p-3" data-testid="dispute-form">
                 <label className="block text-xs font-semibold text-ink">
                   Tell us what went wrong (freezes {money(remainingHeld, existingHold.currency)} until resolved)
                 </label>
@@ -363,7 +363,7 @@ export function ChooseHowToPay({
                   onChange={(e) => setDisputeReason(e.target.value)}
                   data-testid="dispute-reason-input"
                   placeholder="Describe the quality, quantity or delivery issue…"
-                  className="w-full rounded-lg border border-line bg-canvas px-3 py-2 text-xs text-ink"
+                  className="input"
                 />
                 <div className="flex gap-2">
                   <button
@@ -371,14 +371,14 @@ export function ChooseHowToPay({
                     disabled={pending}
                     onClick={() => handleOpenDispute(existingHold.id)}
                     data-testid="submit-dispute-btn"
-                    className="inline-flex min-h-10 items-center rounded-lg bg-accent px-4 py-2 text-xs font-semibold text-white"
+                    className="btn btn-primary"
                   >
                     {pending ? 'Freezing hold…' : 'Freeze held payment & submit dispute'}
                   </button>
                   <button
                     type="button"
                     onClick={() => setShowDisputeForm(false)}
-                    className="inline-flex min-h-10 items-center rounded-lg border border-line bg-canvas px-3 py-2 text-xs text-muted"
+                    className="btn btn-ghost btn-sm"
                   >
                     Cancel
                   </button>
@@ -395,13 +395,13 @@ export function ChooseHowToPay({
   if (existingPayLaterReservation && existingPayLaterReservation.status === 'reserved') {
     return (
       <div
-        className="rounded-xl border border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-950"
+        className="rounded-[16px] border border-ok-line bg-ok-bg p-4 text-sm text-ok"
         data-testid="pay-later-reserved-banner"
       >
         <div className="font-semibold">
           Confirmed on Pay later (Net {existingPayLaterReservation.net_days} days)
         </div>
-        <p className="mt-1 text-xs text-emerald-900">
+        <p className="mt-1 text-xs text-ok">
           {money(existingPayLaterReservation.amount_cents, currency)} is reserved against your credit limit. Your{' '}
           <span className="font-mono">OCT-</span> tax invoice and due date will be issued automatically at{' '}
           <strong>{existingPayLaterReservation.invoice_trigger.replace('_', ' ')}</strong>.
@@ -421,12 +421,12 @@ export function ChooseHowToPay({
       </div>
 
       {error && (
-        <div className="rounded-xl border border-red-300 bg-red-50 p-3 text-xs text-red-900" role="alert" data-testid="payment-error">
+        <div className="rounded-[16px] border border-bad/40 bg-bad-bg p-3 text-xs text-bad" role="alert" data-testid="payment-error">
           {error}
         </div>
       )}
       {notice && (
-        <div className="rounded-xl border border-emerald-300 bg-emerald-50 p-3 text-xs text-emerald-950" data-testid="payment-notice">
+        <div className="rounded-[16px] border border-ok-line bg-ok-bg p-3 text-xs text-ok" data-testid="payment-notice">
           {notice}
         </div>
       )}
@@ -438,10 +438,10 @@ export function ChooseHowToPay({
             type="button"
             onClick={() => setSelected('pay_now')}
             data-testid="option-card-pay_now"
-            className={`flex flex-col justify-between rounded-xl border p-4 text-left transition ${
+            className={`flex flex-col justify-between rounded-[16px] border p-4 text-left transition ${
               selected === 'pay_now'
-                ? 'border-ink bg-surface ring-1 ring-ink'
-                : 'border-line bg-canvas hover:border-ink/40'
+                ? 'border-coral bg-tint ring-1 ring-coral'
+                : 'border-line bg-white hover:border-line-strong'
             }`}
           >
             <div>
@@ -466,10 +466,10 @@ export function ChooseHowToPay({
             type="button"
             onClick={() => setSelected('payment_protection')}
             data-testid="option-card-payment_protection"
-            className={`flex flex-col justify-between rounded-xl border p-4 text-left transition ${
+            className={`flex flex-col justify-between rounded-[16px] border p-4 text-left transition ${
               selected === 'payment_protection'
-                ? 'border-ink bg-surface ring-1 ring-ink'
-                : 'border-line bg-canvas hover:border-ink/40'
+                ? 'border-coral bg-tint ring-1 ring-coral'
+                : 'border-line bg-white hover:border-line-strong'
             }`}
           >
             <div>
@@ -481,7 +481,7 @@ export function ChooseHowToPay({
                 Payment protection — we hold your payment until <strong>{milestoneText}</strong>.
               </p>
             </div>
-            <div className="mt-3 text-[11px] font-medium text-emerald-800">
+            <div className="mt-3 text-[11px] font-medium text-ok">
               Dispute protection included before release
             </div>
           </button>
@@ -492,10 +492,10 @@ export function ChooseHowToPay({
             type="button"
             onClick={() => setSelected('pay_later')}
             data-testid="option-card-pay_later"
-            className={`flex flex-col justify-between rounded-xl border p-4 text-left transition ${
+            className={`flex flex-col justify-between rounded-[16px] border p-4 text-left transition ${
               selected === 'pay_later'
-                ? 'border-ink bg-surface ring-1 ring-ink'
-                : 'border-line bg-canvas hover:border-ink/40'
+                ? 'border-coral bg-tint ring-1 ring-coral'
+                : 'border-line bg-white hover:border-line-strong'
             } ${!payLaterAllowed ? 'opacity-75' : ''}`}
           >
             <div>
@@ -521,11 +521,11 @@ export function ChooseHowToPay({
 
       {/* Selected Option Action Panel */}
       {selected === 'pay_now' && payNowEnabled && (
-        <div className="rounded-xl border border-line bg-surface p-4 space-y-4" data-testid="panel-pay_now">
+        <div className="rounded-[16px] border border-line bg-white p-4 space-y-4" data-testid="panel-pay_now">
           <div className={`grid gap-4 ${activeProvider ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
             {/* 1. Online Aggregator — ONLY shown when an online provider is enabled & configured */}
             {activeProvider && (
-              <div className="rounded-xl border border-line bg-canvas p-4 flex flex-col justify-between">
+              <div className="rounded-[16px] border border-line bg-pearl p-4 flex flex-col justify-between">
                 <div>
                   <div className="text-sm font-semibold text-ink">
                     Pay online ({activeProvider.display_name})
@@ -534,7 +534,7 @@ export function ChooseHowToPay({
                     Instant confirmation via signature-verified webhook.
                   </p>
                   {surchargeCents > 0 && (
-                    <p className="mt-2 text-xs text-amber-900" data-testid="checkout-surcharge-line">
+                    <p className="mt-2 text-xs text-warn" data-testid="checkout-surcharge-line">
                       Includes {money(surchargeCents, currency)} aggregator surcharge · Total{' '}
                       <strong>{money(onlineTotalCents, currency)}</strong>
                     </p>
@@ -545,7 +545,7 @@ export function ChooseHowToPay({
                   disabled={pending}
                   onClick={() => handleOnlineCheckout('pay_now', 'card')}
                   data-testid="pay-now-online-btn"
-                  className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                  className="mt-4 btn btn-primary w-full"
                 >
                   {pending ? 'Opening checkout…' : `Pay ${money(onlineTotalCents, currency)} online`}
                 </button>
@@ -554,7 +554,7 @@ export function ChooseHowToPay({
 
             {/* 2. Wallet Balance */}
             {walletEnabled && (
-              <div className="rounded-xl border border-line bg-canvas p-4 flex flex-col justify-between">
+              <div className="rounded-[16px] border border-line bg-pearl p-4 flex flex-col justify-between">
                 <div>
                   <div className="text-sm font-semibold text-ink">Pay from {currency} wallet</div>
                   <p className="mt-1 text-xs text-muted">
@@ -566,7 +566,7 @@ export function ChooseHowToPay({
                   disabled={pending || walletBalanceCents < amountCents || !onPayNowWalletAction}
                   onClick={handlePayNowWallet}
                   data-testid="pay-now-wallet-btn"
-                  className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-ink bg-ink px-4 py-2 text-xs font-semibold text-canvas hover:opacity-95 disabled:opacity-40"
+                  className="mt-4 btn btn-ghost w-full"
                 >
                   {walletBalanceCents < amountCents
                     ? 'Insufficient wallet balance'
@@ -576,7 +576,7 @@ export function ChooseHowToPay({
             )}
 
             {/* 3. Bank Transfer */}
-            <div className="rounded-xl border border-line bg-canvas p-4">
+            <div className="rounded-[16px] border border-line bg-pearl p-4">
               <div className="text-sm font-semibold text-ink">Bank transfer</div>
               <dl className="mt-2 space-y-1 text-xs">
                 {bankLines.map(([k, v]) => (
@@ -597,10 +597,10 @@ export function ChooseHowToPay({
       )}
 
       {selected === 'payment_protection' && protEnabled && (
-        <div className="rounded-xl border border-line bg-surface p-4 space-y-4" data-testid="panel-payment_protection">
-          <div className="rounded-lg border border-emerald-300 bg-emerald-50/70 p-3 text-xs text-emerald-950">
+        <div className="rounded-[16px] border border-line bg-white p-4 space-y-4" data-testid="panel-payment_protection">
+          <div className="rounded-[10px] border border-ok-line bg-ok-bg p-3 text-xs text-ok">
             <strong>Payment protection — we hold your payment until {milestoneText}.</strong>
-            <p className="mt-1 text-emerald-900">
+            <p className="mt-1 text-ok">
               Your funds are held in a dedicated protection liability account and are only released to revenue and
               invoiced once the milestone is reached. You can open a dispute at any time before release to freeze the
               held payment.
@@ -609,7 +609,7 @@ export function ChooseHowToPay({
 
           <div className={`grid gap-4 ${activeProvider && walletEnabled ? 'md:grid-cols-2' : 'md:grid-cols-1'}`}>
             {activeProvider && (
-              <div className="rounded-xl border border-line bg-canvas p-4 flex flex-col justify-between">
+              <div className="rounded-[16px] border border-line bg-pearl p-4 flex flex-col justify-between">
                 <div>
                   <div className="text-sm font-semibold text-ink">
                     Fund Payment protection online ({activeProvider.display_name})
@@ -623,7 +623,7 @@ export function ChooseHowToPay({
                   disabled={pending}
                   onClick={() => handleOnlineCheckout('payment_protection', 'card')}
                   data-testid="protection-online-btn"
-                  className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-accent px-4 py-2 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                  className="mt-4 btn btn-primary w-full"
                 >
                   {pending
                     ? 'Opening checkout…'
@@ -633,7 +633,7 @@ export function ChooseHowToPay({
             )}
 
             {walletEnabled && (
-              <div className="rounded-xl border border-line bg-canvas p-4 flex flex-col justify-between">
+              <div className="rounded-[16px] border border-line bg-pearl p-4 flex flex-col justify-between">
                 <div>
                   <div className="text-sm font-semibold text-ink">Fund Payment protection from wallet</div>
                   <p className="mt-1 text-xs text-muted">
@@ -645,7 +645,7 @@ export function ChooseHowToPay({
                   disabled={pending || walletBalanceCents < amountCents}
                   onClick={handleProtectionWallet}
                   data-testid="protection-wallet-btn"
-                  className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-ink bg-ink px-4 py-2 text-xs font-semibold text-canvas hover:opacity-95 disabled:opacity-40"
+                  className="mt-4 btn btn-ghost w-full"
                 >
                   {walletBalanceCents < amountCents
                     ? 'Insufficient wallet balance'
@@ -658,7 +658,7 @@ export function ChooseHowToPay({
       )}
 
       {selected === 'pay_later' && showPayLaterOption && (
-        <div className="rounded-xl border border-line bg-surface p-4 space-y-4" data-testid="panel-pay_later">
+        <div className="rounded-[16px] border border-line bg-white p-4 space-y-4" data-testid="panel-pay_later">
           {payLaterAllowed ? (
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="space-y-1 text-xs">
@@ -686,7 +686,7 @@ export function ChooseHowToPay({
                 disabled={pending}
                 onClick={handleConfirmPayLater}
                 data-testid="confirm-pay-later-btn"
-                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-accent px-5 py-2.5 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                className="btn btn-primary"
               >
                 {pending
                   ? 'Reserving credit…'
@@ -694,7 +694,7 @@ export function ChooseHowToPay({
               </button>
             </div>
           ) : (
-            <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950" data-testid="pay-later-disabled-msg">
+            <div className="rounded-[16px] border border-warn-line bg-warn-bg p-3 text-xs text-warn" data-testid="pay-later-disabled-msg">
               <strong>Pay later unavailable:</strong> {payLaterDisabledReason}
             </div>
           )}

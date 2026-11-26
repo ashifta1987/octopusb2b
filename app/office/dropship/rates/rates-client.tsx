@@ -50,7 +50,7 @@ type Msg = { ok: boolean; text: string } | null;
 function Message({ m, testId }: { m: Msg; testId?: string }) {
   if (!m) return null;
   return (
-    <p role={m.ok ? 'status' : 'alert'} data-testid={testId} className={`m-0 text-[13px] ${m.ok ? 'text-[#1B7F4B]' : 'text-[#B42318]'}`}>
+    <p role={m.ok ? 'status' : 'alert'} data-testid={testId} className={`m-0 text-[13px] ${m.ok ? 'text-ok' : 'text-bad'}`}>
       {m.text}
     </p>
   );
@@ -213,7 +213,7 @@ function Importer({ cards, onDone, seed }: { cards: RateCard[]; onDone: (m: Msg)
       {step === 1 && (
         <div className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-3 items-center text-[13px]">
-            <a href={`data:text/csv;charset=utf-8,${encodeURIComponent(`${CSV_HEADER}\n${CSV_EXAMPLE}\n`)}`} download="rate-cards-template.csv" className="underline text-[#2A6FD1]">
+            <a href={`data:text/csv;charset=utf-8,${encodeURIComponent(`${CSV_HEADER}\n${CSV_EXAMPLE}\n`)}`} download="rate-cards-template.csv" className="underline text-coral-text">
               Download the template
             </a>
             <label className="flex items-center gap-2">
@@ -243,7 +243,7 @@ function Importer({ cards, onDone, seed }: { cards: RateCard[]; onDone: (m: Msg)
 
       {step === 2 && (
         <div className="flex flex-col gap-3">
-          <p className="m-0 text-[13px] text-[#5B6478]">{grid.length - 1} rows in {fileName ?? 'the pasted text'}. Match each field to a column in the file. Columns with the template names are matched already.</p>
+          <p className="m-0 text-[13px] text-muted">{grid.length - 1} rows in {fileName ?? 'the pasted text'}. Match each field to a column in the file. Columns with the template names are matched already.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {FIELDS.map((f) => (
               <DsSelect key={f.key} label={`${f.label}${f.required ? ' *' : ''}`} value={map[f.key] ?? ''} data-testid={`map-${f.key}`}
@@ -275,8 +275,8 @@ function Importer({ cards, onDone, seed }: { cards: RateCard[]; onDone: (m: Msg)
         <div className="flex flex-col gap-3" data-testid="rate-check">
           <dl className="grid grid-cols-2 md:grid-cols-4 gap-3 m-0">
             {[['Rows in file', draft.raws.length], ['New', fresh.length], ['Changed', changed.length], ['Errors', invalid.length]].map(([k, v]) => (
-              <div key={k as string} className="rounded-[8px] border border-[#E3E7EF] px-3 py-2">
-                <dt className="text-[12px] text-[#5B6478]">{k}</dt><dd className="m-0 text-[18px] font-bold" data-testid={`check-${String(k).toLowerCase().replace(/ /g, '-')}`}>{v}</dd>
+              <div key={k as string} className="rounded-[8px] border border-line px-3 py-2">
+                <dt className="text-[12px] text-muted">{k}</dt><dd className="m-0 text-[18px] font-bold" data-testid={`check-${String(k).toLowerCase().replace(/ /g, '-')}`}>{v}</dd>
               </div>
             ))}
           </dl>
@@ -299,7 +299,7 @@ function Importer({ cards, onDone, seed }: { cards: RateCard[]; onDone: (m: Msg)
                       <td>{r.country ? countryName(String(r.country)) : '—'}</td>
                       <td>{String(r.carrier_code || '—')} · <span className="font-mono">{String(r.carrier_service_code || '—')}</span></td>
                       <td>{METHOD_LABEL[String(r.method)] ?? String(r.method || '—')}</td>
-                      <td className="text-[12.5px]">{cur ? <>{priceText(cur)} <span className="text-[#5B6478]">· v{cur.version}</span></> : '—'}</td>
+                      <td className="text-[12.5px]">{cur ? <>{priceText(cur)} <span className="text-muted">· v{cur.version}</span></> : '—'}</td>
                       <td className="text-[12.5px]">{p.action === 'invalid' ? '—' : priceText(r as never)}</td>
                       <td>
                         {p.action === 'invalid' && <DsBadge tone="bad">{p.reason ?? 'Error'}</DsBadge>}
@@ -411,14 +411,14 @@ function TestQuote({ countries }: { countries: string[] }) {
       {res && (res.rows.length === 0 ? (
         <p className="m-0 text-[13px]" data-testid="test-quote-none">No active card for this country and method. Merchants see “No rate set” — never 0.</p>
       ) : res.rows.map((r) => (
-        <dl key={r.rate_card_id} className="grid grid-cols-[180px_1fr] gap-x-3 gap-y-1 m-0 text-[13px] border-t border-[#E3E7EF] pt-2" data-testid="test-quote-result">
-          <dt className="text-[#5B6478]">Card</dt><dd className="m-0">{r.carrier_name ?? r.carrier_code} · <span className="font-mono">{r.carrier_service_code}</span> · v{r.version}</dd>
-          <dt className="text-[#5B6478]">Box-size weight</dt>
+        <dl key={r.rate_card_id} className="grid grid-cols-[180px_1fr] gap-x-3 gap-y-1 m-0 text-[13px] border-t border-line pt-2" data-testid="test-quote-result">
+          <dt className="text-muted">Card</dt><dd className="m-0">{r.carrier_name ?? r.carrier_code} · <span className="font-mono">{r.carrier_service_code}</span> · v{r.version}</dd>
+          <dt className="text-muted">Box-size weight</dt>
           <dd className="m-0">{res.dims && r.box_weight_g != null ? `${res.dims} ÷ ${r.volumetric_divisor} = ${(r.box_weight_g / 1000).toFixed(2)} kg` : 'No box size entered'}</dd>
-          <dt className="text-[#5B6478]">Billed weight</dt><dd className="m-0">{(r.billed_weight_g / 1000).toFixed(1)} kg (higher of the two, rounded up to 100 g)</dd>
-          <dt className="text-[#5B6478]">Shipping cost</dt>
+          <dt className="text-muted">Billed weight</dt><dd className="m-0">{(r.billed_weight_g / 1000).toFixed(1)} kg (higher of the two, rounded up to 100 g)</dd>
+          <dt className="text-muted">Shipping cost</dt>
           <dd className="m-0 font-semibold">{r.over_max ? `Over the card’s ${(r.max_weight_g / 1000).toLocaleString('en-US')} kg limit` : `${money(r.price_cents, 'USD')} · card v${r.version}`}
-            {r.remote_area_fee_may_apply && <span className="font-normal text-[#5B6478]"> · remote-area fee may apply</span>}</dd>
+            {r.remote_area_fee_may_apply && <span className="font-normal text-muted"> · remote-area fee may apply</span>}</dd>
         </dl>
       )))}
       <Message m={msg} />
@@ -545,15 +545,15 @@ export function RatesClient({ cards, imports, access }: { cards: RateCard[]; imp
         <div className="flex flex-col gap-5">
           {access.canEditRates && (
             <section id="import" aria-labelledby="import-title" className="ds-card scroll-mt-20">
-              <h2 id="import-title" className="m-0 text-[18px] font-bold text-[#1A174A]">Import a carrier price list</h2>
-              <p className="mt-1 mb-3 text-[13px] text-[#5B6478]">CSV from the carrier. Preview first, nothing changes until approved.</p>
+              <h2 id="import-title" className="m-0 text-[18px] font-bold text-ink">Import a carrier price list</h2>
+              <p className="mt-1 mb-3 text-[13px] text-muted">CSV from the carrier. Preview first, nothing changes until approved.</p>
               <Importer key={importerKey} cards={cards} seed={seed} onDone={(m) => setMsg(m)} />
             </section>
           )}
           {access.canEditRates && (
             <section id="new-card" aria-labelledby="new-card-title" className="ds-card scroll-mt-20">
-              <h2 id="new-card-title" className="m-0 text-[18px] font-bold text-[#1A174A]">New rate card</h2>
-              <p className="mt-1 mb-3 text-[13px] text-[#5B6478]">One card, checked and approved the same way as a price list.</p>
+              <h2 id="new-card-title" className="m-0 text-[18px] font-bold text-ink">New rate card</h2>
+              <p className="mt-1 mb-3 text-[13px] text-muted">One card, checked and approved the same way as a price list.</p>
               <NewCardForm onCheck={(d) => {
                 setSeed(d); setImporterKey((k) => k + 1);
                 document.getElementById('import')?.scrollIntoView({ behavior: 'smooth' });
@@ -564,20 +564,20 @@ export function RatesClient({ cards, imports, access }: { cards: RateCard[]; imp
 
         <div className="flex flex-col gap-5">
           <DsCard title={`Waiting for approval (${waiting.length})`} icon="clock" testId="rate-waiting">
-            {waiting.length === 0 ? <p className="m-0 text-[13px] text-[#5B6478]">Nothing is waiting.</p> : (
+            {waiting.length === 0 ? <p className="m-0 text-[13px] text-muted">Nothing is waiting.</p> : (
               <div className="flex flex-col gap-4">
                 {waiting.map((w) => {
                   const mine = w.proposed_by === access.userId;
                   const keys = w.counts.keys ?? [];
                   return (
-                    <div key={w.id} className="flex flex-col gap-2 border-b border-[#E3E7EF] pb-3 last:border-0" data-testid={`rate-waiting-${w.id}`}>
+                    <div key={w.id} className="flex flex-col gap-2 border-b border-line pb-3 last:border-0" data-testid={`rate-waiting-${w.id}`}>
                       <dl className="grid grid-cols-[130px_1fr] gap-x-3 gap-y-1 m-0 text-[13px]">
-                        <dt className="text-[#5B6478]">Change</dt>
+                        <dt className="text-muted">Change</dt>
                         <dd className="m-0">{w.file_name ?? 'New rate card'} · {w.counts.new ?? 0} new, {w.counts.changed ?? 0} changed
-                          {keys.length > 0 && <span className="block font-mono text-[11.5px] text-[#5B6478]">{keys.slice(0, 4).join(', ')}{keys.length > 4 ? ` +${keys.length - 4} more` : ''}</span>}</dd>
-                        <dt className="text-[#5B6478]">Proposed by</dt><dd className="m-0">{w.proposed_by_name ?? 'Staff'} · {fmtDate(w.submitted_at ?? w.created_at, true)}</dd>
-                        <dt className="text-[#5B6478]">Effective from</dt><dd className="m-0">When approved</dd>
-                        <dt className="text-[#5B6478]">Orders already paid</dt><dd className="m-0">Keep the card they were quoted with</dd>
+                          {keys.length > 0 && <span className="block font-mono text-[11.5px] text-muted">{keys.slice(0, 4).join(', ')}{keys.length > 4 ? ` +${keys.length - 4} more` : ''}</span>}</dd>
+                        <dt className="text-muted">Proposed by</dt><dd className="m-0">{w.proposed_by_name ?? 'Staff'} · {fmtDate(w.submitted_at ?? w.created_at, true)}</dd>
+                        <dt className="text-muted">Effective from</dt><dd className="m-0">When approved</dd>
+                        <dt className="text-muted">Orders already paid</dt><dd className="m-0">Keep the card they were quoted with</dd>
                       </dl>
                       {access.canEditRates && (rejectId === w.id ? (
                         <form className="flex flex-wrap gap-2 items-end" action={() => act(rejectRateImportAction(w.id, rejectReason).then((x) => { if (x.ok) setRejectId(null); return x; }))}>

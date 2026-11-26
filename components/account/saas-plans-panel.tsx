@@ -76,25 +76,25 @@ export function SaasPlansPanel({
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-300 bg-red-50 p-3 text-xs text-red-900" role="alert">
+        <div className="rounded-[10px] border border-bad/40 bg-bad-bg p-3 text-xs text-bad" role="alert">
           {error}
         </div>
       )}
       {notice && (
-        <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-3 text-xs text-emerald-950" data-testid="saas-sub-notice">
+        <div className="rounded-[10px] border border-ok-line bg-ok-bg p-3 text-xs text-ok" data-testid="saas-sub-notice">
           {notice}
         </div>
       )}
 
       {subscriptions.length > 0 && (
-        <div className="rounded-xl border border-line bg-surface p-3.5 text-xs" data-testid="active-saas-subscriptions">
+        <div className="rounded-[16px] border border-line bg-white p-3.5 text-xs" data-testid="active-saas-subscriptions">
           <div className="font-semibold text-ink mb-2">Your active subscriptions</div>
           <ul className="space-y-1.5">
             {subscriptions.map((sub) => (
               <li key={sub.id} className="flex flex-wrap items-center justify-between gap-2">
                 <span>
                   <strong className="font-mono text-ink">{sub.plan_code}</strong> ·{' '}
-                  <span className="uppercase font-semibold text-emerald-800">{sub.status}</span> (
+                  <span className="uppercase font-semibold text-ok">{sub.status}</span> (
                   {sub.payment_option.replace('_', ' ')})
                 </span>
                 <span className="text-muted">
@@ -113,7 +113,7 @@ export function SaasPlansPanel({
             <div
               key={p.code}
               data-testid={`saas-plan-${p.code}`}
-              className="rounded-xl border border-line bg-canvas p-4 flex flex-col justify-between"
+              className="rounded-[16px] border border-line bg-pearl p-4 flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-baseline justify-between gap-2">
@@ -132,7 +132,7 @@ export function SaasPlansPanel({
                     disabled={pending}
                     onClick={() => handleSubscribe(p.code, 'pay_now', 'card')}
                     data-testid={`saas-pay-online-${p.code}`}
-                    className="inline-flex min-h-10 items-center rounded-lg bg-accent px-3.5 py-2 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-50"
+                    className="btn btn-primary"
                   >
                     Pay now (Online)
                   </button>
@@ -142,7 +142,7 @@ export function SaasPlansPanel({
                   disabled={pending}
                   onClick={() => handleSubscribe(p.code, 'pay_now', 'wallet')}
                   data-testid={`saas-pay-wallet-${p.code}`}
-                  className="inline-flex min-h-10 items-center rounded-lg border border-ink bg-ink px-3.5 py-2 text-xs font-semibold text-canvas hover:opacity-95 disabled:opacity-50"
+                  className="btn btn-ghost"
                 >
                   Pay now (Wallet)
                 </button>
@@ -157,7 +157,7 @@ export function SaasPlansPanel({
                         ? `Bill on Net ${netDays} credit terms`
                         : 'Insufficient available credit'
                     }
-                    className="inline-flex min-h-10 items-center rounded-lg border border-line bg-surface px-3.5 py-2 text-xs font-semibold text-ink hover:bg-canvas disabled:opacity-40"
+                    className="btn btn-ghost btn-sm"
                   >
                     Pay later (Net {netDays})
                   </button>

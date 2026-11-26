@@ -23,8 +23,8 @@ function NewTransfer({ board, current, names }: { board: TransfersBoard; current
   const over = filled.find((l) => Number(l.qty) > (avail(l.itemId)?.available ?? 0));
   const why = !from ? 'Choose where the stock leaves from' : !to ? 'Choose where it goes' : filled.length === 0 ? 'Add a product'
     : filled.some((l) => !(Number(l.qty) > 0)) ? 'Every line needs a quantity' : over ? `Only ${avail(over.itemId)?.available ?? 0} available of ${itemText(avail(over.itemId)?.item ?? null)}` : undefined;
-  if (origins.length === 0) return <p className="m-0 text-[13.5px] text-[#5B6478]" data-testid="wh-transfer-readonly">Only receivers, supervisors and admins at an active warehouse send transfers.</p>;
-  if (board.warehouses.length < 2) return <p className="m-0 text-[13.5px] text-[#5B6478]" data-testid="wh-transfer-one-wh">Transfers need a second active warehouse. Add one in Locations.</p>;
+  if (origins.length === 0) return <p className="m-0 text-[13.5px] text-muted" data-testid="wh-transfer-readonly">Only receivers, supervisors and admins at an active warehouse send transfers.</p>;
+  if (board.warehouses.length < 2) return <p className="m-0 text-[13.5px] text-muted" data-testid="wh-transfer-one-wh">Transfers need a second active warehouse. Add one in Locations.</p>;
   const set = (i: number, patch: Partial<Line>) => setLines((ls) => ls.map((l, j) => (j === i ? { ...l, ...patch } : l)));
   return (
     <form className="flex flex-col gap-3" data-testid="wh-transfer-form"
@@ -39,7 +39,7 @@ function NewTransfer({ board, current, names }: { board: TransfersBoard; current
         </DsSelect>
       </div>
       {stock.length === 0 ? (
-        <p className="m-0 text-[13.5px] text-[#5B6478]" data-testid="wh-transfer-no-stock">{names(from)} has no available stock to send.</p>
+        <p className="m-0 text-[13.5px] text-muted" data-testid="wh-transfer-no-stock">{names(from)} has no available stock to send.</p>
       ) : (
         <fieldset className="m-0 p-0 border-0 flex flex-col gap-3">
           <legend className="ds-label">Products</legend>
@@ -63,7 +63,7 @@ function NewTransfer({ board, current, names }: { board: TransfersBoard; current
         </fieldset>
       )}
       <DsTextarea label="Note (optional)" value={note} maxLength={500} rows={2} onChange={(e) => setNote(e.target.value)} />
-      <p className="m-0 text-[12.5px] text-[#5B6478]">Dispatch picks the oldest lots first from the bins. Units not yet put away can’t be sent.</p>
+      <p className="m-0 text-[12.5px] text-muted">Dispatch picks the oldest lots first from the bins. Units not yet put away can’t be sent.</p>
       <div><DsButton type="submit" disabled={pending || Boolean(why)} disabledReason={why} testId="wh-transfer-create">Save draft</DsButton></div>
       <MsgLine msg={msg} testId="wh-transfer-msg" />
     </form>
@@ -77,17 +77,17 @@ function TransferItem({ t, names }: { t: TransferRow; names: (c: string) => stri
   const [label, tone] = TRANSFER_STATUS[t.status] ?? [t.status, 'neutral'];
   const units = t.lines.reduce((s, l) => s + l.qty, 0);
   return (
-    <li className="border-b border-[#EEF0F4] last:border-0 px-5 py-4 flex flex-col gap-3" data-testid={`wh-transfer-${t.code}`}>
+    <li className="border-b border-divider last:border-0 px-5 py-4 flex flex-col gap-3" data-testid={`wh-transfer-${t.code}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           <div className="font-semibold"><span className="font-mono">{t.code}</span> · {names(t.from_wh)} → {names(t.to_wh)}</div>
-          <div className="text-[12.5px] text-[#5B6478]">
+          <div className="text-[12.5px] text-muted">
             {units} unit(s) · {t.lines.length} product(s) · created {fmtWh(t.created_at)}{t.created_by_name ? ` by ${t.created_by_name}` : ''}
             {t.dispatched_at && ` · dispatched ${fmtWh(t.dispatched_at)}${t.dispatched_by_name ? ` by ${t.dispatched_by_name}` : ''}`}
             {t.received_at && ` · received ${fmtWh(t.received_at)}${t.received_by_name ? ` by ${t.received_by_name}` : ''}`}
           </div>
-          {t.note && <div className="text-[12.5px] text-[#5B6478]">“{t.note}”</div>}
-          {t.cancel_reason && <div className="text-[12.5px] text-[#5B6478]">Cancelled: {t.cancel_reason}</div>}
+          {t.note && <div className="text-[12.5px] text-muted">“{t.note}”</div>}
+          {t.cancel_reason && <div className="text-[12.5px] text-muted">Cancelled: {t.cancel_reason}</div>}
         </div>
         <DsBadge tone={tone} testId="wh-transfer-status">{label}</DsBadge>
       </div>
@@ -95,8 +95,8 @@ function TransferItem({ t, names }: { t: TransferRow; names: (c: string) => stri
         {t.lines.map((l) => (
           <li key={l.id}>
             <span className="font-semibold">{l.qty} × {itemText(l.item)}</span>
-            {l.picks.length > 0 && <span className="text-[#5B6478]"> · picked {l.picks.map((p) => `${p.qty} from ${p.bin_code} (${p.lot_code}${p.pallet_code ? `, ${p.pallet_code}` : ''})`).join(', ')}</span>}
-            {l.dest_lot && <span className="text-[#5B6478]"> · arrived as <span className="font-mono">{l.dest_lot}</span></span>}
+            {l.picks.length > 0 && <span className="text-muted"> · picked {l.picks.map((p) => `${p.qty} from ${p.bin_code} (${p.lot_code}${p.pallet_code ? `, ${p.pallet_code}` : ''})`).join(', ')}</span>}
+            {l.dest_lot && <span className="text-muted"> · arrived as <span className="font-mono">{l.dest_lot}</span></span>}
           </li>
         ))}
       </ul>
@@ -107,13 +107,13 @@ function TransferItem({ t, names }: { t: TransferRow; names: (c: string) => stri
               <DsButton disabled={pending} onClick={() => run(() => transferStepAction(t.id, 'dispatch'))} testId="wh-transfer-dispatch" icon="truck">Dispatch</DsButton>
               <DsButton variant="secondary" onClick={() => setCancelling((v) => !v)} aria-expanded={cancelling} testId="wh-transfer-cancel-toggle">Cancel transfer</DsButton>
             </>
-          ) : <p className="m-0 text-[13px] text-[#5B6478]">Receivers, supervisors and admins at {names(t.from_wh)} dispatch this transfer.</p>}
+          ) : <p className="m-0 text-[13px] text-muted">Receivers, supervisors and admins at {names(t.from_wh)} dispatch this transfer.</p>}
         </div>
       )}
       {t.status === 'in_transit' && (
         t.can_receive
           ? <div><DsButton disabled={pending} onClick={() => run(() => transferStepAction(t.id, 'receive'))} testId="wh-transfer-receive" icon="download">Receive at {names(t.to_wh)}</DsButton></div>
-          : <p className="m-0 text-[13px] text-[#5B6478]">Receiving staff at {names(t.to_wh)} receive this transfer.</p>
+          : <p className="m-0 text-[13px] text-muted">Receiving staff at {names(t.to_wh)} receive this transfer.</p>
       )}
       {cancelling && (
         <form className="flex flex-wrap gap-3 items-end" onSubmit={(e) => { e.preventDefault(); run(() => cancelTransferAction(t.id, reason), () => setCancelling(false)); }}>
@@ -136,7 +136,7 @@ export function TransfersClient({ board, current, warehouseNames }: { board: Tra
         {([['Drafts', board.transfers.filter((t) => t.status === 'draft').length], ['In transit', board.transfers.filter((t) => t.status === 'in_transit').length],
           ['Received', board.transfers.filter((t) => t.status === 'received').length]] as const).map(([l, n]) => (
           <div key={l} className="ds-card" data-testid={`wh-trf-${l.toLowerCase().replace(/ /g, '-')}`}>
-            <div className="text-[13px] text-[#5B6478]">{l}</div><div className="text-[28px] font-bold leading-tight">{n}</div>
+            <div className="text-[13px] text-muted">{l}</div><div className="text-[28px] font-bold leading-tight">{n}</div>
           </div>
         ))}
       </section>
@@ -148,7 +148,7 @@ export function TransfersClient({ board, current, warehouseNames }: { board: Tra
           : <ul className="list-none m-0 p-0">{open.map((t) => <TransferItem key={t.id} t={t} names={names} />)}</ul>}
       </DsCard>
       <DsCard title="Received and cancelled" icon="check" noPadding testId="wh-transfers-closed">
-        {closed.length === 0 ? <p className="m-0 px-5 py-4 text-[13.5px] text-[#5B6478]">None yet.</p>
+        {closed.length === 0 ? <p className="m-0 px-5 py-4 text-[13.5px] text-muted">None yet.</p>
           : <ul className="list-none m-0 p-0">{closed.map((t) => <TransferItem key={t.id} t={t} names={names} />)}</ul>}
       </DsCard>
     </div>

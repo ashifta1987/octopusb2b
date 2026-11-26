@@ -116,7 +116,7 @@ export function NewProductClient({ existing }: { existing: SupSubmissionFull | n
                 <DsCheckbox checked={f.magnetic} onChange={flag('magnetic')} label="Magnetic" />
                 <DsCheckbox checked={f.branded} onChange={flag('branded')} label="Branded or licensed item" />
               </div>
-              <p className="text-[12px] text-[#5B6478] mt-3 mb-0">Certificates (CE, RoHS, test reports) for batteries and electronics: send them to your Octopus contact. Staff attach them to the product in Docs.</p>
+              <p className="text-[12px] text-muted mt-3 mb-0">Certificates (CE, RoHS, test reports) for batteries and electronics: send them to your Octopus contact. Staff attach them to the product in Docs.</p>
             </DsCard>
             <DsCard title="Your terms" icon="file">
               <div className="grid sm:grid-cols-4 gap-3">
@@ -136,11 +136,11 @@ export function NewProductClient({ existing }: { existing: SupSubmissionFull | n
                 <DsButton type="submit" loading={pending} disabled={locked} disabledReason={locked ? 'The product is in review' : undefined} icon="send">Submit for review</DsButton>
                 <DsButton variant="secondary" loading={pending} disabled={locked} onClick={() => send(false)}>Save as draft</DsButton>
               </div>
-              {msg && <div role={msg.ok ? 'status' : 'alert'} className={`text-[13px] mt-3 ${msg.ok ? 'text-[#0B6A65]' : 'text-[#B42318]'}`} data-testid="supplier-product-msg">{msg.text}</div>}
-              <p className="text-[12px] text-[#5B6478] mt-3 mb-0">Staff review each product. You get an email when it is approved or when we need changes.</p>
+              {msg && <div role={msg.ok ? 'status' : 'alert'} className={`text-[13px] mt-3 ${msg.ok ? 'text-ok' : 'text-bad'}`} data-testid="supplier-product-msg">{msg.text}</div>}
+              <p className="text-[12px] text-muted mt-3 mb-0">Staff review each product. You get an email when it is approved or when we need changes.</p>
             </DsCard>
-            <DsCard title="Rules"><ul className="m-0 pl-4 text-[13px] text-[#5B6478]"><li>No watermark, logo or contact details on images or packaging.</li><li>Model number and SKU must be unique.</li><li>Batteries and electronics need a certificate.</li></ul>
-              <Link className="text-[#2A6FD1] font-semibold min-h-[44px] inline-flex items-center" href="/supplier/products/import">Many products? Use a spreadsheet</Link></DsCard>
+            <DsCard title="Rules"><ul className="m-0 pl-4 text-[13px] text-muted"><li>No watermark, logo or contact details on images or packaging.</li><li>Model number and SKU must be unique.</li><li>Batteries and electronics need a certificate.</li></ul>
+              <Link className="text-coral-text font-semibold min-h-[44px] inline-flex items-center" href="/supplier/products/import">Many products? Use a spreadsheet</Link></DsCard>
           </aside>
         </fieldset>
       </form>

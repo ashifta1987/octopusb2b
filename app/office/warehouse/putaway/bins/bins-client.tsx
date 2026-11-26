@@ -41,7 +41,7 @@ function RangeForm({ places }: { places: Place[] }) {
         <DsInput label="Bins from" inputMode="numeric" value={binFrom} onChange={(e) => setBinFrom(digits(e.target.value))} />
         <DsInput label="Bins to" inputMode="numeric" value={binTo} onChange={(e) => setBinTo(digits(e.target.value))} />
       </div>
-      <p className="m-0 text-[13px] text-[#5B6478]" data-testid="wh-bin-range-preview" aria-live="polite">
+      <p className="m-0 text-[13px] text-muted" data-testid="wh-bin-range-preview" aria-live="polite">
         {codes.length ? `${codes.length} bin(s): ${codes[0]} … ${codes[codes.length - 1]}. Bins that already exist are skipped.` : 'Enter a rack, rows and bins to see the codes.'}
       </p>
       <div><DsButton type="submit" icon="plus" disabled={pending || Boolean(why)} disabledReason={why} testId="wh-bin-range-submit">Create bins</DsButton></div>
@@ -79,12 +79,12 @@ function BinItem({ b, can, whName }: { b: BinAdminRow; can: boolean; whName: str
   const [reason, setReason] = useState('');
   const [label, tone] = BIN_STATUS[b.status] ?? [b.status, 'neutral'];
   return (
-    <li className="border-b border-[#EEF0F4] last:border-0 px-5 py-3 flex flex-col gap-2" data-testid={`wh-bin-${b.code}`}>
+    <li className="border-b border-divider last:border-0 px-5 py-3 flex flex-col gap-2" data-testid={`wh-bin-${b.code}`}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
           <span className="font-mono font-semibold">{b.code}</span>
-          <span className="text-[12.5px] text-[#5B6478]">{whName ? ` · ${whName}` : ''}{b.zone ? ` · ${b.zone}` : ''} · {b.units ? `${b.units} unit(s)` : 'empty'}</span>
-          {b.block_reason && <div className="text-[12.5px] text-[#5B6478]">Blocked: {b.block_reason}</div>}
+          <span className="text-[12.5px] text-muted">{whName ? ` · ${whName}` : ''}{b.zone ? ` · ${b.zone}` : ''} · {b.units ? `${b.units} unit(s)` : 'empty'}</span>
+          {b.block_reason && <div className="text-[12.5px] text-muted">Blocked: {b.block_reason}</div>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <DsBadge tone={tone}>{label}</DsBadge>
@@ -116,7 +116,7 @@ export function BinsClient({ rows, manageable, warehouseNames }: { rows: BinAdmi
   return (
     <div className="flex flex-col gap-5">
       {manageable.length === 0 ? (
-        <DsCard><p className="m-0 text-[13.5px] text-[#5B6478]" data-testid="wh-bins-readonly">Only receivers, supervisors and admins create or change bins.</p></DsCard>
+        <DsCard><p className="m-0 text-[13.5px] text-muted" data-testid="wh-bins-readonly">Only receivers, supervisors and admins create or change bins.</p></DsCard>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
           <DsCard title="Create a range" icon="grid" testId="wh-bin-range" subtitle="Rack A, rows 1–5, bins 1–10 makes A-01-01 to A-05-10."><RangeForm places={manageable} /></DsCard>
@@ -124,7 +124,7 @@ export function BinsClient({ rows, manageable, warehouseNames }: { rows: BinAdmi
         </div>
       )}
       <DsCard title={`Bins (${rows.filter((r) => r.status !== 'archived').length})`} icon="list" noPadding testId="wh-bin-list">
-        <div className="px-5 py-3 flex flex-wrap gap-3 border-b border-[#EEF0F4]">
+        <div className="px-5 py-3 flex flex-wrap gap-3 border-b border-divider">
           <DsInput label="Find a bin" value={filter} onChange={(e) => setFilter(e.target.value)} containerClassName="w-[180px]" placeholder="A-01" />
           <DsSelect label="Show" value={status} onChange={(e) => setStatus(e.target.value)} containerClassName="w-[180px]">
             <option value="live">Active and blocked</option><option value="active">Active</option><option value="blocked">Blocked</option><option value="archived">Archived</option>
@@ -137,7 +137,7 @@ export function BinsClient({ rows, manageable, warehouseNames }: { rows: BinAdmi
             {shown.slice(0, 500).map((b) => <BinItem key={b.id} b={b} can={can.has(b.warehouse_code)} whName={multi ? warehouseNames[b.warehouse_code] ?? b.warehouse_code : null} />)}
           </ul>
         )}
-        {shown.length > 500 && <p className="m-0 px-5 py-3 text-[12px] text-[#5B6478]">Showing the first 500 of {shown.length}. Use Find a bin to narrow down.</p>}
+        {shown.length > 500 && <p className="m-0 px-5 py-3 text-[12px] text-muted">Showing the first 500 of {shown.length}. Use Find a bin to narrow down.</p>}
       </DsCard>
     </div>
   );

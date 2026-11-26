@@ -54,26 +54,24 @@ async function both(page: Page, name: string, path: string, focus: string) {
   }
 }
 
-test('home: Dropshipping section says Coming soon, no store-connection promise, no "Start dropshipping"', async ({ page }) => {
+// design handoff page 01 (Nov 2026): the homepage Dropshipping card is marked Coming soon and leads to the launch list
+test('home: Dropshipping card says Coming soon, no store-connection promise, no "Start dropshipping"', async ({ page }) => {
   await page.goto('/');
-  const band = page.locator('#dropshipping');
-  await expect(band.getByTestId('dropship-coming-soon')).toContainText('Coming soon');
-  await expect(band.getByTestId('launch-notify-dropship')).toBeVisible();
-  await expect(band).not.toContainText('Start dropshipping');
-  await expect(band).not.toContainText('upload a sheet');
-  await expect(band).toContainText('Coming soon: Shopify and WooCommerce store connection.');
-  await expect(band.locator('a.btn', { hasText: 'See the catalogue' })).toBeVisible();   // the preview card has its own link too
-  // the picker's Dropship tab is honest too
-  await page.getByTestId('picker-tab-drop').click();
-  await expect(page.getByTestId('picker-cta')).toHaveText('Coming soon · notify me →');
-  await expect(page.getByTestId('picker-cta')).toHaveAttribute('href', '/request/dropship#notify');
-  await both(page, 'dropship-home', '/', 'dropship-coming-soon');
+  const card = page.getByTestId('home-service-dropship');
+  await expect(card).toContainText('Coming soon');
+  await expect(card).toContainText('Join the launch list.');
+  await expect(card).toHaveAttribute('href', '/request/dropship');
+  await expect(page.locator('main')).not.toContainText('Start dropshipping');
+  await expect(page.locator('main')).not.toContainText('upload a sheet');
+  await expect(page.locator('nav[aria-label="Services"]').getByRole('link', { name: 'Dropshipping' })).toHaveAttribute('href', '/request/dropship');
+  await both(page, 'dropship-home', '/', 'home-service-dropship');
 });
 
 test('/request/dropship: Coming soon heading and sign-up instead of the setup form', async ({ page }) => {
   await page.goto('/request/dropship');
-  await expect(page.locator('h1')).toHaveText('Dropshipping is coming soon');
-  await expect(page.getByTestId('dropship-coming-soon')).toBeVisible();
+  await expect(page.locator('h1')).toHaveText('You sell. We ship to your customer.');
+  await expect(page.getByTestId('dropship-coming-soon')).toContainText('Coming soon');
+  await expect(page.locator('#notify').getByRole('heading', { name: 'Notify me when it launches' })).toBeVisible();
   await expect(page.locator('main')).not.toContainText('Start dropshipping');
   await expect(page.locator('select[name="store_platform"]')).toHaveCount(0);
   // privacy line under the form, linking to the privacy policy (which exists)

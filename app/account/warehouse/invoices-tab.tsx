@@ -6,7 +6,7 @@ import { fmtDate, money } from '@/lib/format';
 import { KIND_LABEL, amountDue, docStatus, fmtQty, monthLabel, refText, unitWord, type IssuedInvoice } from '@/lib/warehouse-w6';
 
 const TONE: Record<string, string> = {
-  ok: 'bg-[#E8F5EE] text-[#14633B]', warn: 'bg-[#FFF4E0] text-[#7A4A00]', info: 'bg-[#E6EFFB] text-[#1F4F99]', bad: 'bg-[#FDECEC] text-[#9B1C1C]', neutral: 'bg-[#EEF0F4] text-[#333B4F]',
+  ok: 'bg-ok-bg text-ok', warn: 'bg-warn-bg text-warn', info: 'bg-tint text-coral-text', bad: 'bg-bad-bg text-bad', neutral: 'bg-divider text-black',
 };
 
 /**
