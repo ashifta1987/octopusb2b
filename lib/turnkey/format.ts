@@ -141,3 +141,59 @@ export const PAY_STATE: Record<TkPayState, { label: string; tone: 'green' | 'amb
 export function coverActive(from: string | null | undefined, to: string | null | undefined, today: string): boolean {
   return !!from && !!to && from <= today && today <= to;
 }
+
+/* ───────── Drawings, quotes and deposit (T4) ───────── */
+/** Design rule: 3 layout drawing versions are free; each extra version costs 50% of the drawing fee (tk_decide_drawing). */
+export const TK_FREE_DRAWING_VERSIONS = 3;
+/** 50% of the drawing fee in integer cents, rounded half up to the cent (mirrors tk_drawing_extra_fees_half). */
+export const extraVersionCents = (drawingFeeCents: number) => Math.floor((drawingFeeCents + 1) / 2);
+/** True when asking for changes on `version` makes the next version a paid extra version. */
+export const nextVersionIsExtra = (version: number) => version >= TK_FREE_DRAWING_VERSIONS;
+/** Files staff may share as a layout drawing (bucket turnkey-drawings; up to 20 MB). */
+export const TK_DRAWING_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'] as const;
+export const TK_DRAWING_MAX_BYTES = 20 * 1024 * 1024;
+
+export function drawingStatusLabel(status: string, audience: 'client' | 'staff' = 'client'): { label: string; tone: 'blue' | 'amber' | 'green' | 'red' | 'gray' } {
+  switch (status) {
+    case 'shared': return { label: audience === 'client' ? 'Waiting for your review' : 'Waiting for the client', tone: 'amber' };
+    case 'approved': return { label: 'Approved', tone: 'green' };
+    case 'changes_requested': return { label: 'Changes asked', tone: 'gray' };
+    default: return { label: status, tone: 'gray' };
+  }
+}
+
+export function quoteStatusLabel(status: string, audience: 'client' | 'staff' = 'client'): { label: string; tone: 'blue' | 'amber' | 'green' | 'red' | 'gray' } {
+  switch (status) {
+    case 'draft': return { label: 'Draft (not sent)', tone: 'gray' };
+    case 'sent': return { label: audience === 'client' ? 'Waiting for your answer' : 'Sent · waiting for the client', tone: 'amber' };
+    case 'accepted': return { label: 'Accepted', tone: 'green' };
+    case 'changes_requested': return { label: 'Changes asked', tone: 'gray' };
+    case 'superseded': return { label: 'Replaced by a newer version', tone: 'gray' };
+    case 'withdrawn': return { label: 'Withdrawn', tone: 'gray' };
+    default: return { label: status, tone: 'gray' };
+  }
+}
+
+/** Deposit in integer cents: whole percent of the quote total, rounded half up (mirrors tk_client_quotes_deposit). */
+export const depositCents = (totalCents: number, pct: number) => Math.floor((totalCents * pct + 50) / 100);
+
+/** Staff margin: total − cost when every line has a known cost; otherwise null ("unknown", never 0). */
+export function quoteMargin(totalCents: number, costCents: number | null | undefined, costComplete: boolean): { cents: number; pct: number | null } | null {
+  if (!costComplete || costCents == null) return null;
+  const cents = totalCents - costCents;
+  return { cents, pct: totalCents > 0 ? Math.round((cents / totalCents) * 1000) / 10 : null };
+}
+
+/** Whole quantity typed in a form (1 … 1,000,000) → number; anything else → null. */
+export function parseQty(v: string): number | null {
+  const t = v.trim();
+  if (!/^\d{1,7}$/.test(t)) return null;
+  const n = Number(t);
+  return n >= 1 && n <= 1_000_000 ? n : null;
+}
+
+/** File size for people: "1.2 MB", "340 KB". */
+export function fileSize(bytes: number): string {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}

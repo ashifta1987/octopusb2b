@@ -8,15 +8,18 @@ import { moveStageAction, setStageDueAction, setStatusAction } from '../actions'
 type Res = { ok: boolean; message?: string; error?: string };
 
 /**
- * Turnkey T2/T3 — staff controls on the Project screen: move one phase forward (or back with a reason the client sees),
+ * Turnkey T2/T3/T4 — staff controls on the Project screen: move one phase forward (or back with a reason the client sees),
  * hold / cancel / complete / reopen and the target date per phase. Moving into a phase that is paid first needs its fee
- * active (an admin approves fees above 2× the starting fee) and paid (the database refuses otherwise). The account manager and cover are in ManagerPanel.
+ * active (an admin approves fees above 2× the starting fee) and paid (the database refuses otherwise). T4: Design ends
+ * when the client approves a drawing version; Quote and deposit ends when a quote is accepted and its deposit paid. The account manager and cover are in ManagerPanel.
  * Forms use onSubmit + preventDefault so typed text stays when the database refuses; the page refreshes after a change.
  */
-export function ProjectControls({ projectId, code, stage, status, dues, nextFee }: {
+export function ProjectControls({ projectId, code, stage, status, dues, nextFee, finish = null }: {
   projectId: string; code: string; stage: string; status: string; dues: Record<string, string | null>;
   /** state of the next phase's fee: 'paid' | 'approved' (unpaid) | 'pending' | 'none' */
   nextFee: 'paid' | 'approved' | 'pending' | 'none';
+  /** T4: what completes the current phase (Design: an approved drawing; Quote and deposit: accepted quote + paid deposit), and whether it is done */
+  finish?: { done: boolean; text: string } | null;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -54,6 +57,9 @@ export function ProjectControls({ projectId, code, stage, status, dues, nextFee 
             <label className="label" htmlFor="tk-fwd-note">Message to the client (optional)</label>
             <input id="tk-fwd-note" className="input min-h-11" value={fwdNote} onChange={(e) => setFwdNote(e.target.value)} maxLength={1000} />
             <div><button type="submit" className="btn btn-primary btn-sm" disabled={pending} data-testid="tk-move-next">Move to {next.n}. {next.name}</button></div>
+            {finish && (
+              <p className={`m-0 text-[12.5px] ${finish.done ? 'text-ok' : 'text-warn'}`} data-testid="tk-move-finish">{finish.text}</p>
+            )}
             {isGatedPhase(next.code) && (
               <p className="m-0 text-[12.5px] text-muted" data-testid="tk-move-gate">
                 {nextFee === 'paid' ? `${next.name}: the fee is paid.`

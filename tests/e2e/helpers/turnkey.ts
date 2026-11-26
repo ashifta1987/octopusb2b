@@ -64,3 +64,21 @@ export async function recordBankTransfer(documentId: string, cents: number, refe
     await db.end();
   }
 }
+
+/** T4: moves a project one phase as the given Turnkey editor (same function as the staff page; every gate applies). */
+export async function moveTurnkeyStage(projectId: string, stage: string, uid: string) {
+  const db = pgClient();
+  await db.connect();
+  try {
+    await assertStagingDatabase(db);
+    await db.query('begin');
+    await asUser(db, uid);
+    await db.query(`select tk_move_project_stage($1, $2, null)`, [projectId, stage]);
+    await db.query('commit');
+  } catch (e) {
+    await db.query('rollback').catch(() => {});
+    throw e;
+  } finally {
+    await db.end();
+  }
+}

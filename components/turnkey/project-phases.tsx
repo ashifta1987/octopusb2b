@@ -3,7 +3,7 @@ import { phaseStates, tkPhase, tkStatus, type TkStageRow } from '@/lib/turnkey/f
 import type { TkProjectEvent } from '@/lib/turnkey/projects';
 
 /**
- * Turnkey T2/T3 — the 8-phase timeline of a client project (design: "The 8-step flow"; ClientPortal / staff Project).
+ * Turnkey T2/T3/T4 — the 8-phase timeline of a client project (design: "The 8-step flow"; ClientPortal / staff Project).
  * Shared by the client page and the staff page. Dates that are not known yet are simply not shown (never a made-up date).
  */
 export function ProjectPhases({ stage, status, rows }: { stage: string; status: string; rows: TkStageRow[] }) {
@@ -56,6 +56,8 @@ export function eventText(e: TkProjectEvent): { title: string; body: string | nu
     case 'due_date': return { title: 'Target date updated', body: e.message };
     case 'fee': return { title: to ? `Fee set for ${to}` : 'Fee set', body: e.message };
     case 'manager': return { title: 'Account manager cover', body: e.message };
+    case 'drawing': return { title: 'Layout drawing', body: e.message };
+    case 'quote': return { title: 'Quote', body: e.message };
     default: return { title: e.kind, body: e.message };
   }
 }

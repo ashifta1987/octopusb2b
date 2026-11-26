@@ -5,8 +5,14 @@ import { createClient } from '@/lib/supabase/server';
 import { Card, Notice, PageHeader, StatusBadge, Timeline } from '@/components/ui';
 import { fmtDate, money } from '@/lib/format';
 import { countryName } from '@/lib/factory-label';
-import { TK_PHASES, areaLabel, budgetLabel, feeStatusLabel, nextPhase, phaseLabel, tkPhase, tkStatus, type TkStageCode } from '@/lib/turnkey/format';
+import {
+  TK_FREE_DRAWING_VERSIONS, TK_PHASES, areaLabel, budgetLabel, drawingStatusLabel, extraVersionCents, feeStatusLabel, fileSize, nextPhase, phaseLabel,
+  quoteMargin, quoteStatusLabel, tkPhase, tkStatus, type TkStageCode,
+} from '@/lib/turnkey/format';
 import { getTkClientProject } from '@/lib/turnkey/projects';
+import { getTkStaffDrawings, getTkStaffQuotes } from '@/lib/turnkey/work';
+import { DrawingUpload, StaffDrawingComment, WaiveExtraFee } from '@/components/turnkey/drawing-staff';
+import { ClientQuoteBuilder, FactoryQuoteForm, QuoteDraftActions, QuoteWithdraw } from '@/components/turnkey/quote-staff';
 import { ProjectPhases, eventText } from '@/components/turnkey/project-phases';
 import { TkFeeDecision } from '@/components/turnkey/fee-decision';
 import { ProjectControls } from './project-controls';
@@ -25,11 +31,13 @@ type StaffFee = {
 };
 
 /**
- * Admin › Turnkey › Client project (T2 + T3; design staff "Project", SetFee, AccountManagers, matched to the text). What
+ * Admin › Turnkey › Client project (T2 + T3 + T4; design staff "Project", SetFee, AccountManagers, Drawing, Quote). What
  * the client sent, the 8 phases with dates, the fees per phase with every version and who proposed / approved / rejected
  * it (staff only), the account manager and cover, and the history the client sees. Turnkey editors set fees and move
  * phases; a fee above 2× the starting fee waits for an admin who is not the proposer. Account managers see the projects
- * they manage.
+ * they manage. T4: layout drawing versions (upload to the private bucket, client review, extra versions after 3, admin
+ * waiver) and quotes (factory quotes with supplier and cost, client quote versions with margin — both staff only here;
+ * the client sees description, quantity, price, total and the deposit).
  */
 export default async function TurnkeyClientProjectStaffPage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
@@ -66,6 +74,34 @@ export default async function TurnkeyClientProjectStaffPage({ params }: { params
   const defaultStage = (TK_PHASES.find((x) => x.paid && x.n > at && !fees.some((f) => f.stage === x.code && f.status === 'active'))?.code
     ?? TK_PHASES.find((x) => x.paid && x.n >= at)?.code ?? 'consultation') as TkStageCode;
   const coverOn = !!contact?.on_cover;
+  const [drw, qts] = await Promise.all([getTkStaffDrawings(p.id), getTkStaffQuotes(p.id)]);
+  const versions = drw?.data.versions ?? [];
+  const extras = drw?.data.extras ?? [];
+  const comments = drw?.data.comments ?? [];
+  const latest = versions[0] ?? null;
+  const nextVersion = (latest?.version ?? 0) + 1;
+  const approved = versions.find((v) => v.status === 'approved') ?? null;
+  const extraForNext = extras.find((e) => e.for_version === nextVersion) ?? null;
+  const drawingFee = fees.find((f) => f.stage === 'design' && f.service_code === 'layout_drawing' && f.status === 'active') ?? null;
+  const uploadBlocked = p.status !== 'open' ? 'Reopen the project to share drawings.'
+    : p.stage !== 'design' ? 'Drawings are shared in the Design phase.'
+    : approved ? `The client approved version ${approved.version}. No new version is needed.`
+    : latest?.status === 'shared' ? `Waiting for the client to review version ${latest.version}.`
+    : nextVersion > TK_FREE_DRAWING_VERSIONS && !extraForNext ? `Version ${nextVersion} is an extra version; it starts when the client asks for changes.`
+    : extraForNext && extraForNext.status === 'open' && !extraForNext.paid ? `Version ${nextVersion} is an extra version: upload it after the client pays ${money(extraForNext.amount_cents)} (or an admin waives it).`
+    : null;
+  const quotes = qts?.quotes ?? [];
+  const factoryQuotes = qts?.factory_quotes ?? [];
+  const depositPct = qts?.deposit_pct ?? null;
+  const draft = quotes.find((q) => q.status === 'draft') ?? null;
+  const accepted = quotes.find((q) => q.status === 'accepted') ?? null;
+  const factoryLines = factoryQuotes.flatMap((fq) => fq.lines.map((l) => ({ id: l.id, label: `${fq.supplier_name} · ${l.description} · ${money(l.unit_cost_cents)} each`, unit_cost_cents: Number(l.unit_cost_cents) })));
+  const quoteStage = p.stage === 'sourcing' || p.stage === 'quote_deposit';
+  const finish = p.stage === 'design'
+    ? { done: !!approved, text: approved ? `Design: the client approved version ${approved.version}.` : 'Design is complete when the client approves a drawing version.' }
+    : p.stage === 'quote_deposit'
+      ? { done: !!accepted?.deposit_paid, text: !accepted ? 'Quote and deposit is complete when the client accepts a quote and pays the deposit.' : accepted.deposit_paid ? `Quote version ${accepted.version} accepted; the deposit is paid.` : `Quote version ${accepted.version} accepted; waiting for the deposit.` }
+      : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -83,7 +119,7 @@ export default async function TurnkeyClientProjectStaffPage({ params }: { params
           {edit && (
             <Card title="Manage">
               <div className="px-6 pb-6">
-                <ProjectControls projectId={p.id} code={p.code} stage={p.stage} status={p.status} dues={dues} nextFee={nextFee} />
+                <ProjectControls projectId={p.id} code={p.code} stage={p.stage} status={p.status} dues={dues} nextFee={nextFee} finish={finish} />
               </div>
             </Card>
           )}
@@ -137,6 +173,109 @@ export default async function TurnkeyClientProjectStaffPage({ params }: { params
               {edit && p.org_id && p.status !== 'cancelled' && p.status !== 'completed' && (
                 <FeeProposeForm projectId={p.id} code={p.code} defaultStage={defaultStage} services={services} />
               )}
+            </div>
+          </Card>
+          <Card title="Layout drawings">
+            <div className="px-6 pb-6 flex flex-col gap-5" data-testid="tk-staff-drawings">
+              <p className="m-0 text-[13.5px] text-muted">
+                {TK_FREE_DRAWING_VERSIONS} versions are free; each extra version costs 50% of the drawing fee{drawingFee ? ` (${money(extraVersionCents(drawingFee.amount_cents))} now)` : ''} and is uploaded after the client pays it. Files stay private (short signed links).
+              </p>
+              {versions.length === 0 && <p className="m-0 text-[15px]">No drawings yet.</p>}
+              {versions.length > 0 && (
+                <ul className="list-none m-0 p-0 flex flex-col divide-y divide-line border border-line rounded-[12px]">
+                  {versions.map((v) => {
+                    const ds = drawingStatusLabel(v.status, 'staff');
+                    const url = drw?.urls.get(v.file_path) ?? null;
+                    const vc = comments.filter((c) => c.version_id === v.id);
+                    return (
+                      <li key={v.id} className="p-4 flex flex-col gap-2" data-testid={`tk-staff-drawing-v${v.version}`}>
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <div className="font-semibold">Version {v.version} {v.version > TK_FREE_DRAWING_VERSIONS && <span className="text-[13px] text-muted font-normal">· extra version</span>}</div>
+                            <div className="text-[13px] text-muted">{v.file_name} · {fileSize(v.size_bytes)} · {v.uploaded_by_name ?? 'Former team member'} · {fmtDate(v.shared_at, true)}</div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {url && <a href={url} target="_blank" rel="noopener noreferrer" className="btn btn-ghost btn-sm min-h-11">Open<span className="sr-only"> version {v.version}</span></a>}
+                            <StatusBadge status={v.status} label={ds.label} tone={ds.tone} />
+                          </div>
+                        </div>
+                        {v.message && <p className="m-0 text-[14px]">{v.message}</p>}
+                        {vc.length > 0 && (
+                          <ul className="list-none m-0 p-0 flex flex-col gap-1 text-[13.5px]">
+                            {vc.map((c) => <li key={c.id}><span className="font-semibold">{c.from_staff ? (c.author_name ?? 'Team') : 'Client'}{c.kind === 'changes' ? ' (changes asked)' : c.kind === 'approval' ? ' (approved)' : ''}:</span> {c.body} <span className="text-muted">· {fmtDate(c.created_at, true)}</span></li>)}
+                          </ul>
+                        )}
+                        {edit && p.status === 'open' && <StaffDrawingComment versionId={v.id} code={p.code} />}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              {extras.length > 0 && (
+                <ul className="list-none m-0 p-0 flex flex-col gap-3" data-testid="tk-staff-extras">
+                  {extras.map((e) => (
+                    <li key={e.id} className="border border-line rounded-[12px] p-4 flex flex-col gap-2" data-testid={`tk-staff-extra-v${e.for_version}`}>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-semibold">Extra version {e.for_version} · {money(e.amount_cents)} <span className="text-muted font-normal text-[13px]">(50% of {money(e.base_cents)})</span></span>
+                        <StatusBadge status={e.status === 'waived' ? 'waived' : e.paid ? 'paid' : 'awaiting_payment'} label={e.status === 'waived' ? 'Waived' : e.paid ? 'Paid' : 'Awaiting payment'} tone={e.status === 'waived' ? 'gray' : e.paid ? 'green' : 'amber'} />
+                      </div>
+                      <div className="text-[13px] text-muted">Proforma <span className="mono">{e.document_number ?? '—'}</span>{e.status === 'waived' ? ` · waived by ${e.waived_by_name ?? 'an admin'} on ${fmtDate(e.waived_at)}: ${e.waive_reason}` : ''}</div>
+                      {s.isAdmin && e.status === 'open' && !e.paid && (e.paid_cents ?? 0) === 0 && <WaiveExtraFee extraId={e.id} code={p.code} version={e.for_version} />}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {edit && p.org_id && p.stage === 'design' && <DrawingUpload projectId={p.id} code={p.code} nextVersion={nextVersion} blocked={uploadBlocked} />}
+            </div>
+          </Card>
+          <Card title="Quotes (supplier, cost and margin: staff only)">
+            <div className="px-6 pb-6 flex flex-col gap-5" data-testid="tk-staff-quotes">
+              <p className="m-0 text-[13.5px] text-muted">The client never sees factories, costs or margins: only the client quote lines, the total and the deposit ({depositPct ? `${depositPct}% from settings` : 'deposit % not set yet — an admin sets it in Turnkey › Services and fees'}).</p>
+              <section aria-labelledby="tk-fq-list-h" className="flex flex-col gap-3">
+                <h3 id="tk-fq-list-h" className="m-0 text-[15px] font-semibold">Factory quotes</h3>
+                {factoryQuotes.length === 0 && <p className="m-0 text-[14px]">None yet.</p>}
+                {factoryQuotes.map((fq) => (
+                  <div key={fq.id} className="border border-line rounded-[12px] p-4 flex flex-col gap-1 text-[13.5px]" data-testid="tk-staff-factory-quote">
+                    <div className="font-semibold">{fq.supplier_name}{fq.supplier_ref ? ` · ${fq.supplier_ref}` : ''} · <span className="mono">{money(fq.total_cost_cents)}</span></div>
+                    <div className="text-muted">{fq.created_by_name ?? 'Former team member'} · {fmtDate(fq.created_at)}{fq.valid_until ? ` · valid until ${fmtDate(fq.valid_until)}` : ''}{fq.notes ? ` · ${fq.notes}` : ''}</div>
+                    <ul className="list-none m-0 p-0">{fq.lines.map((l) => <li key={l.id}>{l.line_no}. {l.description} · {l.qty} × {money(l.unit_cost_cents)} = {money(l.total_cost_cents)}</li>)}</ul>
+                  </div>
+                ))}
+                {edit && p.status !== 'cancelled' && p.status !== 'completed' && <FactoryQuoteForm projectId={p.id} code={p.code} />}
+              </section>
+              <section aria-labelledby="tk-cq-list-h" className="flex flex-col gap-3">
+                <h3 id="tk-cq-list-h" className="m-0 text-[15px] font-semibold">Client quote versions</h3>
+                {quotes.length === 0 && <p className="m-0 text-[14px]">None yet.</p>}
+                {quotes.map((q) => {
+                  const qs = quoteStatusLabel(q.status, 'staff');
+                  const m = quoteMargin(Number(q.total_cents), q.cost_cents == null ? null : Number(q.cost_cents), q.cost_complete);
+                  return (
+                    <div key={q.id} className="border border-line rounded-[12px] p-4 flex flex-col gap-2" data-testid={`tk-staff-quote-v${q.version}`}>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-semibold">Version {q.version} · <span className="mono">{money(q.total_cents)}</span></span>
+                        <StatusBadge status={q.status} label={qs.label} tone={qs.tone} />
+                      </div>
+                      <dl className="m-0 grid grid-cols-[140px_1fr] gap-x-3 gap-y-1 text-[13px]">
+                        <dt className="text-muted">Margin</dt><dd className="m-0" data-testid={`tk-staff-margin-v${q.version}`}>{m ? `${money(m.cents)}${m.pct != null ? ` (${m.pct}%)` : ''}` : 'Unknown (a line has no cost)'}</dd>
+                        <dt className="text-muted">Deposit</dt><dd className="m-0">{q.deposit_pct ? `${q.deposit_pct}% · ${money(q.deposit_cents)}` : 'Fixed when sent'}</dd>
+                        <dt className="text-muted">Made</dt><dd className="m-0">{q.created_by_name ?? 'Former team member'} · {fmtDate(q.created_at, true)}{q.sent_at ? ` · sent by ${q.sent_by_name ?? 'a former team member'} ${fmtDate(q.sent_at, true)}` : ''}</dd>
+                        {q.client_comment && <><dt className="text-muted">Client</dt><dd className="m-0">{q.client_comment}</dd></>}
+                        {q.document_number && <><dt className="text-muted">Deposit proforma</dt><dd className="m-0"><span className="mono">{q.document_number}</span> · {q.deposit_paid ? 'paid' : (q.paid_cents ?? 0) > 0 ? `part paid (${money(q.paid_cents)})` : 'awaiting payment'}</dd></>}
+                      </dl>
+                      <ul className="list-none m-0 p-0 text-[13px]">
+                        {q.lines.map((l) => <li key={l.id}>{l.line_no}. {l.description} · {l.qty} × {money(l.unit_price_cents)} = {money(l.total_cents)} <span className="text-muted">· cost {l.cost_cents != null ? money(l.cost_cents) : 'unknown'}{l.supplier_name ? ` (${l.supplier_name})` : ''}</span></li>)}
+                      </ul>
+                      {edit && q.status === 'draft' && <QuoteDraftActions quoteId={q.id} code={p.code} canSend={!!depositPct && quoteStage && p.status === 'open'} />}
+                      {edit && q.status === 'sent' && <QuoteWithdraw quoteId={q.id} code={p.code} />}
+                    </div>
+                  );
+                })}
+                {edit && p.status === 'open' && quoteStage && !accepted && (
+                  <ClientQuoteBuilder projectId={p.id} code={p.code} factoryLines={factoryLines} depositPct={depositPct}
+                    initial={draft ? { message: draft.message ?? '', validUntil: draft.valid_until ?? '', lines: draft.lines.map((l) => ({ description: l.description, qty: String(l.qty), unitPriceUsd: (Number(l.unit_price_cents) / 100).toFixed(2), factoryLineId: l.factory_line_id ?? '', unitCostUsd: l.factory_line_id || l.unit_cost_cents == null ? '' : (Number(l.unit_cost_cents) / 100).toFixed(2) })) } : null} />
+                )}
+                {accepted && <p className="m-0 text-[13.5px] text-muted">Version {accepted.version} is accepted. The balance invoice comes in a later step.</p>}
+              </section>
             </div>
           </Card>
         </div>

@@ -6,6 +6,7 @@ import { fmtDate } from '@/lib/format';
 import { categoryLabel, servicePrice, type TkService } from '@/lib/turnkey/format';
 import { getDivisionScope } from '@/lib/divisions/scope';
 import { ImportClient } from './import-client';
+import { DepositSetting } from '@/components/turnkey/quote-staff';
 
 export const metadata = { title: 'Turnkey projects' };
 
@@ -13,9 +14,9 @@ type Project = { project_id: string; title: string; category: string; status: st
 type Lead = { lead_id: string; reference: string; kind: string; status: string; company_name: string; country: string; created_at: string; turnkey_projects: { title: string } | null };
 
 /**
- * Admin › Turnkey (T0–T3, design docs/design/turnkey-v2): catalogue + CSV import of the project sheet, the services
+ * Admin › Turnkey (T0–T4, design docs/design/turnkey-v2): catalogue + CSV import of the project sheet, the services
  * price list, the old leads (read-only; T2 moved each one into a client project at "Enquiry") and a link to the client
- * projects (/admin/turnkey/projects). The ADDON-31 editors are retired.
+ * projects (/admin/turnkey/projects). The ADDON-31 editors are retired. T4: admins set the deposit % of quotes here (D5).
  */
 export default async function TurnkeyAdminPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
   const s = await requireStaff('turnkey', 'view', '/admin/turnkey');
@@ -26,11 +27,12 @@ export default async function TurnkeyAdminPage({ searchParams }: { searchParams:
   const sb = await createClient();
   const PROJECT_COLS = 'project_id, title, category, status, starting_budget_usd, hero_image_path, floor_area_m2, sort_rank';
   const LEAD_COLS = 'lead_id, reference, kind, status, company_name, country, created_at, turnkey_projects(title)';
-  const [{ data: projects }, { data: services }, { data: leads }, { data: moved }] = await Promise.all([
+  const [{ data: projects }, { data: services }, { data: leads }, { data: moved }, { data: depositPct }] = await Promise.all([
     (scope.all ? sb.from('turnkey_projects').select(PROJECT_COLS) : sb.from('turnkey_projects').select(PROJECT_COLS).eq('division_id', scope.division.id)).order('sort_rank').order('title'),
     sb.from('tk_services').select('code, name, from_cents, unit, approx, rule_text, group_code, photo_path, sort').order('sort'),
     (scope.all ? sb.from('turnkey_leads').select(LEAD_COLS) : sb.from('turnkey_leads').select(LEAD_COLS).eq('division_id', scope.division.id)).order('created_at', { ascending: false }).limit(300),
     tab === 'leads' ? sb.from('tk_client_project_staff').select('legacy_lead_id, tk_client_projects(code)').not('legacy_lead_id', 'is', null).limit(1000) : Promise.resolve({ data: [] }),
+    tab === 'services' ? sb.rpc('tk_deposit_pct') : Promise.resolve({ data: null }),
   ]);
   const movedTo = new Map(((moved ?? []) as unknown as { legacy_lead_id: string; tk_client_projects: { code: string } | null }[]).map((m) => [m.legacy_lead_id, m.tk_client_projects?.code ?? null]));
   const P = (projects ?? []) as Project[];
@@ -67,6 +69,16 @@ export default async function TurnkeyAdminPage({ searchParams }: { searchParams:
             </Table>
           </Card>
         </>
+      )}
+
+      {tab === 'services' && (
+        <Card title="Quote deposit">
+          <div className="flex flex-col gap-2" data-testid="tk-deposit-card">
+            <p className="text-[13.5px] text-muted m-0">The share of an accepted quote the client pays as a deposit before production. It is fixed on each quote when it is sent. Not part of the 2× fee rule.</p>
+            {s.isAdmin ? <DepositSetting current={(depositPct as number | null) ?? null} />
+              : <p className="m-0 text-[14px]">{depositPct ? `${depositPct as number}%` : 'Not set yet. An admin sets it.'}</p>}
+          </div>
+        </Card>
       )}
 
       {tab === 'services' && (

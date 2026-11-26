@@ -73,3 +73,56 @@ export async function payTurnkeyFeeAction(input: { code: string; documentId: str
   const r = data as { fully_paid?: boolean };
   return { ok: true, message: r.fully_paid ? 'Paid. Your tax invoice has been issued; we start this phase next.' : 'Payment received. The rest is still to pay.' };
 }
+
+/* ───────── T4: layout drawings and quote (the database checks the client's company and the state again) ───────── */
+type Done = { ok: boolean; message: string };
+const T4_ERR: [RegExp, string][] = [
+  [/REASON_REQUIRED/, 'Tell us what to change.'],
+  [/VERSION_DECIDED/, 'This version was already reviewed. Reload the page.'],
+  [/QUOTE_NOT_OPEN/, 'This quote version is no longer open. Reload the page.'],
+  [/QUOTE_EXPIRED/, 'This quote has expired. Ask us for a new version.'],
+  [/NO_DRAWING_FEE/, 'We could not prepare the extra version. Please contact your account manager.'],
+  [/PROJECT_NOT_OPEN/, 'This project is not open at the moment.'],
+  [/TOO_MANY_COMMENTS/, 'Please try again tomorrow.'],
+];
+const t4msg = (m: string) => T4_ERR.find(([r]) => r.test(m))?.[1] ?? 'That did not work. Please try again or contact us.';
+
+async function t4run(code: string, fn: string, args: Record<string, unknown>): Promise<{ ok: boolean; data?: unknown; message?: string }> {
+  const s = await requireCustomer(/^TKP-\d{5,}$/.test(code) ? `/account/turnkey/${code}` : '/account/turnkey');
+  if (!s.org) return { ok: false, message: 'Complete your company profile first.' };
+  if (!/^TKP-\d{5,}$/.test(code)) return { ok: false, message: 'Something is missing. Reload the page and try again.' };
+  const sb = await createClient();
+  const { data, error } = await sb.rpc(fn, args);
+  if (error) return { ok: false, message: t4msg(error.message) };
+  revalidatePath(`/account/turnkey/${code}`);
+  return { ok: true, data };
+}
+
+export async function drawingCommentAction(code: string, versionId: string, body: string): Promise<Done> {
+  if (!body.trim()) return { ok: false, message: 'Write a comment first.' };
+  const r = await t4run(code, 'tk_comment_drawing', { p_version: versionId, p_body: body.trim().slice(0, 2000) });
+  return { ok: r.ok, message: r.ok ? 'Comment sent.' : r.message ?? '' };
+}
+
+/** Approve the version under review, or ask for changes (from version 3 on the next version is an extra version). */
+export async function decideDrawingAction(code: string, versionId: string, decision: 'approve' | 'changes', comment: string): Promise<Done> {
+  if (decision === 'changes' && !comment.trim()) return { ok: false, message: 'Tell us what to change.' };
+  const r = await t4run(code, 'tk_decide_drawing', { p_version: versionId, p_decision: decision, p_comment: comment.trim().slice(0, 2000) || null });
+  if (!r.ok) return { ok: false, message: r.message ?? '' };
+  revalidatePath('/account/invoices');
+  const d = r.data as { status: string; amount_cents?: number | null };
+  return {
+    ok: true,
+    message: d.status === 'approved' ? 'Approved. Design is complete; we move on to sourcing.'
+      : d.amount_cents ? 'Changes sent. The next version is an extra version: pay it below and we start it.' : 'Changes sent. We will share the next version here.',
+  };
+}
+
+/** Accept a quote version (the deposit proforma is issued) or ask for changes. */
+export async function decideQuoteAction(code: string, quoteId: string, decision: 'accept' | 'changes', comment: string): Promise<Done> {
+  if (decision === 'changes' && !comment.trim()) return { ok: false, message: 'Tell us what to change.' };
+  const r = await t4run(code, 'tk_decide_client_quote', { p_quote: quoteId, p_decision: decision, p_comment: comment.trim().slice(0, 2000) || null });
+  if (!r.ok) return { ok: false, message: r.message ?? '' };
+  revalidatePath('/account/invoices');
+  return { ok: true, message: decision === 'accept' ? 'Quote accepted. Pay the deposit below; production starts after it is paid.' : 'Changes sent. We will send a new version.' };
+}

@@ -521,8 +521,8 @@ test('Sample order: wallet-short ($4.30 cash, $500 credit ignored) & DDP-duty-un
   }
 
   await page.goto('/account/invoices');
-  await expect(page.locator('main')).toContainText(stmtNo);
-  await expect(page.locator('main')).toContainText('Dropshipping');
+  await expect(page.locator('main:visible')).toContainText(stmtNo);
+  await expect(page.locator('main:visible')).toContainText('Dropshipping');
 
   await page.goto(`/api/documents/${stmtId}/pdf`);
   await expect(page.locator('h1')).toContainText(stmtNo);
