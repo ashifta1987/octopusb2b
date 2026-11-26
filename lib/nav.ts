@@ -40,6 +40,16 @@ export const DISTRIBUTOR_NAV: NavSection[] = [{
   ],
 }];
 
+/** Supplier portal (Dropship Release 6, design Supplier*.html). Accounts are made by staff after an application is approved. */
+export const SUPPLIER_NAV: NavSection[] = [{
+  items: [
+    { href: '/supplier', label: 'Products' },
+    { href: '/supplier/products/new', label: 'Add product' },
+    { href: '/supplier/products/import', label: 'Bulk upload' },
+    { href: '/supplier/orders', label: 'Orders to ship' },
+  ],
+}];
+
 export const OFFICE_NAV: NavSection[] = [
   {
     title: 'Back office',

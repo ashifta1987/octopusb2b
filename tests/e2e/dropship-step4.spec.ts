@@ -120,7 +120,8 @@ test('Unverified org sees "Verify your company first" + /account/kyc link on Act
 
   // Locked sidebar nav & store switcher when dropship is not enabled yet
   const lockedNavItems = page.getByTestId('locked-nav-item');
-  await expect(lockedNavItems).toHaveCount(11);
+  // 12 since DS14 (Release 6) added "Integrations" to the merchant menu
+  await expect(lockedNavItems).toHaveCount(12);
   await expect(lockedNavItems.first()).toHaveAttribute('aria-disabled', 'true');
   await expect(lockedNavItems.first()).toHaveAttribute('title', 'Activate dropshipping');
   await expect(page.getByTestId('dropship-store-switcher')).toHaveAttribute(

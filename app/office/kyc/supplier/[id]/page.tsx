@@ -6,6 +6,7 @@ import { Card, PageHeader, StatusBadge, Notice } from '@/components/ui';
 import { ReasonButton, RunButton } from '@/components/backoffice/action-form';
 import { fmtDate } from '@/lib/format';
 import { reviewSupplierApplication } from '../../../actions';
+import { getApplicationChecks } from '@/lib/dropship-ds14';
 
 export const metadata = { title: 'Supplier application' };
 
@@ -24,6 +25,8 @@ export default async function SupplierApplicationPage({ params }: { params: Prom
     sheetUrl = data?.signedUrl ?? null;
   }
   await sb.rpc('log_staff_view', { p_entity: 'supplier_applications', p_entity_id: id, p_details: { sheet: !!a.product_sheet_path } }).then(() => undefined, () => undefined);
+  // Dropship Release 6: automatic checks beside the application (they never decide; staff do). Read through ds_supplier_application_checks.
+  const checks = await getApplicationChecks(id).catch(() => []);
   const canApprove = can(s, 'suppliers', 'approve');
   const closed = ['approved', 'rejected'].includes(a.status as string);
   const link = (u: string | null) => (u ? <a href={/^https?:/.test(u) ? u : `https://${u}`} target="_blank" rel="noopener noreferrer" className="text-coral-text break-all">{u}</a> : null);
@@ -56,6 +59,13 @@ export default async function SupplierApplicationPage({ params }: { params: Prom
             </div>
           </Card>
         </div>
+        {checks.length > 0 && (
+          <Card title="Checks">
+            <ul className="px-6 pb-6 space-y-2 text-[15px]" data-testid="application-checks">
+              {checks.map((c) => <li key={c.key} className="flex gap-2"><span aria-hidden>{c.ok ? '✓' : '✗'}</span><span>{c.label}<span className="sr-only">{c.ok ? ': passed' : ': needs a look'}</span></span></li>)}
+            </ul>
+          </Card>
+        )}
         <Card title="Decision">
           <div className="px-6 pb-6 space-y-3">
             {a.review_note && <Notice tone="blue">Last note: {a.review_note as string}</Notice>}

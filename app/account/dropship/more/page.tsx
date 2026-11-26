@@ -14,6 +14,7 @@ const MORE_ITEMS: { href: string; label: string; icon: DsIconName; feature: Drop
   { href: '/account/dropship/pricing', label: 'Pricing and sync', icon: 'tag', feature: 'pricing' },
   { href: '/account/dropship/packing', label: 'Packing and shipping', icon: 'package', feature: 'packing' },
   { href: '/account/dropship/stores', label: 'Stores', icon: 'store', feature: 'stores' },
+  { href: '/account/dropship/integrations', label: 'Integrations', icon: 'link', feature: 'stores' },
   { href: '/account/dropship/reports', label: 'Reports', icon: 'chart', feature: 'reports' },
   { href: '/account/dropship/billing', label: 'Plan and billing', icon: 'card', feature: 'billing' },
   { href: '/account/dropship/settings', label: 'Settings', icon: 'gear', feature: 'settings' },

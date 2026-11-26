@@ -34,8 +34,13 @@ const STAFF_ITEMS: StaffDropshipNavItem[] = [
   { href: '/office/warehouse/orders?source=dropship', label: 'Fulfilment queue', icon: 'list', matchPrefix: '/office/warehouse/orders', role: 'warehouse' },
   { href: '/office/warehouse/pack', label: 'Pack station', icon: 'scale', matchPrefix: '/office/warehouse/pack', role: 'warehouse' },
   { href: '/office/dropship/problems', label: 'Order problems', icon: 'flag', matchPrefix: '/office/dropship/problems', role: 'dropship' },
+  { href: '/office/dropship/approvals', label: 'Supplier approvals', icon: 'check', matchPrefix: '/office/dropship/approvals', role: 'dropship' },
+  { href: '/office/dropship/suppliers', label: 'Suppliers', icon: 'layers', matchPrefix: '/office/dropship/suppliers', role: 'dropship' },
   { href: '/office/dropship/merchants', label: 'Merchants', icon: 'users', matchPrefix: '/office/dropship/merchants', role: 'dropship' },
+  { href: '/office/dropship/partners', label: 'Sales partners', icon: 'send', matchPrefix: '/office/dropship/partners', role: 'dropship' },
   { href: '/office/dropship/fees', label: 'Fees and plans', icon: 'percent', matchPrefix: '/office/dropship/fees', role: 'fees_duty' },
+  { href: '/office/dropship/invoicing', label: 'Invoicing', icon: 'file', matchPrefix: '/office/dropship/invoicing', role: 'dropship' },
+  { href: '/office/dropship/docs', label: 'Docs', icon: 'shield', matchPrefix: '/office/dropship/docs', role: 'dropship' },
   { href: '/office/dropship/health', label: 'System health', icon: 'activity', matchPrefix: '/office/dropship/health', role: 'dropship' },
   { href: '/admin/finance/saas', label: 'Finance: SaaS billing', icon: 'card', matchPrefix: '/admin/finance/saas', role: 'saas' },
 ];
@@ -52,6 +57,11 @@ const NON_CATALOG_PREFIXES = [
   '/office/dropship/requests',
   '/office/dropship/fees',
   '/office/dropship/health',
+  '/office/dropship/approvals',
+  '/office/dropship/suppliers',
+  '/office/dropship/partners',
+  '/office/dropship/invoicing',
+  '/office/dropship/docs',
   '/office/dropship/ui-kit',
 ];
 

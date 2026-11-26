@@ -17,7 +17,7 @@ export const DROPSHIP_FEATURES: { key: DropshipFeatureKey; label: string; routes
   { key: 'wallet', label: 'Wallet', routes: ['/account/dropship/wallet'], locked: true },
   { key: 'settings', label: 'Settings (basic)', routes: ['/account/dropship/settings'] },
   { key: 'support', label: 'Support', routes: ['/account/dropship/support'], locked: true },
-  { key: 'stores', label: 'Stores', routes: ['/account/dropship/stores'] },
+  { key: 'stores', label: 'Stores and integrations', routes: ['/account/dropship/stores', '/account/dropship/integrations'] },
   { key: 'import_list', label: 'Import list', routes: ['/account/dropship/import', '/account/dropship/push'] },
   { key: 'pushed', label: 'Pushed products', routes: ['/account/dropship/pushed'] },
   { key: 'pricing', label: 'Pricing and sync', routes: ['/account/dropship/pricing'] },

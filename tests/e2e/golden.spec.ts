@@ -186,8 +186,9 @@ test.describe('Golden path 2 — RFQ → quote → approve → proforma → depo
     page.on('dialog', (d) => d.accept());
     await page.locator('#rp-ref').fill('E2E-DEP');
     await page.getByRole('button', { name: 'Record payment' }).click();
+    // the confirm dialog opens after a render — wait for it instead of counting at once (counting raced and skipped it)
     const confirmBtn = page.getByRole('dialog').getByRole('button', { name: /record|confirm/i });
-    if (await confirmBtn.count()) await confirmBtn.last().click();
+    if (await confirmBtn.last().waitFor({ state: 'visible', timeout: 5_000 }).then(() => true, () => false)) await confirmBtn.last().click();
     await expect.poll(async () => (await adminClient().from('orders').select('status').eq('id', orderId).single()).data?.status, { timeout: 20_000 }).toBe('deposit_paid');
 
     await page.context().clearCookies();

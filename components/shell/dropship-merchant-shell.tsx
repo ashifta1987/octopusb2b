@@ -47,6 +47,7 @@ const MERCHANT_GROUPS: MerchantNavGroup[] = [
       { href: '/account/dropship/pricing', label: 'Pricing and sync', icon: 'tag', feature: 'pricing' },
       { href: '/account/dropship/packing', label: 'Packing and shipping', icon: 'package', feature: 'packing' },
       { href: '/account/dropship/stores', label: 'Stores', icon: 'store', feature: 'stores' },
+      { href: '/account/dropship/integrations', label: 'Integrations', icon: 'link', feature: 'stores' },
     ],
   },
   {
@@ -144,6 +145,7 @@ function isPhoneTabActive(tabHref: string, pathname: string, isListParam = false
     pathname.startsWith('/account/dropship/pricing') ||
     pathname.startsWith('/account/dropship/packing') ||
     pathname.startsWith('/account/dropship/stores') ||
+    pathname.startsWith('/account/dropship/integrations') ||
     pathname.startsWith('/account/dropship/billing') ||
     pathname.startsWith('/account/dropship/reports') ||
     pathname.startsWith('/account/dropship/settings') ||

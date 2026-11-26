@@ -76,7 +76,7 @@ Last updated: 26 Nov 2026 (staging state after EA-1 / EA-2). Read this before an
 
 ## 8. Owner decisions still open
 
-Processing fee amount, weighing tolerance, insurance (on/off), plan prices and limits, duty-difference policy, carrier display names, which company invoices (SZ vs HK) and prefixes, the full privacy policy text (legal review).
+Weighing tolerance, insurance (on/off), plan limits (prices stay unset), 3PL rate amounts, Turnkey terms text, duty-difference policy, carrier display names, which company invoices (SZ vs HK) and prefixes, the full privacy policy text (legal review).
 
 ## 9. Owner to-do
 
@@ -90,3 +90,37 @@ Second 2FA phone; Resend app emails (launch blocker); pay Google Workspace (supp
 - D3 Turnkey leads are kept and moved into new projects at "Enquiry"; old catalogue tables archived as legacy, never dropped. D4 `/turnkey` URL kept, old URLs redirect. D5 2× admin approval applies to service fees only; deposit % from settings. D6 inspector offline mode later.
 - D7 carrier rules and client rates: two-person rule, admin approves. D8 3PL client plans are separate from the Dropship processing fee. D9 3PL clients are existing KYC organisations plus the 3PL application. D10 B2B order shipping moves into Warehouse OS; `/office/shipping` retired in W7. D11 default warehouse becomes Foshan (FS-01); stock moves only by new movements.
 - Warehouse OS and Turnkey uploads are text descriptions; board exports (HTML/PNG) requested for Match checks.
+
+## 11. Owner decisions (26 Nov 2026, evening) — settings, never hard-coded
+
+**Turnkey**
+- Deposit 30% of the quote; 50% for custom/branded orders. Balance due before shipment.
+- Legal name: Shenzhen Octopus Trading Co., Ltd. (via `legal_entities`; switch to the HK entity later).
+- Terms text: owner provides it (until then "provided on request").
+
+**3PL client rates** — structure confirmed, amounts still blank: receiving per carton, storage per CBM per month, pick & pack per order + per extra item, packaging, returns. Until filled: "not set", nothing billed.
+
+**Dropship**
+- Processing fee: US$1.20 first item + US$0.40 each extra item (a fee version, published with the two-person rule).
+- Plan prices: unset; `saas_billing_settings` stays OFF.
+- Shipping: rate cards = YunExpress cost. The merchant's shipping line = cost + shipping markup 10% (a setting; changing it needs two people).
+- Launch countries: AE, SA, GB, US. US = DDP, no de minimis.
+- Privacy policy + terms: owner provides reviewed text.
+- Email: Resend. Owner sets up the domain (SPF/DKIM in GoDaddy) and puts the key in Vercel. Sender no-reply@hostoctopus.com, reply-to support@hostoctopus.com. Env vars: `EMAIL_API_KEY`, `EMAIL_FROM`, `EMAIL_REPLY_TO`.
+- Refund rules:
+  - Cancel before packing: full wallet refund. After packing: not cancellable.
+  - Lost: no tracking movement for 15 days → reship or wallet refund.
+  - Damaged or wrong item: photos within 7 days of delivery → reship or refund.
+  - Buyer remorse: the merchant's own policy; the merchant pays return shipping.
+  - Re-weigh disputes: within 7 days.
+  - Refunds go to the wallet by default.
+  - Claims over US$1,000 need a second Finance approver.
+
+**Release 6 (supplier direct shipping)**
+- Packing slip: Dropship orders carry the merchant's brand only (no supplier, no prices, no "Octopus"). B2B Sourcing orders use the Octopus slip.
+- Two-person approval for a new supplier approval and for any supplier bank-detail change. Routine product updates need one approver.
+- Supplier price changes:
+  - Decreases are auto-approved.
+  - Increases up to 3% are auto-approved and staff are notified.
+  - Above 3%, or over 5% in total within 30 days, staff review.
+  - Already-quoted prices never change.
