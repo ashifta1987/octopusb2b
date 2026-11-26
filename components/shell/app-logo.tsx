@@ -11,10 +11,10 @@ import { cn } from '@/lib/cn';
  */
 const LOGOS = {
   b2b: { src: '/images/design/logos/octopus-b2b-original.jpg', width: 1024, height: 270, alt: 'Octopus B2B', svg: false }, // owner's original logo (27 Nov)
-  dropship: { src: '/images/design/logos/octopus-dropship-colour.svg', width: 848, height: 306, alt: 'Octopus Dropship', svg: true },
-  '3pl': { src: '/images/design/logos/octopus-3pl.png', width: 720, height: 297, alt: 'Octopus 3PL', svg: false },
-  turnkey: { src: '/images/design/logos/octopus-turnkey.png', width: 720, height: 308, alt: 'Octopus Turnkey', svg: false },
-  moq: { src: '/images/design/logos/octopus-moq-pool.png', width: 720, height: 306, alt: 'Octopus MOQ Pool', svg: false },
+  dropship: { src: '/images/design/logos/function/octopus-dropship.png', width: 800, height: 329, alt: 'Octopus Dropship', svg: false },
+  '3pl': { src: '/images/design/logos/function/octopus-3pl.png', width: 800, height: 329, alt: 'Octopus 3PL', svg: false },
+  turnkey: { src: '/images/design/logos/function/octopus-turnkey.png', width: 800, height: 329, alt: 'Octopus Turnkey', svg: false },
+  moq: { src: '/images/design/logos/function/octopus-moq-pool.png', width: 800, height: 329, alt: 'Octopus MOQ Pool', svg: false },
 } as const;
 export type AppLogoVariant = keyof typeof LOGOS;
 
@@ -28,7 +28,7 @@ export function AppLogo({ variant = 'b2b', href = '/', label = 'Octopus B2B home
     <Link href={href} aria-label={label} className={cn('inline-flex items-center shrink-0', className)}>
       <Image src={l.src} alt={l.alt} width={l.width} height={l.height} loading="eager" unoptimized={l.svg}
         sizes={size === 'sidebar' ? '210px' : '140px'}
-        className={cn('block w-auto', h)} />
+        className={cn('block w-auto', h, variant !== 'b2b' && 'rounded-[10px]')} />
     </Link>
   );
 }

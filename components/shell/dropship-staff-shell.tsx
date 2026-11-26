@@ -136,14 +136,13 @@ export function DropshipStaffShell({
       >
         <div className="px-2 pb-3 md:pb-4">
           <Image
-            src="/images/design/logos/octopus-dropship-colour.svg"
+            src="/images/design/logos/function/octopus-dropship.png"
             alt="Octopus Dropship"
-            width={848}
-            height={306}
-            unoptimized
+            width={800}
+            height={329}
             loading="eager"
             sizes="160px"
-            className="block w-auto h-[44px] md:h-[54px]"
+            className="block w-auto h-[44px] md:h-[54px] rounded-[10px]"
           />
         </div>
         <div className="app-context mb-1 md:mb-2">

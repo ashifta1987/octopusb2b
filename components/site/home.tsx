@@ -10,7 +10,7 @@ import { categoryLabel, tkImageUrl } from '@/lib/turnkey/format';
 import { JsonLd, SITE_URL } from '@/components/store/seo';
 import { copy } from '@/components/store/home/shared';
 import { siteImage } from '@/lib/site-images';
-import { h1Class, h2Class, eyebrowClass, btn, space, StatusPill, Pic, Check, design, TeamBand, OFFICE_HOURS, WHATSAPP_URL } from './ui';
+import { h1Class, h2Class, eyebrowClass, btn, space, StatusPill, Pic, Check, design, TeamBand, OFFICE_HOURS, WHATSAPP_URL, SUB_BRANDS, type SubBrand } from './ui';
 
 /** Current site's answer to "Are the factories verified?" (content block home3.faq.2) — fills [ANSWER FROM CURRENT FAQ]. */
 export const VERIFIED_FAQ = 'Are the factories verified?|Yes. Dropshipping and Make My Brand use only products Octopus lists directly, from verified suppliers, and our sourcing team matches you only with verified factories.';
@@ -57,7 +57,9 @@ export async function WebsiteHome() {
                   <Pic src={design(s.img)} alt={s.alt} rounded="rounded-none" />
                   <div className="p-6 flex flex-col gap-2.5 flex-1">
                     <div className="flex justify-between items-center gap-2">
-                      <b className="font-mono text-[13px] tracking-[.1em] uppercase text-coral-text">{s.label}</b>
+                      {SUB_BRANDS[s.key as SubBrand]
+                        ? <Image src={SUB_BRANDS[s.key as SubBrand].src} alt={SUB_BRANDS[s.key as SubBrand].alt} width={800} height={329} sizes="140px" className="block h-12 w-auto rounded-[8px]" />
+                        : <b className="font-mono text-[13px] tracking-[.1em] uppercase text-coral-text">{s.label}</b>}
                       <StatusPill soon={s.soon} />
                     </div>
                     <h3 className="m-0 text-[22px]! leading-[1.2] font-semibold">{s.title}</h3>

@@ -16,7 +16,7 @@ export function DropshipComingSoon() {
   );
   return (
     <ServicePage testId="dropship-coming-soon" afterIncluded={notify} d={{
-      key: 'dropship',
+      key: 'dropship', brand: 'dropship',
       crumb: 'Dropshipping',
       soon: true,
       title: 'You sell. We ship to your customer.',

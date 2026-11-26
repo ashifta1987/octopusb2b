@@ -34,7 +34,7 @@ export default async function MakeMyBrandPage() {
   const methods = brandMethods(settings);
   return (
     <ServicePage testId="mmb-page" d={{
-      key: 'brand',
+      key: 'brand', brand: 'brand',
       crumb: 'Make My Brand',
       title: 'Your brand on proven products.',
       lead: 'Choose a product that already sells well, add your logo, colours and packaging, and we produce, check and stock it for you. You see a studio preview before you commit.',

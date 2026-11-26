@@ -36,7 +36,7 @@ export default async function SourcingPage() {
   const verified = copy(blocks, 'home3.faq.2', VERIFIED_FAQ)[1] ?? '';
   return (
     <ServicePage testId="sourcing-page" d={{
-      key: 'sourcing',
+      key: 'sourcing', brand: 'sourcing',
       crumb: 'Product sourcing',
       title: 'Tell us the product. We find the factory.',
       lead: 'Send a photo, a link or a specification. We search for verified factories, collect quotes and manage the order, so you deal with one team instead of many suppliers.',

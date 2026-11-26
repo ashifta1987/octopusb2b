@@ -62,10 +62,14 @@ export function Pic({ src, alt, sizes = '(min-width:1200px) 400px, 100vw', class
 export const design = (file: string) => `/images/design/${file}`;
 
 /** Sub-brand logos (owner brand guidelines, 27 Nov): transparent PNGs, trimmed. Shown on Pearl or white only, never on Coral or photos. */
+// owner 27 Nov: one logo per function (navy tile, white wordmark, blue function name), all 800 × 329
 export const SUB_BRANDS = {
-  '3pl': { src: '/images/design/logos/octopus-3pl.png', alt: 'Octopus 3PL', width: 720, height: 297 },
-  turnkey: { src: '/images/design/logos/octopus-turnkey.png', alt: 'Octopus Turnkey', width: 720, height: 308 },
-  pools: { src: '/images/design/logos/octopus-moq-pool.png', alt: 'Octopus MOQ Pool', width: 720, height: 306 },
+  sourcing: { src: '/images/design/logos/function/octopus-sourcing.png', alt: 'Octopus Sourcing', width: 800, height: 329 },
+  brand: { src: '/images/design/logos/function/octopus-make-my-brand.png', alt: 'Octopus Make My Brand', width: 800, height: 329 },
+  pools: { src: '/images/design/logos/function/octopus-moq-pool.png', alt: 'Octopus MOQ Pool', width: 800, height: 329 },
+  dropship: { src: '/images/design/logos/function/octopus-dropship.png', alt: 'Octopus Dropship', width: 800, height: 329 },
+  '3pl': { src: '/images/design/logos/function/octopus-3pl.png', alt: 'Octopus 3PL', width: 800, height: 329 },
+  turnkey: { src: '/images/design/logos/function/octopus-turnkey.png', alt: 'Octopus Turnkey', width: 800, height: 329 },
 } as const;
 export type SubBrand = keyof typeof SUB_BRANDS;
 
@@ -74,7 +78,7 @@ export function BrandMark({ brand, className = '' }: { brand: SubBrand; classNam
   const b = SUB_BRANDS[brand];
   return (
     <span className={`inline-block p-2 -ml-2 ${className}`} data-testid={`brand-mark-${brand}`}>
-      <Image src={b.src} alt={b.alt} width={b.width} height={b.height} sizes="160px" loading="eager" className="block h-14 sm:h-16 w-auto" />
+      <Image src={b.src} alt={b.alt} width={b.width} height={b.height} sizes="180px" loading="eager" className="block h-16 sm:h-[72px] w-auto rounded-[12px]" />
     </span>
   );
 }
