@@ -1,7 +1,8 @@
 // Warehouse OS · W2b DB checks — bins, pallets, putaway (location sub-ledger), moves, inter-warehouse transfers, labels.
 // STAGING ONLY, rolled-back transactions.
-//  0. Down → up: the W2b down removes every W2b object (no function was replaced); up again gives identical functions,
-//     grants, policies, columns and triggers.
+//  0. Down → up (migrations applied after W2b — e.g. W3a, which replaces wh_lot_free and references bins and lots — are unwound
+//     first and re-applied last): the W2b down removes every W2b object (no function was replaced); up again gives identical
+//     functions, grants, policies, columns and triggers.
 //  1. Setup: a client receives stock through the real W2a path (notice → slot → check-in → count) so lots are released.
 //  2. Bins: putaway role only (packer refused, receiver allowed); range generator (skips existing, ≤ 500); block needs a reason.
 //  3. Putaway: on hand never changes; blocked bin refused; never more than the lot has left; pallets keep one owner and one bin;
@@ -68,6 +69,9 @@ try {
   const downFile = mig('supabase/migrations/down');
   ok(Boolean(upFile && downFile), `W2b migration files found (${upFile} / ${downFile})`);
   const after = await snap();
+  const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
+  const later = await appliedAfter(db, upFile);
+  await unwind(db, later);
   await db.query(fs.readFileSync(`supabase/migrations/down/${downFile}`, 'utf8'));
   const leftovers = await all(`select relname from pg_class where relnamespace = 'public'::regnamespace and relname = any($1)`, [[...W2B_TABLES, 'seq_wh_pallet', 'seq_wh_transfer']]);
   const leftFns = await all(`select proname from pg_proc where pronamespace = 'public'::regnamespace and proname = any($1)`,
@@ -77,6 +81,7 @@ try {
   const leftTg = await all(`select tgname from pg_trigger where tgname in ('wh_stock_covers_placement', 'wh_bin_stock_within_on_hand')`);
   ok(leftovers.length === 0 && leftFns.length === 0 && leftTg.length === 0, 'down: every W2b table, sequence, function and trigger is gone');
   await db.query(fs.readFileSync(`supabase/migrations/${upFile}`, 'utf8'));
+  await reapply(db, later);
   const again = await snap();
   if (again !== after) { const a = JSON.parse(after), b = JSON.parse(again); for (const k of Object.keys(a)) if (JSON.stringify(a[k]) !== JSON.stringify(b[k])) console.log('  diff in', k); }
   ok(again === after, 'up again: identical functions, grants, policies, columns, constraints, indexes and triggers');

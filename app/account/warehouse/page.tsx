@@ -6,23 +6,28 @@ import { requireCustomer } from '@/lib/auth';
 import { getAccountContext, serviceOn } from '@/lib/core/account';
 import { createClient } from '@/lib/supabase/server';
 import { isWarehouseOsEnabled } from '@/lib/warehouse';
+import { signEvidence } from '@/lib/warehouse-evidence';
+import type { PortalProof } from '@/lib/warehouse-orders';
+import { OrdersTab, type PortalOrder } from './orders-tab';
+import { ProofView } from './proof-view';
 import { SendStock, type PortalAsn, type PortalSku } from './send-stock';
 
 export const metadata = { title: '3PL warehouse' };
 
-/** Warehouse OS client portal tabs (design §5). Overview and Send stock are live (W2a); the others say when they arrive. */
+/** Warehouse OS client portal tabs (design §5). Overview and Send stock (W2a) and Orders with packing proof (W3a) are live; the others say when they arrive. */
 const TABS: { key: string; label: string; ships?: string }[] = [
   { key: 'overview', label: 'Overview' },
   { key: 'inventory', label: 'Inventory', ships: 'with stock receiving' },
-  { key: 'orders', label: 'Orders', ships: 'with pick and pack' },
+  { key: 'orders', label: 'Orders' },
   { key: 'send', label: 'Send stock' },
   { key: 'returns', label: 'Returns', ships: 'with returns' },
   { key: 'invoices', label: 'Invoices', ships: 'with monthly invoicing' },
   { key: 'integrations', label: 'Integrations', ships: 'with store connections' },
   { key: 'support', label: 'Support', ships: '' },
 ];
-const LIVE = new Set(['overview', 'send']);
+const LIVE = new Set(['overview', 'orders', 'send']);
 const OPEN_ASN = ['submitted', 'booked', 'arrived', 'receiving'];
+const OPEN_ORDER = ['new', 'allocated', 'picking', 'picked', 'packing', 'exception'];
 
 const daysAgo = (n: number) => new Date(Date.now() - n * 86_400_000).toISOString();
 /** today's date at the warehouse (China time), for the arrival date picker */
@@ -31,6 +36,19 @@ const chinaToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Shan
 type Sb = Awaited<ReturnType<typeof createClient>>;
 type LineRow = { id: string; asn_id: string; item_id: string; expected_qty: number; received_good: number | null; status: string };
 type LotRow = { asn_line_id: string | null; qty: number };
+type OrderLineRow = { order_id: string; sku: string; name: string; qty: number };
+
+/** The company's own warehouse orders (RLS: own org; customer-safe columns only). */
+async function loadOrders(sb: Sb, orgId: string): Promise<PortalOrder[] | null> {
+  const { data, error } = await sb.from('wh_orders')
+    .select('id, code, external_ref, status, warehouse_code, ship_name, ship_country, created_at, packed_at')
+    .eq('org_id', orgId).order('created_at', { ascending: false }).limit(100);
+  if (error) return null;
+  const rows = (data ?? []) as Omit<PortalOrder, 'lines'>[];
+  const ids = rows.map((o) => o.id);
+  const lines = ids.length ? ((await sb.from('wh_order_lines').select('order_id, sku, name, qty').in('order_id', ids)).data ?? []) as OrderLineRow[] : [];
+  return rows.map((o) => ({ ...o, lines: lines.filter((l) => l.order_id === o.id).map(({ sku, name, qty }) => ({ sku, name, qty })) }));
+}
 
 async function loadInbound(sb: Sb, orgId: string) {
   const [asnRes, skuRes] = await Promise.all([
@@ -65,7 +83,7 @@ async function loadInbound(sb: Sb, orgId: string) {
   return { asns, skus, incoming, openCount: failed ? null : open.length };
 }
 
-async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; order?: string }> }) {
   const s = await requireCustomer('/account/warehouse');
   if (!s.org) return <ServiceStart service="warehouse" />;
   const sb = await createClient();
@@ -81,8 +99,8 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string }
   const sp = await searchParams;
   const tab = sp.tab && LIVE.has(sp.tab) ? sp.tab : 'overview';
   const weekStart = daysAgo(7);
-  const [openRes, shippedRes, whRes, inbound] = await Promise.all([
-    sb.from('shipments').select('id', { count: 'exact', head: true }).eq('org_id', s.org.id).in('status', ['created', 'label_ready', 'picked_up']),
+  const [orders, shippedRes, whRes, inbound] = await Promise.all([
+    loadOrders(sb, s.org.id),
     sb.from('shipments').select('id', { count: 'exact', head: true }).eq('org_id', s.org.id).in('status', ['in_transit', 'out_for_delivery', 'delivered']).gte('created_at', weekStart),
     sb.from('warehouses').select('code, name, city, is_default').eq('status', 'active').order('is_default', { ascending: false }).order('name'),
     loadInbound(sb, s.org.id),
@@ -90,7 +108,7 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string }
   const warehouses = (whRes.data ?? []) as { code: string; name: string; city: string; is_default: boolean }[];
   const tiles: [string, string, string][] = [
     ['Units in stock', '—', 'Your stock shows here once we receive it'],
-    ['Open orders', openRes.count == null ? '—' : String(openRes.count), 'Being picked or packed'],
+    ['Open orders', orders == null ? '—' : String(orders.filter((o) => OPEN_ORDER.includes(o.status)).length), 'Received, picking or packing'],
     ['Shipped this week', shippedRes.count == null ? '—' : String(shippedRes.count), 'Last 7 days'],
     ['Stock on its way in', inbound.incoming == null ? '—' : inbound.incoming.toLocaleString('en-US'),
       inbound.openCount == null ? 'Could not load your stock notices' : `${inbound.openCount} open stock notice${inbound.openCount === 1 ? '' : 's'}`],
@@ -98,6 +116,17 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string }
   const defaultWarehouse = client?.preferred_warehouse && warehouses.some((w) => w.code === client.preferred_warehouse)
     ? client.preferred_warehouse : warehouses.find((w) => w.is_default)?.code ?? warehouses[0]?.code ?? '';
   const tabCls = 'px-4 min-h-11 inline-flex items-center whitespace-nowrap';
+  // proof view of one of the company's own orders (photos through signed URLs; the storage policy checks the company)
+  let proof: PortalProof | null = null;
+  const proofRef = tab === 'orders' ? (sp.order ?? '').trim().toUpperCase() : '';
+  if (/^WO-\d{6,}$/.test(proofRef)) {
+    const r = await sb.rpc('wh_portal_proof', { p_code: proofRef });
+    if (!r.error) {
+      proof = r.data as PortalProof;
+      const urls = await signEvidence(sb, proof.evidence.map((e) => e.path));
+      proof.evidence = proof.evidence.map((e) => ({ ...e, url: urls.get(e.path) ?? null }));
+    }
+  }
   return (
     <div className="max-w-[1160px]" data-testid="wh-portal">
       <div className="mono text-[11.5px] font-semibold uppercase tracking-[.1em] text-coral-text">3PL and logistics</div>
@@ -114,7 +143,25 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string }
           </span>
         ))}
       </nav>
-      {tab === 'send' ? (
+      {tab === 'orders' ? (
+        client ? (
+          <>
+            {proofRef && (proof ? <ProofView proof={proof} /> : (
+              <p role="alert" className="card p-5 mt-5 mb-0 text-[14px]" data-testid="wh-proof-missing">We couldn’t find order {proofRef} in your account.</p>
+            ))}
+            {orders == null ? (
+              <p role="alert" className="card p-5 mt-5 mb-0 text-[14px]">Your orders could not be loaded. Reload the page.</p>
+            ) : (
+              <OrdersTab skus={inbound.skus} orders={orders} warehouses={warehouses.map((w) => ({ code: w.code, name: w.name }))} />
+            )}
+          </>
+        ) : (
+          <section className="card p-5 mt-5">
+            <h2 className="text-[18px] font-semibold m-0">Your 3PL account is being set up</h2>
+            <p className="mt-2 mb-0 text-[14px] text-black/75">Orders open once your account is approved. Questions? <Link href="/account/support" className="underline">Contact support</Link>.</p>
+          </section>
+        )
+      ) : tab === 'send' ? (
         client ? (
           <SendStock skus={inbound.skus} asns={inbound.asns} warehouses={warehouses.map((w) => ({ code: w.code, name: w.name }))}
             defaultWarehouse={defaultWarehouse} today={chinaToday()} />
@@ -138,6 +185,7 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string }
           {client && (
             <div className="mt-4 flex flex-wrap gap-3">
               <Link href="/account/warehouse?tab=send" className="btn btn-primary" data-testid="wh-portal-send-shortcut">Send stock</Link>
+              <Link href="/account/warehouse?tab=orders" className="btn btn-ghost" data-testid="wh-portal-orders-shortcut">Send or upload orders</Link>
             </div>
           )}
           <section className="card p-5 mt-5" aria-labelledby="wh-locs">
@@ -147,7 +195,7 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string }
                 <li key={w.code} className="rounded-[10px] border border-line p-3"><div className="font-semibold">{w.name}</div><div className="text-[13px] text-black/70">{w.city}, China</div></li>
               ))}
             </ul>
-            <p className="mt-3 mb-0 text-[13.5px] text-black/75">Uploading orders opens with the next steps. Questions? <Link href="/account/support" className="underline">Contact support</Link>.</p>
+            <p className="mt-3 mb-0 text-[13.5px] text-black/75">Send orders one by one or as a CSV file in the <Link href="/account/warehouse?tab=orders" className="underline">Orders</Link> tab. Questions? <Link href="/account/support" className="underline">Contact support</Link>.</p>
           </section>
         </>
       )}
@@ -155,6 +203,6 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string }
   );
 }
 
-export default function Page(props: { searchParams: Promise<{ tab?: string }> }) {
+export default function Page(props: { searchParams: Promise<{ tab?: string; order?: string }> }) {
   return <Suspense fallback={<PageSkeleton cards={2} table={false} />}><Portal {...props} /></Suspense>;
 }

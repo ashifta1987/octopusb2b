@@ -132,6 +132,11 @@ export async function purgeTestOrgs(orgIds: string[], userIds: string[]) {
     await db.end();
   }
   const admin = adminClient();
-  for (const u of userIds) await admin.auth.admin.deleteUser(u);
+  for (const u of userIds) {
+    // the stock ledger is append-only and keeps who reserved/moved stock (actor_id): such users are banned, not deleted
+    const { count } = await admin.from('warehouse_stock_movements').select('id', { count: 'exact', head: true }).eq('actor_id', u);
+    if ((count ?? 0) > 0) await admin.auth.admin.updateUserById(u, { ban_duration: '876000h' });
+    else await admin.auth.admin.deleteUser(u);
+  }
 }
 

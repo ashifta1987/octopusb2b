@@ -66,7 +66,9 @@ const NO_CUSTOMER_ROWS = ['suppliers', 'supplier_contacts', 'supplier_name_varia
   'wh_applications', // W1: 3PL applications are staff-only (policy needs is_staff())
   'tk_client_project_staff', 'wh_dock_slots', 'wh_counts', 'wh_serials',
   'wh_bins', 'wh_pallets', 'wh_bin_stock', 'wh_location_moves', 'wh_transfers', 'wh_transfer_lines', 'wh_transfer_picks', 'wh_label_prints',
-  'tk_factory_quotes', 'tk_factory_quote_lines', 'tk_client_quote_line_costs']; // W2a: dock slots, count passes and serials are staff-only. W2b: bins, pallets, bin stock, placement history, transfers and label prints are staff-only (wh_sees()). T2: Turnkey T2: account manager / creator / old lead per client project — staff-only (is_staff() + can('turnkey','view')). T4: factory quotes, their cost lines and the cost behind client quote lines — staff-only (is_staff() + tk_staff_can_view)
+  'tk_factory_quotes', 'tk_factory_quote_lines', 'tk_client_quote_line_costs',
+  'wh_settings', 'wh_boxes', 'wh_pick_records', 'wh_scan_log', 'wh_pack_evidence', 'wh_override_attempts',
+  'wh_scale_benches', 'wh_scale_checks', 'wh_materials', 'wh_material_moves', 'wh_material_usage', 'wh_parcels', 'wh_parcel_items', 'wh_exceptions']; // W2a: dock slots, count passes and serials are staff-only. W2b: bins, pallets, bin stock, placement history, transfers and label prints are staff-only (wh_sees()). T2: Turnkey T2: account manager / creator / old lead per client project — staff-only (is_staff() + can('turnkey','view')). T4: factory quotes, their cost lines and the cost behind client quote lines — staff-only (is_staff() + tk_staff_can_view). W3a: packing settings, boxes, pick records, scan log, packing evidence and override attempts — staff-only (wh_sees()); clients read their own proof through wh_portal_proof(); wh_supervisor_pins has no grant at all. W3b: scale benches + checks, packaging materials + their ledger + usage (charges), parcels + parcel items and the exceptions queue — staff-only (wh_sees())
 
 try {
   await db.query('begin');

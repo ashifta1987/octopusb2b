@@ -1,6 +1,6 @@
 // Warehouse OS · W2a DB checks — inbound (stock notices, dock, receiving, counts, lots, serials, client SKUs).
 // STAGING ONLY, rolled-back transactions.
-//  0. Down → up (W2b first down, last up when installed): the W2a down restores record_warehouse_stock_movement() exactly (same source and 'SZ-01' default) and
+//  0. Down → up (migrations applied after W2a — W2b, W3a, … — are unwound first and re-applied last): the W2a down restores record_warehouse_stock_movement() exactly (same source and 'SZ-01' default) and
 //     removes every W2a object; up again gives identical functions, grants, policies and columns.
 //  1. Legacy defaults: stock movements and handoffs default to the default warehouse (FS-01), not SZ-01.
 //  2. Client SKUs: approved client members (and receiving staff) only; one SKU per company; own rows only.
@@ -58,10 +58,11 @@ try {
   const downFile = mig('supabase/migrations/down');
   ok(Boolean(upFile && downFile), `W2a migration files found (${upFile} / ${downFile})`);
   const after = await snap();
-  // later steps that build on W2a (W2b: bins, pallets, transfers reference wh_lots / wh_asns and use wh_sees()) go down first
-  const w2b = (dir) => fs.readdirSync(dir).find((f) => /_w2b_putaway_labels_transfers(\.down)?\.sql$/.test(f) && (dir.endsWith('down') ? f.includes('.down.') : !f.includes('.down.')));
-  const w2bInstalled = Boolean(w2b('supabase/migrations') && (await one(`select to_regclass('public.wh_bins') r`)).r);
-  if (w2bInstalled) await db.query(fs.readFileSync(`supabase/migrations/down/${w2b('supabase/migrations/down')}`, 'utf8'));
+  // later steps that build on W2a (W2b: bins, pallets, transfers reference wh_lots / wh_asns and use wh_sees(); W3a: orders,
+  // and it replaces record_warehouse_stock_movement again) go down first, newest first, and come back afterwards
+  const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
+  const later = await appliedAfter(db, upFile);
+  await unwind(db, later);
   await db.query(fs.readFileSync(`supabase/migrations/down/${downFile}`, 'utf8'));
   const rw = await one(`select md5(prosrc) m, pg_get_function_arguments(oid) a from pg_proc where oid = 'public.record_warehouse_stock_movement(uuid,text,integer,text,text,uuid)'::regprocedure`);
   const hoDefault = (await one(`select column_default d from information_schema.columns where table_name = 'dropship_handoffs' and column_name = 'warehouse_id'`)).d;
@@ -69,7 +70,7 @@ try {
   ok(rw.m === '9b6d51ca62b9247aaca14d0dfebeed3a' && /'SZ-01'::text/.test(rw.a) && hoDefault === `'SZ-01'::text` && leftovers.length === 0,
     'down: record_warehouse_stock_movement restored exactly (source + SZ-01 default), handoff default restored, W2a tables gone');
   await db.query(fs.readFileSync(`supabase/migrations/${upFile}`, 'utf8'));
-  if (w2bInstalled) await db.query(fs.readFileSync(`supabase/migrations/${w2b('supabase/migrations')}`, 'utf8'));
+  await reapply(db, later);
   const again = await snap();
   if (again !== after) { const a = JSON.parse(after), b = JSON.parse(again); for (const k of Object.keys(a)) if (JSON.stringify(a[k]) !== JSON.stringify(b[k])) console.log('  diff in', k); }
   ok(again === after, 'up again: identical functions, grants, policies and columns');

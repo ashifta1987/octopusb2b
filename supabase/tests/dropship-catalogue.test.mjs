@@ -227,6 +227,10 @@ try {
   await db.query(fs.readFileSync('supabase/migrations/20261101000205_dropship_catalogue_functions.sql', 'utf8'));
   await reapply(db, later);
   ok((await snap()) === after, 'up again (204 + 205 + later): identical policies, columns and function permissions');
+  // a fresh transaction for the second unwind: with 30+ later migrations, two unwind/reapply cycles in one transaction
+  // exceed max_locks_per_transaction ("out of shared memory")
+  await db.query('rollback');
+  await db.query('begin');
 
   // Verify the 204 guard refuses when a row exists in dropship_products on a non-staging environment
   await unwind(db, later);

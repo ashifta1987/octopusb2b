@@ -52,6 +52,17 @@ export async function createTempStaff(role: string): Promise<TempStaff> {
 export async function deleteTempStaff(t: TempStaff | null) {
   if (!t) return;
   await t.admin.from('distributor_suppliers').delete().eq('distributor_id', t.id);
+  // The stock ledger is append-only (warehouse_stock_movements.actor_id keeps who moved stock), so a temp person who
+  // posted stock movements can't be deleted: lock them out for good instead (banned, no staff roles, no warehouse access).
+  const { count } = await t.admin.from('warehouse_stock_movements').select('id', { count: 'exact', head: true }).eq('actor_id', t.id);
+  if ((count ?? 0) > 0) {
+    await t.admin.from('warehouse_staff').delete().eq('user_id', t.id);
+    await t.admin.from('division_members').delete().eq('user_id', t.id);
+    await t.admin.from('user_roles').delete().eq('user_id', t.id);
+    const { error: banErr } = await t.admin.auth.admin.updateUserById(t.id, { ban_duration: '876000h' });
+    if (banErr) throw new Error(`deleteTempStaff (ban) ${t.email}: ${banErr.message}`);
+    return;
+  }
   const { error } = await t.admin.auth.admin.deleteUser(t.id);
   // a silent failure left test staff behind: fail loudly (delete the rows that reference the user first)
   if (error) throw new Error(`deleteTempStaff ${t.email}: ${error.message}`);

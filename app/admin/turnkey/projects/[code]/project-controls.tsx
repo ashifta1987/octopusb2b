@@ -9,7 +9,7 @@ type Res = { ok: boolean; message?: string; error?: string };
 
 /**
  * Turnkey T2/T3/T4 — staff controls on the Project screen: move one phase forward (or back with a reason the client sees),
- * hold / cancel / complete / reopen and the target date per phase. Moving into a phase that is paid first needs its fee
+ * hold / cancel / reopen and the target date per phase (T6: the client's handover sign-off completes a project; it then stays closed). Moving into a phase that is paid first needs its fee
  * active (an admin approves fees above 2× the starting fee) and paid (the database refuses otherwise). T4: Design ends
  * when the client approves a drawing version; Quote and deposit ends when a quote is accepted and its deposit paid. The account manager and cover are in ManagerPanel.
  * Forms use onSubmit + preventDefault so typed text stays when the database refuses; the page refreshes after a change.
@@ -34,8 +34,10 @@ export function ProjectControls({ projectId, code, stage, status, dues, nextFee,
   const next = nextPhase(stage);
   const earlier = earlierPhases(stage);
   const open = status === 'open';
-  const statusOptions = ([['open', status === 'completed' || status === 'cancelled' ? 'Reopen' : 'In progress'], ['on_hold', 'Put on hold'], ['cancelled', 'Cancel the project'], ['completed', 'Complete (at Handover)']] as const)
-    .filter(([v]) => v !== status && (v !== 'completed' || stage === 'handover'));
+  // T6: a project is completed by the client's handover sign-off (not here), and a completed project stays closed
+  const statusOptions = ([['open', status === 'cancelled' ? 'Reopen' : 'In progress'], ['on_hold', 'Put on hold'], ['cancelled', 'Cancel the project']] as const)
+    .filter(([v]) => v !== status);
+  const completed = status === 'completed';
   const needsWhy = newStatus === 'on_hold' || newStatus === 'cancelled';
 
   const run = (p: () => Promise<Res>, after?: () => void) => start(async () => {
@@ -51,7 +53,7 @@ export function ProjectControls({ projectId, code, stage, status, dues, nextFee,
 
       <section aria-labelledby="tk-move-h" className="flex flex-col gap-3">
         <h3 id="tk-move-h" className="m-0 text-[15px] font-semibold">Phase</h3>
-        {!open && <p className="m-0 text-sm text-muted">Reopen the project to move it.</p>}
+        {!open && <p className="m-0 text-sm text-muted">{completed ? 'Completed with the client’s handover sign-off. It stays closed; admins can still add documents.' : 'Reopen the project to move it.'}</p>}
         {open && next && (
           <form onSubmit={submit(() => run(() => moveStageAction(projectId, code, next.code, fwdNote), () => setFwdNote('')))} className="flex flex-col gap-2">
             <label className="label" htmlFor="tk-fwd-note">Message to the client (optional)</label>
@@ -70,7 +72,7 @@ export function ProjectControls({ projectId, code, stage, status, dues, nextFee,
             )}
           </form>
         )}
-        {open && !next && <p className="m-0 text-sm text-muted">This is the last phase. Complete the project below after the client signs off.</p>}
+        {open && !next && <p className="m-0 text-sm text-muted" data-testid="tk-move-last">This is the last phase: the project completes when the client signs the handover on their project page.</p>}
         {open && earlier.length > 0 && (
           <form onSubmit={submit(() => run(() => moveStageAction(projectId, code, backTo, backWhy), () => { setBackTo(''); setBackWhy(''); }))} className="flex flex-col gap-2">
             <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-2">
@@ -91,7 +93,7 @@ export function ProjectControls({ projectId, code, stage, status, dues, nextFee,
         )}
       </section>
 
-      <section aria-labelledby="tk-status-h" className="flex flex-col gap-2">
+      {!completed && <section aria-labelledby="tk-status-h" className="flex flex-col gap-2">
         <h3 id="tk-status-h" className="m-0 text-[15px] font-semibold">Status</h3>
         <form onSubmit={submit(() => run(() => setStatusAction(projectId, code, newStatus, statusWhy), () => { setNewStatus(''); setStatusWhy(''); }))} className="flex flex-col gap-2">
           <div className="grid grid-cols-1 sm:grid-cols-[200px_1fr] gap-2">
@@ -109,7 +111,7 @@ export function ProjectControls({ projectId, code, stage, status, dues, nextFee,
           </div>
           <div><button type="submit" className="btn btn-ghost btn-sm" disabled={pending || !newStatus || (needsWhy && !statusWhy.trim())} data-testid="tk-status-save">Save status</button></div>
         </form>
-      </section>
+      </section>}
 
       <section aria-labelledby="tk-due-h" className="flex flex-col gap-2">
         <h3 id="tk-due-h" className="m-0 text-[15px] font-semibold">Target dates</h3>

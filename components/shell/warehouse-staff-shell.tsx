@@ -10,28 +10,32 @@ import { dsInter } from '@/components/dropship-ui/font';
  * Warehouse OS staff shell (docs/design/warehouse-os §4): one left menu for every desktop staff screen.
  * Screens not built yet are listed (staff-side honesty) but not linked, with the step that ships them.
  * W2b: Putaway and pallets, Label centre and Transfers are live; the menu and top bar are hidden when a label sheet is printed.
+ * W3a: Orders, Picking (handheld), Packing station and Evidence are live.
+ * W3b: Multi-parcel packing, Materials, Scale check and Exceptions are live.
  */
 type Item = { href: string; label: string; icon: DsIconName; ships?: string; adminOnly?: boolean };
 const ITEMS: Item[] = [
   { href: '/office/warehouse', label: 'Dashboard', icon: 'grid' },
-  { href: '/office/warehouse/orders', label: 'Orders', icon: 'cart', ships: 'W3' },
-  { href: '/office/warehouse/packing', label: 'Packing station', icon: 'package', ships: 'W3' },
+  { href: '/office/warehouse/orders', label: 'Orders', icon: 'cart' },
+  // handheld picking (board 6), next to Orders
+  { href: '/office/warehouse/pick', label: 'Picking', icon: 'list' },
+  { href: '/office/warehouse/pack', label: 'Packing station', icon: 'package' },
   { href: '/office/warehouse/dispatch', label: 'Dispatch and freight', icon: 'truck', ships: 'W4' },
-  { href: '/office/warehouse/multi-parcel', label: 'Multi-parcel packing', icon: 'layers', ships: 'W3' },
+  { href: '/office/warehouse/multi-parcel', label: 'Multi-parcel packing', icon: 'layers' },
   { href: '/office/warehouse/putaway', label: 'Putaway and pallets', icon: 'box' },
   { href: '/office/warehouse/counts', label: 'Counts and lots', icon: 'list' },
-  { href: '/office/warehouse/materials', label: 'Materials', icon: 'tag', ships: 'W3' },
+  { href: '/office/warehouse/materials', label: 'Materials', icon: 'tag' },
   { href: '/office/warehouse/labels', label: 'Label centre', icon: 'file' },
   { href: '/office/warehouse/inbound', label: 'Inbound', icon: 'download' },
   { href: '/office/warehouse/dock', label: 'Dock appointments', icon: 'clock' },
   // amendment (several China warehouses): stock moved between warehouses
   { href: '/office/warehouse/transfers', label: 'Transfers', icon: 'send' },
-  { href: '/office/warehouse/evidence', label: 'Evidence', icon: 'image', ships: 'W3' },
-  { href: '/office/warehouse/scale', label: 'Scale check', icon: 'scale', ships: 'W3' },
+  { href: '/office/warehouse/evidence', label: 'Evidence', icon: 'image' },
+  { href: '/office/warehouse/scale', label: 'Scale check', icon: 'scale' },
   { href: '/office/warehouse/carriers', label: 'Carriers and rules', icon: 'globe', ships: 'W4' },
   { href: '/office/warehouse/clients', label: 'Clients', icon: 'users' },
   { href: '/office/warehouse/rates', label: 'Rates', icon: 'percent' },
-  { href: '/office/warehouse/exceptions', label: 'Exceptions', icon: 'alert', ships: 'W3' },
+  { href: '/office/warehouse/exceptions', label: 'Exceptions', icon: 'alert' },
   { href: '/office/warehouse/reports', label: 'Reports', icon: 'chart', ships: 'W6' },
   { href: '/office/warehouse/users', label: 'Users and roles', icon: 'user' },
   { href: '/office/warehouse/locations', label: 'Locations', icon: 'store', adminOnly: true },

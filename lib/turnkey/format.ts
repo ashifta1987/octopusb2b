@@ -197,3 +197,210 @@ export function fileSize(bytes: number): string {
   if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   return `${Math.max(1, Math.round(bytes / 1024))} KB`;
 }
+
+/* ───────── Production and QC: inspections (T5) ───────── */
+/** The two inspections the design names (QC "covers factory audit and pre-shipment inspection"). */
+export type TkInspectionKind = 'factory_audit' | 'pre_shipment';
+export const TK_INSPECTION_KINDS: { code: TkInspectionKind; name: string; service: string }[] = [
+  { code: 'factory_audit', name: 'Factory audit', service: 'factory_audit' },
+  { code: 'pre_shipment', name: 'Pre-shipment inspection', service: 'pre_shipment_inspection' },
+];
+/** "Pre-shipment inspection (round 2)" — mirrors tk_inspection_label. */
+export function inspectionLabel(kind: string, round: number): string {
+  const k = TK_INSPECTION_KINDS.find((x) => x.code === kind)?.name ?? kind;
+  return round > 1 ? `${k} (round ${round})` : k;
+}
+export function inspectionStatusLabel(status: string, audience: 'client' | 'staff' = 'client'): { label: string; tone: 'blue' | 'amber' | 'green' | 'red' | 'gray' } {
+  switch (status) {
+    case 'planned': return { label: audience === 'client' ? 'Being arranged' : 'Planned · fee first', tone: 'amber' };
+    case 'scheduled': return { label: 'Scheduled', tone: 'blue' };
+    case 'in_progress': return { label: 'In progress', tone: 'blue' };
+    case 'submitted': return { label: audience === 'client' ? 'Report being checked' : 'Submitted · review it', tone: 'amber' };
+    case 'published': return { label: 'Report ready', tone: 'green' };
+    case 'cancelled': return { label: 'Cancelled', tone: 'gray' };
+    default: return { label: status, tone: 'gray' };
+  }
+}
+export type TkInspectionResult = 'pass' | 'pass_with_remarks' | 'fail';
+export const TK_RESULTS: { code: TkInspectionResult; label: string }[] = [
+  { code: 'pass', label: 'Pass' }, { code: 'pass_with_remarks', label: 'Pass with remarks' }, { code: 'fail', label: 'Fail' },
+];
+export function resultLabel(r: string | null | undefined): { label: string; tone: 'green' | 'amber' | 'red' | 'gray' } {
+  switch (r) {
+    case 'pass': return { label: 'Passed', tone: 'green' };
+    case 'pass_with_remarks': return { label: 'Passed with remarks', tone: 'amber' };
+    case 'fail': return { label: 'Failed', tone: 'red' };
+    default: return { label: 'No result yet', tone: 'gray' };
+  }
+}
+export const TK_ANSWERS: { code: 'pass' | 'fail' | 'na'; label: string }[] = [{ code: 'pass', label: 'Pass' }, { code: 'fail', label: 'Fail' }, { code: 'na', label: 'N/A' }];
+/** Photos the inspector may upload (bucket turnkey-inspections; up to 10 MB). */
+export const TK_PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+export const TK_PHOTO_MAX_BYTES = 10 * 1024 * 1024;
+export const photoExt = (mime: string) => (mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg');
+
+/** Whole number typed in a form (0 … max) → number; anything else → null. */
+export function parseCount(v: string, max = 10_000_000): number | null {
+  const t = v.trim();
+  if (!/^\d{1,8}$/.test(t)) return null;
+  const n = Number(t);
+  return n <= max ? n : null;
+}
+
+/** The AQL numbers an inspector enters, checked like tk_submit_inspection. Returns the first problem, or null. */
+export function aqlProblem(lot: number | null, sample: number | null, crit: number | null, major: number | null, minor: number | null): string | null {
+  if (lot == null || lot < 1) return 'Enter the lot size (a whole number from 1).';
+  if (sample == null || sample < 1) return 'Enter the sample size (a whole number from 1).';
+  if (sample > lot) return 'The sample cannot be larger than the lot.';
+  if (crit == null || major == null || minor == null) return 'Enter the critical, major and minor defects found (0 or more).';
+  return null;
+}
+
+/**
+ * Production and QC completes when the latest pre-shipment inspection is published with a pass (or pass with remarks);
+ * a failed one needs a re-inspection or an admin override. Mirrors the T5 part of tk_move_project_stage.
+ */
+export type TkPsiRow = { kind: string; round: number; status: string; result?: string | null; overridden?: boolean };
+export function psiGate(rows: TkPsiRow[]): { done: boolean; text: string } {
+  const psi = rows.filter((r) => r.kind === 'pre_shipment' && r.status !== 'cancelled').sort((a, b) => b.round - a.round)[0];
+  if (!psi) return { done: false, text: 'Production and QC is complete when a pre-shipment inspection has passed and its report is published.' };
+  const name = inspectionLabel(psi.kind, psi.round);
+  if (psi.status !== 'published') return { done: false, text: `${name}: Production and QC is complete when its report is published with a pass.` };
+  if (psi.result === 'fail' && !psi.overridden) return { done: false, text: `${name} failed: shipment waits for a passed re-inspection (or an admin override with a reason).` };
+  if (psi.result === 'fail') return { done: true, text: `${name} failed, and an admin approved shipment with a reason.` };
+  return { done: true, text: `${name} passed and the report is published.` };
+}
+
+/* ───────── Balance, shipment, documents, trips and handover (T6) ───────── */
+/** Balance of the accepted quote (total − deposit) in integer cents; 0 when the deposit covers the whole quote. */
+export const balanceCents = (totalCents: number, depositCents: number) => Math.max(0, totalCents - depositCents);
+/** State from tk_balance_state: no_quote | none | not_invoiced | unpaid | paid. */
+export type TkBalanceState = 'no_quote' | 'none' | 'not_invoiced' | 'unpaid' | 'paid';
+/** What still blocks Shipment on the money side (mirrors the T6 part of tk_move_project_stage). */
+export function balanceGate(state: string | null | undefined): { done: boolean; text: string } {
+  switch (state) {
+    case 'paid': return { done: true, text: 'The balance is paid.' };
+    case 'none': return { done: true, text: 'No balance: the deposit covered the whole quote.' };
+    case 'unpaid': return { done: false, text: 'Shipment waits until the client has paid the balance in full.' };
+    case 'not_invoiced': return { done: false, text: 'Shipment waits for the balance: issue the balance invoice, then the client pays it.' };
+    default: return { done: false, text: 'Shipment starts after the client accepts a quote and pays its balance.' };
+  }
+}
+
+export type TkShipmentMode = 'sea' | 'air' | 'express';
+export const TK_SHIPMENT_MODES: { code: TkShipmentMode; name: string }[] = [
+  { code: 'sea', name: 'Sea freight' }, { code: 'air', name: 'Air freight' }, { code: 'express', name: 'Express courier' },
+];
+export const shipmentModeLabel = (m: string) => TK_SHIPMENT_MODES.find((x) => x.code === m)?.name ?? m;
+/** Tracking statuses in order (a status moves forward only; mirrors tk_add_shipment_event). */
+export const TK_SHIPMENT_STEPS = ['booked', 'in_transit', 'arrived', 'delivered'] as const;
+export function shipmentStatusLabel(status: string): { label: string; tone: 'blue' | 'amber' | 'green' | 'gray' } {
+  switch (status) {
+    case 'booked': return { label: 'Booked', tone: 'amber' };
+    case 'in_transit': return { label: 'In transit', tone: 'blue' };
+    case 'arrived': return { label: 'Arrived', tone: 'blue' };
+    case 'delivered': return { label: 'Delivered', tone: 'green' };
+    case 'cancelled': return { label: 'Cancelled', tone: 'gray' };
+    default: return { label: status, tone: 'gray' };
+  }
+}
+/** Statuses an event may move a shipment to from `current` (forward only). */
+export function nextShipmentStatuses(current: string): string[] {
+  const i = (TK_SHIPMENT_STEPS as readonly string[]).indexOf(current);
+  return i < 0 ? [] : TK_SHIPMENT_STEPS.slice(i + 1);
+}
+/** Shipment completes when every shipment that is not cancelled (at least one) is delivered. */
+export function shipmentGate(rows: { status: string }[]): { done: boolean; text: string } {
+  const live = rows.filter((r) => r.status !== 'cancelled');
+  if (!live.length) return { done: false, text: 'Shipment is complete when the goods are booked, shipped and delivered.' };
+  const open = live.filter((r) => r.status !== 'delivered').length;
+  return open ? { done: false, text: `Shipment is complete when every shipment is delivered (${open} not delivered yet).` } : { done: true, text: 'Every shipment is delivered.' };
+}
+
+export const TK_SHIPMENT_DOC_KINDS: { code: string; name: string }[] = [
+  { code: 'bill_of_lading', name: 'Bill of lading' }, { code: 'packing_list', name: 'Packing list' }, { code: 'commercial_invoice', name: 'Commercial invoice' },
+  { code: 'certificate_of_origin', name: 'Certificate of origin' }, { code: 'insurance', name: 'Insurance certificate' }, { code: 'customs', name: 'Customs document' },
+  { code: 'other', name: 'Other document' },
+];
+export const TK_HANDOVER_DOC_KINDS: { code: string; name: string }[] = [
+  { code: 'warranty', name: 'Warranty' }, { code: 'manual', name: 'Manual' }, { code: 'as_built_drawing', name: 'As-built drawing' }, { code: 'certificate', name: 'Certificate' },
+  { code: 'final_invoice', name: 'Final invoice' }, { code: 'training', name: 'Training record' }, { code: 'other', name: 'Other document' },
+];
+export const docKindLabel = (k: string) => [...TK_SHIPMENT_DOC_KINDS, ...TK_HANDOVER_DOC_KINDS].find((x) => x.code === k && k !== 'other')?.name ?? 'Document';
+export function docStatusLabel(status: string): { label: string; tone: 'gray' | 'green' | 'amber' } {
+  switch (status) {
+    case 'draft': return { label: 'Draft · client cannot see it', tone: 'amber' };
+    case 'released': return { label: 'Shared with the client', tone: 'green' };
+    case 'withdrawn': return { label: 'Withdrawn', tone: 'gray' };
+    default: return { label: status, tone: 'gray' };
+  }
+}
+/** Shipping and final documents (bucket turnkey-documents; up to 20 MB). */
+export const TK_DOC_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'] as const;
+export const TK_DOC_MAX_BYTES = 20 * 1024 * 1024;
+
+/* trips (Visit China) */
+export type TkTripInput = { start: string; end: string; travellers: number; visaLetters: number; carDays: number; airportPickups: number; hotelHelp: boolean };
+export type TkTripPrices = { dayCents: number; includedTravellers: number; extraTravellerDayCents: number; visaLetterCents: number; carDayCents: number; airportPickupCents: number; hotelHelpCents: number };
+/** Days from the first to the last day, both included (YYYY-MM-DD); 0 when the dates are missing or reversed. */
+export function tripDays(start: string, end: string): number {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)) return 0;
+  const d = Math.round((Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / 86_400_000) + 1;
+  return d >= 1 ? d : 0;
+}
+/** Trip prices from the services list (tk_services): Visit China per day for up to N people, extra traveller per day, extras. */
+export function tripPricesFrom(services: { code: string; from_cents: number; included_travellers?: number | null; extra_traveller_day_cents?: number | null }[]): TkTripPrices | null {
+  const f = (c: string) => services.find((s) => s.code === c);
+  const v = f('visit_china');
+  if (!v || !(Number(v.from_cents) > 0)) return null;
+  return {
+    dayCents: Number(v.from_cents), includedTravellers: Number(v.included_travellers ?? 2), extraTravellerDayCents: Number(v.extra_traveller_day_cents ?? 0),
+    visaLetterCents: Number(f('visa_letter')?.from_cents ?? 0), carDayCents: Number(f('car_driver')?.from_cents ?? 0),
+    airportPickupCents: Number(f('airport_pickup')?.from_cents ?? 0), hotelHelpCents: Number(f('hotel_help')?.from_cents ?? 0),
+  };
+}
+/** The trip's list price and its lines (mirrors tk_trip_estimate / the tk_trips_price constraint); a problem text when the request is impossible. */
+export function tripPrice(p: TkTripPrices, t: TkTripInput): { days: number; lines: { label: string; qty: number; unitCents: number; totalCents: number }[]; listCents: number; problem: string | null } {
+  const days = tripDays(t.start, t.end);
+  const problem = !days ? 'Choose the first and the last day of the visit.'
+    : days > 30 ? 'A visit lasts at most 30 days.'
+    : !(t.travellers >= 1 && t.travellers <= 20) ? 'From 1 to 20 travellers.'
+    : t.visaLetters < 0 || t.visaLetters > t.travellers ? 'At most one visa letter per traveller.'
+    : t.carDays < 0 || t.carDays > days ? 'Car and driver for at most every day of the visit.'
+    : t.airportPickups < 0 || t.airportPickups > 10 ? 'Up to 10 airport pick-ups.'
+    : null;
+  const extra = Math.max(0, t.travellers - p.includedTravellers);
+  const lines = [
+    { label: `Visit China with us (up to ${p.includedTravellers} people)`, qty: days, unitCents: p.dayCents, totalCents: days * p.dayCents },
+    ...(extra > 0 ? [{ label: 'Extra traveller per day', qty: days * extra, unitCents: p.extraTravellerDayCents, totalCents: days * extra * p.extraTravellerDayCents }] : []),
+    ...(t.visaLetters > 0 ? [{ label: 'Visa invitation letter', qty: t.visaLetters, unitCents: p.visaLetterCents, totalCents: t.visaLetters * p.visaLetterCents }] : []),
+    ...(t.carDays > 0 ? [{ label: 'Car and driver (days)', qty: t.carDays, unitCents: p.carDayCents, totalCents: t.carDays * p.carDayCents }] : []),
+    ...(t.airportPickups > 0 ? [{ label: 'Airport pick-up', qty: t.airportPickups, unitCents: p.airportPickupCents, totalCents: t.airportPickups * p.airportPickupCents }] : []),
+    ...(t.hotelHelp ? [{ label: 'Hotel help', qty: 1, unitCents: p.hotelHelpCents, totalCents: p.hotelHelpCents }] : []),
+  ];
+  return { days, lines, listCents: lines.reduce((a, l) => a + l.totalCents, 0), problem };
+}
+export function tripStatusLabel(status: string, audience: 'client' | 'staff' = 'client'): { label: string; tone: 'blue' | 'amber' | 'green' | 'gray' } {
+  switch (status) {
+    case 'requested': return { label: audience === 'client' ? 'Requested · fee and payment first' : 'Requested · set the fee', tone: 'amber' };
+    case 'confirmed': return { label: 'Confirmed', tone: 'green' };
+    case 'completed': return { label: 'Completed', tone: 'gray' };
+    case 'cancelled': return { label: 'Cancelled', tone: 'gray' };
+    default: return { label: status, tone: 'gray' };
+  }
+}
+/** "12 Mar 2027 to 14 Mar 2027 · 3 days · 3 travellers" (dates as typed, YYYY-MM-DD). */
+export function tripSummary(t: { start_on: string; end_on: string; days: number; travellers: number }, fmt: (d: string) => string): string {
+  return `${fmt(t.start_on)}${t.days > 1 ? ` to ${fmt(t.end_on)}` : ''} · ${t.days} ${t.days === 1 ? 'day' : 'days'} · ${t.travellers} ${t.travellers === 1 ? 'traveller' : 'travellers'}`;
+}
+/** Passport copies (bucket turnkey-passports; up to 10 MB; shown through 60-second signed links). */
+export const TK_PASSPORT_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'] as const;
+export const TK_PASSPORT_MAX_BYTES = 10 * 1024 * 1024;
+export const passportExt = (mime: string) => (mime === 'application/pdf' ? 'pdf' : mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg');
+
+/** Handover sign-off is possible when every checklist line (at least one) is done. Mirrors tk_sign_handover's checklist rule. */
+export function handoverReady(items: { done_at: string | null }[]): { ready: boolean; text: string } {
+  if (!items.length) return { ready: false, text: 'We are preparing your final documents. You sign when every line is ready.' };
+  const open = items.filter((i) => !i.done_at).length;
+  return open ? { ready: false, text: `${open} of ${items.length} ${items.length === 1 ? 'line is' : 'lines are'} not ready yet.` } : { ready: true, text: 'Everything is ready. Check the documents, then sign the handover.' };
+}

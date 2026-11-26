@@ -57,11 +57,13 @@ try {
   ok(Number(after.seed_left) === 0, 'every is_seed row is gone');
   // migration 219: demo users who proposed/approved a fee schedule are kept (fee_versions is append-only two-person history)
   const keptFee = (await db.query(`select email from auth.users u where email like '%@demo.octopusb2b.com' and email <> 'admin@demo.octopusb2b.com'
-    and exists (select 1 from fee_versions f where f.proposed_by = u.id or f.approved_by = u.id) order by email`)).rows.map((r) => r.email);
+    and (exists (select 1 from fee_versions f where f.proposed_by = u.id or f.approved_by = u.id)
+      -- migration 236: people in the append-only stock ledger (reserved / picked / moved stock) are kept too
+      or exists (select 1 from warehouse_stock_movements m where m.actor_id = u.id)) order by email`)).rows.map((r) => r.email);
   const expectedLeft = ['admin@demo.octopusb2b.com', ...keptFee].sort().join(',');
   const actualLeft = (after.demo_left ?? '').split(',').sort().join(',');
   ok(Number(after.demo_users) === 1 + keptFee.length && actualLeft === expectedLeft,
-    `demo staff + demo buyer removed; only the kept admin${keptFee.length ? ` + ${keptFee.length} fee-history approver(s)` : ''} remain (${after.demo_left})`);
+    `demo staff + demo buyer removed; only the kept admin${keptFee.length ? ` + ${keptFee.length} fee-history approver(s) / stock-ledger actor(s)` : ''} remain (${after.demo_left})`);
   ok(Number(after.suppliers) === Number(real.suppliers) && Number(after.products) === Number(real.products) && Number(after.orders) === 0,
     `only real suppliers/products remain (${after.suppliers} suppliers, ${after.products} products), no orders`);
   ok(Number(after.ledger_sum) === 0 && Number(after.wallet_sum) === Number(before.real_wallet_sum), `ledger balanced; demo wallets gone, real customers' balances unchanged (${after.wallet_sum})`);

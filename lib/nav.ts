@@ -52,6 +52,7 @@ export const OFFICE_NAV: NavSection[] = [
       { href: '/office/orders', label: 'Orders', area: 'orders' },
       { href: '/office/shipping', label: 'Shipping', area: 'orders' },
       { href: '/office/warehouse', label: 'Warehouse (3PL)', area: 'warehouse' },
+      { href: '/office/turnkey/inspect', label: 'My inspections', area: 'turnkey_qc', action: 'edit' },
       { href: '/office/support', label: 'Support desk', area: 'support' },
       { href: '/office/assistant', label: 'Assistant queue', area: 'assistant' },
     ],

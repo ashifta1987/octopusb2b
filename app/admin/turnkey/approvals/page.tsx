@@ -6,9 +6,20 @@ import { Card, EmptyState, PageHeader, StatusBadge } from '@/components/ui';
 import { fmtDate, money } from '@/lib/format';
 import { feeStatusLabel, fromPrice, tkPhase } from '@/lib/turnkey/format';
 import { TkFeeDecision } from '@/components/turnkey/fee-decision';
+import { InspectionFeeDecision } from '@/components/turnkey/qc-staff';
+import { inspectionLabel } from '@/lib/turnkey/format';
+import { TripFeeDecision } from '@/components/turnkey/trips-staff';
 
 export const metadata = { title: 'Turnkey fee approvals' };
 
+type InspRow = {
+  id: string; project_code: string; project_title: string; client_name: string | null; kind: string; round: number; service_name: string | null; version: number;
+  amount_cents: number; starting_cents: number | null; note: string | null; proposed_by: string; proposed_by_name: string | null; proposed_at: string;
+};
+type TripRow = {
+  id: string; project_code: string; project_title: string; client_name: string | null; trip_label: string; version: number; amount_cents: number; starting_cents: number;
+  note: string | null; proposed_by: string; proposed_by_name: string | null; proposed_at: string;
+};
 type Row = {
   id: string; project_id: string; project_code: string; project_title: string; client_name: string | null; stage: string; service_name: string; version: number;
   amount_cents: number; currency: string; status: string; note: string | null; starting_cents: number | null; active_cents: number | null;
@@ -20,13 +31,16 @@ type Row = {
  * Admin › Turnkey › Fee approvals (T3; design: Admin "approves fees above 2x the starting fee", SetFee; programme D5:
  * the rule is for service fees). Only fees above 2× the starting fee (or with no starting fee) come here; fees within
  * 2× are active at once. An admin who did not propose the fee approves it, or rejects it with a reason. Shows the
- * starting fee, how many times it is, the fee it replaces, and the latest decisions.
+ * starting fee, how many times it is, the fee it replaces, and the latest decisions. T5: inspection fees (factory audit,
+ * pre-shipment inspection) above 2× wait here too. T6: China visit fees above 2× the trip's list price wait here too.
  */
 export default async function TurnkeyFeeApprovalsPage() {
   const s = await requireStaff('turnkey', 'view', '/admin/turnkey/approvals');
   if (!s.isAdmin) redirect('/forbidden');
   const sb = await createClient();
-  const { data, error } = await sb.rpc('tk_list_fee_approvals', { p_decided_limit: 30 });
+  const [{ data, error }, { data: insp }, { data: trip }] = await Promise.all([sb.rpc('tk_list_fee_approvals', { p_decided_limit: 30 }), sb.rpc('tk_list_inspection_fee_approvals'), sb.rpc('tk_list_trip_fee_approvals')]);
+  const tripRows = ((trip ?? []) as TripRow[]).map((r) => ({ ...r, amount_cents: Number(r.amount_cents), starting_cents: Number(r.starting_cents) }));
+  const inspRows = ((insp ?? []) as InspRow[]).map((r) => ({ ...r, amount_cents: Number(r.amount_cents), starting_cents: r.starting_cents == null ? null : Number(r.starting_cents) }));
   const rows = ((data ?? []) as Row[]).map((r) => ({ ...r, amount_cents: Number(r.amount_cents), starting_cents: r.starting_cents == null ? null : Number(r.starting_cents), active_cents: r.active_cents == null ? null : Number(r.active_cents) }));
   const pending = rows.filter((r) => r.status === 'pending_approval');
   const decided = rows.filter((r) => r.status !== 'pending_approval');
@@ -63,6 +77,54 @@ export default async function TurnkeyFeeApprovalsPage() {
                   </li>
                 );
               })}
+            </ul>
+          )}
+        </div>
+      </Card>
+      <Card title={`Inspection fees waiting (${inspRows.length})`}>
+        <div className="px-6 pb-6" data-testid="tk-approvals-inspections">
+          {inspRows.length === 0 ? <EmptyState title="Nothing to approve" body="Inspection fees above 2× the starting fee appear here." /> : (
+            <ul className="list-none m-0 p-0 flex flex-col divide-y divide-line border border-line rounded-[12px]">
+              {inspRows.map((r) => (
+                <li key={r.id} className="p-4 grid gap-3 md:grid-cols-[1fr_auto] items-start" data-testid={`tk-approval-insp-${r.project_code}-${r.kind}-${r.round}`}>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link href={`/admin/turnkey/projects/${r.project_code}`} className="font-semibold hover:text-coral-text">{r.project_title}</Link>
+                      <span className="mono text-[12px] text-muted">{r.project_code}</span>
+                    </div>
+                    <div className="text-[14px]">{inspectionLabel(r.kind, r.round)} · version {r.version} · {r.client_name ?? 'No company'}</div>
+                    <div className="text-[15px]"><span className="mono font-semibold">{money(r.amount_cents)}</span>
+                      <span className="text-[13px] text-muted">{r.starting_cents ? ` · starting fee ${fromPrice(r.starting_cents)} · ${(r.amount_cents / r.starting_cents).toFixed(1)}× the starting fee` : ' · no starting fee'}</span></div>
+                    <div className="text-[13px] text-muted">Proposed by {r.proposed_by_name ?? 'Former team member'} · {fmtDate(r.proposed_at, true)}</div>
+                    {r.note && <div className="text-[13px]">Note: {r.note}</div>}
+                  </div>
+                  <InspectionFeeDecision feeId={r.id} code={r.project_code} isAdmin canApprove={r.proposed_by !== s.userId} canWithdraw={false} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </Card>
+      <Card title={`China visit fees waiting (${tripRows.length})`}>
+        <div className="px-6 pb-6" data-testid="tk-approvals-trips">
+          {tripRows.length === 0 ? <EmptyState title="Nothing to approve" body="Trip fees above 2× the trip's list price appear here." /> : (
+            <ul className="list-none m-0 p-0 flex flex-col divide-y divide-line border border-line rounded-[12px]">
+              {tripRows.map((r) => (
+                <li key={r.id} className="p-4 grid gap-3 md:grid-cols-[1fr_auto] items-start" data-testid={`tk-approval-trip-${r.project_code}`}>
+                  <div className="flex flex-col gap-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Link href={`/admin/turnkey/projects/${r.project_code}`} className="font-semibold hover:text-coral-text">{r.project_title}</Link>
+                      <span className="mono text-[12px] text-muted">{r.project_code}</span>
+                    </div>
+                    <div className="text-[14px]">{r.trip_label} · version {r.version} · {r.client_name ?? 'No company'}</div>
+                    <div className="text-[15px]"><span className="mono font-semibold">{money(r.amount_cents)}</span>
+                      <span className="text-[13px] text-muted"> · list price {money(r.starting_cents)} · {(r.amount_cents / r.starting_cents).toFixed(1)}× the list price</span></div>
+                    <div className="text-[13px] text-muted">Proposed by {r.proposed_by_name ?? 'Former team member'} · {fmtDate(r.proposed_at, true)}</div>
+                    {r.note && <div className="text-[13px]">Note: {r.note}</div>}
+                  </div>
+                  <TripFeeDecision feeId={r.id} code={r.project_code} isAdmin canApprove={r.proposed_by !== s.userId} canWithdraw={false} />
+                </li>
+              ))}
             </ul>
           )}
         </div>
