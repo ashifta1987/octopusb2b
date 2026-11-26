@@ -404,3 +404,43 @@ export function handoverReady(items: { done_at: string | null }[]): { ready: boo
   const open = items.filter((i) => !i.done_at).length;
   return open ? { ready: false, text: `${open} of ${items.length} ${items.length === 1 ? 'line is' : 'lines are'} not ready yet.` } : { ready: true, text: 'Everything is ready. Check the documents, then sign the handover.' };
 }
+
+/* ───────── Team photos on the public Turnkey pages (owner-supplied with a placement guide, 26 Nov 2026;
+   public/images/turnkey-team — /turnkey/* paths redirect to the catalogue) ───────── */
+export type TkPhoto = { src: string; alt: string; pos?: string };
+const img = (file: string, alt: string, pos?: string): TkPhoto => ({ src: `/images/turnkey-team/${file}`, alt, pos });
+/** One photo per phase of the 8-phase journey (How it works; placement guide assets 2–9). */
+export const TK_PHASE_PHOTOS: Record<TkStageCode, TkPhoto> = {
+  enquiry: img('02-enquiry-showroom-reception.webp', 'Octopus staff welcoming a visitor at showroom reception.'),
+  consultation: img('03-consultation-headset-call.webp', 'A headset consultant taking notes during a call.'),
+  design: img('04-design-floor-plan.webp', 'Designer working on a café floor plan.'),
+  sourcing: img('05-sourcing-handle-samples.webp', 'Sourcing specialist comparing cabinet handles.'),
+  quote_deposit: img('06-quote-and-deposit.webp', 'Project manager reviewing a quotation and deposit with a client.'),
+  production_qc: img('07-production-and-qc.webp', 'Quality inspector measuring a finished component with calipers.'),
+  shipment: img('08-shipment-container-loading.webp', 'Shipment supervisor checking pallets at a shipping container.'),
+  handover: img('09-handover-cafe-handshake.webp', 'Project handover with a handshake at the finished café.'),
+};
+/** Photos for the services and starting fees page (by tk_services.code; placement guide assets 14–19, others reused). */
+export const TK_SERVICE_PHOTOS: Record<string, TkPhoto> = {
+  consultation: TK_PHASE_PHOTOS.consultation,
+  layout_drawing: TK_PHASE_PHOTOS.design,
+  sourcing_quotes: img('factory-cnc-tour.jpg', 'The team walking a client through a machining factory.'),
+  factory_audit: img('14-factory-audit-tablet.webp', 'Factory auditor recording findings on a tablet.'),
+  pre_shipment_inspection: img('15-pre-shipment-crate-measurement.webp', 'Pre-shipment inspector measuring a wooden crate.'),
+  visit_china: img('11-factory-visit.webp', 'Octopus guide showing visitors the factory floor.'),
+  account_manager: img('19-account-manager-headset-portrait.webp', 'Octopus account manager wearing a headset.', 'center 25%'),
+  visa_letter: img('18-hotel-help-reception.webp', 'Octopus coordinator assisting a guest at hotel reception.'),
+  car_driver: img('17-car-and-driver-van.webp', 'Octopus driver waiting beside a passenger van.'),
+  airport_pickup: img('16-airport-pickup-arrivals.webp', 'Octopus host meeting a visitor in the airport arrivals hall.'),
+  hotel_help: img('18-hotel-help-reception.webp', 'Octopus coordinator assisting a guest at hotel reception.'),
+};
+/** "Your team in China" band on the catalogue page (assets 11–13). */
+export const TK_TEAM_BAND: { photo: TkPhoto; title: string; text: string }[] = [
+  { photo: img('11-factory-visit.webp', 'Octopus guide showing visitors the factory floor.'), title: 'Factory visits with you', text: 'We walk the factory floor with you and translate on the spot.' },
+  { photo: img('12-audit-with-checklist.webp', 'Factory auditor completing a paper checklist.'), title: 'Audits and inspections', text: 'Checklists, measurements and photos before anything ships.' },
+  { photo: img('13-inspection-reports.webp', 'A specialist reviewing an illustrated inspection report.'), title: 'Reports you can check', text: 'Every audit and inspection ends with a written report.' },
+];
+/** Hero photo on the catalogue page, beside Visit China (asset 1, 1600×900). */
+export const TK_HERO_PHOTO: TkPhoto = img('01-designer-choosing-materials.webp', 'Designer comparing wood, stone and metal finishes in a materials showroom.');
+/** Team portrait above the "Your team in China" band (asset 10, 1600×900). */
+export const TK_TEAM_PHOTO: TkPhoto = img('10-six-person-china-team.webp', 'Six members of the Octopus China team in matching navy polos.');

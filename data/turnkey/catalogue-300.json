@@ -1,0 +1,3006 @@
+{
+ "source": "300_Turnkey_Project_Ideas_–_China_Sourcing.xlsx (owner, 26 Nov 2026)",
+ "photos_supplied": "300 photos (projects 1–300)",
+ "projects": [
+  {
+   "no": 1,
+   "project_id": "1-robotic-cafe",
+   "title": "Robotic café",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Robot barista arm, espresso machine, grinder, ice machine, ordering kiosk, POS",
+   "image": "turnkey/catalogue/1-robotic-cafe.jpg",
+   "image_alt": "Robotic café",
+   "sort": 1
+  },
+  {
+   "no": 2,
+   "project_id": "2-coffee-shop",
+   "title": "Coffee shop",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Espresso machines, grinders, display fridge, counter, furniture",
+   "image": "turnkey/catalogue/2-coffee-shop.jpg",
+   "image_alt": "Coffee shop",
+   "sort": 2
+  },
+  {
+   "no": 3,
+   "project_id": "3-bubble-tea-shop",
+   "title": "Bubble tea shop",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Sealing machine, tea brewers, ice machine, fridges, work counters",
+   "image": "turnkey/catalogue/3-bubble-tea-shop.jpg",
+   "image_alt": "Bubble tea shop",
+   "sort": 3
+  },
+  {
+   "no": 4,
+   "project_id": "4-bakery",
+   "title": "Bakery",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Deck oven, dough mixer, proofer, display cabinets, work tables",
+   "image": "turnkey/catalogue/4-bakery.jpg",
+   "image_alt": "Bakery",
+   "sort": 4
+  },
+  {
+   "no": 5,
+   "project_id": "5-pizza-shop",
+   "title": "Pizza shop",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Pizza oven, dough sheeter, prep fridge, hood, counters",
+   "image": "turnkey/catalogue/5-pizza-shop.jpg",
+   "image_alt": "Pizza shop",
+   "sort": 5
+  },
+  {
+   "no": 6,
+   "project_id": "6-fast-food-restaurant",
+   "title": "Fast-food restaurant",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Fryers, grill, hood, fridges, stainless steel tables",
+   "image": "turnkey/catalogue/6-fast-food-restaurant.jpg",
+   "image_alt": "Fast-food restaurant",
+   "sort": 6
+  },
+  {
+   "no": 7,
+   "project_id": "7-full-restaurant-kitchen",
+   "title": "Full restaurant kitchen",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Range, hood, ovens, dishwasher, cold room, furniture",
+   "image": "turnkey/catalogue/7-full-restaurant-kitchen.jpg",
+   "image_alt": "Full restaurant kitchen",
+   "sort": 7
+  },
+  {
+   "no": 8,
+   "project_id": "8-cloud-kitchen",
+   "title": "Cloud kitchen",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Compact cooking line, fridges, packing station, shelving",
+   "image": "turnkey/catalogue/8-cloud-kitchen.jpg",
+   "image_alt": "Cloud kitchen",
+   "sort": 8
+  },
+  {
+   "no": 9,
+   "project_id": "9-ice-cream-frozen-yogurt-shop",
+   "title": "Ice cream / frozen yogurt shop",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Soft-serve machine, display freezer, blast chiller",
+   "image": "turnkey/catalogue/9-ice-cream-frozen-yogurt-shop.jpg",
+   "image_alt": "Ice cream / frozen yogurt shop",
+   "sort": 9
+  },
+  {
+   "no": 10,
+   "project_id": "10-juice-and-smoothie-bar",
+   "title": "Juice and smoothie bar",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Juicers, blenders, ice machine, fridges",
+   "image": "turnkey/catalogue/10-juice-and-smoothie-bar.jpg",
+   "image_alt": "Juice and smoothie bar",
+   "sort": 10
+  },
+  {
+   "no": 11,
+   "project_id": "11-snack-and-drink-vending",
+   "title": "Snack and drink vending",
+   "category": "Retail & automation",
+   "summary": "Main equipment: Vending machines, cashless payment module, IoT module",
+   "image": "turnkey/catalogue/11-snack-and-drink-vending.jpg",
+   "image_alt": "Snack and drink vending",
+   "sort": 11
+  },
+  {
+   "no": 12,
+   "project_id": "12-fresh-coffee-vending-kiosk",
+   "title": "Fresh coffee vending kiosk",
+   "category": "Retail & automation",
+   "summary": "Main equipment: Bean-to-cup vending machines, cup system, payment",
+   "image": "turnkey/catalogue/12-fresh-coffee-vending-kiosk.jpg",
+   "image_alt": "Fresh coffee vending kiosk",
+   "sort": 12
+  },
+  {
+   "no": 13,
+   "project_id": "13-smart-micro-market-unmanned-store",
+   "title": "Smart micro-market / unmanned store",
+   "category": "Retail & automation",
+   "summary": "Main equipment: Smart fridges, cameras, payment gate",
+   "image": "turnkey/catalogue/13-smart-micro-market-unmanned-store.jpg",
+   "image_alt": "Smart micro-market / unmanned store",
+   "sort": 13
+  },
+  {
+   "no": 14,
+   "project_id": "14-robotic-ice-cream-or-cotton-candy-kiosk",
+   "title": "Robotic ice-cream or cotton-candy kiosk",
+   "category": "Retail & automation",
+   "summary": "Main equipment: Robot unit, payment, branding wrap",
+   "image": "turnkey/catalogue/14-robotic-ice-cream-or-cotton-candy-kiosk.jpg",
+   "image_alt": "Robotic ice-cream or cotton-candy kiosk",
+   "sort": 14
+  },
+  {
+   "no": 15,
+   "project_id": "15-supermarket-fit-out",
+   "title": "Supermarket fit-out",
+   "category": "Retail & automation",
+   "summary": "Main equipment: Shelving, fridges, checkout counters, scales, lighting",
+   "image": "turnkey/catalogue/15-supermarket-fit-out.jpg",
+   "image_alt": "Supermarket fit-out",
+   "sort": 15
+  },
+  {
+   "no": 16,
+   "project_id": "16-mobile-phone-shop",
+   "title": "Mobile phone shop",
+   "category": "Retail & automation",
+   "summary": "Main equipment: Display counters, lighting, security, signage",
+   "image": "turnkey/catalogue/16-mobile-phone-shop.jpg",
+   "image_alt": "Mobile phone shop",
+   "sort": 16
+  },
+  {
+   "no": 17,
+   "project_id": "17-convenience-store",
+   "title": "Convenience store",
+   "category": "Retail & automation",
+   "summary": "Main equipment: Gondola shelves, chillers, POS, signage",
+   "image": "turnkey/catalogue/17-convenience-store.jpg",
+   "image_alt": "Convenience store",
+   "sort": 17
+  },
+  {
+   "no": 18,
+   "project_id": "18-pharmacy-fit-out",
+   "title": "Pharmacy fit-out",
+   "category": "Retail & automation",
+   "summary": "Main equipment: Shelving, counters, medicine fridge, signage",
+   "image": "turnkey/catalogue/18-pharmacy-fit-out.jpg",
+   "image_alt": "Pharmacy fit-out",
+   "sort": 18
+  },
+  {
+   "no": 19,
+   "project_id": "19-commercial-gym",
+   "title": "Commercial gym",
+   "category": "Fitness & wellness",
+   "summary": "Main equipment: Cardio machines, strength machines, free weights, rubber flooring, mirrors, lockers",
+   "image": "turnkey/catalogue/19-commercial-gym.jpg",
+   "image_alt": "Commercial gym",
+   "sort": 19
+  },
+  {
+   "no": 20,
+   "project_id": "20-home-or-boutique-gym",
+   "title": "Home or boutique gym",
+   "category": "Fitness & wellness",
+   "summary": "Main equipment: Compact racks, dumbbells, cable machine, flooring",
+   "image": "turnkey/catalogue/20-home-or-boutique-gym.jpg",
+   "image_alt": "Home or boutique gym",
+   "sort": 20
+  },
+  {
+   "no": 21,
+   "project_id": "21-yoga-pilates-studio",
+   "title": "Yoga / pilates studio",
+   "category": "Fitness & wellness",
+   "summary": "Main equipment: Reformers, mats, wall panels, lighting, sound",
+   "image": "turnkey/catalogue/21-yoga-pilates-studio.jpg",
+   "image_alt": "Yoga / pilates studio",
+   "sort": 21
+  },
+  {
+   "no": 22,
+   "project_id": "22-spa",
+   "title": "Spa",
+   "category": "Fitness & wellness",
+   "summary": "Main equipment: Massage beds, steam rooms, pedicure chairs, reception",
+   "image": "turnkey/catalogue/22-spa.jpg",
+   "image_alt": "Spa",
+   "sort": 22
+  },
+  {
+   "no": 23,
+   "project_id": "23-sauna-and-cold-plunge-centre",
+   "title": "Sauna and cold plunge centre",
+   "category": "Fitness & wellness",
+   "summary": "Main equipment: Sauna cabins, plunge tubs, heaters, changing area",
+   "image": "turnkey/catalogue/23-sauna-and-cold-plunge-centre.jpg",
+   "image_alt": "Sauna and cold plunge centre",
+   "sort": 23
+  },
+  {
+   "no": 24,
+   "project_id": "24-beauty-salon",
+   "title": "Beauty salon",
+   "category": "Fitness & wellness",
+   "summary": "Main equipment: Styling chairs, wash units, mirrors, dryers, shelving",
+   "image": "turnkey/catalogue/24-beauty-salon.jpg",
+   "image_alt": "Beauty salon",
+   "sort": 24
+  },
+  {
+   "no": 25,
+   "project_id": "25-self-service-laundry",
+   "title": "Self-service laundry",
+   "category": "Cleaning & services",
+   "summary": "Main equipment: Washers, dryers, payment controller, folding tables",
+   "image": "turnkey/catalogue/25-self-service-laundry.jpg",
+   "image_alt": "Self-service laundry",
+   "sort": 25
+  },
+  {
+   "no": 26,
+   "project_id": "26-industrial-laundry",
+   "title": "Industrial laundry",
+   "category": "Cleaning & services",
+   "summary": "Main equipment: Tunnel washer, flatbed ironer, boiler, folders",
+   "image": "turnkey/catalogue/26-industrial-laundry.jpg",
+   "image_alt": "Industrial laundry",
+   "sort": 26
+  },
+  {
+   "no": 27,
+   "project_id": "27-car-wash",
+   "title": "Car wash",
+   "category": "Cleaning & services",
+   "summary": "Main equipment: Touchless wash machine, dryer, vacuum bays, payment kiosk",
+   "image": "turnkey/catalogue/27-car-wash.jpg",
+   "image_alt": "Car wash",
+   "sort": 27
+  },
+  {
+   "no": 28,
+   "project_id": "28-dry-cleaning-shop",
+   "title": "Dry-cleaning shop",
+   "category": "Cleaning & services",
+   "summary": "Main equipment: Dry-clean machines, presses, conveyor",
+   "image": "turnkey/catalogue/28-dry-cleaning-shop.jpg",
+   "image_alt": "Dry-cleaning shop",
+   "sort": 28
+  },
+  {
+   "no": 29,
+   "project_id": "29-hotel-room-fit-out",
+   "title": "Hotel room fit-out",
+   "category": "Hospitality",
+   "summary": "Main equipment: Beds, wardrobes, TVs, lighting, bathroom set, door locks",
+   "image": "turnkey/catalogue/29-hotel-room-fit-out.jpg",
+   "image_alt": "Hotel room fit-out",
+   "sort": 29
+  },
+  {
+   "no": 30,
+   "project_id": "30-hostel-dormitory",
+   "title": "Hostel / dormitory",
+   "category": "Hospitality",
+   "summary": "Main equipment: Bunk beds, lockers, bedding, lighting",
+   "image": "turnkey/catalogue/30-hostel-dormitory.jpg",
+   "image_alt": "Hostel / dormitory",
+   "sort": 30
+  },
+  {
+   "no": 31,
+   "project_id": "31-hotel-lobby-and-reception",
+   "title": "Hotel lobby and reception",
+   "category": "Hospitality",
+   "summary": "Main equipment: Furniture, counter, lighting, signage",
+   "image": "turnkey/catalogue/31-hotel-lobby-and-reception.jpg",
+   "image_alt": "Hotel lobby and reception",
+   "sort": 31
+  },
+  {
+   "no": 32,
+   "project_id": "32-banquet-hall",
+   "title": "Banquet hall",
+   "category": "Hospitality",
+   "summary": "Main equipment: Tables and chairs, stage, lighting, sound system",
+   "image": "turnkey/catalogue/32-banquet-hall.jpg",
+   "image_alt": "Banquet hall",
+   "sort": 32
+  },
+  {
+   "no": 33,
+   "project_id": "33-school-classroom-set",
+   "title": "School classroom set",
+   "category": "Education & childcare",
+   "summary": "Main equipment: Desks, chairs, smart boards, storage",
+   "image": "turnkey/catalogue/33-school-classroom.jpg",
+   "image_alt": "School classroom set",
+   "sort": 33
+  },
+  {
+   "no": 34,
+   "project_id": "34-science-or-computer-lab",
+   "title": "Science or computer lab",
+   "category": "Education & childcare",
+   "summary": "Main equipment: Workstations, lab furniture, equipment",
+   "image": "turnkey/catalogue/34-computer-lab.jpg",
+   "image_alt": "Science or computer lab",
+   "sort": 34
+  },
+  {
+   "no": 35,
+   "project_id": "35-kindergarten-nursery",
+   "title": "Kindergarten / nursery",
+   "category": "Education & childcare",
+   "summary": "Main equipment: Child-size furniture, play equipment, safety flooring",
+   "image": "turnkey/catalogue/35-kindergarten-nursery.jpg",
+   "image_alt": "Kindergarten / nursery",
+   "sort": 35
+  },
+  {
+   "no": 36,
+   "project_id": "36-indoor-playground",
+   "title": "Indoor playground",
+   "category": "Education & childcare",
+   "summary": "Main equipment: Soft play, trampolines, slides, flooring",
+   "image": "turnkey/catalogue/36-indoor-playground.jpg",
+   "image_alt": "Indoor playground",
+   "sort": 36
+  },
+  {
+   "no": 37,
+   "project_id": "37-robotics-stem-education-centre",
+   "title": "Robotics / STEM education centre",
+   "category": "Education & childcare",
+   "summary": "Main equipment: Kits, workstations, display",
+   "image": "turnkey/catalogue/37-robotics-stem-education-centre.jpg",
+   "image_alt": "Robotics / STEM education centre",
+   "sort": 37
+  },
+  {
+   "no": 38,
+   "project_id": "38-dental-clinic",
+   "title": "Dental clinic",
+   "category": "Healthcare",
+   "summary": "Main equipment: Dental chairs, X-ray, sterilizer, compressor",
+   "image": "turnkey/catalogue/38-dental-clinic.jpg",
+   "image_alt": "Dental clinic",
+   "sort": 38
+  },
+  {
+   "no": 39,
+   "project_id": "39-general-clinic",
+   "title": "General clinic",
+   "category": "Healthcare",
+   "summary": "Main equipment: Exam beds, diagnostic equipment, furniture, fridge",
+   "image": "turnkey/catalogue/39-general-clinic.jpg",
+   "image_alt": "General clinic",
+   "sort": 39
+  },
+  {
+   "no": 40,
+   "project_id": "40-physiotherapy-centre",
+   "title": "Physiotherapy centre",
+   "category": "Healthcare",
+   "summary": "Main equipment: Treatment beds, rehab equipment, exercise gear",
+   "image": "turnkey/catalogue/40-physiotherapy-centre.jpg",
+   "image_alt": "Physiotherapy centre",
+   "sort": 40
+  },
+  {
+   "no": 41,
+   "project_id": "41-plastic-injection-factory",
+   "title": "Plastic injection factory",
+   "category": "Light industry & factory",
+   "summary": "Main equipment: Injection machines, moulds, chillers, crushers",
+   "image": "turnkey/catalogue/41-plastic-injection-factory.jpg",
+   "image_alt": "Plastic injection factory",
+   "sort": 41
+  },
+  {
+   "no": 42,
+   "project_id": "42-plastic-bag-packaging-plant",
+   "title": "Plastic bag / packaging plant",
+   "category": "Light industry & factory",
+   "summary": "Main equipment: Film blowing, printing, bag-making machines",
+   "image": "turnkey/catalogue/42-plastic-bag-packaging-plant.jpg",
+   "image_alt": "Plastic bag / packaging plant",
+   "sort": 42
+  },
+  {
+   "no": 43,
+   "project_id": "43-water-bottling-plant",
+   "title": "Water bottling plant",
+   "category": "Light industry & factory",
+   "summary": "Main equipment: RO system, filling line, labeler, packaging",
+   "image": "turnkey/catalogue/43-water-bottling-plant.jpg",
+   "image_alt": "Water bottling plant",
+   "sort": 43
+  },
+  {
+   "no": 44,
+   "project_id": "44-paper-cup-tissue-plant",
+   "title": "Paper cup / tissue plant",
+   "category": "Light industry & factory",
+   "summary": "Main equipment: Forming machines, converters, packing",
+   "image": "turnkey/catalogue/44-paper-cup-plant.jpg",
+   "image_alt": "Paper cup / tissue plant",
+   "sort": 44
+  },
+  {
+   "no": 45,
+   "project_id": "45-furniture-workshop",
+   "title": "Furniture workshop",
+   "category": "Light industry & factory",
+   "summary": "Main equipment: CNC cutting, edge-banding, panel saw, spray booth",
+   "image": "turnkey/catalogue/45-furniture-workshop.jpg",
+   "image_alt": "Furniture workshop",
+   "sort": 45
+  },
+  {
+   "no": 46,
+   "project_id": "46-garment-factory",
+   "title": "Garment factory",
+   "category": "Light industry & factory",
+   "summary": "Main equipment: Sewing machines, cutting tables, pressing, finishing",
+   "image": "turnkey/catalogue/46-garment-factory.jpg",
+   "image_alt": "Garment factory",
+   "sort": 46
+  },
+  {
+   "no": 47,
+   "project_id": "47-solar-power-system",
+   "title": "Solar power system",
+   "category": "Energy, farming & logistics",
+   "summary": "Main equipment: Panels, inverters, mounting, batteries, cabling",
+   "image": "turnkey/catalogue/47-solar-power-system.jpg",
+   "image_alt": "Solar power system",
+   "sort": 47
+  },
+  {
+   "no": 48,
+   "project_id": "48-ev-charging-station",
+   "title": "EV charging station",
+   "category": "Energy, farming & logistics",
+   "summary": "Main equipment: Chargers, cabling, payment system, signage",
+   "image": "turnkey/catalogue/48-ev-charging-station.jpg",
+   "image_alt": "EV charging station",
+   "sort": 48
+  },
+  {
+   "no": 49,
+   "project_id": "49-greenhouse-hydroponic-farm",
+   "title": "Greenhouse / hydroponic farm",
+   "category": "Energy, farming & logistics",
+   "summary": "Main equipment: Structure, irrigation, grow lights, climate control",
+   "image": "turnkey/catalogue/49-hydroponic-greenhouse.jpg",
+   "image_alt": "Greenhouse / hydroponic farm",
+   "sort": 49
+  },
+  {
+   "no": 50,
+   "project_id": "50-warehouse-cold-storage",
+   "title": "Warehouse / cold storage",
+   "category": "Energy, farming & logistics",
+   "summary": "Main equipment: Racking, forklifts, cold room, dock equipment",
+   "image": "turnkey/catalogue/50-warehouse-and-cold-storage.jpg",
+   "image_alt": "Warehouse / cold storage",
+   "sort": 50
+  },
+  {
+   "no": 51,
+   "project_id": "51-central-kitchen-catering",
+   "title": "Central kitchen / catering",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Cooking kettles, blast chiller, vacuum packers, trolleys, cold room",
+   "image": "turnkey/catalogue/51-central-kitchen-and-catering.jpg",
+   "image_alt": "Central kitchen / catering",
+   "sort": 51
+  },
+  {
+   "no": 52,
+   "project_id": "52-meat-and-bbq-shop",
+   "title": "Meat and BBQ shop",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Grills, meat slicer, display chiller, grinder, hooks",
+   "image": "turnkey/catalogue/52-meat-and-bbq-shop.jpg",
+   "image_alt": "Meat and BBQ shop",
+   "sort": 52
+  },
+  {
+   "no": 53,
+   "project_id": "53-shawarma-kebab-shop",
+   "title": "Shawarma / kebab shop",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Vertical grills, prep fridges, hood, counters",
+   "image": "turnkey/catalogue/53-shawarma-and-kebab-shop.jpg",
+   "image_alt": "Shawarma / kebab shop",
+   "sort": 53
+  },
+  {
+   "no": 54,
+   "project_id": "54-donut-and-waffle-shop",
+   "title": "Donut and waffle shop",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Fryers, waffle makers, display, mixers",
+   "image": "turnkey/catalogue/54-donut-and-waffle-shop.jpg",
+   "image_alt": "Donut and waffle shop",
+   "sort": 54
+  },
+  {
+   "no": 55,
+   "project_id": "55-food-truck",
+   "title": "Food truck",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Vehicle fit-out, cooking line, generator, fridge, service window",
+   "image": "turnkey/catalogue/55-food-truck.jpg",
+   "image_alt": "Food truck",
+   "sort": 55
+  },
+  {
+   "no": 56,
+   "project_id": "56-beverage-bottling-and-juice-plant",
+   "title": "Beverage bottling and juice plant",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Pasteurizer, filling line, labeler",
+   "image": "turnkey/catalogue/56-beverage-bottling-and-juice-plant.jpg",
+   "image_alt": "Beverage bottling and juice plant",
+   "sort": 56
+  },
+  {
+   "no": 57,
+   "project_id": "57-ice-factory",
+   "title": "Ice factory",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Ice block or cube machines, cold storage, packing",
+   "image": "turnkey/catalogue/57-ice-factory.jpg",
+   "image_alt": "Ice factory",
+   "sort": 57
+  },
+  {
+   "no": 58,
+   "project_id": "58-bakery-biscuit-factory",
+   "title": "Bakery biscuit factory",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Mixers, rotary moulder, tunnel oven, packing line",
+   "image": "turnkey/catalogue/58-bakery-biscuit-factory.jpg",
+   "image_alt": "Bakery biscuit factory",
+   "sort": 58
+  },
+  {
+   "no": 59,
+   "project_id": "59-smart-locker-parcel-station",
+   "title": "Smart locker / parcel station",
+   "category": "Retail & automation",
+   "summary": "Main equipment: Locker banks, touchscreen, software",
+   "image": "turnkey/catalogue/59-smart-locker-and-parcel-station.jpg",
+   "image_alt": "Smart locker / parcel station",
+   "sort": 59
+  },
+  {
+   "no": 60,
+   "project_id": "60-self-checkout-store",
+   "title": "Self-checkout store",
+   "category": "Retail & automation",
+   "summary": "Main equipment: Self-service kiosks, scanners, scales, cameras",
+   "image": "turnkey/catalogue/60-self-checkout-store.jpg",
+   "image_alt": "Self-checkout store",
+   "sort": 60
+  },
+  {
+   "no": 61,
+   "project_id": "61-bookshop-and-stationery-store",
+   "title": "Bookshop and stationery store",
+   "category": "Retail & automation",
+   "summary": "Main equipment: Shelving, counters, lighting, signage",
+   "image": "turnkey/catalogue/61-bookshop-and-stationery-store.jpg",
+   "image_alt": "Bookshop and stationery store",
+   "sort": 61
+  },
+  {
+   "no": 62,
+   "project_id": "62-clothing-boutique",
+   "title": "Clothing boutique",
+   "category": "Retail & automation",
+   "summary": "Main equipment: Racks, mannequins, fitting rooms, lighting, POS",
+   "image": "turnkey/catalogue/62-clothing-boutique.jpg",
+   "image_alt": "Clothing boutique",
+   "sort": 62
+  },
+  {
+   "no": 63,
+   "project_id": "63-cosmetics-store",
+   "title": "Cosmetics store",
+   "category": "Retail & automation",
+   "summary": "Main equipment: Display units, lighting, testers stand, counters",
+   "image": "turnkey/catalogue/63-cosmetics-store.jpg",
+   "image_alt": "Cosmetics store",
+   "sort": 63
+  },
+  {
+   "no": 64,
+   "project_id": "64-jewellery-showroom",
+   "title": "Jewellery showroom",
+   "category": "Retail & automation",
+   "summary": "Main equipment: Display cases, security, lighting, safes",
+   "image": "turnkey/catalogue/64-jewellery-showroom.jpg",
+   "image_alt": "Jewellery showroom",
+   "sort": 64
+  },
+  {
+   "no": 65,
+   "project_id": "65-electronics-showroom",
+   "title": "Electronics showroom",
+   "category": "Retail & automation",
+   "summary": "Main equipment: Display walls, demo tables, security, POS",
+   "image": "turnkey/catalogue/65-electronics-showroom.jpg",
+   "image_alt": "Electronics showroom",
+   "sort": 65
+  },
+  {
+   "no": 66,
+   "project_id": "66-pet-shop-and-grooming",
+   "title": "Pet shop and grooming",
+   "category": "Retail & automation",
+   "summary": "Main equipment: Cages, grooming tables, dryers, display shelves",
+   "image": "turnkey/catalogue/66-pet-shop-and-grooming.jpg",
+   "image_alt": "Pet shop and grooming",
+   "sort": 66
+  },
+  {
+   "no": 67,
+   "project_id": "67-padel-tennis-court",
+   "title": "Padel / tennis court",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Artificial turf, glass walls, lighting, nets",
+   "image": "turnkey/catalogue/67-padel-court.jpg",
+   "image_alt": "Padel / tennis court",
+   "sort": 67
+  },
+  {
+   "no": 68,
+   "project_id": "68-football-5-a-side-pitch",
+   "title": "Football 5-a-side pitch",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Turf, fencing, floodlights, goals",
+   "image": "turnkey/catalogue/68-five-a-side-football-pitch.jpg",
+   "image_alt": "Football 5-a-side pitch",
+   "sort": 68
+  },
+  {
+   "no": 69,
+   "project_id": "69-swimming-pool",
+   "title": "Swimming pool",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Pool, filtration, pumps, heating, cover",
+   "image": "turnkey/catalogue/69-swimming-pool.jpg",
+   "image_alt": "Swimming pool",
+   "sort": 69
+  },
+  {
+   "no": 70,
+   "project_id": "70-boxing-mma-gym",
+   "title": "Boxing / MMA gym",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Ring, heavy bags, mats, cage, mirrors",
+   "image": "turnkey/catalogue/70-boxing-and-mma-gym.jpg",
+   "image_alt": "Boxing / MMA gym",
+   "sort": 70
+  },
+  {
+   "no": 71,
+   "project_id": "71-crossfit-box",
+   "title": "CrossFit box",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Rigs, barbells, plates, kettlebells, flooring",
+   "image": "turnkey/catalogue/71-crossfit-box.jpg",
+   "image_alt": "CrossFit box",
+   "sort": 71
+  },
+  {
+   "no": 72,
+   "project_id": "72-trampoline-park",
+   "title": "Trampoline park",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Trampolines, foam pits, safety nets, flooring",
+   "image": "turnkey/catalogue/72-trampoline-park.jpg",
+   "image_alt": "Trampoline park",
+   "sort": 72
+  },
+  {
+   "no": 73,
+   "project_id": "73-gaming-arcade-esports-lounge",
+   "title": "Gaming arcade / esports lounge",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Gaming PCs, arcade machines, chairs, lighting",
+   "image": "turnkey/catalogue/73-gaming-arcade-and-esports-lounge.jpg",
+   "image_alt": "Gaming arcade / esports lounge",
+   "sort": 73
+  },
+  {
+   "no": 74,
+   "project_id": "74-cinema-vr-centre",
+   "title": "Cinema / VR centre",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Projector, seats, screen, sound, VR sets",
+   "image": "turnkey/catalogue/74-cinema-and-vr-centre.jpg",
+   "image_alt": "Cinema / VR centre",
+   "sort": 74
+  },
+  {
+   "no": 75,
+   "project_id": "75-boutique-hotel",
+   "title": "Boutique hotel",
+   "category": "Hospitality & commercial",
+   "summary": "Main equipment: Rooms, lobby, restaurant, laundry package",
+   "image": "turnkey/catalogue/75-boutique-hotel.jpg",
+   "image_alt": "Boutique hotel",
+   "sort": 75
+  },
+  {
+   "no": 76,
+   "project_id": "76-resort-chalets-prefab-cabins",
+   "title": "Resort chalets / prefab cabins",
+   "category": "Hospitality & commercial",
+   "summary": "Main equipment: Prefab units, furniture, solar, bathrooms",
+   "image": "turnkey/catalogue/76-resort-chalets-and-prefab-cabins.jpg",
+   "image_alt": "Resort chalets / prefab cabins",
+   "sort": 76
+  },
+  {
+   "no": 77,
+   "project_id": "77-co-working-space",
+   "title": "Co-working space",
+   "category": "Hospitality & commercial",
+   "summary": "Main equipment: Desks, chairs, meeting rooms, lighting, networking",
+   "image": "turnkey/catalogue/77-co-working-space.jpg",
+   "image_alt": "Co-working space",
+   "sort": 77
+  },
+  {
+   "no": 78,
+   "project_id": "78-office-fit-out",
+   "title": "Office fit-out",
+   "category": "Hospitality & commercial",
+   "summary": "Main equipment: Workstations, partitions, meeting furniture, lighting",
+   "image": "turnkey/catalogue/78-office-fit-out.jpg",
+   "image_alt": "Office fit-out",
+   "sort": 78
+  },
+  {
+   "no": 79,
+   "project_id": "79-mall-kiosk-food-court-stall",
+   "title": "Mall kiosk / food-court stall",
+   "category": "Hospitality & commercial",
+   "summary": "Main equipment: Modular kiosk, counter, equipment, signage",
+   "image": "turnkey/catalogue/79-mall-food-court-kiosk.jpg",
+   "image_alt": "Mall kiosk / food-court stall",
+   "sort": 79
+  },
+  {
+   "no": 80,
+   "project_id": "80-container-cafe-shop",
+   "title": "Container café / shop",
+   "category": "Hospitality & commercial",
+   "summary": "Main equipment: Converted container, insulation, fit-out, equipment",
+   "image": "turnkey/catalogue/80-container-cafe.jpg",
+   "image_alt": "Container café / shop",
+   "sort": 80
+  },
+  {
+   "no": 81,
+   "project_id": "81-medical-laboratory",
+   "title": "Medical laboratory",
+   "category": "Healthcare & labs",
+   "summary": "Main equipment: Analyzers, centrifuges, fridges, benches",
+   "image": "turnkey/catalogue/81-medical-laboratory.jpg",
+   "image_alt": "Medical laboratory",
+   "sort": 81
+  },
+  {
+   "no": 82,
+   "project_id": "82-diagnostic-imaging-centre",
+   "title": "Diagnostic imaging centre",
+   "category": "Healthcare & labs",
+   "summary": "Main equipment: Ultrasound, X-ray, workstations",
+   "image": "turnkey/catalogue/82-diagnostic-imaging-centre.jpg",
+   "image_alt": "Diagnostic imaging centre",
+   "sort": 82
+  },
+  {
+   "no": 83,
+   "project_id": "83-veterinary-clinic",
+   "title": "Veterinary clinic",
+   "category": "Healthcare & labs",
+   "summary": "Main equipment: Exam tables, anaesthesia, X-ray, kennels",
+   "image": "turnkey/catalogue/83-veterinary-clinic.jpg",
+   "image_alt": "Veterinary clinic",
+   "sort": 83
+  },
+  {
+   "no": 84,
+   "project_id": "84-eye-and-optical-clinic",
+   "title": "Eye and optical clinic",
+   "category": "Healthcare & labs",
+   "summary": "Main equipment: Exam equipment, lens edging machine, displays",
+   "image": "turnkey/catalogue/84-eye-and-optical-clinic.jpg",
+   "image_alt": "Eye and optical clinic",
+   "sort": 84
+  },
+  {
+   "no": 85,
+   "project_id": "85-hair-transplant-aesthetic-clinic",
+   "title": "Hair transplant / aesthetic clinic",
+   "category": "Healthcare & labs",
+   "summary": "Main equipment: Treatment chairs, lasers, sterilization",
+   "image": "turnkey/catalogue/85-hair-transplant-and-aesthetic-clinic.jpg",
+   "image_alt": "Hair transplant / aesthetic clinic",
+   "sort": 85
+  },
+  {
+   "no": 86,
+   "project_id": "86-elderly-care-home",
+   "title": "Elderly care home",
+   "category": "Healthcare & labs",
+   "summary": "Main equipment: Care beds, hoists, furniture, nurse call system",
+   "image": "turnkey/catalogue/86-elderly-care-home.jpg",
+   "image_alt": "Elderly care home",
+   "sort": 86
+  },
+  {
+   "no": 87,
+   "project_id": "87-plastic-recycling-plant",
+   "title": "Plastic recycling plant",
+   "category": "Factories & industry",
+   "summary": "Main equipment: Shredder, washing line, extruder, pelletizer",
+   "image": "turnkey/catalogue/87-plastic-recycling-plant.jpg",
+   "image_alt": "Plastic recycling plant",
+   "sort": 87
+  },
+  {
+   "no": 88,
+   "project_id": "88-pvc-pipe-profile-factory",
+   "title": "PVC pipe / profile factory",
+   "category": "Factories & industry",
+   "summary": "Main equipment: Extruders, moulds, cutters, haul-off",
+   "image": "turnkey/catalogue/88-pvc-pipe-and-profile-factory.jpg",
+   "image_alt": "PVC pipe / profile factory",
+   "sort": 88
+  },
+  {
+   "no": 89,
+   "project_id": "89-led-lighting-factory",
+   "title": "LED lighting factory",
+   "category": "Factories & industry",
+   "summary": "Main equipment: SMT line, assembly line, testing equipment",
+   "image": "turnkey/catalogue/89-led-lighting-factory.jpg",
+   "image_alt": "LED lighting factory",
+   "sort": 89
+  },
+  {
+   "no": 90,
+   "project_id": "90-packaging-box-carton-plant",
+   "title": "Packaging box / carton plant",
+   "category": "Factories & industry",
+   "summary": "Main equipment: Corrugator, printer, die-cutter, gluer",
+   "image": "turnkey/catalogue/90-packaging-box-and-carton-plant.jpg",
+   "image_alt": "Packaging box / carton plant",
+   "sort": 90
+  },
+  {
+   "no": 91,
+   "project_id": "91-stone-and-tile-workshop",
+   "title": "Stone and tile workshop",
+   "category": "Factories & industry",
+   "summary": "Main equipment: Cutting machines, polishing, CNC",
+   "image": "turnkey/catalogue/91-stone-and-tile-workshop.jpg",
+   "image_alt": "Stone and tile workshop",
+   "sort": 91
+  },
+  {
+   "no": 92,
+   "project_id": "92-aluminium-window-and-door-factory",
+   "title": "Aluminium window and door factory",
+   "category": "Factories & industry",
+   "summary": "Main equipment: Cutting, milling, assembly tables",
+   "image": "turnkey/catalogue/92-aluminium-window-and-door-factory.jpg",
+   "image_alt": "Aluminium window and door factory",
+   "sort": 92
+  },
+  {
+   "no": 93,
+   "project_id": "93-brick-and-block-plant",
+   "title": "Brick and block plant",
+   "category": "Factories & industry",
+   "summary": "Main equipment: Block machine, mixer, curing, pallets",
+   "image": "turnkey/catalogue/93-brick-and-block-plant.jpg",
+   "image_alt": "Brick and block plant",
+   "sort": 93
+  },
+  {
+   "no": 94,
+   "project_id": "94-3d-printing-cnc-workshop",
+   "title": "3D printing / CNC workshop",
+   "category": "Factories & industry",
+   "summary": "Main equipment: Printers, CNC routers, finishing tools",
+   "image": "turnkey/catalogue/94-3d-printing-and-cnc-workshop.jpg",
+   "image_alt": "3D printing / CNC workshop",
+   "sort": 94
+  },
+  {
+   "no": 95,
+   "project_id": "95-off-grid-solar-and-battery-container",
+   "title": "Off-grid solar and battery container",
+   "category": "Energy, farming & logistics",
+   "summary": "Main equipment: Panels, battery, inverter, container",
+   "image": "turnkey/catalogue/95-off-grid-solar-and-battery-container.jpg",
+   "image_alt": "Off-grid solar and battery container",
+   "sort": 95
+  },
+  {
+   "no": 96,
+   "project_id": "96-led-screen-and-outdoor-advertising",
+   "title": "LED screen and outdoor advertising",
+   "category": "Energy, farming & logistics",
+   "summary": "Main equipment: Screens, structure, control system",
+   "image": "turnkey/catalogue/96-led-screen-and-outdoor-advertising.jpg",
+   "image_alt": "LED screen and outdoor advertising",
+   "sort": 96
+  },
+  {
+   "no": 97,
+   "project_id": "97-poultry-egg-farm",
+   "title": "Poultry / egg farm",
+   "category": "Energy, farming & logistics",
+   "summary": "Main equipment: Cages, feeders, ventilation, egg collection",
+   "image": "turnkey/catalogue/97-poultry-and-egg-farm.jpg",
+   "image_alt": "Poultry / egg farm",
+   "sort": 97
+  },
+  {
+   "no": 98,
+   "project_id": "98-fish-farm-ras",
+   "title": "Fish farm (RAS)",
+   "category": "Energy, farming & logistics",
+   "summary": "Main equipment: Tanks, filtration, aeration, monitoring",
+   "image": "turnkey/catalogue/98-recirculating-aquaculture-fish-farm.jpg",
+   "image_alt": "Fish farm (RAS)",
+   "sort": 98
+  },
+  {
+   "no": 99,
+   "project_id": "99-mushroom-vertical-farm",
+   "title": "Mushroom / vertical farm",
+   "category": "Energy, farming & logistics",
+   "summary": "Main equipment: Racks, lighting, climate control, humidifiers",
+   "image": "turnkey/catalogue/99-mushroom-farm.jpg",
+   "image_alt": "Mushroom / vertical farm",
+   "sort": 99
+  },
+  {
+   "no": 100,
+   "project_id": "100-logistics-hub-fulfilment-centre",
+   "title": "Logistics hub / fulfilment centre",
+   "category": "Energy, farming & logistics",
+   "summary": "Main equipment: Racking, conveyors, packing stations, scanners",
+   "image": "turnkey/catalogue/100-logistics-hub-and-fulfilment-centre.jpg",
+   "image_alt": "Logistics hub / fulfilment centre",
+   "sort": 100
+  },
+  {
+   "no": 101,
+   "project_id": "101-sushi-asian-restaurant",
+   "title": "Sushi / Asian restaurant",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Rice cookers, sushi display, fryers, wok range",
+   "image": "turnkey/catalogue/101-sushi-and-asian-restaurant.jpg",
+   "image_alt": "Sushi / Asian restaurant",
+   "sort": 101
+  },
+  {
+   "no": 102,
+   "project_id": "102-pasta-and-italian-kitchen",
+   "title": "Pasta and Italian kitchen",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Pasta cooker, pizza oven, prep fridges",
+   "image": "turnkey/catalogue/102-pasta-and-italian-kitchen.jpg",
+   "image_alt": "Pasta and Italian kitchen",
+   "sort": 102
+  },
+  {
+   "no": 103,
+   "project_id": "103-breakfast-and-brunch-cafe",
+   "title": "Breakfast and brunch café",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Griddle, toasters, juice machines, fridges",
+   "image": "turnkey/catalogue/103-breakfast-and-brunch-cafe.jpg",
+   "image_alt": "Breakfast and brunch café",
+   "sort": 103
+  },
+  {
+   "no": 104,
+   "project_id": "104-dessert-patisserie-lab",
+   "title": "Dessert / patisserie lab",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Blast chiller, mixers, ovens, display cases",
+   "image": "turnkey/catalogue/104-dessert-and-patisserie-lab.jpg",
+   "image_alt": "Dessert / patisserie lab",
+   "sort": 104
+  },
+  {
+   "no": 105,
+   "project_id": "105-chocolate-factory",
+   "title": "Chocolate factory",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Melters, tempering machine, moulds, cooling tunnel",
+   "image": "turnkey/catalogue/105-chocolate-factory.jpg",
+   "image_alt": "Chocolate factory",
+   "sort": 105
+  },
+  {
+   "no": 106,
+   "project_id": "106-nut-roasting-and-snack-shop",
+   "title": "Nut roasting and snack shop",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Roasters, packers, display units",
+   "image": "turnkey/catalogue/106-nut-roasting-and-snack-shop.jpg",
+   "image_alt": "Nut roasting and snack shop",
+   "sort": 106
+  },
+  {
+   "no": 107,
+   "project_id": "107-spice-grinding-and-packing-unit",
+   "title": "Spice grinding and packing unit",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Grinders, sifters, filling machine",
+   "image": "turnkey/catalogue/107-spice-grinding-and-packing-unit.jpg",
+   "image_alt": "Spice grinding and packing unit",
+   "sort": 107
+  },
+  {
+   "no": 108,
+   "project_id": "108-tea-coffee-roastery",
+   "title": "Tea / coffee roastery",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Roaster, cooling tray, packing machine, storage",
+   "image": "turnkey/catalogue/108-coffee-roastery.jpg",
+   "image_alt": "Tea / coffee roastery",
+   "sort": 108
+  },
+  {
+   "no": 109,
+   "project_id": "109-frozen-food-plant",
+   "title": "Frozen food plant",
+   "category": "Food & beverage",
+   "summary": "Main equipment: IQF freezer, packing line, cold room",
+   "image": "turnkey/catalogue/109-frozen-food-plant.jpg",
+   "image_alt": "Frozen food plant",
+   "sort": 109
+  },
+  {
+   "no": 110,
+   "project_id": "110-dairy-and-cheese-unit",
+   "title": "Dairy and cheese unit",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Pasteurizer, vats, presses, cold storage",
+   "image": "turnkey/catalogue/110-dairy-and-cheese-unit.jpg",
+   "image_alt": "Dairy and cheese unit",
+   "sort": 110
+  },
+  {
+   "no": 111,
+   "project_id": "111-olive-oil-press",
+   "title": "Olive oil press",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Crusher, malaxer, decanter, filling line",
+   "image": "turnkey/catalogue/111-olive-oil-press.jpg",
+   "image_alt": "Olive oil press",
+   "sort": 111
+  },
+  {
+   "no": 112,
+   "project_id": "112-date-dried-fruit-packing-plant",
+   "title": "Date, dried fruit packing plant",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Washing, sorting, drying, packing",
+   "image": "turnkey/catalogue/112-date-and-dried-fruit-packing-plant.jpg",
+   "image_alt": "Date, dried fruit packing plant",
+   "sort": 112
+  },
+  {
+   "no": 113,
+   "project_id": "113-perfume-shop",
+   "title": "Perfume shop",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Glass displays, lighting, counters",
+   "image": "turnkey/catalogue/113-perfume-shop.jpg",
+   "image_alt": "Perfume shop",
+   "sort": 113
+  },
+  {
+   "no": 114,
+   "project_id": "114-optical-shop",
+   "title": "Optical shop",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Frame displays, testing lane, edging machine",
+   "image": "turnkey/catalogue/114-optical-shop.jpg",
+   "image_alt": "Optical shop",
+   "sort": 114
+  },
+  {
+   "no": 115,
+   "project_id": "115-toy-and-baby-store",
+   "title": "Toy and baby store",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Shelving, display, checkout counters",
+   "image": "turnkey/catalogue/115-toy-and-baby-store.jpg",
+   "image_alt": "Toy and baby store",
+   "sort": 115
+  },
+  {
+   "no": 116,
+   "project_id": "116-furniture-showroom",
+   "title": "Furniture showroom",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Display platforms, lighting, signage",
+   "image": "turnkey/catalogue/116-furniture-showroom.jpg",
+   "image_alt": "Furniture showroom",
+   "sort": 116
+  },
+  {
+   "no": 117,
+   "project_id": "117-mobile-accessories-kiosk",
+   "title": "Mobile accessories kiosk",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Wall display, counters, lights",
+   "image": "turnkey/catalogue/117-mobile-accessories-kiosk.jpg",
+   "image_alt": "Mobile accessories kiosk",
+   "sort": 117
+  },
+  {
+   "no": 118,
+   "project_id": "118-gift-and-souvenir-shop",
+   "title": "Gift and souvenir shop",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Shelves, display, counters",
+   "image": "turnkey/catalogue/118-gift-and-souvenir-shop.jpg",
+   "image_alt": "Gift and souvenir shop",
+   "sort": 118
+  },
+  {
+   "no": 119,
+   "project_id": "119-shoe-store",
+   "title": "Shoe store",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Wall displays, seating, mirrors, lighting",
+   "image": "turnkey/catalogue/119-shoe-store.jpg",
+   "image_alt": "Shoe store",
+   "sort": 119
+  },
+  {
+   "no": 120,
+   "project_id": "120-sports-goods-store",
+   "title": "Sports goods store",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Racks, display walls, mannequins",
+   "image": "turnkey/catalogue/120-sports-goods-store.jpg",
+   "image_alt": "Sports goods store",
+   "sort": 120
+  },
+  {
+   "no": 121,
+   "project_id": "121-home-appliance-showroom",
+   "title": "Home appliance showroom",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Display stands, demo units, lighting",
+   "image": "turnkey/catalogue/121-home-appliance-showroom.jpg",
+   "image_alt": "Home appliance showroom",
+   "sort": 121
+  },
+  {
+   "no": 122,
+   "project_id": "122-hardware-and-tools-store",
+   "title": "Hardware and tools store",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Heavy shelving, counters, pallet racks",
+   "image": "turnkey/catalogue/122-hardware-and-tools-store.jpg",
+   "image_alt": "Hardware and tools store",
+   "sort": 122
+  },
+  {
+   "no": 123,
+   "project_id": "123-car-accessories-shop",
+   "title": "Car accessories shop",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Display racks, workshop corner, lifts",
+   "image": "turnkey/catalogue/123-car-accessories-shop.jpg",
+   "image_alt": "Car accessories shop",
+   "sort": 123
+  },
+  {
+   "no": 124,
+   "project_id": "124-stationery-printing-and-copy-shop",
+   "title": "Stationery printing and copy shop",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Printers, cutters, binders",
+   "image": "turnkey/catalogue/124-stationery-printing-and-copy-shop.jpg",
+   "image_alt": "Stationery printing and copy shop",
+   "sort": 124
+  },
+  {
+   "no": 125,
+   "project_id": "125-auto-repair-garage",
+   "title": "Auto repair garage",
+   "category": "Vehicle & mobility",
+   "summary": "Main equipment: Lifts, diagnostic scanners, tyre changer, tools",
+   "image": "turnkey/catalogue/125-auto-repair-garage.jpg",
+   "image_alt": "Auto repair garage",
+   "sort": 125
+  },
+  {
+   "no": 126,
+   "project_id": "126-tyre-shop",
+   "title": "Tyre shop",
+   "category": "Vehicle & mobility",
+   "summary": "Main equipment: Tyre changer, balancer, racks, compressor",
+   "image": "turnkey/catalogue/126-tyre-shop.jpg",
+   "image_alt": "Tyre shop",
+   "sort": 126
+  },
+  {
+   "no": 127,
+   "project_id": "127-motorbike-workshop",
+   "title": "Motorbike workshop",
+   "category": "Vehicle & mobility",
+   "summary": "Main equipment: Lifts, tools, diagnostic gear",
+   "image": "turnkey/catalogue/127-motorbike-workshop.jpg",
+   "image_alt": "Motorbike workshop",
+   "sort": 127
+  },
+  {
+   "no": 128,
+   "project_id": "128-ev-conversion-service-centre",
+   "title": "EV conversion / service centre",
+   "category": "Vehicle & mobility",
+   "summary": "Main equipment: Lifts, battery testers, chargers",
+   "image": "turnkey/catalogue/128-ev-conversion-and-service-centre.jpg",
+   "image_alt": "EV conversion / service centre",
+   "sort": 128
+  },
+  {
+   "no": 129,
+   "project_id": "129-e-scooter-e-bike-rental-station",
+   "title": "E-scooter / e-bike rental station",
+   "category": "Vehicle & mobility",
+   "summary": "Main equipment: Docks, charging, app, locks",
+   "image": "turnkey/catalogue/129-e-scooter-and-e-bike-rental-station.jpg",
+   "image_alt": "E-scooter / e-bike rental station",
+   "sort": 129
+  },
+  {
+   "no": 130,
+   "project_id": "130-car-showroom",
+   "title": "Car showroom",
+   "category": "Vehicle & mobility",
+   "summary": "Main equipment: Display platforms, lighting, reception",
+   "image": "turnkey/catalogue/130-car-showroom.jpg",
+   "image_alt": "Car showroom",
+   "sort": 130
+  },
+  {
+   "no": 131,
+   "project_id": "131-truck-wash-and-service-bay",
+   "title": "Truck wash and service bay",
+   "category": "Vehicle & mobility",
+   "summary": "Main equipment: High-pressure systems, drains, lifts",
+   "image": "turnkey/catalogue/131-truck-wash-and-service-bay.jpg",
+   "image_alt": "Truck wash and service bay",
+   "sort": 131
+  },
+  {
+   "no": 132,
+   "project_id": "132-parking-system",
+   "title": "Parking system",
+   "category": "Vehicle & mobility",
+   "summary": "Main equipment: Barriers, ticket machines, cameras, signage",
+   "image": "turnkey/catalogue/132-parking-system.jpg",
+   "image_alt": "Parking system",
+   "sort": 132
+  },
+  {
+   "no": 133,
+   "project_id": "133-language-school",
+   "title": "Language school",
+   "category": "Education & childcare",
+   "summary": "Main equipment: Desks, smart boards, headsets, furniture",
+   "image": "turnkey/catalogue/133-language-school.jpg",
+   "image_alt": "Language school",
+   "sort": 133
+  },
+  {
+   "no": 134,
+   "project_id": "134-music-studio-school",
+   "title": "Music studio / school",
+   "category": "Education & childcare",
+   "summary": "Main equipment: Soundproofing, instruments, recording gear",
+   "image": "turnkey/catalogue/134-music-studio-and-school.jpg",
+   "image_alt": "Music studio / school",
+   "sort": 134
+  },
+  {
+   "no": 135,
+   "project_id": "135-dance-studio",
+   "title": "Dance studio",
+   "category": "Education & childcare",
+   "summary": "Main equipment: Mirrors, sprung floor, barres, sound",
+   "image": "turnkey/catalogue/135-dance-studio.jpg",
+   "image_alt": "Dance studio",
+   "sort": 135
+  },
+  {
+   "no": 136,
+   "project_id": "136-art-studio",
+   "title": "Art studio",
+   "category": "Education & childcare",
+   "summary": "Main equipment: Easels, tables, storage, lighting",
+   "image": "turnkey/catalogue/136-art-studio.jpg",
+   "image_alt": "Art studio",
+   "sort": 136
+  },
+  {
+   "no": 137,
+   "project_id": "137-driving-school-simulators",
+   "title": "Driving school simulators",
+   "category": "Education & childcare",
+   "summary": "Main equipment: Simulators, desks, vehicles",
+   "image": "turnkey/catalogue/137-driving-school-simulators.jpg",
+   "image_alt": "Driving school simulators",
+   "sort": 137
+  },
+  {
+   "no": 138,
+   "project_id": "138-vocational-training-centre",
+   "title": "Vocational training centre",
+   "category": "Education & childcare",
+   "summary": "Main equipment: Workshop benches, tools, training rigs",
+   "image": "turnkey/catalogue/138-vocational-training-centre.jpg",
+   "image_alt": "Vocational training centre",
+   "sort": 138
+  },
+  {
+   "no": 139,
+   "project_id": "139-university-lecture-hall",
+   "title": "University lecture hall",
+   "category": "Education & childcare",
+   "summary": "Main equipment: Tiered seating, projector, sound, desks",
+   "image": "turnkey/catalogue/139-university-lecture-hall.jpg",
+   "image_alt": "University lecture hall",
+   "sort": 139
+  },
+  {
+   "no": 140,
+   "project_id": "140-library-fit-out",
+   "title": "Library fit-out",
+   "category": "Education & childcare",
+   "summary": "Main equipment: Shelving, desks, scanners, lighting",
+   "image": "turnkey/catalogue/140-library-fit-out.jpg",
+   "image_alt": "Library fit-out",
+   "sort": 140
+  },
+  {
+   "no": 141,
+   "project_id": "141-dialysis-centre",
+   "title": "Dialysis centre",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Dialysis machines, chairs, water treatment",
+   "image": "turnkey/catalogue/141-dialysis-centre.jpg",
+   "image_alt": "Dialysis centre",
+   "sort": 141
+  },
+  {
+   "no": 142,
+   "project_id": "142-pharmacy-packing-unit",
+   "title": "Pharmacy packing unit",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Blister machine, labeler, shelves",
+   "image": "turnkey/catalogue/142-pharmacy-packing-unit.jpg",
+   "image_alt": "Pharmacy packing unit",
+   "sort": 142
+  },
+  {
+   "no": 143,
+   "project_id": "143-medical-supplies-factory",
+   "title": "Medical supplies factory",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Gloves, mask or syringe lines",
+   "image": "turnkey/catalogue/143-medical-supplies-factory.jpg",
+   "image_alt": "Medical supplies factory",
+   "sort": 143
+  },
+  {
+   "no": 144,
+   "project_id": "144-rehabilitation-hospital-ward",
+   "title": "Rehabilitation hospital ward",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Beds, therapy equipment, furniture",
+   "image": "turnkey/catalogue/144-rehabilitation-hospital-ward.jpg",
+   "image_alt": "Rehabilitation hospital ward",
+   "sort": 144
+  },
+  {
+   "no": 145,
+   "project_id": "145-mobile-clinic-van",
+   "title": "Mobile clinic van",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Vehicle fit-out, exam bed, fridge, generator",
+   "image": "turnkey/catalogue/145-mobile-clinic-van.jpg",
+   "image_alt": "Mobile clinic van",
+   "sort": 145
+  },
+  {
+   "no": 146,
+   "project_id": "146-massage-and-wellness-centre",
+   "title": "Massage and wellness centre",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Massage beds, chairs, towel warmers",
+   "image": "turnkey/catalogue/146-massage-and-wellness-centre.jpg",
+   "image_alt": "Massage and wellness centre",
+   "sort": 146
+  },
+  {
+   "no": 147,
+   "project_id": "147-hammam-turkish-bath",
+   "title": "Hammam / Turkish bath",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Marble slabs, steam generators, heaters, tiling",
+   "image": "turnkey/catalogue/147-hammam-turkish-bath.jpg",
+   "image_alt": "Hammam / Turkish bath",
+   "sort": 147
+  },
+  {
+   "no": 148,
+   "project_id": "148-nail-and-lash-studio",
+   "title": "Nail and lash studio",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Tables, lamps, chairs, sterilizers",
+   "image": "turnkey/catalogue/148-nail-and-lash-studio.jpg",
+   "image_alt": "Nail and lash studio",
+   "sort": 148
+  },
+  {
+   "no": 149,
+   "project_id": "149-barber-shop",
+   "title": "Barber shop",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Chairs, mirrors, wash basins, stations",
+   "image": "turnkey/catalogue/149-barber-shop.jpg",
+   "image_alt": "Barber shop",
+   "sort": 149
+  },
+  {
+   "no": 150,
+   "project_id": "150-cryotherapy-and-recovery-centre",
+   "title": "Cryotherapy and recovery centre",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Cryo chambers, compression units",
+   "image": "turnkey/catalogue/150-cryotherapy-and-recovery-centre.jpg",
+   "image_alt": "Cryotherapy and recovery centre",
+   "sort": 150
+  },
+  {
+   "no": 151,
+   "project_id": "151-prefab-house-factory",
+   "title": "Prefab house factory",
+   "category": "Construction & building",
+   "summary": "Main equipment: Panel lines, steel framing, cutting machines",
+   "image": "turnkey/catalogue/151-prefab-house-factory.jpg",
+   "image_alt": "Prefab house factory",
+   "sort": 151
+  },
+  {
+   "no": 152,
+   "project_id": "152-modular-home-container-house",
+   "title": "Modular home (container house)",
+   "category": "Construction & building",
+   "summary": "Main equipment: Units, insulation, fit-out",
+   "image": "turnkey/catalogue/152-modular-container-home.jpg",
+   "image_alt": "Modular home (container house)",
+   "sort": 152
+  },
+  {
+   "no": 153,
+   "project_id": "153-steel-structure-workshop",
+   "title": "Steel structure workshop",
+   "category": "Construction & building",
+   "summary": "Main equipment: Frame, cranes, welding equipment",
+   "image": "turnkey/catalogue/153-steel-structure-workshop.jpg",
+   "image_alt": "Steel structure workshop",
+   "sort": 153
+  },
+  {
+   "no": 154,
+   "project_id": "154-villa-interior-fit-out",
+   "title": "Villa interior fit-out",
+   "category": "Construction & building",
+   "summary": "Main equipment: Kitchen, wardrobes, doors, lighting, sanitary ware",
+   "image": "turnkey/catalogue/154-villa-interior-fit-out.jpg",
+   "image_alt": "Villa interior fit-out",
+   "sort": 154
+  },
+  {
+   "no": 155,
+   "project_id": "155-kitchen-cabinet-factory",
+   "title": "Kitchen cabinet factory",
+   "category": "Construction & building",
+   "summary": "Main equipment: Panel saws, edge bander, CNC",
+   "image": "turnkey/catalogue/155-kitchen-cabinet-factory.jpg",
+   "image_alt": "Kitchen cabinet factory",
+   "sort": 155
+  },
+  {
+   "no": 156,
+   "project_id": "156-door-and-wardrobe-factory",
+   "title": "Door and wardrobe factory",
+   "category": "Construction & building",
+   "summary": "Main equipment: CNC, presses, spray line",
+   "image": "turnkey/catalogue/156-door-and-wardrobe-factory.jpg",
+   "image_alt": "Door and wardrobe factory",
+   "sort": 156
+  },
+  {
+   "no": 157,
+   "project_id": "157-ceramic-tile-plant",
+   "title": "Ceramic tile plant",
+   "category": "Construction & building",
+   "summary": "Main equipment: Press, kiln, glaze lines",
+   "image": "turnkey/catalogue/157-ceramic-tile-plant.jpg",
+   "image_alt": "Ceramic tile plant",
+   "sort": 157
+  },
+  {
+   "no": 158,
+   "project_id": "158-paint-manufacturing-plant",
+   "title": "Paint manufacturing plant",
+   "category": "Construction & building",
+   "summary": "Main equipment: Mixers, mills, filling machines",
+   "image": "turnkey/catalogue/158-paint-manufacturing-plant.jpg",
+   "image_alt": "Paint manufacturing plant",
+   "sort": 158
+  },
+  {
+   "no": 159,
+   "project_id": "159-concrete-batching-plant",
+   "title": "Concrete batching plant",
+   "category": "Construction & building",
+   "summary": "Main equipment: Mixers, silos, conveyors, control",
+   "image": "turnkey/catalogue/159-concrete-batching-plant.jpg",
+   "image_alt": "Concrete batching plant",
+   "sort": 159
+  },
+  {
+   "no": 160,
+   "project_id": "160-facade-and-glass-workshop",
+   "title": "Facade and glass workshop",
+   "category": "Construction & building",
+   "summary": "Main equipment: Cutting tables, tempering, insulating line",
+   "image": "turnkey/catalogue/160-facade-and-glass-workshop.jpg",
+   "image_alt": "Facade and glass workshop",
+   "sort": 160
+  },
+  {
+   "no": 161,
+   "project_id": "161-plastic-toy-factory",
+   "title": "Plastic toy factory",
+   "category": "Light industry",
+   "summary": "Main equipment: Injection machines, moulds, assembly",
+   "image": "turnkey/catalogue/161-plastic-toy-factory.jpg",
+   "image_alt": "Plastic toy factory",
+   "sort": 161
+  },
+  {
+   "no": 162,
+   "project_id": "162-disposable-cup-plate-plant",
+   "title": "Disposable cup / plate plant",
+   "category": "Light industry",
+   "summary": "Main equipment: Forming machines, printing, packing",
+   "image": "turnkey/catalogue/162-disposable-cup-and-plate-plant.jpg",
+   "image_alt": "Disposable cup / plate plant",
+   "sort": 162
+  },
+  {
+   "no": 163,
+   "project_id": "163-foam-and-mattress-factory",
+   "title": "Foam and mattress factory",
+   "category": "Light industry",
+   "summary": "Main equipment: Foaming line, cutters, spring machines",
+   "image": "turnkey/catalogue/163-foam-and-mattress-factory.jpg",
+   "image_alt": "Foam and mattress factory",
+   "sort": 163
+  },
+  {
+   "no": 164,
+   "project_id": "164-textile-printing-workshop",
+   "title": "Textile printing workshop",
+   "category": "Light industry",
+   "summary": "Main equipment: Digital printers, heat presses, dryers",
+   "image": "turnkey/catalogue/164-textile-printing-workshop.jpg",
+   "image_alt": "Textile printing workshop",
+   "sort": 164
+  },
+  {
+   "no": 165,
+   "project_id": "165-shoe-factory",
+   "title": "Shoe factory",
+   "category": "Light industry",
+   "summary": "Main equipment: Cutting presses, stitching, lasting machines",
+   "image": "turnkey/catalogue/165-shoe-factory.jpg",
+   "image_alt": "Shoe factory",
+   "sort": 165
+  },
+  {
+   "no": 166,
+   "project_id": "166-bag-and-luggage-workshop",
+   "title": "Bag and luggage workshop",
+   "category": "Light industry",
+   "summary": "Main equipment: Sewing machines, cutters, riveters",
+   "image": "turnkey/catalogue/166-bag-and-luggage-workshop.jpg",
+   "image_alt": "Bag and luggage workshop",
+   "sort": 166
+  },
+  {
+   "no": 167,
+   "project_id": "167-cosmetics-manufacturing",
+   "title": "Cosmetics manufacturing",
+   "category": "Light industry",
+   "summary": "Main equipment: Mixers, homogenizers, filling, labeling",
+   "image": "turnkey/catalogue/167-cosmetics-manufacturing.jpg",
+   "image_alt": "Cosmetics manufacturing",
+   "sort": 167
+  },
+  {
+   "no": 168,
+   "project_id": "168-detergent-soap-plant",
+   "title": "Detergent / soap plant",
+   "category": "Light industry",
+   "summary": "Main equipment: Mixers, saponification, packing",
+   "image": "turnkey/catalogue/168-detergent-and-soap-plant.jpg",
+   "image_alt": "Detergent / soap plant",
+   "sort": 168
+  },
+  {
+   "no": 169,
+   "project_id": "169-candle-and-incense-factory",
+   "title": "Candle and incense factory",
+   "category": "Light industry",
+   "summary": "Main equipment: Melting tanks, moulds, packing",
+   "image": "turnkey/catalogue/169-candle-and-incense-factory.jpg",
+   "image_alt": "Candle and incense factory",
+   "sort": 169
+  },
+  {
+   "no": 170,
+   "project_id": "170-glass-bottle-jar-decoration",
+   "title": "Glass bottle / jar decoration",
+   "category": "Light industry",
+   "summary": "Main equipment: Printing, labeling, packing",
+   "image": "turnkey/catalogue/170-glass-bottle-and-jar-decoration.jpg",
+   "image_alt": "Glass bottle / jar decoration",
+   "sort": 170
+  },
+  {
+   "no": 171,
+   "project_id": "171-wire-and-cable-factory",
+   "title": "Wire and cable factory",
+   "category": "Light industry",
+   "summary": "Main equipment: Drawing, extruding, coiling",
+   "image": "turnkey/catalogue/171-wire-and-cable-factory.jpg",
+   "image_alt": "Wire and cable factory",
+   "sort": 171
+  },
+  {
+   "no": 172,
+   "project_id": "172-battery-pack-assembly",
+   "title": "Battery pack assembly",
+   "category": "Light industry",
+   "summary": "Main equipment: Welding, testing, assembly line",
+   "image": "turnkey/catalogue/172-battery-pack-assembly.jpg",
+   "image_alt": "Battery pack assembly",
+   "sort": 172
+  },
+  {
+   "no": 173,
+   "project_id": "173-smart-home-installation",
+   "title": "Smart home installation",
+   "category": "Electronics & technology",
+   "summary": "Main equipment: Hubs, sensors, locks, cameras, panels",
+   "image": "turnkey/catalogue/173-smart-home-installation.jpg",
+   "image_alt": "Smart home installation",
+   "sort": 173
+  },
+  {
+   "no": 174,
+   "project_id": "174-cctv-and-security-system",
+   "title": "CCTV and security system",
+   "category": "Electronics & technology",
+   "summary": "Main equipment: Cameras, recorders, access control",
+   "image": "turnkey/catalogue/174-cctv-and-security-system.jpg",
+   "image_alt": "CCTV and security system",
+   "sort": 174
+  },
+  {
+   "no": 175,
+   "project_id": "175-data-room-mini-data-centre",
+   "title": "Data room / mini data centre",
+   "category": "Electronics & technology",
+   "summary": "Main equipment: Racks, cooling, UPS, cabling",
+   "image": "turnkey/catalogue/175-mini-data-centre.jpg",
+   "image_alt": "Data room / mini data centre",
+   "sort": 175
+  },
+  {
+   "no": 176,
+   "project_id": "176-call-centre-fit-out",
+   "title": "Call centre fit-out",
+   "category": "Electronics & technology",
+   "summary": "Main equipment: Workstations, headsets, partitions, network",
+   "image": "turnkey/catalogue/176-call-centre-fit-out.jpg",
+   "image_alt": "Call centre fit-out",
+   "sort": 176
+  },
+  {
+   "no": 177,
+   "project_id": "177-digital-signage-network",
+   "title": "Digital signage network",
+   "category": "Electronics & technology",
+   "summary": "Main equipment: Screens, players, mounts, software",
+   "image": "turnkey/catalogue/177-digital-signage-network.jpg",
+   "image_alt": "Digital signage network",
+   "sort": 177
+  },
+  {
+   "no": 178,
+   "project_id": "178-smart-classroom",
+   "title": "Smart classroom",
+   "category": "Electronics & technology",
+   "summary": "Main equipment: Interactive panels, tablets, cameras, audio",
+   "image": "turnkey/catalogue/178-smart-classroom.jpg",
+   "image_alt": "Smart classroom",
+   "sort": 178
+  },
+  {
+   "no": 179,
+   "project_id": "179-drone-service-centre",
+   "title": "Drone service centre",
+   "category": "Electronics & technology",
+   "summary": "Main equipment: Drones, charging, repair tools",
+   "image": "turnkey/catalogue/179-drone-service-centre.jpg",
+   "image_alt": "Drone service centre",
+   "sort": 179
+  },
+  {
+   "no": 180,
+   "project_id": "180-phone-repair-lab",
+   "title": "Phone repair lab",
+   "category": "Electronics & technology",
+   "summary": "Main equipment: Microscopes, rework stations, test tools",
+   "image": "turnkey/catalogue/180-phone-repair-lab.jpg",
+   "image_alt": "Phone repair lab",
+   "sort": 180
+  },
+  {
+   "no": 181,
+   "project_id": "181-rooftop-solar-for-factory",
+   "title": "Rooftop solar for factory",
+   "category": "Energy & environment",
+   "summary": "Main equipment: Panels, inverters, mounting, monitoring",
+   "image": "turnkey/catalogue/181-rooftop-solar-for-factory.jpg",
+   "image_alt": "Rooftop solar for factory",
+   "sort": 181
+  },
+  {
+   "no": 182,
+   "project_id": "182-solar-water-pumping",
+   "title": "Solar water pumping",
+   "category": "Energy & environment",
+   "summary": "Main equipment: Pumps, panels, controllers, pipes",
+   "image": "turnkey/catalogue/182-solar-water-pumping.jpg",
+   "image_alt": "Solar water pumping",
+   "sort": 182
+  },
+  {
+   "no": 183,
+   "project_id": "183-wind-and-solar-street-lighting",
+   "title": "Wind and solar street lighting",
+   "category": "Energy & environment",
+   "summary": "Main equipment: Poles, lamps, batteries",
+   "image": "turnkey/catalogue/183-wind-and-solar-street-lighting.jpg",
+   "image_alt": "Wind and solar street lighting",
+   "sort": 183
+  },
+  {
+   "no": 184,
+   "project_id": "184-biogas-plant",
+   "title": "Biogas plant",
+   "category": "Energy & environment",
+   "summary": "Main equipment: Digester, generator, gas storage",
+   "image": "turnkey/catalogue/184-biogas-plant.jpg",
+   "image_alt": "Biogas plant",
+   "sort": 184
+  },
+  {
+   "no": 185,
+   "project_id": "185-water-treatment-plant",
+   "title": "Water treatment plant",
+   "category": "Energy & environment",
+   "summary": "Main equipment: Filters, RO, dosing, tanks",
+   "image": "turnkey/catalogue/185-water-treatment-plant.jpg",
+   "image_alt": "Water treatment plant",
+   "sort": 185
+  },
+  {
+   "no": 186,
+   "project_id": "186-waste-sorting-plant",
+   "title": "Waste sorting plant",
+   "category": "Energy & environment",
+   "summary": "Main equipment: Conveyors, sorting, balers",
+   "image": "turnkey/catalogue/186-waste-sorting-plant.jpg",
+   "image_alt": "Waste sorting plant",
+   "sort": 186
+  },
+  {
+   "no": 187,
+   "project_id": "187-battery-energy-storage-container",
+   "title": "Battery energy storage container",
+   "category": "Energy & environment",
+   "summary": "Main equipment: Batteries, PCS, cooling, control",
+   "image": "turnkey/catalogue/187-battery-energy-storage-container.jpg",
+   "image_alt": "Battery energy storage container",
+   "sort": 187
+  },
+  {
+   "no": 188,
+   "project_id": "188-heat-pump-hvac-installation",
+   "title": "Heat pump / HVAC installation",
+   "category": "Energy & environment",
+   "summary": "Main equipment: Units, ducting, controls",
+   "image": "turnkey/catalogue/188-heat-pump-and-hvac-installation.jpg",
+   "image_alt": "Heat pump / HVAC installation",
+   "sort": 188
+  },
+  {
+   "no": 189,
+   "project_id": "189-smart-irrigation-system",
+   "title": "Smart irrigation system",
+   "category": "Agriculture & logistics",
+   "summary": "Main equipment: Pumps, drip lines, sensors, controllers",
+   "image": "turnkey/catalogue/189-smart-irrigation-system.jpg",
+   "image_alt": "Smart irrigation system",
+   "sort": 189
+  },
+  {
+   "no": 190,
+   "project_id": "190-greenhouse-tomato-farm",
+   "title": "Greenhouse tomato farm",
+   "category": "Agriculture & logistics",
+   "summary": "Main equipment: Structure, heating, irrigation, climate control",
+   "image": "turnkey/catalogue/190-greenhouse-tomato-farm.jpg",
+   "image_alt": "Greenhouse tomato farm",
+   "sort": 190
+  },
+  {
+   "no": 191,
+   "project_id": "191-dairy-farm-milking-parlour",
+   "title": "Dairy farm milking parlour",
+   "category": "Agriculture & logistics",
+   "summary": "Main equipment: Milking machines, cooling tanks, feeders",
+   "image": "turnkey/catalogue/191-dairy-farm-milking-parlour.jpg",
+   "image_alt": "Dairy farm milking parlour",
+   "sort": 191
+  },
+  {
+   "no": 192,
+   "project_id": "192-animal-feed-mill",
+   "title": "Animal feed mill",
+   "category": "Agriculture & logistics",
+   "summary": "Main equipment: Grinders, mixers, pelletizer, bagging",
+   "image": "turnkey/catalogue/192-animal-feed-mill.jpg",
+   "image_alt": "Animal feed mill",
+   "sort": 192
+  },
+  {
+   "no": 193,
+   "project_id": "193-grain-storage-and-silo",
+   "title": "Grain storage and silo",
+   "category": "Agriculture & logistics",
+   "summary": "Main equipment: Silos, dryers, conveyors",
+   "image": "turnkey/catalogue/193-grain-storage-and-silo.jpg",
+   "image_alt": "Grain storage and silo",
+   "sort": 193
+  },
+  {
+   "no": 194,
+   "project_id": "194-cold-chain-truck-refrigerated-van",
+   "title": "Cold chain truck / refrigerated van",
+   "category": "Agriculture & logistics",
+   "summary": "Main equipment: Refrigeration units, insulation",
+   "image": "turnkey/catalogue/194-cold-chain-refrigerated-van.jpg",
+   "image_alt": "Cold chain truck / refrigerated van",
+   "sort": 194
+  },
+  {
+   "no": 195,
+   "project_id": "195-packing-house-for-fruit",
+   "title": "Packing house for fruit",
+   "category": "Agriculture & logistics",
+   "summary": "Main equipment: Washing, sorting, waxing, cold rooms",
+   "image": "turnkey/catalogue/195-fruit-packing-house.jpg",
+   "image_alt": "Packing house for fruit",
+   "sort": 195
+  },
+  {
+   "no": 196,
+   "project_id": "196-courier-sorting-hub",
+   "title": "Courier sorting hub",
+   "category": "Agriculture & logistics",
+   "summary": "Main equipment: Sorters, conveyors, scanners, racks",
+   "image": "turnkey/catalogue/196-courier-sorting-hub.jpg",
+   "image_alt": "Courier sorting hub",
+   "sort": 196
+  },
+  {
+   "no": 197,
+   "project_id": "197-event-hall-stage-package",
+   "title": "Event hall / stage package",
+   "category": "Events, tourism & specialty",
+   "summary": "Main equipment: Stage, trussing, lighting, sound, LED screen",
+   "image": "turnkey/catalogue/197-event-hall-and-stage-package.jpg",
+   "image_alt": "Event hall / stage package",
+   "sort": 197
+  },
+  {
+   "no": 198,
+   "project_id": "198-camping-and-glamping-site",
+   "title": "Camping and glamping site",
+   "category": "Events, tourism & specialty",
+   "summary": "Main equipment: Tents, furniture, solar, bathroom pods",
+   "image": "turnkey/catalogue/198-camping-and-glamping-site.jpg",
+   "image_alt": "Camping and glamping site",
+   "sort": 198
+  },
+  {
+   "no": 199,
+   "project_id": "199-theme-park-attractions",
+   "title": "Theme park attractions",
+   "category": "Events, tourism & specialty",
+   "summary": "Main equipment: Rides, ticketing, safety, lighting",
+   "image": "turnkey/catalogue/199-theme-park-attractions.jpg",
+   "image_alt": "Theme park attractions",
+   "sort": 199
+  },
+  {
+   "no": 200,
+   "project_id": "200-movie-studio-content-studio",
+   "title": "Movie studio / content studio",
+   "category": "Events, tourism & specialty",
+   "summary": "Main equipment: Cameras, lights, backdrops, audio",
+   "image": "turnkey/catalogue/200-movie-and-content-studio.jpg",
+   "image_alt": "Movie studio / content studio",
+   "sort": 200
+  },
+  {
+   "no": 201,
+   "project_id": "201-hotel-buffet-kitchen",
+   "title": "Hotel buffet kitchen",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Bain-maries, chafing stations, cooking line, cold storage",
+   "image": "turnkey/catalogue/201-hotel-buffet-kitchen.jpg",
+   "image_alt": "Hotel buffet kitchen",
+   "sort": 201
+  },
+  {
+   "no": 202,
+   "project_id": "202-hospital-canteen-kitchen",
+   "title": "Hospital / canteen kitchen",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Large kettles, steamers, trolleys, dishwashing line",
+   "image": "turnkey/catalogue/202-hospital-and-canteen-kitchen.jpg",
+   "image_alt": "Hospital / canteen kitchen",
+   "sort": 202
+  },
+  {
+   "no": 203,
+   "project_id": "203-burger-joint",
+   "title": "Burger joint",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Flat-top grill, fryers, bun toaster, prep fridges",
+   "image": "turnkey/catalogue/203-burger-joint.jpg",
+   "image_alt": "Burger joint",
+   "sort": 203
+  },
+  {
+   "no": 204,
+   "project_id": "204-fried-chicken-shop",
+   "title": "Fried chicken shop",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Pressure fryers, breading station, warmers",
+   "image": "turnkey/catalogue/204-fried-chicken-shop.jpg",
+   "image_alt": "Fried chicken shop",
+   "sort": 204
+  },
+  {
+   "no": 205,
+   "project_id": "205-falafel-street-food-stall",
+   "title": "Falafel / street-food stall",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Fryers, griddle, small fridge, cart",
+   "image": "turnkey/catalogue/205-falafel-street-food-stall.jpg",
+   "image_alt": "Falafel / street-food stall",
+   "sort": 205
+  },
+  {
+   "no": 206,
+   "project_id": "206-salad-and-healthy-food-bar",
+   "title": "Salad and healthy-food bar",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Cold wells, blenders, display chiller",
+   "image": "turnkey/catalogue/206-salad-and-healthy-food-bar.jpg",
+   "image_alt": "Salad and healthy-food bar",
+   "sort": 206
+  },
+  {
+   "no": 207,
+   "project_id": "207-waffle-and-crepe-cart",
+   "title": "Waffle and crepe cart",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Crepe plates, batter dispenser, cart",
+   "image": "turnkey/catalogue/207-waffle-and-crepe-cart.jpg",
+   "image_alt": "Waffle and crepe cart",
+   "sort": 207
+  },
+  {
+   "no": 208,
+   "project_id": "208-soft-drink-syrup-plant",
+   "title": "Soft-drink syrup plant",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Mixing tanks, carbonation, filling line",
+   "image": "turnkey/catalogue/208-soft-drink-syrup-plant.jpg",
+   "image_alt": "Soft-drink syrup plant",
+   "sort": 208
+  },
+  {
+   "no": 209,
+   "project_id": "209-pickle-and-sauce-factory",
+   "title": "Pickle and sauce factory",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Cooking kettles, filling, capping, labeling",
+   "image": "turnkey/catalogue/209-pickle-and-sauce-factory.jpg",
+   "image_alt": "Pickle and sauce factory",
+   "sort": 209
+  },
+  {
+   "no": 210,
+   "project_id": "210-pasta-factory",
+   "title": "Pasta factory",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Extruder, dryer, packing machine",
+   "image": "turnkey/catalogue/210-pasta-factory.jpg",
+   "image_alt": "Pasta factory",
+   "sort": 210
+  },
+  {
+   "no": 211,
+   "project_id": "211-noodle-production-line",
+   "title": "Noodle production line",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Dough sheeter, steamer, cutter, packing",
+   "image": "turnkey/catalogue/211-noodle-production-line.jpg",
+   "image_alt": "Noodle production line",
+   "sort": 211
+  },
+  {
+   "no": 212,
+   "project_id": "212-honey-processing-unit",
+   "title": "Honey processing unit",
+   "category": "Food & beverage",
+   "summary": "Main equipment: Extractors, filters, filling, labeling",
+   "image": "turnkey/catalogue/212-honey-processing-unit.jpg",
+   "image_alt": "Honey processing unit",
+   "sort": 212
+  },
+  {
+   "no": 213,
+   "project_id": "213-bridal-and-formal-wear-shop",
+   "title": "Bridal and formal wear shop",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Display, fitting rooms, steamers, lighting",
+   "image": "turnkey/catalogue/213-bridal-and-formal-wear-shop.jpg",
+   "image_alt": "Bridal and formal wear shop",
+   "sort": 213
+  },
+  {
+   "no": 214,
+   "project_id": "214-curtain-and-fabric-shop",
+   "title": "Curtain and fabric shop",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Roll racks, cutting tables, sewing station",
+   "image": "turnkey/catalogue/214-curtain-and-fabric-shop.jpg",
+   "image_alt": "Curtain and fabric shop",
+   "sort": 214
+  },
+  {
+   "no": 215,
+   "project_id": "215-lighting-showroom",
+   "title": "Lighting showroom",
+   "category": "Retail & shop fit-outs",
+   "summary": null,
+   "image": "turnkey/catalogue/215-lighting-showroom.jpg",
+   "image_alt": "Lighting showroom",
+   "sort": 215
+  },
+  {
+   "no": 216,
+   "project_id": "216-bathroom-and-sanitary-ware-showroom",
+   "title": "Bathroom and sanitary-ware showroom",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Display sets, lighting, signage",
+   "image": "turnkey/catalogue/216-bathroom-and-sanitary-ware-showroom.jpg",
+   "image_alt": "Bathroom and sanitary-ware showroom",
+   "sort": 216
+  },
+  {
+   "no": 217,
+   "project_id": "217-carpet-and-flooring-showroom",
+   "title": "Carpet and flooring showroom",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Roll racks, sample displays",
+   "image": "turnkey/catalogue/217-carpet-and-flooring-showroom.jpg",
+   "image_alt": "Carpet and flooring showroom",
+   "sort": 217
+  },
+  {
+   "no": 218,
+   "project_id": "218-bicycle-shop",
+   "title": "Bicycle shop",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Display racks, repair stand, tools",
+   "image": "turnkey/catalogue/218-bicycle-shop.jpg",
+   "image_alt": "Bicycle shop",
+   "sort": 218
+  },
+  {
+   "no": 219,
+   "project_id": "219-musical-instrument-store",
+   "title": "Musical instrument store",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Display walls, demo room, soundproofing",
+   "image": "turnkey/catalogue/219-musical-instrument-store.jpg",
+   "image_alt": "Musical instrument store",
+   "sort": 219
+  },
+  {
+   "no": 220,
+   "project_id": "220-art-gallery-fit-out",
+   "title": "Art gallery fit-out",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Gallery lighting, hanging system, plinths",
+   "image": "turnkey/catalogue/220-art-gallery-fit-out.jpg",
+   "image_alt": "Art gallery fit-out",
+   "sort": 220
+  },
+  {
+   "no": 221,
+   "project_id": "221-tobacco-and-vape-shop",
+   "title": "Tobacco and vape shop",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Display cabinets, counters, security",
+   "image": "turnkey/catalogue/221-tobacco-and-vape-shop.jpg",
+   "image_alt": "Tobacco and vape shop",
+   "sort": 221
+  },
+  {
+   "no": 222,
+   "project_id": "222-dollar-variety-store",
+   "title": "Dollar / variety store",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Shelving, baskets, checkout counters",
+   "image": "turnkey/catalogue/222-dollar-and-variety-store.jpg",
+   "image_alt": "Dollar / variety store",
+   "sort": 222
+  },
+  {
+   "no": 223,
+   "project_id": "223-kids-clothing-store",
+   "title": "Kids' clothing store",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Low displays, play corner, fitting rooms",
+   "image": "turnkey/catalogue/223-kids-clothing-store.jpg",
+   "image_alt": "Kids' clothing store",
+   "sort": 223
+  },
+  {
+   "no": 224,
+   "project_id": "224-electronics-repair-and-resale-shop",
+   "title": "Electronics repair and resale shop",
+   "category": "Retail & shop fit-outs",
+   "summary": "Main equipment: Workbenches, testing tools, display",
+   "image": "turnkey/catalogue/224-electronics-repair-and-resale-shop.jpg",
+   "image_alt": "Electronics repair and resale shop",
+   "sort": 224
+  },
+  {
+   "no": 225,
+   "project_id": "225-golf-simulator-lounge",
+   "title": "Golf simulator lounge",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Simulators, screens, turf, projectors",
+   "image": "turnkey/catalogue/225-golf-simulator-lounge.jpg",
+   "image_alt": "Golf simulator lounge",
+   "sort": 225
+  },
+  {
+   "no": 226,
+   "project_id": "226-bowling-alley",
+   "title": "Bowling alley",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Lanes, pinsetters, scoring, seating",
+   "image": "turnkey/catalogue/226-bowling-alley.jpg",
+   "image_alt": "Bowling alley",
+   "sort": 226
+  },
+  {
+   "no": 227,
+   "project_id": "227-climbing-gym",
+   "title": "Climbing gym",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Climbing walls, holds, auto-belay, flooring",
+   "image": "turnkey/catalogue/227-climbing-gym.jpg",
+   "image_alt": "Climbing gym",
+   "sort": 227
+  },
+  {
+   "no": 228,
+   "project_id": "228-ice-rink",
+   "title": "Ice rink",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Chiller plant, boards, resurfacer",
+   "image": "turnkey/catalogue/228-ice-rink.jpg",
+   "image_alt": "Ice rink",
+   "sort": 228
+  },
+  {
+   "no": 229,
+   "project_id": "229-skate-park",
+   "title": "Skate park",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Ramps, rails, concrete or modular elements",
+   "image": "turnkey/catalogue/229-skate-park.jpg",
+   "image_alt": "Skate park",
+   "sort": 229
+  },
+  {
+   "no": 230,
+   "project_id": "230-shooting-range-airsoft-laser",
+   "title": "Shooting range (airsoft / laser)",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Targets, barriers, lighting, safety gear",
+   "image": "turnkey/catalogue/230-recreational-laser-target-range.jpg",
+   "image_alt": "Shooting range (airsoft / laser)",
+   "sort": 230
+  },
+  {
+   "no": 231,
+   "project_id": "231-go-kart-track-electric",
+   "title": "Go-kart track (electric)",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Karts, barriers, charging, timing system",
+   "image": "turnkey/catalogue/231-electric-go-kart-track.jpg",
+   "image_alt": "Go-kart track (electric)",
+   "sort": 231
+  },
+  {
+   "no": 232,
+   "project_id": "232-water-park-equipment",
+   "title": "Water park equipment",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Slides, pumps, filtration, wave pool",
+   "image": "turnkey/catalogue/232-water-park-equipment.jpg",
+   "image_alt": "Water park equipment",
+   "sort": 232
+  },
+  {
+   "no": 233,
+   "project_id": "233-mini-golf-course",
+   "title": "Mini golf course",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Turf, obstacles, lighting, signage",
+   "image": "turnkey/catalogue/233-mini-golf-course.jpg",
+   "image_alt": "Mini golf course",
+   "sort": 233
+  },
+  {
+   "no": 234,
+   "project_id": "234-escape-room",
+   "title": "Escape room",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Props, locks, sensors, control system",
+   "image": "turnkey/catalogue/234-escape-room.jpg",
+   "image_alt": "Escape room",
+   "sort": 234
+  },
+  {
+   "no": 235,
+   "project_id": "235-karaoke-music-lounge",
+   "title": "Karaoke / music lounge",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Sound-proofed rooms, screens, audio",
+   "image": "turnkey/catalogue/235-karaoke-and-music-lounge.jpg",
+   "image_alt": "Karaoke / music lounge",
+   "sort": 235
+  },
+  {
+   "no": 236,
+   "project_id": "236-sports-hall-indoor-arena",
+   "title": "Sports hall / indoor arena",
+   "category": "Fitness, sport & leisure",
+   "summary": "Main equipment: Flooring, hoops, nets, seating",
+   "image": "turnkey/catalogue/236-sports-hall-and-indoor-arena.jpg",
+   "image_alt": "Sports hall / indoor arena",
+   "sort": 236
+  },
+  {
+   "no": 237,
+   "project_id": "237-hotel-laundry-room",
+   "title": "Hotel laundry room",
+   "category": "Hospitality & commercial",
+   "summary": "Main equipment: Washers, dryers, ironers, folding",
+   "image": "turnkey/catalogue/237-hotel-laundry-room.jpg",
+   "image_alt": "Hotel laundry room",
+   "sort": 237
+  },
+  {
+   "no": 238,
+   "project_id": "238-hotel-spa-and-pool-area",
+   "title": "Hotel spa and pool area",
+   "category": "Hospitality & commercial",
+   "summary": "Main equipment: Pool, sauna, steam room, loungers",
+   "image": "turnkey/catalogue/238-hotel-spa-and-pool-area.jpg",
+   "image_alt": "Hotel spa and pool area",
+   "sort": 238
+  },
+  {
+   "no": 239,
+   "project_id": "239-restaurant-furniture-package",
+   "title": "Restaurant furniture package",
+   "category": "Hospitality & commercial",
+   "summary": "Main equipment: Tables, chairs, booths, outdoor sets",
+   "image": "turnkey/catalogue/239-restaurant-furniture-package.jpg",
+   "image_alt": "Restaurant furniture package",
+   "sort": 239
+  },
+  {
+   "no": 240,
+   "project_id": "240-hotel-bathroom-pods",
+   "title": "Hotel bathroom pods",
+   "category": "Hospitality & commercial",
+   "summary": "Main equipment: Prefab bathroom units, fixtures",
+   "image": "turnkey/catalogue/240-hotel-bathroom-pods.jpg",
+   "image_alt": "Hotel bathroom pods",
+   "sort": 240
+  },
+  {
+   "no": 241,
+   "project_id": "241-bar-and-nightclub",
+   "title": "Bar and nightclub",
+   "category": "Hospitality & commercial",
+   "summary": "Main equipment: Bar counter, DJ system, lighting, fridges",
+   "image": "turnkey/catalogue/241-bar-and-nightclub.jpg",
+   "image_alt": "Bar and nightclub",
+   "sort": 241
+  },
+  {
+   "no": 242,
+   "project_id": "242-beach-club-outdoor-lounge",
+   "title": "Beach club / outdoor lounge",
+   "category": "Hospitality & commercial",
+   "summary": "Main equipment: Loungers, umbrellas, bar, lighting",
+   "image": "turnkey/catalogue/242-beach-club-and-outdoor-lounge.jpg",
+   "image_alt": "Beach club / outdoor lounge",
+   "sort": 242
+  },
+  {
+   "no": 243,
+   "project_id": "243-wedding-venue-fit-out",
+   "title": "Wedding venue fit-out",
+   "category": "Hospitality & commercial",
+   "summary": "Main equipment: Chairs, stage, décor, lighting, sound",
+   "image": "turnkey/catalogue/243-wedding-venue-fit-out.jpg",
+   "image_alt": "Wedding venue fit-out",
+   "sort": 243
+  },
+  {
+   "no": 244,
+   "project_id": "244-serviced-apartments",
+   "title": "Serviced apartments",
+   "category": "Hospitality & commercial",
+   "summary": "Main equipment: Furniture, appliances, kitchenettes, bedding",
+   "image": "turnkey/catalogue/244-serviced-apartments.jpg",
+   "image_alt": "Serviced apartments",
+   "sort": 244
+  },
+  {
+   "no": 245,
+   "project_id": "245-hotel-room-smart-controls",
+   "title": "Hotel room smart controls",
+   "category": "Hospitality & commercial",
+   "summary": "Main equipment: Door locks, key cards, room automation",
+   "image": "turnkey/catalogue/245-hotel-room-smart-controls.jpg",
+   "image_alt": "Hotel room smart controls",
+   "sort": 245
+  },
+  {
+   "no": 246,
+   "project_id": "246-staff-dormitory-worker-camp",
+   "title": "Staff dormitory / worker camp",
+   "category": "Hospitality & commercial",
+   "summary": "Main equipment: Prefab rooms, bunks, kitchens, laundry",
+   "image": "turnkey/catalogue/246-staff-dormitory-and-worker-camp.jpg",
+   "image_alt": "Staff dormitory / worker camp",
+   "sort": 246
+  },
+  {
+   "no": 247,
+   "project_id": "247-maternity-and-women-s-clinic",
+   "title": "Maternity and women's clinic",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Exam beds, ultrasound, delivery equipment",
+   "image": "turnkey/catalogue/247-maternity-and-womens-clinic.jpg",
+   "image_alt": "Maternity and women's clinic",
+   "sort": 247
+  },
+  {
+   "no": 248,
+   "project_id": "248-pediatric-clinic",
+   "title": "Pediatric clinic",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Child-friendly furniture, exam gear, scales",
+   "image": "turnkey/catalogue/248-pediatric-clinic.jpg",
+   "image_alt": "Pediatric clinic",
+   "sort": 248
+  },
+  {
+   "no": 249,
+   "project_id": "249-hospital-ward-fit-out",
+   "title": "Hospital ward fit-out",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Beds, monitors, nurse stations, medical gas",
+   "image": "turnkey/catalogue/249-hospital-ward-fit-out.jpg",
+   "image_alt": "Hospital ward fit-out",
+   "sort": 249
+  },
+  {
+   "no": 250,
+   "project_id": "250-operating-theatre",
+   "title": "Operating theatre",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Surgical lights, tables, anaesthesia, sterilizers",
+   "image": "turnkey/catalogue/250-operating-theatre.jpg",
+   "image_alt": "Operating theatre",
+   "sort": 250
+  },
+  {
+   "no": 251,
+   "project_id": "251-sterilization-unit-cssd",
+   "title": "Sterilization unit (CSSD)",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Autoclaves, washers, packing machines",
+   "image": "turnkey/catalogue/251-sterilization-unit-cssd.jpg",
+   "image_alt": "Sterilization unit (CSSD)",
+   "sort": 251
+  },
+  {
+   "no": 252,
+   "project_id": "252-orthopedic-and-prosthetics-workshop",
+   "title": "Orthopedic and prosthetics workshop",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Machines, moulding, fitting tools",
+   "image": "turnkey/catalogue/252-orthopedic-and-prosthetics-workshop.jpg",
+   "image_alt": "Orthopedic and prosthetics workshop",
+   "sort": 252
+  },
+  {
+   "no": 253,
+   "project_id": "253-medical-oxygen-plant",
+   "title": "Medical oxygen plant",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: PSA oxygen generator, compressors, cylinders",
+   "image": "turnkey/catalogue/253-medical-oxygen-plant.jpg",
+   "image_alt": "Medical oxygen plant",
+   "sort": 253
+  },
+  {
+   "no": 254,
+   "project_id": "254-herbal-and-supplement-factory",
+   "title": "Herbal and supplement factory",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Mixers, capsule filling, packing",
+   "image": "turnkey/catalogue/254-herbal-and-supplement-factory.jpg",
+   "image_alt": "Herbal and supplement factory",
+   "sort": 254
+  },
+  {
+   "no": 255,
+   "project_id": "255-hearing-and-audiology-clinic",
+   "title": "Hearing and audiology clinic",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Sound booth, testing equipment",
+   "image": "turnkey/catalogue/255-hearing-and-audiology-clinic.jpg",
+   "image_alt": "Hearing and audiology clinic",
+   "sort": 255
+  },
+  {
+   "no": 256,
+   "project_id": "256-dental-lab",
+   "title": "Dental lab",
+   "category": "Healthcare & wellness",
+   "summary": "Main equipment: Milling machines, furnaces, scanners",
+   "image": "turnkey/catalogue/256-dental-lab.jpg",
+   "image_alt": "Dental lab",
+   "sort": 256
+  },
+  {
+   "no": 257,
+   "project_id": "257-steel-rebar-processing-yard",
+   "title": "Steel rebar processing yard",
+   "category": "Construction & building materials",
+   "summary": "Main equipment: Bending, cutting, straightening machines",
+   "image": "turnkey/catalogue/257-steel-rebar-processing-yard.jpg",
+   "image_alt": "Steel rebar processing yard",
+   "sort": 257
+  },
+  {
+   "no": 258,
+   "project_id": "258-gypsum-board-plant",
+   "title": "Gypsum board plant",
+   "category": "Construction & building materials",
+   "summary": "Main equipment: Forming line, dryer, cutting",
+   "image": "turnkey/catalogue/258-gypsum-board-plant.jpg",
+   "image_alt": "Gypsum board plant",
+   "sort": 258
+  },
+  {
+   "no": 259,
+   "project_id": "259-insulation-panel-sandwich-panel-line",
+   "title": "Insulation panel (sandwich panel) line",
+   "category": "Construction & building materials",
+   "summary": "Main equipment: Foaming, press, cutting",
+   "image": "turnkey/catalogue/259-insulation-sandwich-panel-line.jpg",
+   "image_alt": "Insulation panel (sandwich panel) line",
+   "sort": 259
+  },
+  {
+   "no": 260,
+   "project_id": "260-roof-tile-plant",
+   "title": "Roof tile plant",
+   "category": "Construction & building materials",
+   "summary": "Main equipment: Presses, kilns, glazing",
+   "image": "turnkey/catalogue/260-roof-tile-plant.jpg",
+   "image_alt": "Roof tile plant",
+   "sort": 260
+  },
+  {
+   "no": 261,
+   "project_id": "261-paving-stone-and-kerb-factory",
+   "title": "Paving stone and kerb factory",
+   "category": "Construction & building materials",
+   "summary": "Main equipment: Presses, moulds, curing",
+   "image": "turnkey/catalogue/261-paving-stone-and-kerb-factory.jpg",
+   "image_alt": "Paving stone and kerb factory",
+   "sort": 261
+  },
+  {
+   "no": 262,
+   "project_id": "262-wood-flooring-factory",
+   "title": "Wood flooring factory",
+   "category": "Construction & building materials",
+   "summary": "Main equipment: Saws, planers, pressing, finishing",
+   "image": "turnkey/catalogue/262-wood-flooring-factory.jpg",
+   "image_alt": "Wood flooring factory",
+   "sort": 262
+  },
+  {
+   "no": 263,
+   "project_id": "263-plumbing-fittings-factory",
+   "title": "Plumbing fittings factory",
+   "category": "Construction & building materials",
+   "summary": "Main equipment: Casting, machining, testing",
+   "image": "turnkey/catalogue/263-plumbing-fittings-factory.jpg",
+   "image_alt": "Plumbing fittings factory",
+   "sort": 263
+  },
+  {
+   "no": 264,
+   "project_id": "264-elevator-supply-and-installation",
+   "title": "Elevator supply and installation",
+   "category": "Construction & building materials",
+   "summary": "Main equipment: Lifts, controllers, rails, installation tools",
+   "image": "turnkey/catalogue/264-elevator-supply-and-installation.jpg",
+   "image_alt": "Elevator supply and installation",
+   "sort": 264
+  },
+  {
+   "no": 265,
+   "project_id": "265-fire-safety-system",
+   "title": "Fire-safety system",
+   "category": "Construction & building materials",
+   "summary": "Main equipment: Alarms, sprinklers, extinguishers, panels",
+   "image": "turnkey/catalogue/265-fire-safety-system.jpg",
+   "image_alt": "Fire-safety system",
+   "sort": 265
+  },
+  {
+   "no": 266,
+   "project_id": "266-swimming-pool-equipment-supply",
+   "title": "Swimming pool equipment supply",
+   "category": "Construction & building materials",
+   "summary": "Main equipment: Pumps, filters, covers, heaters",
+   "image": "turnkey/catalogue/266-swimming-pool-equipment-supply.jpg",
+   "image_alt": "Swimming pool equipment supply",
+   "sort": 266
+  },
+  {
+   "no": 267,
+   "project_id": "267-pallet-and-wooden-box-factory",
+   "title": "Pallet and wooden box factory",
+   "category": "Light industry & manufacturing",
+   "summary": "Main equipment: Saws, nailing machines, dryers",
+   "image": "turnkey/catalogue/267-pallet-and-wooden-box-factory.jpg",
+   "image_alt": "Pallet and wooden box factory",
+   "sort": 267
+  },
+  {
+   "no": 268,
+   "project_id": "268-label-and-sticker-printing",
+   "title": "Label and sticker printing",
+   "category": "Light industry & manufacturing",
+   "summary": "Main equipment: Flexo printers, die-cutters, rewinders",
+   "image": "turnkey/catalogue/268-label-and-sticker-printing.jpg",
+   "image_alt": "Label and sticker printing",
+   "sort": 268
+  },
+  {
+   "no": 269,
+   "project_id": "269-paper-bag-and-envelope-plant",
+   "title": "Paper bag and envelope plant",
+   "category": "Light industry & manufacturing",
+   "summary": "Main equipment: Forming machines, printing, gluing",
+   "image": "turnkey/catalogue/269-paper-bag-and-envelope-plant.jpg",
+   "image_alt": "Paper bag and envelope plant",
+   "sort": 269
+  },
+  {
+   "no": 270,
+   "project_id": "270-non-woven-bag-factory",
+   "title": "Non-woven bag factory",
+   "category": "Light industry & manufacturing",
+   "summary": "Main equipment: Cutting, welding, printing",
+   "image": "turnkey/catalogue/270-nonwoven-bag-factory.jpg",
+   "image_alt": "Non-woven bag factory",
+   "sort": 270
+  },
+  {
+   "no": 271,
+   "project_id": "271-mattress-spring-factory",
+   "title": "Mattress spring factory",
+   "category": "Light industry & manufacturing",
+   "summary": "Main equipment: Coiling, assembly, quilting",
+   "image": "turnkey/catalogue/271-mattress-spring-factory.jpg",
+   "image_alt": "Mattress spring factory",
+   "sort": 271
+  },
+  {
+   "no": 272,
+   "project_id": "272-towel-and-home-textile-plant",
+   "title": "Towel and home-textile plant",
+   "category": "Light industry & manufacturing",
+   "summary": "Main equipment: Looms, cutters, sewing, packing",
+   "image": "turnkey/catalogue/272-towel-and-home-textile-plant.jpg",
+   "image_alt": "Towel and home-textile plant",
+   "sort": 272
+  },
+  {
+   "no": 273,
+   "project_id": "273-socks-and-knitwear-factory",
+   "title": "Socks and knitwear factory",
+   "category": "Light industry & manufacturing",
+   "summary": "Main equipment: Knitting machines, linking, finishing",
+   "image": "turnkey/catalogue/273-socks-and-knitwear-factory.jpg",
+   "image_alt": "Socks and knitwear factory",
+   "sort": 273
+  },
+  {
+   "no": 274,
+   "project_id": "274-leather-goods-workshop",
+   "title": "Leather goods workshop",
+   "category": "Light industry & manufacturing",
+   "summary": "Main equipment: Cutting, skiving, stitching",
+   "image": "turnkey/catalogue/274-leather-goods-workshop.jpg",
+   "image_alt": "Leather goods workshop",
+   "sort": 274
+  },
+  {
+   "no": 275,
+   "project_id": "275-jewellery-manufacturing",
+   "title": "Jewellery manufacturing",
+   "category": "Light industry & manufacturing",
+   "summary": "Main equipment: Casting, polishing, laser welding",
+   "image": "turnkey/catalogue/275-jewellery-manufacturing.jpg",
+   "image_alt": "Jewellery manufacturing",
+   "sort": 275
+  },
+  {
+   "no": 276,
+   "project_id": "276-eyewear-manufacturing",
+   "title": "Eyewear manufacturing",
+   "category": "Light industry & manufacturing",
+   "summary": "Main equipment: Injection moulding, polishing, assembly",
+   "image": "turnkey/catalogue/276-eyewear-manufacturing.jpg",
+   "image_alt": "Eyewear manufacturing",
+   "sort": 276
+  },
+  {
+   "no": 277,
+   "project_id": "277-kitchenware-stainless-steel-factory",
+   "title": "Kitchenware / stainless steel factory",
+   "category": "Light industry & manufacturing",
+   "summary": "Main equipment: Press, polishing, welding",
+   "image": "turnkey/catalogue/277-kitchenware-and-stainless-steel-factory.jpg",
+   "image_alt": "Kitchenware / stainless steel factory",
+   "sort": 277
+  },
+  {
+   "no": 278,
+   "project_id": "278-aluminium-die-casting-shop",
+   "title": "Aluminium die-casting shop",
+   "category": "Light industry & manufacturing",
+   "summary": "Main equipment: Machines, furnace, machining",
+   "image": "turnkey/catalogue/278-aluminium-die-casting-shop.jpg",
+   "image_alt": "Aluminium die-casting shop",
+   "sort": 278
+  },
+  {
+   "no": 279,
+   "project_id": "279-powder-coating-line",
+   "title": "Powder coating line",
+   "category": "Light industry & manufacturing",
+   "summary": "Main equipment: Pretreatment, booth, oven, conveyor",
+   "image": "turnkey/catalogue/279-powder-coating-line.jpg",
+   "image_alt": "Powder coating line",
+   "sort": 279
+  },
+  {
+   "no": 280,
+   "project_id": "280-laser-cutting-and-metal-fabrication",
+   "title": "Laser cutting and metal fabrication",
+   "category": "Light industry & manufacturing",
+   "summary": "Main equipment: Laser cutters, press brakes, welding",
+   "image": "turnkey/catalogue/280-laser-cutting-and-metal-fabrication.jpg",
+   "image_alt": "Laser cutting and metal fabrication",
+   "sort": 280
+  },
+  {
+   "no": 281,
+   "project_id": "281-smart-parking-and-ev-bay",
+   "title": "Smart parking and EV bay",
+   "category": "Electronics & technology",
+   "summary": "Main equipment: Sensors, barriers, chargers, app",
+   "image": "turnkey/catalogue/281-smart-parking-and-ev-bay.jpg",
+   "image_alt": "Smart parking and EV bay",
+   "sort": 281
+  },
+  {
+   "no": 282,
+   "project_id": "282-interactive-kiosks-and-ticket-machines",
+   "title": "Interactive kiosks and ticket machines",
+   "category": "Electronics & technology",
+   "summary": "Main equipment: Kiosks, payment, software",
+   "image": "turnkey/catalogue/282-interactive-kiosks-and-ticket-machines.jpg",
+   "image_alt": "Interactive kiosks and ticket machines",
+   "sort": 282
+  },
+  {
+   "no": 283,
+   "project_id": "283-retail-analytics-and-pos-rollout",
+   "title": "Retail analytics and POS rollout",
+   "category": "Electronics & technology",
+   "summary": "Main equipment: POS terminals, scanners, printers",
+   "image": "turnkey/catalogue/283-retail-analytics-and-pos-rollout.jpg",
+   "image_alt": "Retail analytics and POS rollout",
+   "sort": 283
+  },
+  {
+   "no": 284,
+   "project_id": "284-telecom-tower-equipment",
+   "title": "Telecom tower equipment",
+   "category": "Electronics & technology",
+   "summary": "Main equipment: Antennas, cabinets, power, cabling",
+   "image": "turnkey/catalogue/284-telecom-tower-equipment.jpg",
+   "image_alt": "Telecom tower equipment",
+   "sort": 284
+  },
+  {
+   "no": 285,
+   "project_id": "285-fibre-optic-network-rollout",
+   "title": "Fibre-optic / network rollout",
+   "category": "Electronics & technology",
+   "summary": "Main equipment: Cable, ONTs, splicers, cabinets",
+   "image": "turnkey/catalogue/285-fibre-optic-and-network-rollout.jpg",
+   "image_alt": "Fibre-optic / network rollout",
+   "sort": 285
+  },
+  {
+   "no": 286,
+   "project_id": "286-hotel-tv-and-iptv-system",
+   "title": "Hotel TV and IPTV system",
+   "category": "Electronics & technology",
+   "summary": "Main equipment: Screens, head-end, set-top boxes",
+   "image": "turnkey/catalogue/286-hotel-tv-and-iptv-system.jpg",
+   "image_alt": "Hotel TV and IPTV system",
+   "sort": 286
+  },
+  {
+   "no": 287,
+   "project_id": "287-industrial-automation-robot-cell",
+   "title": "Industrial automation / robot cell",
+   "category": "Electronics & technology",
+   "summary": "Main equipment: Robot arm, conveyor, sensors, safety",
+   "image": "turnkey/catalogue/287-industrial-automation-and-robot-cell.jpg",
+   "image_alt": "Industrial automation / robot cell",
+   "sort": 287
+  },
+  {
+   "no": 288,
+   "project_id": "288-electronics-assembly-smt-line",
+   "title": "Electronics assembly (SMT) line",
+   "category": "Electronics & technology",
+   "summary": "Main equipment: Printer, pick-and-place, reflow",
+   "image": "turnkey/catalogue/288-electronics-assembly-smt-line.jpg",
+   "image_alt": "Electronics assembly (SMT) line",
+   "sort": 288
+  },
+  {
+   "no": 289,
+   "project_id": "289-solar-carport",
+   "title": "Solar carport",
+   "category": "Energy, environment & agriculture",
+   "summary": "Main equipment: Panels, steel structure, inverters, EV chargers",
+   "image": "turnkey/catalogue/289-solar-carport.jpg",
+   "image_alt": "Solar carport",
+   "sort": 289
+  },
+  {
+   "no": 290,
+   "project_id": "290-solar-farm-small-utility",
+   "title": "Solar farm (small utility)",
+   "category": "Energy, environment & agriculture",
+   "summary": "Main equipment: Panels, trackers, inverters, transformers",
+   "image": "turnkey/catalogue/290-small-utility-solar-farm.jpg",
+   "image_alt": "Solar farm (small utility)",
+   "sort": 290
+  },
+  {
+   "no": 291,
+   "project_id": "291-generator-and-power-backup-system",
+   "title": "Generator and power backup system",
+   "category": "Energy, environment & agriculture",
+   "summary": "Main equipment: Generators, ATS panel, cabling",
+   "image": "turnkey/catalogue/291-generator-and-power-backup-system.jpg",
+   "image_alt": "Generator and power backup system",
+   "sort": 291
+  },
+  {
+   "no": 292,
+   "project_id": "292-wastewater-treatment-plant",
+   "title": "Wastewater treatment plant",
+   "category": "Energy, environment & agriculture",
+   "summary": "Main equipment: Tanks, aeration, filters, controls",
+   "image": "turnkey/catalogue/292-wastewater-treatment-plant.jpg",
+   "image_alt": "Wastewater treatment plant",
+   "sort": 292
+  },
+  {
+   "no": 293,
+   "project_id": "293-compost-organic-fertilizer-plant",
+   "title": "Compost / organic fertilizer plant",
+   "category": "Energy, environment & agriculture",
+   "summary": "Main equipment: Turner, crusher, dryer, packing",
+   "image": "turnkey/catalogue/293-compost-and-organic-fertilizer-plant.jpg",
+   "image_alt": "Compost / organic fertilizer plant",
+   "sort": 293
+  },
+  {
+   "no": 294,
+   "project_id": "294-beekeeping-and-hive-production",
+   "title": "Beekeeping and hive production",
+   "category": "Energy, environment & agriculture",
+   "summary": "Main equipment: Hives, extractors, packing",
+   "image": "turnkey/catalogue/294-beekeeping-and-hive-production.jpg",
+   "image_alt": "Beekeeping and hive production",
+   "sort": 294
+  },
+  {
+   "no": 295,
+   "project_id": "295-orchard-vineyard-equipment",
+   "title": "Orchard / vineyard equipment",
+   "category": "Energy, environment & agriculture",
+   "summary": "Main equipment: Sprayers, trellis, irrigation",
+   "image": "turnkey/catalogue/295-orchard-and-vineyard-equipment.jpg",
+   "image_alt": "Orchard / vineyard equipment",
+   "sort": 295
+  },
+  {
+   "no": 296,
+   "project_id": "296-fish-processing-and-cold-room",
+   "title": "Fish processing and cold room",
+   "category": "Energy, environment & agriculture",
+   "summary": "Main equipment: Filleting, freezing, packing",
+   "image": "turnkey/catalogue/296-fish-processing-and-cold-room.jpg",
+   "image_alt": "Fish processing and cold room",
+   "sort": 296
+  },
+  {
+   "no": 297,
+   "project_id": "297-hajj-religious-facility-fit-out",
+   "title": "Hajj / religious facility fit-out",
+   "category": "Specialty & services",
+   "summary": "Main equipment: Carpets, ablution units, sound, lighting",
+   "image": "turnkey/catalogue/297-hajj-and-religious-facility-fit-out.jpg",
+   "image_alt": "Hajj / religious facility fit-out",
+   "sort": 297
+  },
+  {
+   "no": 298,
+   "project_id": "298-funeral-and-cemetery-services",
+   "title": "Funeral and cemetery services",
+   "category": "Specialty & services",
+   "summary": "Main equipment: Equipment, vehicles, chapel fit-out",
+   "image": "turnkey/catalogue/298-funeral-and-cemetery-services.jpg",
+   "image_alt": "Funeral and cemetery services",
+   "sort": 298
+  },
+  {
+   "no": 299,
+   "project_id": "299-prison-security-facility-package",
+   "title": "Prison / security facility package",
+   "category": "Specialty & services",
+   "summary": "Main equipment: Doors, cameras, access control",
+   "image": "turnkey/catalogue/299-prison-and-security-facility-package.jpg",
+   "image_alt": "Prison / security facility package",
+   "sort": 299
+  },
+  {
+   "no": 300,
+   "project_id": "300-disaster-relief-shelter-kit",
+   "title": "Disaster-relief shelter kit",
+   "category": "Specialty & services",
+   "summary": "Main equipment: Tents, solar lights, water filters, bedding",
+   "image": "turnkey/catalogue/300-disaster-relief-shelter-kit.jpg",
+   "image_alt": "Disaster-relief shelter kit",
+   "sort": 300
+  }
+ ]
+}

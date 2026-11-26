@@ -7,25 +7,34 @@ import { getAccountContext, serviceOn } from '@/lib/core/account';
 import { createClient } from '@/lib/supabase/server';
 import { isWarehouseOsEnabled } from '@/lib/warehouse';
 import { signEvidence } from '@/lib/warehouse-evidence';
+import { signProductPhotos, signReturnPhotos } from '@/lib/warehouse-media';
 import type { PortalProof } from '@/lib/warehouse-orders';
+import type { Inventory, ReturnRow, SupportRow } from '@/lib/warehouse-w5';
+import { IntegrationsTab } from './integrations-tab';
+import { InventoryTab } from './inventory-tab';
 import { OrdersTab, type PortalOrder } from './orders-tab';
 import { ProofView } from './proof-view';
+import { ReturnsTab } from './returns-tab';
 import { SendStock, type PortalAsn, type PortalSku } from './send-stock';
+import { SupportTab } from './support-tab';
 
 export const metadata = { title: '3PL warehouse' };
 
-/** Warehouse OS client portal tabs (design §5). Overview and Send stock (W2a) and Orders with packing proof (W3a) and tracking links (W4) are live; the others say when they arrive. */
+/**
+ * Warehouse OS client portal tabs (design §5). Overview and Send stock (W2a), Orders with packing proof (W3a) and tracking links
+ * (W4), Inventory, Returns, Integrations and Support (W5) are live; Invoices says when it arrives (W6).
+ */
 const TABS: { key: string; label: string; ships?: string }[] = [
   { key: 'overview', label: 'Overview' },
-  { key: 'inventory', label: 'Inventory', ships: 'with stock receiving' },
+  { key: 'inventory', label: 'Inventory' },
   { key: 'orders', label: 'Orders' },
   { key: 'send', label: 'Send stock' },
-  { key: 'returns', label: 'Returns', ships: 'with returns' },
+  { key: 'returns', label: 'Returns' },
   { key: 'invoices', label: 'Invoices', ships: 'with monthly invoicing' },
-  { key: 'integrations', label: 'Integrations', ships: 'with store connections' },
-  { key: 'support', label: 'Support', ships: '' },
+  { key: 'integrations', label: 'Integrations' },
+  { key: 'support', label: 'Support' },
 ];
-const LIVE = new Set(['overview', 'orders', 'send']);
+const LIVE = new Set(['overview', 'inventory', 'orders', 'send', 'returns', 'integrations', 'support']);
 const OPEN_ASN = ['submitted', 'booked', 'arrived', 'receiving'];
 const OPEN_ORDER = ['new', 'allocated', 'picking', 'picked', 'packing', 'exception'];
 
@@ -83,7 +92,37 @@ async function loadInbound(sb: Sb, orgId: string) {
   return { asns, skus, incoming, openCount: failed ? null : open.length };
 }
 
-async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; order?: string }> }) {
+/** W5: stock by product (wh_portal_inventory) with signed thumbnails; null when it could not be loaded. */
+async function loadInventory(sb: Sb, orgId: string): Promise<Inventory | null> {
+  const { data, error } = await sb.rpc('wh_portal_inventory', { p_org: orgId });
+  if (error || !data) return null;
+  const inv = data as Inventory;
+  const urls = await signProductPhotos(sb, inv.skus.map((s) => s.image_path ?? '').filter(Boolean));
+  return { ...inv, skus: inv.skus.map((s) => ({ ...s, image_url: s.image_path ? urls.get(s.image_path) ?? null : null })) };
+}
+
+/** W5: the company's returns with signed inspection photos; null when they could not be loaded. */
+async function loadReturns(sb: Sb, orgId: string): Promise<ReturnRow[] | null> {
+  const { data, error } = await sb.rpc('wh_portal_returns', { p_org: orgId });
+  if (error) return null;
+  const rows = (data ?? []) as ReturnRow[];
+  const urls = await signReturnPhotos(sb, rows.flatMap((r) => r.photos.map((p) => p.path)));
+  return rows.map((r) => ({ ...r, photos: r.photos.map((p) => ({ ...p, url: urls.get(p.path) ?? null })) }));
+}
+
+function SetUp({ what }: { what: string }) {
+  return (
+    <section className="card p-5 mt-5">
+      <h2 className="text-[18px] font-semibold m-0">Your 3PL account is being set up</h2>
+      <p className="mt-2 mb-0 text-[14px] text-black/75">{what} open once your account is approved. Questions? <Link href="/account/support" className="underline">Contact support</Link>.</p>
+    </section>
+  );
+}
+function LoadError({ what }: { what: string }) {
+  return <p role="alert" className="card p-5 mt-5 mb-0 text-[14px]">{what} could not be loaded. Reload the page.</p>;
+}
+
+async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; order?: string; ref?: string }> }) {
   const s = await requireCustomer('/account/warehouse');
   if (!s.org) return <ServiceStart service="warehouse" />;
   const sb = await createClient();
@@ -99,15 +138,23 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; 
   const sp = await searchParams;
   const tab = sp.tab && LIVE.has(sp.tab) ? sp.tab : 'overview';
   const weekStart = daysAgo(7);
-  const [orders, shippedRes, whRes, inbound] = await Promise.all([
+  const needsInventory = Boolean(client) && (tab === 'overview' || tab === 'inventory');
+  const needsReturns = Boolean(client) && (tab === 'returns' || tab === 'support');
+  const [orders, shippedRes, whRes, inbound, inventory, returns, supportRes] = await Promise.all([
     loadOrders(sb, s.org.id),
     sb.from('shipments').select('id', { count: 'exact', head: true }).eq('org_id', s.org.id).in('status', ['in_transit', 'out_for_delivery', 'delivered']).gte('created_at', weekStart),
     sb.from('warehouses').select('code, name, city, is_default').eq('status', 'active').order('is_default', { ascending: false }).order('name'),
     loadInbound(sb, s.org.id),
+    needsInventory ? loadInventory(sb, s.org.id) : Promise.resolve(null),
+    needsReturns ? loadReturns(sb, s.org.id) : Promise.resolve(null),
+    tab === 'support' ? sb.rpc('wh_portal_support', { p_org: s.org.id }) : Promise.resolve({ data: null, error: null }),
   ]);
   const warehouses = (whRes.data ?? []) as { code: string; name: string; city: string; is_default: boolean }[];
+  const hasStock = Boolean(inventory && inventory.skus.length > 0);
   const tiles: [string, string, string][] = [
-    ['Units in stock', '—', 'Your stock shows here once we receive it'],
+    // W5: units on hand across warehouses (the stock ledger), from the Inventory data ('—' until there is a product)
+    ['Units in stock', hasStock ? inventory!.totals.on_hand.toLocaleString('en-US') : '—',
+      hasStock ? `${inventory!.totals.available.toLocaleString('en-US')} available for new orders` : 'Your stock shows here once we receive it'],
     ['Open orders', orders == null ? '—' : String(orders.filter((o) => OPEN_ORDER.includes(o.status)).length), 'Received, picking or packing'],
     // W4: orders the warehouse shipped (handed to the carrier / forwarder) in the last 7 days, plus older B2B shipments rows
     ['Shipped this week', orders == null || shippedRes.count == null ? '—'
@@ -129,6 +176,8 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; 
       proof.evidence = proof.evidence.map((e) => ({ ...e, url: urls.get(e.path) ?? null }));
     }
   }
+  const proofOrder = proof ? orders?.find((o) => o.code === proof!.code) ?? null : null;
+  const supportRef = tab === 'support' ? (sp.ref ?? '').trim().toUpperCase() : '';
   return (
     <div className="max-w-[1160px]" data-testid="wh-portal">
       <div className="mono text-[11.5px] font-semibold uppercase tracking-[.1em] text-coral-text">3PL and logistics</div>
@@ -137,8 +186,6 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; 
         {TABS.map((t) => LIVE.has(t.key) ? (
           <Link key={t.key} href={t.key === 'overview' ? '/account/warehouse' : `/account/warehouse?tab=${t.key}`} aria-current={tab === t.key ? 'page' : undefined}
             className={`${tabCls} ${tab === t.key ? 'border-b-2 border-ink font-semibold' : 'text-black/75 hover:text-ink'}`} data-testid={`wh-tab-${t.key}`}>{t.label}</Link>
-        ) : t.key === 'support' ? (
-          <Link key={t.key} href="/account/support" className={`${tabCls} text-black/75 hover:text-ink`}>{t.label}</Link>
         ) : (
           <span key={t.key} aria-disabled="true" title={`Coming ${t.ships}`} className={`${tabCls} gap-1.5 text-black/60`}>
             {t.label}<span className="text-[10.5px] font-semibold uppercase tracking-wide text-black/60">soon</span>
@@ -148,31 +195,36 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; 
       {tab === 'orders' ? (
         client ? (
           <>
-            {proofRef && (proof ? <ProofView proof={proof} /> : (
+            {proofRef && (proof ? <ProofView proof={proof} order={proofOrder} /> : (
               <p role="alert" className="card p-5 mt-5 mb-0 text-[14px]" data-testid="wh-proof-missing">We couldn’t find order {proofRef} in your account.</p>
             ))}
-            {orders == null ? (
-              <p role="alert" className="card p-5 mt-5 mb-0 text-[14px]">Your orders could not be loaded. Reload the page.</p>
-            ) : (
+            {orders == null ? <LoadError what="Your orders" /> : (
               <OrdersTab skus={inbound.skus} orders={orders} warehouses={warehouses.map((w) => ({ code: w.code, name: w.name }))} />
             )}
           </>
-        ) : (
-          <section className="card p-5 mt-5">
-            <h2 className="text-[18px] font-semibold m-0">Your 3PL account is being set up</h2>
-            <p className="mt-2 mb-0 text-[14px] text-black/75">Orders open once your account is approved. Questions? <Link href="/account/support" className="underline">Contact support</Link>.</p>
-          </section>
-        )
+        ) : <SetUp what="Orders" />
       ) : tab === 'send' ? (
         client ? (
           <SendStock skus={inbound.skus} asns={inbound.asns} warehouses={warehouses.map((w) => ({ code: w.code, name: w.name }))}
             defaultWarehouse={defaultWarehouse} today={chinaToday()} />
-        ) : (
-          <section className="card p-5 mt-5">
-            <h2 className="text-[18px] font-semibold m-0">Your 3PL account is being set up</h2>
-            <p className="mt-2 mb-0 text-[14px] text-black/75">Stock notices open once your account is approved. Questions? <Link href="/account/support" className="underline">Contact support</Link>.</p>
-          </section>
-        )
+        ) : <SetUp what="Stock notices" />
+      ) : tab === 'inventory' ? (
+        client ? (inventory ? <InventoryTab inventory={inventory} orgId={s.org.id} /> : <LoadError what="Your stock" />) : <SetUp what="Inventory" />
+      ) : tab === 'returns' ? (
+        client ? (returns ? <ReturnsTab returns={returns} /> : <LoadError what="Your returns" />) : <SetUp what="Returns" />
+      ) : tab === 'integrations' ? (
+        <IntegrationsTab services={{ dropship: ctx.services.dropship.status, brand: ctx.services.brand.status, sourcing: ctx.services.sourcing.status }} />
+      ) : tab === 'support' ? (
+        client ? (
+          supportRes.error ? <LoadError what="Your requests" /> : (
+            <SupportTab orgId={s.org.id} defaultRef={supportRef} requests={(supportRes.data ?? []) as SupportRow[]}
+              refs={{
+                orders: (orders ?? []).map((o) => ({ code: o.code, label: `${o.code}${o.external_ref ? ` · ${o.external_ref}` : ''} · ${o.ship_name}` })),
+                asns: inbound.asns.map((a) => ({ code: a.code, label: `${a.code} · ${a.status}` })),
+                returns: (returns ?? []).map((r) => ({ code: r.code, label: `${r.code} · ${r.units} unit(s)` })),
+              }} />
+          )
+        ) : <SetUp what="Warehouse requests" />
       ) : (
         <>
           <section aria-label="Overview" className="mt-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -188,6 +240,7 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; 
             <div className="mt-4 flex flex-wrap gap-3">
               <Link href="/account/warehouse?tab=send" className="btn btn-primary" data-testid="wh-portal-send-shortcut">Send stock</Link>
               <Link href="/account/warehouse?tab=orders" className="btn btn-ghost" data-testid="wh-portal-orders-shortcut">Send or upload orders</Link>
+              <Link href="/account/warehouse?tab=inventory" className="btn btn-ghost">See your stock</Link>
             </div>
           )}
           <section className="card p-5 mt-5" aria-labelledby="wh-locs">
@@ -197,7 +250,7 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; 
                 <li key={w.code} className="rounded-[10px] border border-line p-3"><div className="font-semibold">{w.name}</div><div className="text-[13px] text-black/70">{w.city}, China</div></li>
               ))}
             </ul>
-            <p className="mt-3 mb-0 text-[13.5px] text-black/75">Send orders one by one or as a CSV file in the <Link href="/account/warehouse?tab=orders" className="underline">Orders</Link> tab. Questions? <Link href="/account/support" className="underline">Contact support</Link>.</p>
+            <p className="mt-3 mb-0 text-[13.5px] text-black/75">Send orders one by one or as a CSV file in the <Link href="/account/warehouse?tab=orders" className="underline">Orders</Link> tab. Questions? <Link href="/account/warehouse?tab=support" className="underline">Ask us in Support</Link>.</p>
           </section>
         </>
       )}
@@ -205,6 +258,6 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; 
   );
 }
 
-export default function Page(props: { searchParams: Promise<{ tab?: string; order?: string }> }) {
+export default function Page(props: { searchParams: Promise<{ tab?: string; order?: string; ref?: string }> }) {
   return <Suspense fallback={<PageSkeleton cards={2} table={false} />}><Portal {...props} /></Suspense>;
 }

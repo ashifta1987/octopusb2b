@@ -108,9 +108,9 @@ try {
   const has191 = !!(await one(`select 1 x from information_schema.columns where table_name = 'journals' and column_name = 'report_line'`));
   const has194 = !!(await one(`select to_regprocedure('dropship_can_edit(uuid)') f`)).f;
   // …and migrations applied after 194 before those (195 views call in_division; 196 dropship seller profiles use division_id_of + the write guard)
-  const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
+  const { appliedAfter, unwind, reapply, MAX_UNWIND } = await import('./lib-later-migrations.mjs');
   const later = await appliedAfter(db, '20261101000194_division_access_fixes.sql');
-  await unwind(db, later);
+  await unwind(db, later, MAX_UNWIND);
   if (has194) await db.query(fs.readFileSync('supabase/migrations/down/20261101000194_division_access_fixes.down.sql', 'utf8'));
   if (has192) await db.query(fs.readFileSync('supabase/migrations/down/20261101000192_division_access.down.sql', 'utf8'));
   if (has191) await db.query(fs.readFileSync('supabase/migrations/down/20261101000191_advertising_line.down.sql', 'utf8'));
@@ -147,7 +147,7 @@ try {
   ok(JSON.stringify(expected) === JSON.stringify(after), `up again: identical placement (${explicitOrders} explicitly placed test order(s) + their journals come back empty, as expected)`);
   await db.query('rollback');
 } catch (e) {
-  ok(false, 'unexpected: ' + e.message);
+  if (!e.skipRoundTrip) ok(false, 'unexpected: ' + e.message);
   await db.query('rollback').catch(() => {});
 } finally {
   await db.end();

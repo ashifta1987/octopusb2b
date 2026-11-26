@@ -52,3 +52,6 @@ docs/qa/2026-11-01-trace/state.json
 # one-off local scripts (never committed)
 *.tmp.mjs
 .q.mjs
+
+# Turnkey catalogue photos (uploaded to storage by scripts/seed-turnkey-catalogue.mjs; source zips kept by the owner)
+data/turnkey/photos/

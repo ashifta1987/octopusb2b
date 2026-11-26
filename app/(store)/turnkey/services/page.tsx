@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getSiteContent } from '@/lib/content';
 import { getTkServices } from '@/lib/turnkey/catalogue';
-import { servicePrice, type TkService } from '@/lib/turnkey/format';
+import { TK_SERVICE_PHOTOS, servicePrice, type TkService } from '@/lib/turnkey/format';
 import { tkOutfit } from '../tk-font';
 
 export const metadata: Metadata = {
@@ -34,7 +34,7 @@ async function Services() {
       <section className="bg-[#1A174A] text-white">
         <div className="max-w-[1100px] mx-auto px-4 sm:px-8 py-10">
           <nav aria-label="Breadcrumb" className="text-[13px] text-[#E8F0FD]"><Link href="/turnkey" className="text-white underline">Turnkey projects</Link> / Services</nav>
-          <h1 className="font-[family-name:var(--font-tk-outfit)] text-[34px] font-bold mt-2 mb-1">Services and starting fees</h1>
+          <h1 className="font-[family-name:var(--font-tk-outfit)]! text-white! text-[34px] font-bold mt-2 mb-1">Services and starting fees</h1>
           <p className="m-0 text-[16px] text-[#E8F0FD] max-w-[640px]">Every price is a starting price, because some projects need more. We set the exact fee with you, and you pay before the work starts.</p>
         </div>
       </section>
@@ -44,16 +44,19 @@ async function Services() {
           if (items.length === 0) return null;
           return (
             <section key={g.code} aria-labelledby={`tk-g-${g.code}`}>
-              <h2 id={`tk-g-${g.code}`} className="font-[family-name:var(--font-tk-outfit)] text-[24px] font-bold text-[#1A174A] m-0">{g.title}</h2>
+              <h2 id={`tk-g-${g.code}`} className="font-[family-name:var(--font-tk-outfit)]! text-[24px] font-bold text-[#1A174A] m-0">{g.title}</h2>
               <p className="mt-1 mb-3 text-[14.5px] text-[#5A6080]">{g.intro}</p>
               <ul className="list-none m-0 p-0 grid grid-cols-1 md:grid-cols-2 gap-3">
                 {items.map((s) => (
-                  <li key={s.code} id={s.code} className="rounded-[14px] border border-[#E1E6F2] bg-white p-5 scroll-mt-24" data-testid={`tk-service-${s.code}`}>
+                  <li key={s.code} id={s.code} className="rounded-[14px] border border-[#E1E6F2] bg-white overflow-hidden scroll-mt-24" data-testid={`tk-service-${s.code}`}>
+                    {TK_SERVICE_PHOTOS[s.code] && <img src={TK_SERVICE_PHOTOS[s.code].src} alt={TK_SERVICE_PHOTOS[s.code].alt} width={1600} height={1200} loading="lazy" className="w-full aspect-[16/9] object-cover" style={TK_SERVICE_PHOTOS[s.code].pos ? { objectPosition: TK_SERVICE_PHOTOS[s.code].pos } : undefined} />}
+                    <div className="p-5">
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="m-0 text-[17px] font-semibold text-[#1A174A]">{s.name}</h3>
                       <span className="text-[16px] font-bold text-[#1A174A] whitespace-nowrap">{servicePrice(s)}</span>
                     </div>
                     {s.rule_text && <p className="mt-2 mb-0 text-[14px] text-[#3B4160]">{s.rule_text}</p>}
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -62,7 +65,7 @@ async function Services() {
         })}
         <div className="rounded-[14px] bg-white border border-[#E1E6F2] p-5 flex flex-wrap items-center justify-between gap-3">
           <p className="m-0 text-[15px] text-[#1A174A]">Ready to start? The first step is a consultation.</p>
-          <Link href="/contact?topic=turnkey-consultation" className="inline-flex min-h-11 items-center px-5 rounded-[10px] bg-[#2559B8] text-white font-semibold no-underline">Book a consultation</Link>
+          <Link href="/account/turnkey/new" className="inline-flex min-h-11 items-center px-5 rounded-[10px] bg-[#2559B8] text-white font-semibold no-underline">Book a consultation</Link>
         </div>
         <p className="m-0 text-[14.5px] text-[#3B4160]">Visiting China with us? Read the <Link href="/turnkey/terms" className="font-semibold text-[#2559B8] underline" data-testid="tk-terms-link">terms and legal</Link> (China visit terms, privacy and passport uploads).</p>
       </div>

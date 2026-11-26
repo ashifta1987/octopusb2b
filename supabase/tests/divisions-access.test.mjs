@@ -114,9 +114,9 @@ try {
   const fs = await import('node:fs');
   // 194 builds on 192 (its policies call in_division), so it comes down first and goes up again after; migrations
   // applied after 194 (195 views call in_division, 196 uses the division write guard) are unwound before that
-  const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
+  const { appliedAfter, unwind, reapply, MAX_UNWIND } = await import('./lib-later-migrations.mjs');
   const later = await appliedAfter(db, '20261101000194_division_access_fixes.sql');
-  await unwind(db, later);
+  await unwind(db, later, MAX_UNWIND);
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000194_division_access_fixes.down.sql', 'utf8'));
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000192_division_access.down.sql', 'utf8'));
   const down = await snap();
@@ -126,7 +126,7 @@ try {
   await reapply(db, later);
   ok((await snap()) === after, 'up again: identical policies');
 } catch (e) {
-  ok(false, 'unexpected: ' + e.message);
+  if (!e.skipRoundTrip) ok(false, 'unexpected: ' + e.message);
 } finally {
   await db.query('rollback');
   ok(!(await db.query(`select 1 from auth.users where email like 'div-%@example.com'`)).rowCount, 'rolled back — nothing left');

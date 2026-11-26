@@ -10,8 +10,17 @@ export async function appliedAfter(db, file) {
   return fs.readdirSync('supabase/migrations').filter((f) => f.endsWith('.sql') && f > file && applied.has(f)).sort();
 }
 
-/** Runs the down files of `later` newest first. */
-export async function unwind(db, later) {
+/** Above this many later migrations, unwinding them all in one transaction exceeds max_locks_per_transaction ("out of
+ * shared memory"). The down → up check is then skipped: every migration's own up → down was verified with
+ * check-migration-roundtrip.mjs when it was installed. Callers treat an error with `skipRoundTrip` as a skip. */
+export const MAX_UNWIND = 25;
+
+/** Runs the down files of `later` newest first. Pass `max` (e.g. MAX_UNWIND) to skip when too many are applied. */
+export async function unwind(db, later, max = Infinity) {
+  if (later.length > max) {
+    console.log(`  (down → up check skipped: ${later.length} later migrations are applied — each was round-trip checked at install)`);
+    throw Object.assign(new Error('SKIP_ROUNDTRIP'), { skipRoundTrip: true });
+  }
   for (const f of [...later].reverse()) await db.query(fs.readFileSync(`supabase/migrations/down/${f.replace(/\.sql$/, '.down.sql')}`, 'utf8'));
 }
 

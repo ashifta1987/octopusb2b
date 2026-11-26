@@ -371,8 +371,9 @@ test('Merchant shell gating, /account/dropship/wallet inside shell, 1280px & 390
     ['/account/dropship/landed-cost', 'Landed cost calculator'],
     ['/account/dropship/requests', 'Request a product'],
     ['/account/dropship/sample', 'Order a sample'],
-    ['/account/dropship/import/test-1', 'Product editor'],
-    ['/account/dropship/push', 'Push to store'],
+    // Release 2 · Step 6 (design v2 wording): the editor and push screens are built
+    ['/account/dropship/import/test-1', 'Edit before pushing'],
+    ['/account/dropship/push', 'Push to Shopify'],
     ['/account/dropship/pushed', 'Pushed products'],
     ['/account/dropship/pricing', 'Pricing and sync'],
     ['/account/dropship/packing', 'Packing and shipping'],

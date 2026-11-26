@@ -9,6 +9,7 @@ import { RealtimeRefresh } from '@/components/account/realtime-refresh';
 import { SupportReply } from '@/components/account/support-reply';
 import { SupportCsat, SupportCsatResult } from '@/components/account/support-csat';
 import { parseAttachments, ticketStatusLabel } from '@/components/account/support-shared';
+import { SUPPORT_KIND_LABEL, type TicketContext } from '@/lib/warehouse-w5';
 
 export const metadata = { title: 'Support ticket' };
 
@@ -61,10 +62,13 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
   }
 
   const finished = t.status === 'resolved' || t.status === 'closed';
+  // Warehouse OS W5: a warehouse request links to the company's order (packing record), stock notice or return
+  const { data: whCtxRaw } = t.category === 'warehouse' ? await sb.rpc('wh_ticket_context', { p_ticket: t.id }) : { data: null };
+  const whCtx = (whCtxRaw ?? null) as TicketContext;
 
   return (
     <>
-      <div className="mb-3 text-sm"><Link href="/account/support" className="text-muted hover:text-ink">← Help &amp; complaints</Link></div>
+      <div className="mb-3 text-sm"><Link href={t.category === 'warehouse' ? '/account/warehouse?tab=support' : '/account/support'} className="text-muted hover:text-ink">{t.category === 'warehouse' ? '← Warehouse requests' : '← Help & complaints'}</Link></div>
       <PageHeader
         eyebrow={<span className="eyebrow">{t.code} · {humanize(t.category)}</span>}
         title={t.subject}
@@ -134,6 +138,25 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
             <Card>
               <div className="p-5">
                 {t.csat == null ? <SupportCsat ticketId={t.id} /> : <SupportCsatResult rating={t.csat} />}
+              </div>
+            </Card>
+          )}
+          {whCtx && (
+            <Card>
+              <div className="p-5 space-y-2 text-[15px]" data-testid="ticket-warehouse">
+                <h2 className="text-lg font-semibold">Warehouse · {SUPPORT_KIND_LABEL[whCtx.kind] ?? humanize(whCtx.kind)}</h2>
+                {whCtx.order ? (
+                  <>
+                    <p>Order <span className="mono font-semibold">{whCtx.order.code}</span>{whCtx.order.external_ref ? <span className="text-muted"> (your {whCtx.order.external_ref})</span> : null}</p>
+                    <Link href={`/account/warehouse?tab=orders&order=${whCtx.order.code}`} className="btn btn-ghost btn-sm" data-testid="ticket-warehouse-proof">
+                      {whCtx.order.packed ? 'Packing record' : 'Order status'}<span className="sr-only"> of {whCtx.order.code}</span>
+                    </Link>
+                  </>
+                ) : whCtx.asn ? (
+                  <p>Stock notice <Link href="/account/warehouse?tab=send" className="mono underline">{whCtx.asn.code}</Link></p>
+                ) : whCtx.return ? (
+                  <p>Return <Link href="/account/warehouse?tab=returns" className="mono underline">{whCtx.return.code}</Link></p>
+                ) : <p className="text-sm text-muted">Not about a specific order.</p>}
               </div>
             </Card>
           )}

@@ -9,6 +9,7 @@ import { one } from '@/components/backoffice/server-utils';
 import { fmtDate, humanize } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { getCurrencyContext } from '@/lib/currency';
+import { SUPPORT_KIND_LABEL, type TicketContext } from '@/lib/warehouse-w5';
 import { replyTicket, updateTicket, ticketStatusForm, ticketPriorityForm, saveMacro, escalateToFinance } from '../actions';
 
 export const metadata = { title: 'Support desk' };
@@ -58,6 +59,9 @@ export default async function SupportDesk({ searchParams }: { searchParams: Prom
   const tOrder = t ? one(t.orders as unknown as Record<string, unknown> | null) : null;
   const [ordWithSup] = tOrder ? await withSuppliers<Record<string, unknown>, { code: string }>(sb, 'orders', [tOrder as Record<string, unknown>], 'code') : [];
   const { data: msgs } = t ? await sb.from('ticket_messages').select('id, author_id, is_staff, internal, body, attachments, created_at').eq('ticket_id', t.id).order('created_at') : { data: null };
+  // Warehouse OS W5: a warehouse request carries its type and the client's order / stock notice / return (links to the warehouse screens)
+  const { data: whCtxRaw } = t && t.category === 'warehouse' ? await sb.rpc('wh_ticket_context', { p_ticket: t.id }) : { data: null };
+  const whCtx = (whCtxRaw ?? null) as TicketContext;
   const authorIds = [...new Set([...(msgs ?? []).map((m) => m.author_id), t?.assigned_to].filter(Boolean))] as string[];
   const { data: people } = authorIds.length ? await sb.from('profiles').select('id, full_name').in('id', authorIds) : { data: [] };
   const name = (id: string | null) => (people ?? []).find((p) => p.id === id)?.full_name ?? (id ? 'User' : '—');
@@ -138,6 +142,31 @@ export default async function SupportDesk({ searchParams }: { searchParams: Prom
                 </div>
               )}
             </section>
+
+            {whCtx && (
+              <section className="card p-6" aria-labelledby="sd-wh" data-testid="sd-warehouse">
+                <h3 id="sd-wh" className="text-lg font-semibold">Warehouse request · {SUPPORT_KIND_LABEL[whCtx.kind] ?? humanize(whCtx.kind)}</h3>
+                {whCtx.order ? (
+                  <div className="mt-2 text-[15px]" data-testid="sd-warehouse-order">
+                    Order <Link href={`/office/warehouse/orders/${whCtx.order.code}`} className="mono text-coral-text">{whCtx.order.code}</Link>
+                    {whCtx.order.external_ref ? <span className="text-muted"> (client ref {whCtx.order.external_ref})</span> : null} · {humanize(whCtx.order.status)} · {whCtx.order.warehouse_code}
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {whCtx.order.packed && (
+                        <Link href={`/office/warehouse/evidence/${whCtx.order.code}`} className="btn btn-ghost btn-sm" data-testid="sd-warehouse-evidence">
+                          Packing record{whCtx.order.photos ? ` (${whCtx.order.photos} photo${whCtx.order.photos === 1 ? '' : 's'})` : ''}
+                        </Link>
+                      )}
+                      {whCtx.order.tracking_token && <Link href={`/t/${whCtx.order.tracking_token}`} target="_blank" className="btn btn-ghost btn-sm">Tracking page</Link>}
+                    </div>
+                  </div>
+                ) : whCtx.asn ? (
+                  <div className="mt-2 text-[15px]">Stock notice <Link href={`/office/warehouse/receive/${whCtx.asn.code}`} className="mono text-coral-text">{whCtx.asn.code}</Link> · {humanize(whCtx.asn.status)} · {whCtx.asn.warehouse_code}</div>
+                ) : whCtx.return ? (
+                  <div className="mt-2 text-[15px]">Return <Link href={`/office/warehouse/returns?status=all&r=${whCtx.return.code}`} className="mono text-coral-text">{whCtx.return.code}</Link> · {humanize(whCtx.return.status)}{whCtx.return.decision ? ` · ${humanize(whCtx.return.decision)}` : ''}</div>
+                ) : <p className="mt-2 text-sm text-muted">No order, stock notice or return was chosen.</p>}
+                <p className="text-xs text-muted mt-3">Photos the client attached are in the conversation below.</p>
+              </section>
+            )}
 
             <section className="card p-6">
               <h3 className="text-lg font-semibold mb-4">Conversation</h3>

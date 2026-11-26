@@ -39,7 +39,7 @@ async function Terms() {
       <section className="bg-[#1A174A] text-white">
         <div className="max-w-[900px] mx-auto px-4 sm:px-8 py-10">
           <nav aria-label="Breadcrumb" className="text-[13px] text-[#E8F0FD]"><Link href="/turnkey" className="text-white underline">Turnkey projects</Link> / Terms and legal</nav>
-          <h1 className="font-[family-name:var(--font-tk-outfit)] text-[34px] font-bold mt-2 mb-1">Terms and legal</h1>
+          <h1 className="font-[family-name:var(--font-tk-outfit)]! text-white! text-[34px] font-bold mt-2 mb-1">Terms and legal</h1>
           <p className="m-0 text-[16px] text-[#E8F0FD] max-w-[640px]">China visit terms, KVKK and GDPR privacy, our independence statement and secure passport upload.</p>
         </div>
       </section>
@@ -52,7 +52,7 @@ async function Terms() {
         </nav>
         {texts.map((s) => (
           <section key={s.id} id={s.id} aria-labelledby={`${s.id}-h`} className="rounded-[14px] border border-[#E1E6F2] bg-white p-6 scroll-mt-24" data-testid={`tk-terms-${s.id}`}>
-            <h2 id={`${s.id}-h`} className="font-[family-name:var(--font-tk-outfit)] m-0 mb-3 text-[22px] font-bold text-[#1A174A]">{s.title}</h2>
+            <h2 id={`${s.id}-h`} className="font-[family-name:var(--font-tk-outfit)]! m-0 mb-3 text-[22px] font-bold text-[#1A174A]">{s.title}</h2>
             {s.text ? <Prose text={s.text} /> : (
               <p className="m-0 text-[15px] text-[#3B4160]" data-testid={`tk-terms-on-request-${s.id}`}>
                 We provide these terms on request. <Link href={`/contact?topic=turnkey-terms`} className="text-[#2559B8] underline">Ask us for a copy</Link>.

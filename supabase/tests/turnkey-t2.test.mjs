@@ -75,7 +75,8 @@ try {
   const orgA = await mkOrg('TK2 Client A', cust);
   const orgB = await mkOrg('TK2 Client B', custB);
   const cat = (await one(`select project_id from turnkey_projects where status <> 'archived' order by sort_rank limit 1`)).project_id;
-  const archived = await one(`select project_id from turnkey_projects where status = 'archived' limit 1`);
+  // own archived catalogue row (later migrations are unwound below, which can change the real catalogue's statuses)
+  const archived = await one(`insert into turnkey_projects (project_id, title, category, status, is_seed) values ('tk-test-archived-t2', 'TK2 archived test', 'Test', 'archived', true) on conflict (project_id) do update set status = 'archived' returning project_id`);
   const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
   const later = await appliedAfter(db, MIG);
   await unwind(db, later);
@@ -112,7 +113,7 @@ try {
   ok(/PLAN_REQUIRED/.test((await enquiry(orgA, cat, null, 'too short')).err ?? ''), 'enquiry: the plan needs 20+ characters');
   ok(/TITLE_REQUIRED/.test((await enquiry(orgA, null, null, PLAN)).err ?? ''), 'enquiry: a new project needs a name');
   ok(/INVALID_DATE/.test((await enquiry(orgA, cat, null, PLAN, { open: '2020-01-01' })).err ?? ''), 'enquiry: opening date must be in the future');
-  if (archived) ok(/UNKNOWN_PROJECT/.test((await enquiry(orgA, archived.project_id, null, PLAN)).err ?? ''), 'enquiry: archived catalogue projects are refused');
+  if (archived) { const ae = (await enquiry(orgA, archived.project_id, null, PLAN)).err ?? ''; ok(/UNKNOWN_PROJECT/.test(ae), `enquiry: archived catalogue projects are refused (${ae})`); }
   ok(/FORBIDDEN/.test((await enquiry(orgB, cat, null, PLAN)).err ?? ''), 'enquiry: not for another company');
   const e1 = await enquiry(orgA, cat, null, PLAN, { country: 'tr', city: 'Izmir', open: '2031-03-01', area: 150, budget: 3500000 });
   const p1 = e1.rows[0]?.r;

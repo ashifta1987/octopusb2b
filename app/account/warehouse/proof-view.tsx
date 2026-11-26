@@ -1,9 +1,15 @@
 import Link from 'next/link';
 import { fmtWh } from '@/lib/warehouse-inbound';
-import { EVIDENCE_LABEL, grams, type PortalProof } from '@/lib/warehouse-orders';
+import { EVIDENCE_LABEL, clientSteps, grams, type PortalProof } from '@/lib/warehouse-orders';
 
-/** Board 19 proof view (W3a; W5 polishes): the client's own order — photos (signed URLs), weight check, scan log, retention. */
-export function ProofView({ proof: p }: { proof: PortalProof }) {
+/**
+ * Board 19 proof view (W3a; W5 polish): the client's own order — contents, step tracker, photos (signed URLs), weight check,
+ * scan log, retention, link to tracking once shipped, and a shortcut to ask about the order with the record attached.
+ */
+export type ProofOrder = { lines: { sku: string; name: string; qty: number }[]; shipped_at?: string | null; tracking_token?: string | null; ship_name: string; ship_country: string };
+
+export function ProofView({ proof: p, order }: { proof: PortalProof; order?: ProofOrder | null }) {
+  const steps = p.status === 'cancelled' ? [] : clientSteps(p.status);
   return (
     <section className="card p-5 mt-5" aria-labelledby="wh-proof" data-testid="wh-proof">
       <div className="flex flex-wrap items-center gap-3">
@@ -11,6 +17,25 @@ export function ProofView({ proof: p }: { proof: PortalProof }) {
         {p.external_ref && <span className="text-[13px] text-black/70">Your order {p.external_ref}</span>}
         <Link href="/account/warehouse?tab=orders" className="ml-auto text-[14px] underline">Back to orders</Link>
       </div>
+      {steps.length > 0 && (
+        <ol className="list-none mt-3 mb-0 p-0 flex flex-wrap gap-1.5 text-[12px]" aria-label="Order steps">
+          {steps.map((s) => (
+            <li key={s.label} aria-current={s.state === 'current' ? 'step' : undefined}
+              className={`px-2 py-0.5 rounded-full border ${s.state === 'done' ? 'bg-ink text-white border-ink' : s.state === 'current' ? 'border-ink font-semibold' : 'border-line text-black/70'}`}>
+              {s.label}
+            </li>
+          ))}
+        </ol>
+      )}
+      {order && order.lines.length > 0 && (
+        <div className="mt-3" data-testid="wh-proof-contents">
+          <h3 className="m-0 mb-1 text-[15px] font-semibold">Contents</h3>
+          <ul className="m-0 pl-5 text-[13.5px]">
+            {order.lines.map((l) => <li key={l.sku}><span className="font-mono">{l.sku}</span> · {l.name} × {l.qty}</li>)}
+          </ul>
+          <p className="mt-1 mb-0 text-[13px] text-black/70">To {order.ship_name} · {order.ship_country}</p>
+        </div>
+      )}
       {!p.packed ? (
         <p className="mt-3 mb-0 text-[14px]" data-testid="wh-proof-pending">This order is not packed yet. The proof appears here once the parcel is closed.</p>
       ) : (
@@ -43,9 +68,18 @@ export function ProofView({ proof: p }: { proof: PortalProof }) {
           <ul className="m-0 pl-5 text-[13.5px]" data-testid="wh-proof-scans">
             {p.scans.map((s, i) => <li key={i}>{fmtWh(s.at)} · {s.sku} · {s.name}</li>)}
           </ul>
-          <p className="mt-3 mb-0 text-[13px] text-black/70">Tracking appears here once the parcel is labelled and handed to the carrier.</p>
+          {order?.tracking_token ? (
+            <p className="mt-3 mb-0 text-[14px]" data-testid="wh-proof-tracking">
+              Shipped {fmtWh(order.shipped_at)}. <Link href={`/t/${order.tracking_token}`} target="_blank" className="underline">Open tracking<span className="sr-only"> for {p.code} (the page your customer sees)</span></Link>
+            </p>
+          ) : (
+            <p className="mt-3 mb-0 text-[13px] text-black/70">Tracking appears here once the parcel is labelled and handed to the carrier.</p>
+          )}
         </>
       )}
+      <p className="mt-3 mb-0 text-[13.5px]">
+        Something wrong with this order? <Link href={`/account/warehouse?tab=support&ref=${p.code}`} className="underline" data-testid="wh-proof-support">Ask us about {p.code}</Link> — our team sees this packing record.
+      </p>
     </section>
   );
 }

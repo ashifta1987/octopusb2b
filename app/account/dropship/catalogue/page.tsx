@@ -29,6 +29,7 @@ import { LaunchNotifyForm } from '@/components/store/launch-notify-form';
 import { addToImportList, removeFromImportList, saveMerchantMarkets } from '../actions';
 import { getDropshipFeatures } from '@/lib/dropship-features';
 import { DsImportSubmitButton, DsQuerySelect } from './catalogue-v2-client';
+import { ImportListPage } from './import-list';
 
 export const metadata = { title: 'Find products · Octopus Dropship' };
 
@@ -113,6 +114,8 @@ async function Catalogue({ searchParams }: { searchParams: Promise<SP> }) {
   const features = await getDropshipFeatures();
   if (!features.find) redirect('/account/dropship');
   if (sp.list === '1' && !features.import_list) redirect('/account/dropship/catalogue');
+  // Release 2 · Step 6: ?list=1 is the Import list screen (screens/ImportList.html) — priced with the merchant's rule
+  if (sp.list === '1') return <ImportListPage />;
 
   const [cfg, merchantCountries, list] = await Promise.all([
     dropshipSettings(),

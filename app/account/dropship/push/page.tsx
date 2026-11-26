@@ -1,39 +1,45 @@
 import { Suspense } from 'react';
-import { DsPageHeader, DsNotice, DsLinkButton } from '@/components/dropship-ui';
+import { DsNotice, DsSkeleton, DsLinkButton } from '@/components/dropship-ui';
 import { requireDropshipV2Merchant } from '@/lib/dropship';
+import { getPushPage, rpcMessage, type PushPageData } from '@/lib/dropship-ds6';
+import { PushClient } from './push-client';
 
 export const metadata = { title: 'Push to store · Octopus Dropship' };
 
-async function Guarded() {
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Release 2 · Step 6 — Push to Shopify (screens/PushStore.html, mobile/M_PushStore.html, states/States-Import.html).
+ * Durable queue: one job per product (ds_push_enqueue). The executor that calls Shopify runs only for an ACTIVE store
+ * connection — until Step 5 ships there is none, so this page says "Connect a store first" and pushes nothing.
+ */
+async function Push({ searchParams }: { searchParams: Promise<{ ids?: string }> }) {
   await requireDropshipV2Merchant('/account/dropship/push');
-  return (
-    <div className="flex flex-col gap-5">
-      <DsPageHeader
-        title="Push to store"
-        subtitle="Review pricing, collections and publishing status before pushing to your store."
-        icon="upload"
-      />
-      <DsNotice
-        tone="info"
-        title="Coming soon"
-        testId="planned-notice"
-        action={
-          <DsLinkButton href="/account/dropship/catalogue" variant="secondary">
-            Find products
-          </DsLinkButton>
-        }
-      >
-        Pushing products to your store arrives with the Octopus Dropship Shopify app (Step 5). Add products to your
-        Import list now so they are ready to push.
-      </DsNotice>
-    </div>
-  );
+  const sp = await searchParams;
+  const ids = (sp.ids ?? '').split(',').map((x) => x.trim()).filter((x) => UUID.test(x)).slice(0, 100);
+  let data: PushPageData | null = null;
+  let error: string | null = null;
+  try {
+    data = await getPushPage(ids);
+  } catch (e) {
+    error = rpcMessage(e);
+  }
+  if (!data) {
+    return (
+      <div className="flex flex-col gap-5" data-testid="ds6-push">
+        <h1 className="m-0 text-[26px] font-bold text-[#1A174A]">Push to Shopify</h1>
+        <DsNotice tone="bad" title="This page could not be loaded" testId="push-error"
+          action={<DsLinkButton href="/account/dropship/catalogue?list=1" variant="secondary">Back to import list</DsLinkButton>}>{error}</DsNotice>
+      </div>
+    );
+  }
+  return <PushClient data={data} ids={ids} />;
 }
 
-export default function Page() {
+export default function Page({ searchParams }: { searchParams: Promise<{ ids?: string }> }) {
   return (
-    <Suspense fallback={<div className="ds-card">Loading…</div>}>
-      <Guarded />
+    <Suspense fallback={<div className="ds-card"><DsSkeleton immediate /></div>}>
+      <Push searchParams={searchParams} />
     </Suspense>
   );
 }
