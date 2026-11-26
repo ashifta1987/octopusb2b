@@ -64,6 +64,7 @@ async function Services() {
           <p className="m-0 text-[15px] text-[#1A174A]">Ready to start? The first step is a consultation.</p>
           <Link href="/contact?topic=turnkey-consultation" className="inline-flex min-h-11 items-center px-5 rounded-[10px] bg-[#2559B8] text-white font-semibold no-underline">Book a consultation</Link>
         </div>
+        <p className="m-0 text-[14.5px] text-[#3B4160]">Visiting China with us? Read the <Link href="/turnkey/terms" className="font-semibold text-[#2559B8] underline" data-testid="tk-terms-link">terms and legal</Link> (China visit terms, privacy and passport uploads).</p>
       </div>
     </div>
   );

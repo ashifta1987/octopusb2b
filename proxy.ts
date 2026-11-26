@@ -127,6 +127,15 @@ async function publicTrackingMissing(token: string): Promise<boolean> {
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !anonKey) return false;
   const headers = { apikey: anonKey, Authorization: `Bearer ${anonKey}`, 'Content-Type': 'application/json' };
+  // W4: orders shipped by a Warehouse OS warehouse have their own public tracking (independent of the Dropship flag);
+  // sandbox shipments are only served on staging (the RPC and the page both check)
+  const whRes = await fetch(`${supabaseUrl}/rest/v1/rpc/wh_public_tracking`, {
+    method: 'POST', headers, body: JSON.stringify({ p_token: token }),
+  });
+  if (whRes.ok) {
+    const wh = (await whRes.json()) as { sandbox?: boolean } | null;
+    if (wh != null && !(wh.sandbox && process.env.APP_ENVIRONMENT !== 'staging')) return false;
+  }
   const flagRes = await fetch(`${supabaseUrl}/rest/v1/site_settings?select=value&key=eq.dropship_v2_ui`, { headers });
   if (!flagRes.ok) return false;
   const rows = (await flagRes.json()) as { value: unknown }[];

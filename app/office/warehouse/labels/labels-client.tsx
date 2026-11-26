@@ -6,6 +6,8 @@ import { Barcode128 } from '@/components/warehouse/barcode';
 import { fmtWh, itemText } from '@/lib/warehouse-inbound';
 import { PALLET_STATUS, cartonRef, type LabelBoard } from '@/lib/warehouse-putaway';
 import { logLabelPrintAction } from '../putaway-actions';
+import { logLabelPrintAction as logParcelPrintAction } from '../w4-actions';
+import { CARRIER_LABEL, SHIPMENT_STATUS, grams, type ReadyLabel } from '@/lib/warehouse-w4';
 import { MsgLine, useRun } from '../wh-run';
 
 export type LabelKind = 'carton' | 'pallet' | 'bin' | 'parcel';
@@ -32,8 +34,9 @@ function LabelBox({ children, size }: { children: ReactNode; size: 'large' | 'sm
   );
 }
 
-export function LabelsClient({ board, initialKind, initialRef, current, warehouseNames }: {
+export function LabelsClient({ board, initialKind, initialRef, current, warehouseNames, parcelLabels, parcelUrls }: {
   board: LabelBoard; initialKind: LabelKind; initialRef: string | null; current: string | null; warehouseNames: Record<string, string>;
+  parcelLabels: ReadyLabel[]; parcelUrls: Record<string, string>;
 }) {
   const { pending, msg, run, setMsg } = useRun();
   const [kind, setKind] = useState<LabelKind>(initialKind);
@@ -114,9 +117,7 @@ export function LabelsClient({ board, initialKind, initialRef, current, warehous
           ))}
         </div>
         {kind === 'parcel' ? (
-          <DsCard testId="wh-label-parcel">
-            <DsEmptyState icon="package" title="Parcel labels come with packing" description="Carrier labels for YunExpress and 4PX are created and scanned at the packing station (step W3). Nothing is printed here yet." />
-          </DsCard>
+          <ParcelLabels labels={parcelLabels} urls={parcelUrls} filter={filter} setFilter={setFilter} whName={whName} />
         ) : places.length === 0 ? (
           <DsCard><p className="m-0 text-[13.5px] text-[#5B6478]">You don’t work at a warehouse here, so you can’t print its labels.</p></DsCard>
         ) : (
@@ -180,5 +181,41 @@ export function LabelsClient({ board, initialKind, initialRef, current, warehous
         </DsCard>
       </div>
     </div>
+  );
+}
+
+/** W4: carrier parcel labels (made at Dispatch and freight); each opens its PDF to print, and every print is logged. */
+function ParcelLabels({ labels, urls, filter, setFilter, whName }: {
+  labels: ReadyLabel[]; urls: Record<string, string>; filter: string; setFilter: (v: string) => void; whName: (c: string) => string;
+}) {
+  const shown = labels.filter((l) => !filter || `${l.tracking_no} ${l.order_code}`.toUpperCase().includes(filter.toUpperCase()));
+  return (
+    <DsCard title="Parcel labels" icon="file" noPadding testId="wh-label-parcel"
+      subtitle="Carrier labels made at Dispatch and freight (last 30 days, and every label not handed over yet). Print opens the 10 × 15 cm PDF.">
+      <div className="px-5 py-3 flex flex-wrap gap-3 items-end border-b border-[#EEF0F4]">
+        <DsInput label="Find" value={filter} onChange={(e) => setFilter(e.target.value)} containerClassName="w-[220px]" />
+      </div>
+      {shown.length === 0 ? (
+        <div className="px-5 py-4"><DsEmptyState icon="package" title="No parcel labels yet" description="Make labels for packed orders under Dispatch and freight." actionLabel="Open Dispatch and freight" actionHref="/office/warehouse/dispatch" actionIcon="truck" /></div>
+      ) : (
+        <ul className="list-none m-0 p-0 max-h-[480px] overflow-y-auto" role="list" aria-label="Parcel labels" tabIndex={0}>
+          {shown.map((l) => (
+            <li key={l.id} className="border-b border-[#EEF0F4] last:border-0 px-5 py-2 flex flex-wrap items-center gap-2" data-testid={`wh-parcel-label-${l.tracking_no}`}>
+              <span className="font-mono font-semibold">{l.tracking_no}</span>
+              <span className="text-[13px] text-[#5B6478]">{l.order_code} · parcel {l.parcel_seq} · {CARRIER_LABEL[l.carrier]} {l.service_name} · {grams(l.weight_g)} · to {l.ship_country} · {whName(l.warehouse_code)}</span>
+              {l.sandbox && <DsBadge tone="warn">Sandbox</DsBadge>}
+              <DsBadge tone={SHIPMENT_STATUS[l.status][1]}>{SHIPMENT_STATUS[l.status][0]}</DsBadge>
+              {l.printed > 0 && <DsBadge tone="neutral">Printed {l.printed}×</DsBadge>}
+              {urls[l.label_path] ? (
+                <a href={urls[l.label_path]} target="_blank" rel="noreferrer" className="ds-btn ds-btn-secondary ml-auto" onClick={() => { void logParcelPrintAction(l.id); }}
+                  data-testid={`wh-parcel-label-print-${l.tracking_no}`}>
+                  {l.printed > 0 ? 'Reprint' : 'Print'}<span className="sr-only"> label {l.tracking_no} (opens the PDF)</span>
+                </a>
+              ) : <span className="ml-auto text-[12.5px] text-[#5B6478]">PDF not available</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </DsCard>
   );
 }

@@ -46,8 +46,8 @@ async function Content() {
             ['Octopus B2B (sourcing)', 'Stock notices and quality reports', outboxOk ? 'ok' : 'warn', outboxOk ? 'Connected' : `${d.outbox.dead} failed event(s)`],
             ['Make My Brand', 'Branded products and packaging', outboxOk ? 'ok' : 'warn', outboxOk ? 'Connected' : 'Check events'],
             ['Octopus Dropship', 'Store orders in, tracking back', outboxOk ? 'ok' : 'warn', outboxOk ? `Connected · ${d.outbox.pending} waiting` : 'Check events'],
-            ['YunExpress', 'Labels and tracking', 'info', yunMode],
-            ['4PX', 'Labels and tracking', 'neutral', 'Not connected yet (W4)'],
+            ['YunExpress', 'Labels and tracking', 'info', `${yunMode} · accounts per warehouse in Carriers and rules`],
+            ['4PX', 'Labels and tracking', 'info', 'Accounts per warehouse in Carriers and rules'],
           ].map(([name, what, tone, state]) => (
             <li key={name} className="rounded-[10px] border border-[#E3E7EF] p-3 flex items-start justify-between gap-3">
               <div><div className="font-semibold text-[14px]">{name}</div><div className="text-[12.5px] text-[#5B6478]">{what}</div></div>

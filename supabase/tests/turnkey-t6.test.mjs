@@ -18,6 +18,7 @@
 // Set-up note: phases are set directly where earlier tests cover them (rolled back): the project is put into Quote and
 // deposit / Production and QC, and a passed, published pre-shipment inspection is inserted (T5 covers that flow).
 // Run: node supabase/tests/turnkey-t6.test.mjs
+import { snapshotSequences, restoreSequences } from './lib-seq-guard.mjs';
 import { config } from 'dotenv';
 import pg from 'pg';
 import fs from 'node:fs';
@@ -482,6 +483,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
   await db.connect();
   await assertStagingDatabase(db);
+  const __seqs = await snapshotSequences(db); // wipe_demo_data() resets sequences; a rollback doesn't undo that
   const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
   let later = [];
   let failed = 0;
@@ -497,6 +499,7 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
     failed++;
   } finally {
     await db.query('rollback').catch(() => {});
+    await restoreSequences(__seqs).catch((e) => console.log('sequence restore failed:', e.message));
     await db.end();
   }
   console.log(failed ? `\nturnkey-t6: ${failed} check(s) failed` : '\nturnkey-t6: all passed');

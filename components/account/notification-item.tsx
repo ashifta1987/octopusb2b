@@ -27,7 +27,7 @@ export function NotificationItem({ id, title, body, link, read, when }: {
     <li data-testid="notification" data-read={isRead ? '1' : '0'} onClick={() => open()}
       className={`px-5 py-4 border-b border-line last:border-0 cursor-pointer ${isRead ? '' : 'bg-tint-2'}`}>
       <div className="flex justify-between gap-3">
-        <div className="font-semibold">{!isRead && <span className="inline-block w-2 h-2 rounded-full bg-coral mr-2 align-middle" aria-label="Unread" data-testid="unread-dot" />}{title}</div>
+        <div className="font-semibold">{!isRead && <span className="inline-block w-2 h-2 rounded-full bg-coral mr-2 align-middle" role="img" aria-label="Unread" data-testid="unread-dot" />}{title}</div>
         <div className="text-[13px] text-muted whitespace-nowrap">{when}</div>
       </div>
       {body && <p className="text-[14px] text-muted mt-0.5">{body}</p>}

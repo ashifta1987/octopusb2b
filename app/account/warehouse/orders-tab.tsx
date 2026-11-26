@@ -9,10 +9,12 @@ import { CLIENT_STATUS, ORDER_CSV_MAX_BYTES, ORDER_CSV_TEMPLATE, clientSteps } f
 import { cancelOrderAction, createCsvOrdersAction, createOrderAction, previewCsvAction, type CsvPreview } from './actions';
 import type { PortalSku } from './send-stock';
 
-/** Warehouse OS · W3a portal Orders tab (board 19): new order form, CSV upload with preview, order list with a step tracker. */
+/** Warehouse OS · W3a portal Orders tab (board 19): new order form, CSV upload with preview, order list with a step tracker (W4: link to tracking). */
 export type PortalOrder = {
   id: string; code: string; external_ref: string | null; status: string; warehouse_code: string; ship_name: string; ship_country: string;
   created_at: string; packed_at: string | null; lines: { sku: string; name: string; qty: number }[];
+  /** W4: set once the order is shipped; the public tracking page for the end customer */
+  shipped_at?: string | null; tracking_token?: string | null;
 };
 type Msg = { ok: boolean; text: string } | null;
 const TONE = { info: 'blue', warn: 'amber', ok: 'green', bad: 'red', neutral: 'gray' } as const;
@@ -206,9 +208,13 @@ function OrderList({ orders, warehouseNames }: { orders: PortalOrder[]; warehous
                 <Steps status={o.status} />
                 <div className="text-[13.5px]">{o.ship_name} · {o.ship_country} · {units} unit(s) · {warehouseNames[o.warehouse_code] ?? o.warehouse_code}</div>
                 <div className="text-[13px] text-black/70">{o.lines.map((l) => `${l.sku} × ${l.qty}`).join(', ')}</div>
+                {o.shipped_at && <div className="text-[13px] text-black/70">Shipped {fmtWh(o.shipped_at)}</div>}
                 <div className="flex flex-wrap gap-2">
                   {['packed', 'labelled', 'shipped'].includes(o.status) && (
                     <Link href={`/account/warehouse?tab=orders&order=${o.code}`} className="btn btn-ghost btn-sm" data-testid={`wh-proof-link-${o.code}`}>Packing proof<span className="sr-only"> for {o.code}</span></Link>
+                  )}
+                  {o.tracking_token && (
+                    <Link href={`/t/${o.tracking_token}`} target="_blank" className="btn btn-ghost btn-sm" data-testid={`wh-tracking-link-${o.code}`}>Tracking<span className="sr-only"> for {o.code} (opens the page your customer sees)</span></Link>
                   )}
                   {['new', 'allocated'].includes(o.status) && (
                     <button type="button" className="btn btn-ghost btn-sm" disabled={pending}

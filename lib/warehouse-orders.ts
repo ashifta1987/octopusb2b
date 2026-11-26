@@ -79,6 +79,19 @@ export const HISTORY_TEXT: Record<string, string> = {
   'wh_parcel.removed': 'Empty parcel removed',
   'wh_material.used': 'Packaging used',
   'wh_material.voided': 'Packaging taken back',
+  // W4: labels, label check, hand-over, freight, tracking
+  'wh_label.created': 'Carrier label made',
+  'wh_label.printed': 'Label printed',
+  'wh_label.confirmed': 'Label checked against the order',
+  'wh_label.wrong_scan': 'Wrong label scanned (refused)',
+  'wh_label.voided': 'Label voided',
+  'wh_order.labelled': 'All parcels labelled',
+  'wh_dispatch.added': 'Added to a hand-over batch',
+  'wh_dispatch.removed': 'Taken out of a hand-over batch',
+  'wh_freight.added': 'Put on a freight pallet',
+  'wh_freight.removed': 'Taken off a freight pallet',
+  'wh_order.shipped': 'Shipped',
+  'wh_tracking.event': 'Tracking update',
 };
 
 /** Client order steps for the portal tracker. */

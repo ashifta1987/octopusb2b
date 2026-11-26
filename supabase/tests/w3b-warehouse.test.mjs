@@ -20,6 +20,7 @@
 //  6. Audit rows, material ledger balanced (on hand = sum of moves, balance chain), stock ledger balanced; the staging demo wipe
 //     removes the demo company's W3b rows (cascade) and keeps every material move.
 // Run: node --env-file=.env.staging supabase/tests/w3b-warehouse.test.mjs
+import { snapshotSequences, restoreSequences } from './lib-seq-guard.mjs';
 import { config } from 'dotenv';
 import pg from 'pg';
 import fs from 'node:fs';
@@ -34,6 +35,7 @@ if (process.env.APP_ENVIRONMENT !== 'staging' || !process.env.DATABASE_URL) {
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 await db.connect();
 await assertStagingDatabase(db);
+const __seqs = await snapshotSequences(db); // wipe_demo_data() resets sequences; a rollback doesn't undo that
 
 let failed = 0;
 const ok = (c, m) => { console.log(`${c ? '✔' : '✘'} ${m}`); if (!c) failed++; };
@@ -551,6 +553,7 @@ try {
   ok(false, 'unexpected: ' + e.message);
 } finally {
   await db.query('rollback').catch(() => {});
+  await restoreSequences(__seqs).catch((e) => console.log('sequence restore failed:', e.message));
   ok(!(await db.query(`select 1 from auth.users where email like 'w3b-%@test.local'`)).rowCount, 'rolled back — nothing left');
   await db.end();
 }

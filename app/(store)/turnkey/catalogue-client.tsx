@@ -76,7 +76,7 @@ export function CatalogueClient({ projects }: { projects: Card[] }) {
                   ) : 'Photo coming'}
                 </div>
                 <div className="p-4 flex flex-col gap-1">
-                  <span className="text-[12px] font-semibold uppercase tracking-[.06em] text-[#2F6FE0]">{categoryLabel(p.category)}</span>
+                  <span className="text-[12px] font-semibold uppercase tracking-[.06em] text-[#2559B8]">{categoryLabel(p.category)}</span>
                   <span className="font-[family-name:var(--font-tk-outfit)] text-[18px] font-semibold text-[#1A174A] leading-tight">{p.title}</span>
                   {projectFrom(p) && <span className="text-[14px] text-[#3B4160]">{projectFrom(p)}</span>}
                 </div>
@@ -104,7 +104,7 @@ export function CatalogueClient({ projects }: { projects: Card[] }) {
               ) : 'Photo coming'}
             </div>
             <div className="p-6 flex flex-col gap-3">
-              <span className="text-[12px] font-semibold uppercase tracking-[.06em] text-[#2F6FE0]">{categoryLabel(open.category)}</span>
+              <span className="text-[12px] font-semibold uppercase tracking-[.06em] text-[#2559B8]">{categoryLabel(open.category)}</span>
               <h3 id="tk-dlg-title" className="font-[family-name:var(--font-tk-outfit)] text-[26px] font-bold text-[#1A174A] m-0">{open.title}</h3>
               {open.short_reason && <p className="m-0 text-[15px] text-[#3B4160]">{open.short_reason}</p>}
               <dl className="m-0 grid grid-cols-[140px_1fr] gap-y-1 text-[14px]">

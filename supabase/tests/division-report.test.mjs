@@ -50,7 +50,7 @@ try {
       + (select count(*) from orders where division_id = d.id and status not in ('delivered','closed','cancelled'))
       + (select count(*) from brand_projects where division_id = d.id and status <> 'closed')
       + (select count(*) from pools where division_id = d.id and status in ('open','locked','confirmed','shipped'))
-      + (select count(*) from turnkey_leads where division_id = d.id and status in ('new','contacted','quoted'))
+      + (select count(*) from tk_client_projects where division_id = d.id and status in ('open','on_hold'))   -- Turnkey T7: client projects, not the frozen leads
       + (select count(*) from shipments where division_id = d.id and status not in ('delivered','returned')) n from divisions d`)) exp[r.code].work = Number(r.n);
 
   await as(adm);

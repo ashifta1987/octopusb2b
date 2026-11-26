@@ -14,7 +14,7 @@ import { SendStock, type PortalAsn, type PortalSku } from './send-stock';
 
 export const metadata = { title: '3PL warehouse' };
 
-/** Warehouse OS client portal tabs (design §5). Overview and Send stock (W2a) and Orders with packing proof (W3a) are live; the others say when they arrive. */
+/** Warehouse OS client portal tabs (design §5). Overview and Send stock (W2a) and Orders with packing proof (W3a) and tracking links (W4) are live; the others say when they arrive. */
 const TABS: { key: string; label: string; ships?: string }[] = [
   { key: 'overview', label: 'Overview' },
   { key: 'inventory', label: 'Inventory', ships: 'with stock receiving' },
@@ -41,7 +41,7 @@ type OrderLineRow = { order_id: string; sku: string; name: string; qty: number }
 /** The company's own warehouse orders (RLS: own org; customer-safe columns only). */
 async function loadOrders(sb: Sb, orgId: string): Promise<PortalOrder[] | null> {
   const { data, error } = await sb.from('wh_orders')
-    .select('id, code, external_ref, status, warehouse_code, ship_name, ship_country, created_at, packed_at')
+    .select('id, code, external_ref, status, warehouse_code, ship_name, ship_country, created_at, packed_at, shipped_at, tracking_token')
     .eq('org_id', orgId).order('created_at', { ascending: false }).limit(100);
   if (error) return null;
   const rows = (data ?? []) as Omit<PortalOrder, 'lines'>[];
@@ -109,7 +109,9 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; 
   const tiles: [string, string, string][] = [
     ['Units in stock', '—', 'Your stock shows here once we receive it'],
     ['Open orders', orders == null ? '—' : String(orders.filter((o) => OPEN_ORDER.includes(o.status)).length), 'Received, picking or packing'],
-    ['Shipped this week', shippedRes.count == null ? '—' : String(shippedRes.count), 'Last 7 days'],
+    // W4: orders the warehouse shipped (handed to the carrier / forwarder) in the last 7 days, plus older B2B shipments rows
+    ['Shipped this week', orders == null || shippedRes.count == null ? '—'
+      : String(orders.filter((o) => o.shipped_at && o.shipped_at >= weekStart).length + shippedRes.count), 'Last 7 days'],
     ['Stock on its way in', inbound.incoming == null ? '—' : inbound.incoming.toLocaleString('en-US'),
       inbound.openCount == null ? 'Could not load your stock notices' : `${inbound.openCount} open stock notice${inbound.openCount === 1 ? '' : 's'}`],
   ];

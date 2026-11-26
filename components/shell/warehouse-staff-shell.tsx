@@ -12,6 +12,7 @@ import { dsInter } from '@/components/dropship-ui/font';
  * W2b: Putaway and pallets, Label centre and Transfers are live; the menu and top bar are hidden when a label sheet is printed.
  * W3a: Orders, Picking (handheld), Packing station and Evidence are live.
  * W3b: Multi-parcel packing, Materials, Scale check and Exceptions are live.
+ * W4: Dispatch and freight (labels, label check, hand-over with manifest, freight pallets, tracking) and Carriers and rules are live.
  */
 type Item = { href: string; label: string; icon: DsIconName; ships?: string; adminOnly?: boolean };
 const ITEMS: Item[] = [
@@ -20,7 +21,7 @@ const ITEMS: Item[] = [
   // handheld picking (board 6), next to Orders
   { href: '/office/warehouse/pick', label: 'Picking', icon: 'list' },
   { href: '/office/warehouse/pack', label: 'Packing station', icon: 'package' },
-  { href: '/office/warehouse/dispatch', label: 'Dispatch and freight', icon: 'truck', ships: 'W4' },
+  { href: '/office/warehouse/dispatch', label: 'Dispatch and freight', icon: 'truck' },
   { href: '/office/warehouse/multi-parcel', label: 'Multi-parcel packing', icon: 'layers' },
   { href: '/office/warehouse/putaway', label: 'Putaway and pallets', icon: 'box' },
   { href: '/office/warehouse/counts', label: 'Counts and lots', icon: 'list' },
@@ -32,7 +33,7 @@ const ITEMS: Item[] = [
   { href: '/office/warehouse/transfers', label: 'Transfers', icon: 'send' },
   { href: '/office/warehouse/evidence', label: 'Evidence', icon: 'image' },
   { href: '/office/warehouse/scale', label: 'Scale check', icon: 'scale' },
-  { href: '/office/warehouse/carriers', label: 'Carriers and rules', icon: 'globe', ships: 'W4' },
+  { href: '/office/warehouse/carriers', label: 'Carriers and rules', icon: 'globe' },
   { href: '/office/warehouse/clients', label: 'Clients', icon: 'users' },
   { href: '/office/warehouse/rates', label: 'Rates', icon: 'percent' },
   { href: '/office/warehouse/exceptions', label: 'Exceptions', icon: 'alert' },

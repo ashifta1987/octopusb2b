@@ -90,8 +90,8 @@ test('T0 old Turnkey URLs go to the catalogue', async ({ page }) => {
 });
 
 test('T1 admin import: preview, import, public card', async ({ page }) => {
-  await staffLogin(page, admin!, '/admin/turnkey');
-  await page.goto('/admin/turnkey');
+  await staffLogin(page, admin!, '/admin/turnkey?tab=catalogue');
+  await page.goto('/admin/turnkey?tab=catalogue'); // T7: the dashboard is the Turnkey staff home; the catalogue is a tab
   await expect(page.getByTestId('tk-import')).toBeVisible();
   await page.getByTestId('tk-import-text').fill(`project_id,title,category,summary,floor_area_m2\n${TEST_ID},E2E Laundry,Laundry,Self-service laundry for e2e,90\n,,Broken,,`);
   await page.getByTestId('tk-import-preview').click();

@@ -83,7 +83,7 @@ async function Catalogue() {
             </li>
           ))}
         </ol>
-        <p className="mt-4 mb-0"><Link href="/turnkey/services" className="font-semibold text-[#2F6FE0] underline">See every service and starting fee</Link></p>
+        <p className="mt-4 mb-0"><Link href="/turnkey/services" className="font-semibold text-[#2559B8] underline">See every service and starting fee</Link></p>
       </section>
 
       {reports.length > 0 && (
@@ -108,6 +108,10 @@ async function Catalogue() {
           </div>
         </section>
       )}
+
+      <section aria-label="Terms" className="max-w-[900px] mx-auto px-4 sm:px-8 pb-14">
+        <p className="m-0 text-[14.5px] text-[#3B4160]">China visit terms, privacy (KVKK and GDPR), our independence statement and passport uploads: <Link href="/turnkey/terms" className="font-semibold text-[#2559B8] underline" data-testid="tk-terms-link">Terms and legal</Link>.</p>
+      </section>
     </div>
   );
 }

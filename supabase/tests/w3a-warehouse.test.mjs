@@ -19,6 +19,7 @@
 //  8. Settings (admin only), audit rows, ledger balanced; the staging demo wipe removes demo companies' W3a rows (and keeps
 //     every stock movement); down restores the exact 230 wipe_demo_data().
 // Run: node --env-file=.env.staging supabase/tests/w3a-warehouse.test.mjs
+import { snapshotSequences, restoreSequences } from './lib-seq-guard.mjs';
 import { config } from 'dotenv';
 import pg from 'pg';
 import fs from 'node:fs';
@@ -33,6 +34,7 @@ if (process.env.APP_ENVIRONMENT !== 'staging' || !process.env.DATABASE_URL) {
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 await db.connect();
 await assertStagingDatabase(db);
+const __seqs = await snapshotSequences(db); // wipe_demo_data() resets sequences; a rollback doesn't undo that
 
 let failed = 0;
 const ok = (c, m) => { console.log(`${c ? '✔' : '✘'} ${m}`); if (!c) failed++; };
@@ -512,6 +514,7 @@ try {
   ok(false, 'unexpected: ' + e.message);
 } finally {
   await db.query('rollback').catch(() => {});
+  await restoreSequences(__seqs).catch((e) => console.log('sequence restore failed:', e.message));
   ok(!(await db.query(`select 1 from auth.users where email like 'w3a-%@test.local'`)).rowCount, 'rolled back — nothing left');
   await db.end();
 }

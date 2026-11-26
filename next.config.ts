@@ -15,8 +15,8 @@ const nextConfig: NextConfig = {
     return [
       { source: '/turnkey/atlas', destination: '/turnkey', permanent: true },
       { source: '/turnkey/confirmation/:id', destination: '/account/turnkey', permanent: true },
-      { source: '/turnkey/:slug((?!services$)[a-z0-9-]+)/:rest*', destination: '/turnkey', permanent: true },
-      { source: '/turnkey/:slug((?!services$)[a-z0-9-]+)', destination: '/turnkey', permanent: true },
+      { source: '/turnkey/:slug((?!(?:services|terms)$)[a-z0-9-]+)/:rest*', destination: '/turnkey', permanent: true },
+      { source: '/turnkey/:slug((?!(?:services|terms)$)[a-z0-9-]+)', destination: '/turnkey', permanent: true },
     ];
   },
   turbopack: {

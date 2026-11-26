@@ -19,7 +19,7 @@ type Row = {
 };
 const WORK_LABEL: Record<string, string> = {
   rfqs: 'RFQs', service_requests: 'Service requests', orders: 'Orders in progress', brand_projects: 'Brand projects', pools: 'Open pools',
-  turnkey_leads: 'Turnkey leads', shipments: 'Shipments',
+  turnkey_leads: 'Turnkey leads', turnkey_projects: 'Turnkey projects', shipments: 'Shipments',
 };
 
 /**

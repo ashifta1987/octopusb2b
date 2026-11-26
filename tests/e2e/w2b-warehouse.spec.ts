@@ -213,6 +213,6 @@ test('W2b labels: bin and pallet barcodes, print log, parcel placeholder', async
   await page.getByTestId('wh-label-kind-carton').click();
   await expect(page.getByTestId('wh-label-picker')).toContainText('One label per stock notice line');
   await page.getByTestId('wh-label-kind-parcel').click();
-  await expect(page.getByTestId('wh-label-parcel')).toContainText('Parcel labels come with packing');
+  await expect(page.getByTestId('wh-label-parcel')).toContainText('Carrier labels made at Dispatch and freight');
   await axeBoth(page, 'labels (parcel)');
 });
