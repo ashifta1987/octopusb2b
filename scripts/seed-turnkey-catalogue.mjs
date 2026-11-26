@@ -6,21 +6,24 @@
 // Idempotent: existing projects keep their data (only a missing photo is filled) (use Admin › Turnkey › Catalogue › Import to change one).
 // Unknown values stay empty (no starting budget, floor area or lead time in the owner's list).
 //   node --env-file=.env.staging scripts/seed-turnkey-catalogue.mjs [--dry-run]
+//   node scripts/seed-turnkey-catalogue.mjs --live [--dry-run]     (approved live release only)
 import fs from 'node:fs';
 import path from 'node:path';
 import pg from 'pg';
 import { createClient } from '@supabase/supabase-js';
-import { assertStagingOrThrow } from './lib-staging-guard.mjs';
+import { assertStagingOrThrow, loadLiveEnvOrExit, assertLiveDatabase } from './lib-staging-guard.mjs';
 
+// --live: only inside an approved live release (loads .env.live and verifies the LIVE project). Default: staging only.
+const isLive = process.argv.includes('--live');
 const dry = process.argv.includes('--dry-run');
 const data = JSON.parse(fs.readFileSync('data/turnkey/catalogue-300.json', 'utf8'));
 const rows = data.projects;
 if (rows.length !== 300) throw new Error(`expected 300 projects, found ${rows.length}`);
 
-await assertStagingOrThrow();
+if (isLive) loadLiveEnvOrExit(); else await assertStagingOrThrow();
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 await db.connect();
-await assertStagingOrThrow(db);
+await (isLive ? assertLiveDatabase(db) : assertStagingOrThrow(db));
 
 // 1. photos → site-media (public bucket used by the catalogue cards)
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });

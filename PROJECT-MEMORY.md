@@ -49,7 +49,8 @@ Last updated: 26 Nov 2026 (staging state after EA-1 / EA-2). Read this before an
 
 ## 5. Where things stand
 
-- Live: migrations up to 217. `main` = f72c41c. `dropship_v2_ui` OFF (customers see "Coming soon"). 0 dropship merchants, 0 rate cards, 0 fee versions, so nothing can be published on live.
+- Live (26 Nov 2026 release "Turnkey + Warehouse OS"): migrations up to 245 (218 → 245 applied in order from commit fc7aba2; backup `backups/live-pre-turnkey-3pl-20261126-2008`). Turnkey v2 live with the owner's 300 projects + photos (`node scripts/seed-turnkey-catalogue.mjs --live`; 25 old projects archived). Warehouse OS live (FS-01 active, SZ-01 closed, legacy 3PL screens retired). Ledger unchanged (275,752 = 275,752), wallets unchanged (USD 252,500), RLS on all 290 tables. `dropship_v2_ui` unset = OFF; `dropship_features` inserted with merchant-only features (stores/orders/billing… OFF). Dropship 246 (DS10), 247 (DS12) and Release 6 are staging only.
+- Earlier: `main` = f72c41c before this release. 0 dropship merchants, 0 rate cards, 0 fee versions, so nothing can be published on live.
 - Staff data work open on live: 316 products need weight + box size; 313 HS codes need staff verification.
 - Batch 1 (white-label + permissions) is live. 106 original product images are still public and backed up in the private bucket `product-media-backup`; decide on 2 Dec whether to make them private or delete them.
 - Staging (not live yet): 218 Batch 2 (Payment protection / Pay now for Dropship orders), 219 demo-wipe keeps fee-history users, 220 Batch 3 (status labels, quotes, staff product requests, factory audit), 221 EA-1 (staff fees, two-person rate cards + price-list imports, duty entries with second-person confirm, customs value policy, request queue), 222 EA-2 (merchant feature list `site_settings.dropship_features`, public Dropship page). Batch 2 + 3 go live together on the owner's "go"; EA-1 + EA-2 follow with Release 1.
