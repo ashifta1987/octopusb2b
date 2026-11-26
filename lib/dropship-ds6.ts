@@ -267,7 +267,12 @@ export const getPackingPage = () => call<PackingData>('ds_packing_get');
 
 /** "STORE_NOT_CONNECTED: Connect a store first." → "Connect a store first." (the sentence after the code is plain words) */
 export function rpcMessage(e: unknown): string {
-  const m = e instanceof Error ? e.message : String(e ?? '');
+  // Error, or a PostgrestError-like object ({ message }) from supabase-js, or a plain string
+  const m = e instanceof Error
+    ? e.message
+    : e && typeof e === 'object' && typeof (e as { message?: unknown }).message === 'string'
+      ? (e as { message: string }).message
+      : String(e ?? '');
   const code = m.split(':')[0].trim();
   const MAP: Record<string, string> = {
     DROPSHIP_PAUSED: 'Dropshipping is paused for your company, so nothing new can be started. Orders in progress, your wallet and support keep working.',

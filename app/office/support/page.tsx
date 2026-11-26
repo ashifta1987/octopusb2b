@@ -10,6 +10,7 @@ import { fmtDate, humanize } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { getCurrencyContext } from '@/lib/currency';
 import { SUPPORT_KIND_LABEL, type TicketContext } from '@/lib/warehouse-w5';
+import { CASE_KIND_LABEL, caseStatusLabel, usd, type CaseKind, type CaseStatus } from '@/lib/dropship-problems-shared';
 import { replyTicket, updateTicket, ticketStatusForm, ticketPriorityForm, saveMacro, escalateToFinance } from '../actions';
 
 export const metadata = { title: 'Support desk' };
@@ -51,7 +52,7 @@ export default async function SupportDesk({ searchParams }: { searchParams: Prom
   const tickets = [...rawTickets].sort((a, b) => (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9) || (a.sla_due_at ?? '9').localeCompare(b.sla_due_at ?? '9'));
   const sel = selId ?? tickets[0]?.id;
   const { data: tRow } = sel ? await sb.from('tickets')
-    .select('id, code, org_id, order_id, subject, category, priority, status, sla_due_at, csat, created_at, organizations(name, country, kyc_status), orders(id, code, status, currency, claim_visible_until, claim_hidden_until, delivered_at)')
+    .select('id, code, org_id, order_id, store_order_id, subject, category, priority, status, sla_due_at, csat, created_at, organizations(name, country, kyc_status), orders(id, code, status, currency, claim_visible_until, claim_hidden_until, delivered_at)')
     .eq('id', sel).maybeSingle() : { data: null };
   // assigned_to and the order's supplier (orders.supplier_id) are hidden from session reads (migration 195): added with the
   // service role for the ticket / order RLS returned, after requireStaff.
@@ -62,6 +63,10 @@ export default async function SupportDesk({ searchParams }: { searchParams: Prom
   // Warehouse OS W5: a warehouse request carries its type and the client's order / stock notice / return (links to the warehouse screens)
   const { data: whCtxRaw } = t && t.category === 'warehouse' ? await sb.rpc('wh_ticket_context', { p_ticket: t.id }) : { data: null };
   const whCtx = (whCtxRaw ?? null) as TicketContext;
+  // Octopus Dropship Step 10: a ticket linked to a store order shows the order and its claims / returns (Order problems)
+  const { data: dsCtxRaw } = t && t.store_order_id ? await sb.rpc('ds10_ticket_context', { p_ticket: t.id }) : { data: null };
+  const dsCtx = (dsCtxRaw ?? null) as { store_order_id: string; order_number: string; external_order_name: string | null; merchant_status: string; payment_state: string;
+    total_cents: number | null; cases: { code: string; kind: CaseKind; status: CaseStatus }[] } | null;
   const authorIds = [...new Set([...(msgs ?? []).map((m) => m.author_id), t?.assigned_to].filter(Boolean))] as string[];
   const { data: people } = authorIds.length ? await sb.from('profiles').select('id, full_name').in('id', authorIds) : { data: [] };
   const name = (id: string | null) => (people ?? []).find((p) => p.id === id)?.full_name ?? (id ? 'User' : '—');
@@ -165,6 +170,21 @@ export default async function SupportDesk({ searchParams }: { searchParams: Prom
                   <div className="mt-2 text-[15px]">Return <Link href={`/office/warehouse/returns?status=all&r=${whCtx.return.code}`} className="mono text-coral-text">{whCtx.return.code}</Link> · {humanize(whCtx.return.status)}{whCtx.return.decision ? ` · ${humanize(whCtx.return.decision)}` : ''}</div>
                 ) : <p className="mt-2 text-sm text-muted">No order, stock notice or return was chosen.</p>}
                 <p className="text-xs text-muted mt-3">Photos the client attached are in the conversation below.</p>
+              </section>
+            )}
+
+            {dsCtx && (
+              <section className="card p-6" aria-labelledby="sd-ds" data-testid="sd-dropship">
+                <h3 id="sd-ds" className="text-lg font-semibold">Dropship order {dsCtx.external_order_name ?? dsCtx.order_number}</h3>
+                <div className="mt-2 text-[15px]"><span className="mono">{dsCtx.order_number}</span> · {humanize(dsCtx.merchant_status)} · {humanize(dsCtx.payment_state)} · {usd(dsCtx.total_cents)}</div>
+                {dsCtx.cases.length > 0 ? (
+                  <ul className="mt-2 space-y-1 text-[15px]">
+                    {dsCtx.cases.map((c) => (
+                      <li key={c.code}><Link href={`/office/dropship/problems?c=${c.code}`} className="mono text-coral-text">{c.code}</Link> · {CASE_KIND_LABEL[c.kind]} · {caseStatusLabel(c.status, c.kind).label}</li>
+                    ))}
+                  </ul>
+                ) : <p className="mt-2 text-sm text-muted">No claim or return on this order.</p>}
+                <p className="text-xs text-muted mt-3">Claims, returns and refunds are decided in Dropship › Order problems (refunds above US$1,000 need a second Finance approver).</p>
               </section>
             )}
 

@@ -23,6 +23,7 @@ export type StaffDropshipNavItem = {
  * Shipping rates and Fees; Support never sees Shipping rates. "Product editor" stays out of the menu (U1 rule above).
  * Warehouse OS W7 (D10): "Fulfilment queue" and "Pack station" open Warehouse OS (Dropship orders / packing station) for staff
  * who work in a warehouse, and are hidden for everyone else (the old URLs say where the work moved).
+ * Release 4 · Step 10: "Order problems" (claims, returns, re-weighs — the Exceptions of staff/StaffQueue.html for Dropship).
  */
 const STAFF_ITEMS: StaffDropshipNavItem[] = [
   { href: '/office/dropship', label: 'Products', icon: 'package', matchPrefix: '/office/dropship', role: 'dropship' },
@@ -32,6 +33,7 @@ const STAFF_ITEMS: StaffDropshipNavItem[] = [
   { href: '/office/dropship/rates', label: 'Shipping rates', icon: 'truck', matchPrefix: '/office/dropship/rates', role: 'rates' },
   { href: '/office/warehouse/orders?source=dropship', label: 'Fulfilment queue', icon: 'list', matchPrefix: '/office/warehouse/orders', role: 'warehouse' },
   { href: '/office/warehouse/pack', label: 'Pack station', icon: 'scale', matchPrefix: '/office/warehouse/pack', role: 'warehouse' },
+  { href: '/office/dropship/problems', label: 'Order problems', icon: 'flag', matchPrefix: '/office/dropship/problems', role: 'dropship' },
   { href: '/office/dropship/merchants', label: 'Merchants', icon: 'users', matchPrefix: '/office/dropship/merchants', role: 'dropship' },
   { href: '/office/dropship/fees', label: 'Fees and plans', icon: 'percent', matchPrefix: '/office/dropship/fees', role: 'fees_duty' },
   { href: '/office/dropship/health', label: 'System health', icon: 'activity', matchPrefix: '/office/dropship/health', role: 'dropship' },
@@ -45,6 +47,7 @@ const NON_CATALOG_PREFIXES = [
   // W7: still listed so the retired /office/dropship/queue|pack URLs never highlight "Products"
   '/office/dropship/queue',
   '/office/dropship/pack',
+  '/office/dropship/problems',
   '/office/dropship/merchants',
   '/office/dropship/requests',
   '/office/dropship/fees',

@@ -34,8 +34,12 @@ function shipToLines(t: ShipTo): string[] {
 export function packingSlipHtml(d: {
   brand: SellerBrand; orderCode: string | null; date: string; tracking: string | null; shipTo: ShipTo;
   items: { description: string; quantity: number | null }[];
+  /** Release 5 · Step 13 (Settings › Branding / Policies): optional logo (signed URL), buyer returns policy and support email. */
+  extras?: { logoUrl?: string | null; returnsPolicy?: string | null; supportEmail?: string | null };
 }): string {
   const b = d.brand;
+  const x = d.extras ?? {};
+  const safeLogo = x.logoUrl && /^https:\/\//.test(x.logoUrl) ? x.logoUrl : null;
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Packing slip · ${esc(b.brand_name)}</title>
 <style>
 @page { size: A5; margin: 0; }
@@ -57,7 +61,7 @@ th.q, td.q { text-align: right; width: 22mm; }
 </style></head><body>
 <div class="noprint"><button onclick="window.print()">Print packing slip</button></div>
 <div class="slip">
-  <div class="head"><div class="brand" data-testid="slip-brand">${esc(b.brand_name)}</div><div class="doc">Packing slip<br>${esc(d.date)}</div></div>
+  <div class="head"><div class="brand" data-testid="slip-brand">${safeLogo ? `<img src="${esc(safeLogo)}" alt="${esc(b.brand_name)} logo" style="max-height:14mm;max-width:50mm;display:block;margin-bottom:1mm">` : ''}${esc(b.brand_name)}</div><div class="doc">Packing slip<br>${esc(d.date)}</div></div>
   <div class="cols">
     <div class="box" data-testid="slip-ship-to"><h4>Ship to</h4><b>${esc(d.shipTo.name)}</b><br>${shipToLines(d.shipTo).join('<br>')}</div>
     <div class="box"><h4>Order</h4><b>${esc(d.orderCode ?? '—')}</b>${d.tracking ? `<br>Tracking: ${esc(d.tracking)}` : ''}</div>
@@ -65,7 +69,7 @@ th.q, td.q { text-align: right; width: 22mm; }
   <table data-testid="slip-items"><thead><tr><th>Item</th><th class="q">Quantity</th></tr></thead><tbody>
     ${d.items.map((i) => `<tr><td>${esc(i.description)}</td><td class="q">${esc(i.quantity ?? '—')}</td></tr>`).join('')}
   </tbody></table>
-  <div class="box" data-testid="slip-return"><h4>Returns</h4>Please send returns to:<br><b>${esc(b.brand_name)}</b><br>${returnAddressLines(b).join('<br>')}</div>
+  <div class="box" data-testid="slip-return"><h4>Returns</h4>Please send returns to:<br><b>${esc(b.brand_name)}</b><br>${returnAddressLines(b).join('<br>')}${x.returnsPolicy ? `<br><br><span data-testid="slip-returns-policy">${esc(x.returnsPolicy)}</span>` : ''}${x.supportEmail ? `<br>Questions: ${esc(x.supportEmail)}` : ''}</div>
   <div class="foot">Thank you for shopping with ${esc(b.brand_name)}.</div>
 </div></body></html>`;
 }

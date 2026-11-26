@@ -137,9 +137,10 @@ test('B3-3 customer declines a Sourcing quote; the status pill uses the status_m
 });
 
 test('B3-4 unbuilt merchant pages say what is coming', async ({ page }) => {
-  // Release 2 · Step 6 built Pricing and sync; Plan and billing (Step 12) is still a placeholder
-  await customerLogin(page, merchant!, '/account/dropship/billing');
-  for (const path of ['/account/dropship/billing', '/account/dropship/stores', '/account/dropship/reports']) {
+  // Release 2 · Step 6 built Pricing and sync; Release 5 built Plan and billing + Reports (tests/e2e/ds12-dropship.spec.ts).
+  // Stores (Step 5, Shopify connection) is still a placeholder.
+  await customerLogin(page, merchant!, '/account/dropship/stores');
+  for (const path of ['/account/dropship/stores']) {
     await page.goto(path);
     await expect(page.getByTestId('planned-notice')).toContainText('Coming soon');
   }

@@ -402,7 +402,12 @@ export async function runDs8Checks(db, ctx) {
   const adr3 = await rpc(`select ds_order_update_address($1, $2::jsonb) r`, [rH.store_order_id, JSON.stringify({ name: 'Omar S', line1: '99 New Road', city: 'Dubai', country: 'AE' })]);
   const oH3 = await so(rH.store_order_id);
   ok(can3.accepted === false && oH3.cancelled_at === null && oH3.cancel_state === 'rejected', 'cancel after packing started: rejected (order continues)');
-  ok(adr3.applied === false && adr3.problem === true && oH3.problem_code === 'address_after_packing' && oH3.shipping_address.line1 === '12 Marina Walk', 'address change after packing: not applied → problem flow');
+  // DS10 (Step 10) moved the address rule to "until the shipping label exists": with DS10 installed a picked order without a
+  // label still takes the new address (the after-label problem flow is checked in ds10-dropship.test.mjs)
+  const ds10 = (await one(`select to_regprocedure('public.ds10_label_created(uuid)') is not null i`)).i;
+  ok(ds10 ? adr3.applied === true && oH3.shipping_address.line1 === '99 New Road'
+          : adr3.applied === false && adr3.problem === true && oH3.problem_code === 'address_after_packing' && oH3.shipping_address.line1 === '12 Marina Walk',
+    ds10 ? 'address change while picked and no label yet (DS10 rule): applied' : 'address change after packing: not applied → problem flow');
   await service();
   const sc = await rpc(`select ds_order_channel_cancel($1, 'shopify', $2, 'Customer cancelled in Shopify') r`, [A.org, `S-${stamp}-1042`]);
   ok(sc.accepted === false && (await one(`select status from dropship_channel_tasks where store_order_id = $1 and action = 'reject_cancellation'`, [rH.store_order_id]))?.status === 'waiting_store',

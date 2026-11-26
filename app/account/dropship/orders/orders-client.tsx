@@ -15,7 +15,8 @@ import { cancelOrderAction, chargeOrdersAction, updateAddressAction, type Charge
 /**
  * Release 3 · Step 8 — Orders screen (screens/Orders.html, mobile/M_Orders.html, states/States-Orders.html):
  * header, wallet bar (Available, Held, Add funds), filter chips, the orders table with a Payment column, the high-risk review
- * panel (Charge and ship / Cancel order), Fix address dialog, bulk "Charge and ship" (oldest first). Pay later is offered only
+ * panel (Charge and ship / Cancel order), Fix address dialog, bulk "Charge and ship" (oldest first). Step 10: the order number
+ * opens the order detail page (claims, returns, re-weigh, tickets). Pay later is offered only
  * when the server says the organisation is credit_eligible (data.pay_later is null for everyone else — never shown, not even
  * disabled).
  */
@@ -211,7 +212,7 @@ export function OrdersClient({ data, countryNames, paused }: {
                           )}
                         </td>
                         <td>
-                          <strong className="block font-mono text-[#1A174A]">{orderName(r)}</strong>
+                          <Link href={`/account/dropship/orders/${r.id}`} className="block font-mono font-bold text-[#2A6FD1] underline" data-testid={`order-link-${r.order_number}`}>{orderName(r)}</Link>
                           <span className="block text-[12px] text-[#5B6478]">{channelLabel(r)}{r.external_order_name ? ` · ${r.order_number}` : ''}</span>
                         </td>
                         <td>
@@ -295,9 +296,9 @@ function OrderMessages({ rows, expiryDays, available }: { rows: OrderRow[]; expi
         </DsNotice>
       ))}
       {problems.map((r) => (
-        <DsNotice key={r.id} tone="warn" title={`Address change on ${orderName(r)} after packing`} testId="state-address-problem"
-          action={<DsLinkButton href="/account/dropship/support" variant="secondary" icon="help">Support</DsLinkButton>}>
-          The parcel is already packed, so the address was not changed. Octopus support checks whether it can still be redirected.
+        <DsNotice key={r.id} tone="warn" title={`Address change on ${orderName(r)} after the label`} testId="state-address-problem"
+          action={<DsLinkButton href={`/account/dropship/orders/${r.id}`} variant="secondary" icon="help">Open order</DsLinkButton>}>
+          The shipping label is already printed, so the address was not changed. Octopus support checks whether the parcel can still be redirected.
         </DsNotice>
       ))}
       {rejected.map((r) => (

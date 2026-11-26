@@ -5,6 +5,7 @@ import {
   DsLinkButton,
   DsNotice,
   DsPageHeader,
+  DsSkeleton,
 } from '@/components/dropship-ui';
 import { requireCustomer } from '@/lib/auth';
 import {
@@ -18,12 +19,18 @@ import { ActivateClient } from './activate-client';
 import { EarlyAccessDashboard } from './ea-dashboard';
 import { getDropshipFeatures } from '@/lib/dropship-features';
 import { isEarlyAccess } from '@/lib/dropship-features-shared';
+import { redirect } from 'next/navigation';
+import { getInvitesForMe } from '@/lib/dropship-ds12';
+import { MerchantDashboard } from './dashboard';
 
 export const metadata = { title: 'Dropshipping' };
 
 async function DropshipHome() {
   const s = await requireCustomer('/account/dropship');
   if (!s.org) {
+    // Step 13: someone invited to a Dropship team (no company yet) is sent to accept the invitation
+    const invites = await getInvitesForMe().catch(() => []);
+    if (invites.length > 0) redirect('/account/dropship/join');
     return <ServiceStart service="dropship" />;
   }
 
@@ -55,6 +62,16 @@ async function DropshipHome() {
   // EA-2: while store connection is not released, active merchants get the early-access dashboard (EA_Dashboard)
   if (isActive && isEarlyAccess(features)) {
     return <EarlyAccessDashboard orgId={s.org.id} orgName={s.org.name} features={features} />;
+  }
+
+  // Release 5 · Step 13: the full dashboard (screens/Dashboard.html, mobile/M_Dashboard.html) with real counts. Paused and
+  // closed merchants keep the page below (banner + orders in progress, wallet, statements, support, data export).
+  if (isActive) {
+    return (
+      <Suspense fallback={<div className="ds-card" data-testid="dashboard-loading"><DsSkeleton immediate /></div>}>
+        <MerchantDashboard features={features} />
+      </Suspense>
+    );
   }
 
   return (

@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { Suspense, type ReactNode } from 'react';
 import { notFound } from 'next/navigation';
 import { isDropshipV2UiEnabled } from '@/lib/dropship';
 import { createClient } from '@/lib/supabase/server';
@@ -7,6 +7,7 @@ import { COUNTRY_NAMES } from '@/lib/format';
 import type { PublicTracking } from '@/lib/warehouse-w4';
 import { DsPageHeader } from '@/components/dropship-ui';
 import { dsInter } from '@/components/dropship-ui/font';
+import { BrandBlock } from './brand-block';
 
 export const metadata = {
   title: 'Track your parcel',
@@ -43,13 +44,14 @@ const PARCEL_STATUS: Record<string, string> = {
  * "Packed and shipped from {warehouse city}", tracking numbers and events. White-label: no carrier, supplier, merchant or store
  * name. Sandbox (staging) shipments say so and are never served on live.
  */
-function WarehouseTracking({ t }: { t: PublicTracking }) {
+function WarehouseTracking({ t, brand }: { t: PublicTracking; brand?: ReactNode }) {
   const from = `${t.shipped_from_city}, ${country(t.shipped_from_country)}`;
   const numbered = t.parcels.filter((p) => p.tracking_no);
   return (
     <div className={`${dsInter.variable} ds-v2 min-h-screen p-6`} data-testid="public-warehouse-tracking">
       <div className="max-w-[760px] mx-auto space-y-6">
         <DsPageHeader title="Track your order" subtitle={`Order ${t.order_ref}`} icon="truck" />
+        {brand}
 
         {t.sandbox && (
           <p role="note" className="m-0 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold text-amber-900" data-testid="tracking-sandbox">
@@ -113,7 +115,7 @@ async function Guarded({ params }: { params: Promise<{ token: string }> }) {
   if (!wh.error && wh.data) {
     const t = wh.data as PublicTracking;
     if (t.sandbox && !isStaging()) notFound(); // never present a test shipment as real outside staging
-    return <WarehouseTracking t={t} />;
+    return <WarehouseTracking t={t} brand={<BrandBlock token={token} />} />;
   }
 
   if (!(await isDropshipV2UiEnabled())) {
@@ -138,6 +140,7 @@ async function Guarded({ params }: { params: Promise<{ token: string }> }) {
           subtitle={`${t.seller_name} · Order ${t.order_ref}`}
           icon="truck"
         />
+        <BrandBlock token={token} />
 
         <section className="rounded-xl border border-slate-200 bg-white p-5 space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
