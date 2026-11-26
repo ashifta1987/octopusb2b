@@ -63,6 +63,7 @@ export function StaffShellSwitcher({
   canEditDropship = false,
   canSeeSaas,
   isAdmin = false,
+  warehouseMember = true,
   userName,
   initials,
   unreadCount,
@@ -77,6 +78,8 @@ export function StaffShellSwitcher({
   canEditDropship?: boolean;
   canSeeSaas: boolean;
   isAdmin?: boolean;
+  /** W7: whether the person works in a warehouse (decides menus pointing at Warehouse OS) */
+  warehouseMember?: boolean;
   userName: string;
   initials: string;
   unreadCount: number;
@@ -88,7 +91,7 @@ export function StaffShellSwitcher({
   // Warehouse OS (W0): its own staff shell and left menu
   if (pathname === '/office/warehouse' || pathname?.startsWith('/office/warehouse/')) {
     return (
-      <WarehouseStaffShell userName={userName} initials={initials} unreadCount={unreadCount} isStaging={isStaging} isAdmin={isAdmin}>
+      <WarehouseStaffShell userName={userName} initials={initials} unreadCount={unreadCount} isStaging={isStaging} isAdmin={isAdmin} warehouseMember={isAdmin || warehouseMember}>
         {children}
       </WarehouseStaffShell>
     );
@@ -109,6 +112,7 @@ export function StaffShellSwitcher({
         canSeeFeesDuty={canSeeFeesDuty}
         canEditDropship={canEditDropship}
         canSeeSaas={canSeeSaas}
+        warehouseMember={isAdmin || warehouseMember}
       >
         {children}
       </DropshipStaffShell>

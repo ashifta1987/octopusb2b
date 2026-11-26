@@ -253,7 +253,7 @@ try {
            ($2, 'US', 'express', 2000, 550, 90,  5, 8, true)
   `, [dsFast.id, dsExt.id]);
 
-  await db.query(`select record_warehouse_stock_movement($1, 'inbound', 50, 'I2 initial inbound', 'SZ-01', null)`, [varFast.item_id]);
+  await db.query(`select record_warehouse_stock_movement($1, 'inbound', 50, 'I2 initial inbound', default_warehouse_code(), null)`, [varFast.item_id]);
 
   // Verify Item 24: GB ('duty', 1200<=2000) -> 24c tax-only; AU ('duty_and_tax', 1200<=2000) -> 0c; US (de_minimis=0, 1200>0) -> 120c duty!
   await as(merchA, 'aal1');
@@ -370,10 +370,10 @@ try {
       'US', 'USD', null, 'express', 'DDP', $2::jsonb, true
     ) r
   `, [orgA, JSON.stringify([{ variant_id: varFast.id, qty: 25, buyer_unit_price_cents: 1500 }])])).r;
-  // Temporarily reserve 30 on another order? Even simpler: SZ-01 has 50 on_hand; order 25 + order 30 -> second exceeds available (20 < 30)!
+  // Temporarily reserve 30 on another order? Even simpler: the default warehouse has 50 on_hand; order 25 + order 30 -> second exceeds available (20 < 30)!
   // Let's test directly by adjusting 30 out or ordering 25 after usdOrder reserves, or ordering 20 + 35!
   await owner();
-  await db.query(`select record_warehouse_stock_movement($1, 'adjust_out', 30, 'Leave 20 available for shortage test', 'SZ-01', null)`, [varFast.item_id]);
+  await db.query(`select record_warehouse_stock_movement($1, 'adjust_out', 30, 'Leave 20 available for shortage test', default_warehouse_code(), null)`, [varFast.item_id]);
   // Available is now 20, while shortOrder needs qty = 25!
   await as(merchA, 'aal1');
   const shortPaid = (await one(`select mark_store_order_paid($1) r`, [shortOrder.store_order_id])).r;
@@ -387,7 +387,7 @@ try {
     `Review 4: insufficient 3PL stock (avail 20 < qty 25) sets staff_stage='on_hold', merchant_status='on_hold', hold_reason='stock_shortage' with NO error`,
   );
   // Restore the 30 units back to 50 on_hand for the full step-by-step pipeline test
-  await db.query(`select record_warehouse_stock_movement($1, 'adjust_in', 30, 'Restore 50 on_hand', 'SZ-01', null)`, [varFast.item_id]);
+  await db.query(`select record_warehouse_stock_movement($1, 'adjust_in', 30, 'Restore 50 on_hand', default_warehouse_code(), null)`, [varFast.item_id]);
 
   // ── 6. Review 4 & 5: Full Step-by-Step Pipeline + Duplicate-Key No-op + Finance Escrow Release Date ──
   // Create a Finance escrow_holds row (target_type = 'dropship_order', store_order_id = $2, auto_release_days = 7, release_rule = 'delivery_plus_days')
@@ -413,7 +413,7 @@ try {
   `, [usdOrder.store_order_id, `store_order:${usdOrder.store_order_id}:paid`])).id;
   const dupRun = (await one(`select process_dropship_domain_events(10) r`)).r;
   const consCnt = (await one(`select count(*)::int n from domain_event_consumptions where event_id = $1`, [dupEvId])).n;
-  const wsStep2 = await one(`select on_hand_qty, reserved_qty from warehouse_stock where warehouse_id = 'SZ-01' and item_id = $1`, [varFast.item_id]);
+  const wsStep2 = await one(`select on_hand_qty, reserved_qty from warehouse_stock where warehouse_id = default_warehouse_code() and item_id = $1`, [varFast.item_id]);
   const hoStep3 = await one(`select handoff_type, status, (select code from divisions where id = to_division_id) div_code from dropship_handoffs where store_order_id = $1`, [usdOrder.store_order_id]);
 
   ok(
@@ -428,7 +428,7 @@ try {
       && hoStep3.handoff_type === 'warehouse_pick_pack'
       && hoStep3.status === 'reserved'
       && hoStep3.div_code === '3PL',
-    'Pipeline Step 1–3 (paid -> reserve -> handoff): reserved 3/50 in SZ-01, 3PL handoff=reserved, order=packing/processing',
+    'Pipeline Step 1–3 (paid -> reserve -> handoff): reserved 3/50 in the default warehouse (FS-01; W7 retired SZ-01), 3PL handoff=reserved, order=packing/processing',
   );
 
   // Step 4 & 5: shipment (store_order_id, token) + pick + label_ready STAYS 'processing'
@@ -438,7 +438,7 @@ try {
   `, [usdOrder.store_order_id])).r;
   await owner();
 
-  const wsStep4 = await one(`select on_hand_qty, reserved_qty from warehouse_stock where warehouse_id = 'SZ-01' and item_id = $1`, [varFast.item_id]);
+  const wsStep4 = await one(`select on_hand_qty, reserved_qty from warehouse_stock where warehouse_id = default_warehouse_code() and item_id = $1`, [varFast.item_id]);
   const soStep5 = await one(`select staff_stage, merchant_status from store_orders where id = $1`, [usdOrder.store_order_id]);
   ok(
     !!shipRes.shipment_id
@@ -510,7 +510,7 @@ try {
   await db.query(`select mark_store_order_paid($1)`, [gbpOrder.store_order_id]);
   const cancelRes = (await one(`select cancel_store_order($1, 'Buyer cancelled before dispatch') r`, [gbpOrder.store_order_id])).r;
   await owner();
-  const wsAfterCancel = await one(`select on_hand_qty, reserved_qty from warehouse_stock where warehouse_id = 'SZ-01' and item_id = $1`, [varFast.item_id]);
+  const wsAfterCancel = await one(`select on_hand_qty, reserved_qty from warehouse_stock where warehouse_id = default_warehouse_code() and item_id = $1`, [varFast.item_id]);
   ok(
     cancelRes.staff_stage === 'cancelled' && cancelRes.merchant_status === 'cancelled' && wsAfterCancel.on_hand_qty === 47 && wsAfterCancel.reserved_qty === 0,
     'Cancel pipeline: cancelling reserved order releases 3PL stock (on_hand=47, reserved=0)',

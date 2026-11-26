@@ -1,5 +1,4 @@
 import { test, expect, type Page } from '@playwright/test';
-import { withWarehouseOsOff } from './helpers/warehouse-flag';
 import { adminClient } from './helpers/customer';
 
 /** ADDON-44-F (staging): boards 24 (public product page), 25 (3PL request) and 26 (Make My Brand request). */
@@ -54,20 +53,16 @@ test('24 · product page: verified factory line without supplier code, four ways
   expect(await page.locator('main').innerText()).not.toMatch(/Supplier OCT-\d{4}|by card/i);
 });
 
-test('25 · 3PL request: warehouse cards from settings, "Not listed? Ask us" reveals the country, checklist', async ({ page }) => {
-  await withWarehouseOsOff(async () => {
-    await page.goto('/request/3pl');
-    await expect(page.getByTestId('request-tab-brand')).toContainText('Make My Brand');
-    const cards = page.getByTestId('warehouse-cards');
-    await expect(cards.getByText('Not listed? Ask us')).toBeVisible();
-    await expect(page.getByLabel('Which country do you need?')).toHaveCount(0);
-    await cards.getByText('Not listed? Ask us').click();
-    await expect(page.getByLabel('Which country do you need?')).toBeVisible();
-    await expect(page.getByTestId('before-you-ship')).toContainText('inbound notice');
-    await expect(page.getByTestId('3pl-rates')).toBeVisible();
-    // no country list of 64 options any more as the warehouse choice
-    await expect(page.locator('select[name="warehouse_country"] option')).not.toHaveCount(0);
-  });
+// W7 (owner, 26 Nov 2026): board 25 (the old 3PL request form with warehouse cards / rates from settings) is retired —
+// /request/3pl goes to the Warehouse OS intro, and the Request Center's 3PL tab opens it too.
+test('25 · 3PL request: /request/3pl opens the Warehouse OS intro; the 3PL tab points there', async ({ page }) => {
+  await page.goto('/request/3pl');
+  await expect(page).toHaveURL(/\/3pl$/);
+  await expect(page.getByTestId('wh-intro')).toBeVisible();
+  await page.goto('/request/sourcing');
+  await expect(page.getByTestId('request-tab-3pl')).toHaveAttribute('href', '/3pl');
+  await expect(page.getByTestId('request-tab-brand')).toContainText('Make My Brand');
+  await expect(page.getByTestId('warehouse-cards')).toHaveCount(0);
 });
 
 test('26 · Make My Brand request: 3 steps, private logo upload, MB reference, project with a signed logo link', async ({ page }) => {

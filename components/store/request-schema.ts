@@ -2,14 +2,15 @@ import { z } from 'zod';
 import { COUNTRY_NAMES } from '@/lib/format';
 
 /** Request Center (Request.png) — one field config per request type; the SAME zod schema runs in the form and the server action. */
-export const REQUEST_TYPES = ['sourcing', '3pl', 'dropship', 'sample', 'qc', 'certification', 'factory-audit'] as const;
+/** W7 (owner, 26 Nov 2026): '3pl' is no longer a request type — 3PL starts at /3pl (Warehouse OS intro + Apply). */
+export const REQUEST_TYPES = ['sourcing', 'dropship', 'sample', 'qc', 'certification', 'factory-audit'] as const;
 export type RequestType = (typeof REQUEST_TYPES)[number];
 export const isRequestType = (t: string): t is RequestType => (REQUEST_TYPES as readonly string[]).includes(t);
 /** Service code charged for each type (`rfq` for sourcing via submit_rfq, else request_service). */
-export const SERVICE_CODE: Record<RequestType, string> = { sourcing: 'rfq', '3pl': '3pl', dropship: 'dropship', sample: 'sample', qc: 'qc', certification: 'certification', 'factory-audit': 'factory_audit' };
+export const SERVICE_CODE: Record<RequestType, string> = { sourcing: 'rfq', dropship: 'dropship', sample: 'sample', qc: 'qc', certification: 'certification', 'factory-audit': 'factory_audit' };
 
 export type Field = {
-  name: string; label: string; kind: 'text' | 'textarea' | 'int' | 'money' | 'select' | 'date' | 'country' | 'warehouse';
+  name: string; label: string; kind: 'text' | 'textarea' | 'int' | 'money' | 'select' | 'date' | 'country';
   required?: boolean; placeholder?: string; options?: string[]; full?: boolean; max?: number; hint?: string;
 };
 export type Section = { title: string; fields: Field[] };
@@ -28,19 +29,6 @@ export const REQUEST_FIELDS: Record<RequestType, Section[]> = {
       { name: 'destination_city', label: 'Destination city / port', kind: 'text', placeholder: 'e.g. Rotterdam' },
       { name: 'incoterm', label: 'Preferred Incoterm', kind: 'select', options: ['EXW', 'FOB', 'CIF', 'DAP', 'DDP'] },
       { name: 'needed_by', label: 'Needed by', kind: 'date' },
-    ],
-  }],
-  '3pl': [{
-    title: 'Fulfillment needs',
-    fields: [
-      { name: 'product', label: 'What will we store?', kind: 'text', required: true, full: true, placeholder: 'Products, SKUs, carton sizes' },
-      // ADDON-44-F board 25: only real warehouses from settings (radio cards) + "Not listed? Ask us" → country
-      { name: 'warehouse', label: 'Warehouse', kind: 'warehouse', required: true, full: true },
-      { name: 'warehouse_country', label: 'Which country do you need?', kind: 'country' },
-      { name: 'monthly_orders', label: 'Orders per month', kind: 'int', placeholder: 'e.g. 1500' },
-      { name: 'storage_type', label: 'Storage type', kind: 'select', required: true, options: ['Standard', 'Fragile', 'Hazardous', 'Temperature-controlled'] },
-      { name: 'platforms', label: 'Sales channels', kind: 'text', placeholder: 'Shopify, WooCommerce or a sheet' },
-      notes,
     ],
   }],
   dropship: [{
@@ -113,8 +101,6 @@ function fieldSchema(f: Field) {
       return req(z.string().trim()).refine((v) => v === '' || !Number.isNaN(Date.parse(v)), 'Enter a valid date');
     case 'country':
       return req(z.string().trim()).refine((v) => v === '' || v in COUNTRY_NAMES, 'Choose a country');
-    case 'warehouse':
-      return req(z.string().trim()).refine((v) => v === '' || /^[A-Za-z0-9_-]{1,40}$/.test(v), 'Choose a warehouse');
     case 'select':
       return req(z.string().trim()).refine((v) => v === '' || (f.options ?? []).includes(v), 'Choose an option');
     case 'textarea':
@@ -127,9 +113,6 @@ function fieldSchema(f: Field) {
 export function requestSchema(type: RequestType) {
   const shape: Record<string, z.ZodType<string, string>> = {};
   REQUEST_FIELDS[type].forEach((s) => s.fields.forEach((f) => (shape[f.name] = fieldSchema(f))));
-  return z.object(shape).superRefine((v, ctx) => {
-    // "Not listed? Ask us" needs the country the customer wants
-    if (v.warehouse === 'other' && !v.warehouse_country) ctx.addIssue({ code: 'custom', path: ['warehouse_country'], message: 'Choose the country you need' });
-  });
+  return z.object(shape);
 }
 export type RequestValues = Record<string, string>;

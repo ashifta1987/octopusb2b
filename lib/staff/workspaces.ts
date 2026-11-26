@@ -19,9 +19,10 @@ export type Workspace = {
   role?: string;
 };
 
+// W7 (audit F-05): no carrier name in tile descriptions — every orders:view person (incl. Support) sees the Shipping tile.
 export const WORKSPACES: Workspace[] = [
   { key: 'office', label: 'Back office', short: 'BO', description: 'Queues: KYC, product moderation, RFQs, service requests', href: '/office', area: 'dashboard', action: 'view' },
-  { key: 'shipping', label: 'Shipping', short: 'SH', description: 'YunExpress shipments, labels and exceptions', href: '/office/shipping', area: 'orders', action: 'view' },
+  { key: 'shipping', label: 'Shipping', short: 'SH', description: 'B2B shipments, labels and exceptions', href: '/office/warehouse/b2b-shipments', area: 'orders', action: 'view' },
   { key: 'support', label: 'Support desk', short: 'SD', description: 'Customer complaints, feedback and SLAs', href: '/office/support', area: 'support', action: 'view' },
   { key: 'finance', label: 'Finance', short: 'FI', description: 'Payments, approvals, statements and reconciliation', href: '/admin/finance', area: 'finance', action: 'view' },
   { key: 'admin', label: 'Admin', short: 'AD', description: 'Master switches, staff & roles, integrations, backups', href: '/admin', role: 'admin' },

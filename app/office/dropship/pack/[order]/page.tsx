@@ -1,38 +1,25 @@
 import { Suspense } from 'react';
 import { requireDropshipV2Staff } from '@/lib/dropship-staff';
-import { DsPageHeader, DsNotice, DsLinkButton } from '@/components/dropship-ui';
+import { handOffToWarehouseOs, resolveDropshipPackTarget } from '@/lib/warehouse-retire-server';
+import { MovedToWarehouseOs } from '../../moved-to-warehouse';
 
 export const metadata = { title: 'Pack station · Back office' };
 
-async function Guarded() {
+/**
+ * W7 (owner, 26 Nov 2026): the old placeholder is gone — the order opens in Warehouse OS (WO code, store order id or DSO
+ * number → that warehouse order; otherwise the Dropship orders list searched by the number).
+ */
+async function Guarded({ params }: { params: Promise<{ order: string }> }) {
   await requireDropshipV2Staff(false, '/office/dropship/pack');
-  return (
-    <div className="flex flex-col gap-5">
-      <DsPageHeader
-        title="Pack station"
-        subtitle="Pick items, add brand insert, weigh parcel and print white-label carrier label."
-        icon="scale"
-      />
-      <DsNotice
-        tone="info"
-        title="Coming soon"
-        testId="planned-notice"
-        action={
-          <DsLinkButton href="/office/shipping" variant="secondary">
-            Open Shipping
-          </DsLinkButton>
-        }
-      >
-        The pack station screen is coming soon. Until then warehouse staff pack and label parcels from Shipping.
-      </DsNotice>
-    </div>
-  );
+  const { order } = await params;
+  await handOffToWarehouseOs(() => resolveDropshipPackTarget(order));
+  return <MovedToWarehouseOs title="Pack station" icon="scale" what="Packing" />;
 }
 
-export default function Page() {
+export default function Page(props: { params: Promise<{ order: string }> }) {
   return (
     <Suspense fallback={<div className="ds-card">Loading…</div>}>
-      <Guarded />
+      <Guarded params={props.params} />
     </Suspense>
   );
 }

@@ -62,8 +62,8 @@ export default async function OfficeQueues() {
       items: (srv?.data ?? []).map((r) => { const o = one(r.organizations as unknown as { name: string; country: string | null } | null); return { id: r.id, href: `/office/services?r=${r.id}`, ref: r.code, title: `${humanize(r.service_code)} · ${o?.name ?? ''}`, sub: `${o?.country ?? ''} · ${age(r.created_at)}`, at: r.created_at, status: r.status }; }),
     },
     {
-      key: 'ship', title: 'Shipments with exceptions', href: '/office/shipping', hide: !ships, count: ships?.count ?? 0,
-      items: (ships?.data ?? []).map((x) => ({ id: x.id, href: '/office/shipping', ref: x.code, title: `${one(x.orders as unknown as { code: string } | null)?.code ?? ''} · ${x.tracking_no ?? ''}`, sub: `last event ${fmtDate(x.last_event_at ?? x.created_at, true)}`, at: x.created_at, status: x.status, flag: true })),
+      key: 'ship', title: 'Shipments with exceptions', href: '/office/warehouse/b2b-shipments', hide: !ships, count: ships?.count ?? 0,
+      items: (ships?.data ?? []).map((x) => ({ id: x.id, href: '/office/warehouse/b2b-shipments', ref: x.code, title: `${one(x.orders as unknown as { code: string } | null)?.code ?? ''} · ${x.tracking_no ?? ''}`, sub: `last event ${fmtDate(x.last_event_at ?? x.created_at, true)}`, at: x.created_at, status: x.status, flag: true })),
     },
     {
       key: 'tk', title: 'Tickets near SLA', href: '/office/support', hide: !tickets, count: tickets?.count ?? 0,

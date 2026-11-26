@@ -189,7 +189,7 @@ export async function HomeHero() {
     { key: 'brand', label: 'Put my brand on it', service: 'Make My Brand', promise: 'Your logo on a verified product, made, checked and stocked for you.', steps: ['Pick a product from our verified suppliers', 'Add your logo print, engraving or branded box', 'Approve proof and sample, then we produce and check'], fact: 'Price confirmed before you pay', cta: 'Start a brand project →', href: '/request/brand' },
     { key: 'source', label: 'Source a product', service: 'Product sourcing', promise: 'Tell us the product. We find the verified factory and get you competing quotes.', steps: ['Send your request with product, quantity and destination', 'Compare quotes from verified factories within 24 hours', 'We inspect the goods and ship them to your door'], fact: rfq ? `RFQ fee ${rfq} · quotes in 24 h` : 'Quotes in 24 h', cta: 'Request quotes →', href: '/request/sourcing' },
     ...(poolsOn ? [{ key: 'pool', label: 'Share a factory order', service: 'MOQ pools', promise: 'Factory minimum too big? Join other buyers on one factory order and each take the quantity you need.', steps: ['Join an open pool or start one for a product', 'Commit your quantity; money waits in escrow', 'When the pool reaches the factory minimum, it is ordered, checked and shipped'], fact: "Pay only for your share · refunded if the pool doesn't fill by its deadline", cta: 'See open pools →', href: '/pools' }] : []),
-    { key: 'store', label: 'Store and ship', service: '3PL & shipping', promise: 'Keep your stock in Shenzhen. We ship every order worldwide.', steps: ['Send your bulk order into our Shenzhen warehouse', 'We count it and store it by SKU, live in your account', 'We pick, pack and ship each order worldwide with tracking'], fact: 'Same or next working day dispatch', cta: 'Get a 3PL quote →', href: '/request/3pl' },
+    { key: 'store', label: 'Store and ship', service: '3PL & shipping', promise: 'Keep your stock in Shenzhen. We ship every order worldwide.', steps: ['Send your bulk order into our Shenzhen warehouse', 'We count it and store it by SKU, live in your account', 'We pick, pack and ship each order worldwide with tracking'], fact: 'Same or next working day dispatch', cta: 'Get a 3PL quote →', href: '/3pl' },
   ];
   return (
     <>
@@ -373,7 +373,7 @@ function RestOfHome({ blocks, M, pools, poolsOn, turnkey, ready, countries, seco
               {['Express', 'Standard', 'Economy'].map((s) => <li key={s} className="flex items-center justify-between py-2.5"><span className="font-semibold">{s}</span><span className="text-on-ink text-[14px]">Delivery days and rate in your quote</span></li>)}
             </ul>
             <p className="mt-3 text-[13.5px] text-on-ink">Tracking to the door · duties and customs paperwork handled{countries ? ` · ${countries} countries` : ''}</p>
-            <div className="mt-auto pt-5 flex flex-col sm:flex-row gap-3"><Link href="/request/3pl" className="btn btn-primary min-h-[52px]">Get a 3PL quote <Arrow /></Link><Link href="/request/3pl#rates" className="btn btn-light min-h-[52px]">Check shipping to my country</Link></div>
+            <div className="mt-auto pt-5 flex flex-col sm:flex-row gap-3"><Link href="/3pl" className="btn btn-primary min-h-[52px]">Get a 3PL quote <Arrow /></Link><Link href="/3pl" className="btn btn-light min-h-[52px]">Check shipping to my country</Link></div>
           </div>
         </div>
       </Band>

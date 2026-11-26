@@ -2,7 +2,6 @@ import 'server-only';
 import { redirect } from 'next/navigation';
 import { getSession, type Session } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { isWarehouseOsEnabled } from '@/lib/warehouse';
 
 /**
  * Warehouse OS · W6 — who may open the monthly invoice run (/office/warehouse/invoices): warehouse admins and Finance preview,
@@ -16,7 +15,6 @@ export async function requireInvoiceAccess(next: string): Promise<InvoiceAccess>
   if (!s) redirect(`/staff/login?next=${encodeURIComponent(next)}`);
   if (!s.isStaff) redirect('/login');
   if (s.aal !== 'aal2') redirect(`/staff/verify?next=${encodeURIComponent(next)}`);
-  if (!(await isWarehouseOsEnabled())) redirect('/admin');
   const sb = await createClient();
   const { data, error } = await sb.rpc('wh_invoice_access');
   if (error) throw new Error(`Could not check access: ${error.message}`);

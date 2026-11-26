@@ -1,32 +1,16 @@
 import { Suspense } from 'react';
 import { requireDropshipV2Staff } from '@/lib/dropship-staff';
-import { DsPageHeader, DsNotice, DsLinkButton } from '@/components/dropship-ui';
+import { handOffToWarehouseOs } from '@/lib/warehouse-retire-server';
+import { WH_PACK_PATH } from '@/lib/warehouse-retire';
+import { MovedToWarehouseOs } from '../moved-to-warehouse';
 
 export const metadata = { title: 'Pack station · Back office' };
 
+/** W7 (owner, 26 Nov 2026): the old placeholder is gone — packing happens at the Warehouse OS packing station. */
 async function Guarded() {
   await requireDropshipV2Staff(false, '/office/dropship/pack');
-  return (
-    <div className="flex flex-col gap-5">
-      <DsPageHeader
-        title="Pack station"
-        subtitle="Pick items, add brand insert, weigh parcel and print white-label carrier label."
-        icon="scale"
-      />
-      <DsNotice
-        tone="info"
-        title="Coming soon"
-        testId="planned-notice"
-        action={
-          <DsLinkButton href="/office/shipping" variant="secondary">
-            Open Shipping
-          </DsLinkButton>
-        }
-      >
-        The pack station screen is coming soon. Until then warehouse staff pack and label parcels from Shipping.
-      </DsNotice>
-    </div>
-  );
+  await handOffToWarehouseOs(WH_PACK_PATH);
+  return <MovedToWarehouseOs title="Pack station" icon="scale" what="Packing" />;
 }
 
 export default function Page() {

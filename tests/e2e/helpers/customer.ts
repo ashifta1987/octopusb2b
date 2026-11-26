@@ -81,6 +81,8 @@ export async function purgeTestOrgs(orgIds: string[], userIds: string[]) {
     const all = [...rfqs, ...quotes, ...orders, ...svcs, ...orgIds];
     await db.query('begin');
     await db.query(`update finance_approvals set executed_journal_id = null where executed_journal_id = any($1)`, [journals]).catch(() => {});
+    // payment-protection holds point at their hold journal (DS8)
+    await db.query(`update escrow_holds set hold_journal_id = null where hold_journal_id = any($1)`, [journals]).catch(() => {});
     await db.query(`delete from ledger_entries where journal_id = any($1)`, [journals]);
     // proforma payments (Turnkey T3 fees, service proformas) point at their journals
     await db.query(`delete from document_payments where journal_id = any($1) or org_id = any($2)`, [journals, orgIds]);

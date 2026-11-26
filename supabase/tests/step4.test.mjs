@@ -329,7 +329,7 @@ try {
   const prod1 = await one(`select id, model_no from dropship_products where model_no = 'DS-000001'`);
   const var1 = await one(`select id, item_id from dropship_variants where product_id = $1 order by sort limit 1`, [prod1.id]);
   await db.query(
-    `select record_warehouse_stock_movement($1, 'inbound', 30, 'Step 4 inbound', 'SZ-01', null)`,
+    `select record_warehouse_stock_movement($1, 'inbound', 30, 'Step 4 inbound', default_warehouse_code(), null)`,
     [var1.item_id],
   );
 

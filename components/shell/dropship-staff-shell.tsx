@@ -11,16 +11,18 @@ export type StaffDropshipNavItem = {
   label: string;
   icon: DsIconName;
   matchPrefix: string;
-  role: 'dropship' | 'dropship_edit' | 'saas' | 'rates' | 'fees_duty';
+  role: 'dropship' | 'dropship_edit' | 'saas' | 'rates' | 'fees_duty' | 'warehouse';
 };
 
 /**
  * Step U1 Rule 4:
  * - "Product editor" is removed from the staff menu; the editor opens from a product row (/office/dropship/[id] or /office/dropship/new).
- * - "Pack station" opens the fulfilment queue filtered to packing (/office/dropship/queue?status=packing) or /office/dropship/pack/[order].
+ * - "Pack station" (W7) opens the Warehouse OS packing station; "Fulfilment queue" opens Warehouse OS orders (Dropship).
  * - Dropship division staff and company-wide admins see the Dropship items; "Finance: SaaS billing" shows only to company-wide Finance and admins.
  * EA-1 (design v2 staff menu): adds "Shipping rates" and moves "Product requests" up. 3PL & Shipping staff also see Duty,
  * Shipping rates and Fees; Support never sees Shipping rates. "Product editor" stays out of the menu (U1 rule above).
+ * Warehouse OS W7 (D10): "Fulfilment queue" and "Pack station" open Warehouse OS (Dropship orders / packing station) for staff
+ * who work in a warehouse, and are hidden for everyone else (the old URLs say where the work moved).
  */
 const STAFF_ITEMS: StaffDropshipNavItem[] = [
   { href: '/office/dropship', label: 'Products', icon: 'package', matchPrefix: '/office/dropship', role: 'dropship' },
@@ -28,8 +30,8 @@ const STAFF_ITEMS: StaffDropshipNavItem[] = [
   { href: '/office/dropship/requests', label: 'Product requests', icon: 'file', matchPrefix: '/office/dropship/requests', role: 'dropship' },
   { href: '/office/dropship/compliance', label: 'Duty, tax and customs', icon: 'globe', matchPrefix: '/office/dropship/compliance', role: 'fees_duty' },
   { href: '/office/dropship/rates', label: 'Shipping rates', icon: 'truck', matchPrefix: '/office/dropship/rates', role: 'rates' },
-  { href: '/office/dropship/queue', label: 'Fulfilment queue', icon: 'list', matchPrefix: '/office/dropship/queue', role: 'dropship' },
-  { href: '/office/dropship/queue?status=packing', label: 'Pack station', icon: 'scale', matchPrefix: '/office/dropship/pack', role: 'dropship' },
+  { href: '/office/warehouse/orders?source=dropship', label: 'Fulfilment queue', icon: 'list', matchPrefix: '/office/warehouse/orders', role: 'warehouse' },
+  { href: '/office/warehouse/pack', label: 'Pack station', icon: 'scale', matchPrefix: '/office/warehouse/pack', role: 'warehouse' },
   { href: '/office/dropship/merchants', label: 'Merchants', icon: 'users', matchPrefix: '/office/dropship/merchants', role: 'dropship' },
   { href: '/office/dropship/fees', label: 'Fees and plans', icon: 'percent', matchPrefix: '/office/dropship/fees', role: 'fees_duty' },
   { href: '/office/dropship/health', label: 'System health', icon: 'activity', matchPrefix: '/office/dropship/health', role: 'dropship' },
@@ -40,6 +42,7 @@ const NON_CATALOG_PREFIXES = [
   '/office/dropship/import',
   '/office/dropship/compliance',
   '/office/dropship/rates',
+  // W7: still listed so the retired /office/dropship/queue|pack URLs never highlight "Products"
   '/office/dropship/queue',
   '/office/dropship/pack',
   '/office/dropship/merchants',
@@ -73,6 +76,7 @@ export function DropshipStaffShell({
   canSeeFeesDuty = false,
   canEditDropship = false,
   canSeeSaas = false,
+  warehouseMember = true,
   children,
 }: {
   userName: string;
@@ -84,12 +88,15 @@ export function DropshipStaffShell({
   canSeeFeesDuty?: boolean;
   canEditDropship?: boolean;
   canSeeSaas?: boolean;
+  warehouseMember?: boolean;
   children: ReactNode;
 }) {
   const pathname = usePathname();
   const isFinanceSaas = pathname.startsWith('/admin/finance/saas');
   const visibleItems = STAFF_ITEMS.filter((item) =>
-    item.role === 'saas'
+    item.role === 'warehouse'
+      ? canSeeDropshipItems && warehouseMember
+      : item.role === 'saas'
       ? canSeeSaas
       : item.role === 'rates'
         ? canSeeRates

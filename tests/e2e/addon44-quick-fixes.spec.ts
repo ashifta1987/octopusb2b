@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 import { adminClient } from './helpers/customer';
-import { withWarehouseOsOff } from './helpers/warehouse-flag';
 
 /** ADDON-44-C — audit quick fixes (03, 05, 06, 09, 11, 13, 16) on public pages. */
 const PUBLIC = ['/', '/about', '/turnkey', '/developers', '/pools', '/request/dropship', '/request/3pl', '/request/sourcing', '/3pl'];
@@ -14,14 +13,12 @@ test('no carrier name, card payment, separate dropship app or unsupported platfo
   }
 });
 
-// Warehouse OS W1: with warehouse_os_ui ON /request/3pl opens the /3pl intro; the old form is the Live gate (flag OFF)
-test('3PL form has its own steps and follow-up section', async ({ page }) => {
-  await withWarehouseOsOff(async () => {
-    await page.goto('/request/3pl');
-    for (const s of ['Rates sent', 'Send your first inbound notice', 'Goods received and counted']) await expect(page.getByText(s, { exact: true })).toBeVisible();
-    await expect(page.getByText(/follow the request in My account › 3PL warehouse/)).toBeVisible();
-    await expect(page.getByText(/Matched suppliers send/)).toHaveCount(0);
-  });
+// W7 (owner, 26 Nov 2026): the old 3PL request form is gone — /request/3pl is a permanent redirect to the Warehouse OS intro
+test('/request/3pl goes to the Warehouse OS intro (no old 3PL form)', async ({ page }) => {
+  await page.goto('/request/3pl');
+  await expect(page).toHaveURL(/\/3pl$/);
+  await expect(page.getByTestId('wh-intro')).toBeVisible();
+  await expect(page.getByText('Rates sent', { exact: true })).toHaveCount(0);
 });
 
 // 20 Nov 2026: dropship onboarding is "Coming soon" with a launch sign-up instead of the setup form (tests/e2e/dropship-coming-soon.spec.ts)

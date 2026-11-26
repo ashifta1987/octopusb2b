@@ -1,39 +1,22 @@
 import { Suspense } from 'react';
 import { requireDropshipV2Staff } from '@/lib/dropship-staff';
-import { DsPageHeader, DsNotice, DsLinkButton } from '@/components/dropship-ui';
+import { handOffToWarehouseOs } from '@/lib/warehouse-retire-server';
+import { dropshipQueueTarget } from '@/lib/warehouse-retire';
+import { MovedToWarehouseOs } from '../moved-to-warehouse';
 
 export const metadata = { title: 'Fulfilment queue · Back office' };
 
-async function Guarded() {
+/** W7 (owner, 26 Nov 2026): the old placeholder is gone — Dropship orders are picked and packed from Warehouse OS Orders. */
+async function Guarded({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   await requireDropshipV2Staff(false, '/office/dropship/queue');
-  return (
-    <div className="flex flex-col gap-5">
-      <DsPageHeader
-        title="Fulfilment queue"
-        subtitle="Paid store orders ready to pick, pack, label and hand over, plus exceptions."
-        icon="list"
-      />
-      <DsNotice
-        tone="info"
-        title="Coming soon"
-        testId="planned-notice"
-        action={
-          <DsLinkButton href="/office/shipping" variant="secondary">
-            Open Shipping
-          </DsLinkButton>
-        }
-      >
-        The fulfilment queue screen is coming soon. Paid store orders are already reserved and handed to the 3PL
-        warehouse automatically, and shipments are handled in Shipping.
-      </DsNotice>
-    </div>
-  );
+  await handOffToWarehouseOs(dropshipQueueTarget(await searchParams));
+  return <MovedToWarehouseOs title="Fulfilment queue" icon="list" what="Picking, packing and shipping of Dropship orders" />;
 }
 
-export default function Page() {
+export default function Page(props: { searchParams: Promise<{ status?: string }> }) {
   return (
     <Suspense fallback={<div className="ds-card">Loading…</div>}>
-      <Guarded />
+      <Guarded searchParams={props.searchParams} />
     </Suspense>
   );
 }

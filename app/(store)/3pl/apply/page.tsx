@@ -1,8 +1,6 @@
 import { Suspense } from 'react';
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { isWarehouseOsEnabled } from '@/lib/warehouse';
 import { ApplyClient } from './apply-client';
 
 export const metadata: Metadata = { title: 'Apply for a 3PL account | Octopus B2B', alternates: { canonical: '/3pl/apply' } };
@@ -12,7 +10,6 @@ export default function ApplyPage() {
   return <Suspense fallback={<div className="h-[600px]" aria-hidden />}><Content /></Suspense>;
 }
 async function Content() {
-  if (!(await isWarehouseOsEnabled())) redirect('/request/3pl');
   const sb = await createClient();
   const { data } = await sb.from('warehouses').select('code, name, city').eq('status', 'active').order('is_default', { ascending: false }).order('name');
   return (

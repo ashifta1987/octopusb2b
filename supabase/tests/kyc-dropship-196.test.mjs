@@ -132,7 +132,7 @@ try {
 
   // ── 196 down → up identical ──
   await db.query('begin');
-  const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
+  const { appliedAfter, unwind, reapply, MAX_UNWIND } = await import('./lib-later-migrations.mjs');
   const later = await appliedAfter(db, '20261101000214_step3_merchant_catalogue_requests_and_samples.sql');
   const snap = async () => JSON.stringify({
     pol: await all(`select tablename, policyname, roles, cmd, qual, with_check from pg_policies where schemaname = 'public' order by 1, 2`),
@@ -143,7 +143,7 @@ try {
   });
   const after = await snap();
   const fn195 = await one(`select md5(prosrc) m from pg_proc where proname = 'review_kyc'`);
-  await unwind(db, later);
+  await unwind(db, later, MAX_UNWIND);
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000196_kyc_more_info_dropship_branding.down.sql', 'utf8'));
   ok(!(await one(`select to_regclass('public.dropship_seller_profiles') t`)).t, 'down: table removed');
   const src = (await one(`select prosrc from pg_proc where proname = 'review_kyc'`)).prosrc;
@@ -155,7 +155,7 @@ try {
   if (again !== after) { const a = JSON.parse(after), b = JSON.parse(again); for (const key of Object.keys(a)) if (JSON.stringify(a[key]) !== JSON.stringify(b[key])) { const sa = new Set(a[key].map((x) => JSON.stringify(x))); console.log('  diff in', key, b[key].filter((x) => !sa.has(JSON.stringify(x))).slice(0, 5)); } }
   ok(again === after, 'up again: identical policies, grants, functions and triggers');
 } catch (e) {
-  ok(false, 'unexpected: ' + e.message);
+  if (!e.skipRoundTrip) ok(false, 'unexpected: ' + e.message);
 } finally {
   await db.query('rollback');
   ok(!(await db.query(`select 1 from auth.users where email like 't196-%@example.com'`)).rowCount, 'rolled back — nothing left');

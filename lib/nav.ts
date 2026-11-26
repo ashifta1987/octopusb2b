@@ -10,7 +10,8 @@ export const CUSTOMER_NAV: NavSection[] = [
       { href: '/account/sourcing', label: 'Product sourcing' },
       { href: '/account/sourcing?type=dropship', label: 'Dropshipping' },
       { href: '/account/pools', label: 'MOQ pools' },
-      { href: '/account/sourcing?type=3pl', label: '3PL' },
+      // W7: the 3PL entry opens the client portal (non-clients see the Apply card there)
+      { href: '/account/warehouse', label: '3PL warehouse' },
       { href: '/account/turnkey', label: 'Turnkey projects' },
       { href: '/account/orders', label: 'Orders' },
       { href: '/account/wallet', label: 'Wallet' },
@@ -50,7 +51,8 @@ export const OFFICE_NAV: NavSection[] = [
       { href: '/office/rfqs', label: 'RFQs & quotes', area: 'requests' },
       { href: '/office/services', label: 'Service requests', area: 'requests' },
       { href: '/office/orders', label: 'Orders', area: 'orders' },
-      { href: '/office/shipping', label: 'Shipping', area: 'orders' },
+      // W7: the legacy Shipping screen is gone — B2B order shipping lives in Warehouse OS (same orders:view permission)
+      { href: '/office/warehouse/b2b-shipments', label: 'B2B shipments', area: 'orders' },
       { href: '/office/warehouse', label: 'Warehouse (3PL)', area: 'warehouse' },
       { href: '/office/turnkey/inspect', label: 'My inspections', area: 'turnkey_qc', action: 'edit' },
       { href: '/office/support', label: 'Support desk', area: 'support' },
@@ -87,4 +89,5 @@ export const OFFICE_NAV: NavSection[] = [
     ],
   },
 ];
+
 

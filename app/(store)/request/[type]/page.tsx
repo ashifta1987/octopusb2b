@@ -3,7 +3,6 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { isDropshipV2UiEnabled } from '@/lib/dropship';
-import { isWarehouseOsEnabled } from '@/lib/warehouse';
 import { PublicDropshipPage } from './public-dropship';
 import { block } from '@/lib/content';
 import { getStoreContent } from '@/components/store/currency';
@@ -19,8 +18,6 @@ import { AdSlot } from '@/components/store/ad-slot';
 import { parts } from '@/components/store/seo';
 import { submitRequest } from './actions';
 import { RequestTabs } from '@/components/store/request-tabs';
-import { ExamplePill, Icon, TBC } from '@/components/ds';
-import type { Warehouse } from '@/components/store/request-form';
 
 type Params = Promise<{ type: string }>;
 type SP = Promise<{ product?: string; qty?: string; title?: string; country?: string; city?: string; category?: string }>;
@@ -29,19 +26,17 @@ type SP = Promise<{ product?: string; qty?: string; title?: string; country?: st
 const HEAD: Record<RequestType, string> = {
   sourcing: "Tell us the product. We'll find the factory.|Matched, verified factories quote within 24 hours. You compare and choose; we inspect and ship.",
   dropship: 'Dropshipping is coming soon|Sell our verified products in your store and we pack each order under your brand. Store connection and dropship ordering are not open yet: leave your email and we will tell you when they launch.',
-  '3pl': 'Store your stock near your buyers|Ship your bulk order once. We receive it, store it by SKU and send out each order as it comes in.',
   sample: 'Order a sample before you buy in bulk|Check quality, packaging and finish in your hands before you commit to a bulk order.',
   qc: 'Book a quality inspection|Our inspectors check the goods at the factory, with photos and video, before anything ships.',
   certification: 'Get your product certified for your market|CE, FCC, RoHS, SASO and more, arranged with accredited labs.',
   'factory-audit': 'Audit a factory before you order|Our auditors visit the factory and check licences, capacity, quality system and working conditions, with a photo report.',
 };
 /** ADDON-36 (H2): dropshipping is an onboarding, not a quote request. */
-/** ADDON-44-C (audit 11): 3PL has its own steps — Octopus quotes warehousing, not suppliers. */
-const THREEPL_STEPS = ['Submitted|You get a reference number right away.', 'Rates sent|Octopus sends storage, pick-and-pack and shipping rates for your goods.', 'Accepted|You accept the rates in My account › 3PL warehouse.', 'Send your first inbound notice|Tell us what is coming: cartons, SKUs and arrival date.', 'Goods received and counted|We check and count every carton and put it on your stock list.', 'Live|Orders ship from your stock and you follow everything in your account.'];
+/** W7 (owner, 26 Nov 2026): the old 3PL request form is gone — /request/3pl is a permanent redirect to /3pl (next.config.ts). */
 const DROPSHIP_STEPS = 'Create your account|Free, takes two minutes.;Choose products|Pick from the dropship catalogue of verified factories.;Connect your store|Coming soon: Shopify and WooCommerce store connection.;Top up your wallet|Product, shipping and fulfilment are paid from it per order. Top up by bank transfer.;We pack and ship|Packed under your brand, tracked to your customer.';
 
 const FALLBACK: Record<RequestType, string> = {
-  sourcing: 'Product sourcing|Find a product we don’t list yet', '3pl': '3PL service|Warehousing and fulfillment', dropship: 'Dropshipping|Ship straight to your customers',
+  sourcing: 'Product sourcing|Find a product we don’t list yet', dropship: 'Dropshipping|Ship straight to your customers',
   sample: 'Sample request|Check quality before bulk', qc: 'QC inspection|Inspect before it ships', certification: 'Certification|CE, FCC, RoHS and more',
   'factory-audit': 'Factory audit|Check the factory before you order',
 };
@@ -74,8 +69,6 @@ export default function RequestPage({ params, searchParams }: { params: Params; 
 async function Content({ params, searchParams }: { params: Params; searchParams: SP }) {
   const [{ type }, sp] = await Promise.all([params, searchParams]);
   if (!isRequestType(type)) notFound();
-  // Warehouse OS W1: the 3PL request is replaced by the public intro page + Apply form.
-  if (type === '3pl' && (await isWarehouseOsEnabled())) redirect('/3pl');
   // Batch 3 (F-15) + EA-2: once Octopus Dropship is open (dropship_v2_ui ON) there is no "coming soon" request.
   // Signed-in customers go to the app (Activate); signed-out visitors (and staff) see the short public page.
   if (type === 'dropship' && (await isDropshipV2UiEnabled())) {
@@ -111,7 +104,7 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
     defaults.product = product.title;
     if (type === 'sourcing') defaults.quantity = String(sp.qty && /^\d+$/.test(sp.qty) ? sp.qty : product.moq);
   }
-  if (orgCountry) { defaults.destination_country = orgCountry; defaults.warehouse_country = orgCountry; defaults.target_market = orgCountry; }
+  if (orgCountry) { defaults.destination_country = orgCountry; defaults.target_market = orgCountry; }
   // home "Get quotes in 24 h" form: ?title=&qty=&country= prefill the sourcing request (validated, never trusted)
   // ADDON-36 (C2, C3): every request type reads title / qty / country / city from the query string (validated, unknown keys ignored)
   {
@@ -119,7 +112,7 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
     if (t && !product) { defaults.title = t; defaults.product = t; }
     if (typeof sp.qty === 'string' && /^\d{1,9}$/.test(sp.qty)) defaults.quantity = sp.qty;
     const c = typeof sp.country === 'string' ? sp.country.toUpperCase() : '';
-    if (c in COUNTRY_NAMES) { defaults.destination_country = c; defaults.warehouse_country = c; defaults.target_market = c; }
+    if (c in COUNTRY_NAMES) { defaults.destination_country = c; defaults.target_market = c; }
     const city = typeof sp.city === 'string' ? sp.city.trim().slice(0, 120) : '';
     if (city) defaults.destination_city = city;
     const cat = typeof sp.category === 'string' && /^[a-z0-9-]{2,80}$/.test(sp.category) ? sp.category : '';
@@ -131,17 +124,8 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
   const wa = company?.whatsapp ? `https://wa.me/${company.whatsapp.replace(/\D/g, '')}` : null;
   const next = type === 'dropship'
     ? block(blocks, 'request.dropship.steps', DROPSHIP_STEPS).split(';').map((x) => x.split('|') as [string, string])
-    : type === '3pl'
-      ? THREEPL_STEPS.map((f, i) => parts(blocks, `request.next.3pl.${i + 1}`, f)).filter((x) => x[0])
-      : [1, 2, 3, 4, 5, 6].map((n) => parts(blocks, `request.next.${n}`)).filter((x) => x[0]);
+    : [1, 2, 3, 4, 5, 6].map((n) => parts(blocks, `request.next.${n}`)).filter((x) => x[0]);
   const [h1, intro] = parts(blocks, `request.h1.${type}`, HEAD[type]);
-  // ADDON-44-F board 25: warehouses, rates and cut-off come from settings only (nothing invented)
-  const warehouses: Warehouse[] = Array.isArray(settings.warehouses)
-    ? (settings.warehouses as Warehouse[]).filter((w) => w && typeof w.code === 'string' && typeof w.city === 'string' && typeof w.country === 'string')
-    : [];
-  const rates = typeof settings['3pl.rates_text'] === 'string' && (settings['3pl.rates_text'] as string).trim() ? (settings['3pl.rates_text'] as string) : null;
-  const cutoff = typeof settings['3pl.cutoff'] === 'string' && (settings['3pl.cutoff'] as string).trim() ? (settings['3pl.cutoff'] as string) : null;
-  const demo = settings['demo.addon44'] === true;
 
   return (
     <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-10 sm:py-12">
@@ -192,14 +176,7 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
             feeCents={fee} serviceName={svc?.name ?? 'Service fee'}
             feeLabel={fee > 0 ? `${type === 'sourcing' ? 'RFQ fee' : svc?.name ?? 'Fee'} ${money(fee, svcCurrency)}, charged ${walletEnabled ? 'from your wallet' : 'on your next invoice'} when you submit.` : 'Free to submit.'}
             balanceCents={balance} creditCents={credit} walletEnabled={walletEnabled} currency={svcCurrency} mode={mode} loginHref={loginHref}
-            warehouses={warehouses} demo={demo}
           />
-          )}
-          {type === '3pl' && (
-            <div id="rates" className="scroll-mt-28 rounded-[12px] border border-line bg-pearl p-4 text-[14px]" data-testid="3pl-rates">
-              <div className="flex items-center gap-2 font-semibold text-ink">3PL rates{demo && rates && <ExamplePill />}</div>
-              <p className="mt-1 text-black">{rates ?? `${TBC}. Octopus sends storage, pick-and-pack and shipping rates for your goods after you submit.`}</p>
-            </div>
           )}
         </section>
 
@@ -217,18 +194,6 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
                   </li>
                 ))}
               </ol>
-            </section>
-          )}
-          {type === '3pl' && (
-            <section className="card p-6" aria-labelledby="before-h" data-testid="before-you-ship">
-              <h2 id="before-h" className="text-base font-semibold">Before you ship to us</h2>
-              <ul className="mt-3 space-y-2 text-[13.5px] text-black">
-                {['Label every carton with the SKU and your reference', 'Create an inbound notice in My account › 3PL warehouse before the goods leave',
-                  'Check accepted and refused goods with your account manager (batteries, liquids, hazardous goods)',
-                  cutoff ? `Same-day dispatch for orders received before ${cutoff}` : `Same-day cut-off time: ${TBC.toLowerCase()}`].map((t) => (
-                  <li key={t} className="flex gap-2"><Icon name="check" size={16} className="text-ok mt-0.5" />{t}</li>
-                ))}
-              </ul>
             </section>
           )}
           <AdSlot placement="product_side" layout="card" />

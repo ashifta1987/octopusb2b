@@ -30,12 +30,8 @@ const SETTINGS = {
   'dropship.handling_days': 2,
   'dropship.returns': 'Faulty or damaged on arrival: report within 14 days with a photo and we replace the item or refund it to your wallet. Change-of-mind returns go back to the warehouse at your cost.',
   'dropship.default_country': 'AE',
-  warehouses: [
-    { code: 'SZX', city: 'Shenzhen', country: 'China', handles: 'Storage, pick and pack, kitting, Express dropshipping' },
-    { code: 'DXB', city: 'Dubai', country: 'UAE', handles: 'GCC stock, returns, next-day dispatch in the UAE' },
-  ],
-  '3pl.rates_text': 'Storage US$ 18 per pallet per month · pick and pack US$ 0.60 per order + US$ 0.15 per extra item · receiving US$ 25 per inbound.',
-  '3pl.cutoff': '14:00 local warehouse time',
+  // W7 (owner, 26 Nov 2026): no more 3PL demo settings (warehouses / 3pl.rates_text / 3pl.cutoff) — the old 3PL request
+  // form that read them is gone; Warehouse OS reads the warehouses table and the client rate plans.
 };
 
 /** EXAMPLE dropship routes: [country, duty %, express?, standard?, economy?, battery allowed on express/standard/economy] */

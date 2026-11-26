@@ -29,7 +29,8 @@ describe('workspacesFor', () => {
     expect(workspacesFor(sess(['content_editor'], ['content:edit']))).toEqual([]);
   });
   it('maps a path to its workspace (longest prefix)', () => {
-    expect(workspaceForPath('/office/shipping/123')?.key).toBe('shipping');
+    // W7: the Shipping workspace opens Warehouse OS › B2B shipments (the legacy /office/shipping screen is gone)
+    expect(workspaceForPath('/office/warehouse/b2b-shipments')?.key).toBe('shipping');
     expect(workspaceForPath('/office/kyc')?.key).toBe('office');
     expect(workspaceForPath('/admin/finance')?.key).toBe('finance');
     expect(workspaceForPath('/admin/staff')?.key).toBe('admin');

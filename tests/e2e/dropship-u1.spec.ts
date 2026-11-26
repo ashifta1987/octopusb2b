@@ -180,9 +180,6 @@ test('Staff UI kit (/office/dropship/ui-kit), role-filtered Staff shell at 1280p
   await page.setViewportSize({ width: 1280, height: 1000 });
   const staffRoutes: [string, string][] = [
     ['/office/dropship/compliance', 'Duty, tax and customs'],
-    ['/office/dropship/queue', 'Fulfilment queue'],
-    ['/office/dropship/queue?status=packing', 'Fulfilment queue'],
-    ['/office/dropship/pack', 'Pack station'],
     ['/office/dropship/merchants', 'Merchants'],
     ['/office/dropship/fees', 'Fees and plans'],
     ['/office/dropship/health', 'System health'],
@@ -193,6 +190,7 @@ test('Staff UI kit (/office/dropship/ui-kit), role-filtered Staff shell at 1280p
     await expect(page.getByTestId('dropship-staff-shell')).toBeVisible();
     await expect(page.locator('h1')).toContainText(heading);
   }
+  // Warehouse OS W7: the Fulfilment queue / Pack station placeholders are gone — those URLs open Warehouse OS (tests/e2e/w7-retire.spec.ts)
 
   // Rule 1: Admin setting dropship_v2_ui toggle writes an audit log entry
   await page.goto('/admin/services');

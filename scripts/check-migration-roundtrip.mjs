@@ -203,7 +203,10 @@ try {
         .reverse();
       for (const f of toUnwind) {
         const dp = `supabase/migrations/down/${f.replace(/\.sql$/, '.down.sql')}`;
+        // deferred stock-ledger checks queued by one down file (W7 posts movements) must run before the next ALTER TABLE
+        await db.query('set constraints all immediate');
         await db.query(fs.readFileSync(dp, 'utf8'));
+        await db.query('set constraints all deferred');
       }
 
       const before = await dumpSchema(db);

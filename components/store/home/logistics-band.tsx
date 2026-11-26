@@ -10,9 +10,9 @@ export type LogisticsStats = { countries?: string; hubs?: string; parcels_daily?
 export type Destinations = { items?: { flag?: string; name: string }[]; more?: number };
 
 const CARDS = [
-  { key: 'yun', href: '/request/3pl', Icon: Globe, blob: 'bg-tint', icon: 'bg-ink', eyebrow: 'text-coral-text', btn: 'btn btn-primary',
+  { key: 'yun', href: '/3pl', Icon: Globe, blob: 'bg-tint', icon: 'bg-ink', eyebrow: 'text-coral-text', btn: 'btn btn-primary',
     fallback: 'Global shipping|Global shipping to {countries} countries||See shipping options' },
-  { key: '3pl', href: '/request/3pl', Icon: Warehouse, blob: 'bg-tint', icon: 'bg-coral-text', eyebrow: 'text-coral-text', btn: 'btn btn-dark',
+  { key: '3pl', href: '/3pl', Icon: Warehouse, blob: 'bg-tint', icon: 'bg-coral-text', eyebrow: 'text-coral-text', btn: 'btn btn-dark',
     fallback: '3PL fulfilment|Warehouses near your buyers||Request a 3PL quote' },
   { key: 'dropship', href: '/request/dropship', Icon: Truck, blob: 'bg-violet-bg', icon: 'bg-violet', eyebrow: 'text-violet', btn: 'btn bg-violet text-white hover:bg-violet',
     fallback: 'Dropshipping|Ship under your brand, zero stock||Start a dropship request' },
@@ -60,7 +60,7 @@ export function LogisticsBand({ blocks, stats, live }: { blocks: Blocks; stats: 
             <p className="text-[15px] sm:text-[16px] leading-[1.6] text-line-strong max-w-[640px]">{block(blocks, 'home.logistics.body')}</p>
           </div>
           <div className="flex flex-wrap gap-2.5">
-            <Link href="/request/3pl" className="btn btn-light min-h-[46px]">{bQuote}</Link>
+            <Link href="/3pl" className="btn btn-light min-h-[46px]">{bQuote}</Link>
             <a href="#service-lines" className="btn min-h-[46px] bg-transparent text-white border-white/35 hover:border-white hover:bg-white/10">{bLines}</a>
           </div>
         </div>

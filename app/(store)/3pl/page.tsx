@@ -1,10 +1,8 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { money } from '@/lib/format';
-import { isWarehouseOsEnabled } from '@/lib/warehouse';
 
 export const metadata: Metadata = {
   title: { absolute: '3PL and fulfilment in China: receive, store, pack with proof, ship | Octopus B2B' },
@@ -23,7 +21,6 @@ export default function ThreePlPage() {
 }
 
 async function Intro() {
-  if (!(await isWarehouseOsEnabled())) redirect('/request/3pl');
   const sb = await createClient();
   const [whRes, rateRes] = await Promise.all([
     sb.from('warehouses').select('code, name, city, email, hours, is_default').eq('status', 'active').order('is_default', { ascending: false }).order('name'),

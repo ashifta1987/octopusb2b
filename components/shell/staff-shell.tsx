@@ -18,8 +18,10 @@ import { StaffShellSwitcher } from './dropship-shell-switcher';
  * ADDON-41 boards 06–08 — staff shell: navy header ("Admin · staff only"), admin tabs, and the side menu
  * (work queue first, then the existing back-office and admin pages the person may open).
  */
-export function StaffShell({ session, nav, counts, moderation, unread = 0, scope, dropshipV2Ui = false, canEditDropship = false, canSeeRates = false, in3pl = false, children }: {
-  session: Session; nav: NavSection[]; counts: { queue: number; approvals: number; transfers: number }; moderation?: number | null; unread?: number; scope?: DivisionScope; dropshipV2Ui?: boolean; canEditDropship?: boolean; canSeeRates?: boolean; in3pl?: boolean; children: React.ReactNode;
+export function StaffShell({ session, nav, counts, moderation, unread = 0, scope, dropshipV2Ui = false, canEditDropship = false, canSeeRates = false, in3pl = false, warehouseMember = false, children }: {
+  session: Session; nav: NavSection[]; counts: { queue: number; approvals: number; transfers: number }; moderation?: number | null; unread?: number; scope?: DivisionScope; dropshipV2Ui?: boolean; canEditDropship?: boolean; canSeeRates?: boolean; in3pl?: boolean;
+  /** W7: whether this person works in a warehouse (from the layout) */
+  warehouseMember?: boolean; children: React.ReactNode;
 }) {
   const name = session.profile?.full_name ?? session.email ?? 'Staff';
   const initials = name.split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase();
@@ -118,6 +120,7 @@ export function StaffShell({ session, nav, counts, moderation, unread = 0, scope
       canEditDropship={canEditDropship}
       canSeeSaas={canSeeSaas}
       isAdmin={session.isAdmin}
+      warehouseMember={warehouseMember}
       userName={name}
       initials={initials || 'ST'}
       unreadCount={unread}

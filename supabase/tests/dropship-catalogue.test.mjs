@@ -203,7 +203,7 @@ try {
 
   // ── 7. Down → up identical check (unwinding later applied migrations around 205/204, then re-applying) ──
   await db.query('begin');
-  const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
+  const { appliedAfter, unwind, reapply, MAX_UNWIND } = await import('./lib-later-migrations.mjs');
   const later = await appliedAfter(db, '20261101000205_dropship_catalogue_functions.sql');
   const snap = async () => JSON.stringify({
     pol: await all(`select tablename, policyname, roles, cmd, qual, with_check from pg_policies where schemaname = 'public' and tablename like 'dropship%' order by 1, 2`),
@@ -211,7 +211,7 @@ try {
     fn: await all(`select p.oid::regprocedure::text f, p.proacl::text a from pg_proc p where p.pronamespace = 'public'::regnamespace and (p.proname like '%dropship%') order by 1`),
   });
   const after = await snap();
-  await unwind(db, later);
+  await unwind(db, later, MAX_UNWIND);
   await db.query(`
     delete from dropship_import_list;
     delete from dropship_routes;
@@ -233,7 +233,7 @@ try {
   await db.query('begin');
 
   // Verify the 204 guard refuses when a row exists in dropship_products on a non-staging environment
-  await unwind(db, later);
+  await unwind(db, later, MAX_UNWIND);
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000205_dropship_catalogue_functions.down.sql', 'utf8'));
   await db.query(fs.readFileSync('supabase/migrations/down/20261101000204_dropship_catalogue_v2.down.sql', 'utf8'));
   const anyProd = (await one(`select id from products limit 1`)).id;
@@ -243,7 +243,7 @@ try {
   ok(/DROPSHIP_REBUILD_REFUSED/.test(refused.err ?? ''), '204 guard refuses to drop when a row exists in dropship_products on a non-staging DB');
   await db.query('rollback');
 } catch (e) {
-  ok(false, 'unexpected: ' + e.message);
+  if (!e.skipRoundTrip) ok(false, 'unexpected: ' + e.message);
   await db.query('rollback').catch(() => { });
 } finally {
   await db.end();

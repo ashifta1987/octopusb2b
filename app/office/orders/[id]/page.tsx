@@ -13,6 +13,7 @@ import { transitionOrder } from '../../actions';
 import { recordPaymentStepUp } from './payment-actions';
 import { ActionForm as PaymentForm } from '@/components/admin/client';
 import { StepUpCallout, StepUpNote } from '@/components/admin/step-up';
+import { b2bShippingAccess } from '@/lib/warehouse-retire';
 
 export const metadata = { title: 'Order' };
 
@@ -34,6 +35,9 @@ async function OfficeOrderContent({ params }: { params: Promise<{ id: string }> 
   const canSeeSuppliers = s.isAdmin || can(s, 'suppliers', 'view') || can(s, 'finance', 'view');
   const canEdit = can(s, 'orders', 'edit');
   const canDownloadLabels = s.isAdmin || canEdit || can(s, 'warehouse', 'view');
+  // W7 (audit F-05): carrier name and service only for admin / orders editors / Finance / warehouse:view — same rule as
+  // Warehouse OS › B2B shipments (lib/warehouse-retire b2bShippingAccess). Support alone reads waybill, status and code.
+  const canSeeCarrier = b2bShippingAccess({ isAdmin: s.isAdmin, can: (area, action) => can(s, area, action) }).canSeeCarrier;
   const canPay = can(s, 'finance', 'approve');
   // suppliers(...) embed went through orders.supplier_id (hidden, migration 195): load only when caller holds supplier/finance permission
   const [o] = canSeeSuppliers
@@ -46,12 +50,13 @@ async function OfficeOrderContent({ params }: { params: Promise<{ id: string }> 
     sb.from('shipments').select('id, code, tracking_no, status, service_code, label_url, created_at, divisions(code)').eq('order_id', id).order('created_at'),
   ]);
   const shipIds = (shipsRaw ?? []).map((sh) => sh.id as string);
-  const { data: carrierRows } = shipIds.length ? await sb.rpc('get_shipment_carriers', { p_ids: shipIds }) : { data: [] as { shipment_id: string; carrier_name: string | null }[] };
+  const { data: carrierRows } = canSeeCarrier && shipIds.length ? await sb.rpc('get_shipment_carriers', { p_ids: shipIds }) : { data: [] as { shipment_id: string; carrier_name: string | null }[] };
   const carrierMap = new Map<string, string | null>((carrierRows ?? []).map((r: { shipment_id: string; carrier_name: string | null }) => [r.shipment_id, r.carrier_name]));
   const ships = (shipsRaw ?? []).map((sh) => ({
     ...sh,
     label_url: canDownloadLabels ? sh.label_url : null,
-    carrier_name: carrierMap.get(sh.id) ?? null,
+    carrier_name: canSeeCarrier ? (carrierMap.get(sh.id) ?? null) : null,
+    service_code: canSeeCarrier ? sh.service_code : null,
   }));
   const org = one(o.organizations as unknown as { id: string; name: string; country: string | null; city: string | null; kyc_status: string } | null);
   const sup = canSeeSuppliers ? one(o.suppliers as unknown as { code: string; legal_name: string; country: string } | null) : null;
@@ -127,7 +132,7 @@ async function OfficeOrderContent({ params }: { params: Promise<{ id: string }> 
                   {next.map((to) => ['cancelled', 'disputed'].includes(to)
                     ? <ReasonButton key={to} action={transitionOrder.bind(null, o.id, to)} label={humanize(to)} title={`${humanize(to)} ${o.code}`} className="btn btn-ghost btn-sm text-bad" danger confirmLabel={humanize(to)} />
                     : <ReasonButton key={to} action={transitionOrder.bind(null, o.id, to)} label={`→ ${humanize(to)}`} title={`Move ${o.code} to ${humanize(to)}`} placeholder="Note for the order timeline (optional)" required={false} className="btn btn-primary btn-sm" confirmLabel="Move" />)}
-                  {o.status === 'ready_to_ship' && <Link href={`/office/shipping?order=${o.id}`} className="btn btn-primary btn-sm">Create shipment →</Link>}
+                  {o.status === 'ready_to_ship' && <Link href={`/office/warehouse/b2b-shipments?order=${o.id}`} className="btn btn-primary btn-sm">Create shipment →</Link>}
                 </div>
               )}
               <p className="text-xs text-muted mt-3">Moves follow the order state machine; payment steps advance automatically when Finance matches money.</p>

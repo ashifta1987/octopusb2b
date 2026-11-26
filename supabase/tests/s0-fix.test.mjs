@@ -3,9 +3,9 @@
 //  1. A1 + Fix 4c: YunExpressAdapter + createShipment fail closed with "Carrier not connected" whenever
 //     APP_ENVIRONMENT !== 'staging' without live keys -> 0 new shipments rows, 0 new tracking_events rows,
 //     and order status unchanged ('ready_to_ship').
-//  2. Fix 1: simulateTracking (and confirmMockPaymentAction / TestPaymentAdapter) allowed ONLY when
-//     APP_ENVIRONMENT === 'staging' (whether or not carrier is connected). On anything else, returns
-//     "Not available" and writes 0 tracking_events / changes nothing.
+//  2. Fix 1: confirmMockPaymentAction / TestPaymentAdapter allowed ONLY when APP_ENVIRONMENT === 'staging'.
+//     (W7, 26 Nov 2026: the staging-only simulateTracking action and the legacy /office/shipping screen are deleted —
+//     checked statically below; B2B shipments live in Warehouse OS and show "Carrier not connected" the same way.)
 //  3. S1 + Fix 2: organizations authenticated UPDATE grant contains ONLY plain profile fields
 //     (business_type, city, country, name, website). An org owner cannot set kyc_status='verified',
 //     cannot clear archived_at, cannot set credit_eligible=true, cannot edit registration_no/wallet_reference,
@@ -76,7 +76,7 @@ const mkUser = async (email, role) => {
   return id;
 };
 
-// Mirror of YunExpressAdapter.createShipment & simulateTracking guards from lib/adapters/index.ts & app/office/actions.ts
+// Mirror of the YunExpressAdapter.createShipment guards from lib/adapters/index.ts & app/office/actions.ts
 function runCarrierCreateShipment(env, input) {
   const hasLiveKeys = Boolean(
     (env.YUNEXPRESS_CUSTOMER_NO || env.YUNEXPRESS_APP_ID) &&
@@ -117,30 +117,16 @@ async function runCreateShipmentFlow(dbClient, env, orderId, input) {
   return { ok: true, data: res };
 }
 
-async function runSimulateTrackingFlow(dbClient, env, shipmentId) {
-  if (env.APP_ENVIRONMENT !== 'staging') {
-    return { error: 'Not available' };
-  }
-  const s = (await dbClient.query(`select id, tracking_no, status from shipments where id = $1`, [shipmentId])).rows[0];
-  if (!s) return { error: 'Shipment not found' };
-  await dbClient.query(`select system_record_tracking($1, $2, 'picked_up', 'Parcel picked up', 'Shenzhen, CN', now())`, [
-    s.tracking_no,
-    `sim-${s.id}-${Date.now()}`,
-  ]);
-  return { ok: true };
-}
-
 // ── 1. Static source verification for Fix 1 & A1 ──
 {
   const adapterSrc = fs.readFileSync('lib/adapters/index.ts', 'utf8');
   const actionsSrc = fs.readFileSync('app/office/actions.ts', 'utf8');
   const mockActionSrc = fs.readFileSync('app/(store)/pay/mock/[id]/actions.ts', 'utf8');
-  const shippingPageSrc = fs.readFileSync('app/office/shipping/page.tsx', 'utf8');
+  const b2bPageSrc = fs.readFileSync('app/office/warehouse/b2b-shipments/page.tsx', 'utf8');
 
   ok(
-    actionsSrc.includes("if (process.env.APP_ENVIRONMENT !== 'staging') return fail('Not available');") &&
-      !actionsSrc.includes("getCarrier().mode !== 'sandbox'"),
-    'Fix 1: simulateTracking in app/office/actions.ts checks ONLY APP_ENVIRONMENT === "staging" (independent of carrier connection) and returns "Not available" otherwise',
+    !actionsSrc.includes('simulateTracking') && !actionsSrc.includes('NEXT_SHIP') && !fs.existsSync('app/office/shipping/page.tsx'),
+    'W7: the simulateTracking action and the legacy /office/shipping screen are deleted',
   );
   ok(
     mockActionSrc.includes("return { ok: false, error: 'Not available' };"),
@@ -151,8 +137,8 @@ async function runSimulateTrackingFlow(dbClient, env, shipmentId) {
     'Fix 1: TestPaymentAdapter throws "Not available" whenever APP_ENVIRONMENT !== "staging"',
   );
   ok(
-    shippingPageSrc.includes("'Carrier not connected'") && shippingPageSrc.includes('{staging && canEdit && !final'),
-    'Fix 1 / A1: Shipping workspace shows "Carrier not connected" when non-staging without live keys, and hides Simulate buttons unless staging',
+    b2bPageSrc.includes("'Carrier not connected'") && !b2bPageSrc.includes('simulateTracking') && !b2bPageSrc.includes('Simulate event'),
+    'Fix 1 / A1 (W7): B2B shipments shows "Carrier not connected" when non-staging without live keys and never offers simulated tracking',
   );
 }
 
@@ -200,14 +186,13 @@ try {
     )
   ).id;
 
-  const existingShipmentId = (
-    await one(
-      `insert into shipments (code, order_id, org_id, carrier_code, service_code, tracking_no, status, weight_kg, parcels, rate_cents, currency, is_seed)
-       values ('TEST-S0-SHP', $1, $2, 'yunexpress', 'standard', 'TESTS00000001', 'label_ready', 1.5, 1, 900, 'USD', true)
-       returning id`,
-      [orderId, orgId],
-    )
-  ).id;
+  // an existing shipment on the order (W7: the simulated-tracking checks that used it are gone with the action)
+  await one(
+    `insert into shipments (code, order_id, org_id, carrier_code, service_code, tracking_no, status, weight_kg, parcels, rate_cents, currency, is_seed)
+     values ('TEST-S0-SHP', $1, $2, 'yunexpress', 'standard', 'TESTS00000001', 'label_ready', 1.5, 1, 900, 'USD', true)
+     returning id`,
+    [orderId, orgId],
+  );
 
   // ── 2. Fix 4c: createShipment with carrier not connected -> 0 shipments, 0 tracking_events, order status unchanged ──
   {
@@ -242,48 +227,6 @@ try {
         statusAfter === 'ready_to_ship' &&
         statusAfter === statusBefore,
       `Fix 4c: 0 new shipments rows (${shipCountBefore} -> ${shipCountAfter}), 0 new tracking_events (${trackCountBefore} -> ${trackCountAfter}), order status unchanged (${statusBefore} -> ${statusAfter})`,
-    );
-  }
-
-  // ── 3. Fix 1: simulateTracking on non-staging (even if carrier connected!) -> "Not available" & writes nothing; on staging -> works even if carrier connected ──
-  {
-    const trackBefore = Number((await one(`select count(*) n from tracking_events where shipment_id = $1`, [existingShipmentId])).n);
-    const shipStatusBefore = (await one(`select status from shipments where id = $1`, [existingShipmentId])).status;
-
-    for (const nonStagingEnv of [
-      { APP_ENVIRONMENT: 'production' },
-      { APP_ENVIRONMENT: 'production', YUNEXPRESS_CUSTOMER_NO: 'C1', YUNEXPRESS_API_SECRET: 'S1', YUNEXPRESS_MODE: 'live' },
-      { APP_ENVIRONMENT: '' },
-      {},
-    ]) {
-      const simRes = await runSimulateTrackingFlow(db, nonStagingEnv, existingShipmentId);
-      ok(
-        simRes.error === 'Not available',
-        `Fix 1: simulateTracking returns "Not available" for env=${JSON.stringify(nonStagingEnv)}`,
-      );
-    }
-
-    const trackAfterNonStaging = Number(
-      (await one(`select count(*) n from tracking_events where shipment_id = $1`, [existingShipmentId])).n,
-    );
-    const shipStatusAfterNonStaging = (await one(`select status from shipments where id = $1`, [existingShipmentId])).status;
-    ok(
-      trackAfterNonStaging === trackBefore && shipStatusAfterNonStaging === shipStatusBefore,
-      'Fix 1: simulateTracking on non-staging wrote 0 tracking_events and left shipment status unchanged',
-    );
-
-    // On staging WITH live carrier keys set, simulateTracking is STILL allowed
-    const simStagingWithCarrier = await runSimulateTrackingFlow(
-      db,
-      { APP_ENVIRONMENT: 'staging', YUNEXPRESS_CUSTOMER_NO: 'C1', YUNEXPRESS_API_SECRET: 'S1', YUNEXPRESS_MODE: 'live' },
-      existingShipmentId,
-    );
-    const trackAfterStaging = Number(
-      (await one(`select count(*) n from tracking_events where shipment_id = $1`, [existingShipmentId])).n,
-    );
-    ok(
-      simStagingWithCarrier.ok === true && trackAfterStaging === trackBefore + 1,
-      'Fix 1: simulateTracking succeeds on APP_ENVIRONMENT=staging even when live carrier keys are present',
     );
   }
 

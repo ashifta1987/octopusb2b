@@ -5,7 +5,6 @@ import { PageSkeleton } from '@/components/shell/skeletons';
 import { requireCustomer } from '@/lib/auth';
 import { getAccountContext, serviceOn } from '@/lib/core/account';
 import { createClient } from '@/lib/supabase/server';
-import { isWarehouseOsEnabled } from '@/lib/warehouse';
 import { signEvidence } from '@/lib/warehouse-evidence';
 import { signProductPhotos, signReturnPhotos } from '@/lib/warehouse-media';
 import type { PortalProof } from '@/lib/warehouse-orders';
@@ -130,13 +129,13 @@ async function Portal({ searchParams }: { searchParams: Promise<{ tab?: string; 
   if (!s.org) return <ServiceStart service="warehouse" />;
   const sb = await createClient();
   // W1: an approved 3PL application for this email links to the company on first visit (switches the service on).
-  const on = await isWarehouseOsEnabled();
-  if (on) await sb.rpc('wh_claim_my_application');
+  // W7: Warehouse OS is the only 3PL (the warehouse_os_ui switch is gone)
+  await sb.rpc('wh_claim_my_application');
   const [ctx, clientRes] = await Promise.all([
     getAccountContext(s.org.id),
-    on ? sb.from('wh_clients').select('org_id, preferred_warehouse').eq('org_id', s.org.id).eq('status', 'active').maybeSingle() : Promise.resolve({ data: null }),
+    sb.from('wh_clients').select('org_id, preferred_warehouse').eq('org_id', s.org.id).eq('status', 'active').maybeSingle(),
   ]);
-  if (!on || !(serviceOn(ctx.services.warehouse) || clientRes.data)) return <ServiceStart service="warehouse" />;
+  if (!(serviceOn(ctx.services.warehouse) || clientRes.data)) return <ServiceStart service="warehouse" />;
   const client = clientRes.data as { org_id: string; preferred_warehouse: string | null } | null;
   const sp = await searchParams;
   const tab = sp.tab && LIVE.has(sp.tab) ? sp.tab : 'overview';

@@ -1,7 +1,6 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
-import { isWarehouseOsEnabled } from '@/lib/warehouse';
 
 export type ApplyInput = {
   company: string; contactName: string; email: string; phone: string; country: string; sells: string; ordersBand: string;
@@ -10,7 +9,6 @@ export type ApplyInput = {
 
 /** Warehouse OS board 27 — Apply. The database validates again and limits repeats. `website` is a hidden honeypot. */
 export async function submitApplicationAction(input: ApplyInput): Promise<{ ok: boolean; code?: string; sds?: boolean; error?: string }> {
-  if (!(await isWarehouseOsEnabled())) return { ok: false, error: 'Applications are not open yet.' };
   if (input.website) return { ok: true, code: 'APP-0000' };
   const need: [string, string][] = [['company', 'Company'], ['contactName', 'Your name'], ['email', 'Work email'], ['sells', 'What you sell'], ['ordersBand', 'Orders a month'], ['stockRoute', 'How stock reaches us']];
   const missing = need.filter(([k]) => !String((input as Record<string, unknown>)[k] ?? '').trim()).map(([, l]) => l);

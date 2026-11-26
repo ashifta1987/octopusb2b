@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
       { source: '/turnkey/confirmation/:id', destination: '/account/turnkey', permanent: true },
       { source: '/turnkey/:slug((?!(?:services|terms)$)[a-z0-9-]+)/:rest*', destination: '/turnkey', permanent: true },
       { source: '/turnkey/:slug((?!(?:services|terms)$)[a-z0-9-]+)', destination: '/turnkey', permanent: true },
+      // Warehouse OS W7 (owner, 26 Nov 2026: "remove the old, follow the new"): the legacy 3PL / shipping screens are gone.
+      // Query strings pass through (e.g. /office/shipping?order=<id> opens the shipment creator on B2B shipments).
+      { source: '/office/shipping', destination: '/office/warehouse/b2b-shipments', permanent: true },
+      { source: '/request/3pl', destination: '/3pl', permanent: true },
     ];
   },
   turbopack: {

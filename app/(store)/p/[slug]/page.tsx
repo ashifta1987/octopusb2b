@@ -44,7 +44,7 @@ export default function ProductPage({ params }: { params: Params }) {
 /** "Verified factory · China (Guangdong)" — the public never sees the supplier code, id or name (19 Nov 2026). */
 const factoryLine = (f: Factory) => factoryLabel(f);
 const SERVICE_CTA: Record<string, string> = {
-  sourcing: 'Request quote', sample: 'Request sample', qc: 'Book QC inspection', certification: 'Request certification', '3pl': 'Request 3PL', dropship: 'Request dropship',
+  sourcing: 'Request quote', sample: 'Request sample', qc: 'Book QC inspection', certification: 'Request certification', dropship: 'Request dropship',
 };
 
 async function Content({ params }: { params: Params }) {
@@ -163,7 +163,7 @@ async function Content({ params }: { params: Params }) {
           <ServiceChoiceCard icon="truck" title="Dropship it" body="We ship each order to your customer under your packing slip. You hold no stock."
             note={<span className="text-muted">See costs per country in your dropship catalogue</span>} cta="Dropship this product" href={`/request/dropship?product=${p.id}`} testId="way-dropship" />
           <ServiceChoiceCard icon="warehouse" title="Store it near your buyers" body="Send your stock to the Octopus warehouse. We pick, pack and ship each order from there."
-            note={<span className="text-muted">Free to request · rates in your quote</span>} cta="Get a 3PL quote" href={`/request/3pl?product=${p.id}`} testId="way-3pl" />
+            note={<span className="text-muted">Free to request · rates in your quote</span>} cta="Get a 3PL quote" href={'/3pl'} testId="way-3pl" />
         </div>
       </section>
 

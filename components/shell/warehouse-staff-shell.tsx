@@ -15,8 +15,10 @@ import { dsInter } from '@/components/dropship-ui/font';
  * W4: Dispatch and freight (labels, label check, hand-over with manifest, freight pallets, tracking) and Carriers and rules are live.
  * W5: Returns is live (not on the board-4 menu list; added next to Exceptions).
  * W6: Reports is live; Client invoices (the monthly invoice run — warehouse admins preview, Finance issues) is added next to Rates.
+ * W7: B2B shipments (Sourcing orders shipped by the supplier — replaces /office/shipping, D10) after Dispatch and freight. It is
+ * the only item for staff who open it without working in a warehouse (orders:view, e.g. Sourcing or Support).
  */
-type Item = { href: string; label: string; icon: DsIconName; ships?: string; adminOnly?: boolean };
+type Item = { href: string; label: string; icon: DsIconName; ships?: string; adminOnly?: boolean; /** W7: shown to staff without a warehouse role */ open?: boolean };
 const ITEMS: Item[] = [
   { href: '/office/warehouse', label: 'Dashboard', icon: 'grid' },
   { href: '/office/warehouse/orders', label: 'Orders', icon: 'cart' },
@@ -24,6 +26,8 @@ const ITEMS: Item[] = [
   { href: '/office/warehouse/pick', label: 'Picking', icon: 'list' },
   { href: '/office/warehouse/pack', label: 'Packing station', icon: 'package' },
   { href: '/office/warehouse/dispatch', label: 'Dispatch and freight', icon: 'truck' },
+  // W7: B2B order shipping (the retired /office/shipping) — its own orders:view permission, not a warehouse role
+  { href: '/office/warehouse/b2b-shipments', label: 'B2B shipments', icon: 'send', open: true },
   { href: '/office/warehouse/multi-parcel', label: 'Multi-parcel packing', icon: 'layers' },
   { href: '/office/warehouse/putaway', label: 'Putaway and pallets', icon: 'box' },
   { href: '/office/warehouse/counts', label: 'Counts and lots', icon: 'list' },
@@ -39,7 +43,8 @@ const ITEMS: Item[] = [
   { href: '/office/warehouse/clients', label: 'Clients', icon: 'users' },
   { href: '/office/warehouse/rates', label: 'Rates', icon: 'percent' },
   // W6: monthly client invoices (not on the board-4 menu list; next to Rates)
-  { href: '/office/warehouse/invoices', label: 'Client invoices', icon: 'dollar' },
+  // W7: open — Finance previews / issues invoices without a warehouse role (the page checks wh_invoice_access)
+  { href: '/office/warehouse/invoices', label: 'Client invoices', icon: 'dollar', open: true },
   { href: '/office/warehouse/exceptions', label: 'Exceptions', icon: 'alert' },
   // W5: returns desk (register, photograph and grade; carry out the client's restock / discard / send-back decision)
   { href: '/office/warehouse/returns', label: 'Returns', icon: 'refresh' },
@@ -53,8 +58,8 @@ function active(href: string, pathname: string) {
 }
 
 export function WarehouseStaffShell({
-  userName, initials, unreadCount = 0, isStaging = false, isAdmin = false, children,
-}: { userName: string; initials: string; unreadCount?: number; isStaging?: boolean; isAdmin?: boolean; children: ReactNode }) {
+  userName, initials, unreadCount = 0, isStaging = false, isAdmin = false, warehouseMember = true, children,
+}: { userName: string; initials: string; unreadCount?: number; isStaging?: boolean; isAdmin?: boolean; warehouseMember?: boolean; children: ReactNode }) {
   const pathname = usePathname();
   return (
     <div data-testid="warehouse-staff-shell" className={`${dsInter.variable} ds-v2 min-h-screen flex flex-col md:flex-row bg-[#F4F6F9] text-[#1A174A] overflow-x-hidden`}>
@@ -65,7 +70,7 @@ export function WarehouseStaffShell({
         </Link>
         <div className="px-2 pb-4 text-[12px] text-[#C9D3E3]">Warehouse OS · 3PL and logistics</div>
         <div className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible pb-2 md:pb-0" role="region" aria-label="Warehouse navigation" tabIndex={0}>
-          {ITEMS.filter((i) => !i.adminOnly || isAdmin).map((i) => {
+          {ITEMS.filter((i) => (!i.adminOnly || isAdmin) && (warehouseMember || i.open)).map((i) => {
             if (i.ships) {
               return (
                 <span key={i.href} aria-disabled="true" title={`Ships in step ${i.ships}`}

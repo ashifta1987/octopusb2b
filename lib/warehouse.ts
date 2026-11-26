@@ -3,7 +3,6 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getSession, type Session } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
-import { isStaging } from '@/lib/core/account';
 
 /**
  * Warehouse OS · W0 — multi-warehouse staff guard and the warehouse switcher choice (cookie, validated per request).
@@ -26,7 +25,6 @@ export async function requireWarehouseStaff(next: string): Promise<WarehouseAcce
   if (!s) redirect(`/staff/login?next=${encodeURIComponent(next)}`);
   if (!s.isStaff) redirect('/login');
   if (s.aal !== 'aal2') redirect(`/staff/verify?next=${encodeURIComponent(next)}`);
-  if (!(await isWarehouseOsEnabled())) redirect('/admin');
   const sb = await createClient();
   const { data, error } = await sb.rpc('wh_my_warehouses');
   if (error) throw new Error(`Could not load warehouses: ${error.message}`);
@@ -42,14 +40,3 @@ export async function requireWarehouseStaff(next: string): Promise<WarehouseAcce
 export const ROLE_LABEL: Record<string, string> = {
   packer: 'Packer', receiver: 'Receiver', supervisor: 'Supervisor', admin: 'Admin', viewer: 'Viewer',
 };
-
-/**
- * Live safety switch for Warehouse OS (like dropship_v2_ui): site_settings.warehouse_os_ui.
- * No row = ON on staging, OFF on live. While OFF, customers keep the old 3PL start card and staff pages redirect.
- */
-export async function isWarehouseOsEnabled(): Promise<boolean> {
-  const sb = await createClient();
-  const { data } = await sb.from('site_settings').select('value').eq('key', 'warehouse_os_ui').maybeSingle();
-  if (typeof data?.value === 'boolean') return data.value;
-  return isStaging();
-}

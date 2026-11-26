@@ -21,7 +21,12 @@ export async function unwind(db, later, max = Infinity) {
     console.log(`  (down → up check skipped: ${later.length} later migrations are applied — each was round-trip checked at install)`);
     throw Object.assign(new Error('SKIP_ROUNDTRIP'), { skipRoundTrip: true });
   }
-  for (const f of [...later].reverse()) await db.query(fs.readFileSync(`supabase/migrations/down/${f.replace(/\.sql$/, '.down.sql')}`, 'utf8'));
+  for (const f of [...later].reverse()) {
+    // deferred stock-ledger checks queued by one down file (W7 posts movements) must run before the next ALTER TABLE
+    await db.query('set constraints all immediate');
+    await db.query(fs.readFileSync(`supabase/migrations/down/${f.replace(/\.sql$/, '.down.sql')}`, 'utf8'));
+    await db.query('set constraints all deferred');
+  }
 }
 
 /** Re-applies `later` oldest first. */

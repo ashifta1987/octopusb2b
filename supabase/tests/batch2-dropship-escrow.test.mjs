@@ -155,7 +155,7 @@ try {
      values ($1, 'US', 'express', 2400, 600, 120, 5, 8, true)`,
     [dsProd.id],
   );
-  await db.query(`select record_warehouse_stock_movement($1, 'inbound', 100, 'B2 initial inbound', 'SZ-01', null)`, [dsVar.item_id]);
+  await db.query(`select record_warehouse_stock_movement($1, 'inbound', 100, 'B2 initial inbound', default_warehouse_code(), null)`, [dsVar.item_id]);
 
   // Fund orgA wallet with US$ 2,000 (200,000c)
   await db.query(
@@ -265,7 +265,7 @@ try {
   const eh1 = await one(`select * from escrow_holds where id = $1`, [resWalProt.hold_id]);
   const so1AfterPay = await one(`select * from store_orders where id = $1`, [so1.store_order_id]);
   const ho1 = await one(`select handoff_type, status from dropship_handoffs where store_order_id = $1`, [so1.store_order_id]);
-  const wsAfterSo1 = await one(`select reserved_qty from warehouse_stock where warehouse_id = 'SZ-01' and item_id = $1`, [dsVar.item_id]);
+  const wsAfterSo1 = await one(`select reserved_qty from warehouse_stock where warehouse_id = default_warehouse_code() and item_id = $1`, [dsVar.item_id]);
   const walAfter1 = Number((await one(`select wallet_balance($1, 'USD') b`, [orgA])).b);
 
   ok(

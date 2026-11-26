@@ -434,7 +434,7 @@ try {
   );
   // Ensure warehouse_stock has enough on_hand_qty for var1.item_id
   await db.query(
-    `select record_warehouse_stock_movement($1, 'inbound', 20, 'Step 3 sample inbound', 'SZ-01', null)`,
+    `select record_warehouse_stock_movement($1, 'inbound', 20, 'Step 3 sample inbound', default_warehouse_code(), null)`,
     [var1.item_id],
   );
   const stockBefore = await one(

@@ -10,10 +10,12 @@ const RATE_CURRENCY = 'USD';
 type Res<T> = { ok: boolean; error?: string; data?: T };
 
 /** Shipping.png steps 2–3: parcel details → YunExpress price trial → create shipment + label. */
-export function ShipmentCreator({ orderId, orderCode, fromCountry, toCountry, defaultDesc, defaultHs, declaredCents, declaredCurrency, incoterm, priceTrial, createShipment }: {
+export function ShipmentCreator({ orderId, orderCode, fromCountry, toCountry, defaultDesc, defaultHs, declaredCents, declaredCurrency, incoterm, priceTrial, createShipment, backHref = '/office/warehouse/b2b-shipments' }: {
   orderId: string; orderCode: string; fromCountry: string; toCountry: string; defaultDesc: string; defaultHs: string; declaredCents: number; declaredCurrency: string; incoterm: string | null;
   priceTrial: (i: { toCountry: string; fromCountry: string; weightKg: number; parcels: number }) => Promise<Res<Rate[]>>;
   createShipment: (orderId: string, i: { service: string; rateCents: number; weightKg: number; parcels: number }) => Promise<Res<{ trackingNo: string; labelUrl: string }>>;
+  /** W7: where "Back to queue" goes (Warehouse OS › B2B shipments). */
+  backHref?: string;
 }) {
   const router = useRouter();
   const [pieces, setPieces] = useState(1);
@@ -48,7 +50,7 @@ export function ShipmentCreator({ orderId, orderCode, fromCountry, toCountry, de
       <p className="mt-2 text-sm">Waybill <span className="mono font-semibold">{done.trackingNo}</span> · order marked shipped.</p>
       <div className="mt-4 flex gap-3">
         <a href={done.labelUrl} target="_blank" rel="noopener" className="btn btn-primary">Print label (10 × 15 cm)</a>
-        <button type="button" className="btn btn-ghost" onClick={() => router.push('/office/shipping')}>Back to queue</button>
+        <button type="button" className="btn btn-ghost" onClick={() => router.push(backHref)}>Back to queue</button>
       </div>
     </section>
   );

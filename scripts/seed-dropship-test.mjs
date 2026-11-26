@@ -456,14 +456,15 @@ try {
         await db.query(`update dropship_products set needs_review = false, needs_review_reason = null where id = $1`, [prodId]);
       }
 
+      // W7: fast-ship stock lives at the default warehouse (FS-01); legacy SZ-01 is closed
       if (item.fulfilment === 'fast_ship' && v.targetOnHand > 0 && itemId) {
         const ws = (await db.query(
-          `select on_hand_qty from warehouse_stock where warehouse_id = 'SZ-01' and item_id = $1`,
+          `select on_hand_qty from warehouse_stock where warehouse_id = default_warehouse_code() and item_id = $1`,
           [itemId],
         )).rows[0];
         if (!ws || Number(ws.on_hand_qty) === 0) {
           await db.query(
-            `select record_warehouse_stock_movement($1, 'inbound', $2, 'Staging test fast-ship stock seed', 'SZ-01', null)`,
+            `select record_warehouse_stock_movement($1, 'inbound', $2, 'Staging test fast-ship stock seed', default_warehouse_code(), null)`,
             [itemId, v.targetOnHand],
           );
         }

@@ -56,9 +56,9 @@ try {
   const item = (await one(`select id from item_master limit 1`)).id;
   const badStock = await tryq(`select record_warehouse_stock_movement($1, 'inbound', 1, 'W0 test', 'XX-99', null)`, [item]);
   const colDefault = (await one(`select column_default d from information_schema.columns where table_name = 'warehouse_stock' and column_name = 'warehouse_id'`)).d;
-  ok(fs?.is_default && fs.status === 'active' && fs.email === 'foshan@octopusb2b.com' && sz?.status === 'legacy' && def === 'FS-01' &&
+  ok(fs?.is_default && fs.status === 'active' && fs.email === 'foshan@octopusb2b.com' && ['legacy', 'closed'].includes(sz?.status) && def === 'FS-01' &&
     /foreign key|WAREHOUSE/i.test(badStock.err ?? '') && /default_warehouse_code/.test(colDefault ?? ''),
-    'Foshan FS-01 is the active default; SZ-01 is legacy; stock must point to a real warehouse; new stock defaults to the default warehouse');
+    'Foshan FS-01 is the active default; SZ-01 is legacy (closed since W7); stock must point to a real warehouse; new stock defaults to the default warehouse');
 
   await as(whAdmin.id);
   const nonAdminSave = await tryq(`select wh_save_location('GZ-01', 'Guangzhou', 'Guangdong', 'Guangzhou', null, null, null, null)`);

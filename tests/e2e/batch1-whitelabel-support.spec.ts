@@ -192,49 +192,54 @@ test('PDF route gates supplier details on supplier/cost permission (sourcing sta
   await ctxCust.close();
 });
 
-test('support gets read-only tracking on /office/shipping and /office/orders/[id] without rates/labels/supplier; shipping & finance see rates via RPC', async ({
+// W7 (owner, 26 Nov 2026): the legacy /office/shipping screen is gone — the URL redirects to Warehouse OS › B2B shipments,
+// where Support reads tracking without carrier names (audit F-05); the order detail hides the carrier from Support too.
+test('support gets read-only tracking on B2B shipments (/office/shipping redirects) and /office/orders/[id] without carrier/rates/labels/supplier; shipping & finance see rates via RPC', async ({
   browser,
 }) => {
   expect(targetOrderId && targetTracking && targetDoc, 'Expected temp order, shipment, tracking event, and doc').toBeTruthy();
 
-  // 1. support (aal2): read-only shipment tracking, events, carrier; NO Ready to ship, rates, labels, or supplier details
+  // 1. support (aal2): read-only shipment tracking and events; NO carrier, Ready to ship, rates, labels, or supplier details
   const ctxSup = await browser.newContext();
   const pageSup = await ctxSup.newPage();
   await staffLogin(pageSup, supportStaff!, '/office/support');
   const resShip = await pageSup.goto('/office/shipping');
   expect(resShip?.status()).toBe(200);
-  await expect(pageSup.getByRole('heading', { name: /Shipping tracking/i })).toBeVisible();
-  const row = pageSup.locator('tr', { hasText: targetTracking! });
+  await expect(pageSup).toHaveURL(/\/office\/warehouse\/b2b-shipments$/);
+  await expect(pageSup.locator('h1')).toContainText('B2B shipments');
+  const row = pageSup.getByTestId('b2b-shipments').locator('tr', { hasText: targetTracking! });
   await expect(row).toBeVisible();
-  await expect(row.getByText('YunExpress')).toBeVisible();
+  await expect(row.getByText('YunExpress')).toHaveCount(0);
   await expect(row.getByText('In transit', { exact: true })).toBeVisible();
 
   const eventsSummary = row.locator('summary', { hasText: /All events/i });
   if (await eventsSummary.count()) await eventsSummary.first().click();
   await expect(row.locator('details li', { hasText: 'Departed Shenzhen hub — E2E test' })).toBeVisible();
 
-  await expect(pageSup.getByRole('heading', { name: /Ready to ship/i })).toHaveCount(0);
+  await expect(pageSup.getByTestId('b2b-ready')).toHaveCount(0);
   await expect(pageSup.locator('a[href^="/api/labels/"]')).toHaveCount(0);
   const shipBodySup = await pageSup.locator('main').innerText();
   expect(shipBodySup).not.toContain('48.00');
+  expect(shipBodySup).not.toContain('YunExpress');
   expect(shipBodySup).not.toContain('Ready to ship');
   expect(shipBodySup).not.toContain(targetDoc!.sup_code);
   expect(shipBodySup).not.toContain(targetDoc!.sup_name);
 
-  // Filtered ?order= view
+  // ?order= survives the redirect; Support still only sees the list
   const resShipOrder = await pageSup.goto(`/office/shipping?order=${targetOrderId}`);
   expect(resShipOrder?.status()).toBe(200);
+  await expect(pageSup).toHaveURL(new RegExp(`/office/warehouse/b2b-shipments\\?order=${targetOrderId}$`));
   await expect(pageSup.locator('main').getByText(targetTracking!)).toBeVisible();
 
   // Direct label endpoint remains 403
   const labelRes = await pageSup.request.get(`/api/labels/${encodeURIComponent(targetTracking!)}`);
   expect(labelRes.status()).toBe(403);
 
-  // Order detail view: shows tracking & carrier, hides Print label and supplier details
+  // Order detail view: shows tracking, hides carrier name (W7, audit F-05), Print label and supplier details
   const resOrd = await pageSup.goto(`/office/orders/${targetOrderId}`);
   expect(resOrd?.status()).toBe(200);
   await expect(pageSup.locator('main').getByText(targetTracking!)).toBeVisible();
-  await expect(pageSup.locator('main').getByText('YunExpress').first()).toBeVisible();
+  expect(await pageSup.locator('main').innerText()).not.toContain('YunExpress');
   await expect(pageSup.getByRole('link', { name: /Print label/i })).toHaveCount(0);
   const ordBodySup = await pageSup.locator('main').innerText();
   expect(ordBodySup).not.toContain(targetDoc!.sup_code);
@@ -244,20 +249,25 @@ test('support gets read-only tracking on /office/shipping and /office/orders/[id
   // 2. sourcingStaff (operations in SRC: orders:edit) -> sees rate via get_shipment_rates(), carrier, Label, and Ready to ship
   const ctxSrc = await browser.newContext();
   const pageSrc = await ctxSrc.newPage();
-  await staffLogin(pageSrc, sourcingStaff!, '/office/shipping');
-  const rowSrc = pageSrc.locator('tr', { hasText: targetTracking! });
+  await staffLogin(pageSrc, sourcingStaff!, '/office/warehouse/b2b-shipments');
+  await pageSrc.goto('/office/warehouse/b2b-shipments');
+  const rowSrc = pageSrc.getByTestId('b2b-shipments').locator('tr', { hasText: targetTracking! });
   await expect(rowSrc).toBeVisible();
   await expect(rowSrc.getByText('48.00')).toBeVisible();
   await expect(rowSrc.getByText('YunExpress')).toBeVisible();
   await expect(rowSrc.getByRole('link', { name: /^Label$/i })).toBeVisible();
-  await expect(pageSrc.locator('main').getByText(/Ready to ship/i).first()).toBeVisible();
+  await expect(pageSrc.getByTestId('b2b-ready')).toBeVisible();
+  // orders editors still see the carrier on the order detail (W7 rule: admin / orders:edit / Finance / warehouse:view)
+  await pageSrc.goto(`/office/orders/${targetOrderId}`);
+  await expect(pageSrc.locator('main').getByText('YunExpress').first()).toBeVisible();
   await ctxSrc.close();
 
   // 3. financeStaff (finance: finance:view) -> sees rate via get_shipment_rates() & carrier, without Simulate event or Label
   const ctxFin = await browser.newContext();
   const pageFin = await ctxFin.newPage();
-  await staffLogin(pageFin, financeStaff!, '/office/shipping');
-  const rowFin = pageFin.locator('tr', { hasText: targetTracking! });
+  await staffLogin(pageFin, financeStaff!, '/office/warehouse/b2b-shipments');
+  await pageFin.goto('/office/warehouse/b2b-shipments');
+  const rowFin = pageFin.getByTestId('b2b-shipments').locator('tr', { hasText: targetTracking! });
   await expect(rowFin).toBeVisible();
   await expect(rowFin.getByText('48.00')).toBeVisible();
   await expect(rowFin.getByText('YunExpress')).toBeVisible();

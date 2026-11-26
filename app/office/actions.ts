@@ -7,6 +7,7 @@ import { getCarrier, type RateQuote } from '@/lib/adapters';
 import { toCents, money } from '@/lib/format';
 import { actionSession, fail, ok, type Result } from '@/components/backoffice/server-utils';
 import { kycMessageRequired, kycMessageRequiredText } from '@/lib/kyc-message';
+import { B2B_SHIPMENTS_PATH } from '@/lib/warehouse-retire';
 
 /* ───────── KYC ───────── */
 /** customerMessage is shown to the customer (required when rejecting or asking for more information, migration 196);
@@ -81,7 +82,7 @@ export async function transitionOrder(orderId: string, to: string, reason: strin
   const sb = await createClient();
   const { error } = await sb.rpc('transition_order', { p_order: orderId, p_to: to, p_reason: reason.trim() || null });
   if (error) return fail(error);
-  revalidatePath('/office/orders'); revalidatePath(`/office/orders/${orderId}`); revalidatePath('/office/shipping');
+  revalidatePath('/office/orders'); revalidatePath(`/office/orders/${orderId}`); revalidatePath(B2B_SHIPMENTS_PATH);
   return ok(undefined, 'Order updated');
 }
 
@@ -100,7 +101,9 @@ export async function recordPayment(orderId: string, fd: FormData): Promise<Resu
   return ok(undefined, 'Payment recorded');
 }
 
-/* ───────── Shipping (YunExpress via CarrierAdapter) ───────── */
+/* ───────── B2B shipping (YunExpress via CarrierAdapter) — Warehouse OS › B2B shipments (W7) ─────────
+ * W7 (owner, 26 Nov 2026): the staging-only simulated-tracking action is deleted with the legacy Shipping screen;
+ * tracking comes from the YunExpress webhook / hourly cron (Warehouse OS parcels have their own sandbox events, W4). */
 /** CarrierAdapter rates (RateQuote.priceCents) are quoted in USD; shipments.currency records it (SPEC §15.1). */
 const CARRIER_RATE_CURRENCY = 'USD';
 export async function priceTrial(input: { toCountry: string; fromCountry: string; weightKg: number; parcels: number }): Promise<Result<RateQuote[]>> {
@@ -147,42 +150,8 @@ export async function createShipment(orderId: string, input: { service: string; 
   try { await carrier.subscribeTracking(res.trackingNo); } catch { /* cron fallback picks it up */ }
   const { error: te } = await sb.rpc('transition_order', { p_order: o.id, p_to: 'shipped', p_reason: `Shipped · tracking ${res.trackingNo}` }); // customer-visible: no carrier name (white-label)
   if (te) return fail(`Shipment created (${res.trackingNo}) but the order could not be marked shipped: ${te.message}`);
-  revalidatePath('/office/shipping'); revalidatePath(`/office/orders/${o.id}`);
+  revalidatePath(B2B_SHIPMENTS_PATH); revalidatePath(`/office/orders/${o.id}`);
   return ok({ trackingNo: res.trackingNo, labelUrl: res.labelUrl }, 'Shipment created');
-}
-
-const NEXT_SHIP: Record<string, { status: string; text: string; loc: string }> = {
-  label_ready: { status: 'picked_up', text: 'Parcel picked up by YunExpress', loc: 'Shenzhen, CN' },
-  created: { status: 'picked_up', text: 'Parcel picked up by YunExpress', loc: 'Shenzhen, CN' },
-  picked_up: { status: 'in_transit', text: 'Departed origin hub — in transit', loc: 'Shenzhen hub, CN' },
-  in_transit: { status: 'out_for_delivery', text: 'Out for delivery', loc: 'Destination city' },
-  out_for_delivery: { status: 'delivered', text: 'Delivered — signed by consignee', loc: 'Destination city' },
-};
-
-/** Staging only: append the next tracking event (or an exception) to a shipment. */
-export async function simulateTracking(shipmentId: string, kind: 'next' | 'exception'): Promise<Result> {
-  if (process.env.APP_ENVIRONMENT !== 'staging') return fail('Not available');
-  const g = await actionSession('orders', 'edit');
-  if ('error' in g) return fail(g.error);
-  const sb = await createClient();
-  const { data: s } = await sb.from('shipments').select('id, org_id, order_id, status, tracking_no').eq('id', shipmentId).maybeSingle();
-  if (!s) return fail('Shipment not found');
-  const step = kind === 'exception'
-    ? { status: 'exception', text: 'Delivery exception — address issue, carrier will retry', loc: 'Destination hub' }
-    : s.status === 'exception' ? { status: 'in_transit', text: 'Exception resolved — back in transit', loc: 'Destination hub' } : NEXT_SHIP[s.status];
-  if (!step) return fail(`No further sandbox events after “${s.status}”.`);
-  if (!s.tracking_no) return fail('This shipment has no tracking number yet.');
-  // SPEC §5/§11.3 golden path 3: a simulated event runs through the same path as the YunExpress webhook
-  // (system_record_tracking: tracking event + shipment status + status_history + `shipment.tracking` outbox event
-  // + order → delivered), never a direct status update. That RPC is service-role only, so call it with the admin
-  // client after the staff permission check above.
-  const { error } = await createAdminClient().rpc('system_record_tracking', {
-    p_tracking_no: s.tracking_no, p_provider_event: `sim-${s.id}-${Date.now()}`, p_status: step.status,
-    p_description: step.text, p_location: step.loc, p_occurred_at: new Date().toISOString(),
-  });
-  if (error) return fail(error);
-  revalidatePath('/office/shipping'); revalidatePath(`/office/orders/${s.order_id}`);
-  return ok(undefined, `Event added: ${step.status}`);
 }
 
 /* ───────── Support desk ───────── */
