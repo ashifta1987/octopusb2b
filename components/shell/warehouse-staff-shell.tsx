@@ -9,6 +9,7 @@ import { dsInter } from '@/components/dropship-ui/font';
 /**
  * Warehouse OS staff shell (docs/design/warehouse-os §4): one left menu for every desktop staff screen.
  * Screens not built yet are listed (staff-side honesty) but not linked, with the step that ships them.
+ * W2b: Putaway and pallets, Label centre and Transfers are live; the menu and top bar are hidden when a label sheet is printed.
  */
 type Item = { href: string; label: string; icon: DsIconName; ships?: string; adminOnly?: boolean };
 const ITEMS: Item[] = [
@@ -17,12 +18,14 @@ const ITEMS: Item[] = [
   { href: '/office/warehouse/packing', label: 'Packing station', icon: 'package', ships: 'W3' },
   { href: '/office/warehouse/dispatch', label: 'Dispatch and freight', icon: 'truck', ships: 'W4' },
   { href: '/office/warehouse/multi-parcel', label: 'Multi-parcel packing', icon: 'layers', ships: 'W3' },
-  { href: '/office/warehouse/putaway', label: 'Putaway and pallets', icon: 'box', ships: 'W2' },
+  { href: '/office/warehouse/putaway', label: 'Putaway and pallets', icon: 'box' },
   { href: '/office/warehouse/counts', label: 'Counts and lots', icon: 'list' },
   { href: '/office/warehouse/materials', label: 'Materials', icon: 'tag', ships: 'W3' },
-  { href: '/office/warehouse/labels', label: 'Label centre', icon: 'file', ships: 'W2' },
+  { href: '/office/warehouse/labels', label: 'Label centre', icon: 'file' },
   { href: '/office/warehouse/inbound', label: 'Inbound', icon: 'download' },
   { href: '/office/warehouse/dock', label: 'Dock appointments', icon: 'clock' },
+  // amendment (several China warehouses): stock moved between warehouses
+  { href: '/office/warehouse/transfers', label: 'Transfers', icon: 'send' },
   { href: '/office/warehouse/evidence', label: 'Evidence', icon: 'image', ships: 'W3' },
   { href: '/office/warehouse/scale', label: 'Scale check', icon: 'scale', ships: 'W3' },
   { href: '/office/warehouse/carriers', label: 'Carriers and rules', icon: 'globe', ships: 'W4' },
@@ -44,7 +47,7 @@ export function WarehouseStaffShell({
   const pathname = usePathname();
   return (
     <div data-testid="warehouse-staff-shell" className={`${dsInter.variable} ds-v2 min-h-screen flex flex-col md:flex-row bg-[#F4F6F9] text-[#1A174A] overflow-x-hidden`}>
-      <nav aria-label="Warehouse" data-testid="warehouse-sidebar" className="w-full md:w-[248px] shrink-0 bg-[#1A174A] text-white px-4 py-6 box-border flex flex-col gap-1">
+      <nav aria-label="Warehouse" data-testid="warehouse-sidebar" className="print:hidden w-full md:w-[248px] shrink-0 bg-[#1A174A] text-white px-4 py-6 box-border flex flex-col gap-1">
         <Link href="/office/warehouse" className="block px-2 pb-1.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/octopus-b2b-logo-white.png" alt="Octopus B2B" className="w-[150px] max-w-full h-auto block" />
@@ -79,8 +82,9 @@ export function WarehouseStaffShell({
           </div>
         </div>
       </nav>
-      <main className="flex-1 min-w-0 px-4 py-5 md:px-8 md:pt-5 md:pb-10 box-border">
+      <main className="flex-1 min-w-0 px-4 py-5 md:px-8 md:pt-5 md:pb-10 box-border print:p-0">
         <div className="w-full max-w-[1240px] mx-auto flex flex-col gap-5">
+          <div className="print:hidden">
           <DsTopBar
             searchPlaceholder="Search orders and stock"
             searchAction=""
@@ -94,6 +98,7 @@ export function WarehouseStaffShell({
             initials={initials}
             extraRight={isStaging ? <span data-testid="staging-badge" className="mono text-[11px] font-bold uppercase tracking-[.1em] px-2.5 py-1 rounded-full bg-[#FFF4E0] text-[#8A5300]">Staging</span> : null}
           />
+          </div>
           {children}
         </div>
       </main>

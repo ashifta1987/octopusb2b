@@ -8,6 +8,8 @@
 //  5. Staff: Turnkey viewers in the TK division see projects; only editors on 2FA move them one phase at a time
 //     (back needs a reason), hold / cancel / complete rules, target dates, account manager; everything audited.
 //  6. Down → up: the schema goes and comes back, leads are untouched and moved in again.
+// Migrations applied after T2 (T3 adds payment gates on phase moves and more tk_ functions; W2a …) are unwound first,
+// inside the rolled-back transaction, so these checks test T2 itself; they are re-applied at the end.
 // Run: node supabase/tests/turnkey-t2.test.mjs
 import { config } from 'dotenv';
 import pg from 'pg';
@@ -74,6 +76,9 @@ try {
   const orgB = await mkOrg('TK2 Client B', custB);
   const cat = (await one(`select project_id from turnkey_projects where status <> 'archived' order by sort_rank limit 1`)).project_id;
   const archived = await one(`select project_id from turnkey_projects where status = 'archived' limit 1`);
+  const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
+  const later = await appliedAfter(db, MIG);
+  await unwind(db, later);
 
   // ── 1. structure ──
   const phases = await all(`select code, seq, paid from tk_stages order by seq`);
@@ -200,10 +205,7 @@ try {
   await owner();
 
   // ── 6. down → up ──
-  const { appliedAfter, unwind, reapply } = await import('./lib-later-migrations.mjs');
-  const later = await appliedAfter(db, MIG);
   const leadsBefore = Number((await one(`select count(*) n from turnkey_leads`)).n);
-  await unwind(db, later);
   await db.query(DOWN);
   const gone = await one(`select to_regclass('public.tk_client_projects') a, to_regclass('public.tk_stages') b, to_regprocedure('public.tk_submit_enquiry(uuid,text,text,text,text,date,numeric,bigint,text)') c`);
   ok(!gone.a && !gone.b && !gone.c, 'down: tables and functions removed');

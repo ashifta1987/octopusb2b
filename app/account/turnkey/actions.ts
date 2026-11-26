@@ -1,5 +1,6 @@
 'use server';
 
+import { revalidatePath } from 'next/cache';
 import { requireCustomer } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
 import { usdToCents } from '@/lib/turnkey/format';
@@ -36,4 +37,39 @@ export async function submitEnquiryAction(input: EnquiryInput): Promise<{ ok: bo
   });
   if (error) return { ok: false, error: clean(error.message) };
   return { ok: true, code: (data as { code: string }).code };
+}
+
+/**
+ * Turnkey T3 — the client pays an approved fee's proforma from the company wallet through the same database function as
+ * every other service proforma (pay_service_proforma, migration 201). The idempotency key comes from the page (one per
+ * view), so a double click is charged once; the tax invoice is issued when it is fully paid. Bank transfers are recorded
+ * by Finance (Admin › Finance › Transfers). The phase opens when staff move the project; the database refuses the move
+ * until the fee is paid.
+ */
+export async function payTurnkeyFeeAction(input: { code: string; documentId: string; amountCents: number; idempotencyKey: string }): Promise<{ ok: boolean; message: string }> {
+  const code = String(input.code ?? '');
+  const s = await requireCustomer(/^TKP-\d{5,}$/.test(code) ? `/account/turnkey/${code}` : '/account/turnkey');
+  if (!s.org) return { ok: false, message: 'Complete your company profile first.' };
+  const amount = Math.round(Number(input.amountCents));
+  if (!/^TKP-\d{5,}$/.test(code) || !/^[0-9a-f-]{36}$/i.test(input.documentId) || String(input.idempotencyKey ?? '').length < 16 || !(amount > 0)) {
+    return { ok: false, message: 'Something is missing. Reload the page and try again.' };
+  }
+  const sb = await createClient();
+  const { data, error } = await sb.rpc('pay_service_proforma', { p_document: input.documentId, p_amount: amount, p_method: 'wallet', p_reference: null, p_idempotency_key: input.idempotencyKey });
+  if (error) {
+    const m = error.message;
+    return {
+      ok: false,
+      message: /WALLET_INSUFFICIENT/.test(m) ? 'Your wallet balance is not enough. Top up first, or pay by bank transfer.'
+        : /ALREADY_PAID/.test(m) ? 'This fee is already paid.'
+        : /WALLET_DISABLED/.test(m) ? 'Wallet payments are switched off at the moment. Please pay by bank transfer.'
+        : /CANCELLED/.test(m) ? 'This proforma was replaced. Reload the page to see the current fee.'
+        : /INVALID_AMOUNT/.test(m) ? 'The amount is more than what is left to pay.'
+        : 'The payment could not be made. Please try again or contact us.',
+    };
+  }
+  revalidatePath(`/account/turnkey/${code}`);
+  revalidatePath('/account/invoices');
+  const r = data as { fully_paid?: boolean };
+  return { ok: true, message: r.fully_paid ? 'Paid. Your tax invoice has been issued; we start this phase next.' : 'Payment received. The rest is still to pay.' };
 }

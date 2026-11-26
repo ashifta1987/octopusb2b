@@ -13,7 +13,7 @@ type Project = { project_id: string; title: string; category: string; status: st
 type Lead = { lead_id: string; reference: string; kind: string; status: string; company_name: string; country: string; created_at: string; turnkey_projects: { title: string } | null };
 
 /**
- * Admin › Turnkey (T0–T2, design docs/design/turnkey-v2): catalogue + CSV import of the project sheet, the services
+ * Admin › Turnkey (T0–T3, design docs/design/turnkey-v2): catalogue + CSV import of the project sheet, the services
  * price list, the old leads (read-only; T2 moved each one into a client project at "Enquiry") and a link to the client
  * projects (/admin/turnkey/projects). The ADDON-31 editors are retired.
  */
@@ -45,6 +45,7 @@ export default async function TurnkeyAdminPage({ searchParams }: { searchParams:
             className={`min-h-11 px-4 inline-flex items-center rounded-[10px] border ${tab === k ? 'bg-ink text-white border-ink' : 'bg-white border-line text-ink hover:border-ink'}`}>{label}</a>
         ))}
         <Link href="/admin/turnkey/projects" className="min-h-11 px-4 inline-flex items-center rounded-[10px] border bg-white border-line text-ink hover:border-ink font-semibold" data-testid="tk-admin-client-projects">Client projects →</Link>
+        {s.isAdmin && <Link href="/admin/turnkey/approvals" className="min-h-11 px-4 inline-flex items-center rounded-[10px] border bg-white border-line text-ink hover:border-ink font-semibold" data-testid="tk-admin-fee-approvals">Fee approvals →</Link>}
       </nav>
 
       {tab === 'catalogue' && (
@@ -70,7 +71,7 @@ export default async function TurnkeyAdminPage({ searchParams }: { searchParams:
 
       {tab === 'services' && (
         <Card title="Services and starting fees">
-            <p className="text-[13.5px] text-muted -mt-1 mb-3">Shown as “From $X”. Staff set the exact fee per client; a fee above 2× the starting fee needs admin approval (with the project screens).</p>
+            <p className="text-[13.5px] text-muted -mt-1 mb-3">Shown as “From $X”. Staff set the exact fee per client on the project page; a fee above 2× the starting fee needs an admin’s approval (not the person who set it).</p>
           <Table head={['Service', 'Starting fee', 'Rule']}>
             {((services ?? []) as TkService[]).map((x) => (
               <tr key={x.code}><td className="td font-semibold">{x.name}</td><td className="td">{servicePrice({ ...x, from_cents: Number(x.from_cents) })}</td><td className="td text-[13.5px]">{x.rule_text ?? '—'}</td></tr>

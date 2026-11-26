@@ -2,19 +2,21 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { TK_PHASES, earlierPhases, nextPhase, tkPhase } from '@/lib/turnkey/format';
-import { moveStageAction, setManagerAction, setStageDueAction, setStatusAction } from '../actions';
+import { TK_PHASES, earlierPhases, isGatedPhase, nextPhase, tkPhase } from '@/lib/turnkey/format';
+import { moveStageAction, setStageDueAction, setStatusAction } from '../actions';
 
 type Res = { ok: boolean; message?: string; error?: string };
 
 /**
- * Turnkey T2 — staff controls on the Project screen: move one phase forward (or back with a reason the client sees),
- * hold / cancel / complete / reopen, target date per phase, and the account manager (cover when away comes in T3).
+ * Turnkey T2/T3 — staff controls on the Project screen: move one phase forward (or back with a reason the client sees),
+ * hold / cancel / complete / reopen and the target date per phase. Moving into a phase that is paid first needs its fee
+ * active (an admin approves fees above 2× the starting fee) and paid (the database refuses otherwise). The account manager and cover are in ManagerPanel.
  * Forms use onSubmit + preventDefault so typed text stays when the database refuses; the page refreshes after a change.
  */
-export function ProjectControls({ projectId, code, stage, status, managerId, candidates, dues }: {
-  projectId: string; code: string; stage: string; status: string; managerId: string | null;
-  candidates: { user_id: string; full_name: string }[]; dues: Record<string, string | null>;
+export function ProjectControls({ projectId, code, stage, status, dues, nextFee }: {
+  projectId: string; code: string; stage: string; status: string; dues: Record<string, string | null>;
+  /** state of the next phase's fee: 'paid' | 'approved' (unpaid) | 'pending' | 'none' */
+  nextFee: 'paid' | 'approved' | 'pending' | 'none';
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -24,7 +26,6 @@ export function ProjectControls({ projectId, code, stage, status, managerId, can
   const [backWhy, setBackWhy] = useState('');
   const [newStatus, setNewStatus] = useState('');
   const [statusWhy, setStatusWhy] = useState('');
-  const [manager, setManager] = useState(managerId ?? '');
   const [dueStage, setDueStage] = useState(stage);
   const [due, setDue] = useState(dues[stage] ?? '');
   const next = nextPhase(stage);
@@ -53,7 +54,14 @@ export function ProjectControls({ projectId, code, stage, status, managerId, can
             <label className="label" htmlFor="tk-fwd-note">Message to the client (optional)</label>
             <input id="tk-fwd-note" className="input min-h-11" value={fwdNote} onChange={(e) => setFwdNote(e.target.value)} maxLength={1000} />
             <div><button type="submit" className="btn btn-primary btn-sm" disabled={pending} data-testid="tk-move-next">Move to {next.n}. {next.name}</button></div>
-            {next.paid && <p className="m-0 text-[12.5px] text-muted">{next.name} is paid first. Payment checks arrive with fees (next step); until then, move it only after the client has paid.</p>}
+            {isGatedPhase(next.code) && (
+              <p className="m-0 text-[12.5px] text-muted" data-testid="tk-move-gate">
+                {nextFee === 'paid' ? `${next.name}: the fee is paid.`
+                  : nextFee === 'approved' ? `${next.name} starts after the client pays its fee.`
+                  : nextFee === 'pending' ? `${next.name}: the fee is waiting for an admin’s approval.`
+                  : `${next.name} is paid first: set its fee below (an admin approves it if it is above 2× the starting fee), then the client pays.`}
+              </p>
+            )}
           </form>
         )}
         {open && !next && <p className="m-0 text-sm text-muted">This is the last phase. Complete the project below after the client signs off.</p>}
@@ -113,20 +121,6 @@ export function ProjectControls({ projectId, code, stage, status, managerId, can
           <div><button type="submit" className="btn btn-ghost btn-sm" disabled={pending || (due || null) === (dues[dueStage] ?? null)} data-testid="tk-due-save">
             {due ? `Save date for ${tkPhase(dueStage)?.name}` : 'Remove date'}
           </button></div>
-        </form>
-      </section>
-
-      <section aria-labelledby="tk-am-h" className="flex flex-col gap-2">
-        <h3 id="tk-am-h" className="m-0 text-[15px] font-semibold">Account manager</h3>
-        <form onSubmit={submit(() => run(() => setManagerAction(projectId, code, manager)))} className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-end">
-          <div>
-            <label className="label" htmlFor="tk-am">One named contact for the client</label>
-            <select id="tk-am" className="input min-h-11" value={manager} onChange={(e) => setManager(e.target.value)} data-testid="tk-am-select">
-              <option value="">Not set</option>
-              {candidates.map((c) => <option key={c.user_id} value={c.user_id}>{c.full_name}</option>)}
-            </select>
-          </div>
-          <div><button type="submit" className="btn btn-ghost btn-sm" disabled={pending || manager === (managerId ?? '')} data-testid="tk-am-save">Save</button></div>
         </form>
       </section>
     </div>

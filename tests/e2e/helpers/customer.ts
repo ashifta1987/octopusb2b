@@ -82,6 +82,8 @@ export async function purgeTestOrgs(orgIds: string[], userIds: string[]) {
     await db.query('begin');
     await db.query(`update finance_approvals set executed_journal_id = null where executed_journal_id = any($1)`, [journals]).catch(() => {});
     await db.query(`delete from ledger_entries where journal_id = any($1)`, [journals]);
+    // proforma payments (Turnkey T3 fees, service proformas) point at their journals
+    await db.query(`delete from document_payments where journal_id = any($1) or org_id = any($2)`, [journals, orgIds]);
     await db.query(`delete from journals where id = any($1)`, [journals]);
     await db.query(`delete from outbox_events where aggregate_id = any($1) or payload->>'org_id' = any($2)`, [all, orgIds]);
     await db.query(`delete from status_history where entity_id = any($1)`, [all]);

@@ -12,7 +12,7 @@ import { SaasPlansPanel, type SaasPlanRow, type SaasSubscriptionRow } from '@/co
 import { resolveActiveOnlineProvider, type CustomerCreditStatus, type PaymentProviderSettingRow } from '@/lib/payments';
 import crypto from 'node:crypto';
 
-const SVC: Record<string, string> = { sourcing: 'Sourcing', dropship: 'Dropshipping', warehouse: '3PL warehouse', brand: 'Make My Brand', wallet: 'Wallet top-up' };
+const SVC: Record<string, string> = { sourcing: 'Sourcing', dropship: 'Dropshipping', warehouse: '3PL warehouse', brand: 'Make My Brand', wallet: 'Wallet top-up', turnkey: 'Turnkey project' };
 
 export const metadata = { title: 'Invoices and receipts' };
 

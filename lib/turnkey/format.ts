@@ -92,3 +92,52 @@ export function tkImageUrl(path: string | null, supabaseUrl: string | undefined)
   if (path.startsWith('/')) return path;
   return supabaseUrl ? `${supabaseUrl}/storage/v1/object/public/site-media/${path.replace(/^\/+/, '')}` : null;
 }
+
+/* ───────── Fees, payment gates and account managers (T3) ───────── */
+/** Phases that stay locked until their fee is active and paid (tk_stage_fee_rules, migration T3). */
+export const TK_GATED_PHASES: TkStageCode[] = ['consultation', 'design', 'sourcing', 'production_qc'];
+/** Default service per paid phase (tk_stage_fee_rules.default_service_code); phases without one take a free-named fee. */
+export const TK_PHASE_SERVICE: Partial<Record<TkStageCode, string>> = {
+  consultation: 'consultation', design: 'layout_drawing', sourcing: 'sourcing_quotes', production_qc: 'factory_audit',
+};
+export const isGatedPhase = (code: string) => (TK_GATED_PHASES as string[]).includes(code);
+
+export type TkFeeStatus = 'pending_approval' | 'active' | 'superseded' | 'rejected' | 'withdrawn';
+/** Staff labels for a fee version. */
+export function feeStatusLabel(status: string): { label: string; tone: 'blue' | 'amber' | 'green' | 'red' | 'gray' } {
+  switch (status) {
+    case 'pending_approval': return { label: 'Waiting for admin approval', tone: 'amber' };
+    case 'active': return { label: 'Active', tone: 'green' };
+    case 'superseded': return { label: 'Replaced by a newer version', tone: 'gray' };
+    case 'rejected': return { label: 'Rejected', tone: 'red' };
+    case 'withdrawn': return { label: 'Withdrawn', tone: 'gray' };
+    default: return { label: status, tone: 'gray' };
+  }
+}
+
+/**
+ * The design's SetFee rule (D5: service fees only): a fee up to 2× the service's starting fee is active at once; above
+ * 2×, or when there is no starting fee, one admin who did not set it approves it first. Mirrors tk_propose_fee.
+ */
+export function feeNeedsApproval(amountCents: number, startingCents: number | null | undefined): boolean {
+  return !startingCents || startingCents <= 0 || amountCents > 2 * startingCents;
+}
+
+/** Client payment state of an approved fee from its proforma (paid = fully paid). Unknown proforma → "to pay", never "paid". */
+export type TkPayState = 'paid' | 'part_paid' | 'to_pay';
+export function feePayState(amountCents: number, doc: { paid_cents: number | null; status: string | null } | null): TkPayState {
+  if (!doc) return 'to_pay';
+  const paid = Number(doc.paid_cents ?? 0);
+  if (paid >= amountCents && amountCents > 0 && doc.status !== 'void' && doc.status !== 'cancelled') return 'paid';
+  return paid > 0 ? 'part_paid' : 'to_pay';
+}
+export const PAY_STATE: Record<TkPayState, { label: string; tone: 'green' | 'amber' | 'blue' }> = {
+  paid: { label: 'Paid', tone: 'green' },
+  part_paid: { label: 'Part paid', tone: 'amber' },
+  to_pay: { label: 'To pay', tone: 'blue' },
+};
+
+/** True when `today` (YYYY-MM-DD) is inside the cover period (both ends included). */
+export function coverActive(from: string | null | undefined, to: string | null | undefined, today: string): boolean {
+  return !!from && !!to && from <= today && today <= to;
+}
