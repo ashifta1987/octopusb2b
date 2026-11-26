@@ -11,6 +11,7 @@ import { getPool, getGroupBuyTerms, toParticipant, type PoolDetail, type PoolPar
 import { factoryLabel } from '@/lib/factory-label';
 import { ProductImage, unitOne } from '@/components/store/product-card';
 import { Breadcrumbs, JsonLd, breadcrumbLd, SITE_URL } from '@/components/store/seo';
+import { BrandMark } from '@/components/site/ui';
 import { getSettings, getWalletFunds } from '@/components/account/data';
 import { getCurrencyContext } from '@/lib/currency';
 import { Countdown } from '@/components/store/pools/countdown';
@@ -79,8 +80,12 @@ async function Content({ params }: { params: Params }) {
     <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-6">
       <JsonLd data={ld} />
       <JsonLd data={breadcrumbLd(crumbs)} />
-      <Breadcrumbs items={crumbs} />
-      <div className="grid gap-6 lg:grid-cols-[1fr_380px] mt-5 items-start">
+      {/* Octopus MOQ Pool sub-brand mark (brand guidelines 27 Nov): on Pearl, with clear space */}
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+        <Breadcrumbs items={crumbs} />
+        <BrandMark brand="pools" />
+      </div>
+      <div className="grid gap-6 lg:grid-cols-[1fr_380px] mt-3 items-start">
         <div className="space-y-6 min-w-0">
           {/* Hero */}
           <section className="card p-6 flex flex-col sm:flex-row gap-6">

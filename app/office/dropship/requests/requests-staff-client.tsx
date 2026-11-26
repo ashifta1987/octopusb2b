@@ -88,7 +88,7 @@ function Detail({ r, canEdit, canSeeSourcing, processingCents }: {
       )}
 
       <DsCard title="Landed quote for the merchant" icon="dollar" noPadding testId="request-landed-quote">
-        <div className="ds-scroll">
+        <div className="ds-scroll" tabIndex={0}>
           <table className="ds-tbl min-w-[560px]">
             <thead><tr><th scope="col">Country</th><th scope="col">Product</th><th scope="col">Processing</th><th scope="col">Shipping</th><th scope="col">Duties</th><th scope="col">Landed</th></tr></thead>
             <tbody>
@@ -179,7 +179,7 @@ export function StaffDropshipRequestsClient({ rows, canEdit, canSeeSourcing, pro
       <div className="grid grid-cols-1 xl:grid-cols-[1.4fr_1fr] gap-5 items-start">
         <DsCard title="Requests" icon="list" noPadding>
           {shown.length === 0 ? <div className="p-5"><DsEmptyState icon="file" title={`No ${BUCKET_LABEL[bucket].toLowerCase()} requests`} description="Choose another filter." /></div> : (
-            <div className="ds-scroll">
+            <div className="ds-scroll" tabIndex={0}>
               <table className="ds-tbl min-w-[860px]" data-testid="staff-dropship-requests-table">
                 <thead><tr>
                   <th scope="col">Request</th><th scope="col">Merchant</th><th scope="col">Product</th><th scope="col">Target landed</th>

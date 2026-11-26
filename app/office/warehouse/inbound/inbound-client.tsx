@@ -29,7 +29,7 @@ export function InboundClient({ asns, warehouseNames }: { asns: AsnRow[]; wareho
         {list.length === 0 ? (
           <div className="p-5"><DsEmptyState icon="download" title="No stock notices here" description="Clients send notices from the Send stock tab of their portal." /></div>
         ) : (
-          <div className="ds-scroll">
+          <div className="ds-scroll" tabIndex={0}>
             <table className="ds-tbl min-w-[860px]">
               <thead>
                 <tr>

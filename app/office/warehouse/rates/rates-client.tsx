@@ -55,7 +55,7 @@ export function RatesClient({ versions, plans, warehouses, canPropose, isAdmin, 
   return (
     <div className="flex flex-col gap-5">
       <DsCard title="Rate card" icon="percent" noPadding testId="wh-rate-card">
-        <div className="ds-scroll">
+        <div className="ds-scroll" tabIndex={0}>
           <table className="ds-tbl min-w-[760px]">
             <thead><tr><th scope="col">Fee</th>{plans.map((p) => <th key={p.code} scope="col">{p.name}</th>)}</tr></thead>
             <tbody>
@@ -140,7 +140,7 @@ export function RatesClient({ versions, plans, warehouses, canPropose, isAdmin, 
       </DsCard>
 
       <DsCard title="History" icon="clock" noPadding>
-        <div className="ds-scroll"><table className="ds-tbl min-w-[620px]">
+        <div className="ds-scroll" tabIndex={0}><table className="ds-tbl min-w-[620px]">
           <thead><tr><th scope="col">Plan</th><th scope="col">Warehouse</th><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Date</th></tr></thead>
           <tbody>
             {versions.length === 0 && <tr><td colSpan={5} className="text-muted">No rates proposed yet.</td></tr>}

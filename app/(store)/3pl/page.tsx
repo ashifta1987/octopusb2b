@@ -45,7 +45,7 @@ async function Intro() {
 
   return (
     <ServicePage testId="wh-intro" d={{
-      key: '3pl',
+      key: '3pl', brand: '3pl',
       crumb: '3PL and logistics',
       title: 'Stored in China. Delivered worldwide.',
       lead: 'Send your goods to our warehouse. We receive and check them, pick and pack each order, dispatch it with the shipping speed you choose, and handle returns.',

@@ -187,7 +187,7 @@ export function ComplianceClient({ versions, entries, policies, completeness, ac
                 {diff ? ` · ${diff.changed} changed, ${diff.added} new${diff.removed ? `, ${diff.removed} removed` : ''} since version ${active?.version}` : ''}. Default = country default (blank HS prefix).
               </p>
               {shownEntries.length === 0 ? <p className="m-0 px-5 pb-4 text-[13px]">No entries yet.</p> : (
-                <div className="ds-scroll">
+                <div className="ds-scroll" tabIndex={0}>
                   <table className="ds-tbl min-w-[980px]" data-testid="duty-entries">
                     <thead><tr>
                       <th scope="col">Country</th><th scope="col">HS prefix</th><th scope="col">Duty</th><th scope="col">Import tax</th>
@@ -327,7 +327,7 @@ export function ComplianceClient({ versions, entries, policies, completeness, ac
 
       <DsCard title="History" icon="clock" noPadding>
         {versions.length === 0 ? <div className="p-4"><DsEmptyState title="No versions yet" description="Create the first version above." /></div> : (
-          <div className="ds-scroll">
+          <div className="ds-scroll" tabIndex={0}>
             <table className="ds-tbl min-w-[820px]" data-testid="duty-history">
               <thead><tr><th scope="col">Version</th><th scope="col">Status</th><th scope="col">Entries</th><th scope="col">Prepared</th><th scope="col">Published</th><th scope="col">Notes</th></tr></thead>
               <tbody>

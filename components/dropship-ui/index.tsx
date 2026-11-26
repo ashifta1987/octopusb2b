@@ -1164,7 +1164,7 @@ export function DsTopBar({
           {unreadCount > 0 && (
             <span
               data-testid="bell-count"
-              className="absolute top-[5px] right-[5px] min-w-[17px] h-[17px] rounded-full bg-bad text-white text-[10px] font-bold flex items-center justify-center px-[4px] box-border"
+              className="absolute top-[5px] right-[5px] min-w-[17px] h-[17px] rounded-full bg-bad text-white text-[10px] font-bold flex items-center justify-center px-1 box-border"
             >
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>

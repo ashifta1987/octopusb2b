@@ -151,7 +151,7 @@ export function StaffMerchantsClient({
             />
           </div>
         ) : (
-          <div className="ds-scroll" data-testid="staff-access-requests">
+          <div className="ds-scroll" tabIndex={0} data-testid="staff-access-requests">
             <table className="ds-tbl min-w-[860px]">
               <thead>
                 <tr>
@@ -267,7 +267,7 @@ export function StaffMerchantsClient({
             />
           </div>
         ) : (
-          <div className="ds-scroll" data-testid="staff-merchants-table">
+          <div className="ds-scroll" tabIndex={0} data-testid="staff-merchants-table">
             <table className="ds-tbl min-w-[1040px]">
               <thead>
                 <tr>

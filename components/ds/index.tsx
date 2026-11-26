@@ -181,7 +181,7 @@ export function StudioPreviewCard({ src, alt, brand, title }: { src: string; alt
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={src} alt={alt} loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover" />
         <StudioPreviewLabel className="absolute top-3 left-3" />
-        <span className="absolute bottom-3 left-1/2 -translate-x-1/2 mono text-[11px] font-bold tracking-[.18em] uppercase px-3 py-1 bg-white/95 text-ink border border-dashed border-ink/50 rounded-[4px]">{brand}</span>
+        <span className="absolute bottom-3 left-1/2 -translate-x-1/2 mono text-[11px] font-bold tracking-[.18em] uppercase px-3 py-1 bg-white/95 text-ink border border-dashed border-ink/50 rounded-sm">{brand}</span>
       </div>
       <figcaption className="px-4 py-3">
         <div className="text-[14px] font-semibold text-ink">{title}</div>

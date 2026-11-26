@@ -280,7 +280,7 @@ function Importer({ cards, onDone, seed }: { cards: RateCard[]; onDone: (m: Msg)
               </div>
             ))}
           </dl>
-          <div className="ds-scroll">
+          <div className="ds-scroll" tabIndex={0}>
             <table className="ds-tbl min-w-[860px]" data-testid="rate-import-preview">
               <thead><tr>
                 <th scope="col">Row</th><th scope="col">Country</th><th scope="col">Carrier · service</th><th scope="col">Method</th>
@@ -484,7 +484,7 @@ export function RatesClient({ cards, imports, access }: { cards: RateCard[]; imp
               description={rows.length === 0 ? 'Import the carrier’s price list or add a card. Until a card is active, merchants see “No rate set” for that country.' : 'Choose another filter.'} />
           </div>
         ) : (
-          <div className="ds-scroll">
+          <div className="ds-scroll" tabIndex={0}>
             <table className="ds-tbl min-w-[1040px]" data-testid="rate-card-table">
               <thead><tr>
                 <th scope="col">Carrier · service</th><th scope="col">Method</th><th scope="col">Country</th><th scope="col">Price</th>

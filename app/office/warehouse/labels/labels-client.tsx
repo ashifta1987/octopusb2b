@@ -28,7 +28,7 @@ const PRINT_CSS = `
 
 function LabelBox({ children, size }: { children: ReactNode; size: 'large' | 'small' }) {
   return (
-    <div className={`wh-label bg-white text-black border border-black rounded-[4px] p-3 flex flex-col gap-1.5 overflow-hidden ${size === 'large' ? 'w-[100mm] min-h-[70mm]' : 'w-[100mm] min-h-[45mm]'} max-w-full box-border`}>
+    <div className={`wh-label bg-white text-black border border-black rounded-sm p-3 flex flex-col gap-1.5 overflow-hidden ${size === 'large' ? 'w-[100mm] min-h-[70mm]' : 'w-[100mm] min-h-[45mm]'} max-w-full box-border`}>
       {children}
     </div>
   );

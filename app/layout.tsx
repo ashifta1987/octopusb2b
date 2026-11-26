@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Figtree, Jost } from 'next/font/google';
+import { Figtree, Jost, Plus_Jakarta_Sans } from 'next/font/google';
 import { block, getSiteContent } from '@/lib/content';
 import { getCurrencyContext } from '@/lib/currency';
 import { withCurrency } from '@/lib/format';
@@ -8,9 +8,11 @@ import { PasswordRevealProvider } from '@/components/password/password-input';
 import { BRAND } from '@/lib/brand';
 import './globals.css';
 
-// ADDON-46 fonts: Degular Display (headings) / Degular (text) / Futura (labels). Until the licences arrive:
-// Figtree 400–800 stands in for both Degular cuts, Jost 600 for Futura (same CSS variables, so the swap is one file).
+// ADDON-46 fonts (brand guidelines p.7–8): Degular Display (headings) / Degular (text) / Futura (labels). Until the licences arrive:
+// Figtree stands in for Degular (text), Plus Jakarta Sans for Degular Display (headings), Jost for Futura (labels).
+// Each one is a CSS variable, so swapping in licensed Degular later is a one-line change here (next/font/local).
 const text = Figtree({ subsets: ['latin'], variable: '--font-text', weight: ['400', '500', '600', '700', '800'], display: 'swap' });
+const heading = Plus_Jakarta_Sans({ subsets: ['latin'], variable: '--font-heading', weight: ['600', '700', '800'], display: 'swap' });
 const label = Jost({ subsets: ['latin'], variable: '--font-label', weight: ['500', '600'], display: 'swap' });
 
 /** Default title/description come from CMS (company profile + home copy with the active {currency}), SPEC §8.4 / §15.1. */
@@ -40,7 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // ADDON-25: how long a revealed password stays visible (site_settings auth.password_reveal_timeout_s, cached)
   const { settings } = await getSiteContent();
   return (
-    <html lang="en" className={`${text.variable} ${label.variable}`}>
+    <html lang="en" className={`${text.variable} ${heading.variable} ${label.variable}`}>
       <body className="antialiased">
         <PasswordRevealProvider timeoutS={revealTimeout(settings['auth.password_reveal_timeout_s'])}>{children}</PasswordRevealProvider>
       </body>

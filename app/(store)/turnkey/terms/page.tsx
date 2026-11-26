@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { Crumb } from '@/components/site/ui';
+import { Crumb, BrandMark } from '@/components/site/ui';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getSiteContent, block } from '@/lib/content';
@@ -37,9 +37,10 @@ async function Terms() {
   return (
     <div className={`bg-pearl`} data-testid="tk-terms">
       <Crumb label="Terms and legal" trail={[{ name: 'Turnkey projects', href: '/turnkey' }]} />
+      <div className="max-w-[1100px] mx-auto px-4 sm:px-8 pt-3"><BrandMark brand="turnkey" /></div>
       <section className="bg-ink text-white mt-4">
         <div className="max-w-[900px] mx-auto px-4 sm:px-8 py-10">
-          <h1 className="!text-white text-[34px] font-bold mt-2 mb-1">Terms and legal</h1>
+          <h1 className="!text-white text-[length:clamp(30px,4.5vw,40px)] font-extrabold mt-2 mb-1">Terms and legal</h1>
           <p className="m-0 text-[16px] text-on-ink max-w-[640px]">China visit terms, KVKK and GDPR privacy, our independence statement and secure passport upload.</p>
         </div>
       </section>

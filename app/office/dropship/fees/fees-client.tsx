@@ -48,7 +48,7 @@ export function FeesClient({ fees, access }: { fees: FeeVersion[]; access: FeesA
       <DsCard title={active ? `Merchant fees · version ${active.version}, from ${fmtDate(active.effective_from)}` : 'Merchant fees'} icon="percent" noPadding testId="fee-versions"
         subtitle={active ? undefined : 'No active fee version yet. Merchant prices can’t be quoted until one is approved.'}>
         {active ? (
-          <div className="ds-scroll">
+          <div className="ds-scroll" tabIndex={0}>
             <table className="ds-tbl min-w-[560px]" data-testid="active-fee-version">
               <thead><tr><th scope="col">Fee</th><th scope="col">Amount</th><th scope="col">Owner</th></tr></thead>
               <tbody>
@@ -144,7 +144,7 @@ export function FeesClient({ fees, access }: { fees: FeeVersion[]; access: FeesA
       </DsCard>
 
       <DsCard title="History" icon="clock" noPadding>
-        <div className="ds-scroll">
+        <div className="ds-scroll" tabIndex={0}>
           <table className="ds-tbl min-w-[820px]" data-testid="fee-history">
             <thead><tr><th scope="col">Version</th><th scope="col">Status</th><th scope="col">First / extra / packaging</th><th scope="col">Branded</th><th scope="col">Tolerance</th><th scope="col">Proposed</th><th scope="col">Approved</th></tr></thead>
             <tbody>

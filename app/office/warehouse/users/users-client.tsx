@@ -33,7 +33,7 @@ export function UsersClient({ rows, capabilities, warehouses, manageable, me, is
         {rows.length === 0 ? (
           <div className="p-5"><DsEmptyState icon="users" title="No one added yet" description="Add the first person below. Company admins can open every warehouse without being added." /></div>
         ) : (
-          <div className="ds-scroll">
+          <div className="ds-scroll" tabIndex={0}>
             <table className="ds-tbl min-w-[860px]">
               <thead><tr><th scope="col">Name</th><th scope="col">Warehouse</th><th scope="col">Role</th><th scope="col">Status</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead>
               <tbody>
@@ -98,7 +98,7 @@ export function UsersClient({ rows, capabilities, warehouses, manageable, me, is
       {msg && <p role={msg.ok ? 'status' : 'alert'} data-testid="wh-users-msg" className={`m-0 text-[13px] ${msg.ok ? 'text-ok' : 'text-bad'}`}>{msg.text}</p>}
 
       <DsCard title="What each role can do" icon="shield" noPadding testId="wh-roles-table">
-        <div className="ds-scroll">
+        <div className="ds-scroll" tabIndex={0}>
           <table className="ds-tbl min-w-[640px]">
             <thead><tr><th scope="col">Action</th>{ROLES.map((r) => <th key={r} scope="col">{LABEL[r]}</th>)}</tr></thead>
             <tbody>

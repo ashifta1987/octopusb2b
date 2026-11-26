@@ -10,7 +10,7 @@ import { categoryLabel, tkImageUrl } from '@/lib/turnkey/format';
 import { JsonLd, SITE_URL } from '@/components/store/seo';
 import { copy } from '@/components/store/home/shared';
 import { siteImage } from '@/lib/site-images';
-import { h1Class, h2Class, eyebrowClass, btn, StatusPill, Pic, Check, design, TeamBand, OFFICE_HOURS, WHATSAPP_URL } from './ui';
+import { h1Class, h2Class, eyebrowClass, btn, space, StatusPill, Pic, Check, design, TeamBand, OFFICE_HOURS, WHATSAPP_URL } from './ui';
 
 /** Current site's answer to "Are the factories verified?" (content block home3.faq.2) — fills [ANSWER FROM CURRENT FAQ]. */
 export const VERIFIED_FAQ = 'Are the factories verified?|Yes. Dropshipping and Make My Brand use only products Octopus lists directly, from verified suppliers, and our sourcing team matches you only with verified factories.';
@@ -46,21 +46,21 @@ export async function WebsiteHome() {
       {orgLd && <JsonLd data={orgLd} />}
 
       {/* services */}
-      <section id="services" className="px-4 sm:px-6 pt-16 pb-14" aria-labelledby="services-h">
+      <section id="services" className={`px-4 sm:px-6 ${space.section}`} aria-labelledby="services-h">
         <div className="max-w-[1200px] mx-auto">
           <h2 id="services-h" className={h2Class}>{["Four", "Five", "Six"][services.length - 4] ?? "Six"} ways to work with us</h2>
           <p className="mt-3 mb-0 text-[18px] leading-[1.55] text-muted max-w-[720px]">Start with one and add the others as you grow. Everything runs from one account, one wallet and one account manager.</p>
           <ul className="mt-9 flex flex-wrap gap-6 list-none p-0">
             {services.map((s) => (
               <li key={s.key} className="flex-[1_1_340px] min-w-0 flex">
-                <Link href={s.href} className="group w-full bg-white border border-line rounded-[18px] overflow-hidden text-black flex flex-col hover:border-coral-text hover:text-black" data-testid={`home-service-${s.key}`}>
+                <Link href={s.href} className="group w-full bg-white border border-line rounded-[18px] overflow-hidden text-black flex flex-col card-lift hover:border-coral-text hover:text-black" data-testid={`home-service-${s.key}`}>
                   <Pic src={design(s.img)} alt={s.alt} rounded="rounded-none" />
                   <div className="p-6 flex flex-col gap-2.5 flex-1">
                     <div className="flex justify-between items-center gap-2">
                       <b className="font-mono text-[13px] tracking-[.1em] uppercase text-coral-text">{s.label}</b>
                       <StatusPill soon={s.soon} />
                     </div>
-                    <h3 className="m-0 text-[23px]! leading-[1.2] font-extrabold">{s.title}</h3>
+                    <h3 className="m-0 text-[22px]! leading-[1.2] font-semibold">{s.title}</h3>
                     <p className="m-0 text-[16px] leading-[1.55] text-muted flex-1">{s.body}</p>
                     <span className="font-bold text-coral-text mt-1.5 group-hover:underline">Learn more <span aria-hidden="true">→</span></span>
                   </div>
@@ -72,7 +72,7 @@ export async function WebsiteHome() {
       </section>
 
       {/* learn */}
-      <section className="bg-tint px-4 sm:px-6 py-20" aria-labelledby="learn-h">
+      <section className={`bg-tint px-4 sm:px-6 ${space.section}`} aria-labelledby="learn-h">
         <div className="max-w-[1200px] mx-auto">
           <h2 id="learn-h" className={h2Class}>New to buying from China? Start here</h2>
           <p className="mt-3 mb-0 text-[18px] leading-[1.55] text-muted max-w-[720px]">Three ideas that make every service easier to understand.</p>
@@ -85,7 +85,7 @@ export async function WebsiteHome() {
               <li key={t} className="flex-[1_1_300px] min-w-0 bg-white rounded-[18px] overflow-hidden">
                 <Pic src={design(img!)} alt={alt!} rounded="rounded-none" className="border-b border-line" />
                 <div className="p-[22px]">
-                  <h3 className="m-0 text-[21px]! font-extrabold">{t}</h3>
+                  <h3 className="m-0 text-[21px]! font-semibold">{t}</h3>
                   <p className="mt-2 mb-0 text-[16px] leading-[1.55] text-muted">{b}</p>
                 </div>
               </li>
@@ -96,7 +96,7 @@ export async function WebsiteHome() {
 
       {/* turnkey — real catalogue projects */}
       {turnkeyOn && (
-        <section id="turnkey" className="px-4 sm:px-6 py-20" aria-labelledby="tk-h">
+        <section id="turnkey" className={`px-4 sm:px-6 ${space.section}`} aria-labelledby="tk-h">
           <div className="max-w-[1200px] mx-auto">
             <div className="flex flex-wrap justify-between items-end gap-4">
               <div className="max-w-[640px]">
@@ -108,7 +108,7 @@ export async function WebsiteHome() {
             <ul className="mt-9 grid gap-5 grid-cols-[repeat(auto-fill,minmax(250px,1fr))] list-none p-0" data-testid="home-turnkey">
               {tkCards.map((p) => (
                 <li key={p.project_id} className="min-w-0 flex">
-                  <Link href="/turnkey/catalogue#projects" className="w-full bg-white border border-line rounded-[18px] overflow-hidden text-black flex flex-col hover:border-coral-text hover:text-black">
+                  <Link href="/turnkey/catalogue#projects" className="w-full bg-white border border-line rounded-[18px] overflow-hidden text-black flex flex-col card-lift hover:border-coral-text hover:text-black">
                     <div className="relative aspect-[3/2] bg-tint">
                       <Image src={p.image!} alt={p.hero_image_alt ?? p.title} fill sizes="(min-width:1200px) 280px, (min-width:600px) 50vw, 100vw" className="object-cover" unoptimized />
                     </div>
@@ -132,7 +132,7 @@ export async function WebsiteHome() {
 
       {/* products — real published products */}
       {ready.length > 0 && (
-        <section id="products" className="px-4 sm:px-6 pt-[88px] pb-[72px]" aria-labelledby="ready-h">
+        <section id="products" className={`px-4 sm:px-6 pt-0 pb-16 md:pb-[88px]`} aria-labelledby="ready-h">
           <div className="max-w-[1200px] mx-auto">
             <h2 id="ready-h" className={h2Class}>Ready to order from verified factories</h2>
             <p className="mt-3 mb-0 text-[18px] leading-[1.55] text-muted max-w-[680px]">Prices are per piece at the factory minimum. Need fewer? {poolsOn ? <Link href="/pools" className="underline font-semibold text-ink hover:text-coral-text">Share the order in an MOQ pool</Link> : 'Share the order in an MOQ pool'} and split it with other buyers.</p>
@@ -142,7 +142,7 @@ export async function WebsiteHome() {
                 const cat = p.category_id ? categoryPath(categories, p.category_id)[0]?.name : null;
                 return (
                   <li key={p.id} className="flex-[1_1_250px] min-w-0 flex">
-                    <Link href={`/p/${p.slug}`} className="w-full bg-white border border-line rounded-[18px] overflow-hidden text-black flex flex-col hover:border-coral-text hover:text-black">
+                    <Link href={`/p/${p.slug}`} className="w-full bg-white border border-line rounded-[18px] overflow-hidden text-black flex flex-col card-lift hover:border-coral-text hover:text-black">
                       <div className="relative aspect-[3/2] bg-white border-b border-divider">
                         {/* product photos are square: shown whole on white, never cropped */}
                         {p.image_url && <Image src={p.image_url} alt={p.title} fill sizes="(min-width:1200px) 290px, (min-width:600px) 50vw, 100vw" className="object-contain p-3" unoptimized />}
@@ -150,7 +150,7 @@ export async function WebsiteHome() {
                       <div className="p-5 flex flex-col gap-1.5 flex-1">
                         {cat && <span className="font-mono text-[12px] font-semibold tracking-[.1em] uppercase text-coral-text">{cat}</span>}
                         <b className="text-[17px] leading-[1.3] text-ink line-clamp-2 flex-1">{p.title}</b>
-                        <p className="mt-2.5 mb-0 text-[24px] font-extrabold text-ink">
+                        <p className="num mt-2.5 mb-0 text-[26px] font-extrabold text-ink">
                           {low ? <><span className="text-[14px] font-normal text-muted">from </span>{money(low, p.currency)}<span className="text-[14px] font-normal text-muted"> / {unitOne(p.unit)}</span></> : <span className="text-[16px] font-semibold text-muted">Price unknown</span>}
                         </p>
                         <p className="m-0 text-[14px] text-muted">Minimum order {p.moq.toLocaleString('en-US')}+ {p.unit}</p>
@@ -166,7 +166,7 @@ export async function WebsiteHome() {
       )}
 
       {/* payment */}
-      <section id="payment" className="bg-ink text-white px-4 sm:px-6 py-20" aria-labelledby="pay-h">
+      <section id="payment" className={`bg-ink text-white px-4 sm:px-6 ${space.section}`} aria-labelledby="pay-h">
         <div className="max-w-[1200px] mx-auto">
           <h2 id="pay-h" className={`${h2Class} !text-white`}>Your money stays protected until your goods ship</h2>
           <p className="mt-3 mb-0 text-[18px] leading-[1.55] text-on-ink max-w-[700px]">Payment is by US dollar wallet and bank transfer. Card payments are not accepted.</p>
@@ -183,7 +183,7 @@ export async function WebsiteHome() {
       </section>
 
       {/* support + quality checks */}
-      <section className="px-4 sm:px-6 py-20" aria-labelledby="support-h">
+      <section className={`px-4 sm:px-6 ${space.section}`} aria-labelledby="support-h">
         <div className="max-w-[1200px] mx-auto flex flex-wrap gap-10 items-center">
           <div className="flex-[1_1_480px] min-w-0">
             <h2 id="support-h" className={h2Class}>One person for every service</h2>
@@ -195,7 +195,7 @@ export async function WebsiteHome() {
             <ul className="mt-8 grid grid-cols-1 min-[440px]:grid-cols-2 gap-3 list-none p-0 m-0">
               {[['Samples', 'Check before you order', '/request/sample'], ['QC inspection', 'Before goods ship', '/request/qc'], ['Certification', 'For your market', '/request/certification'], ['Ask Octo', 'Instant answers, any hour', '/assistant']].map(([t, b, href]) => (
                 <li key={t} className="flex">
-                  <Link href={href!} className="w-full bg-white border border-line rounded-[16px] p-5 text-black hover:border-coral-text hover:text-black">
+                  <Link href={href!} className="w-full bg-white border border-line rounded-[16px] p-5 text-black card-lift hover:border-coral-text hover:text-black">
                     <b className="text-ink">{t} <span aria-hidden="true">→</span></b><span className="block mt-1.5 text-[14px] text-muted">{b}</span>
                   </Link>
                 </li>
@@ -209,10 +209,10 @@ export async function WebsiteHome() {
         </div>
       </section>
 
-      <TeamBand img={team} tint />
+      <TeamBand img={team} dark />
 
       {/* faq */}
-      <section id="faq" className="px-4 sm:px-6 py-20" aria-labelledby="faq-h">
+      <section id="faq" className={`px-4 sm:px-6 ${space.section}`} aria-labelledby="faq-h">
         <div className="max-w-[860px] mx-auto">
           <h2 id="faq-h" className={`${h2Class} mb-7`}>Questions buyers ask</h2>
           <div className="flex flex-col gap-3" data-testid="home-faq">
@@ -234,7 +234,7 @@ export async function WebsiteHome() {
       </section>
 
       {/* closing */}
-      <section id="start" className="bg-ink px-4 sm:px-6 py-20 text-center" aria-labelledby="start-h">
+      <section id="start" className={`bg-ink px-4 sm:px-6 ${space.section} text-center`} aria-labelledby="start-h">
         <div className="max-w-[720px] mx-auto">
           <h2 id="start-h" className={`${h2Class} !text-white`}>Tell us what you need</h2>
           <p className="mt-4 mb-0 text-[19px] text-on-ink">Free account, no card required. Quotes within 24 hours.</p>
@@ -283,14 +283,14 @@ export function HomeHero() {
         </div>
       </section>
 
-      <section id="route" className="px-4 sm:px-6 pt-[72px] pb-4" aria-labelledby="route-h">
+      <section id="route" className={`px-4 sm:px-6 pt-16 md:pt-[88px] pb-0`} aria-labelledby="route-h">
         <div className="max-w-[1200px] mx-auto">
           <h2 id="route-h" className={h2Class}>One account, the whole route</h2>
           <p className="mt-3 mb-0 text-[18px] leading-[1.55] text-muted max-w-[720px]">Five steps from a factory in China to your customer. Use one, or all of them.</p>
           <ol className="mt-8 grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5 list-none p-0">
             {route.map(([t, b, img, href], i) => (
               <li key={t} className={`min-w-0 flex ${i === 4 ? 'col-span-2 md:col-span-1' : ''}`}>
-                <Link href={href} className="group w-full bg-white border border-line rounded-[18px] overflow-hidden text-black flex flex-col hover:border-coral-text hover:text-black">
+                <Link href={href} className="group w-full bg-white border border-line rounded-[18px] overflow-hidden text-black flex flex-col card-lift hover:border-coral-text hover:text-black">
                   <Pic src={img.src} alt={img.alt} square rounded="rounded-none" sizes="(min-width:1024px) 230px, (min-width:768px) 33vw, 50vw" />
                   <span className="p-4 flex flex-col gap-1.5">
                     <span className="flex items-center gap-2"><span aria-hidden="true" className="w-7 h-7 shrink-0 rounded-full bg-coral text-white text-[14px] font-bold flex items-center justify-center">{i + 1}</span><b className="text-[18px] text-ink">{t}</b></span>

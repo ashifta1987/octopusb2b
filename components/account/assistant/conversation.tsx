@@ -155,7 +155,7 @@ export function Conversation(p: ConversationProps) {
       <div ref={logRef} role="log" aria-live="polite" aria-label="Messages" className="flex-1 min-h-0 overflow-y-auto p-5 flex flex-col gap-3.5 bg-pearl">
         <div className="flex gap-2.5 max-w-[86%] self-start">
           <OctoAvatar />
-          <div className="px-3.5 py-3 rounded-[14px] rounded-tl-[4px] bg-white border border-line text-[14.5px] leading-[1.55]">
+          <div className="px-3.5 py-3 rounded-[14px] rounded-tl-sm bg-white border border-line text-[14.5px] leading-[1.55]">
             <strong>Hi {p.orgName}.</strong> I&apos;m Octo, your Octopus B2B AI assistant. I can see your orders, RFQs, wallet and pool pledges. What can I help with today?
             {p.hint && <div className="mt-2 text-[13px] text-muted">{p.hint.hint}</div>}
             <div className="flex flex-wrap gap-1.5 mt-2.5">
@@ -181,7 +181,7 @@ export function Conversation(p: ConversationProps) {
               <div key={m.id} className="flex gap-2.5 max-w-[86%] self-end flex-row-reverse">
                 <span aria-hidden className="flex-none w-9 h-9 rounded-[10px] bg-ink text-white flex items-center justify-center font-display font-bold text-[12px]">{me}</span>
                 <div className="flex flex-col items-end gap-1">
-                  <div className={`px-3.5 py-3 rounded-[14px] rounded-tr-[4px] bg-coral text-white text-[14.5px] leading-[1.55] whitespace-pre-wrap break-words ${m.pending ? 'opacity-70' : ''}`}>
+                  <div className={`px-3.5 py-3 rounded-[14px] rounded-tr-sm bg-coral text-white text-[14.5px] leading-[1.55] whitespace-pre-wrap break-words ${m.pending ? 'opacity-70' : ''}`}>
                     <span className="sr-only">You: </span>{m.content}
                   </div>
                   {m.failed && <span className="text-[11px] text-bad">Not sent</span>}
@@ -197,7 +197,7 @@ export function Conversation(p: ConversationProps) {
                 <span aria-hidden className="flex-none w-9 h-9 rounded-[10px] bg-ok text-white flex items-center justify-center font-display font-bold text-[12px]">{isMgr ? p.team!.initials : 'AT'}</span>
                 <div className="flex flex-col gap-1">
                   <span className="text-[11.5px] font-semibold text-ok">{name} · account manager</span>
-                  <div className="px-3.5 py-3 rounded-[14px] rounded-tl-[4px] bg-ok-bg border border-ok-bg text-[14.5px] leading-[1.55] whitespace-pre-wrap break-words">{m.content}</div>
+                  <div className="px-3.5 py-3 rounded-[14px] rounded-tl-sm bg-ok-bg border border-ok-bg text-[14.5px] leading-[1.55] whitespace-pre-wrap break-words">{m.content}</div>
                 </div>
               </div>
             );
@@ -208,7 +208,7 @@ export function Conversation(p: ConversationProps) {
         {sending && (
           <div className="flex gap-2.5 self-start" aria-live="polite">
             <OctoAvatar />
-            <div className="px-3.5 py-3 rounded-[14px] rounded-tl-[4px] bg-white border border-line text-[14px] text-muted">{withHuman ? `Sent to ${managerFirst}…` : 'Octo is checking your account…'}</div>
+            <div className="px-3.5 py-3 rounded-[14px] rounded-tl-sm bg-white border border-line text-[14px] text-muted">{withHuman ? `Sent to ${managerFirst}…` : 'Octo is checking your account…'}</div>
           </div>
         )}
       </div>
@@ -251,7 +251,7 @@ function BotBubble({ m, feedback, onFeedback }: { m: UiMessage; feedback: boolea
     <div className="flex gap-2.5 max-w-[86%] self-start">
       <OctoAvatar />
       <div className="flex flex-col gap-1 min-w-0">
-        <div className="px-3.5 py-3 rounded-[14px] rounded-tl-[4px] bg-white border border-tint text-[14.5px] leading-[1.55] break-words">
+        <div className="px-3.5 py-3 rounded-[14px] rounded-tl-sm bg-white border border-tint text-[14.5px] leading-[1.55] break-words">
           <span className="sr-only">Octo (AI): </span>
           <div className="whitespace-pre-wrap">{m.content}</div>
           {low && <div className="mt-1 text-[12px] text-muted">Confidence {Math.round(Number(m.confidence) * 100)}%</div>}

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { AppLogo } from './app-logo';
+import { AreaLogo } from './area-logo';
 import { MaintenanceNotice } from '@/components/maintenance-notice';
 import type { Session } from '@/lib/auth';
 import { money } from '@/lib/format';
@@ -62,7 +62,7 @@ export function AccountShell({ session, ctx, newQuotes, dropshipV2Ui = false, dr
       <MaintenanceNotice />
       <div className="app-cols md:grid md:grid-cols-[264px_minmax(0,1fr)] md:grid-rows-[auto_1fr] md:min-h-screen">
         <header className="app-topbar gap-x-4 gap-y-3 md:col-start-2 md:row-start-1">
-          <AppLogo size="bar" className="md:hidden" />
+          <AreaLogo size="bar" className="md:hidden" />
           {/* audit 8 Nov: searched the public catalogue before; now searches the customer's own requests and orders */}
           <form action="/account/sourcing" role="search" className="order-3 md:order-none basis-full md:basis-auto md:flex-1 md:max-w-[560px]">
             <label htmlFor="acct-q" className="sr-only">Search your requests and orders</label>
@@ -98,14 +98,15 @@ export function AccountShell({ session, ctx, newQuotes, dropshipV2Ui = false, dr
           </div>
         </header>
         <aside className="app-sidebar md:col-start-1 md:row-start-1 md:row-span-2 md:sticky md:top-0 md:self-start md:h-screen md:overflow-y-auto md:border-r md:px-3.5 md:pt-6 md:pb-7">
-          <div className="hidden md:block px-2 pb-5"><AppLogo /></div>
+          <div className="hidden md:block px-2 pb-5"><AreaLogo /></div>
           {/* the portal's existing main action (the Sourcing page's "+ New request") */}
           <Link href="/request/sourcing" className="hidden md:flex btn btn-primary w-full mb-3.5" data-testid="sidebar-new-request">+ New request</Link>
           <AccountTabs tabs={tabs} variant="sidebar" />
           <div className="hidden md:block"><SectionMenu tabs={tabs} menus={menus} /></div>
+          {/* brand pass 27 Nov: Ink footer band (Octopus Ink is the 50 % brand colour); white text on Ink is 15.9:1 */}
           <div className="hidden md:block mt-auto pt-6">
-            <form action="/auth/signout" method="post">
-              <button type="submit" className="app-nav w-full text-left bg-transparent">
+            <form action="/auth/signout" method="post" className="rounded-[14px] bg-ink p-1.5">
+              <button type="submit" className="app-nav w-full text-left bg-transparent text-white hover:bg-ink-2">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" /></svg>
                 Log out
               </button>

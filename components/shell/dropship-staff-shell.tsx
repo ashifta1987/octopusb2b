@@ -150,7 +150,7 @@ export function DropshipStaffShell({
           <span className="app-context-tile" aria-hidden="true">
             <DsIcon name={isFinanceSaas ? 'card' : 'package'} size={22} />
           </span>
-          <span className="min-w-0 text-[14px] font-bold leading-snug text-ink">
+          <span className="min-w-0 text-[14px] font-bold leading-snug text-white">
             {isFinanceSaas
               ? 'Finance · SaaS billing'
               : 'Back office · Dropshipping division'}

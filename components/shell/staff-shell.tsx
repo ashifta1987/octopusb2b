@@ -1,4 +1,4 @@
-import { AppLogo } from './app-logo';
+import { AreaLogo } from './area-logo';
 import { SideNav } from '@/components/side-nav';
 import { MaintenanceNotice } from '@/components/maintenance-notice';
 import { WorkspaceSwitcher, StaffUserMenu } from '@/components/portal-shell';
@@ -83,7 +83,7 @@ export function StaffShell({ area = 'staff', session, nav, counts, moderation, u
       <div className="app-cols md:grid md:grid-cols-[264px_minmax(0,1fr)] md:grid-rows-[auto_1fr] md:min-h-screen">
         <div className="md:col-start-2 md:row-start-1 min-w-0">
           <header className="app-topbar gap-x-4 gap-y-3">
-            <AppLogo size="bar" className="md:hidden" />
+            <AreaLogo size="bar" className="md:hidden" />
             <span className="text-[13px] font-bold px-3 py-1.5 rounded-full bg-ink text-white" data-testid="staff-only">Admin · staff only</span>
             <form action="/office/orders" role="search" className="order-3 lg:order-none basis-full lg:basis-auto lg:flex-1 lg:max-w-[520px]">
               <label htmlFor="staff-q" className="sr-only">Search orders by code or title</label>
@@ -109,7 +109,7 @@ export function StaffShell({ area = 'staff', session, nav, counts, moderation, u
           )}
         </div>
         <aside className="app-sidebar gap-3 md:gap-0 px-4 py-3 border-b md:border-b-0 md:col-start-1 md:row-start-1 md:row-span-2 md:sticky md:top-0 md:self-start md:h-screen md:overflow-y-auto md:border-r md:px-3.5 md:pt-6 md:pb-7">
-          <div className="hidden md:block px-2"><AppLogo /></div>
+          <div className="hidden md:block px-2"><AreaLogo /></div>
           {/* context box: the division the app already knows (the division switcher), else the current workspace */}
           <div className="app-context md:mx-1 md:mt-4 md:mb-2.5">
             <span className="app-context-tile" aria-hidden>
@@ -118,7 +118,7 @@ export function StaffShell({ area = 'staff', session, nav, counts, moderation, u
             <div className="min-w-0 flex-1">
               {hasDivisions && scope
                 ? <DivisionSwitcher variant="context" options={scope.options} current={scope.all ? null : scope.division.code} action={setDivisionScope} />
-                : <><span className="block text-[12px] text-muted">Workspace</span><b className="block mt-0.5 text-[15px] leading-tight text-ink">Admin</b></>}
+                : <><span className="block text-[12px] text-on-ink">Workspace</span><b className="block mt-0.5 text-[15px] leading-tight text-white">Admin</b></>}
             </div>
           </div>
           <SideNav sections={[...work, ...rest]} moderation={moderation} badges={{ '/admin': counts.queue, '/admin/notifications': unread, '/admin/approvals': counts.approvals, '/admin/finance/transfers': counts.transfers }} />

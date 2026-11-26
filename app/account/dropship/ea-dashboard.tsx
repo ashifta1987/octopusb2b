@@ -142,7 +142,7 @@ export async function EarlyAccessDashboard({ orgId, orgName, features }: { orgId
           {requests.length === 0 ? (
             <p className="m-0 px-5 py-4 text-[13.5px] text-muted">No requests yet. Ask our sourcing team for a product we don’t stock yet. It’s free.</p>
           ) : (
-            <div className="ds-scroll">
+            <div className="ds-scroll" tabIndex={0}>
               <table className="ds-tbl min-w-[640px]">
                 <thead><tr><th scope="col">Request</th><th scope="col">Product</th><th scope="col">Status</th><th scope="col">Next step</th></tr></thead>
                 <tbody>

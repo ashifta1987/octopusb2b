@@ -198,7 +198,7 @@ async function Content({ searchParams }: { searchParams: Promise<SP> }) {
     <>
       <JsonLd data={collectionLd} />
       <ServicePage testId="pools-page" afterHow={list} d={{
-        key: 'pools',
+        key: 'pools', brand: 'pools',
         crumb: 'MOQ pools',
         title: 'Factory minimum too big? Share it.',
         lead: 'Join other buyers to fill one factory order. You pay for your share, your money stays in escrow, and you are refunded if the pool does not fill.',

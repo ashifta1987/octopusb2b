@@ -89,7 +89,7 @@ export function Stat({ label, value, hint, hintTone }: { label: string; value: R
   return (
     <div className={cn('kpi', hintTone === 'warn' && 'kpi-warn')}>
       <div className="kpi-label">{label}</div>
-      <div className="mt-2 font-display text-[28px] sm:text-[32px] font-extrabold leading-tight text-ink">{value}</div>
+      <div className="mt-2 font-display text-[28px] sm:text-[32px] font-extrabold leading-tight tracking-[-0.01em] tabular-nums text-ink">{value}</div>
       {hint && <div className={cn('mt-2.5 text-sm', hintTone === 'ok' ? 'text-ok' : hintTone === 'warn' ? 'text-warn' : hintTone === 'bad' ? 'text-bad' : 'text-muted')}>{hint}</div>}
     </div>
   );
@@ -123,12 +123,12 @@ export function PageHeader({ title, subtitle, actions, eyebrow, icon }: { title:
 export function EmptyState({ title, body, action }: { title: string; body?: string; action?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center text-center py-12 px-6">
-      <div className="w-12 h-12 rounded-[14px] bg-tint text-coral-text flex items-center justify-center mb-3" aria-hidden>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 7h16M4 12h16M4 17h10" /></svg>
+      <div className="w-14 h-14 rounded-[16px] bg-tint text-coral-text flex items-center justify-center mb-4 ring-8 ring-tint-2" aria-hidden>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7h16M4 12h16M4 17h10" /></svg>
       </div>
-      <div className="font-semibold">{title}</div>
-      {body && <p className="text-sm text-muted mt-1 max-w-md">{body}</p>}
-      {action && <div className="mt-4">{action}</div>}
+      <div className="font-bold text-[16px] text-ink">{title}</div>
+      {body && <p className="text-sm text-muted mt-1.5 max-w-md leading-relaxed">{body}</p>}
+      {action && <div className="mt-5 flex flex-wrap justify-center gap-3">{action}</div>}
     </div>
   );
 }
@@ -173,9 +173,11 @@ export function OrderProgress({ status }: { status: string }) {
 
 /* ───────── Simple server-side table (DataTable for client lives in components/data-table) ───────── */
 export function Table({ head, children, empty }: { head: React.ReactNode[]; children: React.ReactNode; empty?: React.ReactNode }) {
-  const hasRows = Array.isArray(children) ? children.flat().filter(Boolean).length > 0 : !!children;
+  const rows = Array.isArray(children) ? children.flat().filter(Boolean).length : children ? 1 : 0;
+  const hasRows = rows > 0;
+  // brand pass 27 Nov: long tables (over 15 rows) scroll inside their region so the sticky header stays in view
   return (
-    <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Scrollable table">
+    <div className={cn('overflow-x-auto', rows > 15 && 'max-h-[min(75vh,880px)] overflow-y-auto')} tabIndex={0} role="region" aria-label="Scrollable table">
       <table className="w-full border-collapse">
         <thead><tr>{head.map((h, i) => <th key={i} className="th">{h}</th>)}</tr></thead>
         <tbody>{hasRows ? children : <tr><td colSpan={head.length}>{empty ?? <EmptyState title="Nothing here yet" />}</td></tr>}</tbody>

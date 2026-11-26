@@ -87,7 +87,7 @@ export function MarkupCard({ page }: { page: MarkupPage }) {
         {msg && <p role={msg.ok ? 'status' : 'alert'} data-testid="markup-msg" className={`m-0 text-[13px] ${msg.ok ? 'text-ok' : 'text-bad'}`}>{msg.text}</p>}
 
         {page.history.length > 0 && (
-          <div className="ds-scroll">
+          <div className="ds-scroll" tabIndex={0}>
             <table className="ds-tbl min-w-[640px]" data-testid="markup-history">
               <thead><tr><th scope="col">Change</th><th scope="col">Status</th><th scope="col">Proposed</th><th scope="col">Decided</th></tr></thead>
               <tbody>

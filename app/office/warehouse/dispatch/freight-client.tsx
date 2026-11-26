@@ -66,7 +66,7 @@ export function Freight({ board, warehouseNames, cities }: { board: DispatchBoar
 export function PalletLabel({ p, warehouse }: { p: FreightPallet; warehouse: string }) {
   const parcels = p.orders.reduce((n, o) => n + o.parcels, 0);
   return (
-    <div className="bg-white text-black border border-black rounded-[4px] p-3 flex flex-col gap-1.5 w-[100mm] min-h-[70mm] max-w-full box-border" data-testid={`wh-pallet-label-${p.code}`}>
+    <div className="bg-white text-black border border-black rounded-sm p-3 flex flex-col gap-1.5 w-[100mm] min-h-[70mm] max-w-full box-border" data-testid={`wh-pallet-label-${p.code}`}>
       <div className="flex justify-between text-[11px] uppercase tracking-[.08em]"><span>Freight pallet</span><span>From {warehouse}</span></div>
       <div className="text-[30px] font-bold font-mono leading-none">{p.code}</div>
       <div className="text-[15px] font-semibold">To {p.destination}</div>

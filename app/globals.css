@@ -102,25 +102,32 @@
   --color-ok-soft: var(--ok-soft);
   --color-warn-line: var(--warn-line);
   --color-switch-off: var(--switch-off);
-  /* Degular (text) / Degular Display (headings) / Futura (labels); Figtree / Jost until the licences arrive */
+  /* Degular (text) / Degular Display (headings) / Futura (labels). Stand-ins until the licences arrive (app/layout.tsx):
+     Figtree = Degular, Plus Jakarta Sans = Degular Display, Jost = Futura. Swap the next/font import, not these names. */
   --font-sans: var(--font-text), system-ui, sans-serif;
-  --font-display: var(--font-text), sans-serif; /* Degular Display when licensed */
+  --font-display: var(--font-heading), var(--font-text), sans-serif; /* Degular Display when licensed */
+  /* brand pass (27 Nov): one soft elevation, used on hover/focus only (Ink at 12%) */
+  --shadow-lift: 0 10px 28px rgb(26 23 74 / 0.12), 0 2px 6px rgb(26 23 74 / 0.06);
   --font-mono: var(--font-label), system-ui, sans-serif;
 }
 
 html { -webkit-text-size-adjust: 100%; }
 body { background: var(--pearl); color: var(--black); font-family: var(--font-sans); font-size: 16px; line-height: 1.6; }
 h1, h2, h3, h4 { font-family: var(--font-display); color: var(--ink); letter-spacing: -0.01em; line-height: 1.12; }
+/* display sizes track slightly tighter (brand pass 27 Nov) */
+h1 { letter-spacing: -0.025em; }
+h2 { letter-spacing: -0.02em; }
 @layer base {
-  /* ADDON-46 type scale defaults (page utilities still win): H1 50/1.05 (phone 34), H2 34/1.12 (phone 25) */
+  /* ADDON-46 type scale defaults (page utilities still win): H1 50/1.05 800 (phone 34), H2 34/1.12 700 (phone 25), card titles 600 */
   h1 { font-size: 34px; line-height: 1.05; font-weight: 800; }
-  h2 { font-size: 25px; font-weight: 800; }
+  h2 { font-size: 25px; font-weight: 700; }
+  h3, h4 { font-weight: 600; }
   @media (min-width: 761px) { h1 { font-size: 50px; } h2 { font-size: 34px; } }
 }
 :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
 
 @layer components {
-  .btn { @apply inline-flex items-center justify-center gap-2 min-h-12 px-[18px] rounded-[10px] font-semibold text-[15px] leading-none border border-transparent cursor-pointer whitespace-nowrap transition-colors disabled:opacity-50 disabled:cursor-not-allowed; }
+  .btn { @apply inline-flex items-center justify-center gap-2 min-h-12 px-[18px] rounded-[10px] font-semibold text-[15px] leading-none border border-transparent cursor-pointer whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed; }
   .btn-sm { @apply min-h-11 px-3 text-sm; }
   /* ADDON-44 sizes: public pages 48 px, hero 52 px (account pages keep the 44 px default) */
   .btn-pub { @apply min-h-12; }
@@ -155,6 +162,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); color: var(--ink); letter-spa
      fill with muted text (AA 5.0:1) instead of 50 % opacity. Declared after the variants so it beats their hover. */
   .btn { font-weight: 700; }
   .btn:disabled { background-color: var(--disabled); color: var(--muted); border-color: transparent; opacity: 1; }
+  /* colour fades only on hover: a button that turns enabled switches at once (no half-faded, low-contrast frame) */
+  .btn:hover:not(:disabled) { transition: background-color .15s, color .15s, border-color .15s; }
   .btn-ghost { @apply hover:bg-sand; }
   /* skip link (§7): off-screen until focused */
   .skip-link { @apply absolute left-[-9999px] top-2 z-[100] rounded-[8px] bg-white px-4 py-2.5 font-bold text-ink shadow-lg focus:left-2; }
@@ -171,6 +180,17 @@ h1, h2, h3, h4 { font-family: var(--font-display); color: var(--ink); letter-spa
   .app-shell .td { @apply border-divider py-4; }
   /* codes and money in table cells never break mid-value ("US$ / 180.00", "TEST-ORD- / MMB"); tables scroll inside their region */
   .app-shell .td .mono, .app-shell .td.mono { white-space: nowrap; }
+  /* brand pass 27 Nov — tables: sticky header (works inside the long-table scroll region of <Table>), soft zebra and an Ink-tinted
+     row hover. Rows that already carry their own background (selected / flagged rows) keep it. */
+  .app-shell .th { position: sticky; top: 0; z-index: 1; }
+  .app-shell tbody > tr:nth-child(even):not([class*="bg-"]) > .td { background-color: color-mix(in srgb, var(--pearl) 55%, white); }
+  .app-shell tbody > tr:not([class*="bg-"]):hover > .td { background-color: var(--tint-2); }
+  .app-shell tbody > tr:hover > .td { transition: background-color 120ms ease; }
+  /* hover feedback on everything interactive in the shells (the 3 px focus ring itself is global). Like .btn, the colour only
+     fades while hovered, so a state change (aria-pressed, aria-current) never shows a half-faded, low-contrast frame. */
+  :is(.app-nav, .chip, .toggle-btn, .app-ibtn, .app-chip, .check-item, .switch):hover { transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease; }
+  .app-shell a.card:hover, .app-shell a.kpi:hover, .app-shell button.kpi:hover { @apply border-line-strong shadow-[0_2px_10px_rgb(26_23_74/0.07)]; }
+  /* spacing scale used by the shells and page furniture: 4 · 8 · 12 · 16 · 20 · 24 · 28 · 36 · 48 px (Tailwind 1–12) */
 
   /* App shell building blocks (shared by every portal shell so they look like one product) */
   .app-sidebar { @apply bg-white border-line flex flex-col; }
@@ -184,8 +204,10 @@ h1, h2, h3, h4 { font-family: var(--font-display); color: var(--ink); letter-spa
   .app-nav[aria-current="page"], .app-nav[aria-current="true"], .app-nav.is-on { @apply bg-tint border-coral font-bold hover:bg-tint; }
   .app-nav > svg { flex: none; }
   /* context box (back office): pearl, 1 px line, 14 px radius, 48 px tile, 12 px muted label, 15 px bold navy value */
-  .app-context { @apply flex items-center gap-3 rounded-[14px] border border-line bg-pearl px-3 py-2.5; }
-  .app-context-tile { @apply flex-none w-12 h-12 rounded-[10px] bg-tint text-coral-text flex items-center justify-center; }
+  /* brand pass 27 Nov: the context box is the sidebar's Octopus Ink block (Ink = the 50 % brand colour); white text 15.9:1,
+     on-ink label 11.4:1. The logo stays on the white sidebar above it (brand guide: logos on white / Pearl / Ink / black). */
+  .app-context { @apply flex items-center gap-3 rounded-[14px] border border-ink bg-ink text-white px-3 py-2.5; }
+  .app-context-tile { @apply flex-none w-12 h-12 rounded-[10px] bg-ink-card text-on-ink-link flex items-center justify-center; }
   .app-topbar { @apply bg-white border-b border-line flex flex-wrap items-center gap-3 px-4 sm:px-6 lg:px-12 py-3.5; }
   /* 46 px icon button (notifications, help) */
   .app-ibtn { @apply relative w-[46px] h-[46px] flex-none rounded-[12px] border border-line bg-white text-ink flex items-center justify-center hover:bg-sand; }
@@ -196,10 +218,11 @@ h1, h2, h3, h4 { font-family: var(--font-display); color: var(--ink); letter-spa
   /* page heading: 52 px tint icon tile + H1 34/800 + one-line subtitle */
   .app-tile { @apply flex-none w-[52px] h-[52px] rounded-[14px] bg-tint text-coral-text flex items-center justify-center; }
   /* KPI card: white, line border, 16 px, 22/24 padding; label 14 muted, value 32/800 navy; amber when it needs attention */
+  /* KPI hierarchy: label (14 medium muted) → Ink number (32/800, tabular) → sub-line (14 muted); amber edge when it needs attention */
   .kpi { @apply bg-white border border-line rounded-[16px] px-6 py-[22px] min-w-0; }
-  .kpi-warn { @apply border-warn-line; }
-  .kpi-label { @apply text-sm text-muted; }
-  .kpi-value { @apply mt-2 text-[32px] font-extrabold leading-none text-ink; }
+  .kpi-warn { @apply border-warn-line shadow-[inset_0.25rem_0_0_var(--warn-line)]; }
+  .kpi-label { @apply text-sm font-medium text-muted; }
+  .kpi-value { @apply mt-2 text-[32px] font-extrabold leading-none tracking-[-0.01em] tabular-nums text-ink; }
   /* filter chip: 40 px, rounded; selected = blue with white text (aria-pressed / aria-current) */
   .chip { @apply inline-flex items-center gap-1.5 min-h-10 px-4 rounded-full border border-line-strong bg-white text-sm font-bold text-ink whitespace-nowrap hover:bg-sand; }
   .chip[aria-pressed="true"], .chip[aria-current="page"], .chip[aria-current="true"], .chip[aria-selected="true"] { @apply bg-coral border-coral text-white hover:bg-coral-text; }
@@ -235,9 +258,20 @@ h1, h2, h3, h4 { font-family: var(--font-display); color: var(--ink); letter-spa
 @media (min-width: 1000px) {
   .stick { position: sticky; top: 24px; align-self: flex-start; }
 }
+/* brand pass: numbers and prices in the display face, aligned figures */
+@layer components {
+  .num { font-family: var(--font-display); font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+  /* linked / interactive cards: flat at rest, soft lift on hover and keyboard focus (no movement) */
+  .card-lift { transition: box-shadow .2s ease, border-color .2s ease; }
+  .card-lift:hover, .card-lift:focus-visible, .card-lift:focus-within { box-shadow: 0 10px 28px rgb(26 23 74 / 0.12), 0 2px 6px rgb(26 23 74 / 0.06); }
+}
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  /* brand pass 27 Nov: run looping animations (skeleton pulse, spinners) once instead of flickering; no smooth scrolling */
+  .app-shell *, .app-shell *::before, .app-shell *::after { animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
 }
+/* focus ring on Octopus Ink surfaces: Coral text on Ink is only ~3:1, so the ring switches to the on-Ink link colour (10:1) */
+.app-context :focus-visible, .bg-ink :focus-visible { outline-color: var(--on-ink-link); }
 
 /* ───────────────────────────────────────────────────────────────────────────
  * Octopus Dropship — design v2 tokens & utility classes (docs/design/dropship-v2/specs/tokens.css)
@@ -453,6 +487,9 @@ h1, h2, h3, h4 { font-family: var(--font-display); color: var(--ink); letter-spa
   }
   /* table header: Jost 12 px caps, muted, on white */
   .ds-v2 .ds-tbl th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
     text-align: left;
     font-family: var(--font-label), system-ui, sans-serif;
     font-size: 12px;

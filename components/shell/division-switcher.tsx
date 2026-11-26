@@ -16,12 +16,12 @@ export function DivisionSwitcher({ options, current, action, variant = 'header' 
   const ctx = variant === 'context';
   return (
     <form ref={form} action={action} className={ctx ? 'flex flex-col gap-0.5 min-w-0' : 'flex items-center gap-2'} data-testid="division-switcher">
-      <label htmlFor="division-switch" className={ctx ? 'block text-[12px] text-muted' : 'sr-only'}>Division</label>
+      <label htmlFor="division-switch" className={ctx ? 'block text-[12px] text-on-ink' : 'sr-only'}>Division</label>
       <div className={ctx ? 'flex items-center gap-2 min-w-0' : 'contents'}>
         <select key={current ?? 'all'} id="division-switch" name="division" defaultValue={current ?? 'all'} disabled={pending}
           onChange={() => start(() => form.current?.requestSubmit())}
           className={ctx
-            ? 'w-full min-w-0 min-h-11 -ml-1 rounded-[10px] border border-transparent bg-transparent text-ink text-[15px] font-bold leading-tight px-1 pr-6 hover:border-line-strong hover:bg-white disabled:text-muted'
+            ? 'w-full min-w-0 min-h-11 -ml-1 rounded-[10px] border border-transparent bg-transparent text-white text-[15px] font-bold leading-tight px-1 pr-6 hover:border-white/40 hover:bg-ink-2 disabled:text-on-ink [&>option]:text-ink [&>option]:bg-white'
             : 'min-h-11 rounded-[10px] border border-line-strong bg-white text-ink text-sm font-semibold px-3 pr-8 hover:border-ink'}>
           {!single && <option value="all">All divisions</option>}
           {options.map((d) => <option key={d.code} value={d.code}>{d.name}{d.status !== 'active' ? ' (inactive)' : ''}</option>)}

@@ -83,11 +83,10 @@ test('/products?pool=1 shows a Start pool button on each card', async ({ page })
   await expect(first).toHaveAttribute('href', /^\/pools\/start\?product=/);
 });
 
-test('home "Also on Octopus" cards open public explainers with a sign-in button', async ({ page }) => {
+test('public explainers (wallet, assistant, developers) have a sign-in button', async ({ page }) => {
+  // the 26 Nov homepage redesign replaced the "Also on Octopus" cards; the explainer pages stay public
   for (const [path, next] of [['/wallet', '/account/wallet'], ['/assistant', '/account/assistant'], ['/developers', '/account/developer']]) {
-    await page.goto('/');
-    await page.locator(`a[href="${path}"]:visible`).first().click();
-    await page.waitForURL(new RegExp(`${path}$`));
+    await page.goto(path);
     await expect(page.getByTestId('explainer-signin')).toHaveAttribute('href', `/login?next=${encodeURIComponent(next)}`);
   }
 });

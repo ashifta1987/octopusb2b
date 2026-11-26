@@ -117,7 +117,7 @@ export function ClientsClient({ apps, clients, plans, canManage, warehouseNames 
       </div>
       <DsCard title={`Clients (${clients.length})`} icon="users" noPadding testId="wh-clients">
         {clients.length === 0 ? <p className="m-0 px-5 py-4 text-[13.5px] text-muted">No approved clients yet.</p> : (
-          <div className="ds-scroll"><table className="ds-tbl min-w-[620px]">
+          <div className="ds-scroll" tabIndex={0}><table className="ds-tbl min-w-[620px]">
             <thead><tr><th scope="col">Company</th><th scope="col">Plan</th><th scope="col">Preferred warehouse</th><th scope="col">Status</th><th scope="col">Since</th></tr></thead>
             <tbody>{clients.map((c) => (
               <tr key={c.org_id}><td>{c.organizations?.name ?? '—'}</td><td>{planName[c.plan_code] ?? c.plan_code}</td><td>{c.preferred_warehouse ? warehouseNames[c.preferred_warehouse] ?? c.preferred_warehouse : '—'}</td>

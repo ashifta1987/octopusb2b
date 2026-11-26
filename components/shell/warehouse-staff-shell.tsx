@@ -69,11 +69,11 @@ export function WarehouseStaffShell({
       <a href="#wh-staff-main" className="skip-link print:hidden">Skip to content</a>
       <nav aria-label="Warehouse" data-testid="warehouse-sidebar" className="print:hidden app-sidebar w-full box-border gap-1 border-b md:border-b-0 md:border-r px-4 pt-4 pb-2 md:px-3.5 md:pt-6 md:pb-7 md:col-start-1 md:row-start-1 md:row-span-2 md:sticky md:top-0 md:self-start md:h-screen md:overflow-y-auto">
         <div className="px-2 pb-3 md:pb-4">
-          <AppLogo variant="b2b" href="/office/warehouse" label="Octopus B2B" className="[&_img]:h-[40px] md:[&_img]:h-[48px]" />
+          <AppLogo variant="3pl" href="/office/warehouse" label="Octopus B2B" className="[&_img]:h-[44px] md:[&_img]:h-[56px]" />
         </div>
         <div className="app-context mb-1 md:mb-2">
           <span className="app-context-tile" aria-hidden="true"><DsIcon name="box" size={22} /></span>
-          <span className="min-w-0 text-[14px] font-bold leading-snug text-ink">Warehouse OS · 3PL and logistics</span>
+          <span className="min-w-0 text-[14px] font-bold leading-snug text-white">Warehouse OS · 3PL and logistics</span>
         </div>
         <div className="app-grp hidden md:block">Menu</div>
         <div className="flex md:flex-col gap-1 overflow-x-auto md:overflow-visible pt-1 pb-2 md:p-0" role="region" aria-label="Warehouse navigation" tabIndex={0}>

@@ -37,7 +37,7 @@ export function CatalogueClient({ projects }: { projects: Card[] }) {
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap justify-between items-end gap-4">
         <div>
-          <h2 id="tk-projects-h" className="m-0 text-[length:clamp(26px,4.5vw,34px)] font-extrabold">Projects</h2>
+          <h2 id="tk-projects-h" className="m-0 text-[length:clamp(26px,4.5vw,34px)] font-bold">Projects</h2>
           <p className="m-0 mt-1 text-[16px] text-muted" role="status" data-testid="tk-count">{list.length} project{list.length === 1 ? '' : 's'}</p>
         </div>
         <div className="flex flex-wrap gap-3 items-end">
@@ -78,7 +78,7 @@ export function CatalogueClient({ projects }: { projects: Card[] }) {
         <ul className="list-none m-0 p-0 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5" data-testid="tk-cards">
           {list.slice(0, shown).map((p) => (
             <li key={p.project_id} className="min-w-0 flex">
-              <button type="button" onClick={() => show(p)} className="w-full text-left rounded-[18px] border border-line bg-white overflow-hidden hover:border-coral-text cursor-pointer flex flex-col"
+              <button type="button" onClick={() => show(p)} className="card-lift w-full text-left rounded-[18px] border border-line bg-white overflow-hidden hover:border-coral-text cursor-pointer flex flex-col"
                 data-testid={`tk-card-${p.project_id}`} aria-haspopup="dialog">
                 <span className="relative block w-full aspect-[3/2] bg-tint">
                   {p.image
@@ -87,8 +87,8 @@ export function CatalogueClient({ projects }: { projects: Card[] }) {
                 </span>
                 <span className="px-5 pt-4 pb-5 flex flex-col gap-1">
                   <span className="text-[13px] font-semibold text-coral-text">{categoryLabel(p.category)}</span>
-                  <span className="text-[19px] font-bold text-ink leading-tight">{p.title}</span>
-                  {projectFrom(p) && <span className="text-[14px] text-muted">{projectFrom(p)}</span>}
+                  <span className="font-display text-[19px] font-semibold text-ink leading-tight">{p.title}</span>
+                  {projectFrom(p) && <span className="num text-[15px] font-semibold text-ink">{projectFrom(p)}</span>}
                 </span>
               </button>
             </li>
@@ -114,7 +114,7 @@ export function CatalogueClient({ projects }: { projects: Card[] }) {
             </div>
             <div className="p-6 flex flex-col gap-3">
               <span className="text-[13px] font-semibold text-coral-text">{categoryLabel(open.category)}</span>
-              <h3 id="tk-dlg-title" className="text-[26px] font-extrabold m-0">{open.title}</h3>
+              <h3 id="tk-dlg-title" className="text-[26px] font-bold m-0">{open.title}</h3>
               {open.short_reason && <p className="m-0 text-[16px] text-muted">{open.short_reason}</p>}
               <dl className="m-0 grid grid-cols-[140px_1fr] gap-y-1 text-[15px]">
                 {projectFrom(open) && <><dt className="text-muted">Starting budget</dt><dd className="m-0 text-black">{projectFrom(open)}</dd></>}

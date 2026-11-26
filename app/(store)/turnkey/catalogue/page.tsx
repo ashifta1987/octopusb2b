@@ -6,7 +6,7 @@ import { notFound } from 'next/navigation';
 import { getSiteContent, block } from '@/lib/content';
 import { getTurnkeyCatalogue, getTkServices } from '@/lib/turnkey/catalogue';
 import { servicePrice, tkImageUrl } from '@/lib/turnkey/format';
-import { h1Class, h2Class, eyebrowClass, btn, Crumb, SUPPORT_EMAIL } from '@/components/site/ui';
+import { h1Class, h2Class, eyebrowClass, btn, space, Crumb, BrandMark, SUPPORT_EMAIL } from '@/components/site/ui';
 import { siteImage, shareImage } from '@/lib/site-images';
 import { CatalogueClient } from '../catalogue-client';
 
@@ -65,6 +65,7 @@ async function Catalogue() {
       <section id="top" className="px-4 sm:px-6 pt-8 pb-6" aria-labelledby="tk-h1">
         <div className="max-w-[1200px] mx-auto flex flex-wrap gap-10 items-center justify-between">
           <div className="flex-[1_1_520px] min-w-0 max-w-[680px]">
+            <BrandMark brand="turnkey" className="mb-3" />
             <p className={`${eyebrowClass} m-0 text-coral-text`}>Turnkey projects</p>
             <h1 id="tk-h1" className={`${h1Class} mt-3`}>Your complete business, set up from China</h1>
             <p className="mt-4 mb-0 text-[18px] leading-[1.6] text-muted">Pick a project to see what it involves, or ask us for a new one. You deal only with Octopus, from first enquiry to handover.</p>
@@ -95,7 +96,7 @@ async function Catalogue() {
       </section>
 
       {/* phases */}
-      <section id="phases" className="bg-ink text-white px-4 sm:px-6 py-[72px] scroll-mt-4" aria-labelledby="tk-how-h">
+      <section id="phases" className={`bg-ink text-white px-4 sm:px-6 ${space.section} scroll-mt-4`} aria-labelledby="tk-how-h">
         <div className="max-w-[1200px] mx-auto">
           <h2 id="tk-how-h" className={`${h2Class} !text-white`}>How it works: eight phases</h2>
           <p className="mt-3 mb-0 text-[18px] text-on-ink">Each paid phase starts after your payment is confirmed. Only the enquiry is free.</p>
@@ -116,7 +117,7 @@ async function Catalogue() {
       </section>
 
       {/* team */}
-      <section className="px-4 sm:px-6 py-[72px]" aria-labelledby="tk-team-h" data-testid="tk-team">
+      <section className={`px-4 sm:px-6 ${space.section}`} aria-labelledby="tk-team-h" data-testid="tk-team">
         <div className="max-w-[1200px] mx-auto">
           <h2 id="tk-team-h" className={h2Class}>Your team in China</h2>
           <div className="mt-7 flex flex-wrap gap-5">
@@ -162,11 +163,11 @@ async function Catalogue() {
       )}
 
       {/* closing */}
-      <section className="bg-tint px-4 sm:px-6 py-[72px] text-center" aria-labelledby="tk-new-h">
+      <section className={`bg-ink px-4 sm:px-6 ${space.section} text-center`} aria-labelledby="tk-new-h">
         <div className="max-w-[720px] mx-auto">
-          <h2 id="tk-new-h" className={h2Class}>Don&apos;t see your project?</h2>
-          <p className="mt-3 mb-0 text-[18px] text-ink">Send a free enquiry and we will scope it for you.</p>
-          <p className="mt-6 mb-0"><Link href="/account/turnkey/new" className={btn.dark} data-testid="tk-new-enquiry">Start a free enquiry</Link></p>
+          <h2 id="tk-new-h" className={`${h2Class} !text-white`}>Don&apos;t see your project?</h2>
+          <p className="mt-3 mb-0 text-[18px] text-on-ink">Send a free enquiry and we will scope it for you.</p>
+          <p className="mt-6 mb-0"><Link href="/account/turnkey/new" className={btn.primary} data-testid="tk-new-enquiry">Start a free enquiry</Link></p>
         </div>
       </section>
     </div>
