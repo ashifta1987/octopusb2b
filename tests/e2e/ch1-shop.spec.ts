@@ -3,6 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { createTempCustomer, customerLogin, pgClient, purgeTestOrgs, type TempCustomer } from './helpers/customer';
 import { createTempStaff, deleteTempStaff, staffLogin, type TempStaff } from './helpers/staff';
 import { assertStagingOrThrow, assertStagingDatabase } from '../../scripts/lib-staging-guard.mjs';
+import { getShopFlag, setShopFlag, type ShopFlag } from './helpers/shop-flag';
 
 /**
  * CH-1 Shop E2E (STAGING ONLY) — Shop_Home / M_Shop_Home / Shop_Products / M_Shop_Products, owner prompt §1 + §5.
@@ -20,6 +21,7 @@ const created: TempCustomer[] = [];
 let buyer: TempCustomer;
 let staff: TempStaff | null = null;
 let products: { id: string; slug: string; title: string; moq: number }[] = [];
+let shopFlagBefore: ShopFlag;
 let leak: { codes: string[]; names: string[]; models: string[]; skus: string[] } = { codes: [], names: [], models: [], skus: [] };
 
 async function axe(page: Page, label: string) {
@@ -30,6 +32,9 @@ async function axe(page: Page, label: string) {
 
 test.beforeAll(async () => {
   await assertStagingOrThrow();
+  // these tests need the Shop ON (the staging default); an explicit OFF left by someone is switched on and put back afterwards
+  shopFlagBefore = await getShopFlag();
+  if (shopFlagBefore === false) await setShopFlag(true);
   const db = pgClient(); await db.connect();
   try {
     await assertStagingDatabase(db);
@@ -52,6 +57,7 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
+  if (shopFlagBefore === false) await setShopFlag(false);
   await purgeTestOrgs(created.map((c) => c.orgId), created.map((c) => c.id));
   await deleteTempStaff(staff);
 });
@@ -247,6 +253,7 @@ test('7 · no supplier / cost leaks in HTML, RSC payload or image URLs', async (
 });
 
 test('8 · axe at 1280 and 390', async ({ browser }) => {
+  test.setTimeout(240_000); // 6 pages × 2 widths, each settled + axe
   for (const vp of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
     const ctx = await browser.newContext({ viewport: vp });
     const page = await ctx.newPage();

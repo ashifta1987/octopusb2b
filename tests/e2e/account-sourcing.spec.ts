@@ -18,7 +18,7 @@ test.beforeAll(async () => {
   await db.query(`insert into wallet_credit_limits(org_id, limit_minor, currency, note) values ($1, 100000, current_platform_currency(), 'e2e')`, [A.orgId]);
   await db.end();
 });
-test.afterAll(async () => { await purgeTestOrgs([A?.orgId, B?.orgId].filter(Boolean) as string[], [A?.id, B?.id].filter(Boolean) as string[]); });
+test.afterAll(async () => { test.setTimeout(240_000); await purgeTestOrgs([A?.orgId, B?.orgId].filter(Boolean) as string[], [A?.id, B?.id].filter(Boolean) as string[]); });
 
 test('a customer submits a sourcing request and sees it in Product sourcing', async ({ page }) => {
   await customerLogin(page, A!, '/account/sourcing');

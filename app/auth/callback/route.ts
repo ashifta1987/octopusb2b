@@ -3,7 +3,8 @@ import { createAdminClient, createClient } from '@/lib/supabase/server';
 import { emailIsStaff, isStaffUser } from '@/lib/staff/server';
 import { metaFromHeaders } from '@/lib/staff/request-meta';
 import { friendlyAuthError } from '@/lib/auth-errors';
-import { safeNext as safeSameSiteNext, CUSTOMER_HOME } from '@/lib/safe-next';
+import { safeNext as safeSameSiteNext } from '@/lib/safe-next';
+import { isShopEnabled, customerHome } from '@/lib/shop/flag';
 
 /**
  * OAuth / email-link callback: exchanges the code for a session, then routes to onboarding if there is no profile.
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
   const code = url.searchParams.get('code');
   const via = url.searchParams.get('via');
   // CH-1: customers land on the Shop; strict same-site check (lib/safe-next.ts)
-  const safeNext = safeSameSiteNext(url.searchParams.get('next'), CUSTOMER_HOME);
+  const safeNext = safeSameSiteNext(url.searchParams.get('next'), customerHome(await isShopEnabled()));
   const to = (p: string) => NextResponse.redirect(new URL(p, url.origin));
 
   // the old staff Google entry point is closed — staff use email + password (SPEC §17, §22)

@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import { safeAccountNext } from '@/lib/signup-service';
+import { isShopEnabled, customerHome } from '@/lib/shop/flag';
 import { Logo } from '@/components/ui';
 import { getSession } from '@/lib/auth';
 import { createClient } from '@/lib/supabase/server';
@@ -33,7 +34,7 @@ async function save(formData: FormData) {
     p_full_name: d.full_name, p_company: d.company, p_country: d.country, p_phone: d.phone, p_business_type: d.business_type, p_city: d.city ?? null,
   });
   if (error) redirect('/onboarding?error=' + encodeURIComponent(mapDbError(error)));
-  redirect(safeAccountNext(formData.get('next')));
+  redirect(safeAccountNext(formData.get('next'), customerHome(await isShopEnabled())));
 }
 
 /** Staff (role or staff email domain) never get a customer profile/org (SPEC §17.3). */
@@ -52,8 +53,9 @@ export default function OnboardingPage(props: { searchParams: Promise<{ error?: 
 
 async function Onboarding({ searchParams }: { searchParams: Promise<{ error?: string; next?: string }> }) {
   const s = await getSession();
-  const next = safeAccountNext((await searchParams).next);
-  if (!s) redirect(`/login?next=${encodeURIComponent(next === '/shop' ? '/onboarding' : `/onboarding?next=${encodeURIComponent(next)}`)}`); // CH-1: the Shop is the default
+  const landing = customerHome(await isShopEnabled());
+  const next = safeAccountNext((await searchParams).next, landing);
+  if (!s) redirect(`/login?next=${encodeURIComponent(next === landing ? '/onboarding' : `/onboarding?next=${encodeURIComponent(next)}`)}`); // CH-1: the Shop is the default
   if (s.profile && s.org) redirect(next);
   if (s.isStaff || (await refuseStaff(s.userId, s.email))) {
     return (

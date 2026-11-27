@@ -60,6 +60,7 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
+  test.setTimeout(240_000);
   const db = pgClient();
   await db.connect();
   try {

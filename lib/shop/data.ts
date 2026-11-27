@@ -1,6 +1,8 @@
 import 'server-only';
 import { cache } from 'react';
+import { redirect } from 'next/navigation';
 import { requireCustomer } from '@/lib/auth';
+import { isShopEnabled } from './flag';
 import { createClient } from '@/lib/supabase/server';
 import { getAccountContext, nowIso } from '@/lib/core/account';
 import { countWaiting } from '@/lib/core/waiting';
@@ -13,6 +15,8 @@ import type { ShopRole } from './shared';
  * as the /account shell, so both tabs always show the same numbers. Request-time data: only ever called inside <Suspense>.
  */
 export const getShopViewer = cache(async () => {
+  // the proxy already sends /shop/* to /account while the Shop is switched off; this is the server-side backstop
+  if (!(await isShopEnabled())) redirect('/account');
   const s = await requireCustomer('/shop');
   const org = s.org!;
   const sb = await createClient();

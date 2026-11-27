@@ -4,6 +4,6 @@ export const SERVICE_TARGET: Record<string, string> = {
   sourcing: '/account/sourcing', dropship: '/account/dropship', '3pl': '/account/warehouse', warehouse: '/account/warehouse', brand: '/account/brand',
 };
 /** Only My account / Shop paths survive (no open redirects). CH-1: the default is the Shop (main page after login). */
-export const safeAccountNext = (v: unknown) => safeCustomerNext(v, CUSTOMER_HOME);
-/** /onboarding, carrying where to go afterwards when it is not the default (the Shop). */
-export const onboardingHref = (next: string) => (safeAccountNext(next) === CUSTOMER_HOME ? '/onboarding' : `/onboarding?next=${encodeURIComponent(safeAccountNext(next))}`);
+export const safeAccountNext = (v: unknown, home: string = CUSTOMER_HOME) => safeCustomerNext(v, home);
+/** /onboarding, carrying where to go afterwards when it is not the default (`home`: the Shop, or /account while the Shop is off). */
+export const onboardingHref = (next: string, home: string = CUSTOMER_HOME) => (safeAccountNext(next, home) === home ? '/onboarding' : `/onboarding?next=${encodeURIComponent(safeAccountNext(next, home))}`);

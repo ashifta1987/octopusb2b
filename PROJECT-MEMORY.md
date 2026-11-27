@@ -131,3 +131,5 @@ Second 2FA phone; Resend app emails (launch blocker); pay Google Workspace (supp
 ## 12. Owner decisions (27 Nov, afternoon)
 - CH-1 Shop: the built defaults stand (owner: "you can delete the 5 shop questions"): sourcing fee charged once per quote-list request; "customisable"/"samples" are staff-ticked product tags; wallet visible in the Shop bar like /account; turnkey cards say timeline/MOQ "in your quote"; staff opening / see the public website.
 - The 3 company-less gmail logins on live stay.
+- 27 Nov 19:24: NEW THEME = ODS 1.0 (docs/design/dropship-v2/NEW-THEME-MASTER-PROMPT.md wins over older prompts). Owner chose the FULL ODS palette and font (Inter, navy #1A174A, blue #2A6FD1, teal #5FD3C9, canvas #F4F6F9), replacing the Rubik + Ink/Coral/Pearl look live today. Work in steps T0–T11 behind flag ods_theme_v1; T0 (route audit) first, then wait for "go" before T1. Rule from the prompt: never sign in to or create accounts on live from now on.
+- 27 Nov 19:24: next live release = homepage Dropship card fix + C0 (250) + 251 tables, with the Shop switched OFF on live (shop_enabled). The quote-list Shop stays on staging; ODS replaces it with the Cart.

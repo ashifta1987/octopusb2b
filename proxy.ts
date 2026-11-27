@@ -4,7 +4,8 @@ import { NextResponse, type NextRequest } from 'next/server';
 import {
   DEFAULT_LIMITS, EXPIRED_COOKIE, STAFF_COOKIE, sessionState, signExpiredMarker, signStaffCookie, staffCookieOptions, verifyStaffCookie,
 } from '@/lib/staff/session-cookie';
-import { safeNext, CUSTOMER_HOME } from '@/lib/safe-next';
+import { safeNext } from '@/lib/safe-next';
+import { isShopEnabled, SHOP_HOME } from '@/lib/shop/flag';
 import { STAFF_ROLES } from '@/lib/roles';
 
 /** Customer portals: signed-out visitors go to the customer login. CH-1: the Shop (/shop) is signed-in only too. */
@@ -217,11 +218,19 @@ async function route(request: NextRequest) {
     return response;
   }
 
-  // CH-1: signed-in customers land in the Shop; staff keep seeing the website; any lookup failure shows the page as before
-  if (user && SIGNED_IN_LANDING.includes(path)) {
-    const home = await signedInHome(supabase, user.sub as string);
+  // Shop switch (lib/shop/flag.ts): read only where it matters (/shop/* and the signed-in landing paths), never cached
+  const shopPath = under(path, '/shop');
+  const landing = !!user && SIGNED_IN_LANDING.includes(path);
+  const shopOn = shopPath || landing ? await isShopEnabled() : true;
+  // Shop OFF (live until the owner switches it on): /shop and everything under it → the account panel
+  if (shopPath && !shopOn) return redirectTo('/account');
+
+  // CH-1 (Shop ON): signed-in customers land in the Shop; staff keep seeing the website; any lookup failure shows the page as
+  // before. Shop OFF: no redirect at all (the pre-CH-1 behaviour; sign-in itself still sends suppliers to /supplier).
+  if (landing && shopOn) {
+    const home = await signedInHome(supabase, user!.sub as string);
     if (home) {
-      const target = path === '/login' && home === CUSTOMER_HOME ? safeNext(request.nextUrl.searchParams.get('next'), CUSTOMER_HOME) : home;
+      const target = path === '/login' && home === SHOP_HOME ? safeNext(request.nextUrl.searchParams.get('next'), SHOP_HOME) : home;
       const url = request.nextUrl.clone();
       const [p, ...rest] = target.split('#')[0].split('?');
       url.pathname = p;
@@ -251,7 +260,7 @@ async function signedInHome(supabase: ReturnType<typeof createServerClient>, uid
     const roles = ((data ?? []) as { role_code: string }[]).map((r) => r.role_code);
     if (roles.some((r) => STAFF_ROLES.includes(r))) return null;
     if (roles.includes('supplier')) return '/supplier';
-    return CUSTOMER_HOME;
+    return SHOP_HOME;
   } catch {
     return null;
   }

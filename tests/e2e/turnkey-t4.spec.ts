@@ -1,4 +1,6 @@
-import { test, expect, type Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
+// dev-server timing: wait for hydration after every goto, 15 s assertions (see helpers/settled.ts)
+import { test, expect } from './helpers/settled';
 import AxeBuilder from '@axe-core/playwright';
 import { adminClient, createTempCustomer, customerLogin, pgClient, purgeTestOrgs, type TempCustomer } from './helpers/customer';
 import { createTempStaff, deleteTempStaff, staffLogin, type TempStaff } from './helpers/staff';

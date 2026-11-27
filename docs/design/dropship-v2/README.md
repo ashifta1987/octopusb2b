@@ -1,5 +1,8 @@
 # Octopus Dropship – design v2 (UI/UX package)
 
+> **Start here:** `NEW-THEME-MASTER-PROMPT.md` is the master prompt for switching the whole application to the new theme (ODS 1.0), end to end. It replaces the older prompts where they disagree. Tokens: `specs/ods-tokens.css`.
+
+
 Open any file in a browser. This folder is the design source of truth for Antigravity.
 Put it in the repo at `docs/design/dropship-v2/` (not inside `public/`).
 
@@ -67,6 +70,32 @@ All numbers are sample data. `[SQUARE BRACKETS]` are values that come from setti
 | screens/CustomerHome.html | Customer account panel home (back office, tab 2): waiting for you, wallet, services, in progress, account manager | /account | CH-2 |
 | screens/Shop_Home.html | Shop: main page after login (all products, pools, turnkey, dropship; quote list; 'My account panel ↗') | /shop | CH-1 |
 | screens/Shop_Products.html | Shop: products, filters, product page, request a quote | /shop/products, /shop/products/[slug] | CH-1 |
+| screens/Public_Home.html | Public main page (signed out): six ways to work with us, comparison, how it works, two tabs after sign-in, MOQ pools, quality and payments, FAQ | / | CH-0 |
+| mobile/M_Public_Home.html | Public main page (phone) | / | CH-0 |
+| screens/Shop_Main.html | **Customer main page after login** (welcome bar with 3 waiting items, category chips, jump bar, six separate sections, recently viewed). Replaces Shop_Home and Shop_AllProducts | /shop | CH-1 |
+| mobile/M_Shop_Main.html | Customer main page after login (phone) | /shop | CH-1 |
+| screens/Nav_Map.html | Navigation: full site map of the 3 tabs and which navigation pattern each page uses | all | NAV |
+| screens/Nav_Components.html | Navigation components with states, sizes and keyboard rules (section bar + overflow, mega menu, underline tabs, pill filters, segmented, card tabs, stepper, breadcrumbs, sidebar, bottom bar) | all | NAV |
+| screens/Nav_Phone.html | Phone navigation: full-screen menu, Categories sheet, More sheet, Filters sheet | all (< 768 px) | NAV |
+| states/States-Nav.html | Navigation states: overflow open, lazy loading, tab error, empty tab, keyboard focus, no results, collapsed sidebar, phone tabs | all | NAV |
+| screens/Nav_ProductTabs.html / mobile/M_Nav_ProductTabs.html | Product page with underline tabs + Sea/Air segmented | /shop/products/[slug]?tab= | NAV |
+| screens/Nav_AccountOrders.html / mobile/M_Nav_AccountOrders.html | My account › Orders: card tabs, pill filters, List/Board | /account/orders | NAV |
+| screens/Nav_OrderDetail.html / mobile/M_Nav_OrderDetail.html | Order detail: stepper + underline tabs | /account/orders/[ref] | NAV |
+| screens/Flow_SignInTabs.html | How sign-in with Google and the three tabs work, and what each part is called | /, /login, /shop, /account | CH-0b |
+| screens/Auth_SignIn.html | Sign in with Google (or work email) | /login | CH-0b |
+| mobile/M_Auth_SignIn.html | Sign in (phone) | /login | CH-0b |
+| screens/Auth_Setup.html | First-time company setup | /welcome/setup | CH-0b |
+| mobile/M_Auth_Setup.html | First-time company setup (phone) | /welcome/setup | CH-0b |
+| states/States-Auth.html | Sign-in states: already signed in, cancelled, failed, signed out in another tab, expired, invite, wrong email, phone | /login, all tabs | CH-0b |
+| screens/Cart_Page.html / mobile/M_Cart_Page.html | Shop: **cart** with two parts: Buy now (samples, ready stock, pool deposits, Make My Brand, warehouse services) and Get a quote (factory products → one RFQ); Saved for later. Replaces the Quote list | /shop/cart | CART |
+| screens/Cart_Checkout.html / mobile/M_Cart_Checkout.html | Checkout: Delivery → Shipping (per parcel) → Payment (wallet, card, bank transfer, Payment protection) → Review | /shop/checkout | CART |
+| screens/Cart_Done.html / mobile/M_Cart_Done.html | Order placed: one checkout, one order number per type | /shop/checkout/done | CART |
+| states/States-Cart.html | Cart states: side panel after Add to cart, empty, price changed, stock reduced, pool closed, not verified, wallet not enough, card declined, waiting for bank transfer, quote sent, saved for later | /shop/cart, /shop/checkout | CART |
+| screens/Shop_AllProducts.html | Shop: all products and services on one page in 6 separate sections (Sourcing, MOQ pools, Dropshipping, Warehouse (3PL), Turnkey, Make My Brand), jump bar, See all per section | /shop/all | CH-1 |
+| screens/Shop_ProductPage.html | Shop: full product page (gallery, price tiers, quantity price calculator, specs, customise, questions, similar) | /shop/products/[slug] | CH-1 |
+| screens/Shop_Pools.html | Shop: MOQ pools list, pool page, join form, refund rule, timeline | /shop/pools, /shop/pools/[id] | CH-1 |
+| screens/Shop_Turnkey.html | Shop: Turnkey ready projects, project page (included, price, 6 steps), start form | /shop/turnkey, /shop/turnkey/[slug] | CH-1 |
+| states/States-Shop.html | Shop states (categories menu, no results, loading, section error, company not verified, below MOQ, pool full, added toast) | /shop/* | CH-1 |
 | staff/Staff_CustomerFinance.html | Staff: customer finance and follow-up (money due, reminders, payments, credit, follow-up tasks, notes) | /office/customers/[id] | CH-3 |
 | screens/C_Action.html | Action needed | /account/action | CH-2 |
 | screens/C_Sourcing.html | Sourcing requests and quote comparison | /account/sourcing | CH-2 |
@@ -135,3 +164,40 @@ Phone: `mobile/M_<Screen>.html` matches `screens/<Screen>.html` below 768 px.
 - No label prints until staff approve the merchant's return/brand profile, and the item's HS code is verified.
 - Placeholder pages say honestly what is coming; never blank, never fake numbers.
 - Plan fees are free until Finance switches them on; then a 30-day free trial; Shopify merchants approve in Shopify.
+
+
+## Logo (Octopus B2B)
+
+The files are in `assets/`:
+
+| File | Use |
+|---|---|
+| octopus-b2b-logo-mark.png | Navy, no tagline. For headers on white (introduction page, sign-in on phones, setup). |
+| octopus-b2b-logo-mark-white.png | White, no tagline. For headers on navy (shop header, phone headers). |
+| octopus-b2b-logo.png | Navy, with "Global Sourcing, Simplified". Only at 200 px wide or more. |
+| octopus-b2b-logo-white.png | White, with tagline. For the footer, the sign-in side panel and the My account sidebar. |
+| octopus-b2b-logo-original.jpg / -original-transparent.png | The owner's original file, full size. |
+
+Rules:
+- Never redraw or recolour the logo; the blue "B2B" box stays blue on every background.
+- `alt="Octopus B2B"`.
+- The logo is always a link:
+  - on the introduction website, it goes to `/`;
+  - in the Shop, it goes to the main page after login, `/shop`;
+  - in My account, it ALSO goes to the main page after login, `/shop`, switching to the shop tab (`target="octopus-shop"`). On phones it opens in the same tab.
+- In My account, "Home" in the sidebar is the way to My account's own home.
+- Use the tagline version only at 200 px wide or more.
+
+
+## Back Office (staff) in ERP style — `backoffice/`
+
+| File | Screen | Route |
+|---|---|---|
+| backoffice/ERP_Dashboard.html | Staff dashboard: KPI strip, My work, money in/out, receivables ageing, pools closing, activity | /office |
+| backoffice/ERP_Invoices.html | Accounts › Invoices: KPI strip, status tabs, filter chips, saved views, dense grid, bulk bar, Record payment drawer | /office/accounts/invoices |
+| backoffice/ERP_Customer.html | Customer record (360): header, underline tabs, company, money, open items, orders, activity | /office/customers/[id] |
+| backoffice/ERP_Components.html | ODS 1.0 compact: colours from the logo, two densities, buttons and inputs, workspace tabs, data grid, status pills, shortcuts, drawer/dialog/menu/toast | — |
+| backoffice/ERP_States.html | Command palette, unsaved changes, too many tabs, loading, empty, no permission, second approver, collapsed sidebar | — |
+| backoffice/M_ERP_Approvals.html | Phone: approvals only | /office/approvals |
+
+Build prompt: `BACK-OFFICE-ERP-PROMPT.md`.

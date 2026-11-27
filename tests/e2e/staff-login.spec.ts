@@ -108,7 +108,9 @@ test.describe('Staff areas are closed to customers', () => {
     await customerLogin(page, buyer!);
     for (const path of ['/office', '/admin']) {
       await page.goto(path);
-      await expect(page).toHaveURL(/\/login(\?|$)/);
+      // CH-1: a signed-in customer sent to /login is forwarded to the Shop, never into a staff area
+      await expect(page).toHaveURL(/\/login(\?|$)|\/shop(\?|$)/);
+      await expect(page).not.toHaveURL(/\/(office|admin)/);
     }
   });
 

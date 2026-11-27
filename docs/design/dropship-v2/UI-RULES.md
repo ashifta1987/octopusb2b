@@ -26,3 +26,24 @@ UI/UX RULES FOR OCTOPUS DROPSHIP (design v2). These apply to every step from now
     - plan fees follow Finance › SaaS billing.
 11. For every step: show me desktop (1280px) and phone (390px) screenshots of each screen you built, next to the design file name, and list every difference with the reason.
 ```
+
+
+## Navigation (one system for every service)
+
+| Job | Pattern | Rules |
+|---|---|---|
+| Move between site areas | Shop: header + section bar (overflow into More ▾ under 1200 px). My account: sidebar (collapses to icons under 1200 px). Phones: bottom bar, 5 items | `aria-current="page"`; labels always visible on the bottom bar |
+| Switch parts of one record | Underline tabs | 48 px; selected tab is bold with a 3 px blue bar; counts after the label; sticky; `?tab=` in the URL; tablist/tab/tabpanel; arrow keys |
+| Filter a list | Pill filters with counts | 40 px; selected = navy + check mark; `aria-pressed`; result count read out with `aria-live` |
+| Numbers that filter | Card tabs | ≥ 96 px; selected = 2 px blue border; 4 per row (2 on phones) |
+| Switch between 2–3 views | Segmented control | 40 px; grey track, white selected segment |
+| Show a process | Stepper | done = teal check; now = blue with halo; horizontal on desktop, vertical on phones; `aria-current="step"` |
+| Show where you are | Breadcrumbs | every page below level 1; on phones only "‹ Parent" |
+| Categories | Mega menu | opens on click; Esc closes and returns focus |
+
+General rules:
+- Never use a different tab style for a different service.
+- Tabs and filters live in the URL.
+- Tab panels load when first opened and keep their state when you switch back.
+- Tap targets are at least 44 px.
+- Focus ring: 3 px amber (#F59E0B) outline.

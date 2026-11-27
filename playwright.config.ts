@@ -15,6 +15,8 @@ export default defineConfig({
   timeout: 60_000,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
+    // axe must judge the settled page, not a frame halfway through a colour transition (the app honours prefers-reduced-motion)
+    reducedMotion: 'reduce',
     baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',

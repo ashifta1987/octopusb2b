@@ -1,4 +1,6 @@
-import { test, expect, type Page } from '@playwright/test';
+import { type Page } from '@playwright/test';
+// dev-server timing: wait for hydration after every goto, 15 s assertions (see helpers/settled.ts)
+import { test, expect, installHydrationWait } from './helpers/settled';
 import AxeBuilder from '@axe-core/playwright';
 import { adminClient, createTempCustomer, customerLogin, pgClient, purgeTestOrgs, type TempCustomer } from './helpers/customer';
 import { createTempStaff, deleteTempStaff, staffLogin, type TempStaff } from './helpers/staff';
@@ -266,7 +268,7 @@ test('W3a out of tolerance: three wrong PINs lock, admin unlocks, supervisor PIN
 
   // a warehouse admin unlocks on the order page (board 3)
   const ctx = await browser.newContext();
-  const p2 = await ctx.newPage();
+  const p2 = installHydrationWait(await ctx.newPage());
   try {
     await p2.setViewportSize({ width: 1280, height: 1000 });
     await staffLogin(p2, admin!, `/office/warehouse/orders/${codeB}`);
@@ -282,7 +284,7 @@ test('W3a out of tolerance: three wrong PINs lock, admin unlocks, supervisor PIN
 
   // two people: the supervisor re-weighs it at their own station → they are no longer offered as the approver
   const ctx2 = await browser.newContext();
-  const p3 = await ctx2.newPage();
+  const p3 = installHydrationWait(await ctx2.newPage());
   try {
     await p3.setViewportSize({ width: 1280, height: 1000 });
     await staffLogin(p3, sup!, `/office/warehouse/pack?order=${codeB}`);

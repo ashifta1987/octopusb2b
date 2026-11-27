@@ -8,7 +8,8 @@ import { emailIsStaff, isStaffUser } from '@/lib/staff/server';
 import { checkCustomerSignupEmail } from '@/lib/staff/customer-guard';
 import { getEmail } from '@/lib/adapters';
 import { BRAND } from '@/lib/brand';
-import { safeNext as safeSameSiteNext, CUSTOMER_HOME } from '@/lib/safe-next';
+import { safeNext as safeSameSiteNext } from '@/lib/safe-next';
+import { isShopEnabled, customerHome } from '@/lib/shop/flag';
 
 /**
  * Customer authentication (SPEC §4.1, ADDON-22): email + password only — no Google / social sign-in.
@@ -37,7 +38,9 @@ async function siteOrigin() {
 }
 
 // CH-1: customers land on the Shop; one strict same-site check for every sign-in path (lib/safe-next.ts)
-const safeNext = (n: unknown, fallback = CUSTOMER_HOME) => safeSameSiteNext(n, fallback);
+const safeNext = (n: unknown, fallback: string) => safeSameSiteNext(n, fallback);
+/** CH-1: the Shop when shop_enabled is on, /account while it is off (lib/shop/flag.ts) */
+const home = async () => customerHome(await isShopEnabled());
 
 /** Supplier portal accounts (role `supplier`, made by staff) use the same form but never the customer area. */
 async function isSupplierUser(uid: string): Promise<boolean> {
@@ -139,7 +142,7 @@ export async function customerSignIn(input: { email: string; password: string; n
     return { ok: true, redirect: next === '/supplier' || next.startsWith('/supplier/') ? next : '/supplier' };
   }
   await audit(uid, 'auth.sign_in', meta, { method: 'password', provider: 'email', portal: 'customer' });
-  return { ok: true, redirect: safeNext(input.next) };
+  return { ok: true, redirect: safeNext(input.next, await home()) };
 }
 
 /** Sign up with email + password → 6-digit code by email → profile. */
@@ -155,14 +158,15 @@ export async function customerSignUp(input: { email: string; password: string; n
   if (!guard.ok) return { ok: false, error: guard.error };
 
   const sb = await createClient();
-  const next = safeNext(input.next);
+  const landing = await home();
+  const next = safeNext(input.next, landing);
   const { data, error } = await sb.auth.signUp({
     email, password: input.password.slice(0, 200),
     options: { emailRedirectTo: `${await siteOrigin()}/auth/callback?next=${encodeURIComponent(next)}` },
   });
   if (error) return { ok: false, error: error.message };
   await audit(data.user?.id ?? null, 'auth.sign_up', meta, { method: 'password', provider: 'email' });
-  if (data.session) return { ok: true, redirect: onboardingHref(next) };
+  if (data.session) return { ok: true, redirect: onboardingHref(next, landing) };
   return { ok: true, verify: true };
 }
 
@@ -201,5 +205,5 @@ export async function afterCustomerPasswordReset(): Promise<{ next: string }> {
   await audit(uid, 'auth.password_reset', meta, { provider: 'email', other_sessions: 'revoked' });
   if (await isStaffUser(uid).catch(() => false)) return { next: '/staff/verify' };
   if (await isSupplierUser(uid)) return { next: '/supplier' };
-  return { next: CUSTOMER_HOME };
+  return { next: await home() };
 }

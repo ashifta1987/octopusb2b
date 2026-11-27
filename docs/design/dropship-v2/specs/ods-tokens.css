@@ -1,0 +1,50 @@
+:root{
+  /* brand (from the logo) */
+  --ods-navy:#1A174A; --ods-navy-dark:#14123B; --ods-navy-hover:#2E2B66;
+  --ods-blue:#2A6FD1; --ods-blue-hover:#1F5BB0; --ods-blue-tint:#EAF1FC;
+  --ods-teal:#5FD3C9;
+  /* neutrals */
+  --ods-canvas:#F4F6F9; --ods-surface:#FFFFFF; --ods-line:#E3E7EF; --ods-line-strong:#C9D0DD; --ods-slate:#5B6478; --ods-text:#1A174A;
+  /* status */
+  --ods-success:#0B7A75; --ods-success-tint:#E3F5F3;
+  --ods-warning:#B54708; --ods-warning-tint:#FFF4E5;
+  --ods-danger:#B42318;  --ods-danger-tint:#FDECEA;
+  --ods-info:#1D4E9A;    --ods-info-tint:#EAF1FC;
+  --ods-focus:#F59E0B;
+  /* services */
+  --svc-sourcing:#1D4E9A; --svc-sourcing-tint:#EAF1FC;
+  --svc-pools:#0B5F5B;    --svc-pools-tint:#E3F5F3;
+  --svc-dropship:#5B3AA8; --svc-dropship-tint:#F0EBFB;
+  --svc-3pl:#3B4687;      --svc-3pl-tint:#EDEFF8;
+  --svc-turnkey:#94420A;  --svc-turnkey-tint:#FDF1E6;
+  --svc-brand:#A11B5A;    --svc-brand-tint:#FCE9F1;
+  /* type */
+  --ods-font:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  /* shadows */
+  --ods-shadow-card:0 1px 2px rgba(26,23,74,.05);
+  --ods-shadow-pop:0 12px 32px rgba(26,23,74,.14);
+  --ods-shadow-dialog:0 16px 40px rgba(26,23,74,.18);
+  /* z */
+  --z-sticky:10; --z-dropdown:20; --z-drawer:30; --z-modal:40; --z-toast:50; --z-palette:60;
+  --ods-content-max:1240px;
+}
+/* comfortable = customer areas (default) */
+:root, [data-density="comfortable"]{
+  --ods-text-body:15px; --ods-text-table:14px; --ods-text-label:13px; --ods-h1:28px; --ods-h2:21px;
+  --ods-control-h:44px; --ods-row-h:52px; --ods-head-h:44px;
+  --ods-radius-control:8px; --ods-radius-card:14px; --ods-radius-pill:999px;
+  --ods-pad-page:32px; --ods-pad-card:20px; --ods-gap:16px;
+  --ods-tab-h:48px; --ods-tab-bar:3px;
+}
+/* compact = staff apps */
+[data-density="compact"]{
+  --ods-text-body:13px; --ods-text-table:13px; --ods-text-label:12px; --ods-h1:20px; --ods-h2:15px;
+  --ods-control-h:32px; --ods-row-h:36px; --ods-head-h:34px;
+  --ods-radius-control:6px; --ods-radius-card:6px; --ods-radius-pill:4px;
+  --ods-pad-page:16px; --ods-pad-card:12px; --ods-gap:12px;
+  --ods-tab-h:36px; --ods-tab-bar:2px;
+}
+@media (max-width:767px){ :root{ --ods-pad-page:16px; --ods-h1:24px; } }
+*:focus-visible{ outline:3px solid var(--ods-focus); outline-offset:2px; }
+.num, td.num{ font-variant-numeric:tabular-nums; text-align:right; }
+@media (prefers-reduced-motion:reduce){ *{ animation:none!important; transition:none!important; } }

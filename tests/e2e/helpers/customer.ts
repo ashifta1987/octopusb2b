@@ -35,6 +35,8 @@ export async function createTempCustomer(tag: string): Promise<TempCustomer> {
 
 export async function customerLogin(page: Page, c: TempCustomer, next = '/account') {
   await page.goto(`/login?next=${encodeURIComponent(next)}`);
+  // CH-1: when this browser context is already signed in, the proxy forwards /login to the safe ?next= (or /shop)
+  if (!new URL(page.url()).pathname.startsWith('/login')) { await page.context().clearCookies(); await page.goto(`/login?next=${encodeURIComponent(next)}`); }
   const tab = page.getByRole('tab', { name: /log in/i });
   if (await tab.count()) await tab.click();
   await page.getByLabel(/email/i).first().fill(c.email);
