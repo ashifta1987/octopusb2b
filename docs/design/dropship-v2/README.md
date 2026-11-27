@@ -64,11 +64,27 @@ All numbers are sample data. `[SQUARE BRACKETS]` are values that come from setti
 | staff/StaffDutyEntries.html | Duty and tax entries (country + HS prefix, de minimis, approval) | /office/dropship/compliance | EA-1 |
 | staff/StaffRequests.html | Product requests queue and landed quote | /office/dropship/requests | Batch 3 (align), 3 |
 | states/States-Stores.html | Store connection states (disconnect, reconnect, uninstall, sandbox) | /account/dropship/stores, /shopify | 5 |
+| screens/CustomerHome.html | Customer account panel home (back office, tab 2): waiting for you, wallet, services, in progress, account manager | /account | CH-2 |
+| screens/Shop_Home.html | Shop: main page after login (all products, pools, turnkey, dropship; quote list; 'My account panel ↗') | /shop | CH-1 |
+| screens/Shop_Products.html | Shop: products, filters, product page, request a quote | /shop/products, /shop/products/[slug] | CH-1 |
+| staff/Staff_CustomerFinance.html | Staff: customer finance and follow-up (money due, reminders, payments, credit, follow-up tasks, notes) | /office/customers/[id] | CH-3 |
+| screens/C_Action.html | Action needed | /account/action | CH-2 |
+| screens/C_Sourcing.html | Sourcing requests and quote comparison | /account/sourcing | CH-2 |
+| screens/C_Orders.html | Orders across services + order detail | /account/orders | CH-2 |
+| screens/C_Turnkey.html | Turnkey projects: milestones, payments, documents | /account/turnkey | CH-2 |
+| screens/C_Warehouse.html | Warehouse (3PL): stock, inbound, fees | /account/warehouse | CH-2 |
+| screens/C_Shipping.html | Shipping: quote, parcels, tracking | /account/shipping | CH-2 |
+| screens/C_Brand.html | Make My Brand: proof review | /account/brand | CH-2 |
+| screens/C_Wallet.html | Wallet: balance, bank transfer, transactions | /account/wallet | CH-2 |
+| screens/C_Invoices.html | Invoices and documents | /account/invoices | CH-2 |
+| screens/C_Team.html | Team and settings: roles, company, security | /account/settings | CH-2 |
+| states/States-CustomerHome.html | Customer home states (new customer, KYC, empty, loading, error, company switcher, limited role) | /account | CH-1 |
 | states/States-*.html | All states per area | (every screen) | each step, checked in 13 |
 
 Phone: `mobile/M_<Screen>.html` matches `screens/<Screen>.html` below 768 px.
 
 ## Shells
+- **Customer account shell (all services):** sidebar Overview (Home, Action needed), Services (Sourcing requests, Orders, Turnkey projects, Warehouse (3PL), Shipping, Make My Brand, Dropshipping), Money (Wallet, Invoices), Account (Team and settings, Support); company switcher at the top; 'Browse products ↗' at the bottom opens the shop in a new tab. The shop header has 'My account panel ↗' (new tab). Phone tabs: Home, Requests, Orders, Wallet, More (mobile/M_CustomerHome.html). The Dropship area keeps its own sidebar inside /account/dropship.
 - **Merchant sidebar:** groups Sell (Dashboard, Find products, Import list, Orders), Set up (Pricing and sync, Packing and shipping, Stores), Money (Wallet, Plan and billing, Reports), Account (Settings, Support). Store switcher at the top; active item has a teal inset bar and `aria-current="page"`.
 - **Top bar (every page):** search (orders, products, DS model no.), notifications with count, help, account.
 - **Phone:** top bar with logo, store and notifications; bottom tabs Home, Find, Orders, Wallet, More. In early access the tabs are Home, Find, Requests, Wallet, More (see mobile/M_EA_Dashboard.html).

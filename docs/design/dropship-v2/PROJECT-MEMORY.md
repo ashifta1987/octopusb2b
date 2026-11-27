@@ -1,6 +1,6 @@
 # Octopus B2B — Project memory (Sourcing + Dropshipping)
 
-Last updated: 26 Nov 2026 (staging state after EA-1 / EA-2). Read this before any work. It records what is built, what was decided and the rules that always apply.
+Last updated: 25 Nov 2026. Read this before any work. It records what is built, what was decided and the rules that always apply.
 
 ---
 
@@ -52,16 +52,14 @@ Last updated: 26 Nov 2026 (staging state after EA-1 / EA-2). Read this before an
 - Live: migrations up to 217. `main` = f72c41c. `dropship_v2_ui` OFF (customers see "Coming soon"). 0 dropship merchants, 0 rate cards, 0 fee versions, so nothing can be published on live.
 - Staff data work open on live: 316 products need weight + box size; 313 HS codes need staff verification.
 - Batch 1 (white-label + permissions) is live. 106 original product images are still public and backed up in the private bucket `product-media-backup`; decide on 2 Dec whether to make them private or delete them.
-- Staging (not live yet): 218 Batch 2 (Payment protection / Pay now for Dropship orders), 219 demo-wipe keeps fee-history users, 220 Batch 3 (status labels, quotes, staff product requests, factory audit), 221 EA-1 (staff fees, two-person rate cards + price-list imports, duty entries with second-person confirm, customs value policy, request queue), 222 EA-2 (merchant feature list `site_settings.dropship_features`, public Dropship page). Batch 2 + 3 go live together on the owner's "go"; EA-1 + EA-2 follow with Release 1.
-- Built so far: S0-fix, U1 shells, I1a item master + DS model numbers, I1b rate cards / fees / duty / 3PL stock, I2 store orders / handoffs / outbox / status map, Step 2 + 2a staff catalogue + Sourcing structured fields, Step 3 merchant catalogue / landed cost / requests / samples, Step 4 access + onboarding + staff merchants, Batch 1, Batch 2, Batch 3, EA-1, EA-2 (staging).
-- Decisions 25 Nov 2026 (Release 1 Step 0 delta): in the merchant app during early access, OFF features are hidden and redirect (no "coming soon"); rule 10 still applies to staff pages and ON features. Rate cards are edited by 3PL & Shipping editors, DS editors and admins (one "3PL & Shipping" division), Finance views, Support has no access; staff never publish a card directly (proposal + second person). Duty / customs policy publish: admin, DS editors, Finance approvers, always a second person. Price lists: CSV only for now. Customs block threshold: not set yet.
+- Staging: migration 218 (Batch 2: Payment protection / Pay now for Dropship orders) at 300d310. Release it together with Batch 3 (unless Batch 3 touches payments).
+- Built so far: S0-fix, U1 shells, I1a item master + DS model numbers, I1b rate cards / fees / duty / 3PL stock, I2 store orders / handoffs / outbox / status map, Step 2 + 2a staff catalogue + Sourcing structured fields, Step 3 merchant catalogue / landed cost / requests / samples, Step 4 access + onboarding + staff merchants, Batch 1, Batch 2.
 
 ## 6. Next
 
-1. Owner "go" for the Batch 2 + 3 live release (218 → 219 → 220; set the Factory audit price).
-2. Release 1 launch checklist: Batch 2+3 live, EA-1 + EA-2 live (221, 222), active fee version (owner's numbers), rate cards for the launch countries, confirmed duty entries, N products published with complete data + verified HS, privacy policy + terms published, `dropship_v2_ui` ON, owner end-to-end test. Rollback = flag OFF.
-3. Step 5 Shopify: waiting on the owner (GoDaddy DNS for staging, Shopify CLI login, staging app in the Dev Dashboard, secrets in Vercel). Then the 4-test spike on a development store, then the Step 5 plan.
-4. Releases 2–5 per the master prompt, each with a Step 0 plan and its Match list.
+1. Batch 3 from the Sourcing/Dropship audit: list the 18 remaining white-label findings (customer-facing first), fix the stale payments test rollback, honest placeholders on blank pages (e.g. `/account/dropship/pricing`), the factory-audit request type in `/admin/services`, status label consistency. Then release Batch 2 + 3 together.
+2. Step 5 Shopify: waiting on the owner (GoDaddy DNS for staging, Shopify CLI login, staging app in the Dev Dashboard, secrets in Vercel). Then the 4-test spike on a development store, then the Step 5 plan.
+3. Steps 6, 6b, 7–8, 9, 10, 11, 12 + 12b, 13 — each with its Match list.
 
 ## 7. Shopify decisions
 
@@ -80,12 +78,3 @@ Processing fee amount, weighing tolerance, insurance (on/off), plan prices and l
 ## 9. Owner to-do
 
 Second 2FA phone; Resend app emails (launch blocker); pay Google Workspace (support@ mailbox must work); GitHub off-site backup failing since 10 Nov; Stripe/Airwallex live keys once the HK company exists; YunExpress live keys (`YUNEXPRESS_MODE=live`, `YUNEXPRESS_CUSTOMER_NO`, `YUNEXPRESS_API_SECRET`, `YUNEXPRESS_WEBHOOK_SECRET`); switch on credit_eligible for group/test companies; Shopify setup above.
-
-## 10. Programme decisions (26 Nov 2026, approved)
-
-- Three pieces of work: Turnkey rebuilt to `docs/design/turnkey-v2/`; 3PL & logistics replaced by Warehouse OS (`docs/design/warehouse-os/`, Foshan); Octopus Dropship completed.
-- D1: Dropship design v2 + master prompt stay the source of truth for Releases 2–5; v3-only screens (`docs/design/dropship-v3/`: supplier portal, partners, extra channels, admin plans/invoicing/docs) become Release 6; v3 Warehouse/Label boards are replaced by Warehouse OS; plan prices stay unset until confirmed.
-- D2 order: Warehouse OS W0–W4 first (Turnkey alongside), then Dropship Releases 2–3 on top, then W5–W7, then Dropship 4–5.
-- D3 Turnkey leads are kept and moved into new projects at "Enquiry"; old catalogue tables archived as legacy, never dropped. D4 `/turnkey` URL kept, old URLs redirect. D5 2× admin approval applies to service fees only; deposit % from settings. D6 inspector offline mode later.
-- D7 carrier rules and client rates: two-person rule, admin approves. D8 3PL client plans are separate from the Dropship processing fee. D9 3PL clients are existing KYC organisations plus the 3PL application. D10 B2B order shipping moves into Warehouse OS; `/office/shipping` retired in W7. D11 default warehouse becomes Foshan (FS-01); stock moves only by new movements.
-- Warehouse OS and Turnkey uploads are text descriptions; board exports (HTML/PNG) requested for Match checks.
