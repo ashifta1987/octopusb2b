@@ -11,3 +11,6 @@ export * from './components/office-topbar';
 export * from './components/office-sidebar';
 export * from './components/bottom-nav';
 export * from './components/breadcrumbs';
+export * from './components/named-tab-link';
+export * from './components/auth-broadcast';
+export * from './components/site-footer';

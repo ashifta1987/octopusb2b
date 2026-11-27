@@ -7,6 +7,9 @@ import {
 import { safeNext } from '@/lib/safe-next';
 import { isShopEnabled, SHOP_HOME } from '@/lib/shop/flag';
 import { STAFF_ROLES } from '@/lib/roles';
+import { ODS_OFF, ODS_PREVIEW_COOKIE, effectiveOdsSetting, fetchOdsThemeSetting, odsLegacyRedirectsOn, odsPreviewFrom, odsThemeFor } from '@/lib/ods-flag';
+import { ODS_SHOP_REDIRECTS, isOdsInternalPath, odsLegacyRedirect, odsOffFallback, odsRewritePath, odsShopRewritePath } from '@/lib/ods-routes';
+import type { OdsArea } from '@/lib/ods-flag';
 
 /** Customer portals: signed-out visitors go to the customer login. CH-1: the Shop (/shop) is signed-in only too. */
 const PORTALS = ['/account', '/shop', '/supplier', '/onboarding'];
@@ -118,6 +121,15 @@ export async function proxy(request: NextRequest) {
       // fall through to the page, which still renders its own not-found UI
     }
   }
+  // ODS T3: the internal /ods/* tree is only reachable through the rewrites in route() → real 404 when requested directly
+  if (isOdsInternalPath(path)) {
+    const url = request.nextUrl.clone();
+    url.pathname = '/ods-not-found/404';
+    url.search = '';
+    const res = NextResponse.rewrite(url);
+    res.headers.set(TRACE_HEADER, traceId);
+    return res;
+  }
   const res = await route(request);
   res.headers.set(TRACE_HEADER, traceId);
   return res;
@@ -180,6 +192,28 @@ async function route(request: NextRequest) {
     response.cookies.getAll().forEach((c) => res.cookies.set(c));
     return res;
   };
+  /** Redirect (or rewrite) to another path keeping the query string and any refreshed Supabase cookies. */
+  const keepQuery = (pathname: string, kind: 307 | 308 | 'rewrite') => {
+    const url = request.nextUrl.clone();
+    url.pathname = pathname;
+    const res = kind === 'rewrite' ? NextResponse.rewrite(url, { request: { headers: request.headers } }) : NextResponse.redirect(url, kind);
+    response.cookies.getAll().forEach((c) => res.cookies.set(c));
+    return res;
+  };
+
+  // ODS T3 (lib/ods-routes.ts, lib/ods-flag.ts): the new theme for the introduction site and sign-in, per visitor.
+  // Switch off → nothing below changes the request, so today's pages answer exactly as before.
+  const odsTarget = odsRewritePath(path);
+  const odsLegacy = odsLegacyRedirect(path);
+  const odsFallback = odsOffFallback(path);
+  const ods = odsTarget || odsLegacy || odsFallback || path === '/onboarding' ? await odsForVisitor(request, supabase, user?.sub as string | undefined) : null;
+  if (ods) {
+    // owner-approved renames: old service landing pages → /services/* only when the switch is "all"
+    if (odsLegacy && ods.redirects) return keepQuery(odsLegacy, 308);
+    // first-time setup: /onboarding → /welcome/setup only for visitors on the new theme (both keep working)
+    if (path === '/onboarding' && ods.on) return keepQuery('/welcome/setup', 308);
+    if (!ods.on && odsFallback) return keepQuery(odsFallback, 307);
+  }
 
   if (STAFF_AREAS.some((p) => under(path, p)) && !STAFF_OPEN.some((p) => under(path, p))) {
     const next = path + request.nextUrl.search;
@@ -220,7 +254,8 @@ async function route(request: NextRequest) {
 
   // Shop switch (lib/shop/flag.ts): read only where it matters (/shop/* and the signed-in landing paths), never cached
   const shopPath = under(path, '/shop');
-  const landing = !!user && SIGNED_IN_LANDING.includes(path);
+  // ODS 4.1: on the new theme a signed-in visitor SEES the introduction page ("Go to my shop ↗"); /login and /signup still redirect
+  const landing = !!user && SIGNED_IN_LANDING.includes(path) && !(path === '/' && ods?.on);
   const shopOn = shopPath || landing ? await isShopEnabled() : true;
   // Shop OFF (live until the owner switches it on): /shop and everything under it → the account panel
   if (shopPath && !shopOn) return redirectTo('/account');
@@ -241,11 +276,53 @@ async function route(request: NextRequest) {
     }
   }
 
+  // ODS T3: serve the public URL from the ODS tree (the browser keeps the URL); first-time setup needs a session
+  if (ods?.on && odsTarget) {
+    if (path === '/welcome/setup' && !user) return redirectTo('/login', { next: path + request.nextUrl.search });
+    return keepQuery(odsTarget, 'rewrite');
+  }
+
   if (PORTALS.some((p) => under(path, p)) && !user) {
     // keep the query (e.g. /account/turnkey/new?project=gym) so the visitor comes back to the same choice, like staff areas
     return redirectTo('/login', { next: path + request.nextUrl.search });
   }
+
+  // ODS T4: the Shop on the new theme (area "shop": staff, beta companies or "all"; Shop switch already checked above)
+  const odsShop = user && shopOn ? odsShopRewritePath(path) : null;
+  if (odsShop && (await odsForVisitor(request, supabase, user!.sub as string, 'shop')).on) {
+    const moved = ODS_SHOP_REDIRECTS[path];
+    if (moved) return keepQuery(moved, 308);
+    return keepQuery(odsShop, 'rewrite');
+  }
   return response;
+}
+
+/**
+ * ODS T3: is the new theme on for this visitor on the introduction site / sign-in, and do old service URLs redirect?
+ * Staging preview cookie first (no database read); otherwise ods_theme_v1 (15 s memo). "staff" / "beta" modes look up the
+ * person's own roles; in the Shop / My account, "beta" also looks up the person's company (public areas have no company,
+ * so there beta = staff only). Any failure → off.
+ */
+async function odsForVisitor(request: NextRequest, supabase: ReturnType<typeof createServerClient>, uid?: string, area: OdsArea = 'public'): Promise<{ on: boolean; redirects: boolean }> {
+  try {
+    const preview = odsPreviewFrom(request.cookies.get(ODS_PREVIEW_COOKIE)?.value);
+    const setting = preview ? ODS_OFF : await fetchOdsThemeSetting();
+    const eff = effectiveOdsSetting(setting, preview);
+    let isStaff = false;
+    if (uid && (eff.mode === 'staff' || eff.mode === 'beta')) {
+      const { data } = await supabase.from('user_roles').select('role_code').eq('user_id', uid);
+      isStaff = ((data ?? []) as { role_code: string }[]).some((r) => STAFF_ROLES.includes(r.role_code));
+    }
+    // beta companies (Shop / My account only): the person's own membership (org_members, RLS: own rows)
+    let orgId: string | null = null;
+    if (uid && !isStaff && eff.mode === 'beta' && (area === 'shop' || area === 'account')) {
+      const { data } = await supabase.from('org_members').select('org_id').eq('user_id', uid).limit(1).maybeSingle();
+      orgId = (data as { org_id?: string } | null)?.org_id ?? null;
+    }
+    return { on: odsThemeFor(eff, { area, isStaff, orgId }), redirects: odsLegacyRedirectsOn(setting, preview) };
+  } catch {
+    return { on: false, redirects: false };
+  }
 }
 
 /**

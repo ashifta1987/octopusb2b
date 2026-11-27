@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { ODS_OFF, isOdsTheme, odsDensityFor, odsThemeFor, parseOdsThemeSetting, type OdsArea, type OdsThemeSetting } from '@/lib/ods-flag';
+import {
+  ODS_OFF, effectiveOdsSetting, isOdsTheme, odsDensityFor, odsLegacyRedirectsOn, odsPreviewFrom, odsThemeFor, parseOdsThemeSetting,
+  type OdsArea, type OdsThemeSetting,
+} from '@/lib/ods-flag';
 
 const ORG = '0b9c1d2e-3f40-4a5b-8c6d-7e8f90a1b2c3';
 const OTHER = '11111111-2222-4333-8444-555555555555';
@@ -54,12 +57,43 @@ describe('ods_theme_v1: who gets the theme', () => {
     expect(odsThemeFor(beta, { area: 'office', orgId: ORG })).toBe(false);
   });
   it('isOdsTheme reads the setting once and fails closed', async () => {
-    expect(await isOdsTheme({ area: 'shop', orgId: ORG }, async () => s('beta', [ORG]))).toBe(true);
-    expect(await isOdsTheme({ area: 'shop', orgId: ORG }, async () => ODS_OFF)).toBe(false);
-    expect(await isOdsTheme({ area: 'shop', isStaff: true }, async () => { throw new Error('db down'); })).toBe(false);
+    expect(await isOdsTheme({ area: 'shop', orgId: ORG }, null, async () => s('beta', [ORG]))).toBe(true);
+    expect(await isOdsTheme({ area: 'shop', orgId: ORG }, null, async () => ODS_OFF)).toBe(false);
+    expect(await isOdsTheme({ area: 'shop', isStaff: true }, null, async () => { throw new Error('db down'); })).toBe(false);
   });
   it('density: office compact, every customer area comfortable', () => {
     expect(odsDensityFor('office')).toBe('compact');
     for (const area of ['public', 'auth', 'shop', 'account'] as OdsArea[]) expect(odsDensityFor(area)).toBe('comfortable');
+  });
+});
+
+describe('ods_theme_v1: staging preview cookie (T3)', () => {
+  const STAGING = { APP_ENVIRONMENT: 'staging' };
+  it('is ignored everywhere except staging', () => {
+    expect(odsPreviewFrom('on', { APP_ENVIRONMENT: 'production' })).toBeNull();
+    expect(odsPreviewFrom('all', {})).toBeNull();
+    expect(odsPreviewFrom('on', STAGING)).toBe('on');
+    expect(odsPreviewFrom(' ALL ', STAGING)).toBe('all');
+    expect(odsPreviewFrom('0', STAGING)).toBe('off');
+    expect(odsPreviewFrom('maybe', STAGING)).toBeNull();
+    expect(odsPreviewFrom(undefined, STAGING)).toBeNull();
+  });
+  it('on / all turn the theme on for that browser; off turns it off', () => {
+    for (const area of AREAS) {
+      expect(odsThemeFor(effectiveOdsSetting(ODS_OFF, 'on'), { area })).toBe(true);
+      expect(odsThemeFor(effectiveOdsSetting(s('all'), 'off'), { area, isStaff: true })).toBe(false);
+      expect(odsThemeFor(effectiveOdsSetting(s('staff'), null), { area, isStaff: false })).toBe(false);
+    }
+  });
+  it('old service URLs redirect only at "all"', () => {
+    expect(odsLegacyRedirectsOn(s('all'), null)).toBe(true);
+    expect(odsLegacyRedirectsOn(s('beta'), null)).toBe(false);
+    expect(odsLegacyRedirectsOn(ODS_OFF, 'on')).toBe(false);
+    expect(odsLegacyRedirectsOn(ODS_OFF, 'all')).toBe(true);
+    expect(odsLegacyRedirectsOn(s('all'), 'off')).toBe(false);
+  });
+  it('isOdsTheme honours the preview', async () => {
+    expect(await isOdsTheme({ area: 'public' }, 'on', async () => ODS_OFF)).toBe(true);
+    expect(await isOdsTheme({ area: 'public' }, 'off', async () => s('all'))).toBe(false);
   });
 });

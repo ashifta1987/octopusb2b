@@ -6,9 +6,9 @@ import { ArrowUpRight, Menu } from 'lucide-react';
 import { cx } from '../cx';
 import { Icon } from '../icon';
 import { Logo } from '../logo';
-import { SHOP_TAB } from '../logo-href';
 import { buttonClass } from '../styles';
 import { MegaMenu, type MegaMenuColumn, type MegaMenuPromo } from './mega-menu';
+import { NamedTabLink } from './named-tab-link';
 import { Sheet } from './sheet';
 
 export type PublicHeaderProps = {
@@ -55,7 +55,7 @@ export function PublicHeader({
   services,
   user,
   onContinueWithGoogle,
-  googleHref = '/login?with=google',
+  googleHref = '/login?next=/shop',
   signInHref = '/login',
   currentHref,
   sticky = true,
@@ -64,22 +64,30 @@ export function PublicHeader({
   className,
 }: PublicHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  // Part 4.6: the introduction site opens the Shop in its named tab (target="octopus-shop", no rel=noopener; phones: same tab)
   const google = onContinueWithGoogle ? (
-    <button type="button" onClick={onContinueWithGoogle} className={buttonClass('primary')}>
+    <button type="button" onClick={onContinueWithGoogle} data-cta="google" className={buttonClass('primary')}>
       Continue with Google
     </button>
   ) : (
-    <Link href={googleHref} className={buttonClass('primary')}>
+    <NamedTabLink tab="shop" href={googleHref} data-cta="google" className={buttonClass('primary')}>
       Continue with Google
-    </Link>
+    </NamedTabLink>
   );
-  const shopLink = (sameTab: boolean) => (
-    <Link href="/shop" target={sameTab ? undefined : SHOP_TAB} className="inline-flex min-h-ods-control items-center gap-1 rounded-ods-control font-semibold whitespace-nowrap text-ods-blue hover:underline">
-      Go to my shop
-      <Icon icon={ArrowUpRight} className="rtl:-scale-x-100" />
-      {sameTab ? null : <span className="sr-only">(opens the Shop tab)</span>}
-    </Link>
-  );
+  const shopLinkCls = 'inline-flex min-h-ods-control items-center gap-1 rounded-ods-control font-semibold whitespace-nowrap text-ods-blue hover:underline';
+  const shopLink = (sameTab: boolean) =>
+    sameTab ? (
+      <Link href="/shop" className={shopLinkCls}>
+        Go to my shop
+        <Icon icon={ArrowUpRight} className="rtl:-scale-x-100" />
+      </Link>
+    ) : (
+      <NamedTabLink tab="shop" href="/shop" className={shopLinkCls}>
+        Go to my shop
+        <Icon icon={ArrowUpRight} className="rtl:-scale-x-100" />
+        <span className="sr-only">(opens the Shop tab)</span>
+      </NamedTabLink>
+    );
 
   return (
     <header className={cx(sticky ? 'sticky top-0 z-(--z-sticky)' : 'relative', '@container border-b border-ods-line bg-ods-surface text-ods-text', className)}>
@@ -106,7 +114,7 @@ export function PublicHeader({
         </nav>
         <div className="ms-auto flex items-center gap-2">
           {user ? (
-            <p className="hidden items-center gap-2 text-ods-label text-ods-slate @min-[1080px]:flex">
+            <p data-testid="signed-in-as" className="hidden items-center gap-2 text-ods-label text-ods-slate @min-[1080px]:flex">
               <span>
                 Signed in as <strong className="font-semibold text-ods-navy">{user.name}</strong>
               </span>

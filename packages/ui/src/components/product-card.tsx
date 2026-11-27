@@ -21,7 +21,11 @@ export type ProductCardAction = {
   loadingText?: string;
 };
 
-export type ProductCardImage = { src: string; alt: string; width?: number; height?: number };
+/**
+ * `unoptimized`: skip the Next image optimiser (needed for hosts outside next.config remotePatterns, e.g. the
+ * `product-media` bucket). Set it with `!isOptimizableImage(src)` from `@octopus/ui/image-url`.
+ */
+export type ProductCardImage = { src: string; alt: string; width?: number; height?: number; unoptimized?: boolean };
 export type ProductCardBadge = { label: string; tone?: 'success' | 'info' | 'neutral' };
 
 export type ProductCardBaseProps = {
@@ -87,6 +91,7 @@ function Frame({
           alt={image.alt}
           width={image.width ?? 400}
           height={image.height ?? 300}
+          unoptimized={image.unoptimized}
           sizes="(min-width: 1200px) 300px, (min-width: 768px) 50vw, 80vw"
           className={cx(IMG_H, 'w-full rounded-ods-control bg-ods-canvas object-cover')}
         />
@@ -157,7 +162,8 @@ const units = (n: number, one: string, many?: string) => `${formatNumber(n)} ${n
 /* ───────── Sourcing ───────── */
 
 export type SourcingCardProps = ProductCardBaseProps & {
-  fromPrice: number;
+  /** Lowest unit price; null = no price listed → "Price on request" (never 0). */
+  fromPrice: number | null;
   /** "unit", "set", "pair" … */
   unit?: string;
   unitPlural?: string;
@@ -177,9 +183,7 @@ export function SourcingCard({ fromPrice, unit = 'unit', unitPlural, moq, delive
       service="sourcing"
       facts={
         <>
-          <Fact label="From">
-            <Money amount={fromPrice} suffix={`/ ${unit}`} />
-          </Fact>
+          <Fact label="From">{fromPrice == null ? 'Price on request' : <Money amount={fromPrice} suffix={`/ ${unit}`} />}</Fact>
           <Fact label="Minimum order">{units(moq, unit, unitPlural)}</Fact>
           <Fact label="Delivery">{delivery}</Fact>
         </>
@@ -198,7 +202,8 @@ export function SourcingCard({ fromPrice, unit = 'unit', unitPlural, moq, delive
 
 export type PoolCardProps = ProductCardBaseProps & {
   poolPrice: number;
-  normalPrice: number;
+  /** Normal (non-pool) price; missing/null = no strike-through and no "Save n%". */
+  normalPrice?: number | null;
   unit?: string;
   unitPlural?: string;
   /** Units committed so far, and the pool target. */
@@ -220,7 +225,7 @@ export type PoolCardProps = ProductCardBaseProps & {
  */
 export function PoolCard({ poolPrice, normalPrice, unit = 'unit', unitPlural, filled, target, closesIn, joinFrom, status, joinAction, badges, ...base }: PoolCardProps) {
   const pct = target > 0 ? Math.min(100, Math.round((filled / target) * 100)) : 0;
-  const save = normalPrice > poolPrice && normalPrice > 0 ? Math.round((1 - poolPrice / normalPrice) * 100) : 0;
+  const save = normalPrice != null && normalPrice > poolPrice && normalPrice > 0 ? Math.round((1 - poolPrice / normalPrice) * 100) : 0;
   const progressText = `${formatNumber(filled)} of ${units(target, unit, unitPlural)}`;
   return (
     <Frame
@@ -233,13 +238,18 @@ export function PoolCard({ poolPrice, normalPrice, unit = 'unit', unitPlural, fi
           <div className="flex items-baseline justify-between gap-3 text-ods-small">
             <span className="text-ods-slate">Pool price</span>
             <span className="text-end font-semibold text-ods-navy">
-              <Money amount={poolPrice} />{' '}
-              <span className="font-normal text-ods-slate">
-                <span className="sr-only">, normal price </span>
-                <s>
-                  <Money amount={normalPrice} />
-                </s>
-              </span>
+              <Money amount={poolPrice} />
+              {normalPrice != null && normalPrice > poolPrice ? (
+                <>
+                  {' '}
+                  <span className="font-normal text-ods-slate">
+                    <span className="sr-only">, normal price </span>
+                    <s>
+                      <Money amount={normalPrice} />
+                    </s>
+                  </span>
+                </>
+              ) : null}
             </span>
           </div>
           <div
@@ -254,7 +264,7 @@ export function PoolCard({ poolPrice, normalPrice, unit = 'unit', unitPlural, fi
             <span className="block h-full rounded-full bg-ods-success" style={{ width: `${pct}%` }} />
           </div>
           <p className="m-0 text-ods-small text-ods-slate">
-            {progressText} · closes in {closesIn}
+            {progressText} · {closesIn === 'closed' ? 'closed' : `closes in ${closesIn}`}
           </p>
         </>
       }
@@ -353,9 +363,10 @@ export function ServiceCard({ description, rates, quoteAction, ...base }: Servic
 /* ───────── Turnkey ───────── */
 
 export type TurnkeyCardProps = ProductCardBaseProps & {
-  fromPrice: number;
-  /** e.g. "8–10 weeks". */
-  timeline: string;
+  /** null = no starting budget listed → "Budget in your quote". */
+  fromPrice: number | null;
+  /** e.g. "8–10 weeks". Missing = row hidden. */
+  timeline?: string;
   /** What the project includes, e.g. ["Samples", "QC", "Packaging", "Shipping"]. */
   includes: string[];
   viewAction?: ProductCardAction;
@@ -369,10 +380,8 @@ export function TurnkeyCard({ fromPrice, timeline, includes, viewAction, ...base
       service="turnkey"
       facts={
         <>
-          <Fact label="From">
-            <Money amount={fromPrice} />
-          </Fact>
-          <Fact label="Timeline">{timeline}</Fact>
+          <Fact label="From">{fromPrice == null ? 'Budget in your quote' : <Money amount={fromPrice} />}</Fact>
+          {timeline ? <Fact label="Timeline">{timeline}</Fact> : null}
           {includes.length ? <Fact label="Includes">{includes.join(', ')}</Fact> : null}
         </>
       }
@@ -384,12 +393,14 @@ export function TurnkeyCard({ fromPrice, timeline, includes, viewAction, ...base
 /* ───────── Make My Brand ───────── */
 
 export type BrandCardProps = ProductCardBaseProps & {
-  fromPrice: number;
+  /** null = "In your quote". */
+  fromPrice: number | null;
   unit?: string;
   unitPlural?: string;
-  moq: number;
-  /** e.g. "3 days". */
-  proofTime: string;
+  /** null = "In your quote". */
+  moq: number | null;
+  /** e.g. "3 days". Missing = row hidden. */
+  proofTime?: string;
   brandAction?: ProductCardAction;
 };
 
@@ -401,11 +412,9 @@ export function BrandCard({ fromPrice, unit = 'unit', unitPlural, moq, proofTime
       service="brand"
       facts={
         <>
-          <Fact label="From">
-            <Money amount={fromPrice} suffix={`/ ${unit}`} />
-          </Fact>
-          <Fact label="Minimum order">{units(moq, unit, unitPlural)}</Fact>
-          <Fact label="Proof in">{proofTime}</Fact>
+          <Fact label="From">{fromPrice == null ? 'In your quote' : <Money amount={fromPrice} suffix={`/ ${unit}`} />}</Fact>
+          <Fact label="Minimum order">{moq == null ? 'In your quote' : units(moq, unit, unitPlural)}</Fact>
+          {proofTime ? <Fact label="Proof in">{proofTime}</Fact> : null}
         </>
       }
       actions={(id) => <Act action={brandAction} label="Brand it" icon={Sparkles} variant="primary" describedBy={id} />}
