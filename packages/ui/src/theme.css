@@ -1,0 +1,100 @@
+/*
+ * ODS 1.0 → Tailwind v4 utilities. Every name is prefixed `ods-` so nothing collides with the current tokens
+ * (bg-ink, bg-coral, text-muted …). `@theme inline` makes each utility read the scoped variable directly
+ * (e.g. bg-ods-blue → background-color: var(--ods-blue)), so the utilities only resolve inside a
+ * [data-theme="ods"] root and follow its density. Outside a root they resolve to nothing (no colour, no size).
+ *
+ *   colours     bg-/text-/border-/ring-/outline-ods-{navy,navy-dark,navy-hover,blue,blue-hover,blue-tint,teal,canvas,surface,
+ *               line,line-strong,slate,text,success(-tint),warning(-tint),danger(-tint),info(-tint),focus}
+ *   services    bg-/text-/border-ods-svc-{sourcing,pools,dropship,3pl,turnkey,brand}(-tint)
+ *   font        font-ods
+ *   type        text-ods-{display,h1,h2,body,table,label,small} (size + line height; density-aware)
+ *   radius      rounded-ods-{control,card,pill}
+ *   shadow      shadow-ods-{card,pop,dialog}
+ *   sizes       h-/min-h-ods-{control,row,head,tab}, size-ods-icon, w-/h-ods-icon-bar
+ *   padding     p-/px-/py-ods-pad-{page,card}, gap-ods-gap
+ *   width       max-w-ods-content (1240)
+ *   breakpoints ods-tablet: (≥ 768), ods-desktop: (≥ 1200)
+ *   motion      duration-ods / duration-ods-fast are arbitrary: use duration-(--ods-motion); ease-ods
+ *   z-index     z-(--z-sticky) … z-(--z-palette) (Tailwind v4 has no z theme namespace)
+ *   spacing     the 4 px scale is Tailwind's own: 1,2,3,4,5,6,8,12,18,20 = 4…80 px (--ods-space-* for plain CSS)
+ */
+@theme inline {
+  --color-ods-navy: var(--ods-navy);
+  --color-ods-navy-dark: var(--ods-navy-dark);
+  --color-ods-navy-hover: var(--ods-navy-hover);
+  --color-ods-blue: var(--ods-blue);
+  --color-ods-blue-hover: var(--ods-blue-hover);
+  --color-ods-blue-tint: var(--ods-blue-tint);
+  --color-ods-teal: var(--ods-teal);
+  --color-ods-canvas: var(--ods-canvas);
+  --color-ods-surface: var(--ods-surface);
+  --color-ods-line: var(--ods-line);
+  --color-ods-line-strong: var(--ods-line-strong);
+  --color-ods-slate: var(--ods-slate);
+  --color-ods-text: var(--ods-text);
+  --color-ods-success: var(--ods-success);
+  --color-ods-success-tint: var(--ods-success-tint);
+  --color-ods-warning: var(--ods-warning);
+  --color-ods-warning-tint: var(--ods-warning-tint);
+  --color-ods-danger: var(--ods-danger);
+  --color-ods-danger-tint: var(--ods-danger-tint);
+  --color-ods-info: var(--ods-info);
+  --color-ods-info-tint: var(--ods-info-tint);
+  --color-ods-focus: var(--ods-focus);
+
+  --color-ods-svc-sourcing: var(--svc-sourcing);
+  --color-ods-svc-sourcing-tint: var(--svc-sourcing-tint);
+  --color-ods-svc-pools: var(--svc-pools);
+  --color-ods-svc-pools-tint: var(--svc-pools-tint);
+  --color-ods-svc-dropship: var(--svc-dropship);
+  --color-ods-svc-dropship-tint: var(--svc-dropship-tint);
+  --color-ods-svc-3pl: var(--svc-3pl);
+  --color-ods-svc-3pl-tint: var(--svc-3pl-tint);
+  --color-ods-svc-turnkey: var(--svc-turnkey);
+  --color-ods-svc-turnkey-tint: var(--svc-turnkey-tint);
+  --color-ods-svc-brand: var(--svc-brand);
+  --color-ods-svc-brand-tint: var(--svc-brand-tint);
+
+  --font-ods: var(--ods-font);
+
+  --text-ods-display: var(--ods-display);
+  --text-ods-display--line-height: var(--ods-leading-display);
+  --text-ods-h1: var(--ods-h1);
+  --text-ods-h1--line-height: var(--ods-leading-title);
+  --text-ods-h2: var(--ods-h2);
+  --text-ods-h2--line-height: var(--ods-leading-title);
+  --text-ods-body: var(--ods-text-body);
+  --text-ods-body--line-height: var(--ods-leading-body);
+  --text-ods-table: var(--ods-text-table);
+  --text-ods-table--line-height: 1.4;
+  --text-ods-label: var(--ods-text-label);
+  --text-ods-label--line-height: 1.4;
+  --text-ods-small: var(--ods-text-small);
+  --text-ods-small--line-height: 1.45;
+
+  --radius-ods-control: var(--ods-radius-control);
+  --radius-ods-card: var(--ods-radius-card);
+  --radius-ods-pill: var(--ods-radius-pill);
+
+  --shadow-ods-card: var(--ods-shadow-card);
+  --shadow-ods-pop: var(--ods-shadow-pop);
+  --shadow-ods-dialog: var(--ods-shadow-dialog);
+
+  --spacing-ods-control: var(--ods-control-h);
+  --spacing-ods-row: var(--ods-row-h);
+  --spacing-ods-head: var(--ods-head-h);
+  --spacing-ods-tab: var(--ods-tab-h);
+  --spacing-ods-pad-page: var(--ods-pad-page);
+  --spacing-ods-pad-card: var(--ods-pad-card);
+  --spacing-ods-gap: var(--ods-gap);
+  --spacing-ods-icon: var(--ods-icon);
+  --spacing-ods-icon-bar: var(--ods-icon-bar);
+
+  --container-ods-content: var(--ods-content-max);
+
+  --breakpoint-ods-tablet: 48rem;
+  --breakpoint-ods-desktop: 75rem;
+
+  --ease-ods: var(--ods-ease);
+}

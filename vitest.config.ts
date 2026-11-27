@@ -5,6 +5,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, '.'),
+      // ODS 1.0 design system (tsconfig path alias, packages/ui/src)
+      '@octopus/ui': path.resolve(__dirname, 'packages/ui/src'),
       // `server-only` throws outside React Server Components; unit tests run plain Node.
       'server-only': path.resolve(__dirname, 'tests/stubs/server-only.ts'),
     },

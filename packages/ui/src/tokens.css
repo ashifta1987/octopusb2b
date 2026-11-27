@@ -1,0 +1,141 @@
+/*
+ * ODS 1.0 tokens (NEW-THEME-MASTER-PROMPT Appendix A), scoped under [data-theme="ods"].
+ * Nothing here applies outside an ODS root, so the current Rubik / Ink / Coral / Pearl site is unchanged while the
+ * ods_theme_v1 flag is off. Imported once from app/globals.css (before Tailwind's layers are emitted).
+ * Values are mirrored in ./tokens.ts (tests/unit/ods-tokens.test.ts keeps the two identical).
+ *
+ * Changes from Appendix A, all required by the scoping or by Part 2.2:
+ *  - `:root` → `[data-theme="ods"]`; densities via data-density on the ODS root, an ancestor or a nested panel;
+ *  - the phone override (< 768 px) applies to comfortable only, so compact keeps H1 20 on phones;
+ *  - added from Part 2.2/2.4: --ods-display, --ods-text-small, --ods-leading-*, --ods-space-*, --ods-icon(-bar),
+ *    --ods-focus-width/offset, --ods-motion*, --ods-ease, --z-base;
+ *  - focus ring, .num and reduced motion are scoped to ODS roots.
+ */
+
+/* base (same in both densities) + comfortable defaults */
+[data-theme="ods"] {
+  /* brand (from the logo) */
+  --ods-navy: #1A174A; --ods-navy-dark: #14123B; --ods-navy-hover: #2E2B66;
+  --ods-blue: #2A6FD1; --ods-blue-hover: #1F5BB0; --ods-blue-tint: #EAF1FC;
+  --ods-teal: #5FD3C9;
+  /* neutrals */
+  --ods-canvas: #F4F6F9; --ods-surface: #FFFFFF; --ods-line: #E3E7EF; --ods-line-strong: #C9D0DD; --ods-slate: #5B6478; --ods-text: #1A174A;
+  /* status */
+  --ods-success: #0B7A75; --ods-success-tint: #E3F5F3;
+  --ods-warning: #B54708; --ods-warning-tint: #FFF4E5;
+  --ods-danger: #B42318;  --ods-danger-tint: #FDECEA;
+  --ods-info: #1D4E9A;    --ods-info-tint: #EAF1FC;
+  --ods-focus: #F59E0B;
+  /* services */
+  --svc-sourcing: #1D4E9A; --svc-sourcing-tint: #EAF1FC;
+  --svc-pools: #0B5F5B;    --svc-pools-tint: #E3F5F3;
+  --svc-dropship: #5B3AA8; --svc-dropship-tint: #F0EBFB;
+  --svc-3pl: #3B4687;      --svc-3pl-tint: #EDEFF8;
+  --svc-turnkey: #94420A;  --svc-turnkey-tint: #FDF1E6;
+  --svc-brand: #A11B5A;    --svc-brand-tint: #FCE9F1;
+  /* type (Inter via next/font: packages/ui/src/fonts.ts sets --font-ods-inter on the ODS root) */
+  --ods-font: var(--font-ods-inter), Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ods-leading-title: 1.2; --ods-leading-display: 1.08;
+  /* shadows */
+  --ods-shadow-card: 0 1px 2px rgba(26,23,74,.05);
+  --ods-shadow-pop: 0 12px 32px rgba(26,23,74,.14);
+  --ods-shadow-dialog: 0 16px 40px rgba(26,23,74,.18);
+  /* z */
+  --z-base: 0; --z-sticky: 10; --z-dropdown: 20; --z-drawer: 30; --z-modal: 40; --z-toast: 50; --z-palette: 60;
+  --ods-content-max: 1240px;
+  /* spacing, 4 px base */
+  --ods-space-1: 4px; --ods-space-2: 8px; --ods-space-3: 12px; --ods-space-4: 16px; --ods-space-5: 20px;
+  --ods-space-6: 24px; --ods-space-8: 32px; --ods-space-12: 48px; --ods-space-18: 72px; --ods-space-20: 80px;
+  /* focus ring */
+  --ods-focus-width: 3px; --ods-focus-offset: 2px;
+  /* motion */
+  --ods-motion-fast: 150ms; --ods-motion: 200ms; --ods-ease: cubic-bezier(0,0,.2,1);
+  /* icons */
+  --ods-icon-bar: 22px;
+}
+
+/* comfortable = customer areas (default) */
+[data-theme="ods"],
+[data-theme="ods"][data-density="comfortable"],
+[data-density="comfortable"] [data-theme="ods"],
+[data-theme="ods"] [data-density="comfortable"] {
+  --ods-text-body: 15px; --ods-text-table: 14px; --ods-text-label: 13px; --ods-text-small: 13px;
+  --ods-display: 52px; --ods-h1: 28px; --ods-h2: 21px; --ods-leading-body: 1.6;
+  --ods-control-h: 44px; --ods-row-h: 52px; --ods-head-h: 44px;
+  --ods-radius-control: 8px; --ods-radius-card: 14px; --ods-radius-pill: 999px;
+  --ods-pad-page: 32px; --ods-pad-card: 20px; --ods-gap: 16px;
+  --ods-tab-h: 48px; --ods-tab-bar: 3px;
+  --ods-icon: 18px;
+}
+
+/* phones: comfortable only */
+@media (max-width: 767px) {
+  [data-theme="ods"],
+  [data-theme="ods"][data-density="comfortable"],
+  [data-density="comfortable"] [data-theme="ods"],
+  [data-theme="ods"] [data-density="comfortable"] {
+    --ods-pad-page: 16px; --ods-h1: 24px; --ods-display: 34px;
+  }
+}
+
+/* compact = staff apps (after the phone block, and more specific than the bare root, so it always wins) */
+[data-theme="ods"][data-density="compact"],
+[data-density="compact"] [data-theme="ods"],
+[data-theme="ods"] [data-density="compact"] {
+  --ods-text-body: 13px; --ods-text-table: 13px; --ods-text-label: 12px; --ods-text-small: 12px;
+  --ods-display: 52px; --ods-h1: 20px; --ods-h2: 15px; --ods-leading-body: 1.5;
+  --ods-control-h: 32px; --ods-row-h: 36px; --ods-head-h: 34px;
+  --ods-radius-control: 6px; --ods-radius-card: 6px; --ods-radius-pill: 4px;
+  --ods-pad-page: 16px; --ods-pad-card: 12px; --ods-gap: 12px;
+  --ods-tab-h: 36px; --ods-tab-bar: 2px;
+  --ods-icon: 14px;
+}
+
+/* ODS base styles: layered, so Tailwind utilities (ods-* and the rest) still win over them */
+@layer base {
+  [data-theme="ods"] {
+    font-family: var(--ods-font);
+    color: var(--ods-text);
+    background-color: var(--ods-canvas);
+    font-size: var(--ods-text-body);
+    line-height: var(--ods-leading-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  /* a nested density panel re-reads its own body size */
+  [data-theme="ods"] [data-density] { font-size: var(--ods-text-body); line-height: var(--ods-leading-body); }
+  [data-theme="ods"] :is(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--ods-font);
+    color: var(--ods-navy);
+    letter-spacing: -0.01em;
+    line-height: var(--ods-leading-title);
+  }
+  [data-theme="ods"] h1 { font-size: var(--ods-h1); font-weight: 700; }
+  [data-theme="ods"] h2 { font-size: var(--ods-h2); font-weight: 700; }
+  [data-theme="ods"] :is(h3, h4, h5, h6) { font-size: var(--ods-text-body); font-weight: 600; }
+  /* code samples: a system monospace (Tailwind's preflight would use the legacy --font-mono, Jost) */
+  [data-theme="ods"] :is(code, kbd, samp, pre) { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.9em; }
+}
+
+@layer components {
+  /* tabular figures for numbers and money; Inter, not the legacy .num (Rubik) */
+  [data-theme="ods"] .num { font-family: var(--ods-font); letter-spacing: normal; font-variant-numeric: tabular-nums; text-align: right; }
+}
+
+/*
+ * Unlayered on purpose: app/globals.css sets h1–h4 font/colour/line-height, body colours and the Coral focus ring
+ * unlayered, which would beat any layered rule. `revert-layer` hands those properties back to the layered ODS base
+ * (and to utilities), so `text-ods-h1`, `leading-*` and `text-*` keep working on ODS headings.
+ */
+[data-theme="ods"] :is(h1, h2, h3, h4) { font-family: revert-layer; color: revert-layer; letter-spacing: revert-layer; line-height: revert-layer; }
+html[data-theme="ods"] body, body[data-theme="ods"] { background: revert-layer; color: revert-layer; font-family: revert-layer; font-size: revert-layer; line-height: revert-layer; }
+/* focus ring: 3 px amber on every focusable element inside an ODS root (2.9) */
+[data-theme="ods"]:focus-visible,
+[data-theme="ods"] :focus-visible { outline: var(--ods-focus-width) solid var(--ods-focus); outline-offset: var(--ods-focus-offset); }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme="ods"],
+  [data-theme="ods"] *,
+  [data-theme="ods"] *::before,
+  [data-theme="ods"] *::after { animation: none !important; transition: none !important; }
+}

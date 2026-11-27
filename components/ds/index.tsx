@@ -2,7 +2,7 @@
  * ADDON-44 PART 1 — shared design-system components (build once, reuse).
  * Tokens live in app/globals.css (ink, coral, coral-text, pearl, black, line, tint, ill-bg, ok/warn/needs/bad pairs, new-bg).
  * Every interactive element here is ≥ 44 px tall and gets the global 3 px focus ring.
- * Live gallery of every component and state: /dev/ui (staging and local only).
+ * Live gallery of every component and state: /dev/ui/current (staging and local only). /dev/ui is the ODS 1.0 gallery.
  */
 import Link from 'next/link';
 import type { ReactNode } from 'react';
