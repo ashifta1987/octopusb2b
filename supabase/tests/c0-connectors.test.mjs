@@ -327,6 +327,8 @@ export async function runC0Checks(db, ctx) {
   ok(snap?.scope === 'dropship' && Number(snap.declared_usd_cents) === Math.round(18000 * 0.2723) && snap.store_order_id === soDs.store_order_id && snap.snapshot?.store_order?.order_number === soDs.order_number,
     'the customs snapshot (with the store order) is saved with the shipment');
   ok(/CUSTOMS_SNAPSHOT_LOCKED/.test(await err(`update wh_shipment_customs set declared_usd_cents = 1 where shipment_id = $1`, [rec?.id])), 'the snapshot never changes');
+  ok(!(await err(`update wh_shipment_customs set store_order_id = null where shipment_id = $1`, [rec?.id])) && /CUSTOMS_SNAPSHOT_LOCKED/.test(await err(`update wh_shipment_customs set store_order_id = $2 where shipment_id = $1`, [rec?.id, soDs.store_order_id])),
+    'only ON DELETE SET NULL of the store order link is allowed (test clean-up can delete orders); pointing it elsewhere is refused');
   await as(packer, 'aal2');
   const packerSees = Number((await one(`select count(*) n from wh_shipment_customs where shipment_id = $1`, [rec?.id])).n);
   await as(A.uid);

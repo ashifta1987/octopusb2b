@@ -135,7 +135,7 @@ create table if not exists public.wh_shipment_customs (
   block_below_pct numeric,
   snapshot jsonb not null check (jsonb_typeof(snapshot) = 'object'),
   created_at timestamptz not null default now(),
-  constraint wh_shipment_customs_dropship_value check (scope <> 'dropship' or (declared_usd_cents is not null and duty_type is not null and store_order_id is not null))
+  constraint wh_shipment_customs_dropship_value check (scope <> 'dropship' or (declared_usd_cents is not null and duty_type is not null))
 );
 comment on table public.wh_shipment_customs is 'C0: the customs check result saved with the label (declared value = what the buyer paid, locked; item lines with English description, HS, qty, unit value, origin, weight, battery / liquid / magnet; the policy in force; a snapshot of the store order without buyer name or address). Never changed after the label.';
 create index if not exists wh_shipment_customs_order_idx on public.wh_shipment_customs (store_order_id);
@@ -241,6 +241,14 @@ language plpgsql
 set search_path = public
 as $$
 begin
+  -- the only change allowed: a foreign key set to NULL by ON DELETE SET NULL (the store order or the policy row was deleted, e.g. test clean-up)
+  if new.shipment_id = old.shipment_id and new.scope = old.scope and new.declared_usd_cents is not distinct from old.declared_usd_cents
+     and new.duty_type is not distinct from old.duty_type and new.block_below_pct is not distinct from old.block_below_pct and new.snapshot = old.snapshot
+     and new.created_at = old.created_at
+     and (new.store_order_id is not distinct from old.store_order_id or new.store_order_id is null)
+     and (new.policy_id is not distinct from old.policy_id or new.policy_id is null) then
+    return new;
+  end if;
   raise exception 'CUSTOMS_SNAPSHOT_LOCKED: the customs snapshot of a label never changes; void the label and make a new one.';
 end $$;
 drop trigger if exists trg_c0_customs_snapshot_locked on public.wh_shipment_customs;
