@@ -13,6 +13,8 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: 1,
   timeout: 60_000,
+  // server actions + revalidation on the remote staging DB can take several seconds: give UI assertions room
+  expect: { timeout: 15_000 },
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
     // axe must judge the settled page, not a frame halfway through a colour transition (the app honours prefers-reduced-motion)
