@@ -33,6 +33,7 @@ const user = async (email, role) => {
 const INTERNAL_NAME = /supplier|cost|margin|markup|contact|note|_raw$|created_by|assigned|reviewer|confirmed_by|set_by|updated_by|invited_by|matched_by|trace_id|is_seed|hold_reason|rejection|sha256|storage_path|source_file|secret|key_hash|factory_model|internal/;
 const ALLOW = new Set([
   'quotes.notes',                       // the quote's notes to the buyer (shown on the quote)
+  'rfq_lines.notes', 'quote_list_items.notes', // CH-1: the customer's own notes on their request lines / quote list (own company rows only)
   'kyc_submissions.contact_name', 'kyc_submissions.contact_phone', 'kyc_submissions.contact_email', // the customer's own entries
   'kyc_documents.storage_path',         // the customer's own uploaded files (own rows only)
   'tickets.created_by', 'ticket_messages.internal', // who opened the customer's own ticket; flag only (internal rows are filtered by RLS)

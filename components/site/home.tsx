@@ -19,6 +19,8 @@ export async function WebsiteHome() {
   ]);
   const poolsOn = settings.pool_enabled !== false;
   const turnkeyOn = settings['turnkey.enabled'] !== false;
+  // Octopus Dropship is open when site_settings.dropship_v2_ui is true (owner opened it 27 Nov): the card follows the switch
+  const dropshipOn = typeof settings['dropship_v2_ui'] === 'boolean' ? settings['dropship_v2_ui'] === true : process.env.APP_ENVIRONMENT === 'staging'; // same default as isDropshipV2UiEnabled
   const tkCount = turnkey.projects.length || 300;
   const sb = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const tkCards = turnkeyOn ? turnkey.projects.map((p) => ({ ...p, image: tkImageUrl(p.hero_image_path, sb) })).filter((p) => p.image).slice(0, 7) : [];
@@ -31,7 +33,7 @@ export async function WebsiteHome() {
     { key: 'sourcing', href: '/sourcing', img: '01-homepage-service-card-product-sourcin.webp', alt: 'A buyer comparing product samples at a desk with a laptop.', label: 'Product sourcing', title: 'Tell us the product. We find the factory.', body: 'Send a photo, link or specification. We shortlist verified factories and return quotes within 24 hours.' },
     { key: 'brand', href: '/make-my-brand', img: '02-homepage-service-card-make-my-brand.webp', alt: 'Flat-lay of a branded product and box with a logo mock-up.', label: 'Make My Brand', title: 'Your brand on proven products.', body: 'Pick a product that already sells, add your logo and packaging, and see a studio preview before you commit.' },
     ...(poolsOn ? [{ key: 'pools', href: '/pools', img: '03-homepage-service-card-moq-pools.webp', alt: 'A few entrepreneurs examining one product sample together.', label: 'MOQ pools', title: 'Factory minimum too big? Share it.', body: 'Join other buyers to fill one factory order. Funds stay in escrow and are refunded if the pool does not fill.' }] : []),
-    { key: 'dropship', href: '/request/dropship', img: '04-homepage-service-card-dropshipping.webp', alt: 'An online seller at home with a laptop and packed parcels.', label: 'Dropshipping', soon: true, title: 'You sell. We ship to your customer.', body: 'Connect your store and we fulfil each order from our China warehouse. Join the launch list.' },
+    { key: 'dropship', href: '/request/dropship', img: '04-homepage-service-card-dropshipping.webp', alt: 'An online seller at home with a laptop and packed parcels.', label: 'Dropshipping', soon: !dropshipOn, title: 'You sell. We ship to your customer.', body: dropshipOn ? 'Pick products from our catalogue and we fulfil each order from our China warehouse under your brand.' : 'Connect your store and we fulfil each order from our China warehouse. Join the launch list.' },
     ...(turnkeyOn ? [{ key: 'turnkey', href: '/turnkey', img: '05-homepage-service-card-turnkey-project.webp', alt: 'A finished modern café interior with customers.', label: 'Turnkey projects', title: 'A complete business, set up from China.', body: `Choose from ${tkCount} projects, from cafés and gyms to small factories, with one team from enquiry to handover.` }] : []),
     { key: '3pl', href: '/3pl', img: '06-homepage-service-card-3pl-and-logisti.webp', alt: 'A bright organised warehouse aisle with a worker scanning a parcel.', label: '3PL and logistics', title: 'Stored in China. Delivered worldwide.', body: 'We receive, pick, pack and dispatch your orders with Express, Standard or Economy shipping, and handle returns.' },
   ];

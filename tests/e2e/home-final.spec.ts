@@ -17,7 +17,8 @@ test('sections in the design order; six service cards with pictures and alt text
   const cards = page.locator('[data-testid^="home-service-"]');
   expect(await cards.count()).toBeGreaterThanOrEqual(4);
   for (const card of await cards.all()) await expect(card.locator('img').first()).toHaveAttribute('alt', /\S{4,}/);
-  await expect(page.getByTestId('home-service-dropship')).toContainText('Coming soon');
+  // the Dropship card follows site_settings.dropship_v2_ui (Coming soon while off, Open now when on)
+  await expect(page.getByTestId('home-service-dropship')).toContainText(/Coming soon|Open now/);
   // owner (26 Nov): no "Turnkey catalogue" in the header; the route has a photo per step; team and warehouse band
   await expect(page.getByRole('banner').getByRole('link', { name: 'Turnkey catalogue' })).toHaveCount(0);
   await expect(page.locator('#route li img')).toHaveCount(5);
