@@ -11,7 +11,7 @@ import {
   type Condition, type ReturnRow, type ReturnsBoard,
 } from '@/lib/warehouse-w5';
 import { addReturnPhotoAction, applyReturnDefaultAction, completeReturnAction, inspectReturnAction, registerReturnAction } from '../w5-actions';
-import { MsgLine, useRun } from '../wh-run';
+import { HeldResults, HeldResultsList, MsgLine, useRun } from '../wh-run';
 
 const CHIP = 'inline-flex items-center px-3 min-h-[44px] rounded-full border text-[13.5px] font-semibold no-underline';
 const chip = (on: boolean) => `${CHIP} ${on ? 'bg-coral border-coral text-white hover:text-white' : 'bg-white border-line-strong text-ink hover:bg-tint-2'}`;
@@ -130,7 +130,8 @@ function Inspect({ r }: { r: ReturnRow }) {
 }
 
 function Complete({ r }: { r: ReturnRow }) {
-  const run = useRun();
+  // finishing moves the return out of "decided" (and off the Open tab): the success sentence is held above the list
+  const run = useRun({ holdAs: `wh-rt-complete-msg-${r.code}`, holdPrefix: `${r.code}: ` });
   const [note, setNote] = useState('');
   const label = r.decision === 'restock' ? 'Restock and finish' : r.decision === 'send_back' ? 'Create the send-back order' : 'Disposed of — finish';
   return (
@@ -143,7 +144,7 @@ function Complete({ r }: { r: ReturnRow }) {
 }
 
 function ApplyDefault({ r }: { r: ReturnRow }) {
-  const run = useRun();
+  const run = useRun({ holdAs: `wh-rt-default-msg-${r.code}`, holdPrefix: `${r.code}: ` });
   return (
     <div className="mt-3 flex flex-col gap-2 border-t border-divider pt-3">
       <p className="m-0 text-[13px] text-muted">The client did not decide by {fmtWh(r.decide_by)}. Default: restock the good units ({r.good_units}), dispose of the rest; with no good unit, discard.</p>
@@ -215,7 +216,7 @@ function Row({ r, board, focus }: { r: ReturnRow; board: ReturnsBoard; focus: bo
 export function ReturnsClient({ board, status, focus }: { board: ReturnsBoard; status: string; focus: string }) {
   const c = board.counts;
   return (
-    <>
+    <HeldResults>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {([['To inspect', c.received], ['Waiting for the client', c.inspected], ['To carry out', c.decided], ['Decision overdue', c.overdue]] as const).map(([k, v]) => (
           <div key={k} className="ds-card" data-testid={`wh-rt-count-${k.toLowerCase().replace(/ /g, '-')}`}>
@@ -232,6 +233,7 @@ export function ReturnsClient({ board, status, focus }: { board: ReturnsBoard; s
           <Link key={s} href={`/office/warehouse/returns?status=${s}`} aria-current={status === s ? 'page' : undefined} className={chip(status === s)}>{l}</Link>
         ))}
       </nav>
+      <HeldResultsList testId="wh-rt-results" />
       {board.returns.length === 0 ? (
         <DsEmptyState icon="refresh" title={status === 'done' ? 'No finished returns' : 'No open returns'} description="Registered returns appear here with their photos, grading and the client's decision." testId="wh-rt-empty" />
       ) : (
@@ -239,6 +241,6 @@ export function ReturnsClient({ board, status, focus }: { board: ReturnsBoard; s
           {board.returns.map((r) => <Row key={r.id} r={r} board={board} focus={focus === r.code} />)}
         </ul>
       )}
-    </>
+    </HeldResults>
   );
 }

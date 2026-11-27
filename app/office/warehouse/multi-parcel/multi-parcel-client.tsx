@@ -289,6 +289,8 @@ export function MultiParcelClient({ d }: { d: MultiParcel }) {
           <div className="mt-2"><MsgLine msg={fin.msg} testId="wh-multi-close-msg" /></div>
         </DsCard>
       )}
+      {/* once the order is packed the refreshed page drops the close card; its result sentence stays here (state lives above it) */}
+      {!(packing && d.parcels.length > 0) && fin.msg && <DsCard><MsgLine msg={fin.msg} testId="wh-multi-close-msg" /></DsCard>}
     </div>
   );
 }

@@ -10,7 +10,7 @@ import {
 } from '@/lib/warehouse-w3b';
 import { OrderStatusBadge } from '../orders/order-bits';
 import { assignExceptionAction, raiseExceptionAction, resolveExceptionItemAction } from '../w3b-actions';
-import { MsgLine, useRun } from '../wh-run';
+import { HeldResults, HeldResultsList, MsgLine, useRun } from '../wh-run';
 
 const CHIP = 'inline-flex items-center px-3 min-h-[44px] rounded-full border text-[13.5px] font-semibold no-underline';
 const chip = (on: boolean) => `${CHIP} ${on ? 'bg-coral border-coral text-white hover:text-white' : 'bg-white border-line-strong text-ink hover:bg-tint-2'}`;
@@ -18,7 +18,8 @@ const href = (status: string, kind: string | null) => `/office/warehouse/excepti
 
 function Resolve({ e, board }: { e: ExceptionRow; board: ExceptionsBoard }) {
   const asg = useRun();
-  const res = useRun();
+  // a resolved exception leaves the open queue on refresh: its success sentence is held above the list
+  const res = useRun({ holdAs: `wh-exc-resolve-msg-${e.code}` });
   const [owner, setOwner] = useState(e.owner_id ?? '');
   const [action, setAction] = useState<ExceptionAction>(e.actions[0] ?? 'close');
   const [text, setText] = useState('');
@@ -121,6 +122,7 @@ function Raise({ board }: { board: ExceptionsBoard }) {
 export function ExceptionsClient({ board, status, kind }: { board: ExceptionsBoard; status: string; kind: ExceptionKind | null }) {
   const open = Object.values(board.counts).reduce((n, x) => n + (x ?? 0), 0);
   return (
+    <HeldResults>
     <div className="flex flex-col gap-5">
       <nav aria-label="Exception filters" className="flex flex-wrap gap-2" data-testid="wh-exc-filters">
         {[['open', `Open (${open})`], ['resolved', 'Resolved'], ['all', 'All']].map(([s, l]) => (
@@ -136,6 +138,7 @@ export function ExceptionsClient({ board, status, kind }: { board: ExceptionsBoa
           </Link>
         ))}
       </nav>
+      <HeldResultsList testId="wh-exc-results" />
       {board.exceptions.length === 0 ? (
         <DsEmptyState icon="check" title={status === 'open' ? 'No open exceptions' : 'Nothing here'} description="Short picks, locked weight overrides and blocked lots appear here automatically." testId="wh-exc-empty" />
       ) : (
@@ -143,5 +146,6 @@ export function ExceptionsClient({ board, status, kind }: { board: ExceptionsBoa
       )}
       <Raise board={board} />
     </div>
+    </HeldResults>
   );
 }

@@ -6,7 +6,7 @@ import { Barcode128 } from '@/components/warehouse/barcode';
 import { fmtWh } from '@/lib/warehouse-inbound';
 import { PALLET_STATUS, kg, type DispatchBoard, type FreightPallet } from '@/lib/warehouse-w4';
 import { freightAddAction, freightCloseAction, freightCreateAction, freightDispatchAction, freightLabelPrintedAction, freightRemoveAction, freightReopenAction } from '../w4-actions';
-import { MsgLine, useRun } from '../wh-run';
+import { HeldResults, HeldResultsList, MsgLine, useRun } from '../wh-run';
 
 /** Board 13 — freight pallet build: client orders' parcels on an outbound pallet, weigh and measure, pallet label, dispatch. */
 export function Freight({ board, warehouseNames, cities }: { board: DispatchBoard; warehouseNames: Record<string, string>; cities: Record<string, string> }) {
@@ -23,6 +23,7 @@ export function Freight({ board, warehouseNames, cities }: { board: DispatchBoar
     setTimeout(() => { window.print(); setPrinting(null); }, 50);
   };
   return (
+    <HeldResults>
     <div className="flex flex-col gap-5">
       <div className="print:hidden">
         <DsCard title="Freight pallets" icon="layers" testId="wh-freight"
@@ -41,6 +42,8 @@ export function Freight({ board, warehouseNames, cities }: { board: DispatchBoar
           )}
         </DsCard>
       </div>
+      {/* a dispatched pallet leaves the active list on refresh: its result sentence is held here */}
+      <div className="print:hidden"><HeldResultsList testId="wh-freight-results" /></div>
       {active.map((p) => <div key={p.id} className="print:hidden"><PalletCard p={p} canVoid={board.can_void.includes(p.warehouse_code)} onPrint={(n) => print(p, n)} /></div>)}
       {sent.length > 0 && (
         <DsCard title="Dispatched pallets" icon="truck" noPadding className="print:hidden" testId="wh-freight-sent">
@@ -60,6 +63,7 @@ export function Freight({ board, warehouseNames, cities }: { board: DispatchBoar
         </div>
       ))}
     </div>
+    </HeldResults>
   );
 }
 
@@ -78,7 +82,9 @@ export function PalletLabel({ p, warehouse }: { p: FreightPallet; warehouse: str
 }
 
 function PalletCard({ p, canVoid, onPrint }: { p: FreightPallet; canVoid: boolean; onPrint: (copies: number) => void }) {
-  const { pending, msg, run, setMsg } = useRun();
+  const { pending: busy, msg, run, setMsg } = useRun();
+  const sent = useRun({ holdAs: `wh-pallet-msg-${p.code}`, holdPrefix: `${p.code}: ` });
+  const pending = busy || sent.pending;
   const [order, setOrder] = useState('');
   const [f, setF] = useState({ grossKg: '', lengthCm: '120', widthCm: '100', heightCm: '' });
   const [fw, setFw] = useState({ forwarder: '', reference: '' });
@@ -132,7 +138,7 @@ function PalletCard({ p, canVoid, onPrint }: { p: FreightPallet; canVoid: boolea
             <DsInput label="Freight forwarder" value={fw.forwarder} maxLength={120} onChange={(e) => setFw({ ...fw, forwarder: e.target.value })} containerClassName="w-[240px]" />
             <DsInput label="Booking reference (optional)" value={fw.reference} maxLength={64} onChange={(e) => setFw({ ...fw, reference: e.target.value })} containerClassName="w-[220px]" />
             <DsButton icon="send" disabled={pending || !fw.forwarder.trim()} disabledReason={fw.forwarder.trim() ? undefined : 'Enter the forwarder'} testId={`wh-pallet-dispatch-${p.code}`}
-              onClick={() => run(() => freightDispatchAction(p.id, fw.forwarder, fw.reference))}>Dispatch pallet</DsButton>
+              onClick={() => { setMsg(null); sent.run(() => freightDispatchAction(p.id, fw.forwarder, fw.reference)); }}>Dispatch pallet</DsButton>
           </div>
           {canVoid && (
             <details>
@@ -145,7 +151,7 @@ function PalletCard({ p, canVoid, onPrint }: { p: FreightPallet; canVoid: boolea
           )}
         </div>
       )}
-      <div className="mt-2"><MsgLine msg={msg} testId={`wh-pallet-msg-${p.code}`} /></div>
+      <div className="mt-2"><MsgLine msg={msg} testId={`wh-pallet-msg-${p.code}`} /><MsgLine msg={sent.msg} testId={`wh-pallet-error-${p.code}`} /></div>
     </DsCard>
   );
 }

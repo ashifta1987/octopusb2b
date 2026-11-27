@@ -9,7 +9,7 @@ import {
   type CarrierAccount, type CarriersBoard, type CarrierStation, type RuleVersion,
 } from '@/lib/warehouse-w4';
 import { decideRulesAction, proposeRulesAction, saveCarrierAccountAction, saveCarrierServiceAction, type RuleInput } from '../w4-actions';
-import { MsgLine, useRun } from '../wh-run';
+import { HeldResults, HeldResultsList, MsgLine, useRun } from '../wh-run';
 
 /** Warehouse OS · W4 board 9 — accounts, services, rule versions (propose / approve by a different admin), try the rules. */
 export function CarriersClient({ board, credentials }: { board: CarriersBoard; credentials: Record<string, boolean> }) {
@@ -32,14 +32,18 @@ function Station({ st, me, staging, credentials, multi }: { st: CarrierStation; 
   const services = useMemo(() => servicesOf(st), [st]);
   const wh = st.warehouse_code;
   return (
+    <HeldResults>
     <section className="flex flex-col gap-5" aria-label={`${st.name} carriers`} data-testid={`wh-carriers-${wh}`}>
       {multi && <h2 className="m-0 text-[20px] font-bold">{st.name} <span className="text-muted font-normal text-[15px]">· {wh}</span></h2>}
       <Accounts st={st} staging={staging} credentials={credentials} />
       <ActiveRules st={st} services={services} staging={staging} />
+      {/* proposing shows the "waiting for approval" card instead of the form, deciding removes that card: their sentences are held here */}
+      <HeldResultsList testId={`wh-rules-results-${wh}`} />
       {st.pending && <Pending v={st.pending} me={me} canDecide={st.can_manage} wh={wh} />}
       {st.can_manage && !st.pending && <Propose st={st} services={services} staging={staging} />}
       {st.history.length > 0 && <History versions={st.history} wh={wh} />}
     </section>
+    </HeldResults>
   );
 }
 
@@ -196,7 +200,7 @@ function ActiveRules({ st, services, staging }: { st: CarrierStation; services: 
 }
 
 function Pending({ v, me, canDecide, wh }: { v: RuleVersion; me: string; canDecide: boolean; wh: string }) {
-  const { pending, msg, run } = useRun();
+  const { pending, msg, run } = useRun({ holdAs: `wh-rules-decide-msg-${wh}` });
   const [reason, setReason] = useState('');
   const mine = v.proposed_by === me;
   return (
@@ -225,7 +229,7 @@ const toDraft = (v: RuleVersion | null): Draft[] => (v?.rules ?? []).map((r) => 
 function Propose({ st, services, staging }: { st: CarrierStation; services: ServiceForRules[]; staging: boolean }) {
   const wh = st.warehouse_code;
   const usable = services.filter((s) => s.active && s.accountActive);
-  const { pending, msg, run } = useRun();
+  const { pending, msg, run } = useRun({ holdAs: `wh-rules-msg-${wh}` });
   const [rows, setRows] = useState<Draft[]>(toDraft(st.active));
   const [fallback, setFallback] = useState(st.active?.fallback?.id ?? '');
   const [note, setNote] = useState('');

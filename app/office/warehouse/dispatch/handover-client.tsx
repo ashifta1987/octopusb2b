@@ -5,7 +5,7 @@ import { DsBadge, DsButton, DsCard, DsInput, DsSelect } from '@/components/drops
 import { fmtWh } from '@/lib/warehouse-inbound';
 import { CARRIER_LABEL, SHIPMENT_STATUS, grams, kg, type Dispatch, type DispatchBoard } from '@/lib/warehouse-w4';
 import { cancelDispatchAction, closeDispatchAction, dispatchRemoveAction, dispatchScanAction, openDispatchAction } from '../w4-actions';
-import { MsgLine, useRun } from '../wh-run';
+import { HeldResults, HeldResultsList, MsgLine, useRun } from '../wh-run';
 
 /** Hand-over batches per carrier account: scan checked labels in, hand over with who took them, print the manifest. */
 export function Handover({ board, warehouseNames }: { board: DispatchBoard; warehouseNames: Record<string, string> }) {
@@ -18,6 +18,7 @@ export function Handover({ board, warehouseNames }: { board: DispatchBoard; ware
   // render the sheet first, then open the print dialog
   const print = (code: string) => { setPrinting(code); setTimeout(() => { window.print(); setPrinting(null); }, 50); };
   return (
+    <HeldResults>
     <div className="flex flex-col gap-5">
       <div className="print:hidden">
         <DsCard title="Hand over to the carrier" icon="truck" testId="wh-handover"
@@ -38,6 +39,8 @@ export function Handover({ board, warehouseNames }: { board: DispatchBoard; ware
           )}
         </DsCard>
       </div>
+      {/* a handed-over or cancelled batch leaves the open list on refresh: its result sentence is held here */}
+      <div className="print:hidden"><HeldResultsList testId="wh-dispatch-results" /></div>
       {open.map((d) => <div key={d.id} className="print:hidden"><OpenBatch d={d} /></div>)}
       {closed.length > 0 && (
         <DsCard title="Manifests" icon="list" noPadding testId="wh-manifests" className="print:hidden" subtitle="Handed-over batches of the last 30 days.">
@@ -54,11 +57,15 @@ export function Handover({ board, warehouseNames }: { board: DispatchBoard; ware
         <div key={d.code} className="hidden print:block wh-print-on"><Manifest d={d} onPrint={() => undefined} warehouseName={warehouseNames[d.warehouse_code] ?? d.warehouse_code} sheet /></div>
       ))}
     </div>
+    </HeldResults>
   );
 }
 
 function OpenBatch({ d }: { d: Dispatch }) {
-  const { pending, msg, run, setMsg } = useRun();
+  const { pending: busy, msg, run, setMsg } = useRun();
+  const done = useRun({ holdAs: `wh-dispatch-msg-${d.code}`, holdPrefix: `${d.code}: ` });
+  const pending = busy || done.pending;
+  const finish = (p: () => ReturnType<typeof closeDispatchAction>) => { setMsg(null); done.run(p); };
   const [scan, setScan] = useState('');
   const [to, setTo] = useState('');
   const [mf, setMf] = useState('');
@@ -90,16 +97,16 @@ function OpenBatch({ d }: { d: Dispatch }) {
         <DsInput label="Handed to (driver or pickup reference)" value={to} maxLength={120} onChange={(e) => setTo(e.target.value)} containerClassName="w-[280px]" />
         <DsInput label="Carrier manifest number (optional)" value={mf} maxLength={64} onChange={(e) => setMf(e.target.value)} containerClassName="w-[240px]" />
         <DsButton icon="send" disabled={pending || d.lines.length === 0 || !to.trim()} disabledReason={d.lines.length === 0 ? 'Scan labels in first' : !to.trim() ? 'Enter who took the parcels' : undefined}
-          testId={`wh-dispatch-close-${d.code}`} onClick={() => run(() => closeDispatchAction(d.id, to, mf))}>Hand over {d.lines.length} parcel{d.lines.length === 1 ? '' : 's'}</DsButton>
+          testId={`wh-dispatch-close-${d.code}`} onClick={() => finish(() => closeDispatchAction(d.id, to, mf))}>Hand over {d.lines.length} parcel{d.lines.length === 1 ? '' : 's'}</DsButton>
       </div>
       <details className="mt-3">
         <summary className="cursor-pointer text-[13px] text-muted min-h-[44px] flex items-center">Cancel this batch</summary>
         <div className="flex flex-wrap gap-3 items-end">
           <DsInput label="Why is the batch cancelled?" value={reason} maxLength={300} onChange={(e) => setReason(e.target.value)} containerClassName="w-[280px]" />
-          <DsButton variant="secondary" disabled={pending || !reason.trim()} onClick={() => run(() => cancelDispatchAction(d.id, reason))}>Cancel batch</DsButton>
+          <DsButton variant="secondary" disabled={pending || !reason.trim()} onClick={() => finish(() => cancelDispatchAction(d.id, reason))}>Cancel batch</DsButton>
         </div>
       </details>
-      <div className="mt-2"><MsgLine msg={msg} testId={`wh-dispatch-msg-${d.code}`} /></div>
+      <div className="mt-2"><MsgLine msg={msg} testId={`wh-dispatch-msg-${d.code}`} /><MsgLine msg={done.msg} testId={`wh-dispatch-error-${d.code}`} /></div>
     </DsCard>
   );
 }
