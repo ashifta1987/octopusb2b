@@ -4,7 +4,9 @@ import { getSiteContent } from '@/lib/content';
 import { getServices } from '@/components/store/data';
 import { copy } from '@/components/store/home/shared';
 import { ServicePage } from '@/components/site/service-page';
-import { ON_REQUEST } from '@/components/site/ui';
+import Link from 'next/link';
+import { ON_REQUEST, h2Class, space, btn } from '@/components/site/ui';
+import { getShowcaseProducts, ShowcaseGrid } from '@/components/site/products';
 import { VERIFIED_FAQ } from '@/components/site/home';
 import { siteImage, shareImage } from '@/lib/site-images';
 
@@ -25,7 +27,7 @@ export function generateMetadata(): Metadata {
 /** Product sourcing — design page 02. The request form itself stays at /request/sourcing. */
 export default async function SourcingPage() {
   // cached reads only (site content + service prices), so the page is part of the static shell
-  const [{ blocks }, services] = await Promise.all([getSiteContent(), getServices()]);
+  const [{ blocks, categories }, services, products] = await Promise.all([getSiteContent(), getServices(), getShowcaseProducts(8)]);
   // real fees from the services table; a service that is not set up shows "On request"; 0 = free to submit (as on the request form)
   const fee = (code: string) => {
     const s = services[code];
@@ -35,7 +37,22 @@ export default async function SourcingPage() {
   const rfq = services.rfq?.priceCents ? money(services.rfq.priceCents, services.rfq.currency) : null;
   const verified = copy(blocks, 'home3.faq.2', VERIFIED_FAQ)[1] ?? '';
   return (
-    <ServicePage testId="sourcing-page" d={{
+    <ServicePage testId="sourcing-page" afterFacts={products.length > 0 && (
+      // owner 27 Nov: real listed products as examples of what we source (same data as /products)
+      <section className={`px-4 sm:px-6 ${space.tight}`} aria-labelledby="src-products-h">
+        <div className="max-w-[1200px] mx-auto">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="max-w-[720px]">
+              <h2 id="src-products-h" className={h2Class}>Products we already source</h2>
+              <p className="mt-3 mb-0 text-[18px] leading-[1.55] text-muted">A few of the products listed in our catalogue, with their real prices and minimum orders. Open one to see the details.</p>
+            </div>
+            <Link href="/products" className={btn.dark} data-testid="browse-catalogue">Browse verified factory products</Link>
+          </div>
+          <ShowcaseGrid products={products} categories={categories} testId="sourcing-products" />
+          <p className="mt-6 mb-0 text-[16px] text-muted">Looking for something else? <Link href="/request/sourcing" className="inline-flex items-center min-h-11 font-semibold underline text-ink hover:text-coral-text">Send a sourcing request</Link> and we find the factory for you.</p>
+        </div>
+      </section>
+    )} d={{
       key: 'sourcing', brand: 'sourcing',
       crumb: 'Product sourcing',
       title: 'Tell us the product. We find the factory.',

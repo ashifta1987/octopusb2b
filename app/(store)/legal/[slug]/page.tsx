@@ -39,7 +39,7 @@ async function Content({ params }: { params: Params }) {
         <nav aria-label="Sections" className="card p-5 mt-6">
           <h2 className="text-base font-semibold mb-2">Contents</h2>
           <ol className="grid sm:grid-cols-2 gap-x-6 gap-y-1 text-sm">
-            {t.sections.map((s) => <li key={s.no}><a href={`#s-${s.no}`} className="text-coral-text hover:underline">{s.no}. {s.title}</a></li>)}
+            {t.sections.map((s) => <li key={s.no}><a href={`#s-${s.no}`} className="text-coral-text underline">{s.no}. {s.title}</a></li>)}
           </ol>
         </nav>
         <div className="card p-6 sm:p-8 mt-6 space-y-8">

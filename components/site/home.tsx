@@ -1,15 +1,12 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { categoryPath } from '@/lib/content';
-import { money } from '@/lib/format';
 import { getStoreContent } from '@/components/store/currency';
-import { getFeatured, listProducts } from '@/components/store/data';
-import { unitOne } from '@/components/store/product-card';
 import { getTurnkeyCatalogue } from '@/lib/turnkey/catalogue';
 import { categoryLabel, tkImageUrl } from '@/lib/turnkey/format';
 import { JsonLd, SITE_URL } from '@/components/store/seo';
 import { copy } from '@/components/store/home/shared';
 import { siteImage } from '@/lib/site-images';
+import { getShowcaseProducts, ShowcaseGrid } from './products';
 import { h1Class, h2Class, eyebrowClass, btn, space, StatusPill, Pic, Check, design, TeamBand, OFFICE_HOURS, WHATSAPP_URL, SUB_BRANDS, type SubBrand } from './ui';
 
 /** Current site's answer to "Are the factories verified?" (content block home3.faq.2) — fills [ANSWER FROM CURRENT FAQ]. */
@@ -17,11 +14,9 @@ export const VERIFIED_FAQ = 'Are the factories verified?|Yes. Dropshipping and M
 
 /** Homepage (design page 01). Real data: products, turnkey projects, service switches; copy from the design. */
 export async function WebsiteHome() {
-  const [{ blocks, settings, company, categories }, featured, turnkey] = await Promise.all([
-    getStoreContent(), getFeatured(4), getTurnkeyCatalogue(),
+  const [{ blocks, settings, company, categories }, ready, turnkey] = await Promise.all([
+    getStoreContent(), getShowcaseProducts(4), getTurnkeyCatalogue(),
   ]);
-  // real published products; a slow or failed fallback query hides the section instead of breaking the page
-  const ready = featured.length ? featured : (await listProducts({ sort: 'newest' }).catch(() => ({ items: [] as Awaited<ReturnType<typeof listProducts>>['items'] }))).items.filter((p) => p.image_url).slice(0, 4);
   const poolsOn = settings.pool_enabled !== false;
   const turnkeyOn = settings['turnkey.enabled'] !== false;
   const tkCount = turnkey.projects.length || 300;
@@ -136,32 +131,10 @@ export async function WebsiteHome() {
       {ready.length > 0 && (
         <section id="products" className={`px-4 sm:px-6 pt-0 pb-16 md:pb-[88px]`} aria-labelledby="ready-h">
           <div className="max-w-[1200px] mx-auto">
+            <p className={`${eyebrowClass} m-0 mb-3 text-coral-text`} data-testid="ready-caption">Examples via <Link href="/products" className="underline text-coral-text hover:text-ink">Octopus Sourcing</Link></p>
             <h2 id="ready-h" className={h2Class}>Ready to order from verified factories</h2>
             <p className="mt-3 mb-0 text-[18px] leading-[1.55] text-muted max-w-[680px]">Prices are per piece at the factory minimum. Need fewer? {poolsOn ? <Link href="/pools" className="underline font-semibold text-ink hover:text-coral-text">Share the order in an MOQ pool</Link> : 'Share the order in an MOQ pool'} and split it with other buyers.</p>
-            <ul className="mt-9 flex flex-wrap gap-5 list-none p-0" data-testid="home-ready">
-              {ready.map((p) => {
-                const low = p.tiers.length ? Math.min(...p.tiers.map((t) => t.unit_price_cents)) : p.min_price_cents;
-                const cat = p.category_id ? categoryPath(categories, p.category_id)[0]?.name : null;
-                return (
-                  <li key={p.id} className="flex-[1_1_250px] min-w-0 flex">
-                    <Link href={`/p/${p.slug}`} className="w-full bg-white border border-line rounded-[18px] overflow-hidden text-black flex flex-col card-lift hover:border-coral-text hover:text-black">
-                      <div className="relative aspect-[3/2] bg-white border-b border-divider">
-                        {/* product photos are square: shown whole on white, never cropped */}
-                        {p.image_url && <Image src={p.image_url} alt={p.title} fill sizes="(min-width:1200px) 290px, (min-width:600px) 50vw, 100vw" className="object-contain p-3" unoptimized />}
-                      </div>
-                      <div className="p-5 flex flex-col gap-1.5 flex-1">
-                        {cat && <span className="font-mono text-[12px] font-semibold tracking-[.1em] uppercase text-coral-text">{cat}</span>}
-                        <b className="text-[17px] leading-[1.3] text-ink line-clamp-2 flex-1">{p.title}</b>
-                        <p className="num mt-2.5 mb-0 text-[26px] font-extrabold text-ink">
-                          {low ? <><span className="text-[14px] font-normal text-muted">from </span>{money(low, p.currency)}<span className="text-[14px] font-normal text-muted"> / {unitOne(p.unit)}</span></> : <span className="text-[16px] font-semibold text-muted">Price unknown</span>}
-                        </p>
-                        <p className="m-0 text-[14px] text-muted">Minimum order {p.moq.toLocaleString('en-US')}+ {p.unit}</p>
-                      </div>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+            <ShowcaseGrid products={ready} categories={categories} testId="home-ready" />
             <p className="mt-6 mb-0"><Link href="/products" className="inline-flex items-center min-h-11 font-semibold underline text-ink hover:text-coral-text">View all products →</Link></p>
           </div>
         </section>

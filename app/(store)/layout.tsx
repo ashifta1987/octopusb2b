@@ -1,9 +1,9 @@
 import { Suspense } from 'react';
-import { SiteFrame, StoreAnnouncement } from '@/components/store-shell';
+import { SiteFrame } from '@/components/store-shell';
 import { MaintenanceNotice } from '@/components/maintenance-notice';
-import { HomeOnly } from '@/components/site/home-only';
 
-/** Storefront layout: website shell (design §3) — skip link, announcement (homepage only), white header + navy service bar, navy footer. */
+/** Storefront layout: website shell (design §3) — skip link, white header + navy service bar, navy footer.
+ *  Owner 27 Nov: no announcement bar above the logo (StoreAnnouncement and its CMS switch stay, but are not rendered). */
 export default function StoreLayout({ children }: { children: React.ReactNode }) {
   return (
     <SiteFrame
@@ -13,8 +13,6 @@ export default function StoreLayout({ children }: { children: React.ReactNode })
           <Suspense fallback={null}>
             <MaintenanceNotice variant="prominent" />
           </Suspense>
-          {/* cached data only → part of the static shell */}
-          <HomeOnly><StoreAnnouncement /></HomeOnly>
         </>
       }
     >

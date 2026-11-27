@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { categoryPath, block } from '@/lib/content';
 import { getStoreContent } from '@/components/store/currency';
 import { money, fmtDate, COUNTRY_NAMES } from '@/lib/format';
-import { VerifiedBadge, ServiceChoiceCard, Icon } from '@/components/ds';
+import { VerifiedBadge, Icon } from '@/components/ds';
 import { getProduct, getRecommendations, getServices, getMoreFromFactory, type Factory } from '@/components/store/data';
 import { ProductGrid, GridSkeleton, unitOne, fmtQty } from '@/components/store/product-card';
 import { PriceCalculator } from '@/components/store/price-calculator';
@@ -15,6 +15,8 @@ import { ProductGallery } from '@/components/store/product-gallery';
 import { AdSlot } from '@/components/store/ad-slot';
 import { Breadcrumbs, JsonLd, breadcrumbLd, parts, SITE_URL } from '@/components/store/seo';
 import { ProductPoolCard } from '@/components/store/pools/product-pool-card';
+import { ProductActions } from '@/components/site/product-actions';
+import { isDropshipV2UiEnabled } from '@/lib/dropship';
 
 type Params = Promise<{ slug: string }>;
 
@@ -51,11 +53,14 @@ async function Content({ params }: { params: Params }) {
   const { slug } = await params;
   const p = await getProduct(slug);
   if (!p) notFound();
-  const [{ categories, company, blocks }, services, recs, more] = await Promise.all([getStoreContent(), getServices(), getRecommendations(p.id, p.category_id), getMoreFromFactory(p.id)]);
+  const [{ categories, company, blocks, settings }, services, recs, more, dropshipLive] = await Promise.all([getStoreContent(), getServices(), getRecommendations(p.id, p.category_id), getMoreFromFactory(p.id), isDropshipV2UiEnabled()]);
   const verified = !!p.factory?.verified;
   const path = categoryPath(categories, p.category_id);
+  // owner 27 Nov: products belong to Octopus Sourcing → Home › Product sourcing › Products › Category › Product
   const crumbs = [
     { name: 'Home', href: '/' },
+    { name: 'Product sourcing', href: '/sourcing' },
+    { name: 'Products', href: '/products' },
     ...path.map((c, i) => ({ name: c.name, href: `/c/${path.slice(0, i + 1).map((x) => x.slug).join('/')}` })),
     { name: p.title, href: `/p/${p.slug}` },
   ];
@@ -147,25 +152,9 @@ async function Content({ params }: { params: Params }) {
         </div>
       </div>
 
-      {/* ADDON-44-F board 24: four ways to use this product */}
-      <section className="mt-10" aria-labelledby="ways-h" data-testid="product-ways">
-        <div className="k !text-coral-text">Four ways to use this product</div>
-        <h2 id="ways-h" className="mt-1.5 text-[25px] sm:text-[30px] font-extrabold leading-[1.15]">What do you want to do with this product?</h2>
-        <p className="mt-1.5 text-[15px] text-black max-w-[640px]">Each choice opens a request with this product already filled in. Every request gets a reference number you can follow in My account.</p>
-        <div className={`mt-5 grid gap-4 sm:grid-cols-2 ${verified ? 'lg:grid-cols-4' : 'lg:grid-cols-3'}`}>
-          <ServiceChoiceCard icon="search" title="Buy in bulk" body="Tell us the quantity and your country. We send a quote in US dollars with the price for your order."
-            note={services.rfq?.priceCents ? <span className="text-muted">RFQ fee <b className="text-ink">{money(services.rfq.priceCents, services.rfq.currency)}</b></span> : undefined}
-            cta="Request quote" href={`/request/sourcing?product=${p.id}`} testId="way-bulk" />
-          {verified && (
-            <ServiceChoiceCard icon="tag" title="Put your brand on it" isNew primary body="Your logo on the product and its box, made by this verified factory. We store the stock and ship it where you sell."
-              note={<span className="text-muted">Free to request · quote before you pay</span>} cta="Start a brand project" href={`/request/brand?product=${p.id}`} testId="way-brand" />
-          )}
-          <ServiceChoiceCard icon="truck" title="Dropship it" body="We ship each order to your customer under your packing slip. You hold no stock."
-            note={<span className="text-muted">See costs per country in your dropship catalogue</span>} cta="Dropship this product" href={`/request/dropship?product=${p.id}`} testId="way-dropship" />
-          <ServiceChoiceCard icon="warehouse" title="Store it near your buyers" body="Send your stock to the Octopus warehouse. We pick, pack and ship each order from there."
-            note={<span className="text-muted">Free to request · rates in your quote</span>} cta="Get a 3PL quote" href={'/3pl'} testId="way-3pl" />
-        </div>
-      </section>
+      {/* owner 27 Nov: the product sits under Octopus Sourcing; every way to use it, with its function logo (service switches respected) */}
+      <ProductActions productId={p.id} verified={verified} poolsOn={settings.pool_enabled !== false} dropshipLive={dropshipLive}
+        rfq={services.rfq?.priceCents ? { priceCents: services.rfq.priceCents, currency: services.rfq.currency } : null} />
 
       <section className="mt-10 grid gap-5 lg:grid-cols-[1.4fr_1fr] items-start" aria-labelledby="addons-h">
         <div>

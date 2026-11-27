@@ -177,13 +177,13 @@ async function Detail({
         footer={
           <span>
             Processing covers pick, pack and standard packaging. Change DDP or DAP per country in{' '}
-            <Link href="/account/dropship/packing" className="text-coral-text hover:underline">
+            <Link href="/account/dropship/packing" className="text-coral-text underline">
               Packing and shipping
             </Link>
             . Try other quantities in the{' '}
             <Link
               href={`/account/dropship/landed-cost?product=${p.product_id}&country=${country}`}
-              className="text-coral-text hover:underline"
+              className="text-coral-text underline"
             >
               landed cost calculator
             </Link>

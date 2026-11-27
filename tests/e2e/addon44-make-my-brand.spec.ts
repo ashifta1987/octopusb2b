@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
 const mainText = (page: import('@playwright/test').Page) => page.locator('main').evaluate((el) => { const c = el.cloneNode(true) as HTMLElement; c.querySelectorAll('script,style').forEach((s) => s.remove()); return c.textContent ?? ''; });
 
 /** ADDON-44-D — Make My Brand on the home page and /make-my-brand (design handoff pages 01 and 03, Nov 2026). */
-test('home: Make My Brand in the service bar (2nd), its service card, the announcement and the footer', async ({ page }) => {
+test('home: Make My Brand in the service bar (2nd), its service card and the footer', async ({ page }) => {
   await page.goto('/');
   const bar = page.locator('nav[aria-label="Services"] li a');
   await expect(bar.nth(1)).toHaveText('Make My Brand');
@@ -12,7 +12,7 @@ test('home: Make My Brand in the service bar (2nd), its service card, the announ
   const card = page.getByTestId('home-service-brand');
   await expect(card.getByRole('heading', { name: 'Your brand on proven products.' })).toBeVisible();
   await expect(card).toHaveAttribute('href', '/make-my-brand');
-  await expect(page.getByTestId('announcement').getByRole('link', { name: /See how it works/ })).toHaveAttribute('href', '/make-my-brand');
+  await expect(page.getByTestId('announcement')).toHaveCount(0); // owner 27 Nov: no announcement bar above the logo
   await expect(page.locator('footer').getByRole('link', { name: 'Make My Brand' })).toHaveAttribute('href', '/make-my-brand');
   await expect(page.getByText(/YunExpress/)).toHaveCount(0);
 });

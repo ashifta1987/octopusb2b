@@ -32,8 +32,8 @@ export type ServicePageData = {
   cta: string;
 };
 
-export function ServicePage({ d, testId, afterHow, beforeFaq, afterIncluded }: {
-  d: ServicePageData; testId?: string; afterHow?: React.ReactNode; beforeFaq?: React.ReactNode; afterIncluded?: React.ReactNode;
+export function ServicePage({ d, testId, afterFacts, afterHow, beforeFaq, afterIncluded }: {
+  d: ServicePageData; testId?: string; afterFacts?: React.ReactNode; afterHow?: React.ReactNode; beforeFaq?: React.ReactNode; afterIncluded?: React.ReactNode;
 }) {
   const photoSteps = d.steps.some((s) => s[2]);
   return (
@@ -70,6 +70,8 @@ export function ServicePage({ d, testId, afterHow, beforeFaq, afterIncluded }: {
           ))}
         </dl>
       </section>
+
+      {afterFacts}
 
       <section className="px-4 sm:px-6 pt-12 md:pt-16 pb-16 md:pb-[88px]" aria-labelledby="who-h">
         <div className="max-w-[1200px] mx-auto">

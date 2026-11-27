@@ -4,7 +4,7 @@ import { test, expect } from '@playwright/test';
 const mainText = (page: import('@playwright/test').Page) => page.locator('main').evaluate((el) => { const c = el.cloneNode(true) as HTMLElement; c.querySelectorAll('script,style').forEach((s) => s.remove()); return c.textContent ?? ''; });
 
 /** Homepage — design handoff page 01 (Nov 2026): sections in the design's order, pictures with alt text, real data,
- *  FAQ keyboard, announcement on the homepage only, no horizontal scroll at 1440 and 390. */
+ *  FAQ keyboard, no announcement bar (owner 27 Nov), no horizontal scroll at 1440 and 390. */
 test('sections in the design order; six service cards with pictures and alt text; no carrier names', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('From the factory to your customer. One account.');
@@ -44,14 +44,14 @@ test('real data: turnkey cards from the catalogue and ready-to-order products li
   }
 });
 
-test('FAQ opens with the keyboard; announcement bar only on the homepage', async ({ page }) => {
+test('FAQ opens with the keyboard; no announcement bar above the logo', async ({ page }) => {
   await page.goto('/', { waitUntil: 'networkidle' }); // wait for the streamed section to hydrate
   const q = page.getByTestId('home-faq').locator('summary').nth(1);
   await q.scrollIntoViewIfNeeded();
   await q.focus();
   await page.keyboard.press('Enter');
   await expect(page.getByTestId('home-faq').locator('details').nth(1)).toHaveAttribute('open', '');
-  await expect(page.getByTestId('announcement')).toBeVisible();
+  await expect(page.getByTestId('announcement')).toHaveCount(0);
   await page.goto('/sourcing');
   await expect(page.getByTestId('announcement')).toHaveCount(0);
 });

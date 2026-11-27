@@ -5,7 +5,8 @@ import { SERVICES, type ServiceKey } from '@/components/site/ui';
 
 /** Website service bar (design §3): the six services on navy; the current one is underlined in on-ink-link. */
 const ACTIVE: [RegExp, ServiceKey][] = [
-  [/^\/(sourcing|request\/sourcing)(\/|$)/, 'sourcing'],
+  // owner 27 Nov: the product catalogue (/products, /c/…, /p/…, /search) belongs to Octopus Sourcing
+  [/^\/(sourcing|request\/sourcing|products|c|p|search)(\/|$)/, 'sourcing'],
   [/^\/(make-my-brand|request\/brand)(\/|$)/, 'brand'],
   [/^\/request\/dropship(\/|$)/, 'dropship'],
   [/^\/pools?(\/|$)/, 'pools'],

@@ -8,6 +8,7 @@ import { ProductGrid } from './product-card';
 import { FilterForm, SortSelect } from './filter-form';
 import { AdSlot, type AdPlacement } from './ad-slot';
 import { Breadcrumbs, JsonLd, breadcrumbLd, parts } from './seo';
+import { BrandMark } from '@/components/site/ui';
 import { stockTotals } from '@/lib/category-stock';
 
 export type SP = Record<string, string | string[] | undefined>;
@@ -58,7 +59,8 @@ export async function CatalogView({ basePath, category, sp, placement, title }: 
 
   const path = category ? categoryPath(categories, category.id) : [];
   const catHref = (c: Category) => `/c/${categoryPath(categories, c.id).map((x) => x.slug).join('/')}`;
-  const crumbs: { name: string; href?: string }[] = [{ name: 'Home', href: '/' }, { name: 'All categories', href: '/products' }, ...path.map((c) => ({ name: c.name, href: catHref(c) }))];
+  // owner 27 Nov: the catalogue is part of Octopus Sourcing → Home › Product sourcing › Products (› Category)
+  const crumbs: { name: string; href?: string }[] = [{ name: 'Home', href: '/' }, { name: 'Product sourcing', href: '/sourcing' }, { name: 'Products', href: '/products' }, ...path.map((c) => ({ name: c.name, href: catHref(c) }))];
   if (basePath === '/search') crumbs.push({ name: q ? `Search: “${q}”` : 'Search' });
   const heading = title ?? category?.name ?? (q ? `Results for “${q}”` : 'All categories');
   const openPath = new Set(path.map((c) => c.id));
@@ -77,6 +79,11 @@ export async function CatalogView({ basePath, category, sp, placement, title }: 
     <div className="max-w-[1280px] mx-auto px-4 sm:px-8 py-6">
       <JsonLd data={breadcrumbLd(crumbs)} />
       <Breadcrumbs items={crumbs} />
+      {/* Octopus Sourcing function logo + one-line intro (no figures) */}
+      <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1" data-testid="catalogue-brand">
+        <BrandMark brand="sourcing" />
+        <p className="m-0 text-[15px] text-muted max-w-[640px]">Products from verified factories, listed by Octopus Sourcing. Request a quote, or use a product for an MOQ pool, Make My Brand or dropshipping.</p>
+      </div>
       <div className="flex flex-wrap justify-between items-end gap-4 mt-3">
         <div>
           <h1 className="text-[28px] sm:text-[32px] font-extrabold leading-tight">{heading}</h1>

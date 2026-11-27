@@ -105,7 +105,7 @@
   /* Degular (text) / Degular Display (headings) / Futura (labels). Stand-ins until the licences arrive (app/layout.tsx):
      Figtree = Degular, Plus Jakarta Sans = Degular Display, Jost = Futura. Swap the next/font import, not these names. */
   --font-sans: var(--font-text), system-ui, sans-serif;
-  --font-display: var(--font-heading), var(--font-text), sans-serif; /* Degular Display when licensed */
+  --font-display: var(--font-text), sans-serif; /* Rubik (owner 27 Nov); headings use its 800–900 weights */
   /* brand pass (27 Nov): one soft elevation, used on hover/focus only (Ink at 12%) */
   --shadow-lift: 0 10px 28px rgb(26 23 74 / 0.12), 0 2px 6px rgb(26 23 74 / 0.06);
   --font-mono: var(--font-label), system-ui, sans-serif;
@@ -115,12 +115,12 @@ html { -webkit-text-size-adjust: 100%; }
 body { background: var(--pearl); color: var(--black); font-family: var(--font-sans); font-size: 16px; line-height: 1.6; }
 h1, h2, h3, h4 { font-family: var(--font-display); color: var(--ink); letter-spacing: -0.01em; line-height: 1.12; }
 /* display sizes track slightly tighter (brand pass 27 Nov) */
-h1 { letter-spacing: -0.025em; }
-h2 { letter-spacing: -0.02em; }
+h1 { letter-spacing: -0.015em; }
+h2 { letter-spacing: -0.01em; }
 @layer base {
   /* ADDON-46 type scale defaults (page utilities still win): H1 50/1.05 800 (phone 34), H2 34/1.12 700 (phone 25), card titles 600 */
-  h1 { font-size: 34px; line-height: 1.05; font-weight: 800; }
-  h2 { font-size: 25px; font-weight: 700; }
+  h1 { font-size: 34px; line-height: 1.05; font-weight: 900; }
+  h2 { font-size: 25px; font-weight: 800; }
   h3, h4 { font-weight: 600; }
   @media (min-width: 761px) { h1 { font-size: 50px; } h2 { font-size: 34px; } }
 }
