@@ -9,7 +9,7 @@ const COUNTRIES = ['AE', 'SA', 'US', 'GB', 'DE', 'FR', 'NL', 'AU', 'CA', 'SG', '
 /** STAGING ONLY — a store order for a merchant, sent through the same intake as the store webhook. */
 export function TestOrderClient({ merchants }: { merchants: { id: string; name: string; status: string }[] }) {
   const [f, setF] = useState({
-    org_id: merchants[0]?.id ?? '', external_order_id: '', model_no: 'DS-000001-01', qty: '1', other_items: '0', risk: 'low', address_check: 'ok',
+    org_id: merchants[0]?.id ?? '', external_order_id: '', model_no: 'DS-000001-01', qty: '1', buyer_price: '24.99', other_items: '0', risk: 'low', address_check: 'ok',
     address_issue: '', buyer_name: 'Test Buyer', line1: '12 Marina Walk', city: 'Dubai', postcode: '', country: 'AE',
   });
   const [res, setRes] = useState<{ ok: boolean; message: string } | null>(null);
@@ -37,6 +37,7 @@ export function TestOrderClient({ merchants }: { merchants: { id: string; name: 
           <DsInput label="Store order number (optional)" value={f.external_order_id} onChange={set('external_order_id')} hint="Same number twice = duplicate, ignored." />
           <DsInput label="DS variant model no." value={f.model_no} onChange={set('model_no')} />
           <DsInput label="Quantity" type="number" min={1} max={50} value={f.qty} onChange={set('qty')} />
+          <DsInput label="Price the buyer paid, each (US$)" inputMode="decimal" value={f.buyer_price} onChange={set('buyer_price')} hint="Customs declares what the buyer paid; an order without it is refused." />
           <DsInput label="Items not from Octopus" type="number" min={0} max={20} value={f.other_items} onChange={set('other_items')} />
           <DsSelect label="Store risk rating" value={f.risk} onChange={set('risk')}>
             <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>

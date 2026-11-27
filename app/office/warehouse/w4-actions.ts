@@ -5,6 +5,7 @@ import { requireWarehouseStaff } from '@/lib/warehouse';
 import { createClient } from '@/lib/supabase/server';
 import { cleanDbError } from '@/lib/warehouse-inbound';
 import { CarrierError, getCarrierAdapter } from '@/lib/carriers';
+import type { LabelCustoms } from '@/lib/carriers/types';
 import { PRODUCT_TYPES, parseCountries, type ProductType } from '@/lib/carriers/rules';
 import { CARRIERS, LEVELS, TRACKING_STATUSES, labelPath, type Carrier, type Level } from '@/lib/warehouse-w4';
 
@@ -110,8 +111,19 @@ type Plan = {
   ship_to: { name: string; phone: string | null; address: Record<string, unknown> | null; country: string };
   ship_from: { name: string; city: string; province: string | null; country: string; address: string | null; phone: string | null };
   items: { sku: string; name: string; qty: number; unit_weight_g: number | null }[];
+  /** C0: the customs check of this parcel (wh_customs_check; the plan is refused when a Dropship parcel fails it) */
+  customs?: {
+    scope: 'dropship' | 'client_order' | 'domestic'; declared_usd_cents: number | null; duty_type: 'DDP' | 'DAP' | null;
+    items: { sku: string; description_en: string; hs_code: string | null; qty: number; unit_value_cents: number | null; value_cents: number | null;
+      origin_country: string | null; unit_weight_g: number | null; battery: boolean; liquid: boolean; magnet: boolean }[];
+  };
 };
 const str = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null);
+const labelCustoms = (c: Plan['customs']): LabelCustoms | null => (c ? {
+  scope: c.scope, currency: 'USD', declaredValueCents: c.declared_usd_cents, dutyType: c.duty_type,
+  items: c.items.map((i) => ({ sku: i.sku, descriptionEn: i.description_en, hsCode: i.hs_code, qty: i.qty, unitValueCents: i.unit_value_cents, valueCents: i.value_cents,
+    originCountry: i.origin_country, unitWeightG: i.unit_weight_g, battery: i.battery, liquid: i.liquid, magnet: i.magnet })),
+} : null);
 
 /** Rules choose the service → the account's adapter makes the label → PDF to the private bucket → the database records it. */
 export async function createLabelAction(parcelId: string): Promise<W4Result> {
@@ -140,6 +152,7 @@ export async function createLabelAction(parcelId: string): Promise<W4Result> {
       },
       shipFrom: plan.ship_from,
       items: plan.items.map((i) => ({ sku: i.sku, name: i.name, qty: i.qty, unitWeightG: i.unit_weight_g })),
+      customs: labelCustoms(plan.customs),
     });
   } catch (e) {
     return { ok: false, error: e instanceof CarrierError ? e.message : 'The carrier could not make the label. Try again.' };

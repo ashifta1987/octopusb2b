@@ -41,6 +41,17 @@ export function fourPxStatus(code: string): CarrierTrackingEvent['status'] {
   return 'info';
 }
 
+/** C0 · DDP → 'P' (sender pays duties), DAP → 'U' (receiver pays). Domestic / unknown → 'U'. Confirm the codes with 4PX. */
+export function fourPxDutyType(d: 'DDP' | 'DAP' | null | undefined): 'P' | 'U' {
+  return d === 'DDP' ? 'P' : 'U';
+}
+
+/** Carrier customs fields take plain ASCII: "TEST – Lamp ×2" → "TEST - Lamp x2" (the database already refused non-Latin text). */
+export function asciiText(s: string): string {
+  return s.replace(/[\u2010-\u2015]/g, '-').replace(/[\u2018\u2019]/g, "'").replace(/[\u201c\u201d]/g, '"').replace(/\u00d7/g, 'x')
+    .normalize('NFKD').replace(/[^\x20-\x7e]/g, '').replace(/\s+/g, ' ').trim();
+}
+
 export class FourPxAdapter implements CarrierAdapter {
   readonly carrier = '4px' as const;
   readonly mode = 'live' as const;
@@ -74,16 +85,35 @@ export class FourPxAdapter implements CarrierAdapter {
 
   async createLabel(req: LabelRequest): Promise<LabelResult> {
     const to = req.shipTo;
+    const c = req.customs;
+    // C0: a Dropship label always carries the customs declaration (declared value = what the buyer paid, HS code, duty type).
+    // Client (3PL) orders: Warehouse OS has no customer price yet (open question) → items without a value, as before.
+    if (!c || (c.scope === 'dropship' && (c.declaredValueCents == null || !c.dutyType || c.items.length === 0))) {
+      throw new CarrierError('CARRIER_REFUSED', 'The customs declaration is missing for this parcel. Run the customs check again.');
+    }
+    const usd = (cents: number | null) => (cents == null ? undefined : (cents / 100).toFixed(2));
     const created = await this.call<{ '4px_tracking_no'?: string; logistics_channel_no?: string; ds_consignment_no?: string }>('ds.xms.order.create', {
       ref_no: `${req.orderCode}-P${req.parcelSeq}`,
       business_type: 'BDS',
-      duty_type: 'U',
+      // 4PX duty type: P = duties paid by the sender (DDP), U = unpaid / paid by the receiver (DAP). Field values NOT verified — confirm with 4PX.
+      duty_type: fourPxDutyType(c.dutyType),
       logistics_service_info: { logistics_product_code: req.serviceCode },
       is_insure: 'N',
       parcel_list: [{
         weight: req.weightG ?? undefined,
+        parcel_value: usd(c.declaredValueCents),
+        currency: c.currency,
         include_battery: req.dangerousGoods.includes('battery') ? 'Y' : 'N',
-        declare_product_info: req.items.map((i) => ({ declare_product_name_en: i.name.slice(0, 100), declare_product_code_qty: i.qty, sku: i.sku })),
+        declare_product_info: c.items.map((i) => ({
+          declare_product_name_en: asciiText(i.descriptionEn).slice(0, 100),
+          declare_product_code_qty: i.qty,
+          declare_unit_price_export: usd(i.unitValueCents),
+          currency_export: c.currency,
+          hscode_export: i.hsCode ?? undefined,
+          origin_country: i.originCountry ?? undefined,
+          unit_net_weight: i.unitWeightG ?? undefined,
+          sku: i.sku,
+        })),
       }],
       recipient_info: {
         first_name: to.name, phone: to.phone ?? '', country: to.country, state: to.region ?? '', city: to.city ?? '',

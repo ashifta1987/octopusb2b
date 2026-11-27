@@ -23,6 +23,24 @@ export type LabelRequest = {
   shipTo: LabelAddress;
   shipFrom: { name: string; city: string; province?: string | null; country: string; address?: string | null; phone?: string | null };
   items: { sku: string; name: string; qty: number; unitWeightG: number | null }[];
+  /**
+   * C0 · customs declaration from wh_customs_check() (Dropship parcels: required; the database refuses the label without it).
+   * Declared value = what the buyer paid (locked at intake), never the cost. Integer US cents.
+   */
+  customs?: LabelCustoms | null;
+};
+
+export type LabelCustomsItem = {
+  sku: string; descriptionEn: string; hsCode: string | null; qty: number; unitValueCents: number | null; valueCents: number | null;
+  originCountry: string | null; unitWeightG: number | null; battery: boolean; liquid: boolean; magnet: boolean;
+};
+export type LabelCustoms = {
+  scope: 'dropship' | 'client_order' | 'domestic';
+  currency: 'USD';
+  declaredValueCents: number | null;
+  /** DDP = duties paid by the sender (us); DAP = paid by the receiver. The US is always DDP (DS16). */
+  dutyType: 'DDP' | 'DAP' | null;
+  items: LabelCustomsItem[];
 };
 
 export type LabelResult = { trackingNo: string; pdf: Uint8Array; carrierRef?: string };

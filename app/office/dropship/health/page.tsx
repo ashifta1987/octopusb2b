@@ -4,6 +4,7 @@ import { DsLinkButton, DsNotice, DsSkeleton } from '@/components/dropship-ui';
 import { rpcMessage } from '@/lib/dropship-ds6';
 import { getHealthPage, type HealthPageData } from '@/lib/dropship-ds12';
 import { HealthClient } from './health-client';
+import { ConnectorHealthCard } from './connectors-card';
 
 export const metadata = { title: 'System health · Back office' };
 
@@ -31,7 +32,15 @@ async function Guarded() {
       </div>
     );
   }
-  return <HealthClient data={data} />;
+  return (
+    <div className="flex flex-col gap-5">
+      <HealthClient data={data} />
+      {/* C0: store connectors, requested platforms, tracking company names, carrier poll */}
+      <Suspense fallback={<div className="ds-card"><DsSkeleton immediate /></div>}>
+        <ConnectorHealthCard />
+      </Suspense>
+    </div>
+  );
 }
 
 export default function Page() {

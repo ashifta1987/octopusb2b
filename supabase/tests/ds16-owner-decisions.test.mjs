@@ -242,7 +242,8 @@ export async function runDs16Checks(db, ctx) {
       await ownerSet('dropship.country_duty_rules', { US: { incoterm: 'DDP', de_minimis_cents: 0 }, AE: { de_minimis_cents: 0 } });
       await as(adminA, 'aal2');
       const capped = await q('AE');
-      const decl = Number(base.declared_value_usd_cents);
+      // C0: an order quote without the buyer's price has no declared value; the duty is estimated on duty_estimate_basis_usd_cents
+      const decl = Number(base.declared_value_usd_cents ?? base.duty_estimate_basis_usd_cents);
       const full = Math.round((decl * (Number(dl.d.duty_bp) + Number(dl.d.tax_bp))) / 10000);
       ok(decl <= Number(dl.d.de_minimis_cents) && Number(capped.duties_cents) === full && Number(capped.duties_cents) >= Number(base.duties_cents),
         `de minimis 0 in the country rule: full duty + tax charged (${base.duties_cents} → ${capped.duties_cents})`);

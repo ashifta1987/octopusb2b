@@ -6,6 +6,7 @@ import { DsBadge, DsButton, DsCard, DsLinkButton, DsNotice, DsPageHeader, DsTabl
 import { CAPABILITIES, CHANNELS, CONNECT_BLOCKED_REASON, CHANNEL_KEYS } from '@/lib/dropship-ds14-shared';
 import type { ChannelsPage } from '@/lib/dropship-ds14';
 import { channelWaitlistAction } from '../ds14-actions';
+import { StoreLinkCard } from './store-link-card';
 
 export function IntegrationsClient({ data }: { data: ChannelsPage }) {
   const router = useRouter();
@@ -22,6 +23,17 @@ export function IntegrationsClient({ data }: { data: ChannelsPage }) {
       <DsPageHeader title="Integrations" subtitle="Connect the places you sell. Products go out and orders come back." icon="link" />
       <DsNotice tone="info" title="Store connections open soon" testId="integrations-notice">{CONNECT_BLOCKED_REASON} Nothing is connected or synced yet. You can already set how each channel should behave, so it is ready the day it opens.</DsNotice>
       {msg && <DsNotice tone="ok" title="Saved" testId="integrations-msg">{msg}</DsNotice>}
+      <div className="grid lg:grid-cols-[2fr_1fr] gap-4 items-start">
+        <StoreLinkCard waitlist={data.waitlist} />
+        <DsCard title="File import (CSV)" subtitle="Works now, for any store." icon="file" testId="file-connector-card">
+          <ul className="m-0 pl-4 text-[13px] text-muted">
+            <li>Upload your orders as a CSV file</li>
+            <li>Download a product file for your store</li>
+            <li>Download tracking numbers for your store</li>
+          </ul>
+          <div className="mt-3"><DsLinkButton href="/account/dropship/integrations/file" variant="secondary" icon="upload">Open file import</DsLinkButton></div>
+        </DsCard>
+      </div>
       <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-4" data-testid="channel-list">
         {CHANNELS.map((c) => {
           const connected = c.key === 'shopify' && shopifyOn;

@@ -72,6 +72,8 @@ export type DocsPage = { can_edit: boolean; docs: DocRow[]; products: { id: stri
 // ───────── merchant ─────────
 export type ChannelsPage = {
   shopify: { status: string; shop?: string; connected_at?: string | null };
+  /** C0: every connected / connecting store of any platform (no secrets) */
+  connections?: { id: string; platform: string; shop: string; store_url: string | null; status: string; last_error: string | null; last_sync_at: string | null; connected_at: string | null }[];
   settings: Partial<Record<string, ChannelSettings>>;
   waitlist: string[];
   plan_name: string | null; stores_limit: number | null; stores_used: number; billing_enabled: boolean;

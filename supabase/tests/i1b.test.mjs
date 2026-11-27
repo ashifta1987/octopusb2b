@@ -288,11 +288,13 @@ try {
       && qBelowDeMin.duties_cents === 144
       && qBelowDeMin.duties_status === 'estimate'
       && qBelowDeMin.duty_basis === 'product_price'
-      && qBelowDeMin.declared_value_usd_cents === 1200
+      // C0: a catalogue quote is an estimate: no declared value (never the product price); the duty basis is reported separately
+      && qBelowDeMin.declared_value_usd_cents === null
+      && qBelowDeMin.duty_estimate_basis_usd_cents === 1200
       && qBelowDeMin.version_ids.shipping_rate_card_id === rcV2
       && qBelowDeMin.version_ids.fee_version_id === fvSelf
       && qBelowDeMin.version_ids.duty_rate_version_id === dvId,
-    `catalogue quote uses product price; DS16: the US has no de minimis (country rule), so 1200c -> 10% duty + 2% tax = 144c even under the table's 2000c; duties_status='estimate', version_ids returned`,
+    `catalogue quote: duty estimated on the product price but NO declared value (C0); DS16: the US has no de minimis (country rule), so 1200c -> 10% duty + 2% tax = 144c even under the table's 2000c; duties_status='estimate', version_ids returned`,
   );
   await owner();
 

@@ -506,6 +506,17 @@ try {
     'a sandbox shipment is never served when the database is not staging (freight without sandbox labels still is); the client reads its own order\'s token, no W4 table rows');
 
   // ── 11. Dropship ──
+  // C0: the customs check runs before every label — a Dropship parcel without the buyer's price on the store order and without
+  // verified customs data is refused (CUSTOMS_BLOCKED); with them, the label is made and the customs snapshot is saved with it
+  const blockedD = await makeLabel(packer, oD.parcels[0].id);
+  ok(blockedD.plan?.ok === false && blockedD.plan?.code === 'CUSTOMS_BLOCKED' && /NOT_ON_STORE_ORDER/.test(JSON.stringify(blockedD.plan?.customs?.problems ?? [])),
+    'C0: a Dropship parcel with no buyer price on the store order gets no label (CUSTOMS_BLOCKED)');
+  const dvC0 = await one(`select v.id, v.product_id, v.model_no from dropship_variants v order by v.created_at limit 1`);
+  await db.query(`insert into store_order_items (store_order_id, product_id, variant_id, item_id, model_no, title_snapshot, fulfilment_type, qty, unit_product_cents, line_product_cents, buyer_unit_price_cents, declared_usd_cents)
+    values ($1, $2, $3, $4, $5, 'Desk lamp', 'fast_ship', 1, 1200, 1200, 2599, 2599)`, [so.id, dvC0.product_id, dvC0.id, LAMP.item, dvC0.model_no]);
+  await db.query(`select set_config('octopus.allow_hs_verify', 'true', true)`);
+  await db.query(`update item_master set hs_code = '9405110000', origin_country = 'CN', hs_verified = true, hs_verified_at = now() where id = $1`, [LAMP.item]);
+  await db.query(`select set_config('octopus.allow_hs_verify', '', true)`);
   const movesBefore = Number((await one(`select count(*) n from warehouse_stock_movements where store_order_id = $1`, [so.id])).n);
   const lD = await makeLabel(packer, oD.parcels[0].id);
   await as(packer);
@@ -515,6 +526,9 @@ try {
   const closed2 = (await one(`select wh_dispatch_close($1, 'Driver Li', 'PX-MF-77') r`, [d2.id])).r;
   await owner();
   const oDrow = await ord(oD.id);
+  const custD = await one(`select c.scope, c.declared_usd_cents, c.duty_type, c.snapshot -> 'store_order' ->> 'order_number' o from wh_shipment_customs c join wh_shipments s on s.id = c.shipment_id where s.parcel_id = $1 and s.status <> 'voided'`, [oD.parcels[0].id]);
+  ok(custD?.scope === 'dropship' && Number(custD.declared_usd_cents) === 2599 && custD.duty_type === 'DDP' && custD.o === so.order_number,
+    'C0: the Dropship label carries the customs snapshot (declared = what the buyer paid, 2599¢; DDP; the store order number)');
   const legacy = await one(`select * from shipments where store_order_id = $1`, [so.id]);
   const shD = await one(`select legacy_shipment_id from wh_shipments where parcel_id = $1 and status <> 'voided'`, [oD.parcels[0].id]);
   const ev = await one(`select event_type, external_status, payload from domain_events where aggregate_id = $1 and event_type = 'shipment.status_changed' order by created_at desc limit 1`, [legacy?.id]);

@@ -42,3 +42,20 @@ export async function notifyMerchantAction(connectionId: string): Promise<Action
   if (!i.success) return { ok: false, message: 'This store was not found.' };
   return rpc('ds_health_notify_merchant', { p_connection: i.data });
 }
+
+/** C0 · carrier → store tracking company name (Dropship editors and admins; checked again by c0_tracking_name_save). */
+export async function saveTrackingNameAction(f: { carrier: string; platform: string; company: string; url: string }): Promise<ActionResult> {
+  const p = z.object({
+    carrier: z.enum(['yunexpress', '4px']),
+    platform: z.string().regex(/^[a-z_]{2,20}$/),
+    company: z.string().trim().max(80),
+    url: z.string().trim().max(300),
+  }).safeParse(f);
+  if (!p.success) return { ok: false, message: 'Check the name and the link.' };
+  if (p.data.url && !/^https:\/\/\S+$/.test(p.data.url)) return { ok: false, message: 'The tracking link must start with https://.' };
+  if (p.data.url && !p.data.url.includes('{tracking}')) return { ok: false, message: 'The tracking link must contain {tracking} where the number goes.' };
+  return rpc('c0_tracking_name_save', {
+    p_carrier: p.data.carrier, p_platform: p.data.platform, p_company: p.data.company || null, p_url_template: p.data.url || null,
+    p_use_branded_link: !p.data.url, p_note: null,
+  });
+}

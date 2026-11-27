@@ -6,6 +6,7 @@ import { isStaging } from '@/lib/core/account';
 import { requireDropshipV2Staff } from '@/lib/dropship-staff';
 import { createClient } from '@/lib/supabase/server';
 import { rpcMessage } from '@/lib/dropship-ds6';
+import { decimalToMinor } from '@/lib/connectors/formats';
 
 /** STAGING ONLY — create a test store order through the real intake (ds_test_order_create checks staff + staging again). */
 const Input = z.object({
@@ -13,6 +14,8 @@ const Input = z.object({
   external_order_id: z.string().trim().max(64).optional().or(z.literal('')),
   model_no: z.string().trim().regex(/^DS-\d{6}-\d{2}$/, 'Enter a DS variant model number, like DS-000001-01.'),
   qty: z.number().int().min(1).max(50),
+  // C0: the customs value is what the buyer paid — a test order needs the buyer's price too (USD, e.g. 24.99)
+  buyer_price: z.string().trim().regex(/^\d{1,6}(\.\d{1,2})?$/, 'Enter the price the buyer paid, like 24.99.'),
   other_items: z.number().int().min(0).max(20),
   risk: z.enum(['low', 'medium', 'high']),
   address_check: z.enum(['ok', 'failed']),
@@ -41,7 +44,7 @@ export async function createTestOrderAction(input: z.input<typeof Input>): Promi
       address_issue: v.address_issue || null,
       other_items: v.other_items,
       address: { name: v.buyer_name, line1: v.line1, city: v.city, postcode: v.postcode || null, country: v.country },
-      lines: [{ model_no: v.model_no, qty: v.qty }],
+      lines: [{ model_no: v.model_no, qty: v.qty, buyer_unit_price_cents: decimalToMinor(v.buyer_price, 'USD') }],
     },
   });
   if (error) return { ok: false, message: rpcMessage(error) };
