@@ -2,6 +2,7 @@ import 'server-only';
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { STAFF_ROLES } from '@/lib/roles';
 
 export type Session = {
   userId: string;
@@ -14,8 +15,6 @@ export type Session = {
   isAdmin: boolean;
   aal: string | null;
 };
-
-const STAFF_ROLES = ['admin', 'operations', 'finance', 'support', 'sourcing_agent', 'qc_coordinator', 'content_editor', 'distributor', 'account_manager', 'warehouse'];
 
 /** Loads the current user, profile, roles, permissions and org once per request. */
 export const getSession = cache(async (): Promise<Session | null> => {
@@ -58,7 +57,8 @@ export async function requireCustomer(next = '/account') {
   if (!s) redirect(`/login?next=${encodeURIComponent(next)}`);
   // ADDON-41 rule 3: staff accounts never act as customers — they use Admin / Back office
   if (s.isStaff) redirect('/admin?notice=staff-not-customer');
-  if (!s.profile || !s.org) redirect(next === '/account' ? '/onboarding' : `/onboarding?next=${encodeURIComponent(next)}`);
+  // CH-1: always carry where the customer was going (the default after onboarding is the Shop, so /account must be explicit)
+  if (!s.profile || !s.org) redirect(next === '/shop' ? '/onboarding' : `/onboarding?next=${encodeURIComponent(next)}`);
   return s;
 }
 

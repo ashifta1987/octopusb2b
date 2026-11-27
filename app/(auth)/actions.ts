@@ -8,6 +8,7 @@ import { emailIsStaff, isStaffUser } from '@/lib/staff/server';
 import { checkCustomerSignupEmail } from '@/lib/staff/customer-guard';
 import { getEmail } from '@/lib/adapters';
 import { BRAND } from '@/lib/brand';
+import { safeNext as safeSameSiteNext, CUSTOMER_HOME } from '@/lib/safe-next';
 
 /**
  * Customer authentication (SPEC §4.1, ADDON-22): email + password only — no Google / social sign-in.
@@ -35,10 +36,18 @@ async function siteOrigin() {
   return host ? `${proto}://${host}` : '';
 }
 
-const safeNext = (n: unknown, fallback = '/account') => {
-  const s = typeof n === 'string' ? n : '';
-  return s.startsWith('/') && !s.startsWith('//') ? s : fallback;
-};
+// CH-1: customers land on the Shop; one strict same-site check for every sign-in path (lib/safe-next.ts)
+const safeNext = (n: unknown, fallback = CUSTOMER_HOME) => safeSameSiteNext(n, fallback);
+
+/** Supplier portal accounts (role `supplier`, made by staff) use the same form but never the customer area. */
+async function isSupplierUser(uid: string): Promise<boolean> {
+  try {
+    const { data } = await createAdminClient().from('user_roles').select('role_code').eq('user_id', uid).eq('role_code', 'supplier').limit(1);
+    return (data ?? []).length > 0;
+  } catch {
+    return false;
+  }
+}
 
 /** 10 attempts per IP per minute on the given endpoint. Fails open if the limiter itself is unavailable. */
 async function rateLimited(endpoint: string, ip: string | null): Promise<string | null> {
@@ -124,6 +133,11 @@ export async function customerSignIn(input: { email: string; password: string; n
     await audit(uid, 'auth.sign_in', meta, { method: 'password', provider: 'email', portal: 'customer_form' });
     return { ok: true, redirect: '/staff/verify' };
   }
+  if (await isSupplierUser(uid)) {
+    await audit(uid, 'auth.sign_in', meta, { method: 'password', provider: 'email', portal: 'supplier' });
+    const next = safeNext(input.next, '/supplier');
+    return { ok: true, redirect: next === '/supplier' || next.startsWith('/supplier/') ? next : '/supplier' };
+  }
   await audit(uid, 'auth.sign_in', meta, { method: 'password', provider: 'email', portal: 'customer' });
   return { ok: true, redirect: safeNext(input.next) };
 }
@@ -186,5 +200,6 @@ export async function afterCustomerPasswordReset(): Promise<{ next: string }> {
   await sb.auth.signOut({ scope: 'others' }).catch(() => null);
   await audit(uid, 'auth.password_reset', meta, { provider: 'email', other_sessions: 'revoked' });
   if (await isStaffUser(uid).catch(() => false)) return { next: '/staff/verify' };
-  return { next: '/account' };
+  if (await isSupplierUser(uid)) return { next: '/supplier' };
+  return { next: CUSTOMER_HOME };
 }

@@ -1,4 +1,5 @@
 import { SERVICE_TARGET } from '@/lib/signup-service';
+import { safeNext, CUSTOMER_HOME } from '@/lib/safe-next';
 import Link from 'next/link';
 import { AuthForm } from './auth-form';
 import { getCustomerSocialProviders } from '@/lib/auth-providers';
@@ -57,7 +58,8 @@ export function AuthShell({ children, title = 'Create a free account', sub = 'An
 
 export default async function AuthPage({ searchParams, mode }: { searchParams: Promise<{ next?: string; error?: string; reset?: string; service?: string }>; mode: 'signup' | 'login' }) {
   const [sp, social] = await Promise.all([searchParams, getCustomerSocialProviders()]);
-  const next = sp.next ?? (sp.service ? SERVICE_TARGET[sp.service] : undefined) ?? '/account';
+  // CH-1: customers land on the Shop unless a safe same-site ?next= (or a ?service= section) is given
+  const next = safeNext(sp.next ?? (sp.service ? SERVICE_TARGET[sp.service] : undefined), CUSTOMER_HOME);
   const login = mode === 'login';
   return (
     <AuthShell

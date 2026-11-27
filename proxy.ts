@@ -4,9 +4,13 @@ import { NextResponse, type NextRequest } from 'next/server';
 import {
   DEFAULT_LIMITS, EXPIRED_COOKIE, STAFF_COOKIE, sessionState, signExpiredMarker, signStaffCookie, staffCookieOptions, verifyStaffCookie,
 } from '@/lib/staff/session-cookie';
+import { safeNext, CUSTOMER_HOME } from '@/lib/safe-next';
+import { STAFF_ROLES } from '@/lib/roles';
 
-/** Customer portals: signed-out visitors go to the customer login. */
-const PORTALS = ['/account', '/supplier', '/onboarding'];
+/** Customer portals: signed-out visitors go to the customer login. CH-1: the Shop (/shop) is signed-in only too. */
+const PORTALS = ['/account', '/shop', '/supplier', '/onboarding'];
+/** CH-1: a signed-in customer opening these goes to the Shop (or a safe ?next= on /login); suppliers to their portal. */
+const SIGNED_IN_LANDING = ['/', '/login', '/signup'];
 /** Staff areas (SPEC §17.3): staff login + aal2 + staff session rules. */
 const STAFF_AREAS = ['/office', '/admin', '/distributor', '/staff', '/scan'];
 /** Staff sign-in steps that must stay reachable without a full staff session. */
@@ -213,11 +217,44 @@ async function route(request: NextRequest) {
     return response;
   }
 
+  // CH-1: signed-in customers land in the Shop; staff keep seeing the website; any lookup failure shows the page as before
+  if (user && SIGNED_IN_LANDING.includes(path)) {
+    const home = await signedInHome(supabase, user.sub as string);
+    if (home) {
+      const target = path === '/login' && home === CUSTOMER_HOME ? safeNext(request.nextUrl.searchParams.get('next'), CUSTOMER_HOME) : home;
+      const url = request.nextUrl.clone();
+      const [p, ...rest] = target.split('#')[0].split('?');
+      url.pathname = p;
+      url.search = rest.length ? `?${rest.join('?')}` : '';
+      const res = NextResponse.redirect(url);
+      response.cookies.getAll().forEach((c) => res.cookies.set(c));
+      return res;
+    }
+  }
+
   if (PORTALS.some((p) => under(path, p)) && !user) {
     // keep the query (e.g. /account/turnkey/new?project=gym) so the visitor comes back to the same choice, like staff areas
     return redirectTo('/login', { next: path + request.nextUrl.search });
   }
   return response;
+}
+
+/**
+ * CH-1: where a signed-in person goes from /, /login and /signup. Reads the person's own roles (user_roles, RLS: own rows).
+ * Customer (no staff / supplier role) → the Shop; supplier → /supplier; staff → null (no redirect, they keep seeing the
+ * website). null on any error, so a failed lookup never blocks the page or loops.
+ */
+async function signedInHome(supabase: ReturnType<typeof createServerClient>, uid: string): Promise<string | null> {
+  try {
+    const { data, error } = await supabase.from('user_roles').select('role_code').eq('user_id', uid);
+    if (error) return null;
+    const roles = ((data ?? []) as { role_code: string }[]).map((r) => r.role_code);
+    if (roles.some((r) => STAFF_ROLES.includes(r))) return null;
+    if (roles.includes('supplier')) return '/supplier';
+    return CUSTOMER_HOME;
+  } catch {
+    return null;
+  }
 }
 
 export const config = {

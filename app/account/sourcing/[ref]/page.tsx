@@ -60,11 +60,15 @@ async function SourcingDetailContent({ params }: { params: Promise<{ ref: string
   let quotes: (Quote & { total: number })[] = [];
   let order = null as { id: string; code: string; status: string } | null;
   let docs: { id: string; doc_type: string; number: string; created_at: string }[] = [];
+  // CH-1: a request sent from the Shop quote list carries several products (rfq_lines; line 1 = the request row)
+  let lines: { line_no: number; product_id: string | null; title: string; quantity: number; unit: string; notes: string | null }[] = [];
   if (kind === 'rfq') {
-    const [{ data: q }, { data: o }] = await Promise.all([
+    const [{ data: q }, { data: o }, { data: ln }] = await Promise.all([
       sb.from('quotes').select('id, code, unit_price_cents, quantity, incoterm, lead_time_days, shipping_cents, notes, status, valid_until, created_at, currency, moq, sample_price_cents').eq('rfq_id', id).order('unit_price_cents'),
       sb.from('orders').select('id, code, status').eq('rfq_id', id).maybeSingle(),
+      sb.from('rfq_lines').select('line_no, product_id, title, quantity, unit, notes').eq('rfq_id', id).order('line_no'),
     ]);
+    lines = (ln ?? []) as typeof lines;
     quotes = ((q ?? []) as Quote[]).map((x) => ({ ...x, unit_price_cents: Number(x.unit_price_cents), shipping_cents: Number(x.shipping_cents), sample_price_cents: x.sample_price_cents == null ? null : Number(x.sample_price_cents), total: Number(x.unit_price_cents) * x.quantity + Number(x.shipping_cents) }));
     order = o as typeof order;
     if (order) docs = ((await sb.from('documents').select('id, doc_type, number, created_at').eq('order_id', order.id).order('created_at')).data ?? []) as typeof docs;
@@ -142,8 +146,28 @@ async function SourcingDetailContent({ params }: { params: Promise<{ ref: string
                 <Item key={k} k={humanize(k)}>{k.endsWith('country') || k === 'target_market' ? (COUNTRY_NAMES[String(v)] ?? String(v)) : String(v)}</Item>
               ))}
             </dl>
-            {req.product_id && <ProductLink id={req.product_id as string} />}
+            {req.product_id && lines.length <= 1 && <ProductLink id={req.product_id as string} />}
           </Card>
+
+          {lines.length > 1 && (
+            <Card title={`Products in this request (${lines.length})`}>
+              <div className="overflow-x-auto px-2 pb-4" tabIndex={0} role="region" aria-label="Products in this request">
+                <table className="w-full border-collapse min-w-[480px]" data-testid="rfq-lines">
+                  <thead><tr><th scope="col" className="th">#</th><th scope="col" className="th">Product</th><th scope="col" className="th">Quantity</th><th scope="col" className="th">Notes</th></tr></thead>
+                  <tbody>
+                    {lines.map((l) => (
+                      <tr key={l.line_no}>
+                        <td className="td mono">{l.line_no}</td>
+                        <td className="td">{l.title}</td>
+                        <td className="td mono whitespace-nowrap">{Number(l.quantity).toLocaleString('en-US')} {l.unit}</td>
+                        <td className="td text-muted">{l.notes || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          )}
 
           {kind === 'rfq' && (
             <Card title={`Quotes (${quotes.length})`} action={quotes.length > 1 ? <span className="text-sm text-muted">Side by side · factory shown without its name</span> : undefined}>

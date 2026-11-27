@@ -72,7 +72,7 @@ try {
     const page = await ctx.newPage();
     await login(page, email, password);
     await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 60000 });
-    ok(/\/(account|onboarding)/.test(new URL(page.url()).pathname), `sign-in with email + password → ${new URL(page.url()).pathname}`);
+    ok(/\/(account|onboarding|shop)/.test(new URL(page.url()).pathname), `sign-in with email + password → ${new URL(page.url()).pathname}`);
     const { data: a } = await admin.from('audit_log').select('action, details').eq('actor_id', userId).eq('action', 'auth.sign_in').order('created_at', { ascending: false }).limit(1);
     ok(a?.[0]?.details?.provider === 'email' && 'ip' in (a?.[0]?.details ?? {}), 'audit_log auth.sign_in has provider=email and the IP');
     await ctx.close();
@@ -82,8 +82,9 @@ try {
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
     const page = await ctx.newPage();
     await login(page, 'buyer@demo.octopusb2b.com', process.env.DEMO_PASSWORD);
-    await page.waitForURL(/\/account/, { timeout: 60000 }).catch(() => null);
-    ok(new URL(page.url()).pathname === '/account', 'mobile: existing customer signs in → /account dashboard');
+    // CH-1: customers land on the Shop (main page after login); the account panel is one tap away
+    await page.waitForURL(/\/shop/, { timeout: 60000 }).catch(() => null);
+    ok(new URL(page.url()).pathname === '/shop', 'mobile: existing customer signs in → /shop (main page after login)');
     await ctx.close();
   }
 

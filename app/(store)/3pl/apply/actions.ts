@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { getSession } from '@/lib/auth';
 
 export type ApplyInput = {
   company: string; contactName: string; email: string; phone: string; country: string; sells: string; ordersBand: string;
@@ -22,5 +23,8 @@ export async function submitApplicationAction(input: ApplyInput): Promise<{ ok: 
   });
   if (error) return { ok: false, error: error.message.replace(/^[A-Z_]+:\s*/, '').replace(/^./, (c) => c.toUpperCase()) };
   const d = data as { code: string; safety_data_sheet: boolean };
+  // CH-1 single sign-in (G1): a signed-in customer's application belongs to their company straight away
+  const s = await getSession();
+  if (s?.org && !s.isStaff) await sb.rpc('wh_link_my_application', { p_code: d.code });
   return { ok: true, code: d.code, sds: d.safety_data_sheet };
 }

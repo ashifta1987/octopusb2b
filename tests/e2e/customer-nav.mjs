@@ -16,7 +16,9 @@ try {
     await page.getByLabel('Work email').fill('buyer@demo.octopusb2b.com');
     await page.getByLabel('Password', { exact: true }).fill(PW);
     await page.getByRole('button', { name: 'Log in', exact: true }).click();
-    await page.waitForURL(/\/account/, { timeout: 60000 });
+    // CH-1: sign-in lands on the Shop; this script checks the account panel's menu, so open it
+    await page.waitForURL(/\/shop/, { timeout: 60000 });
+    await page.goto(APP + '/account', { waitUntil: 'domcontentloaded' });
     // the dashboard keeps a realtime connection open, so wait for the sidebar instead of network idle
     await page.locator('nav a', { hasText: 'Help & complaints' }).first().waitFor({ timeout: 60000 });
     const advertising = await page.getByRole('link', { name: 'Advertising', exact: true }).count();

@@ -38,7 +38,8 @@ try {
   await page.fill('#phone', '+31 10 000 0000');
   await page.selectOption('#business_type', { index: 1 });
   const tOnb = Date.now();
-  await Promise.all([page.waitForURL(/\/account(\?|$)/, { timeout: 20000 }), page.getByRole('button', { name: 'Continue' }).click()]);
+  // CH-1: a new customer lands on the Shop after onboarding (no ?next=)
+  await Promise.all([page.waitForURL(/\/shop(\?|$)/, { timeout: 20000 }), page.getByRole('button', { name: 'Continue' }).click()]);
   r.latency['onboarding (SA → complete_onboarding → redirect)'] = Date.now() - tOnb;
   const [org] = await sql(`select o.id, o.name as code, o.kyc_status from org_members m join organizations o on o.id=m.org_id where m.user_id=$1`, [buyer.uid]);
   check(org, 'complete_onboarding created the organization + membership', org?.code);

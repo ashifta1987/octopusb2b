@@ -33,6 +33,8 @@ export type CardProduct = {
   currency: Currency; source_currency: Currency;
   category_id: string | null; octopus_dropship: boolean; ready_to_ship: boolean;
   tiers: Tier[]; tags: TagRef[]; factory: Factory | null;
+  /** CH-1 shop cards: lead time in days (null = not known → "on request", never 0) and when it was listed (new arrivals). */
+  lead_time_days?: number | null; created_at?: string;
 };
 export type ProductDetail = CardProduct & {
   description: string | null; lead_time_days: number | null; incoterm: string | null; origin_country: string | null; hs_code: string | null; hs_code_indicative?: boolean; qty_per_carton?: string | null;
@@ -42,7 +44,7 @@ export type ProductDetail = CardProduct & {
 };
 
 const CARD_COLS =
-  'id, slug, title, unit, moq, min_price_cents, currency, image_url, category_id, octopus_dropship, ready_to_ship, price_tiers(min_qty, unit_price_cents, currency), product_tags(tags(name, slug, kind))';
+  'id, slug, title, unit, moq, min_price_cents, currency, image_url, category_id, octopus_dropship, ready_to_ship, lead_time_days, created_at, price_tiers(min_qty, unit_price_cents, currency), product_tags(tags(name, slug, kind))';
 
 type RawTier = { min_qty: number; unit_price_cents: number; currency: string | null };
 type RawCard = Omit<CardProduct, 'tiers' | 'tags' | 'factory' | 'currency' | 'source_currency'> & {
@@ -150,7 +152,15 @@ export async function getFeatured(limit = 8): Promise<CardProduct[]> {
 export type ListFilters = {
   q?: string; categoryIds?: string[]; minCents?: number; maxCents?: number; moqMax?: number; tagSlugs?: string[];
   dropship?: boolean; ready?: boolean; verified?: boolean; sort?: string; page?: number;
+  /** CH-1 shop: lead time at most N days (unknown lead times are left out), in an open MOQ pool, listed on/after a day (YYYY-MM-DD). */
+  leadMax?: number; inPool?: boolean; newSince?: string;
 };
+
+/** Products with an open MOQ pool right now (public pools; no supplier). */
+async function openPoolProductIds(): Promise<string[]> {
+  const { data } = await createPublicClient().from('pools').select('product_id').eq('status', 'open').gt('deadline_at', new Date().toISOString()).limit(1000);
+  return [...new Set((data ?? []).map((r) => r.product_id as string).filter(Boolean))];
+}
 export const PAGE_SIZE = 24;
 
 /** Server-paginated product search (Products.png). Full-text `search` column + ilike on title / HS code. */
@@ -168,6 +178,13 @@ export async function listProducts(f: ListFilters): Promise<{ items: CardProduct
   if (f.moqMax != null) query = query.lte('moq', f.moqMax);
   if (f.dropship) query = query.eq('octopus_dropship', true);
   if (f.ready) query = query.eq('ready_to_ship', true);
+  if (f.leadMax != null) query = query.not('lead_time_days', 'is', null).lte('lead_time_days', f.leadMax);
+  if (f.newSince && /^\d{4}-\d{2}-\d{2}$/.test(f.newSince)) query = query.gte('created_at', f.newSince);
+  if (f.inPool) {
+    const ids = await openPoolProductIds();
+    if (!ids.length) return { items: [], total: 0 };
+    query = query.in('id', ids);
+  }
 
   if (f.tagSlugs?.length) {
     const { data: tags } = await sb.from('tags').select('id').in('slug', f.tagSlugs);
@@ -194,6 +211,7 @@ export async function listProducts(f: ListFilters): Promise<{ items: CardProduct
     case 'price_asc': query = query.order('min_price_platform', { ascending: true, nullsFirst: false }); break;
     case 'price_desc': query = query.order('min_price_platform', { ascending: false, nullsFirst: false }); break;
     case 'moq_asc': query = query.order('moq', { ascending: true }); break;
+    case 'lead_asc': query = query.order('lead_time_days', { ascending: true, nullsFirst: false }); break;
     case 'newest': query = query.order('created_at', { ascending: false }); break;
     default: query = query.order('featured', { ascending: false }).order('created_at', { ascending: true });
   }
@@ -204,13 +222,26 @@ export async function listProducts(f: ListFilters): Promise<{ items: CardProduct
   return { items: await toCards((data ?? []) as unknown as RawCard[]), total: count ?? 0 };
 }
 
+/** CH-1: live product cards by id, in the order given (personal picks, recently viewed, quote list). Same public query + shape. */
+export async function getCardsByIds(ids: string[]): Promise<CardProduct[]> {
+  'use cache';
+  cacheLife({ revalidate: 300 });
+  cacheTag('products', 'currency');
+  const clean = [...new Set(ids.filter((id) => /^[0-9a-f-]{36}$/i.test(id)))].slice(0, 60);
+  if (!clean.length) return [];
+  const { data } = await createPublicClient().from('products').select(CARD_COLS).in('id', clean).eq('status', 'live').is('archived_at', null);
+  const cards = await toCards((data ?? []) as unknown as RawCard[]);
+  const byId = new Map(cards.map((c) => [c.id, c]));
+  return clean.map((id) => byId.get(id)).filter((c): c is CardProduct => !!c);
+}
+
 export async function getProduct(slug: string): Promise<ProductDetail | null> {
   'use cache';
   cacheLife({ revalidate: 300 });
   cacheTag('products', `product:${slug}`, 'currency');
   const sb = createPublicClient();
   const { data } = await sb.from('products')
-    .select(`${CARD_COLS}, description, lead_time_days, incoterm, origin_country, hs_code, qty_per_carton, seo_title, seo_description, updated_at,
+    .select(`${CARD_COLS}, description, incoterm, origin_country, hs_code, qty_per_carton, seo_title, seo_description, updated_at,
       product_specs(name, value, sort), product_media(url, alt, sort, kind),
       product_certificates(certificates(id, name, issuer, status, expires_at))`)
     .eq('slug', slug).eq('status', 'live').is('archived_at', null).maybeSingle();
@@ -243,7 +274,7 @@ export async function getProduct(slug: string): Promise<ProductDetail | null> {
   } catch { /* no service key (local preview) → no fallback certificates */ }
   return {
     ...card,
-    description: raw.description, lead_time_days: raw.lead_time_days, incoterm: raw.incoterm, origin_country: raw.origin_country,
+    description: raw.description, lead_time_days: raw.lead_time_days ?? null, incoterm: raw.incoterm, origin_country: raw.origin_country,
     hs_code: raw.hs_code, hs_code_indicative: hsIndicative, qty_per_carton: raw.qty_per_carton ?? null, seo_title: raw.seo_title, seo_description: raw.seo_description, updated_at: raw.updated_at,
     specs: [...(product_specs ?? [])].sort((a, b) => a.sort - b.sort).map(({ name, value }) => ({ name, value })),
     media: [...(product_media ?? [])].filter((m) => m.kind === 'image').sort((a, b) => a.sort - b.sort).map(({ url, alt }) => ({ url, alt })),

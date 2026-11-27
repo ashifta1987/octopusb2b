@@ -10,9 +10,11 @@ const ROUTES: [string, string][] = [['octopus_b2b', 'Sourced through Octopus B2B
 const field = 'min-h-11 w-full rounded-[8px] border border-line-strong bg-white px-3 text-[15px] text-ink';
 
 /** Warehouse OS board 27 — Apply / Sign in card. Send stays disabled until the required fields are filled. */
-export function ApplyClient({ warehouses }: { warehouses: { code: string; name: string; city: string }[] }) {
+/** CH-1 single sign-in (gap G1): a signed-in customer gets the company and contact pre-filled and the application is linked to the company. */
+export type ApplyDefaults = { company: string; contactName: string; email: string; phone: string; country: string };
+export function ApplyClient({ warehouses, defaults }: { warehouses: { code: string; name: string; city: string }[]; defaults?: ApplyDefaults | null }) {
   const [tab, setTab] = useState<'apply' | 'signin'>('apply');
-  const [f, setF] = useState({ company: '', contactName: '', email: '', phone: '', country: '', sells: '', ordersBand: '', stockRoute: '', preferredWarehouse: warehouses[0]?.code ?? '', website: '' });
+  const [f, setF] = useState({ company: defaults?.company ?? '', contactName: defaults?.contactName ?? '', email: defaults?.email ?? '', phone: defaults?.phone ?? '', country: defaults?.country ?? '', sells: '', ordersBand: '', stockRoute: '', preferredWarehouse: warehouses[0]?.code ?? '', website: '' });
   const [channels, setChannels] = useState<string[]>([]);
   const [bat, setBat] = useState(false);
   const [liq, setLiq] = useState(false);

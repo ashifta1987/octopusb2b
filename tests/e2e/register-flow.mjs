@@ -78,8 +78,10 @@ try {
       await page.getByRole('button', { name: 'Continue' }).click();
       await page.waitForURL(/\/account(\?|$)/, { timeout: 60000 });
       ok(/\/account(\?|$)/.test(new URL(page.url()).pathname + new URL(page.url()).search), `${label}: onboarding completes and lands on the customer dashboard`);
+      // CH-1: a signed-in customer opening the homepage goes to the Shop, whose header links to the account panel
       await page.goto(APP + '/', { waitUntil: 'networkidle' });
-      ok(await page.locator('header').getByRole('link', { name: 'My account' }).isVisible(), `${label}: signed-in header shows "My account" instead of Sign in/Register`);
+      ok(new URL(page.url()).pathname === '/shop', `${label}: signed-in customer opening / lands on /shop`);
+      ok(await page.locator('header').getByRole('link', { name: /My account panel|Account/ }).first().isVisible(), `${label}: shop header shows the account panel link instead of Sign in/Register`);
       await ctx.close();
     }
   }

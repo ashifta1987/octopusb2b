@@ -53,7 +53,7 @@ export default function OnboardingPage(props: { searchParams: Promise<{ error?: 
 async function Onboarding({ searchParams }: { searchParams: Promise<{ error?: string; next?: string }> }) {
   const s = await getSession();
   const next = safeAccountNext((await searchParams).next);
-  if (!s) redirect(`/login?next=${encodeURIComponent(next === '/account' ? '/onboarding' : `/onboarding?next=${next}`)}`);
+  if (!s) redirect(`/login?next=${encodeURIComponent(next === '/shop' ? '/onboarding' : `/onboarding?next=${encodeURIComponent(next)}`)}`); // CH-1: the Shop is the default
   if (s.profile && s.org) redirect(next);
   if (s.isStaff || (await refuseStaff(s.userId, s.email))) {
     return (
