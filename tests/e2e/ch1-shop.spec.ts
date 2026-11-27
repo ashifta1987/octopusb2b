@@ -242,11 +242,14 @@ test('7 · no supplier / cost leaks in HTML, RSC payload or image URLs', async (
   for (const path of ['/shop', '/shop/products', `/shop/products/${products[0].slug}`, '/shop/quote-list']) {
     await page.goto(path);
     await page.waitForLoadState('networkidle').catch(() => null);
+    // the page itself must render (production payloads also carry Next's not-found template, so check the visible h1)
+    await expect(page.locator('main h1:visible').first()).toBeVisible();
     bodies.push(await page.content());
   }
   const all = bodies.join('\n');
   for (const s of [...leak.codes, ...leak.names, ...leak.models, ...leak.skus]) expect(all.includes(s), `leak: ${s}`).toBe(false);
-  const hit = all.match(/.{0,80}("supplier_id"|"cost_cents"|"margin[a-z_]*"|"factory_model"|"purchase_price).{0,80}/);
+  // exact data field names only ("margin" alone is also a CSS style key in React payloads)
+  const hit = all.match(/.{0,80}("supplier_id"|"cost_cents"|"margin_(?:cents|pct|bps|percent)"|"factory_model"|"purchase_price).{0,80}/);
   expect(hit?.[0] ?? null, 'supplier / cost field names in the page or payload').toBeNull();
   const imgs = await page.locator('img').evaluateAll((els) => els.map((e) => (e as HTMLImageElement).src));
   for (const src of imgs) for (const s of [...leak.codes, ...leak.models]) expect(src.includes(s), `image URL leak: ${src}`).toBe(false);
