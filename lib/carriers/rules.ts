@@ -14,6 +14,8 @@ export type RuleDraft = { seq: number; countries: string[]; product_type: Produc
 export type ServiceForRules = {
   id: string; name: string; active: boolean; accountActive: boolean; accountName: string; sandbox: boolean;
   accepts_battery: boolean; accepts_liquid: boolean; max_weight_g: number | null;
+  /** CONN S4 (missing on older data = takes magnets, as before) */
+  accepts_magnet?: boolean;
 };
 export type PickInput = {
   rules: RuleDraft[]; fallbackId: string | null; services: ServiceForRules[];
@@ -49,6 +51,7 @@ export function serviceProblem(s: ServiceForRules | undefined, dg: string[], wei
   if (s.sandbox && !staging) return `${s.accountName} is a sandbox account (staging only)`;
   if (dg.includes('battery') && !s.accepts_battery) return `${s.name} does not take batteries`;
   if (dg.includes('liquid') && !s.accepts_liquid) return `${s.name} does not take liquids`;
+  if (dg.includes('magnet') && s.accepts_magnet === false) return `${s.name} does not take magnets`;
   if (s.max_weight_g != null && weightG != null && weightG > s.max_weight_g) return `${s.name} takes up to ${g(s.max_weight_g)} g`;
   return null;
 }

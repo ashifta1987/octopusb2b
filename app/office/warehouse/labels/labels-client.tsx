@@ -212,6 +212,12 @@ function ParcelLabels({ labels, urls, filter, setFilter, whName }: {
                   {l.printed > 0 ? 'Reprint' : 'Print'}<span className="sr-only"> label {l.tracking_no} (opens the PDF)</span>
                 </a>
               ) : <span className="ml-auto text-[12.5px] text-muted">PDF not available</span>}
+              {/* CONN S4: the customs invoice for a cross-border parcel (the server says when none is needed) */}
+              {l.status !== 'voided' && (
+                <a href={`/api/labels/commercial-invoice/${l.id}`} target="_blank" rel="noreferrer" className="ds-btn ds-btn-secondary" data-testid={`wh-parcel-ci-${l.tracking_no}`}>
+                  Commercial invoice<span className="sr-only"> for {l.tracking_no} (opens the PDF)</span>
+                </a>
+              )}
             </li>
           ))}
         </ul>

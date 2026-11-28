@@ -1,5 +1,6 @@
 'use client';
 
+import { platformName } from '@/lib/connectors/platforms';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
@@ -14,7 +15,7 @@ import { fmtWhen, newRequestKey, problemShort } from '../ds6-ui';
 const JOB: Record<JobView['status'], { tone: DsBadgeTone; label: (j: JobView) => string }> = {
   queued: { tone: 'info', label: () => 'Waiting to push' },
   running: { tone: 'info', label: () => 'Pushing now' },
-  retry_wait: { tone: 'info', label: (j) => (j.error_code === 'THROTTLED' ? 'Shopify is busy · retrying automatically' : 'Retrying automatically') },
+  retry_wait: { tone: 'info', label: (j) => (j.error_code === 'THROTTLED' ? 'Shopify is busy · retrying automatically' : j.error_code === 'STORE_UNAVAILABLE' ? 'Store not reachable · retrying automatically' : 'Retrying automatically') },
   done: { tone: 'ok', label: (j) => (j.kind === 'unlink' ? 'Unlinked' : `Pushed as ${j.publish_as === 'ACTIVE' ? 'active' : 'draft'}`) },
   failed: { tone: 'bad', label: () => 'Failed' },
   blocked: { tone: 'warn', label: (j) => problemShort(j.error_code ?? '') },
@@ -33,6 +34,9 @@ export function PushClient({ data, ids }: { data: PushPageData; ids: string[] })
   const [confirm, setConfirm] = useState<{ productId: string; title: string; text: string } | null>(null);
   const [requestKey, setRequestKey] = useState(newRequestKey);
   const store = data.store;
+  // CONN S2b: the screens name the connected platform (Shopify when none is connected yet)
+  const storeName = platformName(store?.platform ?? 'shopify');
+  const pushNotBuilt = store?.platform === 'magento' || store?.platform === 'prestashop';
   const paused = data.dropship_status !== 'on';
   const ready = data.items.filter((i) => i.ready);
   const latest = data.batches.find((b) => b.kind === 'push');
@@ -47,8 +51,9 @@ export function PushClient({ data, ids }: { data: PushPageData; ids: string[] })
 
   const disabledReason = paused ? 'Dropshipping is paused for your company, so nothing new can be pushed.'
     : !store ? 'Connect a store first.'
-      : ids.length === 0 ? 'Choose products in your import list first.'
-        : ready.length === 0 ? 'None of the selected products can be pushed yet (see below).' : undefined;
+      : pushNotBuilt ? `Pushing products to ${storeName} comes later. Download the product file on File import instead.`
+        : ids.length === 0 ? 'Choose products in your import list first.'
+          : ready.length === 0 ? 'None of the selected products can be pushed yet (see below).' : undefined;
 
   function push(confirmIds: string[] = []) {
     setNotice(null);
@@ -67,7 +72,7 @@ export function PushClient({ data, ids }: { data: PushPageData; ids: string[] })
   return (
     <div className="flex flex-col gap-5" data-testid="ds6-push">
       <DsPageHeader
-        title="Push to Shopify"
+        title={`Push to ${storeName}`}
         icon="upload"
         subtitle={store ? `${data.items.length} products, ${variants} variants to ${store.shop_domain}` : `${data.items.length} products, ${variants} variants selected`}
         actions={<DsLinkButton href="/account/dropship/catalogue?list=1" variant="secondary" icon="list">Back to import list</DsLinkButton>}
@@ -77,8 +82,14 @@ export function PushClient({ data, ids }: { data: PushPageData; ids: string[] })
         <DsNotice tone="warn" title="Connect a store first" testId="push-connect-store"
           action={<DsLinkButton href="/account/dropship/stores" variant="secondary" icon="store">Stores</DsLinkButton>}>
           {data.store_needs_reconnect
-            ? 'Shopify access needs renewing. Stock and price updates are paused. Paid orders keep shipping. Reconnect, then push again.'
-            : 'Pushing needs a connected Shopify store. Store connection is the next release; nothing is pushed or queued until then. Your import list, edits and prices are saved.'}
+            ? 'Store access needs renewing. Stock and price updates are paused. Paid orders keep shipping. Reconnect, then push again.'
+            : 'Pushing needs a connected store. Connect one on Integrations; nothing is pushed or queued until then. Your import list, edits and prices are saved.'}
+        </DsNotice>
+      )}
+      {pushNotBuilt && (
+        <DsNotice tone="info" title={`Product push to ${storeName} comes later`} testId="push-file-notice"
+          action={<DsLinkButton href="/account/dropship/integrations/file" variant="secondary" icon="upload">Open file import</DsLinkButton>}>
+          Your {storeName} store already imports orders and receives tracking automatically. Export your products as a CSV file for now.
         </DsNotice>
       )}
       {paused && <DsNotice tone="warn" title="Dropshipping is paused" testId="push-paused">Nothing new can be pushed. Products already in your store, orders in progress, your wallet and support keep working.</DsNotice>}
@@ -88,18 +99,18 @@ export function PushClient({ data, ids }: { data: PushPageData; ids: string[] })
         <DsCard title="Push settings" icon="gear" testId="push-settings">
           <div className="flex flex-col gap-3">
             <DsSelect id="ps" label="Store" disabled={!store} hint={store ? undefined : 'No store connected yet.'} value={store?.id ?? ''} onChange={() => {}}>
-              {store ? <option value={store.id}>{`Shopify · ${store.shop_domain}`}</option> : <option value="">No store connected</option>}
+              {store ? <option value={store.id}>{`${storeName} · ${store.shop_domain}`}</option> : <option value="">No store connected</option>}
             </DsSelect>
             <DsInput id="pcl" label="Collection" value={collection} maxLength={120} onChange={(e) => setCollection(e.target.value)} hint="Matched to a collection with this name in your store. Leave empty for no collection." />
             <fieldset className="m-0 p-0 border-0 flex flex-col gap-2">
               <legend className="ds-label">Status in your store</legend>
-              <DsRadioCard name="pub" value="draft" checked={publishAs === 'draft'} onChange={() => setPublishAs('draft')} title="Draft" description="Review in Shopify first" badge={<DsBadge tone="ok">Recommended</DsBadge>} />
+              <DsRadioCard name="pub" value="draft" checked={publishAs === 'draft'} onChange={() => setPublishAs('draft')} title="Draft" description={`Review in ${storeName} first`} badge={<DsBadge tone="ok">Recommended</DsBadge>} />
               <DsRadioCard name="pub" value="active" checked={publishAs === 'active'} onChange={() => setPublishAs('active')} title="Active" description="Visible right away" />
             </fieldset>
             <DsCheckbox label="Push all images" checked={pushImages} onChange={(e) => setPushImages(e.target.checked)} />
             <DsCheckbox label="Push SEO title and description" checked={pushSeo} onChange={(e) => setPushSeo(e.target.checked)} />
             <DsCheckbox label="Keep stock and price in sync" checked={keepSynced} onChange={(e) => setKeepSynced(e.target.checked)} />
-            <p className="m-0 text-[13px] text-muted">Products are created through Shopify&apos;s Admin API. You can edit them in Shopify afterwards.</p>
+            <p className="m-0 text-[13px] text-muted">{store?.platform === 'woocommerce' ? 'Products are created in your WooCommerce store. Stock shows as in stock / out of stock and follows Octopus. Collection = an existing product category with this name.' : pushNotBuilt ? `Download your product CSV on File import and upload it to ${storeName}.` : `Products are created through ${storeName}'s Admin API.`} You can edit them in your store afterwards.</p>
             <DsButton icon="upload" loading={pending} disabled={pending || Boolean(disabledReason)} disabledReason={disabledReason} onClick={() => push()} testId="push-start">
               {`Push ${ready.length} product${ready.length === 1 ? '' : 's'}`}
             </DsButton>
@@ -125,7 +136,7 @@ export function PushClient({ data, ids }: { data: PushPageData; ids: string[] })
                         <DsButton variant="link" onClick={() => start(async () => { await pushCancelAction([j.id]); router.refresh(); })}>Cancel</DsButton>
                       )}
                       {j.status === 'failed' && (
-                        <DsButton variant="link" disabled={!store || paused} disabledReason={!store ? 'Connect a store first.' : undefined}
+                        <DsButton variant="link" disabled={!store || paused || pushNotBuilt} disabledReason={!store ? 'Connect a store first.' : undefined}
                           onClick={() => start(async () => { const r = await pushRetryAction([j.id], newRequestKey()); setNotice(r.ok ? { tone: 'ok', title: 'Queued again' } : { tone: 'bad', title: 'Not queued', text: r.message }); router.refresh(); })}>Retry</DsButton>
                       )}
                     </span>
@@ -151,7 +162,7 @@ export function PushClient({ data, ids }: { data: PushPageData; ids: string[] })
                   <span className="flex gap-2 flex-wrap">
                     <DsLinkButton href={`/account/dropship/import/${i.product_id}`} variant="secondary" icon="pencil">{blocking?.code === 'TEXT_CHECK' ? 'Edit description' : 'Change price'}</DsLinkButton>
                     {!blocking && low && (
-                      <DsButton variant="secondary" disabled={!store || paused || pending} disabledReason={!store ? 'Connect a store first.' : undefined}
+                      <DsButton variant="secondary" disabled={!store || paused || pending || pushNotBuilt} disabledReason={!store ? 'Connect a store first.' : undefined}
                         onClick={() => setConfirm({ productId: i.product_id, title: `Push 1 product below your minimum?`, text: `${i.title} at ${storeMoney(low.price_minor, i.currency)} gives ${pct(low.profit_bp, 1)}. Your minimum is ${pct(i.min_profit_bp)}.` })}>Push anyway</DsButton>
                     )}
                   </span>

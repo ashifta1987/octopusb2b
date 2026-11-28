@@ -8,7 +8,7 @@ import {
   CARRIERS, CARRIER_LABEL, LEVELS, LEVEL_LABEL, VERSION_STATUS, grams,
   type CarrierAccount, type CarriersBoard, type CarrierStation, type RuleVersion,
 } from '@/lib/warehouse-w4';
-import { decideRulesAction, proposeRulesAction, saveCarrierAccountAction, saveCarrierServiceAction, type RuleInput } from '../w4-actions';
+import { decideRulesAction, proposeRulesAction, saveCarrierAccountAction, saveCarrierServiceAction, testCarrierAccountAction, type RuleInput } from '../w4-actions';
 import { HeldResults, HeldResultsList, MsgLine, useRun } from '../wh-run';
 
 /** Warehouse OS · W4 board 9 — accounts, services, rule versions (propose / approve by a different admin), try the rules. */
@@ -24,7 +24,7 @@ export function CarriersClient({ board, credentials }: { board: CarriersBoard; c
 function servicesOf(st: CarrierStation): ServiceForRules[] {
   return st.accounts.flatMap((a) => a.services.map((s) => ({
     id: s.id, name: `${s.name} (${CARRIER_LABEL[a.carrier]})`, active: s.active, accountActive: a.active, accountName: a.name, sandbox: a.mode === 'sandbox',
-    accepts_battery: s.accepts_battery, accepts_liquid: s.accepts_liquid, max_weight_g: s.max_weight_g,
+    accepts_battery: s.accepts_battery, accepts_liquid: s.accepts_liquid, accepts_magnet: s.accepts_magnet, max_weight_g: s.max_weight_g,
   })));
 }
 
@@ -84,7 +84,7 @@ function Accounts({ st, staging, credentials }: { st: CarrierStation; staging: b
 
 function AccountRow({ a, wh, canManage, credentialsOk, staging }: { a: CarrierAccount; wh: string; canManage: boolean; credentialsOk: boolean; staging: boolean }) {
   const { pending, msg, run } = useRun();
-  const [s, setS] = useState({ code: '', name: '', level: 'standard', max: '', battery: false, liquid: false });
+  const [s, setS] = useState({ code: '', name: '', level: 'standard', max: '', battery: false, liquid: false, magnet: true });
   const why = !s.code.trim() ? 'Enter the carrier’s product code' : !s.name.trim() ? 'Name the service' : undefined;
   const toggle = () => run(() => saveCarrierAccountAction({ warehouse: wh, id: a.id, carrier: a.carrier, name: a.name, mode: a.mode, credentialEnv: a.credential_env ?? '', active: !a.active }));
   return (
@@ -98,20 +98,26 @@ function AccountRow({ a, wh, canManage, credentialsOk, staging }: { a: CarrierAc
           ? <DsBadge tone="ok">Server credentials found</DsBadge>
           : <DsBadge tone="bad">{`Not connected: set ${a.credential_env}_APP_KEY and _APP_SECRET on the server`}</DsBadge>)}
         {a.mode === 'sandbox' && !staging && <DsBadge tone="bad">Sandbox does not work here</DsBadge>}
+        {canManage && <DsButton variant="secondary" icon="refresh" disabled={pending} onClick={() => run(() => testCarrierAccountAction(a.id))} testId={`wh-account-test-${a.id}`}>Test connection<span className="sr-only"> {a.name}</span></DsButton>}
       </div>
+      {a.last_check_at && (
+        <p className={`m-0 text-[13px] ${a.last_check_ok ? 'text-ok' : 'text-bad'}`} data-testid={`wh-account-check-${a.id}`}>
+          {a.last_check_ok ? 'Last test worked' : 'Last test failed'} · {fmtWh(a.last_check_at)}{a.last_check_message ? ` · ${a.last_check_message}` : ''}
+        </p>
+      )}
       {a.services.length === 0 ? <p className="m-0 text-[13px] text-muted">No services yet.</p> : (
         <div className="overflow-x-auto" tabIndex={0} role="region" aria-label={`${a.name} services`}>
-          <table className="ds-tbl min-w-[620px]">
-            <thead><tr><th scope="col">Service</th><th scope="col">Code</th><th scope="col">Level</th><th scope="col">Up to</th><th scope="col">Batteries</th><th scope="col">Liquids</th><th scope="col">State</th>{canManage && <th scope="col"><span className="sr-only">Actions</span></th>}</tr></thead>
+          <table className="ds-tbl min-w-[700px]">
+            <thead><tr><th scope="col">Service</th><th scope="col">Code</th><th scope="col">Level</th><th scope="col">Up to</th><th scope="col">Batteries</th><th scope="col">Liquids</th><th scope="col">Magnets</th><th scope="col">State</th>{canManage && <th scope="col"><span className="sr-only">Actions</span></th>}</tr></thead>
             <tbody>
               {a.services.map((x) => (
                 <tr key={x.id} data-testid={`wh-service-${x.code}`}>
                   <td>{x.name}</td><td className="font-mono">{x.code}</td><td>{LEVEL_LABEL[x.level]}</td><td>{x.max_weight_g ? grams(x.max_weight_g) : 'Any weight'}</td>
-                  <td>{x.accepts_battery ? 'Yes' : 'No'}</td><td>{x.accepts_liquid ? 'Yes' : 'No'}</td>
+                  <td>{x.accepts_battery ? 'Yes' : 'No'}</td><td>{x.accepts_liquid ? 'Yes' : 'No'}</td><td>{x.accepts_magnet === false ? 'No' : 'Yes'}</td>
                   <td>{x.active ? <DsBadge tone="ok">In use</DsBadge> : <DsBadge tone="neutral">Off</DsBadge>}</td>
                   {canManage && (
                     <td><DsButton variant="link" disabled={pending}
-                      onClick={() => run(() => saveCarrierServiceAction({ accountId: a.id, id: x.id, code: x.code, name: x.name, level: x.level, maxWeightG: x.max_weight_g ? String(x.max_weight_g) : '', battery: x.accepts_battery, liquid: x.accepts_liquid, active: !x.active }))}>
+                      onClick={() => run(() => saveCarrierServiceAction({ accountId: a.id, id: x.id, code: x.code, name: x.name, level: x.level, maxWeightG: x.max_weight_g ? String(x.max_weight_g) : '', battery: x.accepts_battery, liquid: x.accepts_liquid, magnet: x.accepts_magnet !== false, active: !x.active }))}>
                       {x.active ? 'Switch off' : 'Switch on'}<span className="sr-only"> {x.name}</span>
                     </DsButton></td>
                   )}
@@ -125,7 +131,7 @@ function AccountRow({ a, wh, canManage, credentialsOk, staging }: { a: CarrierAc
         <details>
           <summary className="cursor-pointer text-[13.5px] font-semibold text-coral-text min-h-[44px] flex items-center">Add a service to {a.name}</summary>
           <form className="mt-2 flex flex-wrap gap-3 items-end" data-testid={`wh-service-form-${a.id}`}
-            onSubmit={(e) => { e.preventDefault(); if (!why) run(() => saveCarrierServiceAction({ accountId: a.id, id: null, code: s.code, name: s.name, level: s.level, maxWeightG: s.max, battery: s.battery, liquid: s.liquid, active: true }), () => setS({ code: '', name: '', level: 'standard', max: '', battery: false, liquid: false })); }}>
+            onSubmit={(e) => { e.preventDefault(); if (!why) run(() => saveCarrierServiceAction({ accountId: a.id, id: null, code: s.code, name: s.name, level: s.level, maxWeightG: s.max, battery: s.battery, liquid: s.liquid, magnet: s.magnet, active: true }), () => setS({ code: '', name: '', level: 'standard', max: '', battery: false, liquid: false, magnet: true })); }}>
             <DsInput label="Product code" value={s.code} maxLength={40} onChange={(e) => setS({ ...s, code: e.target.value })} containerClassName="w-[150px]" />
             <DsInput label="Service name" value={s.name} maxLength={80} onChange={(e) => setS({ ...s, name: e.target.value })} containerClassName="w-[200px]" />
             <DsSelect label="Level" value={s.level} onChange={(e) => setS({ ...s, level: e.target.value })} containerClassName="w-[140px]">
@@ -134,6 +140,7 @@ function AccountRow({ a, wh, canManage, credentialsOk, staging }: { a: CarrierAc
             <DsInput label="Maximum weight (g)" inputMode="numeric" value={s.max} onChange={(e) => setS({ ...s, max: e.target.value.replace(/\D/g, '').slice(0, 7) })} containerClassName="w-[160px]" />
             <DsCheckbox label="Takes batteries" checked={s.battery} onChange={(e) => setS({ ...s, battery: e.target.checked })} />
             <DsCheckbox label="Takes liquids" checked={s.liquid} onChange={(e) => setS({ ...s, liquid: e.target.checked })} />
+            <DsCheckbox label="Takes magnets" checked={s.magnet} onChange={(e) => setS({ ...s, magnet: e.target.checked })} />
             <DsButton type="submit" icon="plus" disabled={pending || Boolean(why)} disabledReason={s.code || s.name ? why : undefined} testId={`wh-service-submit-${a.id}`}>Add service</DsButton>
           </form>
         </details>
@@ -167,9 +174,9 @@ function RulesTable({ v, label }: { v: RuleVersion; label: string }) {
 }
 
 function Tester({ rules, fallbackId, services, staging, testId }: { rules: RuleDraft[]; fallbackId: string | null; services: ServiceForRules[]; staging: boolean; testId: string }) {
-  const [t, setT] = useState({ country: '', weight: '', battery: false, liquid: false });
+  const [t, setT] = useState({ country: '', weight: '', battery: false, liquid: false, magnet: false });
   const ready = /^[A-Za-z]{2}$/.test(t.country.trim());
-  const res = ready ? pickService({ rules, fallbackId, services, country: t.country, dg: [...(t.battery ? ['battery'] : []), ...(t.liquid ? ['liquid'] : [])], weightG: t.weight ? Number(t.weight) : null, staging }) : null;
+  const res = ready ? pickService({ rules, fallbackId, services, country: t.country, dg: [...(t.battery ? ['battery'] : []), ...(t.liquid ? ['liquid'] : []), ...(t.magnet ? ['magnet'] : [])], weightG: t.weight ? Number(t.weight) : null, staging }) : null;
   return (
     <div className="mt-4 pt-4 border-t border-divider" data-testid={testId}>
       <h3 className="m-0 text-[14px] font-bold">Try the rules</h3>
@@ -178,6 +185,7 @@ function Tester({ rules, fallbackId, services, staging, testId }: { rules: RuleD
         <DsInput label="Weight (g)" inputMode="numeric" value={t.weight} onChange={(e) => setT({ ...t, weight: e.target.value.replace(/\D/g, '').slice(0, 7) })} containerClassName="w-[130px]" />
         <DsCheckbox label="Battery" checked={t.battery} onChange={(e) => setT({ ...t, battery: e.target.checked })} />
         <DsCheckbox label="Liquid" checked={t.liquid} onChange={(e) => setT({ ...t, liquid: e.target.checked })} />
+        <DsCheckbox label="Magnet" checked={t.magnet} onChange={(e) => setT({ ...t, magnet: e.target.checked })} />
       </div>
       <p role="status" className={`mt-2 mb-0 text-[13.5px] ${res && !res.ok ? 'text-bad' : 'text-ink'}`} data-testid={`${testId}-result`}>
         {res ? res.reason : 'Enter a two-letter country code to see which service a parcel gets.'}

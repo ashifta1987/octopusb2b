@@ -334,8 +334,9 @@ test('Merchant Integrations + Connect a channel @1280 + 390: nothing connects, s
   const main = page.locator('main:visible');
   await expect(main.getByRole('heading', { name: 'Integrations' }).first()).toBeVisible();
   for (const k of ['shopify', 'woocommerce', 'tiktok_shop', 'wix', 'ebay', 'amazon']) await expect(main.getByTestId(`channel-${k}`)).toBeVisible();
-  await expect(main.getByTestId('connect-woocommerce')).toBeDisabled();
-  await expect(main.getByTestId('channel-woocommerce')).toContainText('Connections open in the store-connection release.');
+  // CONN S2: WooCommerce connects once the owner switches it on (CONNECTOR_WOOCOMMERCE=on); Wix stays closed either way
+  await expect(main.getByTestId('connect-wix')).toBeDisabled();
+  await expect(main.getByTestId('channel-wix')).toContainText('Connections open in the store-connection release.');
   await expect(main.getByTestId('channel-woocommerce')).toContainText('Not connected yet');
   const wl = main.getByTestId('amazon-waitlist');
   await expect(wl).toHaveText('Join the waiting list');

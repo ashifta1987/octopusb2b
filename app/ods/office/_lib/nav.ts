@@ -125,6 +125,10 @@ export const NAV_GROUPS: OfficeGroupDef[] = [
     id: 'accounts', label: 'Accounts', items: [
       // ODS T9: Accounts › Invoices (Part 7.4, new ODS page; Finance viewers, like today's receivables)
       { id: 'invoices', label: 'Invoices', href: '/office/accounts/invoices', icon: 'file', allow: area('finance'), g: 'I', keywords: ['invoice', 'record payment', 'receivables'] },
+      // ODS T9 batch 3: new Accounts pages (Finance viewers, like Invoices)
+      { id: 'payments', label: 'Payments', href: '/office/accounts/payments', icon: 'coins', allow: area('finance'), keywords: ['incoming payments', 'payment'] },
+      { id: 'credit-notes', label: 'Credit notes', href: '/office/accounts/credit-notes', icon: 'file', allow: area('finance'), keywords: ['credit note', 'cn'] },
+      { id: 'ledger', label: 'Ledger', href: '/office/accounts/ledger', icon: 'report', allow: area('finance'), keywords: ['journals', 'general ledger'] },
       { id: 'finance', label: 'Finance overview', href: '/admin/finance', icon: 'chart', allow: area('finance'), exact: true, g: 'F', keywords: ['payments', 'record payment', 'invoices'] },
       { id: 'holds', label: 'Held payments', href: '/admin/finance/holds', icon: 'pause', allow: area('finance'), keywords: ['payment protection'] },
       { id: 'wallets', label: 'Wallets', href: '/admin/wallet', icon: 'wallet', allow: area('wallet'), g: 'L', keywords: ['top-ups'] },

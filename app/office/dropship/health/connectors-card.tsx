@@ -28,7 +28,7 @@ export async function ConnectorHealthCard() {
     <section aria-labelledby="conn-h" className="ds-card !p-0 overflow-hidden" data-testid="connector-health">
       <div className="px-5 pt-4 pb-3">
         <h2 id="conn-h" className="m-0 text-[17px] font-semibold text-ink">Store connectors</h2>
-        <p className="m-0 mt-1 text-[13px] text-muted">No platform is connected yet: each one needs the owner&rsquo;s app or test store first. The CSV file connector works now. Checked {fmtDateTime(data.checked_at)} (UTC).</p>
+        <p className="m-0 mt-1 text-[13px] text-muted">A platform connects once its connector is switched on (Server column); the others need the owner&rsquo;s app or test store first. The CSV file connector works for every store. Checked {fmtDateTime(data.checked_at)} (UTC).</p>
       </div>
       <div className="ds-scroll overflow-x-auto" tabIndex={0} role="region" aria-label="Store connectors per platform">
         <table className="w-full min-w-[820px] text-[14px] border-collapse">

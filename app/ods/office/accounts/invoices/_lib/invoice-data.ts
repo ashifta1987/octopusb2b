@@ -34,7 +34,7 @@ type Sb = Awaited<ReturnType<typeof createClient>>;
 
 /** typed as string on purpose: the literal select parser hits TS2589 on this many embeds; rows are cast to DocRow. */
 const COLS: string =
-  'id, number, doc_type, org_id, order_id, division_id, amount_cents, paid_cents, currency, status, due_at, payment_option, last_reminder_stage, emailed_at, created_at, data, organizations(name), divisions(code), orders(code, total_cents, paid_cents, currency)';
+  'id, number, doc_type, org_id, order_id, division_id, amount_cents, paid_cents, currency, status, due_at, payment_option, last_reminder_stage, created_at, data, organizations(name), divisions(code), orders(code, total_cents, paid_cents, currency)';
 
 /** The few PostgREST filter methods the loader uses (keeps the builder's own type through `as T`). */
 type Filterable = {
@@ -64,7 +64,7 @@ function applySteps<T>(q: T, steps: TabFilterStep[]): T {
 type DocRow = {
   id: string; number: string; doc_type: string; org_id: string | null; order_id: string | null; amount_cents: number | null; paid_cents: number | null;
   currency: string | null; status: string | null; due_at: string | null; payment_option: string | null; last_reminder_stage: string | null;
-  emailed_at: string | null; created_at: string; data: { service?: string } | null;
+  created_at: string; data: { service?: string } | null;
   organizations: { name?: string } | null; divisions: { code?: string } | null;
   orders: { code?: string; total_cents?: number; paid_cents?: number; currency?: string } | null;
 };
@@ -126,7 +126,8 @@ function toRow(d: DocRow, nowMs: number, owners: Map<string, string>): InvoiceRo
     payBlockedReason: pay.reason,
     paymentOption: d.payment_option,
     lastReminder: d.last_reminder_stage,
-    emailedAt: d.emailed_at,
+    // documents.emailed_at is not readable by staff sessions (column grant), so it is not shown
+    emailedAt: null,
   };
 }
 

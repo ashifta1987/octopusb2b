@@ -136,6 +136,22 @@ export class FourPxAdapter implements CarrierAdapter {
     await this.call('ds.xms.order.cancel', { request_no: trackingNo, cancel_reason: 'Label voided at the warehouse' });
   }
 
+  /**
+   * CONN S4 · asks 4PX for the tracking of a number that does not exist: a signature / key problem is refused as such, while
+   * "no such order" (or an empty answer) means 4PX accepted our credentials. VERIFY the refusal wording with a real 4PX account.
+   */
+  async validateCredentials(): Promise<{ ok: boolean; message: string }> {
+    try {
+      await this.fetchTracking('OCTOPUSTEST000000');
+      return { ok: true, message: '4PX accepted the credentials.' };
+    } catch (e) {
+      if (e instanceof CarrierError && e.code === 'CARRIER_UNREACHABLE') return { ok: false, message: e.message };
+      const msg = e instanceof Error ? e.message : String(e);
+      if (/sign|app[_ ]?key|secret|auth|permission|token|unauthori[sz]ed|forbidden|invalid key/i.test(msg)) return { ok: false, message: msg.slice(0, 280) };
+      return { ok: true, message: `4PX accepted the credentials (${msg.replace(/^4PX refused: /, '').slice(0, 120)}).` };
+    }
+  }
+
   async fetchTracking(trackingNo: string): Promise<CarrierTrackingEvent[]> {
     const data = await this.call<{ trackingList?: { businessLinkCode?: string; trackingContent?: string; occurDatetime?: string; occurLocation?: string }[] }>(
       'tr.order.tracking.get', { deliveryOrderNo: trackingNo });

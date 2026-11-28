@@ -3,8 +3,10 @@ import { requireDropshipV2Staff } from '@/lib/dropship-staff';
 import { DsLinkButton, DsNotice, DsSkeleton } from '@/components/dropship-ui';
 import { rpcMessage } from '@/lib/dropship-ds6';
 import { getHealthPage, type HealthPageData } from '@/lib/dropship-ds12';
-import { HealthClient } from './health-client';
+import { HealthClient, type EngineStatus } from './health-client';
+import { createClient } from '@/lib/supabase/server';
 import { ConnectorHealthCard } from './connectors-card';
+import { StoreAndCarrierHealthCard } from './c5-health-card';
 
 export const metadata = { title: 'System health · Back office' };
 
@@ -23,6 +25,13 @@ async function Guarded() {
   } catch (e) {
     error = rpcMessage(e);
   }
+  // CONN S6: the auto-sync engine + FX feed status (the tile says "not run yet" when it can't be read)
+  let engine: EngineStatus | null = null;
+  try {
+    const sb = await createClient();
+    const { data: e } = await sb.rpc('c6_engine_status');
+    engine = (e as EngineStatus | null) ?? null;
+  } catch { engine = null; }
   if (!data) {
     return (
       <div className="flex flex-col gap-5" data-testid="ds-health-page">
@@ -34,10 +43,14 @@ async function Guarded() {
   }
   return (
     <div className="flex flex-col gap-5">
-      <HealthClient data={data} />
+      <HealthClient data={data} engine={engine} />
       {/* C0: store connectors, requested platforms, tracking company names, carrier poll */}
       <Suspense fallback={<div className="ds-card"><DsSkeleton immediate /></div>}>
         <ConnectorHealthCard />
+      </Suspense>
+      {/* CONN S5: connections in error (Retry / Contact merchant), failed store updates (Retry), carrier accounts and failures */}
+      <Suspense fallback={<div className="ds-card"><DsSkeleton immediate /></div>}>
+        <StoreAndCarrierHealthCard />
       </Suspense>
     </div>
   );

@@ -128,7 +128,7 @@ export function ReceivablesClient({
           disabled={pending}
           onClick={handleRunOverdueCheck}
           data-testid="run-overdue-reminders-btn"
-          className="inline-flex min-h-10 items-center rounded-lg bg-ink px-4 py-2 text-xs font-semibold text-canvas hover:opacity-95 disabled:opacity-40"
+          className="inline-flex min-h-10 items-center rounded-lg bg-ink px-4 py-2 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-40"
         >
           Run Pay-later reminders &amp; overdue check (-3d, 0d, +3d, +7d, +14d)
         </button>

@@ -24,7 +24,14 @@ function Tile({ name, tone, state, line, testId }: { name: string; tone: DsBadge
   );
 }
 
-export function HealthClient({ data }: { data: HealthPageData }) {
+/** CONN S6: the auto-sync engine and the FX feed (c6_engine_status); null when it could not be read */
+export type EngineStatus = {
+  engine: { at: string; status: number; summary: string } | null; engine_errors_24h: number;
+  fx: { at: string; status: number; summary: string } | null; waiting_approvals: number;
+};
+const utcTime = (ts: string) => `${new Date(ts).toISOString().slice(0, 16).replace('T', ' ')} UTC`;
+
+export function HealthClient({ data, engine = null }: { data: HealthPageData; engine?: EngineStatus | null }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -50,8 +57,10 @@ export function HealthClient({ data }: { data: HealthPageData }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" data-testid="health-tiles">
         <Tile testId="tile-shopify" name="Shopify API" tone="neutral" state={data.stores_active ? 'Connected' : 'Not connected'} line={data.stores_active ? `${data.stores_active} store(s) connected` : 'No store is connected yet (Shopify connection comes last).'} />
         <Tile testId="tile-webhooks" name="Order webhooks" tone={data.webhooks.store_failed.length ? 'bad' : 'neutral'} state={data.webhooks.store_failed.length ? `${data.webhooks.store_failed.length} failed` : data.webhooks.store_received_24h ? 'Working' : 'No webhooks yet'} line={`Received today: ${data.webhooks.store_received_24h} · payment events waiting: ${data.webhooks.payment_unprocessed}`} />
-        <Tile testId="tile-order-check" name="Hourly order check" tone="neutral" state="Not running" line="Starts with the store connection (catch-up for missed webhooks)." />
-        <Tile testId="tile-sync" name="Stock and price sync" tone={data.links_failed ? 'bad' : 'neutral'} state={data.links_failed ? `${data.links_failed} failed` : 'Not running'} line={data.links_failed ? 'Some live products failed to sync.' : 'Starts with the auto-sync engine and a connected store.'} />
+        <Tile testId="tile-order-check" name="Hourly order check" tone={data.stores_active ? 'ok' : 'neutral'} state={data.stores_active ? 'Running' : 'Not running'} line={data.stores_active ? 'Connected stores are read every hour for orders a webhook missed.' : 'Starts with the first connected store (catch-up for missed webhooks).'} />
+        <Tile testId="tile-sync" name="Stock and price sync" tone={data.links_failed || (engine?.engine_errors_24h ?? 0) > 0 ? 'bad' : engine?.engine ? 'ok' : 'neutral'}
+          state={data.links_failed ? `${data.links_failed} failed` : (engine?.engine_errors_24h ?? 0) > 0 ? `${engine!.engine_errors_24h} error(s) today` : engine?.engine ? 'Running' : 'Not run yet'}
+          line={engine?.engine ? `Last run ${utcTime(engine.engine.at)}: ${engine.engine.summary}${engine.waiting_approvals ? ` · ${engine.waiting_approvals} price change(s) wait for merchants` : ''}${engine.fx ? ` · FX: ${engine.fx.summary}` : ''}` : 'Runs every hour once a store has pushed products; FX from the ECB on weekdays.'} />
         <Tile testId="tile-events" name="Events between divisions" tone={evTone} state={de.dead > 0 ? `${de.dead} stopped` : evTone === 'warn' ? 'Delayed' : 'Working'}
           line={`${de.pending} waiting · ${de.retry} retrying${delay != null ? ` · oldest ${delay} min` : ''} · ${de.processed_24h} delivered today`} />
         <Tile testId="tile-carrier" name="Carrier events" tone={data.carrier_last_event ? 'ok' : 'neutral'} state={data.carrier_last_event ? 'Working' : 'No events yet'} line={data.carrier_last_event ? `Last event ${carrierAge} min ago` : 'Tracking events appear after the first hand-over.'} />

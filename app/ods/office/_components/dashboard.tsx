@@ -179,7 +179,7 @@ export function DashboardShell({ firstName, roleLabel, widgets, initialHidden, s
 
 /* ───────── shared panel frame + states ───────── */
 
-function Panel({ title, actions, children, testId, className }: { title: ReactNode; actions?: ReactNode; children: ReactNode; testId: string; className?: string }) {
+export function Panel({ title, actions, children, testId, className }: { title: ReactNode; actions?: ReactNode; children: ReactNode; testId: string; className?: string }) {
   return (
     <section data-testid={testId} className={cx('min-w-0 rounded-ods-card border border-ods-line bg-ods-surface shadow-ods-card', className)} aria-label={typeof title === 'string' ? title : undefined}>
       <header className="flex min-h-11 flex-wrap items-center justify-between gap-2 border-b border-ods-line px-ods-pad-card py-2">

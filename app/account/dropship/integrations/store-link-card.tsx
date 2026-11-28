@@ -8,15 +8,18 @@ import { CONNECTION_STATUS, PLATFORMS, platformName } from '@/lib/connectors/pla
 import type { DetectResult } from '@/lib/connectors/types';
 import type { StoreLinkState } from '@/lib/dropship-c0';
 import { detectStoreLinkAction, requestPlatformAction } from './c0-actions';
+import type { C1Result } from './c1-actions';
+import { ConnectStoreForm } from './connect-store-form';
+import { ConnectKeyForm } from './connect-key-form';
 
 /**
  * C0 · "Connect your store": paste a link → found / not recognised / connected / could not connect. The check runs on the server
- * (DNS-resolved SSRF guard, short timeout). A link alone gives no access: Connect stays disabled with the store-connection reason.
- * Not recognised → choose the platform, "Request this platform" (the waiting-list counter) or import orders from a file.
+ * (DNS-resolved SSRF guard, short timeout). A link alone gives no access: Connect stays disabled unless the platform is ready.
+ * S2: WooCommerce approval form. S3: Magento 2 and PrestaShop key-paste form. OpenCart points to File import (CSV).
  */
 const CHANNEL_PAGES = new Set(['shopify', 'woocommerce', 'wix', 'tiktok_shop', 'ebay']);
 
-export function StoreLinkCard({ waitlist }: { waitlist: string[] }) {
+export function StoreLinkCard({ waitlist, ready = [], onConnected }: { waitlist: string[]; ready?: string[]; onConnected?: (r: C1Result) => void }) {
   const [url, setUrl] = useState('');
   const [res, setRes] = useState<{ detect: DetectResult; state: StoreLinkState | null } | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -45,6 +48,7 @@ export function StoreLinkCard({ waitlist }: { waitlist: string[] }) {
   const conn = res?.state?.connection ?? null;
   const found = d && (d.outcome === 'found' || d.outcome === 'marketplace') ? d.platform : null;
   const status = conn ? CONNECTION_STATUS[conn.status] : null;
+  const foundReady = Boolean(found && d?.outcome === 'found' && ready.includes(found));
 
   return (
     <DsCard title="Connect your store" subtitle="Paste your store link. We check which platform it runs on. A link alone gives Octopus no access." icon="store" testId="store-link-card">
@@ -71,12 +75,18 @@ export function StoreLinkCard({ waitlist }: { waitlist: string[] }) {
                 <span className="text-[14px]">{d.outcome === 'marketplace' ? `${platformName(found)} marketplace` : `This is a ${platformName(found)} store`} · {d.host}</span>
               </div>
               {d.outcome === 'marketplace' && <p className="m-0 text-[13px] text-muted">Marketplaces connect through your seller account (no store link). We will ask you to sign in there when it opens.</p>}
+              {found === 'woocommerce' && foundReady && d.outcome === 'found' && <ConnectStoreForm platform="woocommerce" defaultUrl={d.url} testId="store-link-woo" />}
+              {(found === 'magento' || found === 'prestashop') && foundReady && d.outcome === 'found' && (
+                <ConnectKeyForm platform={found} defaultUrl={d.url} testId={`store-link-${found}`} onConnected={(r) => { onConnected?.(r); setMsg({ ok: true, text: r.message }); }} />
+              )}
               <div className="flex flex-wrap gap-2 items-center">
-                <DsButton disabled disabledReason={CONNECT_BLOCKED_REASON} icon="link" testId="store-link-connect">Connect {platformName(found)}</DsButton>
+                {foundReady
+                  ? null
+                  : <DsButton disabled disabledReason={CONNECT_BLOCKED_REASON} icon="link" testId="store-link-connect">Connect {platformName(found)}</DsButton>}
                 {CHANNEL_PAGES.has(found) && <DsLinkButton href={`/account/dropship/integrations/${found}`} variant="secondary" icon="gear">Channel settings</DsLinkButton>}
-                {requested.includes(found)
+                {!foundReady && (requested.includes(found)
                   ? <DsBadge tone="info">You asked to be told</DsBadge>
-                  : <DsButton variant="secondary" icon="bell" onClick={() => request(found)} loading={pending} testId="store-link-notify">Tell me when it opens</DsButton>}
+                  : <DsButton variant="secondary" icon="bell" onClick={() => request(found)} loading={pending} testId="store-link-notify">Tell me when it opens</DsButton>)}
               </div>
             </div>
           ) : d.outcome === 'unknown' ? (
@@ -89,6 +99,9 @@ export function StoreLinkCard({ waitlist }: { waitlist: string[] }) {
                 </DsSelect>
                 {choice === 'other' && <DsInput label="Platform name" value={other} onChange={(e) => setOther(e.target.value)} maxLength={60} data-testid="store-link-other" />}
               </div>
+              {choice === 'opencart' && (
+                <p className="m-0 text-[13px] text-muted" data-testid="store-link-opencart-csv">OpenCart&rsquo;s built-in API cannot list orders, so OpenCart stores use CSV file import and export.</p>
+              )}
               <div className="flex flex-wrap gap-2">
                 <DsButton variant="secondary" icon="bell" onClick={() => request(choice)} loading={pending}
                   disabled={!choice || (choice === 'other' && other.trim().length < 2) || requested.includes(choice)}

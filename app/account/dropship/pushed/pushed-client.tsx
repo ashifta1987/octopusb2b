@@ -1,5 +1,6 @@
 'use client';
 
+import { platformName } from '@/lib/connectors/platforms';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState, useTransition } from 'react';
 import {
@@ -28,13 +29,15 @@ export function PushedClient({ data, showFailed }: { data: PushedData; showFaile
   const [askUnlink, setAskUnlink] = useState(false);
   const [notice, setNotice] = useState<{ tone: 'ok' | 'bad' | 'warn'; title: string; text?: string } | null>(null);
   const store = data.store;
+  const pushNotBuilt = store?.platform === 'magento' || store?.platform === 'prestashop';
+  const storeName = platformName(store?.platform ?? 'shopify');
 
   const rows = useMemo(() => data.rows.filter((r) =>
     (!q || `${r.title} ${r.model_no}`.toLowerCase().includes(q.toLowerCase()))
     && (storeStatus === 'all' || r.store_status === storeStatus)
     && (sync === 'all' || (sync === 'in_sync' ? r.sync_state === 'in_sync' : sync === 'needs_you' ? r.sync_state === 'needs_you' : r.stock_status === 'out'))), [data.rows, q, storeStatus, sync]);
   const chosen = data.rows.filter((r) => selected.has(r.product_id));
-  const noStoreReason = !store ? 'Connect a store first.' : undefined;
+  const noStoreReason = !store ? 'Connect a store first.' : pushNotBuilt ? `Pushing products to ${storeName} comes later.` : undefined;
   const counts = { import: data.import_count, pushed: data.rows.length, failed: data.failed.length };
 
   const repush = () => start(async () => {
@@ -60,16 +63,22 @@ export function PushedClient({ data, showFailed }: { data: PushedData; showFaile
         actions={
           <>
             <DsButton variant="secondary" icon="refresh" disabled disabledReason="Automatic stock and price sync starts with the sync engine; nothing syncs yet." testId="sync-all">Sync all now</DsButton>
-            <DsButton variant="secondary" icon="upload" disabled={pending || chosen.length === 0 || !store} disabledReason={noStoreReason ?? (chosen.length === 0 ? 'Select products first.' : undefined)} onClick={repush} testId="repush-selected">Re-push selected</DsButton>
+            <DsButton variant="secondary" icon="upload" disabled={pending || chosen.length === 0 || !store || pushNotBuilt} disabledReason={noStoreReason ?? (chosen.length === 0 ? 'Select products first.' : undefined)} onClick={repush} testId="repush-selected">Re-push selected</DsButton>
             <DsButton variant="secondary" icon="link" disabled={pending || chosen.length === 0} disabledReason={chosen.length === 0 ? 'Select products first.' : undefined} onClick={() => setAskUnlink(true)} testId="unlink-selected">Unlink selected</DsButton>
           </>
         }
       />
       <Ds6Chips current={showFailed ? 'failed' : 'pushed'} counts={counts} />
       {!store && (
-        <DsNotice tone="info" title={data.store_needs_reconnect ? 'Shopify access needs renewing' : 'Connect a store first'} testId="pushed-connect-store"
+        <DsNotice tone="info" title={data.store_needs_reconnect ? 'Store access needs renewing' : 'Connect a store first'} testId="pushed-connect-store"
           action={<DsLinkButton href="/account/dropship/stores" variant="secondary" icon="store">{data.store_needs_reconnect ? 'Reconnect' : 'Stores'}</DsLinkButton>}>
           {data.store_needs_reconnect ? 'Stock and price updates are paused. Paid orders keep shipping.' : 'Nothing has been pushed yet. Products appear here after you connect a store and push them from your import list.'}
+        </DsNotice>
+      )}
+      {pushNotBuilt && (
+        <DsNotice tone="info" title={`Product push to ${storeName} comes later`} testId="pushed-file-notice"
+          action={<DsLinkButton href="/account/dropship/integrations/file" variant="secondary" icon="upload">Open file import</DsLinkButton>}>
+          Your {storeName} store receives orders and tracking automatically. Download your product CSV on File import for now.
         </DsNotice>
       )}
       {notice && <DsNotice tone={notice.tone} title={notice.title} testId="pushed-notice">{notice.text}</DsNotice>}
@@ -126,7 +135,7 @@ export function PushedClient({ data, showFailed }: { data: PushedData; showFaile
                 <span className="flex gap-2 flex-wrap">
                   {j.error_code === 'HANDLE_TAKEN' && <DsLinkButton href={`/account/dropship/import/${j.product_id}`} variant="secondary" icon="pencil">Change handle</DsLinkButton>}
                   {j.error_code === 'STORE_ACCESS_EXPIRED' && <DsLinkButton href="/account/dropship/stores" icon="link">Reconnect</DsLinkButton>}
-                  <DsButton variant="secondary" icon="refresh" disabled={pending || !store} disabledReason={noStoreReason}
+                  <DsButton variant="secondary" icon="refresh" disabled={pending || !store || pushNotBuilt} disabledReason={noStoreReason}
                     onClick={() => start(async () => { const r = await pushRetryAction([j.id], newRequestKey()); setNotice(r.ok ? { tone: 'ok', title: 'Queued again' } : { tone: 'bad', title: 'Not queued', text: r.message }); router.refresh(); })}>Retry</DsButton>
                 </span>
               </li>
@@ -137,7 +146,7 @@ export function PushedClient({ data, showFailed }: { data: PushedData; showFaile
 
       {askUnlink && (
         <DsDialog title={`Unlink ${chosen.length} product${chosen.length === 1 ? '' : 's'}?`}
-          description="They stay in your Shopify store but stop syncing stock and price, and leave the Octopus location. Stock is set to 0 there first."
+          description={store?.platform && store.platform !== 'shopify' ? 'They stay in your store but stop syncing stock and price. They are set to out of stock there first.' : 'They stay in your Shopify store but stop syncing stock and price, and leave the Octopus location. Stock is set to 0 there first.'}
           confirmLabel="Unlink" cancelLabel="Keep" onCancel={() => setAskUnlink(false)} onConfirm={unlink} testId="unlink-dialog" />
       )}
     </div>

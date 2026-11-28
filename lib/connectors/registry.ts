@@ -2,16 +2,22 @@ import 'server-only';
 import { PLATFORMS, type StorePlatform } from './platforms';
 import { matchSignature } from './signatures';
 import { tokenBoxConfigured } from '@/lib/crypto/token-box';
+import { readCredential } from './credentials';
+import { WooCommerceConnector } from './woocommerce';
+import { MagentoConnector } from './magento';
+import { PrestaShopConnector } from './prestashop';
 import {
   ConnectorError, type Connector, type ConnectorId, type ConnectorStatus, type ConnectionRef, type InternalProduct, type InternalShipment,
   type PullResult, type PushResult, type StartConnectResult, type TestResult,
 } from './types';
 
 /**
- * C0 · Connector registry. Every planned platform is registered; none talks to a platform yet:
- *  - Shopify, WooCommerce, Wix, BigCommerce, Magento, PrestaShop, OpenCart, eBay, TikTok Shop, Amazon, Walmart, Etsy →
- *    NotConfiguredConnector ("not configured" while their env keys are missing, "not built" once keys exist — the real connector is
- *    written against the platform's official docs in Group B with the owner's go);
+ * C0 · Connector registry.
+ *  - WooCommerce → WooCommerceConnector (CONN S2 / S2b);
+ *  - Magento 2 → MagentoConnector (CONN S3, pasted access token);
+ *  - PrestaShop → PrestaShopConnector (CONN S3, pasted Webservice key);
+ *  - Shopify, Wix, BigCommerce, OpenCart (uses CSV file), eBay, TikTok Shop, Amazon, Walmart, Etsy →
+ *    NotConfiguredConnector ("not configured" while their env keys are missing, "not built" once keys exist);
  *  - CSV → the file connector that works now (orders in through ds_order_intake channel 'csv'; product feed + tracking files out).
  * The registry never returns a value of a secret; missingEnv() lists NAMES only.
  */
@@ -74,6 +80,20 @@ for (const p of PLATFORMS) {
   REGISTRY.set(p.key as StorePlatform, new NotConfiguredConnector(p.key as StorePlatform, p.name, p.env));
 }
 REGISTRY.set('csv', new CsvConnector());
+// CONN S2: WooCommerce (merchant-approved keys; ready once CONNECTOR_TOKEN_KEY and CONNECTOR_WOOCOMMERCE=on are set)
+REGISTRY.set('woocommerce', new WooCommerceConnector({
+  keys: async (id) => {
+    const [k, s] = await Promise.all([readCredential(id, 'consumer_key'), readCredential(id, 'consumer_secret')]);
+    return k && s ? { consumerKey: k.value, consumerSecret: s.value } : null;
+  },
+}));
+// CONN S3: Magento 2 and PrestaShop (merchant-pasted keys; ready once CONNECTOR_TOKEN_KEY and CONNECTOR_MAGENTO/PRESTASHOP=on are set)
+REGISTRY.set('magento', new MagentoConnector({
+  key: async (id) => (await readCredential(id, 'access_token'))?.value ?? null,
+}));
+REGISTRY.set('prestashop', new PrestaShopConnector({
+  key: async (id) => (await readCredential(id, 'api_key'))?.value ?? null,
+}));
 
 export function getConnector(id: ConnectorId): Connector {
   const c = REGISTRY.get(id);

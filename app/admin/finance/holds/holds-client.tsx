@@ -293,7 +293,7 @@ export function HoldsClient({
                         type="submit"
                         disabled={pending}
                         data-testid={`hold-execute-btn-${h.id}`}
-                        className="rounded-lg bg-ink px-3.5 py-1.5 text-xs font-semibold text-canvas hover:opacity-95 disabled:opacity-40"
+                        className="rounded-lg bg-ink px-3.5 py-1.5 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-40"
                       >
                         Execute
                       </button>

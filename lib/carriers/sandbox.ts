@@ -64,6 +64,9 @@ export class SandboxCarrierAdapter implements CarrierAdapter {
   async cancelLabel(): Promise<void> {
     // nothing exists at a carrier
   }
+  async validateCredentials(): Promise<{ ok: boolean; message: string }> {
+    return { ok: true, message: 'Sandbox account: test labels only (staging). No carrier is called.' };
+  }
   async fetchTracking(): Promise<CarrierTrackingEvent[]> {
     // sandbox steps are added by staff on staging (wh_tracking_sandbox_next), never invented by polling
     return [];

@@ -1,10 +1,12 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { after } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { requireDropshipV2Merchant } from '@/lib/dropship';
 import { rpcMessage } from '@/lib/dropship-ds6';
+import { connectorPushNow } from '@/lib/connectors/runtime-server';
 
 /**
  * Octopus Dropship · Step 6 + 6b merchant — server actions. Every action checks the merchant (and that the feature that
@@ -16,6 +18,8 @@ import { rpcMessage } from '@/lib/dropship-ds6';
 export type ActionResult<T = Record<string, unknown>> = { ok: true; data: T; message?: string } | { ok: false; message: string; code?: string; fields?: { field: string; kind: string }[] };
 
 const Uuid = z.string().uuid();
+/** CONN S2b: start the push / unlink for a non-Shopify store right after the answer (the 5-minute job picks up anything left) */
+const kickPush = () => after(async () => { await connectorPushNow().catch(() => undefined); });
 const Uuids = z.array(Uuid).min(1).max(200);
 
 async function rpc<T = Record<string, unknown>>(fn: string, args: Record<string, unknown>): Promise<ActionResult<T>> {
@@ -171,7 +175,7 @@ export async function pushEnqueueAction(productIds: string[], options: z.infer<t
   if (!ids.success || !opts.success || !Uuid.safeParse(requestKey).success) return { ok: false, message: 'Select between 1 and 100 products to push.' };
   const confirm = z.array(Uuid).max(100).safeParse(confirmBelowMin ?? []);
   const r = await rpc('ds_push_enqueue', { p_product_ids: ids.data, p_options: opts.data, p_confirm_below_min: confirm.success ? confirm.data : [], p_request_key: requestKey });
-  if (r.ok) revalidateDs6();
+  if (r.ok) { revalidateDs6(); kickPush(); }
   return r;
 }
 
@@ -189,7 +193,7 @@ export async function pushRetryAction(jobIds: string[], requestKey: string, conf
   const p = Uuids.safeParse(jobIds);
   if (!p.success || !Uuid.safeParse(requestKey).success) return { ok: false, message: 'Nothing selected.' };
   const r = await rpc('ds_push_retry', { p_job_ids: p.data, p_request_key: requestKey, p_confirm_below_min: z.array(Uuid).max(100).catch([]).parse(confirmBelowMin) });
-  if (r.ok) revalidateDs6();
+  if (r.ok) { revalidateDs6(); kickPush(); }
   return r;
 }
 
@@ -198,7 +202,7 @@ export async function unlinkAction(productIds: string[], requestKey: string): Pr
   const p = z.array(Uuid).min(1).max(100).safeParse(productIds);
   if (!p.success || !Uuid.safeParse(requestKey).success) return { ok: false, message: 'Select at least one product.' };
   const r = await rpc('ds_unlink', { p_product_ids: p.data, p_request_key: requestKey });
-  if (r.ok) revalidateDs6();
+  if (r.ok) { revalidateDs6(); kickPush(); }
   return r;
 }
 

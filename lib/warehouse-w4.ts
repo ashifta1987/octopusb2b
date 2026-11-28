@@ -16,9 +16,13 @@ export const LEVEL_LABEL: Record<Level, string> = { economy: 'Economy', standard
 // ───────── carriers and rules (board 9) ─────────
 export type CarrierService = {
   id: string; code: string; name: string; level: Level; max_weight_g: number | null; accepts_battery: boolean; accepts_liquid: boolean; active: boolean;
+  /** CONN S4 */
+  accepts_magnet?: boolean;
 };
 export type CarrierAccount = {
   id: string; carrier: Carrier; name: string; mode: 'sandbox' | 'live'; credential_env: string | null; active: boolean; updated_at: string;
+  /** CONN S4: the last "Test connection" */
+  last_check_at?: string | null; last_check_ok?: boolean | null; last_check_message?: string | null;
   services: CarrierService[];
 };
 export type RuleRow = {

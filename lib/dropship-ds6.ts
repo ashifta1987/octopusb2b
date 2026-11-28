@@ -150,7 +150,7 @@ export type JobView = {
 
 export type PushPageData = {
   dropship_status: 'on' | 'paused' | 'off';
-  store: { id: string; shop_domain: string; currency: string | null } | null;
+  store: { id: string; shop_domain: string; currency: string | null; platform?: string } | null;
   store_needs_reconnect: boolean;
   items: {
     product_id: string;
@@ -169,7 +169,7 @@ export type PushPageData = {
 };
 
 export type PushedData = {
-  store: { shop_domain: string; currency: string | null } | null;
+  store: { shop_domain: string; currency: string | null; platform?: string } | null;
   store_needs_reconnect: boolean;
   import_count: number;
   rows: {

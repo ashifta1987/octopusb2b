@@ -24,12 +24,12 @@ export type PlatformInfo = {
 
 export const PLATFORMS: PlatformInfo[] = [
   { key: 'shopify', name: 'Shopify', kind: 'web', method: 'oauth_app', env: ['SHOPIFY_API_KEY', 'SHOPIFY_API_SECRET', 'SHOPIFY_APP_URL', 'CONNECTOR_TOKEN_KEY'], ownerNeeds: 'Shopify Dev Dashboard app (staging + production), dev store, staging DNS' },
-  { key: 'woocommerce', name: 'WooCommerce', kind: 'web', method: 'approval_link', env: ['CONNECTOR_TOKEN_KEY'], ownerNeeds: 'a test WordPress + WooCommerce store on HTTPS' },
+  { key: 'woocommerce', name: 'WooCommerce', kind: 'web', method: 'approval_link', env: ['CONNECTOR_TOKEN_KEY', 'CONNECTOR_WOOCOMMERCE'], ownerNeeds: 'a test WordPress + WooCommerce store on HTTPS; /api/webhooks/connect/woocommerce and /api/webhooks/connectors/* reachable from merchants\' servers (WAF), then CONNECTOR_WOOCOMMERCE=on' },
   { key: 'wix', name: 'Wix', kind: 'web', method: 'oauth_app', env: ['WIX_APP_ID', 'WIX_APP_SECRET', 'CONNECTOR_TOKEN_KEY'], ownerNeeds: 'Wix Developers app (app ID, secret, redirect URL)' },
   { key: 'bigcommerce', name: 'BigCommerce', kind: 'web', method: 'oauth_app', env: ['BIGCOMMERCE_CLIENT_ID', 'BIGCOMMERCE_CLIENT_SECRET', 'CONNECTOR_TOKEN_KEY'], ownerNeeds: 'BigCommerce Developer Portal app + sandbox store' },
-  { key: 'magento', name: 'Magento (Adobe Commerce)', kind: 'web', method: 'pasted_key', env: ['CONNECTOR_TOKEN_KEY'], ownerNeeds: 'a test Magento store' },
-  { key: 'prestashop', name: 'PrestaShop', kind: 'web', method: 'pasted_key', env: ['CONNECTOR_TOKEN_KEY'], ownerNeeds: 'a test PrestaShop store' },
-  { key: 'opencart', name: 'OpenCart', kind: 'web', method: 'pasted_key', env: ['CONNECTOR_TOKEN_KEY'], ownerNeeds: 'a test OpenCart store' },
+  { key: 'magento', name: 'Magento (Adobe Commerce)', kind: 'web', method: 'pasted_key', env: ['CONNECTOR_TOKEN_KEY', 'CONNECTOR_MAGENTO'], ownerNeeds: 'a test Magento 2 store (allow standalone Bearer tokens on 2.4.4+), then CONNECTOR_MAGENTO=on' },
+  { key: 'prestashop', name: 'PrestaShop', kind: 'web', method: 'pasted_key', env: ['CONNECTOR_TOKEN_KEY', 'CONNECTOR_PRESTASHOP'], ownerNeeds: 'a test PrestaShop store with Webservice enabled, then CONNECTOR_PRESTASHOP=on' },
+  { key: 'opencart', name: 'OpenCart', kind: 'web', method: 'pasted_key', env: ['CONNECTOR_TOKEN_KEY'], ownerNeeds: 'uses the CSV file connector (built-in OpenCart API cannot list orders)' },
   { key: 'ebay', name: 'eBay', kind: 'marketplace', method: 'seller_auth', env: ['EBAY_CLIENT_ID', 'EBAY_CLIENT_SECRET', 'EBAY_RUNAME', 'CONNECTOR_TOKEN_KEY'], ownerNeeds: 'eBay Developers Program keysets, RuName, account-deletion endpoint, sandbox seller' },
   { key: 'tiktok_shop', name: 'TikTok Shop', kind: 'marketplace', method: 'seller_auth', env: ['TIKTOK_SHOP_APP_KEY', 'TIKTOK_SHOP_APP_SECRET', 'CONNECTOR_TOKEN_KEY'], ownerNeeds: 'TikTok Shop Partner Center app per region + test seller' },
   { key: 'amazon', name: 'Amazon', kind: 'marketplace', method: 'seller_auth', env: ['AMAZON_SP_CLIENT_ID', 'AMAZON_SP_CLIENT_SECRET', 'AMAZON_SP_APP_ID', 'CONNECTOR_TOKEN_KEY'], ownerNeeds: 'SP-API developer registration, app, LWA credentials, restricted-role approval' },

@@ -35,6 +35,8 @@ export type InternalOrderLine = {
   variantLabel?: string | null;
   title?: string | null;
   externalLineId?: string | null;
+  /** CONN S2b: the store's own id of the product / variant ("woocommerce:variation:123"), matched to a pushed variant at intake */
+  storeVariantRef?: string | null;
 };
 
 export type InternalOrder = {
@@ -111,4 +113,40 @@ export interface Connector {
   syncStock(conn: ConnectionRef, items: { sku: string; available: number }[]): Promise<{ ok: boolean; failed: string[] }>;
   syncPrice(conn: ConnectionRef, items: { sku: string; priceMinor: Minor; compareAtMinor: Minor | null }[]): Promise<{ ok: boolean; failed: string[] }>;
   disconnect(conn: ConnectionRef, opts: { hideProducts: boolean }): Promise<void>;
+  /**
+   * CONN S1 · webhooks (optional: platforms without webhooks rely on the hourly catch-up pull).
+   * verifyWebhook checks the platform's signature over the RAW body with the connection's sealed webhook secret, in constant time;
+   * the route stores nothing but "signature did not match" when it fails. webhookMeta names the event id / topic for dedupe.
+   * webhookEvent turns a verified payload into what the runtime does (an order for ds_order_intake, a cancellation, uninstall).
+   */
+  verifyWebhook?(input: { headers: Record<string, string>; rawBody: string; secret: string }): boolean;
+  /** an unsigned "are you there" call the platform sends when a webhook is created (answered 200, stored nowhere) */
+  isPing?(input: { headers: Record<string, string>; rawBody: string }): boolean;
+  webhookMeta?(input: { headers: Record<string, string>; rawBody: string }): { eventId: string | null; topic: string | null };
+  webhookEvent?(input: { topic: string | null; payload: unknown }): WebhookEvent;
+  /** CONN S1 · order-level store tasks other than tracking (cancellation answers); a platform without them has nothing to do. */
+  orderAction?(conn: ConnectionRef, input: { action: 'release_fulfillment' | 'accept_cancellation' | 'reject_cancellation'; externalOrderId: string | null; detail: Record<string, unknown> }): Promise<{ ok: boolean; message?: string }>;
 }
+
+/** CONN S1 · what a verified webhook means for us. */
+export type WebhookEvent =
+  | { kind: 'order'; order: InternalOrder }
+  | { kind: 'order_cancelled'; externalOrderId: string }
+  | { kind: 'uninstalled' }
+  | { kind: 'ping' }
+  | { kind: 'ignored'; reason: string };
+
+/** CONN S1 · one store task claimed by the runtime (dropship_channel_tasks). */
+export type StoreTask = {
+  id: string;
+  action: 'release_fulfillment' | 'accept_cancellation' | 'reject_cancellation' | 'update_tracking' | 'send_tracking';
+  detail: Record<string, unknown>;
+  attempts: number;
+  storeOrderId: string;
+  orgId: string;
+  channel: string;
+  connectionId: string;
+  externalOrderId: string | null;
+  externalOrderName: string | null;
+  orderNumber: string;
+};

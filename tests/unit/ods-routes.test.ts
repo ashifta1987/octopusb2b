@@ -107,3 +107,14 @@ describe('ODS T8 back office routes', () => {
     expect(odsStaffRewritePath('/staff/other')).toBeNull();
   });
 });
+
+describe('ODS T9 accounts routes (Invoices, Credit notes, Ledger, Payments)', () => {
+  it('rewrite to the ODS tree (new pages: with the switch off they 404, as today has no /office/accounts pages)', () => {
+    for (const p of ['/office/accounts/invoices', '/office/accounts/credit-notes', '/office/accounts/ledger', '/office/accounts/payments'])
+      expect(odsOfficeRewritePath(p), p).toBe(`/ods${p}`);
+    expect(odsOfficeRewritePath('/office/accounts/ledger/')).toBe('/ods/office/accounts/ledger');
+    expect(odsOfficeRewritePath('/office/accounts/../account')).toBeNull();
+    // the CSV exports they link to stay route handlers (never rewritten)
+    expect(odsOfficeRewritePath('/admin/finance/export')).toBeNull();
+  });
+});

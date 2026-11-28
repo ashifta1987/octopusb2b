@@ -50,6 +50,8 @@ export async function saveCarrierAccountAction(f: {
 
 export async function saveCarrierServiceAction(f: {
   accountId: string; id: string | null; code: string; name: string; level: string; maxWeightG: string; battery: boolean; liquid: boolean; active: boolean;
+  /** CONN S4: takes magnetic goods (undefined = keep / default yes) */
+  magnet?: boolean;
 }): Promise<W4Result> {
   await requireWarehouseStaff(CARRIERS_PATH);
   if (!uuid(f.accountId)) return { ok: false, error: 'Choose the account.' };
@@ -59,10 +61,32 @@ export async function saveCarrierServiceAction(f: {
   const sb = await createClient();
   const { error } = await sb.rpc('wh_save_carrier_service', {
     p_account: f.accountId, p_id: f.id, p_code: f.code.trim(), p_name: f.name.trim(), p_level: f.level as Level, p_max_weight_g: max,
-    p_accepts_battery: f.battery, p_accepts_liquid: f.liquid, p_active: f.active,
+    p_accepts_battery: f.battery, p_accepts_liquid: f.liquid, p_active: f.active, p_accepts_magnet: typeof f.magnet === 'boolean' ? f.magnet : null,
   });
   if (error) return fail(error.message);
   return done(f.id ? 'Service saved.' : 'Service added. Use it in a rule or as the fallback.', [CARRIERS_PATH]);
+}
+
+/**
+ * CONN S4 · "Test connection": the account's adapter checks the server credentials (sandbox: staging only; 4PX: a harmless
+ * tracking query); the result is kept on the account and logged for System health (c4_carrier_check_record checks the role).
+ */
+export async function testCarrierAccountAction(accountId: string): Promise<W4Result> {
+  await requireWarehouseStaff(CARRIERS_PATH);
+  if (!uuid(accountId)) return { ok: false, error: 'Choose the account.' };
+  const sb = await createClient();
+  const { data: a, error } = await sb.from('wh_carrier_accounts').select('id, carrier, mode, credential_env').eq('id', accountId).maybeSingle();
+  if (error || !a) return { ok: false, error: 'Not found. Reload the page and try again.' };
+  let res: { ok: boolean; message: string };
+  try {
+    res = await getCarrierAdapter({ carrier: a.carrier as Carrier, mode: a.mode as 'sandbox' | 'live', credentialEnv: a.credential_env }).validateCredentials();
+  } catch (e) {
+    res = { ok: false, message: e instanceof CarrierError ? e.message : 'The carrier could not be checked. Try again.' };
+  }
+  const { error: recErr } = await sb.rpc('c4_carrier_check_record', { p_account: a.id, p_ok: res.ok, p_message: res.message });
+  if (recErr) return fail(recErr.message);
+  revalidatePath(CARRIERS_PATH);
+  return res.ok ? { ok: true, message: `Connection works: ${res.message}` } : { ok: false, error: `Connection failed: ${res.message}` };
 }
 
 // ───────── carrier rules (proposed by a warehouse admin, approved by a different admin) ─────────
@@ -155,7 +179,10 @@ export async function createLabelAction(parcelId: string): Promise<W4Result> {
       customs: labelCustoms(plan.customs),
     });
   } catch (e) {
-    return { ok: false, error: e instanceof CarrierError ? e.message : 'The carrier could not make the label. Try again.' };
+    const why = e instanceof CarrierError ? e.message : 'The carrier could not make the label. Try again.';
+    // CONN S5: a refused label shows in System health (carrier failures); never a key
+    await sb.rpc('c5_carrier_error_record', { p_account: plan.account_id, p_message: why }).then(() => undefined, () => undefined);
+    return { ok: false, error: why };
   }
   const path = labelPath(plan.warehouse_code, plan.order_code, plan.seq, label.trackingNo.toUpperCase());
   const up = await sb.storage.from('wh-labels').upload(path, label.pdf, { contentType: 'application/pdf', upsert: false });

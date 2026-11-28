@@ -207,7 +207,7 @@ export function CreditTermsClient({
               type="submit"
               disabled={pending}
               data-testid="propose-credit-submit-btn"
-              className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-ink px-4 py-2 text-xs font-semibold text-canvas hover:opacity-95 disabled:opacity-40"
+              className="inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-ink px-4 py-2 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-40"
             >
               Propose credit limit
             </button>

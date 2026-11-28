@@ -59,6 +59,8 @@ export interface CarrierAdapter {
   createLabel(req: LabelRequest): Promise<LabelResult>;
   cancelLabel(trackingNo: string): Promise<void>;
   fetchTracking(trackingNo: string): Promise<CarrierTrackingEvent[]>;
+  /** CONN S4 · "Test connection": do the server credentials work? Plain words for staff; never contains a key. */
+  validateCredentials(): Promise<{ ok: boolean; message: string }>;
 }
 
 /** A carrier problem in words for staff (never contains credentials). */

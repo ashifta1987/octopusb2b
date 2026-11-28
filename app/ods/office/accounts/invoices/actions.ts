@@ -100,10 +100,9 @@ export async function invoiceActivityAction(documentId: string): Promise<{ ok: t
   const id = String(documentId ?? '');
   if (!/^[0-9a-f-]{36}$/i.test(id)) return { ok: false, error: 'Invoice not found.' };
   const sb = await createClient();
-  const { data: d, error } = await sb.from('documents').select('id, number, doc_type, order_id, created_at, emailed_at, last_reminder_stage, currency').eq('id', id).maybeSingle();
+  const { data: d, error } = await sb.from('documents').select('id, number, doc_type, order_id, created_at, last_reminder_stage, currency').eq('id', id).maybeSingle();
   if (error || !d) return { ok: false, error: 'Invoice not found.' };
   const items: InvoiceActivityItem[] = [{ id: `${d.id}:issued`, at: d.created_at as string, title: 'Issued', detail: d.number as string, amountMinor: null, currency: null }];
-  if (d.emailed_at) items.push({ id: `${d.id}:emailed`, at: d.emailed_at as string, title: 'Emailed to the customer', detail: null, amountMinor: null, currency: null });
   if (d.order_id) {
     const { data: pays, error: e2 } = await sb.from('payments').select('id, purpose, method, amount_cents, currency, reference, status, created_at, confirmed_at').eq('order_id', d.order_id).order('created_at', { ascending: false }).limit(50);
     if (e2) return { ok: false, error: 'We couldn’t load the activity.' };

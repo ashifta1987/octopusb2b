@@ -216,7 +216,7 @@ function DrawerBody({ row, onClose, canRecord, approvalLimitMinor, onSave, loadA
         {detail('Payment option', row.paymentOption ? row.paymentOption.replace(/_/g, ' ') : '—')}
         {detail('Order', row.orderId ? <a href={`/office/orders/${row.orderId}`} className="font-semibold text-ods-info underline">{row.orderCode ?? 'Open order'}</a> : '—')}
         {detail('Last reminder', row.lastReminder ? row.lastReminder.replace(/_/g, ' ') : '—')}
-        {detail('Emailed', row.emailedAt ? formatDate(row.emailedAt) : '—')}
+        {row.emailedAt ? detail('Emailed', formatDate(row.emailedAt)) : null}
         {detail('Owner', row.owner?.name ?? '—')}
       </dl>
       <a href={`/api/documents/${row.id}/pdf`} target="_blank" rel="noopener" className="mt-3 inline-flex items-center gap-1 text-ods-small font-semibold text-ods-info underline">

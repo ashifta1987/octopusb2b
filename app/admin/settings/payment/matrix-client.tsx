@@ -133,7 +133,7 @@ export function PaymentMatrixAndProvidersClient({
           </p>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Service × payment option matrix">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-line text-muted uppercase tracking-wider text-[11px]">
@@ -152,6 +152,7 @@ export function PaymentMatrixAndProvidersClient({
                   const row = matrix.find((m) => m.service === svc && m.option === opt);
                   if (!row) return null;
                   const formId = `matrix-${svc}-${opt}`;
+                  const rowLabel = `${SERVICE_LABELS[svc] ?? svc} · ${OPTION_LABELS[opt]}`;
                   return (
                     <tr key={`${svc}-${opt}`} data-testid={`matrix-row-${svc}-${opt}`}>
                       <td className="py-2.5 pr-3 font-medium text-ink">{SERVICE_LABELS[svc] ?? svc}</td>
@@ -164,6 +165,7 @@ export function PaymentMatrixAndProvidersClient({
                           defaultChecked={row.enabled}
                           disabled={!canEdit || pending}
                           data-testid={`matrix-toggle-${svc}-${opt}`}
+                          aria-label={`${rowLabel} · enabled`}
                           className="h-4 w-4 rounded border-line"
                         />
                       </td>
@@ -172,6 +174,7 @@ export function PaymentMatrixAndProvidersClient({
                           form={formId}
                           type="number"
                           name="min_amount_cents"
+                          aria-label={`${rowLabel} · minimum (US$ cents)`}
                           defaultValue={row.min_amount_cents}
                           disabled={!canEdit || pending}
                           className="w-24 rounded border border-line bg-canvas px-2 py-1 font-mono text-xs"
@@ -182,6 +185,7 @@ export function PaymentMatrixAndProvidersClient({
                           form={formId}
                           type="number"
                           name="max_amount_cents"
+                          aria-label={`${rowLabel} · maximum (US$ cents)`}
                           defaultValue={row.max_amount_cents ?? ''}
                           placeholder="Unlimited"
                           disabled={!canEdit || pending}
@@ -194,6 +198,7 @@ export function PaymentMatrixAndProvidersClient({
                             <select
                               form={formId}
                               name="release_rule"
+                              aria-label={`${rowLabel} · protection release rule`}
                               defaultValue={row.release_rule ?? 'milestones'}
                               disabled={!canEdit || pending}
                               className="rounded border border-line bg-canvas px-2 py-1 text-xs"
@@ -208,6 +213,7 @@ export function PaymentMatrixAndProvidersClient({
                               form={formId}
                               type="number"
                               name="auto_release_days"
+                              aria-label={`${rowLabel} · auto-release after (days)`}
                               defaultValue={row.auto_release_days ?? 7}
                               disabled={!canEdit || pending}
                               title="Auto-release dispute window (days)"
@@ -219,6 +225,7 @@ export function PaymentMatrixAndProvidersClient({
                           <select
                             form={formId}
                             name="pay_later_invoice_trigger"
+                            aria-label={`${rowLabel} · pay-later invoice trigger`}
                             defaultValue={row.pay_later_invoice_trigger ?? 'shipment'}
                             disabled={!canEdit || pending}
                             className="rounded border border-line bg-canvas px-2 py-1 text-xs"
@@ -313,6 +320,7 @@ export function PaymentMatrixAndProvidersClient({
                       <input
                         type="text"
                         name="methods"
+                        aria-label={`${p.display_name} · handled methods (comma-separated)`}
                         defaultValue={p.methods.join(', ')}
                         disabled={!canEdit || pending}
                         className="w-full rounded border border-line bg-surface px-2.5 py-1.5 font-mono text-xs"
@@ -325,6 +333,7 @@ export function PaymentMatrixAndProvidersClient({
                         <input
                           type="number"
                           name="priority"
+                          aria-label={`${p.display_name} · priority`}
                           defaultValue={p.priority}
                           disabled={!canEdit || pending}
                           className="w-full rounded border border-line bg-surface px-2.5 py-1.5 font-mono text-xs"
@@ -334,6 +343,7 @@ export function PaymentMatrixAndProvidersClient({
                         <label className="block text-muted mb-0.5">Fee handling</label>
                         <select
                           name="fee_mode"
+                          aria-label={`${p.display_name} · fee handling`}
                           defaultValue={p.fee_mode}
                           disabled={!canEdit || pending}
                           data-testid={`provider-fee-mode-${p.provider}`}
@@ -349,6 +359,7 @@ export function PaymentMatrixAndProvidersClient({
                       <label className="block text-muted mb-0.5">Linked legal entity</label>
                       <select
                         name="legal_entity_id"
+                        aria-label={`${p.display_name} · linked legal entity`}
                         defaultValue={p.legal_entity_id}
                         disabled={!canEdit || pending}
                         className="w-full rounded border border-line bg-surface px-2 py-1.5 text-xs"
@@ -378,7 +389,7 @@ export function PaymentMatrixAndProvidersClient({
                   type="submit"
                   disabled={!canEdit || pending}
                   data-testid={`provider-save-${p.provider}`}
-                  className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-canvas hover:opacity-95 disabled:opacity-40"
+                  className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-ink px-3 py-2 text-xs font-semibold text-white hover:opacity-95 disabled:opacity-40"
                 >
                   Save {p.display_name}
                 </button>
@@ -443,6 +454,7 @@ export function PaymentMatrixAndProvidersClient({
                 <input
                   type="text"
                   name="code"
+                  aria-label="Entity code"
                   defaultValue="HK-OCTOPUS"
                   className="w-full rounded border border-line bg-canvas px-2.5 py-1.5 font-mono"
                 />
@@ -452,6 +464,7 @@ export function PaymentMatrixAndProvidersClient({
                 <input
                   type="text"
                   name="legal_name"
+                  aria-label="Legal company name"
                   placeholder="Octopus B2B (Hong Kong) Limited"
                   className="w-full rounded border border-line bg-canvas px-2.5 py-1.5"
                 />
@@ -461,6 +474,7 @@ export function PaymentMatrixAndProvidersClient({
                 <input
                   type="text"
                   name="registered_in"
+                  aria-label="Jurisdiction"
                   defaultValue="Hong Kong"
                   className="w-full rounded border border-line bg-canvas px-2.5 py-1.5"
                 />
@@ -470,6 +484,7 @@ export function PaymentMatrixAndProvidersClient({
                 <input
                   type="text"
                   name="registration_no"
+                  aria-label="Registration No (BR / CR)"
                   placeholder="Optional until incorporation"
                   className="w-full rounded border border-line bg-canvas px-2.5 py-1.5 font-mono"
                 />
@@ -479,6 +494,7 @@ export function PaymentMatrixAndProvidersClient({
                 <input
                   type="text"
                   name="address"
+                  aria-label="Registered address"
                   placeholder="Hong Kong registered office"
                   className="w-full rounded border border-line bg-canvas px-2.5 py-1.5"
                 />
@@ -488,7 +504,7 @@ export function PaymentMatrixAndProvidersClient({
               type="submit"
               disabled={pending}
               data-testid="save-hk-entity-btn"
-              className="inline-flex min-h-10 items-center rounded-lg bg-ink px-4 py-2 text-xs font-semibold text-canvas"
+              className="inline-flex min-h-10 items-center rounded-lg bg-ink px-4 py-2 text-xs font-semibold text-white"
             >
               Save upcoming entity (keep Shenzhen Octopus Trading Co., Ltd. as default)
             </button>
