@@ -1,0 +1,147 @@
+/*
+ * ODS T7 · Dropshipping inside My account (Part 6.6): restyle TODAY's Dropship pages with the ODS comfortable tokens
+ * without touching their code. Imported once from app/globals.css, right after tokens.css / theme.css.
+ *
+ * Scope: ONLY `.ds-v2` (and today's `.app-shell` furniture used by the shared wallet view) INSIDE an ODS root
+ * (`[data-theme="ods"]`). app/ods/account/dropship/layout.tsx wraps the re-exported pages in `.ds-v2.app-shell` inside the
+ * ODS My account frame. With the ODS switch off, today's merchant shell renders the same pages outside any ODS root, so
+ * nothing here applies and they look exactly as today.
+ *
+ * How: today's pages colour themselves with Tailwind utilities that read the brand variables (`text-ink` →
+ * var(--ink), `bg-coral` → var(--coral), `border-line` → var(--line) … — `@theme inline` in app/globals.css) and with the
+ * `.ds-*` kit classes that read the same variables plus `--ds-*`. Re-declaring those variables on the scoped root maps
+ * every one of them to an ODS token. `--ds-*` are re-declared too: they are defined on :root from the brand variables,
+ * so they would keep the :root values otherwise. No new colours: every value is an `--ods-*` token (or a mix of two).
+ *
+ * Contrast (2.9, checked with axe on /dev/ui/screens/account-dropship): text colours keep ≥ 4.5:1 on their backgrounds —
+ * links / info text use --ods-info (#1D4E9A, 8.3:1 on white, 7.3:1 on the blue tint) rather than --ods-blue, which is
+ * only 4.3:1 on the tint; muted text = --ods-slate (6.2:1 on white, 5.6:1 on canvas); fills with white text =
+ * --ods-blue (4.9:1) / --ods-navy / --ods-danger.
+ */
+
+[data-theme="ods"] .ds-v2 {
+  /* brand variables read by today's utilities and kit classes */
+  --ink: var(--ods-navy);
+  --ink-2: var(--ods-navy-hover);
+  --ink-card: var(--ods-navy-hover);
+  --coral: var(--ods-blue);
+  --coral-hover: var(--ods-blue-hover);
+  --coral-text: var(--ods-info);
+  --tint: var(--ods-blue-tint);
+  --tint-2: color-mix(in srgb, var(--ods-blue-tint) 55%, var(--ods-surface));
+  --pearl: var(--ods-canvas);
+  --ill-bg: var(--ods-canvas);
+  --black: var(--ods-text);
+  --muted: var(--ods-slate);
+  --line: var(--ods-line);
+  --line-strong: var(--ods-line-strong);
+  --fill: var(--ods-canvas);
+  --divider: var(--ods-line);
+  --sand: var(--ods-canvas);
+  --disabled: var(--ods-canvas);
+  --focus: var(--ods-focus);
+  --green: var(--ods-success);
+  --green-ink: var(--ods-success);
+  --ok-bg: var(--ods-success-tint);
+  --ok-line: color-mix(in srgb, var(--ods-success) 45%, var(--ods-surface));
+  --ok-soft: var(--ods-success-tint);
+  --amber: var(--ods-warning);
+  --amber-ink: var(--ods-warning);
+  --warn-bg: var(--ods-warning-tint);
+  --warn-line: color-mix(in srgb, var(--ods-warning) 55%, var(--ods-surface));
+  --needs: var(--ods-warning);
+  --needs-bg: var(--ods-warning-tint);
+  --red: var(--ods-danger);
+  --red-ink: var(--ods-danger);
+  --bad-bg: var(--ods-danger-tint);
+  --switch-off: var(--ods-slate);
+  /* fonts: Inter (set on the ODS root by OdsThemeRoot) for text, display and the old label face */
+  --font-text: var(--font-ods-inter), Inter;
+  --font-label: var(--font-ods-inter), Inter;
+
+  /* the Dropship kit's own names */
+  --ds-navy: var(--ods-navy);
+  --ds-navy-hover: var(--ods-navy-hover);
+  --ds-blue: var(--ods-blue);
+  --ds-blue-hover: var(--ods-blue-hover);
+  --ds-logo-blue: var(--ods-blue);
+  --ds-teal: var(--ods-success);
+  --ds-teal-accent: var(--ods-teal);
+  --ds-danger: var(--ods-danger);
+  --ds-bg: var(--ods-canvas);
+  --ds-surface: var(--ods-surface);
+  --ds-border: var(--ods-line);
+  --ds-border-strong: var(--ods-line-strong);
+  --ds-muted: var(--ods-slate);
+  --ds-text: var(--ods-text);
+  --ds-ok-bg: var(--ods-success-tint);
+  --ds-ok-fg: var(--ods-success);
+  --ds-warn-bg: var(--ods-warning-tint);
+  --ds-warn-fg: var(--ods-warning);
+  --ds-bad-bg: var(--ods-danger-tint);
+  --ds-bad-fg: var(--ods-danger);
+  --ds-info-bg: var(--ods-info-tint);
+  --ds-info-fg: var(--ods-info);
+  --ds-neu-bg: var(--ods-canvas);
+  --ds-neu-fg: var(--ods-text);
+  --ds-radius-control: var(--ods-radius-control);
+  --ds-radius-card: var(--ods-radius-card);
+  --ds-touch: var(--ods-control-h);
+  --ds-content-max: var(--ods-content-max);
+  --ds-font: var(--ods-font);
+}
+
+/* type: ODS body size and headings (today's .app-shell h1 34/800 → ODS H1 28/700, H2 21/700); page utilities still win */
+@layer base {
+  [data-theme="ods"] .ds-v2 { font-size: var(--ods-text-body); line-height: var(--ods-leading-body); }
+  [data-theme="ods"] .ds-v2 h1 { font-size: var(--ods-h1); font-weight: 700; line-height: var(--ods-leading-title); }
+  [data-theme="ods"] .ds-v2 h2 { font-size: var(--ods-h2); font-weight: 700; line-height: var(--ods-leading-title); }
+}
+
+/* kit shapes: ODS control height / radii / card shadow (more specific than today's `.ds-v2 .ds-*`, same layer) */
+@layer components {
+  [data-theme="ods"] .ds-v2 .ds-card,
+  [data-theme="ods"] .ds-v2 .card,
+  [data-theme="ods"] .ds-v2 .kpi,
+  [data-theme="ods"] .ds-v2 .detail-panel {
+    border-color: var(--ods-line);
+    border-radius: var(--ods-radius-card);
+    box-shadow: var(--ods-shadow-card);
+  }
+  [data-theme="ods"] .ds-v2 .ds-btn,
+  [data-theme="ods"] .ds-v2 .ds-btn2,
+  [data-theme="ods"] .ds-v2 .btn,
+  [data-theme="ods"] .ds-v2 .ds-input,
+  [data-theme="ods"] .ds-v2 .ds-inp,
+  [data-theme="ods"] .ds-v2 .input {
+    min-height: var(--ods-control-h);
+    border-radius: var(--ods-radius-control);
+  }
+  [data-theme="ods"] .ds-v2 .ds-btn { font-size: var(--ods-text-body); font-weight: 600; }
+  [data-theme="ods"] .ds-v2 .ds-btn-secondary { font-size: var(--ods-text-table); }
+  [data-theme="ods"] .ds-v2 textarea.ds-input,
+  [data-theme="ods"] .ds-v2 textarea.input { min-height: 96px; }
+  [data-theme="ods"] .ds-v2 .ds-badge,
+  [data-theme="ods"] .ds-v2 .pill { border-radius: var(--ods-radius-pill); font-size: var(--ods-text-label); font-weight: 600; }
+  /* table header: ODS head row (label size, canvas background) instead of the old 12 px spaced caps */
+  [data-theme="ods"] .ds-v2 .ds-tbl th,
+  [data-theme="ods"] .ds-v2 .th {
+    height: var(--ods-head-h);
+    background: var(--ods-canvas);
+    font-family: var(--ods-font);
+    font-size: var(--ods-text-label);
+    letter-spacing: 0.02em;
+    color: var(--ods-slate);
+  }
+  [data-theme="ods"] .ds-v2 .ds-tbl td { font-size: var(--ods-text-table); }
+  /* selected / current = ODS navy for the filter and view toggles (today: Coral fill) */
+  [data-theme="ods"] .ds-v2 .ds-chip[aria-pressed="true"],
+  [data-theme="ods"] .ds-v2 .chip[aria-pressed="true"] { background: var(--ods-navy); border-color: var(--ods-navy); color: white; }
+  [data-theme="ods"] .ds-v2 .ds-chip[aria-pressed="true"]:hover,
+  [data-theme="ods"] .ds-v2 .chip[aria-pressed="true"]:hover { background: var(--ods-navy-hover); border-color: var(--ods-navy-hover); }
+}
+
+/* focus: 3 px amber (2.9) — today's kit rule sets the Coral ring inside .ds-v2; this wins inside ODS roots */
+[data-theme="ods"] .ds-v2 :focus-visible { outline: var(--ods-focus-width) solid var(--ods-focus); outline-offset: var(--ods-focus-offset); box-shadow: none; }
+/* one ODS H1 size on every Dropship page (pages set 26–34 px with utilities; unlayered so it wins over them): 28 px, 24 on phones */
+[data-theme="ods"] .ds-v2 h1 { font-size: var(--ods-h1); font-weight: 700; line-height: var(--ods-leading-title); }

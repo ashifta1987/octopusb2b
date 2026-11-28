@@ -6,6 +6,8 @@ import { Box, Plus, Send, Sparkles, Tag, Users } from 'lucide-react';
 import { Breadcrumbs, Button, Card, EmptyState, Icon, Money, RadioCards, Segmented, Tabs, cx, formatMoney } from '@octopus/ui';
 import { priceForQuantity } from '../../_lib/price';
 import type { AddToCartFn, LoadSimilarFn, ProductPageVM, ShopActor, SubmitRfqFn, SubmitSampleFn } from '../../_lib/types';
+import { useMiniCart } from '../../../_components/mini-cart';
+import { cartTabHref, isCartNotReady, type CartAddFn, type QuoteAddFn } from '../../../cart/_lib/cart-ui';
 import { ProductGallery } from './gallery';
 import { PriceCalculator, TierTable, calcReason } from './price-calculator';
 import { RfqDrawer, SampleDrawer } from './request-drawers';
@@ -16,7 +18,12 @@ export type ProductPageViewProps = {
   actor: ShopActor;
   submitRfq?: SubmitRfqFn;
   submitSample?: SubmitSampleFn;
+  /** Today's addToQuoteList: the fallback for Add to cart while the cart isn't set up (migration 253 not applied). */
   addToCart?: AddToCartFn;
+  /** T5a cart: Add to cart = the cart's Get a quote part (quoteAdd) + the mini-cart. */
+  quoteAdd?: QuoteAddFn;
+  /** T5a cart: Order a sample = a Buy now sample line (cartAdd kind 'sample') + the mini-cart; 'cart-not-ready' → today's sample drawer. */
+  cartAdd?: CartAddFn;
   loadSimilar?: LoadSimilarFn;
   /** recordView (Recently viewed) — called once after the page shows in the browser. */
   onView?: (productId: string) => Promise<void>;
@@ -46,14 +53,16 @@ function Fact({ label, children, testId }: { label: string; children: React.Reac
  * page passes customer-safe props and today's server actions. White-label: "Ships from China" only; no supplier name,
  * code, model number, cost or margin is ever in the props.
  */
-export function ProductPageView({ product: p, actor, submitRfq, submitSample, addToCart, loadSimilar, onView, initialQuantity, openQuote, demo }: ProductPageViewProps) {
+export function ProductPageView({ product: p, actor, submitRfq, submitSample, addToCart, quoteAdd, cartAdd, loadSimilar, onView, initialQuantity, openQuote, demo }: ProductPageViewProps) {
+  const mini = useMiniCart();
   const [qty, setQty] = useState(String(initialQuantity ?? p.moq));
   const [custom, setCustom] = useState<string>('none');
   const [rfqOpen, setRfqOpen] = useState(!!openQuote);
   const [sampleOpen, setSampleOpen] = useState(false);
   const [ship, setShip] = useState<'sea' | 'air'>('sea');
   const [cartPending, startCart] = useTransition();
-  const [cartMsg, setCartMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [cartMsg, setCartMsg] = useState<{ ok: boolean; text: string; href?: string } | null>(null);
+  const [samplePending, startSample] = useTransition();
 
   useEffect(() => {
     onView?.(p.id).catch(() => {});
@@ -62,6 +71,8 @@ export function ProductPageView({ product: p, actor, submitRfq, submitSample, ad
     // cards link to "#request" (toSourcingCard quoteHref) or "?quote=1": open the quote drawer (subscribe to the hash)
     const sync = () => {
       if (window.location.hash === '#request' && actor.canAct) setRfqOpen(true);
+      // the checkout placeholder links sample lines to "#sample" = today's sample request
+      if (window.location.hash === '#sample' && actor.canAct && p.samplesAvailable) setSampleOpen(true);
     };
     const t = window.setTimeout(sync, 0);
     window.addEventListener('hashchange', sync);
@@ -69,7 +80,7 @@ export function ProductPageView({ product: p, actor, submitRfq, submitSample, ad
       window.clearTimeout(t);
       window.removeEventListener('hashchange', sync);
     };
-  }, [actor.canAct]);
+  }, [actor.canAct, p.samplesAvailable]);
 
   const quantity = Number(qty.replace(/,/g, ''));
   const result = useMemo(() => priceForQuantity(p.tiers, qty.trim() === '' ? null : quantity, p.moq), [p.tiers, p.moq, qty, quantity]);
@@ -82,13 +93,34 @@ export function ProductPageView({ product: p, actor, submitRfq, submitSample, ad
   const sampleText = p.sampleCents == null ? 'On request' : p.sampleCents === 0 ? 'Free' : formatMoney(p.sampleCents / 100, { currency: p.currency });
   const highlight = result.status === 'ok' ? result.tierIndex : undefined;
 
+  const legacyAdd = async () => {
+    if (!addToCart) return;
+    const r = await addToCart(p.id, quantity);
+    setCartMsg(r.ok ? { ok: true, text: `Added to your cart (${r.count}).`, href: cartTabHref('quote') } : { ok: false, text: r.error });
+  };
   const addCart = () =>
     startCart(async () => {
-      if (!addToCart) return;
       setCartMsg(null);
-      const r = await addToCart(p.id, quantity);
-      setCartMsg(r.ok ? { ok: true, text: `Added to your cart (${r.count}).` } : { ok: false, text: r.error });
+      if (!quoteAdd) return legacyAdd();
+      const r = await quoteAdd({ productId: p.id, qty: quantity });
+      if (isCartNotReady(r)) return legacyAdd();
+      if (!r.ok) return setCartMsg({ ok: false, text: r.message });
+      const added = `${p.title} × ${n(quantity)} added to Get a quote`;
+      if (mini) mini.show(r.cart, added);
+      setCartMsg({ ok: true, text: `${added}.`, href: cartTabHref('quote') });
     });
+  const orderSample = () => {
+    if (!cartAdd) return setSampleOpen(true);
+    startSample(async () => {
+      setCartMsg(null);
+      const r = await cartAdd({ kind: 'sample', refId: p.id, qty: 1 });
+      if (isCartNotReady(r)) return setSampleOpen(true);
+      if (!r.ok) return setCartMsg({ ok: false, text: r.message });
+      const added = `Sample of ${p.title} added`;
+      if (mini) mini.show(r.cart, added);
+      setCartMsg({ ok: true, text: `${added} to Buy now.`, href: cartTabHref('buy') });
+    });
+  };
 
   const badges = [
     ...(p.verified ? [{ label: 'Verified supplier', cls: 'bg-ods-success-tint text-ods-success' }] : []),
@@ -291,16 +323,16 @@ export function ProductPageView({ product: p, actor, submitRfq, submitSample, ad
                 Add to cart
               </Button>
             ) : null}
-            <Button variant="secondary" iconStart={Box} onClick={() => setSampleOpen(true)} disabled={!!sampleReason} disabledReason={sampleReason} data-testid="order-sample">
+            <Button variant="secondary" iconStart={Box} onClick={orderSample} loading={samplePending} loadingText="Adding…" disabled={!!sampleReason} disabledReason={sampleReason} data-testid="order-sample">
               Order a sample
             </Button>
           </div>
           <p role="status" aria-live="polite" className={cx('m-0 text-ods-small', cartMsg ? (cartMsg.ok ? 'text-ods-success' : 'text-ods-danger') : 'sr-only')}>
             {cartMsg?.text ?? ''}
-            {cartMsg?.ok ? (
+            {cartMsg?.ok && cartMsg.href ? (
               <>
                 {' '}
-                <Link href="/shop/quote-list" className="font-semibold text-ods-blue underline underline-offset-4">
+                <Link href={cartMsg.href} className="font-semibold text-ods-blue underline underline-offset-4">
                   View cart
                 </Link>
               </>

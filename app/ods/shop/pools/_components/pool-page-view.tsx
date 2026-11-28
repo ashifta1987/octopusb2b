@@ -8,6 +8,7 @@ import { ClosingTime } from './closing-time';
 import { PoolJoinForm } from './join-form';
 import { NotifyMe } from './notify-me';
 import type { JoinState, NotifyAction } from './pool-types';
+import type { CartAddFn } from '../../cart/_lib/cart-ui';
 
 export type PoolPageViewProps = {
   pool: PoolView;
@@ -17,6 +18,8 @@ export type PoolPageViewProps = {
   /** The viewer's email for Notify me. */
   email: string | null;
   notifyAction?: NotifyAction;
+  /** T5a: Join pool adds a cart pool line (see PoolJoinForm). */
+  cartAdd?: CartAddFn;
   /** Fixtures: Join pool shows a sample message instead of navigating. */
   demo?: boolean;
   /** Fixtures: start value for the units (e.g. the minimum). */
@@ -55,7 +58,7 @@ function timelineFor(p: PoolView, now: number): TimelineItem[] {
  * the customer's time zone, progress bar (role=progressbar), buyer COUNT only, the join panel for the company's state,
  * and the timeline. Presentational: props only (the page and the fixtures pass them).
  */
-export function PoolPageView({ pool: p, now, join, email, notifyAction, demo, initialUnits, titleLevel = 1 }: PoolPageViewProps) {
+export function PoolPageView({ pool: p, now, join, email, notifyAction, cartAdd, demo, initialUnits, titleLevel = 1 }: PoolPageViewProps) {
   const T = titleLevel === 2 ? 'h2' : 'h1';
   const S = titleLevel === 2 ? 'h3' : 'h2';
   const cur = currencyPrefix(p.currency);
@@ -146,7 +149,7 @@ export function PoolPageView({ pool: p, now, join, email, notifyAction, demo, in
           </div>
         </div>
 
-        <JoinPanel pool={p} join={join} email={email} notifyAction={notifyAction} demo={demo} initialUnits={initialUnits} titleLevel={titleLevel} />
+        <JoinPanel pool={p} join={join} email={email} notifyAction={notifyAction} cartAdd={cartAdd} demo={demo} initialUnits={initialUnits} titleLevel={titleLevel} />
 
         <section aria-labelledby="pool-timeline" className="flex flex-col gap-3">
           <S id="pool-timeline" className="m-0 text-ods-h2 text-ods-navy">
@@ -159,11 +162,11 @@ export function PoolPageView({ pool: p, now, join, email, notifyAction, demo, in
   );
 }
 
-function JoinPanel({ pool: p, join, email, notifyAction, demo, initialUnits, titleLevel = 1 }: Omit<PoolPageViewProps, 'now'>) {
+function JoinPanel({ pool: p, join, email, notifyAction, cartAdd, demo, initialUnits, titleLevel = 1 }: Omit<PoolPageViewProps, 'now'>) {
   const S = titleLevel === 2 ? 'h3' : 'h2';
   const u = (n: number) => unitWord(p.unit, n);
   if (join.kind === 'open') {
-    return <PoolJoinForm pool={p} continueHref={`/pool/${encodeURIComponent(p.code)}#join-h`} demo={demo} initialUnits={initialUnits} headingLevel={titleLevel === 2 ? 3 : 2} />;
+    return <PoolJoinForm pool={p} continueHref={`/pool/${encodeURIComponent(p.code)}#join-h`} cartAdd={cartAdd} demo={demo} initialUnits={initialUnits} headingLevel={titleLevel === 2 ? 3 : 2} />;
   }
   if (join.kind === 'mine') {
     return (

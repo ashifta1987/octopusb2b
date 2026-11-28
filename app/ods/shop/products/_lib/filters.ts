@@ -63,7 +63,7 @@ export function parseProductParams(sp: SearchParamsRecord): ProductFilterState {
 
 /** Number of filters in use (search and sort are not filters). */
 export function activeFilterCount(s: ProductFilterState): number {
-  return [s.category, s.min, s.max, s.moq, s.lead].filter((x) => x != null).length + [s.verified, s.samples, s.custom, s.pool].filter(Boolean).length;
+  return [s.category, s.min, s.max, s.moq, s.lead].filter((x) => x != null).length + [s.verified, s.custom, s.pool].filter(Boolean).length;
 }
 
 /** Query string for a state + patch. Any change other than `page` goes back to page 1. */

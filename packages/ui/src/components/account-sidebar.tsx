@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useId, type ReactNode } from 'react';
-import { ArrowUpRight, Building2, ChevronsUpDown, PanelLeftClose, PanelLeftOpen, type LucideIcon } from 'lucide-react';
+import { ArrowUpRight, Building2, ChevronsUpDown, Lock, PanelLeftClose, PanelLeftOpen, type LucideIcon } from 'lucide-react';
 import { cx } from '../cx';
 import { Icon } from '../icon';
 import { Logo } from '../logo';
@@ -24,7 +24,26 @@ export type AccountSidebarItem = {
   /** A service the company doesn't use yet: shows "Start" and sits at the end of its group. */
   notStarted?: boolean;
   /** Sub-items (e.g. Dropshipping), shown while the item or one of them is current. */
-  children?: Omit<AccountSidebarItem, 'children' | 'icon'>[];
+  children?: AccountSidebarSubItem[];
+  /** data-testid on the item's <li> (T7: `dropship-group`). */
+  testId?: string;
+  /** data-testid on the sub-item list (T7: `dropship-sidebar`). */
+  childrenTestId?: string;
+  /** Shown above the sub-items when some of them are locked (the reason next to the disabled items, 2.9). */
+  childrenNote?: string;
+};
+/** A sub-item. `locked` = shown but not usable yet (aria-disabled, lock icon, `lockedReason` as its title). */
+export type AccountSidebarSubItem = {
+  id: string;
+  label: string;
+  href: string;
+  count?: number;
+  /** Accessible name when the visible label is ambiguous (e.g. "Dropshipping wallet" for the sub-item "Wallet"). */
+  ariaLabel?: string;
+  locked?: boolean;
+  lockedReason?: string;
+  /** data-testid (default none); `data-item` is always the sub-item id. */
+  testId?: string;
 };
 export type AccountSidebarGroup = { id: string; label: string; items: AccountSidebarItem[] };
 export type AccountSidebarCompany = { id: string; name: string };
@@ -50,6 +69,7 @@ export type AccountSidebarProps = {
   /** Extra content above Browse products (e.g. help card). */
   footer?: ReactNode;
   className?: string;
+  testId?: string;
 };
 
 const itemCls = (current: boolean, collapsed: boolean, muted?: boolean) =>
@@ -62,7 +82,8 @@ const itemCls = (current: boolean, collapsed: boolean, muted?: boolean) =>
 
 /**
  * AccountSidebar (My account, tab 3): 248 px navy, collapsing to 72 px icons with tooltips. Logo with tagline
- * (→ /shop in the Shop tab); company switcher (menu); groups with red counts; current item = lighter navy, bold, 3 px
+ * (→ /shop in the Shop tab); company switcher (menu — only when `companies` has more than one entry; with one company
+ * its name is shown as plain text, T6); groups with red counts; current item = lighter navy, bold, 3 px
  * teal bar and aria-current="page"; services not started show "Start"; "Browse products ↗" at the bottom.
  * Collapse: the toggle at the top; the choice is remembered (localStorage); with no choice it collapses under 1200 px.
  * Collapsed icons keep their name (aria-label) and a tooltip. Phones (< 768): not shown — My account uses the
@@ -82,6 +103,7 @@ export function AccountSidebar({
   label = 'My account',
   footer,
   className,
+  testId,
 }: AccountSidebarProps) {
   const id = useId();
   const narrow = useMediaQuery('(max-width: 1199px)');
@@ -108,6 +130,7 @@ export function AccountSidebar({
     <nav
       aria-label={label}
       data-collapsed={collapsed}
+      data-testid={testId}
       className={cx('relative flex h-full shrink-0 flex-col bg-ods-navy text-white transition-[width] duration-(--ods-motion) ease-ods motion-reduce:transition-none', collapsed ? 'w-[72px]' : 'w-[248px]', className)}
     >
       <div className={cx('flex items-center gap-2 pt-4', collapsed ? 'flex-col px-2' : 'ps-3 pe-10')}>
@@ -131,7 +154,26 @@ export function AccountSidebar({
         </button>
       </div>
 
-      {company ? (
+      {company && companies.length === 1 ? (
+        // One company only (today: one login = one company) → its name, no switcher (States-CustomerHome).
+        <div className="mt-4 px-3" data-testid="account-company">
+          {withTip(
+            company.name,
+            <p
+              className={cx(
+                'm-0 flex items-center gap-2 rounded-ods-control border border-white/20 text-ods-table font-semibold text-white',
+                collapsed ? 'size-ods-control justify-center' : 'min-h-ods-control w-full px-3 py-1',
+              )}
+            >
+              <Icon icon={Building2} />
+              <span className={collapsed ? 'sr-only' : 'min-w-0 flex-1 truncate text-start'}>
+                <span className="sr-only">Company: </span>
+                {company.name}
+              </span>
+            </p>,
+          )}
+        </div>
+      ) : company ? (
         <div className={cx('mt-4', collapsed ? 'px-3' : 'px-3')}>
           <MenuButton
             className={collapsed ? '' : 'w-full'}
@@ -178,7 +220,7 @@ export function AccountSidebar({
                   const isCurrent = it.id === current;
                   const name = `${it.label}${it.count ? `, ${it.count} waiting` : ''}${it.notStarted ? ', not started' : ''}`;
                   return (
-                    <li key={it.id}>
+                    <li key={it.id} data-testid={it.testId}>
                       {withTip(
                         it.label,
                         <Link
@@ -200,16 +242,49 @@ export function AccountSidebar({
                         </Link>,
                       )}
                       {!collapsed && it.children && (isCurrent || childCurrent) ? (
-                        <ul className="mt-0.5 ms-6 grid gap-0.5 border-s border-white/15 ps-2">
-                          {it.children.map((c) => (
-                            <li key={c.id}>
-                              <Link href={c.href} aria-current={c.id === current ? 'page' : undefined} className={cx(itemCls(c.id === current, false), 'min-h-[calc(var(--ods-control-h)-8px)]')}>
-                                <span className="min-w-0 flex-1 truncate">{c.label}</span>
-                                {c.count ? <CountBadge count={c.count} label="waiting" /> : null}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
+                        <>
+                          {it.childrenNote ? (
+                            <p className="m-0 mt-1 ms-6 ps-3 text-ods-small text-white/75" id={`${gid}-${it.id}-note`}>
+                              {it.childrenNote}
+                            </p>
+                          ) : null}
+                          <ul
+                            className="mt-0.5 ms-6 grid gap-0.5 border-s border-white/15 ps-2"
+                            data-testid={it.childrenTestId}
+                            aria-label={`${it.label} pages`}
+                            aria-describedby={it.childrenNote ? `${gid}-${it.id}-note` : undefined}
+                          >
+                            {it.children.map((c) => (
+                              <li key={c.id}>
+                                {c.locked ? (
+                                  <span
+                                    aria-disabled="true"
+                                    title={c.lockedReason}
+                                    data-testid={c.testId}
+                                    data-item={c.id}
+                                    className={cx(itemCls(false, false, true), 'min-h-[calc(var(--ods-control-h)-8px)] cursor-not-allowed select-none hover:bg-transparent')}
+                                  >
+                                    <span className="min-w-0 flex-1 truncate">{c.label}</span>
+                                    <Icon icon={Lock} size="sm" />
+                                    {c.lockedReason ? <span className="sr-only">{`, ${c.lockedReason}`}</span> : null}
+                                  </span>
+                                ) : (
+                                  <Link
+                                    href={c.href}
+                                    aria-current={c.id === current ? 'page' : undefined}
+                                    aria-label={c.ariaLabel}
+                                    data-testid={c.testId}
+                                    data-item={c.id}
+                                    className={cx(itemCls(c.id === current, false), 'min-h-[calc(var(--ods-control-h)-8px)]')}
+                                  >
+                                    <span className="min-w-0 flex-1 truncate">{c.label}</span>
+                                    {c.count ? <CountBadge count={c.count} label="waiting" /> : null}
+                                  </Link>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        </>
                       ) : null}
                     </li>
                   );

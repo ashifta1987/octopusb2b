@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ODS_SHOP_REDIRECTS, isOdsInternalPath, odsLegacyRedirect, odsOffFallback, odsRewritePath, odsShopRewritePath } from '@/lib/ods-routes';
+import { ODS_SHOP_REDIRECTS, isOdsInternalPath, odsAccountKeepsLegacy, odsDropshipRewritePath, odsOfficeRewritePath, odsStaffRewritePath, odsAccountOffFallback, odsAccountRedirect, odsAccountRewritePath, odsLegacyRedirect, odsOffFallback, odsRewritePath, odsShopRewritePath } from '@/lib/ods-routes';
 
 describe('ODS T3 routes', () => {
   it('public URLs the ODS theme serves', () => {
@@ -43,15 +43,67 @@ describe('ODS T3 routes', () => {
 });
 
 describe('ODS T4 shop routes', () => {
-  it('serves /shop/* from the ODS tree, except the CH-1 quote list', () => {
+  it('serves /shop/* from the ODS tree; the CH-1 quote list moves to the cart (T5a)', () => {
     expect(odsShopRewritePath('/shop')).toBe('/ods/shop');
     expect(odsShopRewritePath('/shop/products')).toBe('/ods/shop/products');
     expect(odsShopRewritePath('/shop/products/some-slug')).toBe('/ods/shop/products/some-slug');
     expect(odsShopRewritePath('/shop/turnkey/gym/start')).toBe('/ods/shop/turnkey/gym/start');
-    expect(odsShopRewritePath('/shop/quote-list')).toBeNull();
+    expect(ODS_SHOP_REDIRECTS['/shop/quote-list']).toBe('/shop/cart?tab=quote');
     expect(odsShopRewritePath('/shopping')).toBeNull();
     expect(odsShopRewritePath('/account')).toBeNull();
     expect(odsShopRewritePath('/shop/../admin')).toBeNull();
     expect(ODS_SHOP_REDIRECTS['/shop/all']).toBe('/shop');
+  });
+});
+
+describe('ODS T6 account routes', () => {
+  it('rewrites only the pages that have an ODS version', () => {
+    for (const p of ['/account', '/account/action', '/account/requests', '/account/requests/RFQ-1042', '/account/orders', '/account/orders/OCT-SRC-2026-0207', '/account/wallet', '/account/invoices', '/account/turnkey', '/account/turnkey/TKP-00012', '/account/warehouse', '/account/shipping', '/account/brand', '/account/settings', '/account/support', '/account/support/0b9c1d2e-3f40-4a5b-8c6d-7e8f90a1b2c3'])
+      expect(odsAccountRewritePath(p), p).toBe(`/ods${p}`);
+    for (const p of ['/account/ledger', '/account/notifications', '/account/turnkey/new', '/account/dropship', '/account/dropship/orders', '/account/pools', '/account/developer', '/account/orders/../admin'])
+      expect(odsAccountRewritePath(p), p).toBeNull();
+  });
+  it('renames (ODS on) and fallbacks (ODS off)', () => {
+    expect(odsAccountRedirect('/account/sourcing')).toBe('/account/requests');
+    expect(odsAccountRedirect('/account/sourcing/RFQ-7')).toBe('/account/requests/RFQ-7');
+    expect(odsAccountRedirect('/account/kyc')).toBe('/account/settings?tab=verification');
+    expect(odsAccountRedirect('/account/wallet')).toBeNull();
+    expect(odsAccountOffFallback('/account/requests/RFQ-7')).toBe('/account/sourcing/RFQ-7');
+    expect(odsAccountOffFallback('/account/settings')).toBe('/account/kyc');
+    expect(odsAccountOffFallback('/account/action')).toBe('/account#waiting');
+    expect(odsAccountOffFallback('/account')).toBeNull();
+  });
+});
+
+describe('ODS T6 warehouse tools stay on today’s page', () => {
+  it('only the legacy tab keys', () => {
+    expect(odsAccountKeepsLegacy('/account/warehouse', new URLSearchParams('tab=send'))).toBe(true);
+    expect(odsAccountKeepsLegacy('/account/warehouse', new URLSearchParams('tab=orders&order=WO-1'))).toBe(true);
+    expect(odsAccountKeepsLegacy('/account/warehouse', new URLSearchParams('tab=stock'))).toBe(false);
+    expect(odsAccountKeepsLegacy('/account/warehouse', new URLSearchParams(''))).toBe(false);
+    expect(odsAccountKeepsLegacy('/account/wallet', new URLSearchParams('tab=send'))).toBe(false);
+  });
+});
+
+describe('ODS T7 dropship routes', () => {
+  it('every page under /account/dropship, never the export route handlers', () => {
+    for (const p of ['/account/dropship', '/account/dropship/orders', '/account/dropship/orders/abc', '/account/dropship/catalogue/x1', '/account/dropship/integrations/shopify'])
+      expect(odsDropshipRewritePath(p), p).toBe(`/ods${p}`);
+    for (const p of ['/account/dropship/export', '/account/dropship/export/csv', '/account/dropship/reports/csv', '/account/dropship/integrations/file/export', '/account/dropshipx', '/account/dropship/../wallet'])
+      expect(odsDropshipRewritePath(p), p).toBeNull();
+  });
+});
+
+describe('ODS T8 back office routes', () => {
+  it('every /office and /admin page; never the export / template route handlers', () => {
+    for (const p of ['/office', '/admin', '/office/rfqs/abc', '/admin/customers/1', '/office/warehouse/pick', '/admin/finance/holds'])
+      expect(odsOfficeRewritePath(p), p).toBe(`/ods${p}`);
+    for (const p of ['/admin/finance/export', '/office/warehouse/reports/csv', '/office/dropship/docs/file/9', '/admin/import/template', '/officex', '/office/../account'])
+      expect(odsOfficeRewritePath(p), p).toBeNull();
+  });
+  it('staff sign-in pages', () => {
+    for (const p of ['/staff', '/staff/login', '/staff/verify', '/staff/forgot', '/staff/set-password', '/staff/account', '/staff/workspace'])
+      expect(odsStaffRewritePath(p), p).toBe(`/ods${p}`);
+    expect(odsStaffRewritePath('/staff/other')).toBeNull();
   });
 });

@@ -205,7 +205,7 @@ export function toSourcingCard(row: SourcingRow, opts: { now?: number } = {}): S
   if (row.factory?.verified) badges.push({ label: 'Verified supplier', tone: 'success' });
   if (row.ready_to_ship) badges.push({ label: 'Ready to ship', tone: 'neutral' });
   if (tags.has('customisable')) badges.push({ label: 'Customisable', tone: 'neutral' });
-  if (tags.has('samples') || tags.has('samples-available')) badges.push({ label: 'Samples', tone: 'neutral' });
+  // no "Samples" badge: every product offers samples unless tagged no-samples (owner decision 4, T5a)
   const href = productHref(row.slug);
   const days = row.lead_time_days;
   return {

@@ -45,6 +45,8 @@ export type WorkspaceAction =
   | { type: 'reorder'; from: number; to: number }
   | { type: 'markDirty'; id: string; dirty: boolean }
   | { type: 'rename'; id: string; title: string }
+  /** T8: the tab now shows another route (in-page navigation in the current tab): new href / title / icon, same place. */
+  | { type: 'update'; id: string; patch: Partial<Pick<WorkspaceTab, 'title' | 'href' | 'icon'>> }
   | { type: 'next'; delta?: 1 | -1 }
   | { type: 'confirmPending' }
   | { type: 'cancelPending' }
@@ -131,6 +133,10 @@ export function workspaceReducer(state: WorkspaceState, action: WorkspaceAction)
       return { ...state, tabs: state.tabs.map((t) => (t.id === action.id ? { ...t, dirty: action.dirty } : t)) };
     case 'rename':
       return { ...state, tabs: state.tabs.map((t) => (t.id === action.id ? { ...t, title: action.title } : t)) };
+    case 'update': {
+      const patch = Object.fromEntries(Object.entries(action.patch).filter(([, v]) => v !== undefined)) as Partial<WorkspaceTab>;
+      return state.tabs.some((t) => t.id === action.id) ? { ...state, tabs: state.tabs.map((t) => (t.id === action.id ? { ...t, ...patch } : t)) } : state;
+    }
     case 'next': {
       if (!state.tabs.length) return state;
       const i = Math.max(0, state.tabs.findIndex((t) => t.id === state.activeId));

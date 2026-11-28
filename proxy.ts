@@ -8,7 +8,10 @@ import { safeNext } from '@/lib/safe-next';
 import { isShopEnabled, SHOP_HOME } from '@/lib/shop/flag';
 import { STAFF_ROLES } from '@/lib/roles';
 import { ODS_OFF, ODS_PREVIEW_COOKIE, effectiveOdsSetting, fetchOdsThemeSetting, odsLegacyRedirectsOn, odsPreviewFrom, odsThemeFor } from '@/lib/ods-flag';
-import { ODS_SHOP_REDIRECTS, isOdsInternalPath, odsLegacyRedirect, odsOffFallback, odsRewritePath, odsShopRewritePath } from '@/lib/ods-routes';
+import {
+  ODS_SHOP_REDIRECTS, isOdsInternalPath, odsAccountKeepsLegacy, odsDropshipRewritePath, odsAccountOffFallback, odsAccountRedirect, odsAccountRewritePath, odsLegacyRedirect, odsOffFallback, odsOfficeRewritePath, odsRewritePath,
+  odsShopRewritePath, odsStaffRewritePath,
+} from '@/lib/ods-routes';
 import type { OdsArea } from '@/lib/ods-flag';
 
 /** Customer portals: signed-out visitors go to the customer login. CH-1: the Shop (/shop) is signed-in only too. */
@@ -249,8 +252,16 @@ async function route(request: NextRequest) {
     if (now - staff.last > 60_000) {
       response.cookies.set(STAFF_COOKIE, signStaffCookie({ ...staff, last: now }), staffCookieOptions(DEFAULT_LIMITS, staff.until, now));
     }
+    // ODS T8: the Back Office on the new theme (area "office": staff mode or "all", or the staging cookie). Today's staff
+    // guards above already ran; the rewrite keeps the refreshed session / staff cookies.
+    const odsOffice = odsOfficeRewritePath(path) ?? odsStaffRewritePath(path);
+    if (odsOffice && (await odsForVisitor(request, supabase, user.sub as string, 'office')).on) return keepQuery(odsOffice, 'rewrite');
     return response;
   }
+
+  // ODS T8: staff sign-in steps (open without a staff session) — only "all" or the staging cookie can apply before sign-in
+  const odsStaffOpen = STAFF_OPEN.some((p) => under(path, p)) ? odsStaffRewritePath(path) : null;
+  if (odsStaffOpen && (await odsForVisitor(request, supabase, user?.sub as string | undefined, 'office')).on) return keepQuery(odsStaffOpen, 'rewrite');
 
   // Shop switch (lib/shop/flag.ts): read only where it matters (/shop/* and the signed-in landing paths), never cached
   const shopPath = under(path, '/shop');
@@ -291,8 +302,32 @@ async function route(request: NextRequest) {
   const odsShop = user && shopOn ? odsShopRewritePath(path) : null;
   if (odsShop && (await odsForVisitor(request, supabase, user!.sub as string, 'shop')).on) {
     const moved = ODS_SHOP_REDIRECTS[path];
-    if (moved) return keepQuery(moved, 308);
+    if (moved) {
+      const res = NextResponse.redirect(new URL(moved, request.url), 308);
+      response.cookies.getAll().forEach((c) => res.cookies.set(c));
+      return res;
+    }
     return keepQuery(odsShop, 'rewrite');
+  }
+
+  // ODS T6/T7: My account (incl. Dropshipping, T7) on the new theme (area "account"); pages without an ODS version keep today's page
+  if (user && under(path, '/account')) {
+    const target = odsAccountKeepsLegacy(path, request.nextUrl.searchParams) ? null : (odsAccountRewritePath(path) ?? odsDropshipRewritePath(path));
+    const renamed = odsAccountRedirect(path);
+    const fallback = odsAccountOffFallback(path);
+    if (target || renamed || fallback) {
+      const on = (await odsForVisitor(request, supabase, user.sub as string, 'account')).on;
+      const to = (dest: string, status: 307 | 308) => {
+        const url = new URL(dest, request.url);
+        if (!dest.includes('?') && !dest.includes('#')) url.search = request.nextUrl.search;
+        const res = NextResponse.redirect(url, status);
+        response.cookies.getAll().forEach((c) => res.cookies.set(c));
+        return res;
+      };
+      if (on && renamed) return to(renamed, 308);
+      if (on && target) return keepQuery(target, 'rewrite');
+      if (!on && fallback) return to(fallback, 307);
+    }
   }
   return response;
 }

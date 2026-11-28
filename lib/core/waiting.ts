@@ -1,9 +1,9 @@
 import 'server-only';
 import { createClient } from '@/lib/supabase/server';
 import { KYC_CONTACT_FALLBACK } from '@/lib/kyc-message';
-import { buildWaitingItems, type WaitingItem, type WaitingRaw } from './waiting-items';
+import { buildWaitingItems, type WaitingActionItem, type WaitingRaw } from './waiting-items';
 
-export type { WaitingItem, WaitingKind } from './waiting-items';
+export type { WaitingItem, WaitingKind, WaitingActionItem, WaitingActionType, WaitingService } from './waiting-items';
 
 /**
  * CH-1 "N things are waiting for you" — the same rules as the "Waiting for you" list on /account (ADDON-41 board 01):
@@ -28,10 +28,11 @@ export async function countWaiting(orgId: string, nowIso: string): Promise<numbe
 /**
  * ODS T4: the same items as a list (welcome-bar tiles on /shop; My account › Action needed can use it too), most urgent
  * first. Same queries and rules as countWaiting(); shaping is the pure buildWaitingItems() in ./waiting-items.ts.
+ * ODS T6: returns WaitingActionItem (WaitingItem + type/service/ref/what/action/odsHref/dueAt for My account › Action needed).
  * Columns read: quotes.rfq_id, valid_until, rfqs.code/title · orders.id, code, title, status, updated_at ·
  * wallet_topups.id, amount_cents, status, reject_reason, confirmed_at · kyc_submissions.status, customer_message, reviewed_at.
  */
-export async function listWaiting(orgId: string, nowIso: string, limit = 50): Promise<WaitingItem[]> {
+export async function listWaiting(orgId: string, nowIso: string, limit = 50): Promise<WaitingActionItem[]> {
   const sb = await createClient();
   const since = new Date(Date.parse(nowIso) - 14 * 864e5).toISOString();
   const [quotes, orders, transfers, kyc] = await Promise.all([

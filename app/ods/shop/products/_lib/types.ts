@@ -31,7 +31,7 @@ export type ProductPageVM = {
   images: ProductCardImage[];
   verified: boolean;
   customisable: boolean;
-  /** Tagged "Samples available" and the sample service is on. */
+  /** The sample service is on and the product isn't tagged `no-samples` (samplesAvailableFor, owner decision 4). */
   samplesAvailable: boolean;
   unit: string;
   unitPlural: string;

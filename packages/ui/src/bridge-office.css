@@ -1,0 +1,182 @@
+/*
+ * ODS T8 · Back Office bridge (Part 7.1 / 2.2 compact): restyle TODAY's staff pages with the ODS compact tokens without
+ * touching their code. Imported once from app/globals.css, after bridge-dropship.css.
+ *
+ * Scope: ONLY inside `.ods-office` (the ODS Back Office frame root and the ODS staff sign-in wrapper,
+ * app/ods/office/_components/office-frame.tsx + app/ods/staff/layout.tsx) INSIDE an ODS root (`[data-theme="ods"]`).
+ * With the ODS switch off, today's StaffLayoutShell renders the same pages outside any ODS root: nothing here applies.
+ *
+ * How (same approach as bridge-dropship.css):
+ *  1. today's utilities and kit classes read the brand variables (`text-ink` → var(--ink), `bg-coral`, `border-line`,
+ *     `text-muted` …); re-declaring them on the scoped root maps every one to an ODS token. No new colours.
+ *  2. today's component classes (.btn*, .card, .input, .label, .th/.td, .pill, .chip, .kpi, .app-tile …) get the
+ *     compact shapes: 32 px controls, 6 px radius (status pills 4), 34 px table head / 36 px rows, Inter 13 px body.
+ *  3. headings follow the ODS compact H1 20 / H2 15 (unlayered: today's pages set 28–40 px with utilities); the most
+ *     common body-size utilities (text-[15px], text-[16px], text-sm …) step down to the compact body size in the page
+ *     area, except inside comfortable panels (warehouse floor screens, turnkey inspector — audit C13).
+ *  4. phones (< 768 px): tap targets stay ≥ 44 px (Part 2.2), so the compact control height is raised there.
+ * Focus: the 3 px amber ring comes from tokens.css for every element inside an ODS root.
+ *
+ * Contrast (2.9; axe on /dev/ui/screens/office-frame): link / Coral text → --ods-info #1D4E9A (8.3:1 on white); muted →
+ * --ods-slate (6.2:1 white, 5.6:1 canvas); white text only on --ods-blue (4.9:1), --ods-navy, --ods-danger.
+ */
+
+[data-theme="ods"] .ods-office {
+  /* brand variables read by today's utilities and component classes */
+  --ink: var(--ods-navy);
+  --ink-2: var(--ods-navy-hover);
+  --ink-card: var(--ods-navy-hover);
+  --coral: var(--ods-blue);
+  --coral-hover: var(--ods-blue-hover);
+  --coral-text: var(--ods-info);
+  --tint: var(--ods-blue-tint);
+  --tint-2: color-mix(in srgb, var(--ods-blue-tint) 55%, var(--ods-surface));
+  --pearl: var(--ods-canvas);
+  --ill-bg: var(--ods-canvas);
+  --black: var(--ods-text);
+  --muted: var(--ods-slate);
+  --line: var(--ods-line);
+  --line-strong: var(--ods-line-strong);
+  --fill: var(--ods-canvas);
+  --divider: var(--ods-line);
+  --sand: var(--ods-canvas);
+  --disabled: var(--ods-canvas);
+  --focus: var(--ods-focus);
+  --on-ink: color-mix(in srgb, white 80%, var(--ods-navy));
+  --on-ink-link: color-mix(in srgb, white 85%, var(--ods-blue));
+  --green: var(--ods-success);
+  --green-ink: var(--ods-success);
+  --ok-bg: var(--ods-success-tint);
+  --ok-line: color-mix(in srgb, var(--ods-success) 45%, var(--ods-surface));
+  --ok-soft: var(--ods-success-tint);
+  --amber: var(--ods-warning);
+  --amber-ink: var(--ods-warning);
+  --warn-bg: var(--ods-warning-tint);
+  --warn-line: color-mix(in srgb, var(--ods-warning) 55%, var(--ods-surface));
+  --needs: var(--ods-warning);
+  --needs-bg: var(--ods-warning-tint);
+  --red: var(--ods-danger);
+  --red-ink: var(--ods-danger);
+  --bad-bg: var(--ods-danger-tint);
+  --switch-off: var(--ods-slate);
+  /* fonts: Inter (OdsThemeRoot sets --font-ods-inter). --font-sans / --font-mono are re-declared too: on :root they
+     resolve from the old faces, so they would keep Rubik / Jost otherwise. */
+  --font-text: var(--font-ods-inter), Inter;
+  --font-label: var(--font-ods-inter), Inter;
+  --font-sans: var(--ods-font);
+  --font-display: var(--ods-font);
+  --font-mono: var(--ods-font);
+  font-family: var(--ods-font);
+}
+
+/* phones: ≥ 44 px tap targets even in the compact staff frame (Part 2.2 "Tap targets ≥ 44 px always on phones") */
+@media (max-width: 767px) {
+  [data-theme="ods"] .ods-office[data-density="compact"] {
+    --ods-control-h: 44px;
+    --ods-row-h: 44px;
+  }
+}
+
+@layer components {
+  /* buttons */
+  [data-theme="ods"] .ods-office .btn {
+    min-height: var(--ods-control-h);
+    padding-inline: 12px;
+    gap: 6px;
+    border-radius: var(--ods-radius-control);
+    font-family: var(--ods-font);
+    font-size: var(--ods-text-body);
+    font-weight: 600;
+  }
+  [data-theme="ods"] .ods-office .btn-sm { min-height: var(--ods-control-h); padding-inline: 10px; font-size: var(--ods-text-label); }
+  [data-theme="ods"] .ods-office .btn-ghost { background: var(--ods-surface); border-color: var(--ods-line-strong); color: var(--ods-navy); }
+  [data-theme="ods"] .ods-office .btn-ghost:hover:not(:disabled) { background: var(--ods-canvas); border-color: var(--ods-navy); }
+  [data-theme="ods"] .ods-office .btn-danger { background: var(--ods-danger); }
+  [data-theme="ods"] .ods-office .btn:disabled { background: var(--ods-canvas); color: var(--ods-slate); border-color: var(--ods-line); }
+
+  /* cards and panels */
+  [data-theme="ods"] .ods-office .card,
+  [data-theme="ods"] .ods-office .kpi,
+  [data-theme="ods"] .ods-office .detail-panel {
+    border-color: var(--ods-line);
+    border-radius: var(--ods-radius-card);
+    box-shadow: var(--ods-shadow-card);
+  }
+  [data-theme="ods"] .ods-office .kpi { padding: var(--ods-pad-card); }
+  [data-theme="ods"] .ods-office .kpi-label { font-size: var(--ods-text-label); font-weight: 600; color: var(--ods-slate); }
+  [data-theme="ods"] .ods-office .kpi-value { margin-top: 4px; font-size: 20px; font-weight: 700; }
+  [data-theme="ods"] .ods-office .detail-panel { padding: var(--ods-pad-card); }
+  [data-theme="ods"] .ods-office .field-row { font-size: var(--ods-text-body); padding-block: 6px; }
+  [data-theme="ods"] .ods-office .app-tile { width: 36px; height: 36px; border-radius: var(--ods-radius-control); }
+
+  /* form controls */
+  [data-theme="ods"] .ods-office .input {
+    min-height: var(--ods-control-h);
+    padding-inline: 10px;
+    border-radius: var(--ods-radius-control);
+    border-color: var(--ods-line-strong);
+    font-size: var(--ods-text-body);
+  }
+  [data-theme="ods"] .ods-office textarea.input { min-height: 72px; padding-block: 6px; }
+  [data-theme="ods"] .ods-office .label { margin-bottom: 4px; font-size: var(--ods-text-label); font-weight: 600; color: var(--ods-navy); }
+  [data-theme="ods"] .ods-office .toggle-btn { min-height: var(--ods-control-h); padding-inline: 12px; border-radius: var(--ods-radius-control); font-size: var(--ods-text-label); }
+  [data-theme="ods"] .ods-office .toggle-btn[aria-pressed="true"] { background: var(--ods-navy); border-color: var(--ods-navy); }
+
+  /* filter chips and link tabs (components/admin/ui Tabs): compact, selected = ODS blue with white text */
+  [data-theme="ods"] .ods-office .chip {
+    min-height: calc(var(--ods-control-h) - 4px);
+    padding-inline: 10px;
+    border-radius: var(--ods-radius-control);
+    font-size: var(--ods-text-label);
+    font-weight: 600;
+  }
+
+  /* tables (.th / .td and components/ui Table): 34 px head on canvas, 36 px rows, 13 px */
+  [data-theme="ods"] .ods-office .th {
+    height: var(--ods-head-h);
+    padding: 0 12px;
+    background: var(--ods-canvas);
+    font-family: var(--ods-font);
+    font-size: var(--ods-text-label);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    color: var(--ods-slate);
+  }
+  [data-theme="ods"] .ods-office .td { height: var(--ods-row-h); padding: 6px 12px; font-size: var(--ods-text-table); border-color: var(--ods-line); }
+  [data-theme="ods"] .ods-office tbody > tr:not([class*="bg-"]):hover > .td { background-color: var(--ods-blue-tint); }
+
+  /* status pills and caps labels: Inter, sentence-size, 4 px radius in compact */
+  [data-theme="ods"] .ods-office .pill {
+    padding: 2px 8px;
+    border-radius: var(--ods-radius-pill);
+    font-family: var(--ods-font);
+    font-size: var(--ods-text-label);
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  [data-theme="ods"] .ods-office :is(.k, .label-caps, .eyebrow, .app-grp) { font-family: var(--ods-font); letter-spacing: 0.04em; }
+  [data-theme="ods"] .ods-office .toast-ok { border-radius: var(--ods-radius-control); font-size: var(--ods-text-body); }
+  [data-theme="ods"] .ods-office .step-pill { border-radius: var(--ods-radius-pill); font-size: var(--ods-text-label); }
+}
+
+/* headings: ODS compact sizes (unlayered so today's text-[28px] … utilities on page titles don't win) */
+[data-theme="ods"] .ods-office h1 { font-size: var(--ods-h1); font-weight: 700; line-height: var(--ods-leading-title); letter-spacing: -0.01em; }
+[data-theme="ods"] .ods-office h2 { font-size: var(--ods-h2); font-weight: 700; line-height: var(--ods-leading-title); }
+[data-theme="ods"] .ods-office h1 + p { font-size: var(--ods-text-body); }
+/* components/ui Stat: the value line (28–32 px utilities) → 20 px */
+[data-theme="ods"] .ods-office .kpi > div:nth-child(2) { font-size: 20px; line-height: 1.2; font-weight: 700; }
+
+/* body-size utilities in the page area → compact body (comfortable panels keep theirs) */
+[data-theme="ods"] .ods-office #office-main :is(.text-\[15px\], .text-\[16px\], .text-\[17px\], .text-base):not([data-density="comfortable"] *) { font-size: var(--ods-text-body); }
+[data-theme="ods"] .ods-office #office-main :is(.text-sm, .text-\[14px\]):not([data-density="comfortable"] *) { font-size: var(--ods-text-table); }
+[data-theme="ods"] .ods-office #office-main .text-lg:not([data-density="comfortable"] *) { font-size: 15px; }
+
+/* staff sign-in pages (app/staff/* re-exported, wrapped by app/ods/staff/layout.tsx): today's StaffFrame, compact */
+[data-theme="ods"] .ods-staff-auth .app-shell { background: var(--ods-canvas); }
+[data-theme="ods"] .ods-staff-auth aside { border-radius: var(--ods-radius-card); padding: 24px; gap: 16px; }
+[data-theme="ods"] .ods-staff-auth aside :is(p, ul) { font-size: var(--ods-text-body); }
+[data-theme="ods"] .ods-staff-auth header { padding-block: 0; }
+/* the sign-in forms size their fields / Continue with min-h-12 / min-h-[50px] utilities: compact height (44 px on phones) */
+[data-theme="ods"] .ods-staff-auth :is(.input, .btn) { min-height: var(--ods-control-h); }

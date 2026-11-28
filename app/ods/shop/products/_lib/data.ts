@@ -1,4 +1,5 @@
 import 'server-only';
+import { samplesAvailableFor } from './samples';
 import { cacheLife, cacheTag } from 'next/cache';
 import { isOptimizableImage } from '@octopus/ui/image-url';
 import { createPublicClient } from '@/lib/supabase/server';
@@ -71,7 +72,8 @@ export async function loadCategories(): Promise<{ all: Category[]; options: Cate
 
 export async function loadProductList(s: ProductFilterState, categories: Category[]): Promise<ProductListVM> {
   const cat = s.category ? categories.find((c) => c.slug === s.category) ?? null : null;
-  const tagSlugs = [s.custom ? 'customisable' : '', s.samples ? 'samples' : ''].filter(Boolean);
+  // every product offers samples unless tagged no-samples (owner decision 4), so "samples" no longer narrows the list
+  const tagSlugs = [s.custom ? 'customisable' : ''].filter(Boolean);
   const f: ListFilters = {
     q: s.q || undefined,
     categoryIds: cat ? descendantIds(categories, cat.id) : undefined,
@@ -186,7 +188,7 @@ export async function loadProductPage(slug: string): Promise<ProductPageVM | nul
     images: row.images.map((m, i) => ({ src: m.url, alt: m.alt?.trim() || `${row.title}, photo ${i + 1}`, unoptimized: !isOptimizableImage(m.url) })),
     verified: row.verified,
     customisable,
-    samplesAvailable: row.tags.includes('samples') && !!sample,
+    samplesAvailable: samplesAvailableFor(row.tags, !!sample),
     unit: u.one,
     unitPlural: u.many,
     moq: row.moq,

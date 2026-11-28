@@ -214,10 +214,10 @@ test.describe('ODS T4 · real Shop on the new theme (@writes: temporary staging 
     } finally {
       await db.end();
     }
-    // /shop/all → /shop; the CH-1 quote list stays on today's page until the T5 cart
+    // /shop/all → /shop; T5a: the CH-1 quote list moved into the cart's Get a quote tab
     await page.goto('/shop/all');
     expect(new URL(page.url()).pathname).toBe('/shop');
-    await open(page, '/shop/quote-list');
-    expect(await page.locator('[data-theme="ods"]').count()).toBe(0);
+    await page.goto('/shop/quote-list');
+    expect(new URL(page.url()).pathname + new URL(page.url()).search).toBe('/shop/cart?tab=quote');
   });
 });

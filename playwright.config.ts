@@ -1,10 +1,20 @@
 import { defineConfig, devices } from '@playwright/test';
+import { installOdsPreviewHook, odsPreviewModeFromEnv } from './tests/e2e/helpers/ods-preview-hook';
 
 /**
  * E2E golden paths (SPEC §11.3). Runs against E2E_BASE_URL (Vercel preview with seeded staging data) or a local
  * `pnpm dev` server. Demo credentials come from env: DEMO_PASSWORD (+ optional E2E_BUYER_EMAIL / E2E_OPS_EMAIL).
  */
 const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
+
+/**
+ * ODS T7 (opt-in, default off): E2E_ODS_PREVIEW=on|all puts the staging preview cookie ods_preview on EVERY browser
+ * context (fixture contexts and browser.newContext()), so today's specs run unchanged inside the ODS theme, e.g.
+ *   E2E_ODS_PREVIEW=on pnpm exec playwright test tests/e2e/ds*.spec.ts tests/e2e/dropship-*.spec.ts
+ * Staging only (the server ignores the cookie elsewhere). See tests/e2e/helpers/ods-preview-hook.ts.
+ */
+const odsPreview = odsPreviewModeFromEnv();
+if (odsPreview) installOdsPreviewHook(odsPreview, baseURL);
 
 export default defineConfig({
   testDir: './tests/e2e',

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { priceForQuantity, normaliseTiers, fromPriceCents, tierRange } from '@/app/ods/shop/products/_lib/price';
 import { parseProductParams, productsHref, activeFilterCount } from '@/app/ods/shop/products/_lib/filters';
 import { safeSpecs } from '@/app/ods/shop/products/_lib/white-label';
+import { samplesAvailableFor } from '@/app/ods/shop/products/_lib/samples';
 import { PRODUCT_COLS, PRODUCT_FACTORY_COLS, FORBIDDEN_COLUMN } from '@/app/ods/shop/products/_lib/columns';
 
 const TIERS = [
@@ -108,5 +109,22 @@ describe('product page columns (white-label)', () => {
     expect(cols.filter((c) => FORBIDDEN_COLUMN.test(c))).toEqual([]);
     expect(PRODUCT_FACTORY_COLS).toBe('verified');
     expect(PRODUCT_COLS).not.toMatch(/supplier|province|city/);
+  });
+});
+
+describe('samples (owner decision 4, T5a): every product unless tagged no-samples', () => {
+  it('is available for untagged products when the sample service is on', () => {
+    expect(samplesAvailableFor([], true)).toBe(true);
+    expect(samplesAvailableFor(['customisable'], true)).toBe(true);
+    expect(samplesAvailableFor(['samples'], true)).toBe(true);
+  });
+  it('is off for products tagged no-samples, or when the sample service is off', () => {
+    expect(samplesAvailableFor(['no-samples'], true)).toBe(false);
+    expect(samplesAvailableFor(['customisable', 'no-samples'], true)).toBe(false);
+    expect(samplesAvailableFor([], false)).toBe(false);
+    expect(samplesAvailableFor(['samples'], false)).toBe(false);
+  });
+  it('the old "samples" filter no longer counts as an active filter', () => {
+    expect(activeFilterCount(parseProductParams({ samples: '1' }))).toBe(0);
   });
 });

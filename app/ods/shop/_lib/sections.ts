@@ -10,7 +10,7 @@
  *  - `normaliseInterest(value)`       setup interest / alias → ShopSectionKey | null ('warehouse' → '3pl', 'mmb' → 'brand' …)
  *  - `orderSections(interests)`       fixed order, with the FIRST valid interest moved to the top (Part 5.2 §4)
  *  - `greetingFor(hour)`              'Good morning' (05–11) | 'Good afternoon' (12–17) | 'Good evening' (18–04)
- *  - `SHOP_PATHS`                     public URLs used by the frame (cart = quote list until T5, request a product, …)
+ *  - `SHOP_PATHS`                     public URLs used by the frame (cart, checkout, request a product, …)
  */
 import type { OdsServiceKey } from '@octopus/ui/tokens';
 
@@ -144,8 +144,9 @@ export function greetingFor(hour: number): 'Good morning' | 'Good afternoon' | '
 export const SHOP_PATHS = {
   home: '/shop',
   search: '/shop/search',
-  /** T5 replaces this with /shop/cart + the mini-cart; until then "Cart (n)" = the quote list. */
-  cart: '/shop/quote-list',
+  /** T5a: the company cart (Buy now · Get a quote · Saved for later); /shop/quote-list 308s to /shop/cart?tab=quote. */
+  cart: '/shop/cart',
+  checkout: '/shop/checkout',
   requestProduct: '/request/sourcing',
   account: '/account',
   notifications: '/account/notifications',

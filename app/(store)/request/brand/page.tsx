@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   alternates: { canonical: '/request/brand' },
 };
 
-type SP = Promise<{ product?: string; model?: string; title?: string }>;
+type SP = Promise<{ product?: string; model?: string; title?: string; method?: string }>;
 const UUID = /^[0-9a-f-]{36}$/i;
 const DS_MODEL = /^DS-\d{6}(?:-\d{2})?$/i;
 
@@ -68,6 +68,7 @@ async function BrandRequest({ searchParams }: { searchParams: SP }) {
             </div>
           )}
           <BrandRequestWizard products={products} methods={brandMethods(settings)} initialProduct={chosenOk ? wanted : null}
+            initialMethod={brandMethods(settings).some((m) => m.key === sp.method) ? sp.method! : null}
             initialDsModel={dsModel} initialDsTitle={dsTitle} orgId={session?.org?.id ?? null}
             mode={mode} loginHref={loginHref} countries={countries} />
         </div>

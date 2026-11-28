@@ -25,7 +25,7 @@ export type FiltersFormProps = {
 const SHIPS_TO_REASON = 'Products don’t list destination countries yet. Choose your country in the quote request.';
 
 /**
- * Product filters (Part 5.3): Category, Price, Minimum order, Delivery, Verified supplier, Samples available, Customisable
+ * Product filters (Part 5.3): Category, Price, Minimum order, Delivery, Verified supplier, Customisable (no "Samples available": every product offers samples unless tagged no-samples, T5a)
  * (+ Also in an MOQ pool). Ships to is shown disabled with the reason (no destination data on products).
  * Works without JavaScript as a GET form; with JS it pushes the new URL (filters live in the URL, Part 2.8).
  */
@@ -136,7 +136,6 @@ export function FiltersForm({ state, categories, currency, basePath = '/shop/pro
       <fieldset className="m-0 flex flex-col border-0 p-0">
         <legend className="mb-0.5 text-ods-label font-semibold text-ods-text">Show only</legend>
         <Checkbox name="verified" value="1" label="Verified supplier" checked={draft.verified} onCheckedChange={(v) => change({ verified: v })} />
-        <Checkbox name="samples" value="1" label="Samples available" checked={draft.samples} onCheckedChange={(v) => change({ samples: v })} />
         <Checkbox name="custom" value="1" label="Customisable" description="Logo, colour or packaging" checked={draft.custom} onCheckedChange={(v) => change({ custom: v })} />
         <Checkbox name="pool" value="1" label="Also in an MOQ pool" checked={draft.pool} onCheckedChange={(v) => change({ pool: v })} />
       </fieldset>

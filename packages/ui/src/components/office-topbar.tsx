@@ -62,7 +62,7 @@ export function OfficeTopbar({ apps, currentApp, onOpenPalette, bindPaletteHotke
     </>
   );
   return (
-    <header className={cx('@container', className)}>
+    <header data-testid="office-topbar" className={cx('@container', className)}>
       <div className="flex h-12 items-center gap-1 bg-ods-navy-dark px-2 text-white @min-[560px]:gap-2 @min-[560px]:px-3">
       <span className="contents @max-[559px]:hidden">
         <Logo variant="mark-white" area="office" height={22} />
@@ -72,7 +72,7 @@ export function OfficeTopbar({ apps, currentApp, onOpenPalette, bindPaletteHotke
       </span>
       <span aria-hidden className="mx-1 hidden h-6 w-px bg-white/25 @min-[560px]:block" />
       {app ? (
-        <span className="hidden @min-[560px]:contents">
+        <span data-testid="app-switcher" className="hidden @min-[560px]:contents">
         <MenuButton
           label={app.label}
           menuLabel="Switch app"
@@ -86,6 +86,7 @@ export function OfficeTopbar({ apps, currentApp, onOpenPalette, bindPaletteHotke
           type="button"
           onClick={onOpenPalette}
           aria-keyshortcuts="Control+K"
+          data-testid="palette-button"
           className="hidden h-8 w-full max-w-[520px] items-center gap-2 rounded-ods-control border border-white/20 bg-white/10 px-3 text-start text-ods-label text-white/85 hover:bg-white/15 @min-[760px]:flex"
         >
           <Icon icon={Search} size="xs" />

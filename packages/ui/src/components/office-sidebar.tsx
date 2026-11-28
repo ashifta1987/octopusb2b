@@ -115,7 +115,7 @@ export function OfficeSidebar({ items, groups, current, collapsed: collapsedProp
           const open = collapsed || (openGroups[g.id] ?? g.defaultOpen ?? true);
           const listId = `${id}-${g.id}`;
           return (
-            <div key={g.id} className={cx('mt-2', collapsed && 'border-t border-white/15 pt-2')}>
+            <div key={g.id} data-testid="sidebar-group" data-group={g.id} className={cx('mt-2', collapsed && 'border-t border-white/15 pt-2')}>
               {collapsed ? (
                 <span id={`${listId}-h`} className="sr-only">
                   {g.label}

@@ -6,6 +6,7 @@ import { getShopActor, loadProductPage, loadProductRow } from '../_lib/data';
 import { ProductPageView } from './_components/product-view';
 import { ProductPageError, ProductPageSkeleton } from './_components/product-states';
 import { loadSimilarProducts } from './actions';
+import { cartAdd, quoteAdd } from '../../cart/actions';
 
 type Params = Promise<{ slug: string }>;
 type SP = Promise<Record<string, string | string[] | undefined>>;
@@ -20,7 +21,9 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 /**
  * ODS /shop/products/[slug] (Part 5.4). Data: loadProductPage (customer-safe columns, listed in ../_lib/data.ts
  * PRODUCT_COLS) + getShopActor (role, company country, cart count). Actions = today's app/shop/actions.ts:
- * submitShopRfq (Request quote), addToQuoteList (Add to cart), submitSample (Order a sample), recordView (on open).
+ * submitShopRfq (Request quote), recordView (on open). T5a cart (../../cart/actions): Add to cart = quoteAdd (Get a quote)
+ * and Order a sample = cartAdd({ kind: 'sample' }), both opening the mini-cart; while the cart isn't set up
+ * ('cart-not-ready') they fall back to today's addToQuoteList / submitSample.
  */
 export default function ShopProductPage({ params, searchParams }: { params: Params; searchParams: SP }) {
   return (
@@ -48,6 +51,8 @@ async function Content({ params, searchParams }: { params: Params; searchParams:
       submitRfq={submitShopRfq}
       submitSample={submitSample}
       addToCart={addToQuoteList}
+      quoteAdd={quoteAdd}
+      cartAdd={cartAdd}
       loadSimilar={loadSimilarProducts}
       onView={recordView}
       initialQuantity={Number.isInteger(q) && q > 0 ? q : undefined}

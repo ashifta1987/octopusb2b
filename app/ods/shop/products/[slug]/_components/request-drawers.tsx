@@ -29,7 +29,7 @@ function Done({ title, body, code, testId }: { title: string; body: string; code
       <h3 className="m-0 text-ods-h2 text-ods-navy">{title}</h3>
       <p className="m-0 text-ods-body text-ods-text">{body}</p>
       {code ? (
-        <NamedTabLink tab="account" href={`/account/sourcing/${encodeURIComponent(code)}`} className="inline-flex min-h-ods-control items-center gap-1 font-semibold text-ods-blue underline underline-offset-4">
+        <NamedTabLink tab="account" href={`/account/requests/${encodeURIComponent(code)}`} className="inline-flex min-h-ods-control items-center gap-1 font-semibold text-ods-blue underline underline-offset-4">
           Open {code} in My account <Icon icon={ArrowUpRight} size="sm" />
         </NamedTabLink>
       ) : null}

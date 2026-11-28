@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 import { AuthBroadcastListener } from '@octopus/ui';
 import { getSiteContent } from '@/lib/content';
 import { getShopFrameData } from './_lib/loaders';
+import { getFrameCart } from './_lib/cart-frame';
+import { MiniCartProvider } from './_components/mini-cart';
 import { SHOP_PATHS } from './_lib/sections';
 import { ShopBottomNav, ShopTop, ShopTopSkeleton } from './_components/shop-frame';
 import { ShopFooter } from './_components/shop-footer';
@@ -14,6 +16,8 @@ import { ShopFooter } from './_components/shop-footer';
  * "You signed out" here). Hidden from search engines like today's shop layout.
  * `--shop-header-h` = the sticky header height (phones: logo row + search row; ≥ 768 px: 68 px) — the main page's sticky
  * JumpBar sits under it.
+ * T5a: `MiniCartProvider` wraps the frame (header Cart (n) = the cart's headerCount; the mini-cart opens after any add and
+ * from the header on desktop). The cart is read once per request (getCart, React-cached) inside the header's Suspense.
  */
 export const metadata: Metadata = {
   title: { default: 'Shop', template: '%s · Octopus B2B Shop' },
@@ -22,6 +26,7 @@ export const metadata: Metadata = {
 
 export default function OdsShopLayout({ children }: { children: ReactNode }) {
   return (
+    <MiniCartProvider>
     <div className="flex min-h-screen flex-col bg-ods-canvas [--shop-header-h:124px] ods-tablet:[--shop-header-h:68px] [--ods-shop-sticky-top:var(--shop-header-h)]">
       <a
         href="#main"
@@ -41,14 +46,16 @@ export default function OdsShopLayout({ children }: { children: ReactNode }) {
       </Suspense>
       <AuthBroadcastListener mode="overlay" />
     </div>
+    </MiniCartProvider>
   );
 }
 
 async function FrameTop() {
-  const f = await getShopFrameData();
+  const [f, cart] = await Promise.all([getShopFrameData(), getFrameCart()]);
   return (
     <ShopTop
       cartCount={f.viewer.cartCount}
+      cart={cart}
       unread={f.viewer.unread}
       walletAvailable={f.viewer.walletAvailable}
       categories={f.categories}
@@ -60,8 +67,8 @@ async function FrameTop() {
 }
 
 async function FrameBottomNav() {
-  const f = await getShopFrameData();
-  return <ShopBottomNav cartCount={f.viewer.cartCount} categories={f.categories} poolsOn={f.poolsOn} />;
+  const [f, cart] = await Promise.all([getShopFrameData(), getFrameCart()]);
+  return <ShopBottomNav cartCount={cart?.summary.headerCount ?? f.viewer.cartCount} categories={f.categories} poolsOn={f.poolsOn} />;
 }
 
 /** Company profile is cached site content (no session), so the footer is part of the static shell. */

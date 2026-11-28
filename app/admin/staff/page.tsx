@@ -128,7 +128,7 @@ export default async function StaffPage({ searchParams }: { searchParams: Promis
             const self = t.id === s.userId;
             const targetIsAdmin = byUser.get(t.id)?.includes('admin') ?? false;
             return (
-              <tr key={t.id} className={cn(selUser?.id === t.id && 'bg-tint', deactivated && 'opacity-70')}>
+              <tr key={t.id} className={cn(selUser?.id === t.id && 'bg-tint', deactivated && 'bg-fill')}>
                 <td className="td">
                   <div className="font-semibold">{t.full_name}{self && <span className="text-xs text-muted"> (you)</span>}</div>
                   <div className="mono text-sm text-muted break-all">{t.email ?? sec?.email}</div>

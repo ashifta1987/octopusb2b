@@ -130,7 +130,7 @@ try {
     if (!/^[\s()]*(false|NOT|AND|OR|[\s()])*$/i.test(rest.replace(/\bfalse\b/g, ' false '))) reachable.add(p.t);
   }
   for (const v of (await all(`select table_name t from information_schema.views where table_schema = 'public'`))) reachable.add(v.t);
-  const STAFF_OWN_ROWS = ['division_members', 'user_roles', 'manager_limits', 'staff_backup_codes', 'restore_requests', 'finance_approvals', 'distributor_suppliers', 'import_jobs', 'import_rows', 'ai_jobs', 'backups'];
+  const STAFF_OWN_ROWS = ['division_members', 'user_roles', 'manager_limits', 'staff_backup_codes', 'restore_requests', 'finance_approvals', 'staff_approvals', 'distributor_suppliers', 'import_jobs', 'import_rows', 'ai_jobs', 'backups'];
   const suspicious = readable.filter((r) => (r.anon || r.auth) && reachable.has(r.t) && INTERNAL_NAME.test(r.col) && !ALLOW.has(`${r.t}.${r.col}`)
     && !NO_CUSTOMER_ROWS.includes(r.t) && !STAFF_OWN_ROWS.includes(r.t) && !['warehouse_shipments', 'assistant_queue_view'].includes(r.t));
   ok(suspicious.length === 0, `no unreviewed internal-looking column is readable${suspicious.length ? ' — ' + suspicious.map((r) => `${r.t}.${r.col}${r.anon ? ' (anon)' : ''}`).join(', ') : ''}`);

@@ -8,6 +8,7 @@ import { getShopViewer } from '@/lib/shop/data';
 import { subscribePoolAlerts } from '@/app/(store)/pools/actions';
 import { loadJoinState, loadPool, resolvePoolCode } from '../_lib/loaders';
 import { PoolPageView } from '../_components/pool-page-view';
+import { cartAdd } from '../../cart/actions';
 
 export const metadata: Metadata = { title: 'MOQ pool', robots: { index: false, follow: false } };
 
@@ -15,7 +16,8 @@ type Params = Promise<{ id: string }>;
 
 /**
  * ODS T4 · /shop/pools/[id]. `id` = today's pool identifier, the pool code (POOL-0042, as on /pool/[code]); a pool UUID
- * redirects to its code URL. Join pool continues on today's join step (see PoolJoinForm).
+ * redirects to its code URL. T5a: Join pool adds a cart pool line (cartAdd) and opens the mini-cart; before migration 253
+ * it continues on today's join step (see PoolJoinForm).
  */
 export default function ShopPoolPage({ params }: { params: Params }) {
   return (
@@ -36,5 +38,5 @@ async function Content({ params }: { params: Params }) {
   await connection();
   const now = Date.parse(nowIso());
   const join = await loadJoinState(pool, { orgId: viewer.org.id, role: viewer.role }, now);
-  return <PoolPageView pool={pool} now={now} join={join} email={viewer.session.email ?? null} notifyAction={subscribePoolAlerts} />;
+  return <PoolPageView pool={pool} now={now} join={join} email={viewer.session.email ?? null} notifyAction={subscribePoolAlerts} cartAdd={cartAdd} />;
 }

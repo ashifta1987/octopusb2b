@@ -45,7 +45,8 @@ async function both(page: Page, name: string, path: string, focus: string) {
   for (const [w, h, tag] of [[1440, 1000, 'desktop'], [390, 844, 'phone']] as const) {
     await page.setViewportSize({ width: w, height: h });
     await page.goto(path);
-    await page.waitForLoadState('networkidle');
+    // networkidle can hang behind background prefetches on the production build; it is only a screenshot settle
+    await page.waitForLoadState('networkidle', { timeout: 10_000 }).catch(() => {});
     const el = page.getByTestId(focus).first();
     await el.scrollIntoViewIfNeeded();
     // keep the section heading in view under the sticky header; caret 'initial' = don't restyle inputs (no hydration noise)

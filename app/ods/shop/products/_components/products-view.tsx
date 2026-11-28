@@ -49,7 +49,6 @@ export function ProductsView({ state, categories, chips, status, list, currency,
     ...(state.moq != null ? [{ label: `Minimum order up to ${state.moq.toLocaleString('en-US')}`, patch: { moq: null } }] : []),
     ...(state.lead != null ? [{ label: `Delivery within ${state.lead} days`, patch: { lead: null } }] : []),
     ...(state.verified ? [{ label: 'Verified supplier', patch: { verified: false } }] : []),
-    ...(state.samples ? [{ label: 'Samples available', patch: { samples: false } }] : []),
     ...(state.custom ? [{ label: 'Customisable', patch: { custom: false } }] : []),
     ...(state.pool ? [{ label: 'Also in an MOQ pool', patch: { pool: false } }] : []),
   ];

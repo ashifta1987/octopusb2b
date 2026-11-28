@@ -32,8 +32,10 @@ function RadioCard({ name, value, checked, onChange, title, body, extra }: { nam
 }
 
 /** ADDON-44-F board 26 — Make My Brand request: 3 steps, private logo upload, summary, creates MB-xxxx. */
-export function BrandRequestWizard({ products, methods, initialProduct, initialDsModel, initialDsTitle, orgId, mode, loginHref, countries }: {
+export function BrandRequestWizard({ products, methods, initialProduct, initialMethod, initialDsModel, initialDsTitle, orgId, mode, loginHref, countries }: {
   products: BrandProduct[]; methods: MethodOpt[]; initialProduct: string | null;
+  /** ODS T5 (owner 27 Nov): /request/brand?method=<key> preselects the branding method (validated against the settings list). */
+  initialMethod?: string | null;
   initialDsModel?: string | null; initialDsTitle?: string | null;
   orgId: string | null;
   mode: 'ready' | 'guest' | 'no-org'; loginHref: string; countries: [string, string][];
@@ -46,7 +48,7 @@ export function BrandRequestWizard({ products, methods, initialProduct, initialD
   const [useLink, setUseLink] = useState(Boolean(initialDsModel && !initialProduct));
   const [qty, setQty] = useState('');
   const [markets, setMarkets] = useState<string[]>([]);
-  const [method, setMethod] = useState('');
+  const [method, setMethod] = useState(initialMethod ?? '');
   const [packaging, setPackaging] = useState('');
   const [colours, setColours] = useState('');
   const [files, setFiles] = useState<File[]>([]);

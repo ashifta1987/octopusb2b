@@ -2,6 +2,10 @@
 /* ODS 1.0 (new theme, T1): tokens scoped under [data-theme="ods"] + ods-* utilities. No effect outside an ODS root. */
 @import "../packages/ui/src/tokens.css";
 @import "../packages/ui/src/theme.css";
+/* ODS T7: today's Dropship pages restyled with ODS tokens, only inside ODS roots (see the file header) */
+@import "../packages/ui/src/bridge-dropship.css";
+/* ODS T8: today's staff pages restyled with the ODS compact tokens, only inside the ODS Back Office frame (.ods-office) */
+@import "../packages/ui/src/bridge-office.css";
 
 /*
  * Octopus B2B brand tokens (ADDON-46 brand system, values from ADDON-48 Part 1) — the ONE source of truth.

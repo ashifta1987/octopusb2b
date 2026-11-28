@@ -23,6 +23,10 @@ export type WorkspaceHandle = {
   close: (id: string) => void;
   activate: (id: string) => void;
   markDirty: (id: string, dirty: boolean) => void;
+  /** T8: point a tab at another route (title / href / icon) without moving it — in-page navigation in the current tab. */
+  update: (id: string, patch: Partial<Pick<WorkspaceTab, 'title' | 'href' | 'icon'>>) => void;
+  /** T8: replace the open tabs (e.g. restored from the server's workspace_tabs row on a new device). */
+  restore: (state: Pick<WorkspaceState, 'tabs' | 'activeId'>) => void;
   getState: () => WorkspaceState;
 };
 
@@ -102,6 +106,8 @@ export function Workspace({
       close: (id) => dispatch({ type: 'close', id }),
       activate: (id) => dispatch({ type: 'activate', id }),
       markDirty: (id, dirty) => dispatch({ type: 'markDirty', id, dirty }),
+      update: (id, patch) => dispatch({ type: 'update', id, patch }),
+      restore: (s) => dispatch({ type: 'restore', state: s }),
       getState: () => stateRef.current,
     }),
     [],
@@ -264,7 +270,8 @@ export function Workspace({
                   else tabEls.current.delete(t.id);
                 }}
                 className={cx(
-                  'group relative flex h-[calc(100%-4px)] max-w-[210px] min-w-0 items-center rounded-t-ods-control',
+                  // shrink-0 (T8 fix): tabs keep their width so the overflow measurement can move extra tabs into "n more"
+                  'group relative flex h-[calc(100%-4px)] max-w-[210px] min-w-0 shrink-0 items-center rounded-t-ods-control',
                   active ? 'bg-ods-surface text-ods-navy shadow-ods-card' : 'text-ods-slate hover:bg-ods-surface/70 hover:text-ods-navy',
                 )}
               >
@@ -275,6 +282,8 @@ export function Workspace({
                   id={`${uid}-${t.id}`}
                   data-roving
                   data-tab-id={t.id}
+                  data-testid="workspace-tab"
+                  data-dirty={t.dirty ? 'true' : undefined}
                   aria-selected={active}
                   aria-label={t.pinned ? name : undefined}
                   tabIndex={active ? 0 : -1}
